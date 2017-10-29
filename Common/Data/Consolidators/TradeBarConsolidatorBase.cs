@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <typeparam name="T">The input type into the consolidator's Update method</typeparam>
     public abstract class TradeBarConsolidatorBase<T> : PeriodCountConsolidatorBase<T, TradeBar>
-        where T : BaseData
+        where T : IBaseData
     {
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the period

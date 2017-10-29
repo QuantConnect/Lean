@@ -65,6 +65,14 @@ namespace QuantConnect.Brokerages
         public abstract IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm);
 
         /// <summary>
+        /// Gets a brokerage message handler
+        /// </summary>
+        public virtual IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api)
+        {
+            return new DefaultBrokerageMessageHandler(algorithm, job, api);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageFactory"/> class for the specified <paramref name="brokerageType"/>
         /// </summary>
         /// <param name="brokerageType">The type of brokerage created by this factory</param>

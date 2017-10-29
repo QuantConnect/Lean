@@ -53,8 +53,11 @@ namespace QuantConnect.Tests
                 Config.Set("api-handler", "QuantConnect.Api.Api");
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler");
                 Config.Set("algorithm-language", language.ToString());
-                Config.Set("algorithm-location", "QuantConnect.Algorithm." + language + ".dll");
-
+                Config.Set("algorithm-location",  
+                    language == Language.Python
+                        ? "../../../Algorithm.Python/" + algorithm + ".py"
+                        : "QuantConnect.Algorithm." + language + ".dll");
+                
                 var debugEnabled = Log.DebuggingEnabled;
 
                 var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler("regression.log", false)};
@@ -75,7 +78,8 @@ namespace QuantConnect.Tests
                     {
                         string algorithmPath;
                         var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-                        engine.Run(job, algorithmPath);
+                        var algorithmManager = new AlgorithmManager(false);
+                        engine.Run(job, algorithmManager, algorithmPath);
                     }).Wait();
 
                     var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;

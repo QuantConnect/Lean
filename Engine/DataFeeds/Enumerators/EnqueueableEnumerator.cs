@@ -19,7 +19,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -61,6 +60,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public T LastEnqueued
         {
             get { return _lastEnqueued; }
+        }
+
+        /// <summary>
+        /// Returns true if the enumerator has finished and will not accept any more data
+        /// </summary>
+        public bool HasFinished
+        {
+            get { return _end || _disposed; }
         }
 
         /// <summary>

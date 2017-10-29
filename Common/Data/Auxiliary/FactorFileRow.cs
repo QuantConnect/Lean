@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -63,10 +64,38 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads in the factor file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<FactorFileRow> Read(string permtick, string market)
+        public static IEnumerable<FactorFileRow> Read(string permtick, string market, out DateTime? factorFileMinimumDate)
         {
-            string path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
-            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
+            factorFileMinimumDate = null;
+
+            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
+            var lines = File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l));
+
+            var hasInfEntry = false;
+            var rows = new List<FactorFileRow>();
+
+            // parse factor file lines
+            foreach (var line in lines)
+            {
+                if (line.Contains("inf"))
+                {
+                    hasInfEntry = true;
+                    continue;
+                }
+
+                var row = Parse(line);
+
+                if (hasInfEntry && rows.Count == 0)
+                {
+                    // special handling for INF values: set minimum date
+                    factorFileMinimumDate = row.Date.AddDays(1);
+                    row = new FactorFileRow(row.Date.AddDays(-1), row.PriceFactor, row.SplitFactor);
+                }
+
+                rows.Add(row);
+            }
+
+            return rows;
         }
 
         /// <summary>

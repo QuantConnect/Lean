@@ -86,12 +86,22 @@ namespace QuantConnect.Statistics
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            var listPerformance = new List<double>();
+            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
+
+            // we need to have the same dates in the performance and benchmark dictionaries,
+            // so we add missing dates with zero value
+            var missingPerformanceDates = benchmark.Keys.Where(x => !performance.ContainsKey(x));
+            foreach (var date in missingPerformanceDates)
+            {
+                performance.Add(date, 0m);
+            }
+
+            var listPerformance = new List<double>();
             performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
 
-            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var listBenchmark = CreateBenchmarkDifferences(benchmark, periodEquity);
+
             EnsureSameLength(listPerformance, listBenchmark);
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
@@ -147,15 +157,15 @@ namespace QuantConnect.Statistics
             return new Dictionary<string, string> 
             { 
                 { "Total Trades", totalTransactions.ToString(CultureInfo.InvariantCulture) },
-                { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2) + "%"  },
-                { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2) + "%" },
-                { "Compounding Annual Return", Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3) + "%" },
-                { "Drawdown", (Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3)) + "%" },
+                { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2).ToString(CultureInfo.InvariantCulture) + "%"  },
+                { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2).ToString(CultureInfo.InvariantCulture) + "%" },
+                { "Compounding Annual Return", Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%" },
+                { "Drawdown", Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%" },
                 { "Expectancy", Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3) + "%"},
+                { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%"},
                 { "Sharpe Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()) + "%" },
-                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()) + "%" }, 
+                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" },
+                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" }, 
                 { "Profit-Loss Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToString(CultureInfo.InvariantCulture) },
                 { "Alpha", Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Beta", Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToString(CultureInfo.InvariantCulture) },
@@ -164,7 +174,7 @@ namespace QuantConnect.Statistics
                 { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Total Fees", "$" + totalFees.ToString("0.00") }
+                { "Total Fees", "$" + totalFees.ToString("0.00", CultureInfo.InvariantCulture) }
             };
         }
 

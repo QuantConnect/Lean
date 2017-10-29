@@ -163,14 +163,6 @@ namespace QuantConnect.Securities
         {
             if (_universes.TryAdd(key, universe))
             {
-                var userDefinedUniverse = universe as UserDefinedUniverse;
-                if (userDefinedUniverse != null)
-                {
-                    // wire up user defined universes to trigger
-                    userDefinedUniverse.CollectionChanged += (sender, args) => 
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, universe));
-                }
-
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, universe));
             }
         }
@@ -227,7 +219,7 @@ namespace QuantConnect.Securities
                 Universe existing;
                 if (_universes.TryGetValue(symbol, out existing) && existing != value)
                 {
-                    throw new ArgumentException("Unable to over write existing Universe: " + symbol.ToString());
+                    throw new ArgumentException("Unable to over write existing Universe: " + symbol.Value);
                 }
 
                 // no security exists for the specified symbol key, add it now

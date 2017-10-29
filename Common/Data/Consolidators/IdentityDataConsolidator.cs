@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <typeparam name="T">The type of data</typeparam>
     public class IdentityDataConsolidator<T> : DataConsolidator<T>
-        where T : BaseData
+        where T : IBaseData
     {
         private static readonly bool IsTick = typeof (T) == typeof (Tick);
 
@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override BaseData WorkingData
+        public override IBaseData WorkingData
         {
             get { return _last == null ? null : _last.Clone(); }
         }

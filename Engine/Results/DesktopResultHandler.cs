@@ -26,13 +26,14 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using System.Diagnostics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
     /// <summary>
     /// Desktop Result Handler - Desktop GUI Result Handler for Piping Results to WinForms:
     /// </summary>
-    public class DesktopResultHandler : IResultHandler
+    public class DesktopResultHandler : BaseResultsHandler, IResultHandler
     {
         private bool _isActive;
         private bool _exitTriggered;
@@ -173,6 +174,15 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Send a system debug message back to the browser console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        public void SystemDebugMessage(string message)
+        {
+            Messages.Enqueue(new SystemDebugPacket(0, "", "", message));
+        }
+
+        /// <summary>
         /// Send a logging message to the log list for storage.
         /// </summary>
         /// <param name="message">Message we'd in the log.</param>
@@ -188,7 +198,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new RuntimeErrorPacket("", message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, "", message, stacktrace));
         }
 
         /// <summary>
@@ -457,16 +467,37 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
-            _algorithm.DebugMessages.Clear();
+            var debugStopWatch = Stopwatch.StartNew();
+            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.DebugMessages.TryDequeue(out message))
+                {
+                    DebugMessage(message);
+                }
+            }
 
             //Send out the error messages:
-            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
-            _algorithm.ErrorMessages.Clear();
+            var errorStopWatch = Stopwatch.StartNew();
+            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                {
+                    ErrorMessage(message);
+                }
+            }
 
             //Send out the log messages:
-            _algorithm.LogMessages.ForEach(x => LogMessage(x));
-            _algorithm.LogMessages.Clear();
+            var logStopWatch = Stopwatch.StartNew();
+            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.LogMessages.TryDequeue(out message))
+                {
+                    LogMessage(message);
+                }
+            }
 
             //Set the running statistics:
             foreach (var pair in _algorithm.RuntimeStatistics)

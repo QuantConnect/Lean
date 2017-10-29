@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,25 +19,21 @@ using System.Globalization;
 using System.Linq;
 using QuantConnect.Data;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// 3.0 CUSTOM DATA SOURCE: USE YOUR OWN MARKET DATA (OPTIONS, FOREX, FUTURES, DERIVATIVES etc).
-    /// 
-    /// The new QuantConnect Lean Backtesting Engine is incredibly flexible and allows you to define your own data source. 
-    /// 
-    /// This includes any data source which has a TIME and VALUE. These are the *only* requirements. To demonstrate this we're loading
-    /// in "Nifty" data. This by itself isn't special, the cool part is next:
-    /// 
-    /// We load the "Nifty" data as a tradable security we're calling "NIFTY".
-    /// 
+    /// This demonstration imports indian NSE index "NIFTY" as a tradable security in addition to the USDINR currency pair. We move into the
+    /// NSE market when the economy is performing well.s
     /// </summary>
-    public class CustomDataNIFTYAlgorithm : QCAlgorithm
+    /// <meta name="tag" content="strategy example" />
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="custom data" />
+    public class CustomDataNiftyAlgorithm : QCAlgorithm
     {
         //Create variables for analyzing Nifty
-        CorrelationPair today = new CorrelationPair();
-        List<CorrelationPair> prices = new List<CorrelationPair>();
-        int minimumCorrelationHistory = 50;
+        private CorrelationPair _today = new CorrelationPair();
+        private readonly List<CorrelationPair> _prices = new List<CorrelationPair>();
+        private const int _minimumCorrelationHistory = 50;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -56,14 +52,13 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// Event Handler for Nifty Data Events: These Nifty objects are created from our 
+        /// Event Handler for Nifty Data Events: These Nifty objects are created from our
         /// "Nifty" type below and fired into this event handler.
         /// </summary>
         /// <param name="data">One(1) Nifty Object, streamed into our algorithm synchronised in time with our other data streams</param>
         public void OnData(DollarRupee data)
         {
-            today = new CorrelationPair(data.Time);
-            today.CurrencyPrice = Convert.ToDouble(data.Close);
+            _today = new CorrelationPair(data.Time) {CurrencyPrice = Convert.ToDouble(data.Close)};
         }
 
         /// <summary>
@@ -75,23 +70,23 @@ namespace QuantConnect.Algorithm.Examples
         {
             try
             {
-                int quantity = (int)(Portfolio.TotalPortfolioValue * 0.9m / data.Close);
+                var quantity = (int)(Portfolio.TotalPortfolioValue * 0.9m / data.Close);
 
-                today.NiftyPrice = Convert.ToDouble(data.Close);
-                if (today.Date == data.Time)
+                _today.NiftyPrice = Convert.ToDouble(data.Close);
+                if (_today.Date == data.Time)
                 {
-                    prices.Add(today);
+                    _prices.Add(_today);
 
-                    if (prices.Count > minimumCorrelationHistory)
+                    if (_prices.Count > _minimumCorrelationHistory)
                     {
-                        prices.RemoveAt(0);
+                        _prices.RemoveAt(0);
                     }
                 }
 
                 //Strategy
-                double highestNifty = (from pair in prices select pair.NiftyPrice).Max();
-                double lowestNifty = (from pair in prices select pair.NiftyPrice).Min();
-                if (Time.DayOfWeek == DayOfWeek.Wednesday) //prices.Count >= minimumCorrelationHistory && 
+                var highestNifty = (from pair in _prices select pair.NiftyPrice).Max();
+                var lowestNifty = (from pair in _prices select pair.NiftyPrice).Min();
+                if (Time.DayOfWeek == DayOfWeek.Wednesday) //prices.Count >= minimumCorrelationHistory &&
                 {
                     //List<double> niftyPrices = (from pair in prices select pair.NiftyPrice).ToList();
                     //List<double> currencyPrices = (from pair in prices select pair.CurrencyPrice).ToList();
@@ -100,12 +95,12 @@ namespace QuantConnect.Algorithm.Examples
 
                     if (Convert.ToDouble(data.Open) >= highestNifty)
                     {
-                        int code = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
+                        var code = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
                         Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
                     else if (Convert.ToDouble(data.Open) <= lowestNifty)
                     {
-                        int code = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
+                        var code = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
                         Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
                 }
@@ -122,10 +117,7 @@ namespace QuantConnect.Algorithm.Examples
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         public override void OnEndOfDay()
         {
-            //if(niftyData != null)
-            {
-                Plot("Nifty Closing Price", today.NiftyPrice);
-            }
+            Plot("Nifty Closing Price", _today.NiftyPrice);
         }
     }
 
@@ -137,19 +129,19 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Opening Price
         /// </summary>
-        public decimal Open = 0;
+        public decimal Open;
         /// <summary>
         /// High Price
         /// </summary>
-        public decimal High = 0;
+        public decimal High;
         /// <summary>
         /// Low Price
         /// </summary>
-        public decimal Low = 0;
+        public decimal Low;
         /// <summary>
         /// Closing Price
         /// </summary>
-        public decimal Close = 0;
+        public decimal Close;
 
         /// <summary>
         /// Default initializer for NIFTY.
@@ -160,7 +152,7 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
@@ -168,20 +160,20 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             //New Nifty object
-            Nifty index = new Nifty();
+            var index = new Nifty();
 
             try
             {
                 //Example File Format:
                 //Date,       Open       High        Low       Close     Volume      Turnover
                 //2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
-                string[] data = line.Split(',');
+                var data = line.Split(',');
                 index.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
                 index.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 index.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
@@ -192,9 +184,7 @@ namespace QuantConnect.Algorithm.Examples
             }
             catch
             {
-
             }
-
             return index;
         }
     }
@@ -206,7 +196,7 @@ namespace QuantConnect.Algorithm.Examples
     public class DollarRupee : BaseData
     {
         /// <summary>
-        /// Open Price 
+        /// Open Price
         /// </summary>
         public decimal Open = 0;
         /// <summary>
@@ -220,7 +210,7 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Closing Price
         /// </summary>
-        public decimal Close = 0;
+        public decimal Close;
 
         /// <summary>
         /// Default constructor for the custom data class.
@@ -231,7 +221,7 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
@@ -239,17 +229,17 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             //New USDINR object
-            DollarRupee currency = new DollarRupee();
+            var currency = new DollarRupee();
 
             try
             {
-                string[] data = line.Split(',');
+                var data = line.Split(',');
                 currency.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
                 currency.Close = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 currency.Symbol = "USDINR";
@@ -257,32 +247,30 @@ namespace QuantConnect.Algorithm.Examples
             }
             catch
             {
-
             }
-
             return currency;
         }
     }
 
     /// <summary>
-    /// Correlation Pair is a helper class to combine two data points which we'll use to perform the correlation. 
+    /// Correlation Pair is a helper class to combine two data points which we'll use to perform the correlation.
     /// </summary>
     public class CorrelationPair
     {
         /// <summary>
         /// Date of the correlation pair
         /// </summary>
-        public DateTime Date = new DateTime();
+        public DateTime Date;
 
         /// <summary>
         /// Nifty price for this correlation pair
         /// </summary>
-        public double NiftyPrice = 0;
+        public double NiftyPrice;
 
         /// <summary>
         /// Currency price for this correlation pair
         /// </summary>
-        public double CurrencyPrice = 0;
+        public double CurrencyPrice;
 
         /// <summary>
         /// Default initializer

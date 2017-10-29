@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Securities
 {
@@ -48,9 +49,19 @@ namespace QuantConnect.Securities
             try
             {
                 // apply sales value to holdings in the account currency
-                var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
-                var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
-                security.Holdings.AddNewSale(saleValue);
+                if (security.Type == SecurityType.Future)
+                {
+                    // for futures, we measure volume of sales, not notionals
+                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity);
+                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                    security.Holdings.AddNewSale(saleValue);
+                }
+                else
+                {
+                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
+                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                    security.Holdings.AddNewSale(saleValue);
+                }
 
                 // subtract transaction fees from the portfolio (assumes in account currency)
                 var feeThisOrder = Math.Abs(fill.OrderFee);
@@ -58,11 +69,15 @@ namespace QuantConnect.Securities
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 
                 // apply the funds using the current settlement model
-                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
-                if (security.Type == SecurityType.Forex)
+                // we dont adjust funds for futures: it is zero upfront payment derivative (margin applies though)
+                if (security.Type != SecurityType.Future)
+                {
+                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
+                }
+                if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
                 {
                     // model forex fills as currency swaps
-                    var forex = (Forex.Forex) security;
+                    var forex = (IBaseCurrencySymbol) security;
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrencySymbol, fill.FillQuantity);
                 }
                 
@@ -81,6 +96,12 @@ namespace QuantConnect.Securities
                     var closedCost = Math.Sign(-fill.FillQuantity)*absoluteQuantityClosed*averageHoldingsPrice;
                     var conversionFactor = security.QuoteCurrency.ConversionRate*security.SymbolProperties.ContractMultiplier;
                     var lastTradeProfit = (closedSaleValueInQuoteCurrency - closedCost)*conversionFactor;
+
+                    // Reflect account cash adjustment for futures position 
+                    if (security.Type == SecurityType.Future)
+                    {
+                        security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, lastTradeProfit);
+                    }
 
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfit);
@@ -157,7 +178,7 @@ namespace QuantConnect.Securities
             }
 
             //Set the results back to the vehicle.
-            security.Holdings.SetHoldings(averageHoldingsPrice, Convert.ToInt32(quantityHoldings));
+            security.Holdings.SetHoldings(averageHoldingsPrice, quantityHoldings);
         }
     }
 }

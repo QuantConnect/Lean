@@ -161,9 +161,10 @@ namespace QuantConnect.Securities
         /// Added alias for RemoveOrder - 
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
-        public OrderTicket CancelOrder(int orderId)
+        /// <param name="orderTag">Tag to indicate from where this method was called</param>
+        public OrderTicket CancelOrder(int orderId, string orderTag = null)
         {
-            return RemoveOrder(orderId);
+            return RemoveOrder(orderId, orderTag);
         }
 
         /// <summary>
@@ -186,9 +187,10 @@ namespace QuantConnect.Securities
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
-        public OrderTicket RemoveOrder(int orderId)
+        /// <param name="tag">Tag request</param>
+        public OrderTicket RemoveOrder(int orderId, string tag = null)
         {
-            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, string.Empty));
+            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, tag ?? string.Empty));
         }
 
         /// <summary>
@@ -298,7 +300,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="portfolio">Our portfolio</param>
         /// <param name="order">Order we're checking</param>
-        /// <returns>True if suficient capital.</returns>
+        /// <returns>True if sufficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
             // short circuit the div 0 case
@@ -312,6 +314,35 @@ namespace QuantConnect.Securities
                 Log.Error("SecurityTransactionManager.GetSufficientCapitalForOrder(): Null order ticket for id: " + order.Id);
                 return false;
             }
+
+            if (order.Type == OrderType.OptionExercise)
+            {
+                // for option assignment and exercise orders we look into the requirements to process the underlying security transaction
+                var option = (Option.Option)security;
+                var underlying = option.Underlying;
+
+                if (option.IsAutoExercised(underlying.Close))
+                {
+                    var quantity = option.GetExerciseQuantity(order.Quantity);
+
+                    var newOrder = new LimitOrder
+                    {
+                        Id = order.Id,
+                        Time = order.Time,
+                        LimitPrice = option.StrikePrice,
+                        Symbol = underlying.Symbol,
+                        Quantity = option.Symbol.ID.OptionRight == OptionRight.Call ? quantity : -quantity
+                    };
+
+                    // we continue with this call for underlying 
+                    return GetSufficientCapitalForOrder(portfolio, newOrder);
+                }
+
+                return true;
+            }
+
+            // When order only reduces or closes a security position, capital is always sufficient
+            if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity)) return true;
 
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);

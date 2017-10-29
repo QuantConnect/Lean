@@ -3,6 +3,7 @@
 *.ko
 *.obj
 *.elf
+*.pyc
 
 # Visual Studio Project Items:
 *.suo
@@ -252,3 +253,6 @@ Charts/
 # NCrunch files
 *.ncrunchsolution
 *.ncrunchproject
+
+# QuantConnect plugin files
+QuantConnectProjects.xml

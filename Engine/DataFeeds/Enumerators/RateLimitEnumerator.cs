@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -26,22 +25,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// an <see cref="ITimeProvider"/> instance and calls to the underlying enumerator are limited
     /// to a minimum time between each call.
     /// </summary>
-    public class RateLimitEnumerator : IEnumerator<BaseData>
+    public class RateLimitEnumerator<T> : IEnumerator<T>
     {
-        private BaseData _current;
+        private T _current;
         private DateTime _lastCallTime;
 
         private readonly ITimeProvider _timeProvider;
-        private readonly IEnumerator<BaseData> _enumerator;
+        private readonly IEnumerator<T> _enumerator;
         private readonly TimeSpan _minimumTimeBetweenCalls;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RateLimitEnumerator"/> class
+        /// Initializes a new instance of the <see cref="RateLimitEnumerator{T}"/> class
         /// </summary>
         /// <param name="enumerator">The underlying enumerator to place rate limits on</param>
         /// <param name="timeProvider">Time provider used for determing the time between calls</param>
         /// <param name="minimumTimeBetweenCalls">The minimum time allowed between calls to the underlying enumerator</param>
-        public RateLimitEnumerator(IEnumerator<BaseData> enumerator, ITimeProvider timeProvider, TimeSpan minimumTimeBetweenCalls)
+        public RateLimitEnumerator(IEnumerator<T> enumerator, ITimeProvider timeProvider, TimeSpan minimumTimeBetweenCalls)
         {
             _enumerator = enumerator;
             _timeProvider = timeProvider;
@@ -68,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (!_enumerator.MoveNext())
                 {
                     // our underlying is finished
-                    _current = null;
+                    _current = default(T);
                     return false;
                 }
 
@@ -79,7 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             else
             {
                 // we've been rate limitted
-                _current = null;
+                _current = default(T);
             }
 
             return true;
@@ -100,7 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseData Current
+        public T Current
         {
             get { return _current; }
         }

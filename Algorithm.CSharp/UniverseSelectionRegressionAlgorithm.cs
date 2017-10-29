@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,15 +19,17 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// Universe Selection regression algorithm simulates an edge case. In one week, Google listed two new symbols, delisted one of them and changed tickers.
     /// </summary>
+    /// <meta name="tag" content="regression test" />
     public class UniverseSelectionRegressionAlgorithm : QCAlgorithm
     {
-        private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>(); 
+        private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>();
         private SecurityChanges _changes;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -53,6 +55,15 @@ namespace QuantConnect.Algorithm.CSharp
                        let sym = c.Symbol.Value
                        where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
                        select c.Symbol;
+
+                // Before March 28th 2014:
+                // - Only GOOG  T1AZ164W5VTX existed
+                // On March 28th 2014
+                // - GOOAV VP83T1ZUHROL and GOOCV VP83T1ZUHROL are listed
+                // On April 02nd 2014
+                // - GOOAV VP83T1ZUHROL is delisted
+                // - GOOG  T1AZ164W5VTX becomes GOOGL
+                // - GOOCV VP83T1ZUHROL becomes GOOG
             });
         }
 
@@ -72,22 +83,16 @@ namespace QuantConnect.Algorithm.CSharp
                 _delistedSymbols.Add(kvp.Key);
             }
 
-            if (Time.Date == new DateTime(2014, 04, 07))
-            {
-                Liquidate();
-                return;
-            }
-
             if (_changes != null && _changes.AddedSecurities.All(x => data.Bars.ContainsKey(x.Symbol)))
             {
                 foreach (var security in _changes.AddedSecurities)
                 {
-                    Console.WriteLine(Time + ": Added Security: " + security.Symbol);
+                    Log(Time + ": Added Security: " + security.Symbol.ID);
                     MarketOnOpenOrder(security.Symbol, 100);
                 }
                 foreach (var security in _changes.RemovedSecurities)
                 {
-                    Console.WriteLine(Time + ": Removed Security: " + security.Symbol);
+                    Log(Time + ": Removed Security: " + security.Symbol.ID);
                     if (!_delistedSymbols.Contains(security.Symbol))
                     {
                         MarketOnOpenOrder(security.Symbol, -100);
@@ -96,8 +101,6 @@ namespace QuantConnect.Algorithm.CSharp
                 _changes = null;
             }
         }
-
-        #region Overrides of QCAlgorithm
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
@@ -108,14 +111,34 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Submitted)
             {
-                Console.WriteLine(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
+                Log(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
             if (orderEvent.Status.IsFill())
             {
-                Console.WriteLine(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
+                Log(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
         }
 
-        #endregion
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var security in Portfolio.Securities.Values.Where(x => x.Invested))
+            {
+                // At the end, we should hold 100 shares of:
+                // - SPY                (bought on March, 25th 2014),
+                // - GOOG  T1AZ164W5VTX (bought on March, 26th 2014),
+                // - GOOCV VP83T1ZUHROL (bought on March, 28th 2014).
+                AssertQuantity(security, 100);
+            }
+        }
+
+        private void AssertQuantity(Security security, int expected)
+        {
+            var actual = security.Holdings.Quantity;
+            if (actual != expected)
+            {
+                var symbol = security.Symbol;
+                throw new Exception(string.Format("{0}({1}) expected {2}, but received {3}.", symbol, symbol.ID, expected, actual));
+            }
+        }
     }
 }

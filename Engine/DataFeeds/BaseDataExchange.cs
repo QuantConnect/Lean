@@ -60,7 +60,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="BaseDataExchange"/>
         /// </summary>
         /// <param name="name">A name for this exchange</param>
-        /// <param name="enumerators">The enumerators to fanout</param>
         public BaseDataExchange(string name)
         {
             _name = name;
@@ -134,6 +133,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataHandler = new DataHandler(symbol);
             dataHandler.DataEmitted += (sender, args) => handler(args);
             SetDataHandler(dataHandler);
+        }
+
+        /// <summary>
+        /// Adds the specified hander function to handle data for the handler's symbol 
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be handled</param>
+        /// <param name="handler">The handler to use when this symbol's data is encountered</param>
+        /// <returns>An identifier that can be used to remove this handler</returns>
+        public void AddDataHandler(Symbol symbol, Action<BaseData> handler)
+        {
+            _dataHandlers.AddOrUpdate(symbol,
+                x =>
+                {
+                    var dataHandler = new DataHandler(symbol);
+                    dataHandler.DataEmitted += (sender, args) => handler(args);
+                    return dataHandler;
+                },
+                (x, existingHandler) => 
+                {
+                    existingHandler.DataEmitted += (sender, args) => handler(args);
+                    return existingHandler;
+                });
         }
 
         /// <summary>

@@ -15,16 +15,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using Newtonsoft.Json;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary;
 using QuantConnect.Brokerages.Oanda;
+using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.ToolBox.OandaDownloader
 {
@@ -33,16 +29,16 @@ namespace QuantConnect.ToolBox.OandaDownloader
     /// </summary>
     public class OandaDataDownloader : IDataDownloader
     {
+        private readonly OandaBrokerage _brokerage;
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
-        private const int BarsPerRequest = 5000;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
         /// </summary>
-        public OandaDataDownloader(string accessToken, int accountId)
+        public OandaDataDownloader(string accessToken, string accountId)
         {
             // Set Oanda account credentials
-            Credentials.SetCredentials(EEnvironment.Practice, accessToken, accountId);
+            _brokerage = new OandaBrokerage(null, null, Environment.Practice, accessToken, accountId);
         }
 
         /// <summary>
@@ -87,21 +83,18 @@ namespace QuantConnect.ToolBox.OandaDownloader
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
 
-            var barsTotalInPeriod = new List<Candle>();
-            var barsToSave = new List<Candle>();
+            var barsTotalInPeriod = new List<QuoteBar>();
+            var barsToSave = new List<QuoteBar>();
 
             // set the starting date/time
-            DateTime date = startUtc;
-            DateTime startDateTime = date;
+            var date = startUtc;
+            var startDateTime = date;
 
             // loop until last date
             while (startDateTime <= endUtc.AddDays(1))
             {
-                string start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-
                 // request blocks of 5-second bars with a starting date/time
-                var oandaSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
-                var bars = DownloadBars(oandaSymbol, start, BarsPerRequest);
+                var bars = _brokerage.DownloadQuoteBars(symbol, startDateTime, endUtc.AddDays(1), Resolution.Second, DateTimeZone.Utc).ToList();
                 if (bars.Count == 0)
                     break;
 
@@ -147,7 +140,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 }
 
                 // calculate the next request datetime (next 5-sec bar time)
-                startDateTime = GetDateTimeFromString(bars[bars.Count - 1].time).AddSeconds(5);
+                startDateTime = bars[bars.Count - 1].Time.AddSeconds(5);
             }
 
             if (barsToSave.Count > 0)
@@ -176,21 +169,31 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <param name="bars"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateBars(Symbol symbol, List<Candle> bars, TimeSpan resolution)
+        internal IEnumerable<QuoteBar> AggregateBars(Symbol symbol, IEnumerable<QuoteBar> bars, TimeSpan resolution)
         {
             return
                 (from b in bars
-                 group b by GetDateTimeFromString(b.time).RoundDown(resolution)
+                 group b by b.Time.RoundDown(resolution)
                      into g
-                     select new TradeBar
+                 select new QuoteBar
+                 {
+                     Symbol = symbol,
+                     Time = g.Key,
+                     Bid = new Bar
                      {
-                         Symbol = symbol,
-                         Time = g.Key,
-                         Open = Convert.ToDecimal(g.First().openMid),
-                         High = Convert.ToDecimal(g.Max(b => b.highMid)),
-                         Low = Convert.ToDecimal(g.Min(b => b.lowMid)),
-                         Close = Convert.ToDecimal(g.Last().closeMid)
-                     });
+                         Open = g.First().Bid.Open,
+                         High = g.Max(b => b.Bid.High),
+                         Low = g.Min(b => b.Bid.Low),
+                         Close = g.Last().Bid.Close
+                     },
+                     Ask = new Bar
+                     {
+                         Open = g.First().Ask.Open,
+                         High = g.Max(b => b.Ask.High),
+                         Low = g.Min(b => b.Ask.Low),
+                         Close = g.Last().Ask.Close
+                     }
+                 });
         }
 
         /// <summary>
@@ -198,129 +201,21 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="bars"></param>
         /// <returns></returns>
-        private static SortedDictionary<DateTime, List<Candle>> GroupBarsByDate(List<Candle> bars)
+        private static SortedDictionary<DateTime, List<QuoteBar>> GroupBarsByDate(IEnumerable<QuoteBar> bars)
         {
-            var groupedBars = new SortedDictionary<DateTime, List<Candle>>();
+            var groupedBars = new SortedDictionary<DateTime, List<QuoteBar>>();
 
             foreach (var bar in bars)
             {
-                var date = GetDateTimeFromString(bar.time).Date;
+                var date = bar.Time.Date;
 
                 if (!groupedBars.ContainsKey(date))
-                    groupedBars[date] = new List<Candle>();
+                    groupedBars[date] = new List<QuoteBar>();
 
                 groupedBars[date].Add(bar);
             }
 
             return groupedBars;
         }
-
-        /// <summary>
-        /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
-        /// </summary>
-        /// <param name="time"></param>
-        private static DateTime GetDateTimeFromString(string time)
-        {
-            return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.000000'Z'", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Downloads a block of 5-second bars from a starting datetime
-        /// </summary>
-        /// <param name="oandaSymbol"></param>
-        /// <param name="start"></param>
-        /// <param name="barsPerRequest"></param>
-        /// <returns></returns>
-        private static List<Candle> DownloadBars(string oandaSymbol, string start, int barsPerRequest)
-        {
-            var request = new CandlesRequest
-            {
-                instrument = oandaSymbol,
-                granularity = EGranularity.S5,
-                candleFormat = ECandleFormat.midpoint,
-                count = barsPerRequest,
-                start = Uri.EscapeDataString(start)
-            };
-            return GetCandles(request);
-        }
-
-        /// <summary>
-        /// More detailed request to retrieve candles
-        /// </summary>
-        /// <param name="request">the request data to use when retrieving the candles</param>
-        /// <returns>List of Candles received (or empty list)</returns>
-        public static List<Candle> GetCandles(CandlesRequest request)
-        {
-            string requestString = Credentials.GetDefaultCredentials().GetServer(EServer.Rates) + request.GetRequestString();
-
-            CandlesResponse candlesResponse = MakeRequest<CandlesResponse>(requestString);
-            List<Candle> candles = new List<Candle>();
-            if (candlesResponse != null)
-            {
-                candles.AddRange(candlesResponse.candles);
-            }
-            return candles;
-        }
-
-        /// <summary>
-        /// Primary (internal) request handler
-        /// </summary>
-        /// <typeparam name="T">The response type</typeparam>
-        /// <param name="requestString">the request to make</param>
-        /// <param name="method">method for the request (defaults to GET)</param>
-        /// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
-        /// <returns>response via type T</returns>
-        private static T MakeRequest<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
-        {
-            if (requestParams != null && requestParams.Count > 0)
-            {
-                var parameters = CreateParamString(requestParams);
-                requestString = requestString + "?" + parameters;
-            }
-            HttpWebRequest request = WebRequest.CreateHttp(requestString);
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + Credentials.GetDefaultCredentials().AccessToken;
-            request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
-            request.Method = method;
-
-            try
-            {
-                using (WebResponse response = request.GetResponse())
-                {
-                    var stream = GetResponseStream(response);
-                    var reader = new StreamReader(stream);
-                    var result = reader.ReadToEnd();
-                    return JsonConvert.DeserializeObject<T>(result);
-                }
-            }
-            catch (WebException ex)
-            {
-                var stream = GetResponseStream(ex.Response);
-                var reader = new StreamReader(stream);
-                var result = reader.ReadToEnd();
-                throw new Exception(result);
-            }
-        }
-
-        private static Stream GetResponseStream(WebResponse response)
-        {
-            var stream = response.GetResponseStream();
-            if (response.Headers["Content-Encoding"] == "gzip")
-            {	// if we received a gzipped response, handle that
-                stream = new GZipStream(stream, CompressionMode.Decompress);
-            }
-            return stream;
-        }
-
-        /// <summary>
-        /// Helper function to create the parameter string out of a dictionary of parameters
-        /// </summary>
-        /// <param name="requestParams">the parameters to convert</param>
-        /// <returns>string containing all the parameters for use in requests</returns>
-        private static string CreateParamString(Dictionary<string, string> requestParams)
-        {
-            return string.Join(",", requestParams.Select(x => x.Key + "=" + x.Value).Select(WebUtility.UrlEncode));
-        }
-
-
     }
 }

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,7 +84,7 @@ namespace QuantConnect.Securities
         public void Update(BaseData data)
         {
             if (_isBaseCurrency) return;
-            
+
             var rate = data.Value;
             if (_invertRealTimePrice)
             {
@@ -141,15 +141,11 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            if (subscriptions.Count == 0)
-            {
-                throw new InvalidOperationException("Unable to add cash when no subscriptions are present. Please add subscriptions in the Initialize() method.");
-            }
-
             // we require a subscription that converts this into the base currency
             string normal = Symbol + CashBook.AccountCurrency;
             string invert = CashBook.AccountCurrency + Symbol;
-            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd))
+            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd ||
+            config.SecurityType == SecurityType.Crypto))
             {
                 if (config.Symbol.Value == normal)
                 {
@@ -164,16 +160,25 @@ namespace QuantConnect.Securities
                 }
             }
             // if we've made it here we didn't find a subscription, so we'll need to add one
-            var currencyPairs = Currencies.CurrencyPairs.Select(x =>
+
+            // Create a SecurityType to Market mapping with the markets from SecurityManager members
+            var markets = securities.Keys.GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
+            if (markets.ContainsKey(SecurityType.Cfd) && !markets.ContainsKey(SecurityType.Forex))
             {
-                // allow XAU or XAG to be used as quote currencies, but pairs including them are CFDs
-                var securityType = Symbol.StartsWith("X") ? SecurityType.Cfd : SecurityType.Forex;
-                var market = marketMap[securityType];
-                return QuantConnect.Symbol.Create(x, securityType, market);
-            });
+                markets.Add(SecurityType.Forex, markets[SecurityType.Cfd]);
+            }
+            if (markets.ContainsKey(SecurityType.Forex) && !markets.ContainsKey(SecurityType.Cfd))
+            {
+                markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
+            }
+
+            var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
+                .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
+                .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
+
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
-            var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
-            foreach (var symbol in currencyPairs)
+            var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (QuoteBar);
+            foreach (var symbol in potentials)
             {
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
@@ -188,7 +193,7 @@ namespace QuantConnect.Securities
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+                    var config = subscriptions.Add(objectType, TickType.Quote, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
                     SecuritySymbol = config.Symbol;
 
                     Security security;
@@ -196,9 +201,13 @@ namespace QuantConnect.Securities
                     {
                         security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
                     }
+                    else if (securityType == SecurityType.Crypto)
+                    {
+                        security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+                    }
                     else
                     {
-                        security = new Forex.Forex(exchangeHours, this, config, symbolProperties);
+                        security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
                     }
                     securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
@@ -219,13 +228,24 @@ namespace QuantConnect.Securities
             // round the conversion rate for output
             decimal rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return string.Format("{0}: {1,15} @ ${2,10} = {3}{4}", 
-                Symbol, 
-                Amount.ToString("0.00"), 
-                rate.ToString("0.00####"), 
-                Currencies.CurrencySymbols[Symbol], 
+            return string.Format("{0}: {1,15} @ ${2,10} = {3}{4}",
+                Symbol,
+                Amount.ToString("0.00"),
+                rate.ToString("0.00####"),
+                Currencies.GetCurrencySymbol(Symbol),
                 Math.Round(ValueInAccountCurrency, 2)
                 );
+        }
+
+        private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)
+        {
+            string market;
+            if (!markets.TryGetValue(securityType, out market))
+            {
+                market = marketMap[securityType];
+            }
+
+            return QuantConnect.Symbol.Create(crypto, securityType, market);
         }
     }
 }

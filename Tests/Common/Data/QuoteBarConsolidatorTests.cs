@@ -41,7 +41,8 @@ namespace QuantConnect.Tests.Common.Data
                 Bid = new Bar(1, 2, 0.75m, 1.25m),
                 LastBidSize = 3,
                 Ask = null,
-                LastAskSize = 0
+                LastAskSize = 0,
+                Value = 1
             };
             creator.Update(bar1);
             Assert.IsNull(quoteBar);
@@ -53,7 +54,8 @@ namespace QuantConnect.Tests.Common.Data
                 Bid = new Bar(1.1m, 2.2m, 0.9m, 2.1m),
                 LastBidSize = 3,
                 Ask = new Bar(2.2m, 4.4m, 3.3m, 3.3m),
-                LastAskSize = 0
+                LastAskSize = 0,
+                Value = 1
             };
             creator.Update(bar2);
             Assert.IsNull(quoteBar);
@@ -65,7 +67,8 @@ namespace QuantConnect.Tests.Common.Data
                 Bid = new Bar(1, 2, 0.5m, 1.75m),
                 LastBidSize = 3,
                 Ask = null,
-                LastAskSize = 0
+                LastAskSize = 0,
+                Value = 1
             };
             creator.Update(bar3);
             Assert.IsNull(quoteBar);
@@ -77,7 +80,8 @@ namespace QuantConnect.Tests.Common.Data
                 Bid = null,
                 LastBidSize = 0,
                 Ask = new Bar(1, 7, 0.5m, 4.4m),
-                LastAskSize = 4
+                LastAskSize = 4,
+                Value = 1
             };
             creator.Update(bar4);
             Assert.IsNotNull(quoteBar);
@@ -92,6 +96,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar4.Ask.Close, quoteBar.Ask.Close);
             Assert.AreEqual(bar3.LastBidSize, quoteBar.LastBidSize);
             Assert.AreEqual(bar4.LastAskSize, quoteBar.LastAskSize);
+            Assert.AreEqual(bar1.Value, quoteBar.Value);
         }
     }
 }

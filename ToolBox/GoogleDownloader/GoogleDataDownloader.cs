@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.GoogleDownloader
 {
@@ -28,37 +30,108 @@ namespace QuantConnect.ToolBox.GoogleDownloader
     public class GoogleDataDownloader : IDataDownloader
     {
         // q = SYMBOL
+        // startdate = Mon+D%2C+YYYY, e.g. Jan+1%2C+2005
+        // enddate = Mon+D%2C+YYYY, e.g. Sep+29%2C+2016
+        private const string UrlPrototypeDaily = @"https://finance.google.com/finance/historical?q={0}&startdate={1}&enddate={2}&output=csv";
+        private enum ConvertMonths
+        {
+            Jan = 1,
+            Feb = 2,
+            Mar = 3,
+            Apr = 4,
+            May = 5,
+            Jun = 6,
+            Jul = 7,
+            Aug = 8,
+            Sep = 9,
+            Oct = 10,
+            Nov = 11,
+            Dec = 12
+        };
+
+        private IEnumerable<BaseData> GetDaily(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            var startdate = ((ConvertMonths)startUtc.Month).ToString()
+                + @"+" + startUtc.Day.ToString()
+                + @"%2C+" + startUtc.Year.ToString();
+            var enddate = ((ConvertMonths)endUtc.Month).ToString()
+                + @"+" + endUtc.Day.ToString()
+                + @"%2C+" + endUtc.Year.ToString();
+
+            // Create the Google formatted URL.
+            var url = string.Format(UrlPrototypeDaily, symbol.Value, startdate, enddate);
+
+            // Download the data from Google.
+            string[] lines;
+            using (var client = new WebClient())
+            {
+                var data = client.DownloadString(url);
+                lines = data.Split('\n');
+            }
+
+            // first line is header
+            var currentLine = 1;
+
+            while (currentLine < lines.Length - 1)
+            {
+                // Format: Date,Open,High,Low,Close,Volume
+                var columns = lines[currentLine].Split(',');
+
+                // date format: DD-Mon-YY, e.g. 27-Sep-16
+                var DMY = columns[0].Split('-');
+
+                // date = 20160927
+                var day = DMY[0].ToInt32();
+                var month = (int)Enum.Parse(typeof(ConvertMonths), DMY[1]);
+                var year = (DMY[2].ToInt32() > 70) ? 1900 + DMY[2].ToInt32() : 2000 + DMY[2].ToInt32();
+                var time = new DateTime(year, month, day, 0, 0, 0);
+
+                // occasionally, the columns will have a '-' instead of a proper value
+                List<Decimal?> ohlc = new List<Decimal?>()
+                {
+                    columns[1] != "-" ? (Decimal?)columns[1].ToDecimal() : null,
+                    columns[2] != "-" ? (Decimal?)columns[2].ToDecimal() : null,
+                    columns[3] != "-" ? (Decimal?)columns[3].ToDecimal() : null,
+                    columns[4] != "-" ? (Decimal?)columns[4].ToDecimal() : null
+                };
+
+                if (ohlc.Where(val => val == null).Count() > 0)
+                {
+                    // let's try hard to fix any issues as good as we can
+                    // this code assumes that there is at least 1 good value
+                    if (ohlc[1] == null) ohlc[1] = ohlc.Where(val => val != null).Max();
+                    if (ohlc[2] == null) ohlc[2] = ohlc.Where(val => val != null).Min();
+                    if (ohlc[0] == null) ohlc[0] = ohlc.Where(val => val != null).Average();
+                    if (ohlc[3] == null) ohlc[3] = ohlc.Where(val => val != null).Average();
+
+                    Log.Error(string.Format("Corrupt bar on {0}: {1},{2},{3},{4}. Saved as {5},{6},{7},{8}.",
+                        columns[0], columns[1], columns[2], columns[3], columns[4],
+                        ohlc[0], ohlc[1], ohlc[2], ohlc[3]));
+                }
+
+                long volume = columns[5].ToInt64();
+
+                yield return new TradeBar(time, symbol, (Decimal)ohlc[0], (Decimal)ohlc[1], (Decimal)ohlc[2], (Decimal)ohlc[3], volume, resolution.ToTimeSpan());
+
+                currentLine++;
+            }
+        }
+
+        // q = SYMBOL
         // i = resolution in seconds
         // p = period in days
         // ts = start time
         // Strangely Google forces CHLO format instead of normal OHLC.
-        private const string UrlPrototype = @"http://www.google.com/finance/getprices?q={0}&i={1}&p={2}d&f=d,c,h,l,o,v&ts={3}";
+        private const string UrlPrototypeMinuteOrHour = @"https://finance.google.com/finance/getprices?q={0}&i={1}&p={2}d&f=d,c,h,l,o,v&ts={3}";
 
-        /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
-        /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        private IEnumerable<BaseData> GetMinuteOrHour(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (resolution != Resolution.Minute && resolution != Resolution.Hour)
-                throw new NotSupportedException("Resolution not available: " + resolution);
-
-            if (symbol.ID.SecurityType != SecurityType.Equity)
-                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
-
-            if (endUtc < startUtc)
-                throw new ArgumentException("The end date must be greater or equal than the start date.");
-
             var numberOfDays = (int)(endUtc - startUtc).TotalDays;
             var resolutionSeconds = (int)resolution.ToTimeSpan().TotalSeconds;
             var endUnixTime = ToUnixTime(endUtc);
 
             // Create the Google formatted URL.
-            var url = string.Format(UrlPrototype, symbol.Value, resolutionSeconds, numberOfDays, endUnixTime);
+            var url = string.Format(UrlPrototypeMinuteOrHour, symbol.Value, resolutionSeconds, numberOfDays, endUnixTime);
 
             // Download the data from Google.
             string[] lines;
@@ -134,5 +207,34 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             return epoch.AddSeconds(unixTime);
         }
 
+        /// <summary>
+        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// </summary>
+        /// <param name="symbol">Symbol for the data we're looking for.</param>
+        /// <param name="resolution">Resolution of the data request</param>
+        /// <param name="startUtc">Start time of the data in UTC</param>
+        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <returns>Enumerable of base data for this symbol</returns>
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            if (symbol.ID.SecurityType != SecurityType.Equity)
+                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
+
+            if (endUtc < startUtc)
+                throw new ArgumentException("The end date must be greater or equal than the start date.");
+
+            switch (resolution)
+            {
+                case Resolution.Minute:
+                case Resolution.Hour:
+                    return GetMinuteOrHour(symbol, resolution, startUtc, endUtc);
+
+                case Resolution.Daily:
+                    return GetDaily(symbol, resolution, startUtc, endUtc);
+
+                default:
+                    throw new NotSupportedException("Resolution not available: " + resolution);
+            }
+        }
     }
 }

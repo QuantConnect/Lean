@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -387,21 +389,30 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(current, open, high, low, close);
             }
 
+            // Only fill with data types we are subscribed to
+            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
+
+            // Tick
             var tick = asset.Cache.GetData<Tick>();
-            if (tick != null)
+            if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
             {
-                if (direction == OrderDirection.Sell && tick.BidPrice != 0)
+                var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
+                if (price != 0m)
                 {
-                    current = tick.BidPrice;
+                    return new Prices(price, 0, 0, 0, 0);
                 }
-                else if (direction == OrderDirection.Buy && tick.AskPrice != 0)
+
+                // If the ask/bid spreads are not available for ticks, try the price
+                price = tick.Price;
+                if (price != 0m)
                 {
-                    current = tick.AskPrice;
+                    return new Prices(price, 0, 0, 0, 0);
                 }
             }
 
+            // Quote
             var quoteBar = asset.Cache.GetData<QuoteBar>();
-            if (quoteBar != null)
+            if (subscriptionTypes.Contains(typeof(QuoteBar)) && quoteBar != null)
             {
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
@@ -410,17 +421,11 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
+            // Trade
             var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (tradeBar != null)
+            if (subscriptionTypes.Contains(typeof(TradeBar)) && tradeBar != null)
             {
                 return new Prices(tradeBar);
-            }
-
-            var lastData = asset.GetLastData();
-            var lastBar = lastData as IBar;
-            if (lastBar != null)
-            {
-                return new Prices(lastBar);
             }
 
             return new Prices(current, open, high, low, close);

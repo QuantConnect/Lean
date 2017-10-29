@@ -95,7 +95,7 @@ namespace QuantConnect.Indicators
                 }
                 else
                 {
-                    return _multipliedDiffWindow.IsReady;
+                    return _multipliedDiffWindow.Samples > _multipliedDiffWindow.Size;
                 }
             }
         }

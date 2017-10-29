@@ -4,11 +4,11 @@
 # IB Controller Sourced-Modified from https://github.com/ib-controller/ib-controller
 
 IBC_PATH=$1   #/Lean/Interactive/IBController
-TWS_PATH=$2   #/Lean/Interactive/IBJts 
+TWS_PATH=$2   #/Lean/Interactive/IBJts
 TWSUSERID=$3
 TWSPASSWORD=$4
-TWS_MAJOR_VRSN=952
-TRADING_MODE=
+TWS_MAJOR_VRSN=968
+TRADING_MODE=$6
 IBC_INI=$IBC_PATH/IBController.ini
 LOG_PATH=$IBC_PATH/Logs
 

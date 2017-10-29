@@ -130,43 +130,17 @@ namespace QuantConnect.Packets
     /// <summary>
     /// Live results object class for packaging live result data.
     /// </summary>
-    public class LiveResult
+    public class LiveResult : Result
     {
-        /// <summary>
-        /// Charts updates for the live algorithm since the last result packet
-        /// </summary>
-        public Dictionary<string, Chart> Charts = new Dictionary<string, Chart>();
-
         /// <summary>
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
-        public Dictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
-        
-        /// <summary>
-        /// Order updates since the last result packet
-        /// </summary>
-        public Dictionary<int, Order> Orders = new Dictionary<int, Order>();
-        
-        /// <summary>
-        /// Trade profit and loss information since the last algorithm result packet
-        /// </summary>
-        public Dictionary<DateTime, decimal> ProfitLoss = new Dictionary<DateTime, decimal>();
-
-        /// <summary>
-        /// Statistics information sent during the algorithm operations.
-        /// </summary>
-        /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
-        public Dictionary<string, string> Statistics = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
-        /// </summary>
-        public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
+        public IDictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
 
         /// <summary>
         /// Server status information, including CPU/RAM usage, ect...
         /// </summary>
-        public Dictionary<string, string> ServerStatistics = new Dictionary<string, string>();
+        public IDictionary<string, string> ServerStatistics = new Dictionary<string, string>();
 
         /// <summary>
         /// Default Constructor
@@ -177,7 +151,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(Dictionary<string, Chart> charts, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> runtime, Dictionary<string, string> serverStatistics = null)
+        public LiveResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, Holding> holdings, IDictionary<string, string> statistics, IDictionary<string, string> runtime, IDictionary<string, string> serverStatistics = null)
         {
             Charts = charts;
             Orders = orders;

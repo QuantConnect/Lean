@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -29,13 +30,15 @@ namespace QuantConnect.Data.Custom
     /// </summary>
     /// <remarks>
     /// Data sourced by Thomson Reuters
-    /// DailyFX provides traders with an easy to use and customizable real-time calendar that updates automatically during 
-    /// announcements.Keep track of significant events that traders care about.As soon as event data is released, the DailyFX 
+    /// DailyFX provides traders with an easy to use and customizable real-time calendar that updates automatically during
+    /// announcements.Keep track of significant events that traders care about.As soon as event data is released, the DailyFX
     /// calendar automatically updates to provide traders with instantaneous information that they can use to formulate their trading decisions.
     /// </remarks>
     public class DailyFx : BaseData
     {
         JsonSerializerSettings _jsonSerializerSettings;
+        private string _previousContent;
+        private readonly Dictionary<string, DailyFx> _previous = new Dictionary<string, DailyFx>();
 
         /// <summary>
         /// Title of the event.
@@ -47,7 +50,7 @@ namespace QuantConnect.Data.Custom
         /// Date the event was displayed on DailyFX
         /// </summary>
         [JsonProperty(PropertyName = "displayDate")]
-        public DateTimeOffset DisplayDate; 
+        public DateTimeOffset DisplayDate;
 
         /// <summary>
         /// Time of the day the event was displayed.
@@ -57,6 +60,14 @@ namespace QuantConnect.Data.Custom
         /// </remarks>
         [JsonProperty(PropertyName = "displayTime")]
         public DateTimeOffset DisplayTime;
+
+        /// <summary>
+        /// Date/time of the event
+        /// </summary>
+        public DateTimeOffset EventDateTime
+        {
+            get { return DisplayDate.Date.Add(DisplayTime.TimeOfDay); }
+        }
 
         /// <summary>
         /// Importance assignment from FxDaily API.
@@ -127,7 +138,7 @@ namespace QuantConnect.Data.Custom
         }
 
         /// <summary>
-        /// Get the source URL for this date. 
+        /// Get the source URL for this date.
         /// </summary>
         /// <remarks>
         ///     FXCM API allows up to 3mo blocks at a time, so we'll return the same URL for each
@@ -147,7 +158,7 @@ namespace QuantConnect.Data.Custom
             {
                 url += GetQuarter(date);
             }
-            
+
             return new SubscriptionDataSource(url, SubscriptionTransportMedium.Rest, FileFormat.Collection);
         }
 
@@ -161,21 +172,59 @@ namespace QuantConnect.Data.Custom
         /// <returns></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
+            if (_previousContent == content)
+            {
+                return null;
+            }
+
+            _previousContent = content;
+
+            // clean old entries from memory
+            var clearingDate = date.Date.AddDays(-2);
+            var oldEntries = _previous.Where(kvp => kvp.Value.DisplayDate.UtcDateTime.Date < clearingDate).ToList();
+            oldEntries.ForEach(oe => _previous.Remove(oe.Key));
+
             var dailyfxList = JsonConvert.DeserializeObject<List<DailyFx>>(content, _jsonSerializerSettings);
 
+            var timestamp = DateTime.UtcNow;
+            var updated = new List<DailyFx>();
             foreach (var dailyfx in dailyfxList)
             {
-                // Custom data format without settings in market hours are assumed UTC.
-                dailyfx.Time = dailyfx.DisplayDate.Date.AddHours(dailyfx.DisplayTime.TimeOfDay.TotalHours);
+                DailyFx previous;
+                var key = MakeKey(dailyfx);
+                if (_previous.TryGetValue(key, out previous))
+                {
+                    // if the event hasn't been updated then don't emit it
+                    if (!dailyfx.HasChangedSince(previous))
+                    {
+                        continue;
+                    }
+                }
 
-                // Assign a value to this event: 
+                updated.Add(dailyfx);
+                _previous[key] = dailyfx;
+
+                dailyfx.Symbol = config.Symbol;
+
+                if (isLiveMode)
+                {
+                    // Live mode set the time to now, this update just happened
+                    dailyfx.Time = timestamp;
+                }
+                else
+                {
+                    // Custom data format without settings in market hours are assumed UTC.
+                    dailyfx.Time = dailyfx.DisplayDate.Date.AddHours(dailyfx.DisplayTime.TimeOfDay.TotalHours);
+                }
+
+                // Assign a value to this event:
                 // Fairly meaningless between unrelated events, but meaningful with the same event over time.
                 dailyfx.Value = 0;
                 try
                 {
-                    if (!string.IsNullOrEmpty(Actual))
+                    if (!string.IsNullOrEmpty(dailyfx.Actual))
                     {
-                        dailyfx.Value = Convert.ToDecimal(RemoveSpecialCharacters(Actual));
+                        dailyfx.Value = Convert.ToDecimal(RemoveSpecialCharacters(dailyfx.Actual));
                     }
                 }
                 catch
@@ -183,7 +232,7 @@ namespace QuantConnect.Data.Custom
                 }
             }
 
-            return new BaseDataCollection(date, config.Symbol, dailyfxList);
+            return new BaseDataCollection(timestamp, config.Symbol, updated);
         }
 
         /// <summary>
@@ -207,7 +256,7 @@ namespace QuantConnect.Data.Custom
             if (date.Month < 4)
             {
                 start += "0101";
-                end += "03312359"; 
+                end += "03312359";
             }
             else if (date.Month < 7)
             {
@@ -233,7 +282,26 @@ namespace QuantConnect.Data.Custom
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Format("DailyFx [{0} {1} {2} {3} {4}]", Time.ToString("u"), Title, Currency, Importance, Meaning);
+            return $"DailyFx: {EndTime} [{EventDateTime.ToString("u")} {Title} {Currency} {Importance} {Meaning} {Actual}]";
+        }
+
+        /// <summary>
+        /// Determines whether or not the values of this event have changed since the previous
+        /// </summary>
+        public bool HasChangedSince(DailyFx previous)
+        {
+            return Importance != previous.Importance
+                || Meaning != previous.Meaning
+                || Actual != previous.Actual
+                || Forecast != previous.Forecast
+                || Previous != previous.Previous
+                || Commentary != previous.Commentary
+                || Value != previous.Value;
+        }
+
+        private static string MakeKey(DailyFx data)
+        {
+            return data.EventDateTime + data.Title;
         }
     }
 

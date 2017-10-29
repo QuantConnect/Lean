@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,13 +18,13 @@ using System.Collections.Concurrent;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Base class caching caching spot for security data and any other temporary properties.
     /// </summary>
     /// <remarks>
-    /// This class is virtually unused and will soon be made obsolete. 
+    /// This class is virtually unused and will soon be made obsolete.
     /// This comment made in a remark to prevent obsolete errors in all users algorithms
     /// </remarks>
     public class SecurityCache
@@ -72,23 +72,35 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the most recent bid size submitted to this cache
         /// </summary>
-        public long BidSize { get; private set; }
+        public decimal BidSize { get; private set; }
 
         /// <summary>
         /// Gets the most recent ask size submitted to this cache
         /// </summary>
-        public long AskSize { get; private set; }
+        public decimal AskSize { get; private set; }
 
         /// <summary>
         /// Gets the most recent volume submitted to this cache
         /// </summary>
-        public long Volume { get; private set; }
+        public decimal Volume { get; private set; }
+
+        /// <summary>
+        /// Gets the most recent open interest submitted to this cache
+        /// </summary>
+        public long OpenInterest { get; private set; }
 
         /// <summary>
         /// Add a new market data point to the local security cache for the current market price.
         /// </summary>
         public void AddData(BaseData data)
         {
+            var openInterest = data as OpenInterest;
+            if (openInterest != null)
+            {
+                OpenInterest = (long)openInterest.Value;
+                return;
+            }
+
             _lastData = data;
             _dataByType[data.GetType()] = data;
 
@@ -102,6 +114,10 @@ namespace QuantConnect.Securities
 
                 if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
                 if (tick.AskSize != 0) AskSize = tick.AskSize;
+
+                if (tick.Quantity != 0) Volume = tick.Quantity;
+
+                return;
             }
             var bar = data as IBar;
             if (bar != null)

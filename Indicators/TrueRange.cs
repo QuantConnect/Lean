@@ -25,9 +25,9 @@ namespace QuantConnect.Indicators
     /// value2 = distance from yesterday's close to today's high.
     /// value3 = distance from yesterday's close to today's low.    
     /// </summary>
-    public class TrueRange : TradeBarIndicator
+    public class TrueRange : BarIndicator
     {
-        private TradeBar _previousInput;
+        private IBaseDataBar _previousInput;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrueRange"/> class using the specified name.
@@ -51,7 +51,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             if (!IsReady)
             {

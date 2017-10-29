@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
@@ -24,7 +23,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
@@ -84,7 +82,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
-            foreach (var security in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()))
+            foreach (var security in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()))
             {
                 // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
@@ -100,7 +98,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Execute the live realtime event thread montioring. 
+        /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
         public void Run()
@@ -110,24 +108,33 @@ namespace QuantConnect.Lean.Engine.RealTime
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                try
+
+                var time = DateTime.UtcNow;
+
+                // pause until the next second
+                var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
+                var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
+                Thread.Sleep(delay < 0 ? 1 : delay);
+
+                // poke each event to see if it should fire
+                foreach (var scheduledEvent in _scheduledEvents)
                 {
-                    var time = DateTime.UtcNow;
-
-                    // pause until the next second
-                    var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
-                    var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
-                    Thread.Sleep(delay < 0 ? 1 : delay);
-
-                    // poke each event to see if it should fire
-                    foreach (var scheduledEvent in _scheduledEvents)
+                    try
                     {
                         scheduledEvent.Value.Scan(time);
                     }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
+                    catch (ScheduledEventException scheduledEventException)
+                    {
+                        var errorMessage = $"LiveTradingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.ScheduledEventExceptionMessage}";
+
+                        Log.Error(errorMessage);
+
+                        _resultHandler.RuntimeError(errorMessage);
+
+                        // Errors in scheduled event should be treated as runtime error
+                        // Runtime errors should end Lean execution
+                        _algorithm.RunTimeError = new Exception(errorMessage);
+                    }
                 }
             }
 
@@ -148,8 +155,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var marketHours = _api.MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
-                Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
-                        security.Type, security.Symbol, localMarketHours));
+                Log.Trace(string.Format("LiveTradingRealTimeHandler.RefreshMarketHoursToday({0}): Market hours set: Symbol: {1} {2} ({3})",
+                        security.Type, security.Symbol, localMarketHours, security.Exchange.Hours.TimeZone));
             }
         }
 
@@ -185,6 +192,16 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             // in live mode we use current time for our time keeping
             // this method is used by backtesting to set time based on the data
+        }
+
+        /// <summary>
+        /// Scan for past events that didn't fire because there was no data at the scheduled time.
+        /// </summary>
+        /// <param name="time">Current time.</param>
+        public void ScanPastEvents(DateTime time)
+        {
+            // in live mode we use current time for our time keeping
+            // this method is used by backtesting to scan for past events based on the data
         }
 
         /// <summary>

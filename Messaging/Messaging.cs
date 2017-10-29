@@ -70,6 +70,11 @@ namespace QuantConnect.Messaging
                     Log.Trace("Debug: " + debug.Message);
                     break;
 
+                case PacketType.SystemDebug:
+                    var systemDebug = (SystemDebugPacket)packet;
+                    Log.Trace("Debug: " + systemDebug.Message);
+                    break;
+
                 case PacketType.Log:
                     var log = (LogPacket) packet;
                     Log.Trace("Log: " + log.Message);

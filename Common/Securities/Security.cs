@@ -24,8 +24,11 @@ using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
+using QuantConnect.Data.Market;
+using QuantConnect.Python;
+using Python.Runtime;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// A base vehicle properties class for providing a common interface to all assets in QuantConnect.
@@ -297,6 +300,19 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Customizable price variation model used to define the minimum price variation of this security.
+        /// By default minimum price variation is a constant find in the symbol-properties-database.
+        /// </summary>
+        /// <seealso cref="AdjustedPriceVariationModel"/>
+        /// <seealso cref="SecurityPriceVariationModel"/>
+        /// <seealso cref="EquityPriceVariationModel"/>
+        public IPriceVariationModel PriceVariationModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
         public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
@@ -308,11 +324,12 @@ namespace QuantConnect.Securities
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new SpreadSlippageModel(),
+                new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
-                new SecurityDataFilter())
+                new SecurityDataFilter(),
+                new SecurityPriceVariationModel())
         {
         }
 
@@ -328,11 +345,12 @@ namespace QuantConnect.Securities
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new SpreadSlippageModel(),
+                new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
-                new SecurityDataFilter()
+                new SecurityDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
         }
@@ -352,7 +370,8 @@ namespace QuantConnect.Securities
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
-            ISecurityDataFilter dataFilter
+            ISecurityDataFilter dataFilter,
+            IPriceVariationModel priceVariationModel
             )
         {
 
@@ -374,6 +393,7 @@ namespace QuantConnect.Securities
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
+            PriceVariationModel = priceVariationModel;
             PortfolioModel = portfolioModel;
             MarginModel = marginModel;
             FillModel = fillModel;
@@ -400,7 +420,8 @@ namespace QuantConnect.Securities
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
-            ISecurityDataFilter dataFilter
+            ISecurityDataFilter dataFilter,
+            IPriceVariationModel priceVariationModel
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -414,7 +435,8 @@ namespace QuantConnect.Securities
                 settlementModel,
                 volatilityModel,
                 marginModel,
-                dataFilter
+                dataFilter,
+                priceVariationModel
                 )
         {
             SubscriptionsBag.Add(config);
@@ -512,7 +534,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Access to the volume of the equity today
         /// </summary>
-        public virtual long Volume
+        public virtual decimal Volume
         {
             get { return Cache.Volume; }
         }
@@ -528,7 +550,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the most recent bid size if available
         /// </summary>
-        public virtual long BidSize
+        public virtual decimal BidSize
         {
             get { return Cache.BidSize; }
         }
@@ -544,9 +566,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the most recent ask size if available
         /// </summary>
-        public virtual long AskSize
+        public virtual decimal AskSize
         {
             get { return Cache.AskSize; }
+        }
+
+        /// <summary>
+        /// Access to the open interest of the security today
+        /// </summary>
+        public virtual long OpenInterest
+        {
+            get { return Cache.OpenInterest; }
         }
 
         /// <summary>
@@ -574,16 +604,19 @@ namespace QuantConnect.Securities
                 Exchange.SetLocalDateTimeFrontier(args.Time);
             };
         }
-        
+
         /// <summary>
         /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
+        /// 
         public void SetMarketPrice(BaseData data) 
         {
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
+
+            if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
         }
@@ -597,27 +630,100 @@ namespace QuantConnect.Securities
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
+
+            if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
         }
- 
+
+        /// <summary>
+        /// Returns true if the security contains at least one subscription that represents custom data
+        /// </summary>
+        public bool IsCustomData()
+        {
+            if (Subscriptions == null || !Subscriptions.Any())
+            {
+                return false;
+            }
+
+            return Subscriptions.Any(x => x.IsCustomData);
+        }
+
         /// <summary>
         /// Set the leverage parameter for this security
         /// </summary>
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
+            if (Symbol.ID.SecurityType == SecurityType.Future ||
+                Symbol.ID.SecurityType == SecurityType.Option)
+                return;
+
             MarginModel.SetLeverage(this, leverage);
         }
 
         /// <summary>
         /// Sets the data normalization mode to be used by this security
         /// </summary>
-        public void SetDataNormalizationMode(DataNormalizationMode mode)
+        public virtual void SetDataNormalizationMode(DataNormalizationMode mode)
         {
             foreach (var subscription in SubscriptionsBag)
             {
                 subscription.DataNormalizationMode = mode;
             }
+        }
+
+        /// <summary>
+        /// Sets the fee model
+        /// </summary>
+        /// <param name="feelModel">Model that represents a fee model</param>
+        public void SetFeeModel(IFeeModel feelModel)
+        {
+            FeeModel = feelModel;
+        }
+
+        /// <summary>
+        /// Sets the fee model
+        /// </summary>
+        /// <param name="feelModel">Model that represents a fee model</param>
+        public void SetFeeModel(PyObject feelModel)
+        {
+            FeeModel = new FeeModelPythonWrapper(feelModel);
+        }
+
+        /// <summary>
+        /// Sets the fill model
+        /// </summary>
+        /// <param name="fillModel">Model that represents a fill model</param>
+        public void SetFillModel(IFillModel fillModel)
+        {
+            FillModel = fillModel;
+        }
+
+        /// <summary>
+        /// Sets the fill model
+        /// </summary>
+        /// <param name="fillModel">Model that represents a fill model</param>
+        public void SetFillModel(PyObject fillModel)
+        {
+            FillModel = new FillModelPythonWrapper(fillModel);
+        }
+
+        /// <summary>
+        /// Sets the slippage model
+        /// </summary>
+        /// <param name="slippageModel">Model that represents a slippage model</param>
+        public void SetSlippageModel(ISlippageModel slippageModel)
+        {
+            SlippageModel = slippageModel;
+        }
+
+        /// <summary>
+        /// Sets the slippage model
+        /// </summary>
+        /// <param name="slippageModel">Model that represents a slippage model</param>
+        public void SetSlippageModel(PyObject slippageModel)
+        {
+            SlippageModel = new SlippageModelPythonWrapper(slippageModel);
         }
 
         /// <summary>
@@ -641,6 +747,20 @@ namespace QuantConnect.Securities
             if (subscription.Symbol != _symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
             if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
             SubscriptionsBag.Add(subscription);
+        }
+
+        /// <summary>
+        /// Adds the specified data subscriptions to this security.
+        /// </summary>
+        /// <param name="subscriptions">The subscription configuration to add. The Symbol and ExchangeTimeZone properties must match the existing Security object</param>
+        internal void AddData(SubscriptionDataConfigList subscriptions)
+        {
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.Symbol != _symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
+                if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+                SubscriptionsBag.Add(subscription);
+            }
         }
     }
 }

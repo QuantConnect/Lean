@@ -42,10 +42,12 @@ namespace QuantConnect.Tests.Compression
             var fileBytes = Encoding.ASCII.GetBytes(fileContents); // using asci because UnzipData uses 1byte=1char
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
             File.WriteAllBytes("entry.zip", zippedBytes);
-            var unzipped = QuantConnect.Compression.Unzip("entry.zip").ToList();
-            Assert.AreEqual(1, unzipped.Count);
-            Assert.AreEqual("entry", unzipped[0].Key);
-            Assert.AreEqual(fileContents, unzipped[0].Value.Single());
+
+            using (var streamReader = QuantConnect.Compression.UnzipStreamToStreamReader(File.OpenRead("entry.zip")))
+            {
+                var contents = streamReader.ReadToEnd();
+                Assert.AreEqual(fileContents, contents);
+            }
         }
 
         [Test]
@@ -58,6 +60,27 @@ namespace QuantConnect.Tests.Compression
             {
                 var text = entryStream.ReadToEnd();
                 Assert.AreEqual("2", text);
+            }
+        }
+
+        [Test]
+        public void ReadsZipEntryFileNames()
+        {
+            var zipFileName = Path.Combine("TestData", "20151224_quote_american.zip");
+            var entryFileNames = QuantConnect.Compression.GetZipEntryFileNames(zipFileName).ToList();
+
+            var expectedFileNames = new[]
+            {
+                "20151224_xlre_tick_quote_american_call_210000_20160819.csv",
+                "20151224_xlre_tick_quote_american_call_220000_20160819.csv",
+                "20151224_xlre_tick_quote_american_put_370000_20160819.csv"
+            };
+
+            Assert.AreEqual(expectedFileNames.Length, entryFileNames.Count);
+
+            for (var i = 0; i < entryFileNames.Count; i++)
+            {
+                Assert.AreEqual(expectedFileNames[i], entryFileNames[i]);
             }
         }
     }

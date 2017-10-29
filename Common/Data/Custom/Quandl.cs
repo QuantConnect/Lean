@@ -60,11 +60,10 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         /// Default quandl constructor uses Close as its value column
         /// </summary>
-        public Quandl()
+        public Quandl() : this("Close")
         {
-            _valueColumn = "Close";
         }
-        
+
         /// <summary>
         /// Constructor for creating customized quandl instance which doesn't use "Close" as its value item.
         /// </summary>
@@ -94,7 +93,7 @@ namespace QuantConnect.Data.Custom
                 _isInitialized = true;
                 foreach (var propertyName in csv)
                 {
-                    var property = propertyName.TrimStart().TrimEnd();
+                    var property = propertyName.Trim();
                     // should we remove property names like Time?
                     // do we need to alias the Time??
                     data.SetProperty(property, 0m);
@@ -127,7 +126,7 @@ namespace QuantConnect.Data.Custom
         /// <returns>STRING API Url for Quandl.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = @"https://www.quandl.com/api/v1/datasets/" + config.Symbol.Value + ".csv?sort_order=asc&exclude_headers=false&auth_token=" + _authCode;
+            var source = @"https://www.quandl.com/api/v3/datasets/" + config.Symbol.Value + ".csv?order=asc&api_key=" + _authCode;
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
         }
 
@@ -137,6 +136,8 @@ namespace QuantConnect.Data.Custom
         /// <param name="authCode"></param>
         public static void SetAuthCode(string authCode)
         {
+            if (string.IsNullOrWhiteSpace(authCode)) return;
+
             _authCode = authCode;
             IsAuthCodeSet = true;
         }

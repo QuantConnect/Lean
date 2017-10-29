@@ -24,7 +24,9 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
+using System.Collections.Concurrent;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Interfaces
 {
@@ -119,7 +121,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         IHistoryProvider HistoryProvider
         {
-            get; 
+            get;
             set;
         }
 
@@ -128,7 +130,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         AlgorithmStatus Status
         {
-            get; 
+            get;
             set;
         }
 
@@ -147,6 +149,7 @@ namespace QuantConnect.Interfaces
         string Name
         {
             get;
+            set;
         }
 
         /// <summary>
@@ -216,7 +219,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
-        List<string> DebugMessages
+        ConcurrentQueue<string> DebugMessages
         {
             get;
         }
@@ -224,7 +227,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Error messages from the strategy:
         /// </summary>
-        List<string> ErrorMessages
+        ConcurrentQueue<string> ErrorMessages
         {
             get;
         }
@@ -232,7 +235,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Log messages from the strategy:
         /// </summary>
-        List<string> LogMessages
+        ConcurrentQueue<string> LogMessages
         {
             get;
         }
@@ -249,7 +252,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
-        Dictionary<string, string> RuntimeStatistics
+        ConcurrentDictionary<string, string> RuntimeStatistics
         {
             get;
         }
@@ -259,7 +262,7 @@ namespace QuantConnect.Interfaces
         /// the value of the benchmark at a requested date/time
         /// </summary>
         IBenchmark Benchmark
-        { 
+        {
             get;
         }
 
@@ -274,7 +277,23 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        TradeBuilder TradeBuilder
+        ITradeBuilder TradeBuilder
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the user settings for the algorithm
+        /// </summary>
+        AlgorithmSettings Settings
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        IOptionChainProvider OptionChainProvider
         {
             get;
         }
@@ -394,6 +413,13 @@ namespace QuantConnect.Interfaces
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
+        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
+        /// </summary>
+        /// <param name="assignmentEvent">Option exercise event details containing details of the assignment</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        void OnAssignmentOrderEvent(OrderEvent assignmentEvent);
+
+        /// <summary>
         /// Brokerage message event handler. This method is called for all types of brokerage messages.
         /// </summary>
         void OnBrokerageMessage(BrokerageMessageEvent messageEvent);
@@ -450,6 +476,33 @@ namespace QuantConnect.Interfaces
         Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
 
         /// <summary>
+        /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
+        /// </summary>
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        Future AddFutureContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m);
+
+        /// <summary>
+        /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
+        /// </summary>
+        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Option"/> security</returns>
+        Option AddOptionContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m);
+
+        /// <summary>
+        /// Removes the security with the specified symbol. This will cancel all
+        /// open orders and then liquidate any existing holdings
+        /// </summary>
+        /// <param name="symbol">The symbol of the security to be removed</param>
+        bool RemoveSecurity(Symbol symbol);
+
+        /// <summary>
         /// Set the starting capital for the strategy
         /// </summary>
         /// <param name="startingCash">decimal starting capital, default $100,000</param>
@@ -467,8 +520,9 @@ namespace QuantConnect.Interfaces
         /// Liquidate your portfolio holdings:
         /// </summary>
         /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
+        /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>list of order ids</returns>
-        List<int> Liquidate(Symbol symbolToLiquidate = null);
+        List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated");
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
@@ -492,5 +546,44 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="max">Maximum order count int</param>
         void SetMaximumOrders(int max);
+
+        /// <summary>
+        /// Sets the implementation used to handle messages from the brokerage.
+        /// The default implementation will forward messages to debug or error
+        /// and when a <see cref="BrokerageMessageType.Error"/> occurs, the algorithm
+        /// is stopped.
+        /// </summary>
+        /// <param name="handler">The message handler to use</param>
+        void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
+
+        /// <summary>
+        /// Set the historical data provider
+        /// </summary>
+        /// <param name="historyProvider">Historical data provider</param>
+        void SetHistoryProvider(IHistoryProvider historyProvider);
+
+        /// <summary>
+        /// Set the runtime error
+        /// </summary>
+        /// <param name="exception">Represents error that occur during execution</param>
+        void SetRunTimeError(Exception exception);
+
+        /// <summary>
+        /// Set the state of a live deployment
+        /// </summary>
+        /// <param name="status">Live deployment status</param>
+        void SetStatus(AlgorithmStatus status);
+
+        /// <summary>
+        /// Set the available <see cref="TickType"/> supported by each <see cref="SecurityType"/> in <see cref="SecurityManager"/>
+        /// </summary>
+        /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
+        void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes);
+
+        /// <summary>
+        /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        /// <param name="optionChainProvider">The option chain provider</param>
+        void SetOptionChainProvider(IOptionChainProvider optionChainProvider);
     }
 }

@@ -46,14 +46,13 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var scaleFactor = Config.GetValue("bitfinex-scale-factor", 1m);
-
+                //todo: will download any exchange but always save as gdax
                 // Create an instance of the downloader
-                const string market = Market.Bitfinex;
-                var downloader = new CryptoiqDownloader(args[2], scaleFactor);
+                const string market = Market.GDAX;
+                var downloader = new CryptoiqDownloader(args[2]);
 
                 // Download the data
-                var symbolObject = Symbol.Create(args[3], SecurityType.Forex, market);
+                var symbolObject = Symbol.Create(args[3], SecurityType.Crypto, market);
                 var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
 
                 // Save the data

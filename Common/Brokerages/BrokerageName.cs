@@ -26,6 +26,12 @@ namespace QuantConnect.Brokerages
         Default,
 
         /// <summary>
+        /// Transaction and submit/execution rules will be the default as initialized
+        /// Alternate naming for default brokerage
+        /// </summary>
+        QuantConnectBrokerage = Default,
+
+        /// <summary>
         /// Transaction and submit/execution rules will use interactive brokers models
         /// </summary>
         InteractiveBrokersBrokerage,
@@ -43,6 +49,17 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use fxcm models
         /// </summary>
-        FxcmBrokerage
+        FxcmBrokerage,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use bitfinex models
+        /// </summary>
+        Bitfinex,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use gdax models
+        /// </summary>
+        GDAX = 12
+
     }
 }

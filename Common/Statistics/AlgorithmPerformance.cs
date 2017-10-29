@@ -26,17 +26,17 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The algorithm statistics on closed trades
         /// </summary>
-        public TradeStatistics TradeStatistics { get; private set; }
+        public TradeStatistics TradeStatistics { get; set; }
 
         /// <summary>
         /// The algorithm statistics on portfolio
         /// </summary>
-        public PortfolioStatistics PortfolioStatistics { get; private set; }
+        public PortfolioStatistics PortfolioStatistics { get; set; }
 
         /// <summary>
         /// The list of closed trades
         /// </summary>
-        public List<Trade> ClosedTrades { get; private set; }
+        public List<Trade> ClosedTrades { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmPerformance"/> class

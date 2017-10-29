@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,7 +54,6 @@ namespace QuantConnect.ToolBox
             _symbol = symbol;
             _market = symbol.ID.Market.ToLower();
             _dataType = dataType;
-
             // All fx data is quote data.
             if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
@@ -62,7 +61,7 @@ namespace QuantConnect.ToolBox
             }
 
             // Can only process Fx and equity for now
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
@@ -195,7 +194,7 @@ namespace QuantConnect.ToolBox
                         while ((line = reader.ReadLine()) != null)
                         {
                             var time = DateTime.ParseExact(line.Substring(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                            rows.Add(time, line);
+                            rows[time] = line;
                         }
                     }
                 }
@@ -205,22 +204,32 @@ namespace QuantConnect.ToolBox
         }
 
         /// <summary>
-        /// Write this file to disk
+        /// Write this file to disk.
         /// </summary>
-        private void WriteFile(string fileName, string data, DateTime time)
+        /// <param name="filePath">The full path to the new file</param>
+        /// <param name="data">The data to write as a string</param>
+        /// <param name="date">The date the data represents</param>
+        private void WriteFile(string filePath, string data, DateTime date)
         {
+            var tempFilePath = filePath + ".tmp";
+
             data = data.TrimEnd();
-            if (File.Exists(fileName))
+            if (File.Exists(filePath))
             {
-                File.Delete(fileName);
-                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + fileName);
+                File.Delete(filePath);
+                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + filePath);
             }
+
             // Create the directory if it doesnt exist
-            Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             // Write out this data string to a zip file
-            Compression.Zip(data, fileName, LeanData.GenerateZipEntryName(_symbol.Value, _securityType, time, _resolution, _dataType));
-            Log.Trace("LeanDataWriter.Write(): Created: " + fileName);
+            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol.Value, _securityType, date, _resolution, _dataType));
+
+            // Move temp file to the final destination with the appropriate name
+            File.Move(tempFilePath, filePath);
+
+            Log.Trace("LeanDataWriter.Write(): Created: " + filePath);
         }
 
         /// <summary>

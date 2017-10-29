@@ -67,6 +67,15 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "Tradier brokerage only supports Market orders. MarketOnOpen and MarketOnClose orders not supported."
+                    );
+
+                return false;
+            }
+
             if (!CanExecuteOrder(security, order))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
@@ -177,7 +186,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The new slippage model for this brokerage</returns>
         public override ISlippageModel GetSlippageModel(Security security)
         {
-            return new SpreadSlippageModel();
+            return new ConstantSlippageModel(0);
         }
 
     }

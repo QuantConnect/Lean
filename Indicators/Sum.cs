@@ -64,7 +64,7 @@ namespace QuantConnect.Indicators {
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input) {
             _sum += input.Value;
-            if (window.IsReady) {
+            if (window.Samples > window.Size) {
                 _sum -= window.MostRecentlyRemoved.Value;
             }
             return _sum;

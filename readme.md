@@ -2,7 +2,8 @@
 Lean C# Algorithmic Trading Engine
 =========
 
-[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">  &nbsp;&nbsp;&nbsp;&nbsp;  [![Coverage Status](https://coveralls.io/repos/QuantConnect/Lean/badge.svg?branch=master&service=github)](https://coveralls.io/github/QuantConnect/Lean?branch=master)
+[![Join the chat at https://www.quantconnect.com/slack](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://www.quantconnect.com/slack) &nbsp;&nbsp;&nbsp;&nbsp;
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean)
 
 [Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
 
@@ -10,11 +11,11 @@ Lean C# Algorithmic Trading Engine
 
 ## Introduction ##
 
-Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. The community has contributed additional connectors to F#, Visual Basic and Java.
-
-Lean drives the web based backtesting platform [QuantConnect][4].
+Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. Lean drives the web based algorithmic trading platform [QuantConnect][4].
 
 ## System Overview ##
+
+![alt tag](Documentation/2-Overview-Detailed-New.png)
 
 Lean outsourced key infrastructure management to plugins. The most important plugins are:
 
@@ -35,84 +36,99 @@ Lean outsourced key infrastructure management to plugins. The most important plu
 
 For more information on the system design and contributing please see the Lean Website Documentation.
 
-## Spinup Instructions ##
+## Installation Instructions ##
 
-### OS X
+Download the zip file with the [lastest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
 
-Install [Mono for Mac](http://www.mono-project.com/docs/getting-started/install/mac/)
-
-Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio) for your IDE. If you use MonoDevelop also install its [FSharp Plugin](http://addins.monodevelop.com/Project/Index/48).
-
-Clone the repo:
-```
-git clone git@github.com:QuantConnect/Lean.git
-cd Lean
-```
-
-OSX does not fully support Visual Basic or F#. You will need to remove these projects from the solution for them to build properly. Alternatively for Visual Basic modify the target framework as shown [here](https://groups.google.com/forum/#!topic/lean-engine/uR94evlM01g). Alternatively modify the target framework:
-```
-sed -i -e 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
-```
-
-Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`. You should also run `nuget install MathNet.Filtering -pre` to install the MathNet library. 
-
-In OS X `mdtool` is not added to the PATH environment. Either set up the PATH manually or reference the binary directly.
-
-If you are running Xamarin Studio:
-```
-/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool build
-```
-
-If you are running MonoDevelop:
-```
-/Applications/MonoDevelop.app/Contents/MacOS/mdtool build
-```
-
-Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
-```
-cd Lean/Launcher/bin/Debug
-mono ./QuantConnect.Lean.Launcher.exe
-```
-### Linux (Debian, Ubuntu)
-
-Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/)).
-
-Install dependencies, MonoDevelop, Git and NuGet:
-```
-sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git ca-certificates-mono
-mozroots --import --sync
-apt-get upgrade mono-complete
-```
-Clone the repo:
+Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
 ```
 git clone https://github.com/QuantConnect/Lean.git
 cd Lean
 ```
-Like OSX, Linux does not fully support Visual Basic. You will need to remove this project from the solution for them to build properly. Alternatively modify the target framework:
-```
-sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
-```
-Restore NuGet packages then compile:
-```
-wget https://nuget.org/nuget.exe
-mono nuget.exe restore QuantConnect.Lean.sln
-xbuild
-```
-If you get: "Error initializing task Fsc: Not registered task Fsc." -> apt-get upgrade mono-complete
-If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
 
-Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
+### macOS 
+
+- Install [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/)
+- Open `QuantConnect.Lean.sln` in Visual Studio
+
+Visual Studio will automatically start to restore the Nuget packages. If not, in the menu bar, click `Project > Restore NuGet Packages`.
+
+- In the menu bar, click `Run > Start Debugging`.
+
+Alternatively, run the compiled `exe` file. First, in the menu bar, click `Build > Build All`, then:
 ```
 cd Lean/Launcher/bin/Debug
-./QuantConnect.Lean.Launcher.exe
+mono QuantConnect.Lean.Launcher.exe
 ```
+
+### Linux (Debian, Ubuntu)
+
+- Install [Mono](http://www.mono-project.com/download/#download-lin):
+```
+sudo apt-get update && rm -rf /var/lib/apt/lists/*
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > sudo /etc/apt/sources.list.d/mono-xamarin.list
+sudo apt-get update
+sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
+```
+- Install Nuget and Python
+```
+sudo apt-get update && sudo apt-get install -y nuget python-pip
+```
+- Restore NuGet packages then compile:
+```
+nuget restore QuantConnect.Lean.sln
+xbuild QuantConnect.Lean.sln
+```
+If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
+
+If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
+
+If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
+
+- Run the compiled `exe` file:
+```
+cd Lean/Launcher/bin/Debug
+mono ./QuantConnect.Lean.Launcher.exe
+```
+- Interactive Brokers set up details
+
+Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
+
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001 to match the settings in your IBGateway/TWS.
+
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
-- Press `ctrl-f5` to run without debugging.
-By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again. 
+- Press `F5` to run
 
+By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again.
+
+### Python Support
+
+A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
+
+### R Support
+
+- Install R-base if you need to call R in your algorithm.
+For Linux users:
+```
+sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
+```
+For Windows and macOs users:
+Please visit the official [R website](https://www.r-project.org/) to download R. 
+
+### QuantConnect plugin
+
+To install QuantConnect plugin build the `VisualStudioPlugin` project in `Release` mode. Then go to `VisualStudioPlugin/bin/Release` and run `QuantConnect.VisualStudioPlugin.vsix` file. Restart VisualStudio.
+In VisualStudio go to Tools -> Options -> QuantConnect and set "<Path to Lean repo>/Data" value to "Price data path".
+
+VisualStudio plugin writes log data to the VisualStudio activity log, but only if VisualStudio is started with the `/log` parameter passed to it. To debug the QuantConnect plugin start VisualStudio with the following command:
+
+```
+devenv /log <path-to-log>
+```
 
 ## Issues and Feature Requests ##
 
@@ -126,8 +142,7 @@ The mailing list for the project can be found on [Google Groups][6]
 
 Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
-## Build Status ##
-<img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
+All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
 ## Acknowledgements ##
 
@@ -136,8 +151,8 @@ The open sourcing of QuantConnect would not have been possible without the suppo
 Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan, Paul R, Nik M, Scott Y, BinaryExecutor.com, Tadas T, Matt B, Binumon P, Zyron, Mike O, TC, Luigi, Lester Z, Andreas H, Eugene K, Hugo P, Robert N, Christofer O, Ramesh L, Nicholas S, Jonathan E, Marc R, Raghav N, Marcus, Hakan D, Sergey M, Peter McE, Jim M, INTJCapital.com, Richard E, Dominik, John L, H. Orlandella, Stephen L, Risto K, E.Subasi, Peter W, Hui Z, Ross F, Archibald112, MooMooForex.com, Jae S, Eric S, Marco D, Jerome B, James B. Crocker, David Lypka, Edward T, Charlie Guse, Thomas D, Jordan I, Mark S, Bengt K, Marc D, Al C, Jan W, Ero C, Eranmn, Mitchell S, Helmuth V, Michael M, Jeremy P, PVS78, Ross D, Sergey K, John Grover, Fahiz Y, George L.Z., Craig E, Sean S, Brad G, Dennis H, Camila C, Egor U, David T, Cameron W, Napoleon Hernandez, Keeshen A, Daniel E, Daniel H, M.Patterson, Asen K, Virgil J, Balazs Trader, Stan L, Con L, Will D, Scott K, Barry K, Pawel D, S Ray, Richard C, Peter L, Thomas L., Wang H, Oliver Lee, Christian L.
 
 
-  [1]: https://lean.quantconnect.com "Lean Open Source Home Page"
-  [2]: https://lean.quantconnect.com/docs "Lean Documentation"
+  [1]: https://www.quantconnect.com/lean "Lean Open Source Home Page"
+  [2]: https://www.quantconnect.com/lean/docs "Lean Documentation"
   [3]: https://github.com/QuantConnect/Lean/archive/master.zip
   [4]: https://www.quantconnect.com "QuantConnect"
   [5]: https://github.com/QuantConnect/Lean/issues

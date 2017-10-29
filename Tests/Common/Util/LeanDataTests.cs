@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
@@ -60,6 +63,16 @@ namespace QuantConnect.Tests.Common.Util
         {
             var line = LeanData.GenerateLine(parameters.Data, parameters.SecurityType, parameters.Resolution);
             Assert.AreEqual(parameters.ExpectedLine, line);
+
+            if (parameters.Config.Type == typeof(QuoteBar))
+            {
+                Assert.AreEqual(line.Split(',').Length, 11);
+            }
+
+            if (parameters.Config.Type == typeof(TradeBar))
+            {
+                Assert.AreEqual(line.Split(',').Length, 6);
+            }
         }
 
         [Test, TestCaseSource("GetLeanDataLineTestParameters")]
@@ -133,6 +146,139 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, source.Source);
         }
 
+        [Test]
+        public void GetDataType_ReturnsCorrectType()
+        {
+            var tickType = typeof(Tick);
+            var openInterestType = typeof(OpenInterest);
+            var quoteBarType = typeof(QuoteBar);
+            var tradeBarType = typeof(TradeBar);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tickType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Daily, TickType.OpenInterest), tickType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Second, TickType.OpenInterest), openInterestType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), openInterestType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Minute, TickType.Quote), quoteBarType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Second, TickType.Trade), quoteBarType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Hour, TickType.Trade), tradeBarType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tradeBarType);
+        }
+
+        [Test]
+        public void LeanData_CanDetermineTheCorrectCommonDataTypes()
+        {
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(OpenInterest)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(TradeBar)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(QuoteBar)));
+            Assert.IsFalse(LeanData.IsCommonLeanDataType(typeof(Bitcoin)));
+        }
+
+        [Test]
+        public void LeanData_GetCommonTickTypeForCommonDataTypes_ReturnsCorrectDataForTickResolution()
+        {
+            Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Cfd), TickType.Quote);
+            Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Forex), TickType.Quote);
+        }
+
+        [Test]
+        public void IncorrectPaths_CannotBeParsed()
+        {
+            DateTime date;
+            Symbol symbol;
+            Resolution resolution;
+
+            var invalidPath = "forex/fxcm/eurusd/20160101_quote.zip";
+            Assert.IsFalse(LeanData.TryParsePath(invalidPath, out symbol, out date, out resolution));
+
+            var nonExistantPath = "Data/f/fxcm/eurusd/20160101_quote.zip";
+            Assert.IsFalse(LeanData.TryParsePath(nonExistantPath, out symbol, out date, out resolution));
+
+            var notAPath = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+            Assert.IsFalse(LeanData.TryParsePath(notAPath, out symbol, out date, out resolution));
+
+            var  emptyPath = "";
+            Assert.IsFalse(LeanData.TryParsePath(emptyPath, out symbol, out date, out resolution));
+
+            string nullPath = null;
+            Assert.IsFalse(LeanData.TryParsePath(nullPath, out symbol, out date, out resolution));
+
+            var optionsTradePath = "Data/option/u sa/minute/aapl/20140606_trade_american.zip";
+            Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out symbol, out date, out resolution));
+
+            var optionsOpenInterestPath = "Data/option/usa/minute/aapl/20140609_openinterest_american.zip";
+            Assert.IsFalse(LeanData.TryParsePath(optionsOpenInterestPath, out symbol, out date, out resolution));
+
+            var optionsQuotePath = "Data/option/usa/minute/aapl/20140609_quote_american.zip";
+            Assert.IsFalse(LeanData.TryParsePath(optionsQuotePath, out symbol, out date, out resolution));
+        }
+
+        [Test]
+        public void CorrectPaths_CanBeParsedCorrectly()
+        {
+            DateTime date;
+            Symbol symbol;
+            Resolution resolution;
+
+            var customPath = "a/very/custom/path/forex/oanda/tick/eurusd/20170104_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(customPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(symbol.ID.Market, Market.Oanda);
+            Assert.AreEqual(resolution, Resolution.Tick);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("2017-01-04").Date);
+
+            var mixedPathSeperators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(symbol.ID.Market, Market.FXCM);
+            Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
+
+            var longRelativePath = "../../../../../../../../../Data/forex/fxcm/hour/gbpusd.zip";
+            Assert.IsTrue(LeanData.TryParsePath(longRelativePath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(symbol.ID.Market, Market.FXCM);
+            Assert.AreEqual(resolution, Resolution.Hour);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "gbpusd");
+            Assert.AreEqual(date.Date, DateTime.MinValue);
+
+            var shortRelativePath = "Data/forex/fxcm/minute/eurusd/20160102_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(shortRelativePath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(symbol.ID.Market, Market.FXCM);
+            Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-02").Date);
+
+            var dailyEquitiesPath = "Data/equity/usa/daily/aapl.zip";
+            Assert.IsTrue(LeanData.TryParsePath(dailyEquitiesPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Equity);
+            Assert.AreEqual(symbol.ID.Market, Market.USA);
+            Assert.AreEqual(resolution, Resolution.Daily);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "aapl");
+            Assert.AreEqual(date.Date, DateTime.MinValue);
+
+            var minuteEquitiesPath = "Data/equity/usa/minute/googl/20070103_trade.zip";
+            Assert.IsTrue(LeanData.TryParsePath(minuteEquitiesPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Equity);
+            Assert.AreEqual(symbol.ID.Market, Market.USA);
+            Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "goog");
+            Assert.AreEqual(date.Date, DateTime.Parse("2007-01-03").Date);
+
+            var cfdPath = "Data/cfd/oanda/minute/bcousd/20160101_trade.zip";
+            Assert.IsTrue(LeanData.TryParsePath(cfdPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Cfd);
+            Assert.AreEqual(symbol.ID.Market, Market.Oanda);
+            Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "bcousd");
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)
@@ -155,7 +301,7 @@ namespace QuantConnect.Tests.Common.Util
             return new List<LeanDataTestParameters>
             {
                 // equity
-                new LeanDataTestParameters(Symbols.SPY, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_spy_tick_trade.csv", "equity/usa/tick/spy"),
+                new LeanDataTestParameters(Symbols.SPY, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_spy_Trade_Tick.csv", "equity/usa/tick/spy"),
                 new LeanDataTestParameters(Symbols.SPY, date, Resolution.Second, TickType.Trade, "20160217_trade.zip", "20160217_spy_second_trade.csv", "equity/usa/second/spy"),
                 new LeanDataTestParameters(Symbols.SPY, date, Resolution.Minute, TickType.Trade, "20160217_trade.zip", "20160217_spy_minute_trade.csv", "equity/usa/minute/spy"),
                 new LeanDataTestParameters(Symbols.SPY, date, Resolution.Hour, TickType.Trade, "spy.zip", "spy.csv", "equity/usa/hour"),
@@ -186,6 +332,20 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_minute_quote.csv", "cfd/fxcm/minute/de10ybeur"),
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Hour, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/fxcm/hour"),
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Daily, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/fxcm/daily"),
+
+                // Crypto - trades
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_tick_trade.csv", "crypto/gdax/tick/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_second_trade.csv", "crypto/gdax/second/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_minute_trade.csv", "crypto/gdax/minute/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Trade, "btcusd_trade.zip", "btcusd_trade.csv", "crypto/gdax/hour"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Trade, "btcusd_trade.zip", "btcusd_trade.csv", "crypto/gdax/daily"),
+
+                // Crypto -quotes
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_tick_quote.csv", "crypto/gdax/tick/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_second_quote.csv", "crypto/gdax/second/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_minute_quote.csv", "crypto/gdax/minute/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Quote, "btcusd_quote.zip", "btcusd_quote.csv", "crypto/gdax/hour"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Quote, "btcusd_quote.zip", "btcusd_quote.csv", "crypto/gdax/daily"),
 
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
         }
@@ -224,18 +384,36 @@ namespace QuantConnect.Tests.Common.Util
                 // forex
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.EURUSD, BidPrice = 1, Value =1.5m, AskPrice = 2, TickType = TickType.Quote}, SecurityType.Forex, Resolution.Tick,
                     "34200000,1,2"),
-                new LeanDataLineTestParameters(new TradeBar(time, Symbols.EURUSD, 1, 2, 3, 4, 0, TimeSpan.FromMinutes(1)), SecurityType.Forex, Resolution.Minute,
-                    "34200000,1,2,3,4"),
-                new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.EURUSD, 1, 2, 3, 4, 0, TimeSpan.FromDays(1)), SecurityType.Forex, Resolution.Daily,
-                    "20160218 00:00,1,2,3,4"),
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.EURUSD, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromMinutes(1)), SecurityType.Forex, Resolution.Minute, "34200000,1,2,3,4,0,1,2,3,4,0"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.EURUSD, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromDays(1)), SecurityType.Forex, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,0,1,2,3,4,0"),
 
                 // cfd
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.DE10YBEUR, BidPrice = 1, Value = 1.5m, AskPrice = 2, TickType = TickType.Quote}, SecurityType.Cfd, Resolution.Tick,
                     "34200000,1,2"),
-                new LeanDataLineTestParameters(new TradeBar(time, Symbols.DE10YBEUR, 1, 2, 3, 4, 0, TimeSpan.FromMinutes(1)), SecurityType.Cfd, Resolution.Minute,
-                    "34200000,1,2,3,4"),
-                new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.DE10YBEUR, 1, 2, 3, 4, 0, TimeSpan.FromDays(1)), SecurityType.Cfd, Resolution.Daily,
-                    "20160218 00:00,1,2,3,4"),
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.DE10YBEUR, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromMinutes(1)), SecurityType.Cfd, Resolution.Minute,
+                    "34200000,1,2,3,4,0,1,2,3,4,0"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.DE10YBEUR, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromDays(1)), SecurityType.Cfd, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,0,1,2,3,4,0"),
+
+                // crypto - trades
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.BTCUSD, null, 0, new Bar(6, 7, 8, 9), 10, TimeSpan.FromMinutes(1)) {Bid = null}, SecurityType.Crypto, Resolution.Minute,
+                    "34200000,,,,,0,6,7,8,9,10"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.BTCUSD, new Bar(1, 2, 3, 4), 5, null, 0, TimeSpan.FromDays(1)) {Ask = null}, SecurityType.Crypto, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,5,,,,,0"),
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.BTCUSD, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromMinutes(1)), SecurityType.Crypto, Resolution.Minute,
+                    "34200000,1,2,3,4,5,6,7,8,9,10"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.BTCUSD, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromDays(1)), SecurityType.Crypto, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,5,6,7,8,9,10"),
+                new LeanDataLineTestParameters(new Tick(time, Symbols.BTCUSD, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = false, Quantity = 5}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1,2,3,4,5"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1,2"),
+                new LeanDataLineTestParameters(new TradeBar(time, Symbols.BTCUSD, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Crypto, Resolution.Minute,
+                    "34200000,1,2,3,4,5"),
+                new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.BTCUSD, 1, 2, 3, 4, 5, TimeSpan.FromDays(1)), SecurityType.Crypto, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,5"),
+
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
         }
 

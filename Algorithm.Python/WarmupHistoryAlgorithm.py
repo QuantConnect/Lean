@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,48 +23,51 @@ from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 
+### <summary>
+### This algorithm demonstrates using the history provider to retrieve data
+### to warm up indicators before data is received.
+### </summary>
+### <meta name="tag" content="indicators" />
+### <meta name="tag" content="history" />
+### <meta name="tag" content="history and warm up" />
+### <meta name="tag" content="using data" />
 class WarmupHistoryAlgorithm(QCAlgorithm):
-    '''This algorithm demonstrates using the history provider to
-     retrieve data to warm up indicators before data is received'''
-    def __init__(self):
-        self.__fast = None
-        self.__slow = None
-        self.__fastPeriod = 60
-        self.__slowPeriod = 3600
-        self.__symbol = Symbol.Create("EURUSD", SecurityType.Forex, "FXCM")
-
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,07)   #Set Start Date
-        self.SetEndDate(2013,10,11)     #Set End Date
-        self.SetCash(100000)            #Set Strategy Cash
+        self.SetStartDate(2014,5,2)   #Set Start Date
+        self.SetEndDate(2014,5,2)     #Set End Date
+        self.SetCash(100000)          #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Forex, self.__symbol.Value, Resolution.Second)
+        forex = self.AddForex("EURUSD", Resolution.Second)
+        forex = self.AddForex("NZDUSD", Resolution.Second)
 
-        self.__fast = self.EMA(self.__symbol, self.__fastPeriod)
-        self.__slow = self.EMA(self.__symbol, self.__slowPeriod)
+        fast_period = 60
+        slow_period = 3600
+        self.fast = self.EMA("EURUSD", fast_period)
+        self.slow = self.EMA("EURUSD", slow_period)
 
-        # "self.__slowPeriod + 1" because rolling window waits for one to fall off the back to be considered ready
-        history = self.History(self.__symbol, self.__slowPeriod + 1)
-        for bar in history:
-        	datapoint = IndicatorDataPoint(bar.EndTime, bar.Close)
-        	self.__fast.Update(datapoint)
-        	self.__slow.Update(datapoint)
+        # "slow_period + 1" because rolling window waits for one to fall off the back to be considered ready
+        # History method returns a dict with a pandas.DataFrame
+        history = self.History(["EURUSD", "NZDUSD"], slow_period + 1)
 
-        self.Log("FAST IS {0} READY. Samples: {1}".format("" if self.__fast.IsReady else "NOT", self.__fast.Samples))
-        self.Log("SLOW IS {0} READY. Samples: {1}".format("" if self.__slow.IsReady else "NOT", self.__slow.Samples))
+        # prints out the tail of the dataframe
+        self.Log(str(history.loc["EURUSD"].tail()))
+        self.Log(str(history.loc["NZDUSD"].tail()))
+
+        for index, row in history.loc["EURUSD"].iterrows():
+            self.fast.Update(index, row["close"])
+            self.slow.Update(index, row["close"])
+
+        self.Log("FAST {0} READY. Samples: {1}".format("IS" if self.fast.IsReady else "IS NOT", self.fast.Samples))
+        self.Log("SLOW {0} READY. Samples: {1}".format("IS" if self.slow.IsReady else "IS NOT", self.slow.Samples))
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
 
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
-        
-        if self.__fast.Current.Value > self.__slow.Current.Value:
-            self.SetHoldings(self.__symbol, 1)
+        if self.fast.Current.Value > self.slow.Current.Value:
+            self.SetHoldings("EURUSD", 1)
         else:
-            self.SetHoldings(self.__symbol, -1)
+            self.SetHoldings("EURUSD", -1)

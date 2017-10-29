@@ -25,7 +25,7 @@ namespace QuantConnect.Securities.Forex
     /// FOREX Security Object Implementation for FOREX Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Forex : Security
+    public class Forex : Security, IBaseCurrencySymbol
     {
         /// <summary>
         /// Constructor for the forex security
@@ -43,11 +43,12 @@ namespace QuantConnect.Securities.Forex
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new SpreadSlippageModel(),
+                new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new ForexDataFilter()
+                new ForexDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new ForexHolding(this);
@@ -74,11 +75,12 @@ namespace QuantConnect.Securities.Forex
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new SpreadSlippageModel(),
+                new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new ForexDataFilter()
+                new ForexDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new ForexHolding(this);

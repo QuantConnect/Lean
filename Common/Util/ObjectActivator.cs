@@ -19,7 +19,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using CloneExtensions;
 using Fasterflect;
-using QuantConnect.Securities;
+using Python.Runtime;
+using QuantConnect.Python;
 
 namespace QuantConnect.Util
 {
@@ -51,6 +52,18 @@ namespace QuantConnect.Util
         {
             lock (_lock)
             {
+                // Special case: if base type is PythonData, we will the special factory with a PyObject
+                if (dataType.BaseType == typeof(PythonData))
+                {
+                    dataType = typeof(PythonData);
+                }
+
+                // Special case: if base type is PythonQuandl, we will the special factory with a PyObject
+                if (dataType.BaseType == typeof(PythonQuandl))
+                {
+                    dataType = typeof(PythonQuandl);
+                }
+
                 // if we already have it, just use it
                 Func<object[], object> factory;
                 if (_activatorsByType.TryGetValue(dataType, out factory))
@@ -122,6 +135,39 @@ namespace QuantConnect.Util
                 throw new Exception("Unable to clone instance of type " + instanceToClone.GetType().Name + " to " + typeof(T).Name);
             }
             return clone;
+        }
+
+        /// <summary>
+        /// Creates an activator for PythonData type
+        /// </summary>
+        /// <param name="module">The algorithm python module</param>
+        public static void SetPythonModule(PyObject module)
+        {
+            _activatorsByType[typeof(PythonData)] = type =>
+            {
+                using (Py.GIL())
+                {
+                    var instance = module.GetAttr(((Type)type[0]).Name).Invoke();
+                    return new PythonData(instance);
+                }
+            };
+
+            _activatorsByType[typeof(PythonQuandl)] = type =>
+            {
+                using (Py.GIL())
+                {
+                    var instance = module.GetAttr(((Type)type[0]).Name).Invoke();
+                    return new PythonQuandl(instance.GetAttr("ValueColumnName").ToString());
+                }
+            };
+        }
+
+        /// <summary>
+        /// Reset the object activators
+        /// </summary>
+        public static void ResetActivators()
+        {
+            _activatorsByType.Clear();
         }
     }
 }

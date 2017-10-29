@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox
         /// Invoked for each piece of data from the source file
         /// </summary>
         /// <param name="data">The data to be processed</param>
-        public void Process(BaseData data)
+        public void Process(IBaseData data)
         {
             foreach (var processor in _processors)
             {

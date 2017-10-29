@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ using System.Threading;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
@@ -38,7 +37,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// stage serves to cull the set using coarse filters, such as price, market, and dollar volume.
         /// Later we'll support full fundamental data such as ratios and financial statements, and these
         /// would be run AFTER the initial coarse filter
-        /// 
+        ///
         /// The files are generated from LEAN formatted daily trade bar equity files
         /// </summary>
         /// <param name="args">Unused argument</param>
@@ -51,6 +50,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var ignoreMaplessSymbols = false;
             var updateMode = false;
             var updateTime = TimeSpan.Zero;
+            DateTime? startDate = null;
             if (config.TryGetValue("update-mode", out jtoken))
             {
                 updateMode = jtoken.Value<bool>();
@@ -73,9 +73,16 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 ignoreMaplessSymbols = jtoken.Value<bool>();
             }
 
+            if (config.TryGetValue("coarse-universe-generator-start-date", out jtoken))
+            {
+                string startDateStr = jtoken.Value<string>();
+                startDate = DateTime.ParseExact(startDateStr, "yyyyMMdd", null);
+                Log.Trace("Generating coarse data from {0}", startDate);
+            }
+
             do
             {
-                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols);
+                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols, startDate);
             }
             while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
         }
@@ -101,7 +108,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// </summary>
         /// <param name="dataDirectory">The Lean /Data directory</param>
         /// <param name="ignoreMaplessSymbols">Ignore symbols without a QuantQuote map file.</param>
-        public static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols)
+        public static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols, DateTime? startDate)
         {
             var exclusions = ReadExclusionsFile(ExclusionsFile);
 
@@ -116,7 +123,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                     Directory.CreateDirectory(coarseFolder);
                 }
 
-                var lastProcessedDate = GetStartDate(coarseFolder);
+                var lastProcessedDate = startDate ?? GetLastProcessedDate(coarseFolder);
                 ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols, lastProcessedDate);
             }
         }
@@ -130,6 +137,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="mapFileResolver"></param>
         /// <param name="exclusions">The symbols to be excluded from processing</param>
         /// <param name="ignoreMapless">Ignore the symbols without a map file.</param>
+        /// <param name="startDate">The starting date for processing</param>
         /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
         /// the symbol, specify null for this behavior.</param>
         /// <returns>A collection of the generated coarse files</returns>
@@ -157,6 +165,13 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             }
             var market = dailyFolderDirectoryInfo.Name.ToLower();
 
+            var fundamentalDirectoryInfo = new DirectoryInfo(coarseFolder).Parent;
+            if (fundamentalDirectoryInfo == null)
+            {
+                throw new Exception("Unable to resolve fundamental path for coarse folder: " + coarseFolder);
+            }
+            var fineFundamentalFolder = Path.Combine(fundamentalDirectoryInfo.FullName, "fine");
+
             // open up each daily file to get the values and append to the daily coarse files
             foreach (var file in Directory.EnumerateFiles(dailyFolder))
             {
@@ -182,15 +197,22 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         continue;
                     }
 
+                    // check if symbol has any fine fundamental data
+                    var firstFineSymbolDate = DateTime.MaxValue;
+                    if (Directory.Exists(fineFundamentalFolder))
+                    {
+                        var fineSymbolFolder = Path.Combine(fineFundamentalFolder, symbol.ToLower());
+
+                        var firstFineSymbolFileName = Directory.Exists(fineSymbolFolder) ? Directory.GetFiles(fineSymbolFolder).OrderBy(x => x).FirstOrDefault() : string.Empty;
+                        if (firstFineSymbolFileName.Length > 0)
+                        {
+                            firstFineSymbolDate = DateTime.ParseExact(Path.GetFileNameWithoutExtension(firstFineSymbolFileName), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        }
+                    }
+
                     ZipFile zip;
                     using (var reader = Compression.Unzip(file, out zip))
                     {
-                        // 30 period EMA constant
-                        const decimal k = 2m / (30 + 1);
-
-                        var seeded = false;
-                        var runningAverageVolume = 0m;
-
                         var checkedForMapFile = false;
 
                         symbols++;
@@ -200,7 +222,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             //20150625.csv
                             var csv = line.Split(',');
                             var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                            
+
                             // spin past old data
                             if (date < startDate) continue;
 
@@ -218,14 +240,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             var close = decimal.Parse(csv[4])/scaleFactor;
                             var volume = long.Parse(csv[5]);
 
-                            // compute the current volume EMA for dollar volume calculations
-                            runningAverageVolume = seeded
-                                ? volume*k + runningAverageVolume*(1 - k)
-                                : volume;
-
-                            seeded = true;
-
-                            var dollarVolume = close * runningAverageVolume;
+                            var dollarVolume = close * volume;
 
                             var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
                             dates.Add(date);
@@ -246,8 +261,11 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                                 continue;
                             }
 
-                            // sid,symbol,close,volume,dollar volume
-                            var coarseFileLine = sid + "," + symbol + "," + close + "," + volume + "," + Math.Truncate(dollarVolume);
+                            // check if symbol has fine fundamental data for the current date
+                            var hasFundamentalDataForDate = date >= firstFineSymbolDate;
+
+                            // sid,symbol,close,volume,dollar volume,has fundamental data
+                            var coarseFileLine = sid + "," + symbol + "," + close + "," + volume + "," + Math.Truncate(dollarVolume) + "," + hasFundamentalDataForDate;
 
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))
@@ -309,7 +327,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// </summary>
         /// <param name="coarseDirectory">The directory containing the coarse files</param>
         /// <returns>The last coarse file date plus one day if exists, else DateTime.MinValue</returns>
-        public static DateTime GetStartDate(string coarseDirectory)
+        public static DateTime GetLastProcessedDate(string coarseDirectory)
         {
             var lastProcessedDate = (
                 from coarseFile in Directory.EnumerateFiles(coarseDirectory)

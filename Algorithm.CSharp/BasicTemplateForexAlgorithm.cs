@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,13 +14,18 @@
 */
 
 using QuantConnect.Data;
-using System.Linq;
+using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// Algorithm demonstrating FOREX asset types and requesting history on them in bulk. As FOREX uses
+    /// QuoteBars you should request slices or
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="history and warm up" />
+    /// <meta name="tag" content="history" />
+    /// <meta name="tag" content="forex" />
     public class BasicTemplateForexAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -28,21 +33,20 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2014, 5, 7);  //Set Start Date
+            SetEndDate(2014, 5, 15);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddForex("EURUSD", Resolution.Minute);
-            AddForex("GBPUSD", Resolution.Minute);
-            AddForex("EURGBP", Resolution.Minute);
+            AddForex("EURUSD");
+            AddForex("NZDUSD");
 
-            History(5, Resolution.Daily);
-            History(5, Resolution.Hour);
-            History(5, Resolution.Minute);
+            var dailyHistory = History(5, Resolution.Daily);
+            var hourHistory = History(5, Resolution.Hour);
+            var minuteHistory = History(5, Resolution.Minute);
+            var secondHistory = History(5, Resolution.Second);
 
-            var history = History(System.TimeSpan.FromSeconds(5), Resolution.Second);
-
-            foreach (var data in history.OrderBy(x => x.Time))
+            // Log values from history request of second-resolution data
+            foreach (var data in secondHistory)
             {
                 foreach (var key in data.Keys)
                 {
@@ -57,10 +61,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            // Print to console to verify that data is coming in
-            foreach (var key in data.Keys)
+            if (!Portfolio.Invested)
             {
-                Log(key.Value + ": " + data[key].Time + " > " + data[key].Value);
+                SetHoldings("EURUSD", .5);
+                SetHoldings("NZDUSD", .5);
+                Log(string.Join(", ", data.Values));
             }
         }
     }

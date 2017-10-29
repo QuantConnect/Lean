@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,12 @@
 
 using System;
 using System.Collections.Generic;
-using Krs.Ats.IBNet;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -52,6 +52,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 data.Add("ib-account", Config.Get("ib-account"));
                 data.Add("ib-user-name", Config.Get("ib-user-name"));
                 data.Add("ib-password", Config.Get("ib-password"));
+                data.Add("ib-trading-mode", Config.Get("ib-trading-mode"));
                 data.Add("ib-agent-description", Config.Get("ib-agent-description"));
                 return data;
             }
@@ -83,21 +84,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibControllerDirectory = Config.Get("ib-controller-dir", "C:\\IBController");
 
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
-            var userID = Read<string>(job.BrokerageData, "ib-user-name", errors);
+            var userId = Read<string>(job.BrokerageData, "ib-user-name", errors);
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
-            var agentDescription = Read<AgentDescription>(job.BrokerageData, "ib-agent-description", errors);
+            var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
+            var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
 
             if (errors.Count != 0)
             {
                 // if we had errors then we can't create the instance
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
-            
-            // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
 
-            var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
+            if (tradingMode.IsNullOrEmpty())
+            {
+                throw new Exception("No trading mode selected. Please select either 'paper' or 'live' trading.");
+            }
+
+            // launch the IB gateway
+            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userId, password, tradingMode, useTws);
+
+            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
+
             return ib;
         }
 

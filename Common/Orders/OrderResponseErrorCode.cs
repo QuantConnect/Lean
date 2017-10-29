@@ -163,6 +163,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The order's symbol references a non-tradable security
         /// </summary>
-        NonTradableSecurity = -28
+        NonTradableSecurity = -28,
+
+        /// <summary>
+        /// The order's symbol references a non-exercisable security
+        /// </summary>
+        NonExercisableSecurity = -29
     }
 }

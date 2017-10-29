@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// to be traded using the BaseData custom data system in combination with the AddUniverse{T} method.
     /// AddUniverse{T} requires a function that will return the symbols to be traded.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="universes" />
+    /// <meta name="tag" content="custom universes" />
     public class DropboxBaseDataUniverseSelectionAlgorithm : QCAlgorithm
     {
         // the changes from the previous universe selection
@@ -70,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (_changes == SecurityChanges.None) return;
 
             // start fresh
-            
+
             Liquidate();
 
             var percentage = 1m / slice.Bars.Count;
@@ -116,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             /// <summary>
-            /// Return the URL string source of the file. This will be converted to a stream 
+            /// Return the URL string source of the file. This will be converted to a stream
             /// </summary>
             /// <param name="config">Configuration object</param>
             /// <param name="date">Date of this source file</param>
@@ -129,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             /// <summary>
-            /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
+            /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
             /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
             /// </summary>
             /// <param name="config">Subscription data config setup object</param>

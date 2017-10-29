@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public SecurityTransactionModel()
         {
-            _slippageModel = new SpreadSlippageModel();
+            _slippageModel = new ConstantSlippageModel(0);
             _fillModel = new ImmediateFillModel();
             _feeModel = new ConstantFeeModel(0);
         }

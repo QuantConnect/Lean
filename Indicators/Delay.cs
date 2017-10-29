@@ -41,6 +41,14 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        ///     Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady
+        {
+            get { return Samples > Period; }
+        }
+
+        /// <summary>
         ///     Computes the next value for this indicator from the given state.
         /// </summary>
         /// <param name="window">The window of data held in this indicator</param>
@@ -48,7 +56,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            if (!window.IsReady)
+            if (!IsReady)
             {
                 // grab the initial value until we're ready
                 return window[window.Count - 1];

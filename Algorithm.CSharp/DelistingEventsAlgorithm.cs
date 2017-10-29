@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -22,11 +21,12 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Showcases the delisting event of QCAlgorithm
+    /// Demonstration of using the Delisting event in your algorithm. Assets are delisted on their last day of trading, or when their contract expires.
+    /// This data is not included in the open source project.
     /// </summary>
-    /// <remarks>
-    /// The data for this algorithm isn't in the github repo, so this will need to be run on the QC site
-    /// </remarks>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="data event handlers" />
+    /// <meta name="tag" content="delisting event" />
     public class DelistingEventsAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var symbol = kvp.Key;
                 var tradeBar = kvp.Value;
-                Console.WriteLine("OnData(Slice): {0}: {1}: {2}", Time, symbol, tradeBar.Close.ToString("0.00"));
+                Debug(string.Format("OnData(Slice): {0}: {1}: {2}", Time, symbol, tradeBar.Close.ToString("0.00")));
             }
 
             // the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
@@ -72,18 +72,18 @@ namespace QuantConnect.Algorithm.CSharp
                 var delisting = kvp.Value;
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    Console.WriteLine("OnData(Delistings): {0}: {1} will be delisted at end of day today.", Time, symbol);
+                    Debug(string.Format("OnData(Delistings): {0}: {1} will be delisted at end of day today.", Time, symbol));
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    Console.WriteLine("OnData(Delistings): {0}: {1} has been delisted.", Time, symbol);
+                    Debug(string.Format("OnData(Delistings): {0}: {1} has been delisted.", Time, symbol));
                 }
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Console.WriteLine("OnOrderEvent(OrderEvent): {0}: {1}", Time, orderEvent);
+            Debug(string.Format("OnOrderEvent(OrderEvent): {0}: {1}", Time, orderEvent));
         }
     }
 }

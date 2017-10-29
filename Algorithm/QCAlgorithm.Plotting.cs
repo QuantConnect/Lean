@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
@@ -23,20 +25,13 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
-        private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
+        private readonly Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
 
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
         /// <remarks> RuntimeStatistics are displayed in the head banner in live trading</remarks>
-        public Dictionary<string, string> RuntimeStatistics
-        {
-            get
-            {
-                return _runtimeStatistics;
-            }
-        }
+        public ConcurrentDictionary<string, string> RuntimeStatistics { get; } = new ConcurrentDictionary<string, string>();
 
         /// <summary>
         /// Add a Chart object to algorithm collection
@@ -154,7 +149,7 @@ namespace QuantConnect.Algorithm
         /// <param name="chart">Chart name</param>
         /// <param name="series">Series name</param>
         /// <param name="value">Value of the point</param>
-        public void Plot(string chart, string series, decimal value) 
+        public void Plot(string chart, string series, decimal value)
         {
             //Ignore the reserved chart names:
             if ((chart == "Strategy Equity" && series == "Equity") || (chart == "Daily Performance") || (chart == "Meta"))
@@ -165,11 +160,11 @@ namespace QuantConnect.Algorithm
             // If we don't have the chart, create it:
             if (!_charts.ContainsKey(chart))
             {
-                _charts.Add(chart, new Chart(chart)); 
+                _charts.Add(chart, new Chart(chart));
             }
 
             var thisChart = _charts[chart];
-            if (!thisChart.Series.ContainsKey(series)) 
+            if (!thisChart.Series.ContainsKey(series))
             {
                 //Number of series in total.
                 var seriesCount = (from x in _charts.Values select x.Series.Count).Sum();
@@ -187,12 +182,32 @@ namespace QuantConnect.Algorithm
             var thisSeries = thisChart.Series[series];
             if (thisSeries.Values.Count < 4000 || _liveMode)
             {
-                thisSeries.AddPoint(Time, value, _liveMode);
+                thisSeries.AddPoint(UtcTime, value, _liveMode);
             }
-            else 
+            else
             {
                 Debug("Exceeded maximum points per chart, data skipped.");
             }
+        }
+
+        /// <summary>
+        /// Add a series object for charting. This is useful when initializing charts with
+        /// series other than type = line. If a series exists in the chart with the same name,
+        /// then it is replaced.
+        /// </summary>
+        /// <param name="chart">The chart name</param>
+        /// <param name="series">The series name</param>
+        /// <param name="seriesType">The type of series, i.e, Scatter</param>
+        /// <param name="unit">The unit of the y axis, usually $</param>
+        public void AddSeries(string chart, string series, SeriesType seriesType, string unit = "$")
+        {
+            Chart c;
+            if (!_charts.TryGetValue(chart, out c))
+            {
+                _charts[chart] = c = new Chart(chart);
+            }
+
+            c.Series[series] = new Series(series, seriesType, unit);
         }
 
         /// <summary>
@@ -202,7 +217,7 @@ namespace QuantConnect.Algorithm
         /// <param name="indicators">The indicatorsto plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         public void Plot<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var indicator in indicators)
             {
@@ -214,10 +229,12 @@ namespace QuantConnect.Algorithm
         /// Automatically plots each indicator when a new value is available
         /// </summary>
         public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var i in indicators)
             {
+                if (i == null) continue;
+
                 // copy loop variable for usage in closure
                 var ilocal = i;
                 i.Updated += (sender, args) =>
@@ -231,10 +248,12 @@ namespace QuantConnect.Algorithm
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
         public void PlotIndicator<T>(string chart, bool waitForReady, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var i in indicators)
             {
+                if (i == null) continue;
+
                 // copy loop variable for usage in closure
                 var ilocal = i;
                 i.Updated += (sender, args) =>
@@ -255,14 +274,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="LiveMode"/>
         public void SetRuntimeStatistic(string name, string value)
         {
-            //If not set, add it to the dictionary:
-            if (!_runtimeStatistics.ContainsKey(name))
-            {
-                _runtimeStatistics.Add(name, value);
-            }
-
-            //Set 
-            _runtimeStatistics[name] = value;
+            RuntimeStatistics.AddOrUpdate(name, value);
         }
 
         /// <summary>
@@ -272,7 +284,7 @@ namespace QuantConnect.Algorithm
         /// <param name="value">Decimal value of your runtime statistic</param>
         public void SetRuntimeStatistic(string name, decimal value)
         {
-            SetRuntimeStatistic(name, value.ToString());
+            SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -292,7 +304,7 @@ namespace QuantConnect.Algorithm
         /// <param name="value">Double value of your runtime statistic</param>
         public void SetRuntimeStatistic(string name, double value)
         {
-            SetRuntimeStatistic(name, value.ToString());
+            SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>

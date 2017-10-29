@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,24 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
+from datetime import timedelta
 
-
+### <summary>
+### Demonstration of the Scheduled Events features available in QuantConnect.
+### </summary>
+### <meta name="tag" content="scheduled events" />
+### <meta name="tag" content="date rules" />
+### <meta name="tag" content="time rules" />
 class ScheduledEventsAlgorithm(QCAlgorithm):
-    '''QCU Scheduled Events Algorithm'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
+
         self.SetStartDate(2013,10,07)  #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+        self.AddEquity("SPY")
 
         # events are scheduled using date and time rules
         # date rules specify on what dates and event will fire
@@ -58,7 +63,7 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
         # the scheduling methods return the ScheduledEvent object which can be used for other things here I set
         # the event up to check the portfolio value every 10 minutes, and liquidate if we have too many losses
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(TimeSpan.FromMinutes(10)), Action(self.LiquidateUnrealizedLosses))
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(minutes=10)), Action(self.LiquidateUnrealizedLosses))
 
         # schedule an event to fire at the beginning of the month, the symbol is optional
         # if specified, it will fire the first trading day for that symbol of the month,
@@ -67,11 +72,7 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 

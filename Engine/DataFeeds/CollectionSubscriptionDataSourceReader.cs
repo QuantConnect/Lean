@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
 
@@ -27,24 +28,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class CollectionSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
-        
+
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
         private readonly SubscriptionDataConfig _config;
+        private readonly IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CollectionSubscriptionDataSourceReader"/> class
         /// </summary>
+        /// <param name="dataCacheProvider">Used to cache data for requested from the IDataProvider</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public CollectionSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public CollectionSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            _dataCacheProvider = dataCacheProvider;
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
-            _factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[0]);
+            _factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
         }
 
         /// <summary>
@@ -54,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public event EventHandler<InvalidSourceEventArgs> InvalidSource;
 
         /// <summary>
-        /// Event fired when an exception is thrown during a call to 
+        /// Event fired when an exception is thrown during a call to
         /// <see cref="BaseData.Reader(SubscriptionDataConfig, string, DateTime, bool)"/>
         /// </summary>
         public event EventHandler<ReaderErrorEventArgs> ReaderError;
@@ -66,8 +70,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
+            SubscriptionDataSourceReader.CheckRemoteFileCache();
+
             IStreamReader reader = null;
-            var instances = new BaseDataCollection();
             try
             {
                 switch (source.TransportMedium)
@@ -77,32 +82,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         reader = new RestSubscriptionStreamReader(source.Source);
                         break;
                     case SubscriptionTransportMedium.LocalFile:
-                        reader = new LocalFileSubscriptionStreamReader(source.Source);
+                        reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
                         break;
                     case SubscriptionTransportMedium.RemoteFile:
-                        reader = new RemoteFileSubscriptionStreamReader(source.Source, Globals.Cache);
+                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache);
                         break;
                 }
 
                 var raw = "";
-                try
+                while (!reader.EndOfStream)
                 {
-                    raw = reader.ReadLine();
-                    var result = _factory.Reader(_config, raw, _date, _isLiveMode);
-                    instances = result as BaseDataCollection;
-                    if (instances == null)
+                    BaseDataCollection instances;
+                    try
                     {
-                        OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
+                        raw = reader.ReadLine();
+                        var result = _factory.Reader(_config, raw, _date, _isLiveMode);
+                        instances = result as BaseDataCollection;
+                        if (instances == null)
+                        {
+                            OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
+                            continue;
+                        }
                     }
-                }
-                catch (Exception err)
-                {
-                    OnReaderError(raw, err);
-                }
+                    catch (Exception err)
+                    {
+                        OnReaderError(raw, err);
+                        continue;
+                    }
 
-                foreach (var instance in instances.Data)
-                {
-                    yield return instance;
+                    if (_isLiveMode)
+                    {
+                        yield return instances;
+                    }
+                    else
+                    {
+                        foreach (var instance in instances.Data)
+                        {
+                            yield return instance;
+                        }
+                    }
                 }
             }
             finally

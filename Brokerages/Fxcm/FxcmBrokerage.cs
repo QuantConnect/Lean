@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,9 @@ using com.fxcm.external.api.util;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
+using com.fxcm.messaging.util;
+using NodaTime;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -50,11 +53,30 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly object _lockerConnectionMonitor = new object();
         private DateTime _lastReadyMessageTime;
         private volatile bool _connectionLost;
-        private volatile bool _connectionError;
 
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
+
+        private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
+
+        private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
+
+        /// <summary>
+        /// Gets/sets a timeout for history requests (in milliseconds)
+        /// </summary>
+        public int HistoryResponseTimeout { get; set; }
+
+        /// <summary>
+        /// Gets/sets the maximum number of retries for a history request
+        /// </summary>
+        public int MaximumHistoryRetryAttempts { get; set; }
+
+        /// <summary>
+        /// Gets/sets a value to enable only history requests to this brokerage
+        /// Set to true in parallel downloaders to avoid loading accounts, orders, positions etc. at connect time
+        /// </summary>
+        public bool EnableOnlyHistoryRequests { get; set; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
@@ -76,6 +98,9 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            HistoryResponseTimeout = 5000;
+            MaximumHistoryRetryAttempts = 1;
         }
 
         #region IBrokerage implementation
@@ -103,24 +128,34 @@ namespace QuantConnect.Brokerages.Fxcm
             _cancellationTokenSource = new CancellationTokenSource();
 
             // create new thread to fire order events in queue
-            _orderEventThread = new Thread(() =>
+            if (!EnableOnlyHistoryRequests)
             {
-                while (!_cancellationTokenSource.IsCancellationRequested)
+                _orderEventThread = new Thread(() =>
                 {
-                    OrderEvent orderEvent;
-                    if (!_orderEventQueue.TryDequeue(out orderEvent))
+                    while (!_cancellationTokenSource.IsCancellationRequested)
                     {
-                        Thread.Sleep(1);
-                        continue;
-                    }
+                        try
+                        {
+                            OrderEvent orderEvent;
+                            if (!_orderEventQueue.TryDequeue(out orderEvent))
+                            {
+                                Thread.Sleep(1);
+                                continue;
+                            }
 
-                    OnOrderEvent(orderEvent);
+                            OnOrderEvent(orderEvent);
+                        }
+                        catch (Exception exception)
+                        {
+                            Log.Error(exception);
+                        }
+                    }
+                }) { IsBackground = true };
+                _orderEventThread.Start();
+                while (!_orderEventThread.IsAlive)
+                {
+                    Thread.Sleep(1);
                 }
-            });
-            _orderEventThread.Start();
-            while (!_orderEventThread.IsAlive)
-            {
-                Thread.Sleep(1);
             }
 
             // create the gateway
@@ -132,101 +167,136 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // create local login properties
             var loginProperties = new FXCMLoginProperties(_userName, _password, _terminal, _server);
+            loginProperties.addProperty(IConnectionManager.APP_INFO, "QuantConnect");
 
             // log in
-            _gateway.login(loginProperties);
+            try
+            {
+                _gateway.login(loginProperties);
+            }
+            catch (Exception err)
+            {
+                var message =
+                    err.Message.Contains("ORA-20101") ? "Incorrect login credentials" :
+                    err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
+                    err.Message;
+
+                _cancellationTokenSource.Cancel();
+
+                throw new BrokerageException(message, err.InnerException);
+            }
 
             // create new thread to manage disconnections and reconnections
-            _connectionMonitorThread = new Thread(() =>
+            if (!EnableOnlyHistoryRequests)
             {
-                _lastReadyMessageTime = DateTime.UtcNow;
-
-                try
+                _connectionMonitorThread = new Thread(() =>
                 {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    _lastReadyMessageTime = DateTime.UtcNow;
+
+                    try
                     {
-                        TimeSpan elapsed;
-                        lock (_lockerConnectionMonitor)
+                        while (!_cancellationTokenSource.IsCancellationRequested)
                         {
-                            elapsed = DateTime.UtcNow - _lastReadyMessageTime;
-                        }
-
-                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(5))
-                        {
-                            _connectionLost = true;
-
-                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
-                                                                         "This could be because of internet connectivity issues. "));
-                        }
-                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5))
-                        {
-                            try
+                            TimeSpan elapsed;
+                            lock (_lockerConnectionMonitor)
                             {
-                                _gateway.relogin();
-
-                                _connectionLost = false;
-
-                                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
+                                elapsed = DateTime.UtcNow - _lastReadyMessageTime;
                             }
-                            catch (Exception exception)
+
+                            if (!_connectionLost && elapsed > TimeSpan.FromSeconds(10))
                             {
-                                Log.Error(exception);
+                                _connectionLost = true;
+
+                                OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
+                                                                             "This could be because of internet connectivity issues. "));
                             }
+                            else if (_connectionLost && IsWithinTradingHours())
+                            {
+                                Log.Trace("FxcmBrokerage.ConnectionMonitorThread(): Attempting reconnection...");
+
+                                try
+                                {
+                                    // log out
+                                    try
+                                    {
+                                        _gateway.logout();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // ignored
+                                    }
+
+                                    // remove the message listeners
+                                    _gateway.removeGenericMessageListener(this);
+                                    _gateway.removeStatusMessageListener(this);
+
+                                    // register the message listeners with the gateway
+                                    _gateway.registerGenericMessageListener(this);
+                                    _gateway.registerStatusMessageListener(this);
+
+                                    // log in
+                                    _gateway.login(loginProperties);
+
+                                    // load instruments, accounts, orders, positions
+                                    LoadInstruments();
+                                    if (!EnableOnlyHistoryRequests)
+                                    {
+                                        LoadAccounts();
+                                        LoadOpenOrders();
+                                        LoadOpenPositions();
+                                    }
+
+                                    _connectionLost = false;
+
+                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
+                                }
+                                catch (Exception exception)
+                                {
+                                    Log.Trace("FxcmBrokerage.ConnectionMonitorThread(): reconnect failed.");
+                                    Log.Error(exception);
+                                }
+                            }
+
+                            Thread.Sleep(5000);
                         }
-                        else if (_connectionError)
-                        {
-                            try
-                            {
-                                // log out
-                                _gateway.logout();
-
-                                // remove the message listeners
-                                _gateway.removeGenericMessageListener(this);
-                                _gateway.removeStatusMessageListener(this);
-
-                                // register the message listeners with the gateway
-                                _gateway.registerGenericMessageListener(this);
-                                _gateway.registerStatusMessageListener(this);
-
-                                // log in
-                                _gateway.login(loginProperties);
-
-                                // load instruments, accounts, orders, positions
-                                LoadInstruments();
-                                LoadAccounts();
-                                LoadOpenOrders();
-                                LoadOpenPositions();
-
-                                _connectionError = false;
-                                _connectionLost = false;
-
-                                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error(exception);
-                            }
-                        }
-
-                        Thread.Sleep(5000);
                     }
-                }
-                catch (Exception exception)
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                    }
+                }) { IsBackground = true };
+                _connectionMonitorThread.Start();
+                while (!_connectionMonitorThread.IsAlive)
                 {
-                    Log.Error(exception);
+                    Thread.Sleep(1);
                 }
-            });
-            _connectionMonitorThread.Start();
-            while (!_connectionMonitorThread.IsAlive)
-            {
-                Thread.Sleep(1);
             }
 
             // load instruments, accounts, orders, positions
             LoadInstruments();
-            LoadAccounts();
-            LoadOpenOrders();
-            LoadOpenPositions();
+            if (!EnableOnlyHistoryRequests)
+            {
+                LoadAccounts();
+                LoadOpenOrders();
+                LoadOpenPositions();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if we are within FXCM trading hours
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsWithinTradingHours()
+        {
+            var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.EasternStandard);
+
+            // FXCM Trading Hours: http://help.fxcm.com/us/Trading-Basics/New-to-Forex/38757093/What-are-the-Trading-Hours.htm
+
+            return !(time.DayOfWeek == DayOfWeek.Friday && time.TimeOfDay > new TimeSpan(16, 55, 0) ||
+                     time.DayOfWeek == DayOfWeek.Saturday ||
+                     time.DayOfWeek == DayOfWeek.Sunday && time.TimeOfDay < new TimeSpan(17, 0, 0) ||
+                     time.Month == 12 && time.Day == 25 ||
+                     time.Month == 1 && time.Day == 1);
         }
 
         /// <summary>
@@ -234,25 +304,38 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         public override void Disconnect()
         {
-            if (!IsConnected) return;
-
             Log.Trace("FxcmBrokerage.Disconnect()");
 
-            // log out
-            _gateway.logout();
+            if (_gateway != null)
+            {
+                // log out
+                try
+                {
+                    if (_gateway.isConnected())
+                        _gateway.logout();
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
 
-            // remove the message listeners
-            _gateway.removeGenericMessageListener(this);
-            _gateway.removeStatusMessageListener(this);
+                // remove the message listeners
+                _gateway.removeGenericMessageListener(this);
+                _gateway.removeStatusMessageListener(this);
+            }
 
             // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _orderEventThread.Join();
-            _connectionMonitorThread.Join();
+            if (_cancellationTokenSource != null) _cancellationTokenSource.Cancel();
+
+            if (!EnableOnlyHistoryRequests)
+            {
+                if (_orderEventThread != null) _orderEventThread.Join();
+                if (_connectionMonitorThread != null) _connectionMonitorThread.Join();
+            }
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from FXCM</returns>
@@ -274,7 +357,22 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             Log.Trace("FxcmBrokerage.GetAccountHoldings()");
 
-            var holdings = _openPositions.Values.Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
+            // FXCM maintains multiple positions per symbol, so we aggregate them by symbol.
+            // The average price for the aggregated position is the quantity weighted average price.
+            var holdings = _openPositions.Values
+                .Select(ConvertHolding)
+                .Where(x => x.Quantity != 0)
+                .GroupBy(x => x.Symbol)
+                .Select(group => new Holding
+                {
+                    Symbol = group.Key,
+                    Type = group.First().Type,
+                    AveragePrice = group.Sum(x => x.AveragePrice * x.Quantity) / group.Sum(x => x.Quantity),
+                    ConversionRate = group.First().ConversionRate,
+                    CurrencySymbol = group.First().CurrencySymbol,
+                    Quantity = group.Sum(x => x.Quantity)
+                })
+                .ToList();
 
             // Set MarketPrice in each Holding
             var fxcmSymbols = holdings
@@ -304,11 +402,56 @@ namespace QuantConnect.Brokerages.Fxcm
         public override List<Cash> GetCashBalance()
         {
             Log.Trace("FxcmBrokerage.GetCashBalance()");
+            var cashBook = new List<Cash>();
 
-            return new List<Cash>
+            //Adds the account currency USD to the cashbook.
+            cashBook.Add(new Cash(_fxcmAccountCurrency,
+                        Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
+                        GetUsdConversion(_fxcmAccountCurrency)));
+
+            foreach (var trade in _openPositions.Values)
             {
-                new Cash(_fxcmAccountCurrency, Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()), GetUsdConversion(_fxcmAccountCurrency))
-            };
+                //settlement price for the trade
+                var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
+                //direction of trade
+                var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
+                //quantity of the asset
+                var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
+                //quantity of base currency
+                var baseQuantity = direction * quantity;
+                //quantity of quote currency
+                var quoteQuantity = -direction * quantity * settlementPrice;
+                //base currency
+                var baseCurrency = trade.getCurrency();
+                //quote currency
+                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
+                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
+
+                var baseCurrencyObject = (from cash in cashBook where cash.Symbol == baseCurrency select cash).FirstOrDefault();
+                //update the value of the base currency
+                if (baseCurrencyObject != null)
+                {
+                    baseCurrencyObject.AddAmount(baseQuantity);
+                }
+                else
+                {
+                    //add the base currency if not present
+                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
+                }
+
+                var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
+                //update the value of the quote currency
+                if (quoteCurrencyObject != null)
+                {
+                    quoteCurrencyObject.AddAmount(quoteQuantity);
+                }
+                else
+                {
+                    //add the quote currency if not present
+                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
+                }
+            }
+            return cashBook;
         }
 
         /// <summary>
@@ -466,6 +609,125 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new TimeoutException(string.Format("FxcmBrokerage.CancelOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderUpdateOrCancelRejected;
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+            {
+                Log.Trace("FxcmBrokerage.GetHistory(): Invalid symbol: {0}, no history returned", request.Symbol.Value);
+                yield break;
+            }
+
+            // cache exchange time zone for symbol
+            DateTimeZone exchangeTimeZone;
+            if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
+            {
+                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, request.Symbol, request.Symbol.SecurityType).TimeZone;
+                _symbolExchangeTimeZones.Add(request.Symbol, exchangeTimeZone);
+            }
+
+            var interval = ToFxcmInterval(request.Resolution);
+
+            // download data
+            var history = new List<BaseData>();
+            var lastEndTime = DateTime.MinValue;
+
+            var end = request.EndTimeUtc;
+
+            var attempt = 1;
+            while (end > request.StartTimeUtc)
+            {
+                Log.Debug(string.Format("FxcmBrokerage.GetHistory(): Requesting {0:O} to {1:O}", end, request.StartTimeUtc));
+                _lastHistoryChunk.Clear();
+
+                var mdr = new MarketDataRequest();
+                mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
+                mdr.setResponseFormat(IFixMsgTypeDefs.__Fields.MSGTYPE_FXCMRESPONSE);
+                mdr.setFXCMTimingInterval(interval);
+                mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+
+                mdr.setFXCMStartDate(new UTCDate(ToJavaDateUtc(request.StartTimeUtc)));
+                mdr.setFXCMStartTime(new UTCTimeOnly(ToJavaDateUtc(request.StartTimeUtc)));
+                mdr.setFXCMEndDate(new UTCDate(ToJavaDateUtc(end)));
+                mdr.setFXCMEndTime(new UTCTimeOnly(ToJavaDateUtc(end)));
+                mdr.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(request.Symbol)]);
+
+                AutoResetEvent autoResetEvent;
+                lock (_locker)
+                {
+                    _currentRequest = _gateway.sendMessage(mdr);
+                    autoResetEvent = new AutoResetEvent(false);
+                    _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
+                    _pendingHistoryRequests.Add(_currentRequest);
+                }
+
+                if (!autoResetEvent.WaitOne(HistoryResponseTimeout))
+                {
+                    // No response can mean genuine timeout or the history data has ended.
+
+                    // 90% of the time no response because no data; widen the search net to 5m if we don't get a response:
+                    if (request.StartTimeUtc.AddSeconds(300) >= end)
+                    {
+                        break;
+                    }
+
+                    // 5% of the time its because the data ends at a specific, repeatible time not close to our desired endtime:
+                    if (end == lastEndTime)
+                    {
+                        Log.Trace("FxcmBrokerage.GetHistory(): Request for {0} ended at {1:O}", request.Symbol.Value, end);
+                        break;
+                    }
+
+                    // 5% of the time its because of an internet / time of day / api settings / timeout: throw if this is the *second* attempt.
+                    if (EnableOnlyHistoryRequests && lastEndTime != DateTime.MinValue)
+                    {
+                        throw new TimeoutException(string.Format("FxcmBrokerage.GetHistory(): History operation ending in {0:O} took longer than {1} seconds. This may be because there is no data, retrying...", end, (decimal)HistoryResponseTimeout / 1000));
+                    }
+
+                    // Assuming Timeout: If we've already retried quite a few times, lets bail.
+                    if (++attempt > MaximumHistoryRetryAttempts)
+                    {
+                        Log.Trace("FxcmBrokerage.GetHistory(): Maximum attempts reached for: " + request.Symbol.Value);
+                        break;
+                    }
+
+                    // Assuming Timeout: Save end time and if have the same endtime next time, break since its likely there's no data after that time.
+                    lastEndTime = end;
+                    Log.Trace("FxcmBrokerage.GetHistory(): Attempt " + attempt + " for: " + request.Symbol.Value + " ended at " + lastEndTime.ToString("O"));
+                    continue;
+                }
+
+                // Add data
+                lock (_locker)
+                {
+                    history.InsertRange(0, _lastHistoryChunk);
+                }
+
+                var firstDateUtc = _lastHistoryChunk[0].Time.ConvertToUtc(exchangeTimeZone);
+                if (end != firstDateUtc)
+                {
+                    // new end date = first datapoint date.
+                    end = request.Resolution == Resolution.Tick ? firstDateUtc.AddMilliseconds(-1) : firstDateUtc.AddSeconds(-1);
+
+                    if (request.StartTimeUtc.AddSeconds(10) >= end)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            foreach (var data in history)
+            {
+                yield return data;
+            }
         }
 
         #endregion

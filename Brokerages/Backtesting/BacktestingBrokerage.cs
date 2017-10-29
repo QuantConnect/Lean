@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -34,10 +35,13 @@ namespace QuantConnect.Brokerages.Backtesting
         // is not exactly the fastest operation and Scan gets called at least twice per
         // time loop
         private bool _needsScan;
-        // this is the algorithm under test
-        protected readonly IAlgorithm Algorithm;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
+
+        /// <summary>
+        /// This is the algorithm under test
+        /// </summary>
+        protected readonly IAlgorithm Algorithm;
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -62,6 +66,18 @@ namespace QuantConnect.Brokerages.Backtesting
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
+        /// <summary>
+        /// Creates a new BacktestingBrokerage for the specified algorithm. Adds market simulation to BacktestingBrokerage;
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketSimulation">The backtesting market simulation instance</param>
+        public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
+            : base("Backtesting Brokerage")
+        {
+            Algorithm = algorithm;
+            MarketSimulation = marketSimulation;
+            _pending = new ConcurrentDictionary<int, Order>();
+        }
         /// <summary>
         /// Gets the connection status
         /// </summary>
@@ -191,6 +207,11 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Market Simulation - simulates various market conditions in backtest
+        /// </summary>
+        public IBacktestingMarketSimulation MarketSimulation { get; set; }
+
+        /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
         /// </summary>
         public void Scan()
@@ -224,7 +245,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var fill = new OrderEvent(order, Algorithm.UtcTime, 0);
+                    var fills = new[] { new OrderEvent(order, Algorithm.UtcTime, 0) };
 
                     Security security;
                     if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
@@ -273,27 +294,32 @@ namespace QuantConnect.Brokerages.Backtesting
                             switch (order.Type)
                             {
                                 case OrderType.Limit:
-                                    fill = model.LimitFill(security, order as LimitOrder);
+                                    fills = new[] { model.LimitFill(security, order as LimitOrder) };
                                     break;
 
                                 case OrderType.StopMarket:
-                                    fill = model.StopMarketFill(security, order as StopMarketOrder);
+                                    fills = new[] { model.StopMarketFill(security, order as StopMarketOrder) };
                                     break;
 
                                 case OrderType.Market:
-                                    fill = model.MarketFill(security, order as MarketOrder);
+                                    fills = new[] { model.MarketFill(security, order as MarketOrder) };
                                     break;
 
                                 case OrderType.StopLimit:
-                                    fill = model.StopLimitFill(security, order as StopLimitOrder);
+                                    fills = new[] { model.StopLimitFill(security, order as StopLimitOrder) };
                                     break;
 
                                 case OrderType.MarketOnOpen:
-                                    fill = model.MarketOnOpenFill(security, order as MarketOnOpenOrder);
+                                    fills = new[] { model.MarketOnOpenFill(security, order as MarketOnOpenOrder) };
                                     break;
 
                                 case OrderType.MarketOnClose:
-                                    fill = model.MarketOnCloseFill(security, order as MarketOnCloseOrder);
+                                    fills = new[] { model.MarketOnCloseFill(security, order as MarketOnCloseOrder) };
+                                    break;
+
+                                case OrderType.OptionExercise:
+                                    var option = (Option)security;
+                                    fills = option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder).ToArray();
                                     break;
                             }
                         }
@@ -312,14 +338,22 @@ namespace QuantConnect.Brokerages.Backtesting
                             order.GetValue(security).SmartRounding()));
                     }
 
-                    // change in status or a new fill
-                    if (order.Status != fill.Status || fill.FillQuantity != 0)
+                    foreach (var fill in fills)
                     {
-                        //If the fill models come back suggesting filled, process the affects on portfolio
-                        OnOrderEvent(fill);
+                        // change in status or a new fill
+                        if (order.Status != fill.Status || fill.FillQuantity != 0)
+                        {
+                            //If the fill models come back suggesting filled, process the affects on portfolio
+                            OnOrderEvent(fill);
+                        }
+
+                        if (order.Type == OrderType.OptionExercise)
+                        {
+                            OnOptionPositionAssigned(fill);
+                        }
                     }
 
-                    if (fill.Status.IsClosed())
+                    if (fills.All(x => x.Status.IsClosed()))
                     {
                         _pending.TryRemove(order.Id, out order);
                     }
@@ -328,9 +362,41 @@ namespace QuantConnect.Brokerages.Backtesting
                         stillNeedsScan = true;
                     }
                 }
-                
+
                 // if we didn't fill then we need to continue to scan
                 _needsScan = stillNeedsScan;
+            }
+        }
+
+        /// <summary>
+        /// Runs market simulation 
+        /// </summary>
+        public void SimulateMarket()
+        {
+            // if simulator is installed, we run it
+            if (MarketSimulation != null)
+                MarketSimulation.SimulateMarketConditions(this, Algorithm);
+        }
+
+        /// <summary>
+        /// This method is called by market simulator in order to launch an assignment event
+        /// </summary>
+        /// <param name="option">Option security to assign</param>
+        /// <param name="quantity">Quantity to assign</param>
+        public virtual void ActivateOptionAssignment(Option option, int quantity)
+        {
+            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0.0m, 0.0m, Algorithm.UtcTime, "Simulated option assignment");
+            var order = (OptionExerciseOrder)Order.CreateOrder(request);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
+
+            foreach (var fill in fills)
+            {
+                // processing assignment in the portfolio first
+                portfolioModel.ProcessFill(Algorithm.Portfolio, option, fill);
+
+                // firing event informing interested parties that option position has been assigned
+                OnOptionPositionAssigned(fill);
             }
         }
 

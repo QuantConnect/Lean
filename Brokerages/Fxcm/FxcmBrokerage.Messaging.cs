@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,11 +19,13 @@ using System.Linq;
 using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.fix;
+using com.fxcm.fix.admin;
 using com.fxcm.fix.other;
 using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
+using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -39,7 +41,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
         private readonly object _locker = new object();
         private string _currentRequest;
-        private const int ResponseTimeout = 2500;
+        private const int ResponseTimeout = 5000;
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
 
@@ -48,11 +50,13 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();
 
         private readonly Dictionary<string, ExecutionReport> _openOrders = new Dictionary<string, ExecutionReport>();
+        // Map key: fxcmPositionId (can have multiple positions for the same symbol)
         private readonly Dictionary<string, PositionReport> _openPositions = new Dictionary<string, PositionReport>();
 
         private readonly Dictionary<string, Order> _mapRequestsToOrders = new Dictionary<string, Order>();
         private readonly Dictionary<string, Order> _mapFxcmOrderIdsToOrders = new Dictionary<string, Order>();
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
+        private readonly HashSet<string> _pendingHistoryRequests = new HashSet<string>();
 
         private string _fxcmAccountCurrency = "USD";
 
@@ -89,7 +93,8 @@ namespace QuantConnect.Brokerages.Fxcm
             // Hedging MUST be disabled on the account
             if (_accounts[_accountId].getParties().getFXCMPositionMaintenance() == "Y")
             {
-                throw new NotSupportedException("FxcmBrokerage.LoadAccounts(): The Lean engine does not support accounts with Hedging enabled. Please contact FXCM support to disable Hedging.");
+                throw new NotSupportedException("FxcmBrokerage.LoadAccounts(): The Lean engine does not support accounts with Hedging enabled. " +
+                                                "Please contact FXCM Active Trader support to disable Hedging. They can be reached at 646.432.2970 or by email, activetrader@fxcm.com.");
             }
         }
 
@@ -111,7 +116,9 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenPositions(_accountId);
+                _currentRequest = _terminal.Equals("Demo") ?
+                    _gateway.requestOpenPositions(Convert.ToInt64(_accountId)) :
+                    _gateway.requestOpenPositions(_accountId);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
@@ -129,7 +136,7 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 Symbol = _symbolMapper.GetLeanSymbol(
                     x.getInstrument().getSymbol(),
-                    _symbolMapper.GetBrokerageSecurityType(x.getInstrument().getSymbol()), 
+                    _symbolMapper.GetBrokerageSecurityType(x.getInstrument().getSymbol()),
                     Market.FXCM),
                 BidPrice = (decimal) x.getBidClose(),
                 AskPrice = (decimal) x.getAskClose()
@@ -219,7 +226,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else if (message is OrderCancelReject)
                     OnOrderCancelReject((OrderCancelReject)message);
 
-                else if (message is UserResponse || message is CollateralInquiryAck ||
+                else if (message is UserResponse || message is CollateralInquiryAck || message is Logout ||
                     message is MarketDataRequestReject || message is BusinessMessageReject || message is SecurityStatus)
                 {
                     // Unused messages, no handler needed
@@ -281,24 +288,81 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         private void OnMarketDataSnapshot(MarketDataSnapshot message)
         {
-            // update the current prices for the instrument
             var instrument = message.getInstrument();
-            _rates[instrument.getSymbol()] = message;
-
-            // if instrument is subscribed, add ticks to list
             var securityType = _symbolMapper.GetBrokerageSecurityType(instrument.getSymbol());
             var symbol = _symbolMapper.GetLeanSymbol(instrument.getSymbol(), securityType, Market.FXCM);
 
-            if (_subscribedSymbols.Contains(symbol))
+            var isHistoryResponse = _pendingHistoryRequests.Contains(message.getRequestID());
+            if (isHistoryResponse)
             {
                 var time = FromJavaDate(message.getDate().toDate());
-                var bidPrice = Convert.ToDecimal(message.getBidClose());
-                var askPrice = Convert.ToDecimal(message.getAskClose());
-                var tick = new Tick(time, symbol, bidPrice, askPrice);
 
-                lock (_ticks)
+                // history timestamps must be in exchange time zone
+                DateTimeZone exchangeTimeZone;
+                if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
                 {
-                    _ticks.Add(tick);
+                    time = time.ConvertFromUtc(exchangeTimeZone);
+                }
+
+                // append ticks/bars to history
+                if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
+                {
+                    var bidPrice = Convert.ToDecimal(message.getBidClose());
+                    var askPrice = Convert.ToDecimal(message.getAskClose());
+                    var tick = new Tick(time, symbol, bidPrice, askPrice);
+
+                    _lastHistoryChunk.Add(tick);
+                }
+                else
+                {
+                    var bar = new QuoteBar(
+                        time,
+                        symbol,
+                        new Bar(
+                            Convert.ToDecimal(message.getBidOpen()),
+                            Convert.ToDecimal(message.getBidHigh()),
+                            Convert.ToDecimal(message.getBidLow()),
+                            Convert.ToDecimal(message.getBidClose())
+                        ),
+                        0,
+                            new Bar(
+                            Convert.ToDecimal(message.getAskOpen()),
+                            Convert.ToDecimal(message.getAskHigh()),
+                            Convert.ToDecimal(message.getAskLow()),
+                            Convert.ToDecimal(message.getAskClose())
+                        ),
+                        0);
+
+                    _lastHistoryChunk.Add(bar);
+                }
+            }
+            else
+            {
+                // update the current prices for the instrument
+                _rates[instrument.getSymbol()] = message;
+
+                // if instrument is subscribed, add ticks to list
+                if (_subscribedSymbols.Contains(symbol))
+                {
+                    // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
+                    // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
+                    var time = FromJavaDate(new java.util.Date(message.getMakingTime()));
+
+                    // live ticks timestamps must be in exchange time zone
+                    DateTimeZone exchangeTimeZone;
+                    if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                    {
+                        time = time.ConvertFromUtc(exchangeTimeZone);
+                    }
+
+                    var bidPrice = Convert.ToDecimal(message.getBidClose());
+                    var askPrice = Convert.ToDecimal(message.getAskClose());
+                    var tick = new Tick(time, symbol, bidPrice, askPrice);
+
+                    lock (_ticks)
+                    {
+                        _ticks.Add(tick);
+                    }
                 }
             }
 
@@ -308,6 +372,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     _mapRequestsToAutoResetEvents[_currentRequest].Set();
                     _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+
+                    if (isHistoryResponse) _pendingHistoryRequests.Remove(_currentRequest);
                 }
             }
         }
@@ -388,7 +454,7 @@ namespace QuantConnect.Brokerages.Fxcm
                         _isOrderSubmitRejected = true;
                     }
 
-                    AutoResetEvent autoResetEvent = null;
+                    AutoResetEvent autoResetEvent;
                     if (_mapRequestsToAutoResetEvents.TryGetValue(_currentRequest, out autoResetEvent))
                     {
                         autoResetEvent.Set();
@@ -420,19 +486,20 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getAccount() == _accountId)
             {
-                if (_openPositions.ContainsKey(message.getCurrency()) && message is ClosedPositionReport)
+                var fxcmPositionId = message.getFXCMPosID();
+                if (_openPositions.ContainsKey(fxcmPositionId) && message is ClosedPositionReport)
                 {
-                    _openPositions.Remove(message.getCurrency());
+                    _openPositions.Remove(fxcmPositionId);
                 }
                 else
                 {
-                    _openPositions[message.getCurrency()] = message;
+                    _openPositions[fxcmPositionId] = message;
                 }
             }
 
             if (message.getRequestID() == _currentRequest)
             {
-                AutoResetEvent autoResetEvent = null;
+                AutoResetEvent autoResetEvent;
                 if (message.isLastRptRequested() && _mapRequestsToAutoResetEvents.TryGetValue(_currentRequest, out autoResetEvent))
                 {
                     autoResetEvent.Set();
@@ -476,11 +543,6 @@ namespace QuantConnect.Brokerages.Fxcm
                     {
                         _lastReadyMessageTime = DateTime.UtcNow;
                     }
-                    _connectionError = false;
-                    break;
-
-                case ISessionStatus.__Fields.STATUSCODE_ERROR:
-                    _connectionError = true;
                     break;
             }
         }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,12 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This example demonstrates how to add options for a given underlying equity security.
-    /// It also shows how you can prefilter contracts easily based on strikes and expirations.
-    /// It also shows how you can inspect the option chain to pick a specific option contract to trade.
+    /// It also shows how you can prefilter contracts easily based on strikes and expirations, and how you
+    /// can inspect the option chain to pick a specific option contract to trade.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="options" />
+    /// <meta name="tag" content="filter selection" />
     public class BasicTemplateOptionsAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "GOOG";
@@ -37,13 +40,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetCash(100000);
 
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
+            option.SetFilter(u => u.Strikes(-2, +2)
+                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -55,25 +59,23 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && IsMarketOpen(OptionSymbol))
             {
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // find the second call strike under market price expiring today
-                    var contract = (
-                        from optionContract in chain.OrderByDescending(x => x.Strike)
-                        where optionContract.Right == OptionRight.Call
-                        where optionContract.Expiry == Time.Date
-                        where optionContract.Strike < chain.Underlying.Price
-                        select optionContract
-                        ).Skip(2).FirstOrDefault();
+                    // we find at the money (ATM) put contract with farthest expiration
+                    var atmContract = chain
+                        .OrderByDescending(x => x.Expiry)
+                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .ThenByDescending(x => x.Right)
+                        .FirstOrDefault();
 
-                    if (contract != null)
+                    if (atmContract != null)
                     {
-                        var quantity = CalculateOrderQuantity(contract.Symbol, -1m);
-                        MarketOrder(contract.Symbol, quantity);
-                        MarketOnCloseOrder(contract.Symbol, -quantity);
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOnCloseOrder(atmContract.Symbol, -1);
                     }
                 }
             }

@@ -2,18 +2,18 @@
 
 :: IB Controller Sourced-Modified from https://github.com/ib-controller/ib-controller
 @echo off
-set TWS_MAJOR_VRSN=952
-set TRADING_MODE=
+set TWS_MAJOR_VRSN=968
+set TRADING_MODE=%6
 
 set IBC_PATH=%1
 set TWS_PATH=%2
 set TWSUSERID=%3
 set TWSPASSWORD=%4
+set APP=%5
 
 set IBC_INI=%IBC_PATH%\IBController.ini
 set LOG_PATH=%IBC_PATH%\Logs
 
-set APP=GATEWAY
 set TITLE=IBController (%APP% %TWS_MAJOR_VRSN%)
 set MIN=
 if not defined LOG_PATH set MIN=/Min

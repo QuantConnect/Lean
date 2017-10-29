@@ -103,6 +103,12 @@ namespace QuantConnect.Lean.Engine.Results
         void DebugMessage(string message);
 
         /// <summary>
+        /// Process system debug messages with the preconfigured settings.
+        /// </summary>
+        /// <param name="message">String debug message</param>
+        void SystemDebugMessage(string message);
+
+        /// <summary>
         /// Send a list of security types to the browser
         /// </summary>
         /// <param name="types">Security types list inside algorithm</param>
@@ -246,5 +252,19 @@ namespace QuantConnect.Lean.Engine.Results
         /// Process any synchronous events in here that are primarily triggered from the algorithm loop
         /// </summary>
         void ProcessSynchronousEvents(bool forceProcess = false);
+
+        /// <summary>
+        /// Save the logs
+        /// </summary>
+        /// <param name="id">Id that will be incorporated into the algorithm log name</param>
+        /// <param name="logs">The logs to save</param>
+        string SaveLogs(string id, IEnumerable<string> logs);
+
+        /// <summary>
+        /// Save the results
+        /// </summary>
+        /// <param name="name">The name of the results</param>
+        /// <param name="result">The results to save</param>
+        void SaveResults(string name, Result result);
     }
 }

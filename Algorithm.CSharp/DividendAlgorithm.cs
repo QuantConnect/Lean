@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -21,8 +20,12 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// Demonstration of payments for cash dividends in backtesting. When data normalization mode is set
+    /// to "Raw" the dividends are paid as cash directly into your portfolio.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="data event handlers" />
+    /// <meta name="tag" content="dividend event" />
     public class DividendAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -66,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data["MSFT"];
-            Console.WriteLine("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"), Portfolio.Cash, Portfolio["MSFT"].Price.ToString("C"));
+            Debug(string.Format("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"), Portfolio.Cash, Portfolio["MSFT"].Price.ToString("C")));
         }
 
         /// <summary>
@@ -77,14 +80,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug("MSFT: " + Securities["MSFT"].Price);
             var split = data["MSFT"];
-            Console.WriteLine("{0} >> SPLIT >> {1} - {2} - {3} - {4}", split.Time.ToString("o"), split.Symbol, split.SplitFactor, Portfolio.Cash, Portfolio["MSFT"].Quantity);
+            Debug(string.Format("{0} >> SPLIT >> {1} - {2} - {3} - {4}", split.Time.ToString("o"), split.Symbol, split.SplitFactor, Portfolio.Cash, Portfolio["MSFT"].Quantity));
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             // orders get adjusted based on split events to maintain order value
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Console.WriteLine("{0} >> ORDER >> " + order, Time);
+            Debug(string.Format("{0} >> ORDER >> " + order, Time));
         }
     }
 }
