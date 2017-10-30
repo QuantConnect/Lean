@@ -63,6 +63,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ISecurityProvider _securityProvider;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
+        
+        private readonly string _cashBookAccountCurrency = "AUD";
 
         private Thread _messageProcessingThread;
         private readonly AutoResetEvent _resetEventRestartGateway = new AutoResetEvent(false);
@@ -906,18 +908,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Gets the current conversion rate into USD
         /// </summary>
         /// <remarks>Synchronous, blocking</remarks>
-        private decimal GetUsdConversion(string currency)
+        private decimal GetBaseCurrencyConversion(string currency)
         {
-            if (currency == "USD")
+            if (currency == _cashBookAccountCurrency)
             {
                 return 1m;
             }
 
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Getting USD conversion for " + currency);
+            Log.Trace("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): Getting " + _cashBookAccountCurrency +  " conversion for " + currency);
 
             // determine the correct symbol to choose
-            var invertedSymbol = "USD" + currency;
-            var normalSymbol = currency + "USD";
+            var invertedSymbol = _cashBookAccountCurrency + currency;
+            var normalSymbol = currency + _cashBookAccountCurrency;
             var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
@@ -952,26 +954,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // define and add our tick handler for the ticks
             var marketDataTicker = GetNextTickerId();
 
-            _requestInformation[marketDataTicker] = "GetUsdConversion.MarketData: " + contract;
+            _requestInformation[marketDataTicker] = "GetBaseCurrencyConversion.MarketData: " + contract;
 
             EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
             {
                 if (args.TickerId == marketDataTicker && args.Field == IBApi.TickType.ASK)
                 {
                     rate = Convert.ToDecimal(args.Price);
-                    Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Market price rate is " + args.Price + " for currency " + currency);
+                    Log.Trace("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): Market price rate is " + args.Price + " for currency " + currency);
                     manualResetEvent.Set();
                 }
             };
 
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting market data for " + currencyPair);
+            Log.Trace("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): Requesting market data for " + currencyPair);
             _client.TickPrice += clientOnTickPrice;
 
             _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
 
             if (!manualResetEvent.WaitOne(requestTimeout * 1000))
             {
-                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+                Log.Error("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
             }
 
             _client.TickPrice -= clientOnTickPrice;
@@ -991,7 +993,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     var data = new List<IB.HistoricalDataEventArgs>();
                     var historicalTicker = GetNextTickerId();
 
-                    _requestInformation[historicalTicker] = "GetUsdConversion.Historical: " + contract;
+                    _requestInformation[historicalTicker] = "GetBaseCurrencyConversion.Historical: " + contract;
 
                     EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
                     {
@@ -1018,7 +1020,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
                     };
 
-                    Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting historical data for " + currencyPair);
+                    Log.Trace("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): Requesting historical data for " + currencyPair);
                     _client.HistoricalData += clientOnHistoricalData;
                     _client.HistoricalDataEnd += clientOnHistoricalDataEnd;
                     _client.Error += clientOnError;
@@ -1030,13 +1032,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     if (!manualResetEvent.WaitOne(requestTimeout * 1000))
                     {
-                        Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+                        Log.Error("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
                     }
 
                     if (pacingViolation)
                     {
                         // we received 'pacing violation' error from IB, so we have to wait
-                        Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion() Pacing violation, pausing for {0} secs.", pacingDelaySeconds);
+                        Log.Trace("InteractiveBrokersBrokerage.GetBaseCurrencyConversion() Pacing violation, pausing for {0} secs.", pacingDelaySeconds);
                         Thread.Sleep(pacingDelaySeconds * 1000);
                     }
                     else
@@ -1050,7 +1052,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
 
                         rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
-                        Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Last historical price rate is " + rate + " for currency " + currency);
+                        Log.Trace("InteractiveBrokersBrokerage.GetBaseCurrencyConversion(): Last historical price rate is " + rate + " for currency " + currency);
                     }
 
                     // be sure to unwire our history handler as well
