@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
-        private readonly List<Order> _orders = new List<Order>(); 
+        private readonly List<Order> _orders = new List<Order>();
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
         private const int buyQuantity = 100;
         private const SecurityType Type = SecurityType.Forex;
@@ -42,9 +42,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"), 
-                Config.Get("ib-tws-dir"), 
-                Config.Get("ib-user-name"), 
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"),
+                Config.Get("ib-tws-dir"),
+                Config.Get("ib-user-name"),
                 Config.Get("ib-password"),
                 Config.Get("ib-trading-mode"),
                 Config.GetBool("ib-use-tws")
@@ -642,7 +642,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.IsTrue(ib.IsConnected);
 
             var tenMinutes = TimeSpan.FromMinutes(10);
-            
+
             Console.WriteLine("------");
             Console.WriteLine("Waiting for internet disconnection ");
             Console.WriteLine("------");
@@ -653,7 +653,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Thread.Sleep(2500);
                 Console.Write(".");
             }
-            
+
             var stopwatch = Stopwatch.StartNew();
 
             Console.WriteLine("------");
@@ -667,6 +667,32 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Console.Write(".");
             }
 
+            Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
+        public void GetCashBalanceConnectsIfDisconnected()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.Disconnect();
+            Assert.IsFalse(ib.IsConnected);
+
+            ib.GetCashBalance();
+            Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
+        public void GetAccountHoldingsConnectsIfDisconnected()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.Disconnect();
+            Assert.IsFalse(ib.IsConnected);
+
+            ib.GetAccountHoldings();
             Assert.IsTrue(ib.IsConnected);
         }
 

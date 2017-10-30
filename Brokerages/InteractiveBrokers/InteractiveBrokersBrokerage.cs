@@ -386,6 +386,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
+            if (!IsConnected)
+            {
+                Log.Trace("InteractiveBrokersBrokerage.GetAccountHoldings(): not connected, connecting now");
+                Connect();
+            }
+
             var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
             // fire up tasks to resolve the conversion rates so we can do them in parallel
@@ -422,6 +428,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override List<Cash> GetCashBalance()
         {
             CheckIbGateway();
+
+            if (!IsConnected)
+            {
+                Log.Trace("InteractiveBrokersBrokerage.GetCashBalance(): not connected, connecting now");
+                Connect();
+            }
 
             return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
