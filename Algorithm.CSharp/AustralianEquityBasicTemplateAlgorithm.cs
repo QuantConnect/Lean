@@ -41,7 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("BHP", Resolution.Daily);
+            //AddEquity("BHP", Resolution.Daily);
+            AddEquity("BHP", Resolution.Daily, Market.AU).Symbol;
             
             SetBenchmark(dt => 1m);
             
