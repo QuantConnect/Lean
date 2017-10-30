@@ -392,14 +392,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 // if quote currency is in USD don't bother making the request
                 var currency = local.Symbol.Value.Substring(3);
-                if (currency == "USD")
+                if (currency == _cashBookAccountCurrency)
                 {
                     local.ConversionRate = 1m;
                     return null;
                 }
 
                 // this will allow us to do this in parallel
-                return Task.Factory.StartNew(() => local.ConversionRate = GetUsdConversion(currency));
+                return Task.Factory.StartNew(() => local.ConversionRate = GetBaseCurrencyConversion(currency));
             }).Where(x => x != null).ToArray();
 
             Task.WaitAll(tasks, 5000);
@@ -415,7 +415,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            return _cashBalances.Select(x => new Cash(x.Key, x.Value, System.Convert.ToDecimal(1.00))).ToList();
+            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetBaseCurrencyConversion(currency))).ToList();
         }
 
         /// <summary>
@@ -905,7 +905,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Gets the current conversion rate into USD
+        /// Gets the current conversion rate into the base currency
         /// </summary>
         /// <remarks>Synchronous, blocking</remarks>
         private decimal GetBaseCurrencyConversion(string currency)
@@ -1600,7 +1600,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Symbol = ibSymbol,
                 Exchange = exchange ?? "Smart",
                 SecType = securityType,
-                Currency = "USD"
+                Currency = _cashBookAccountCurrency
             };
             if (symbol.ID.SecurityType == SecurityType.Forex)
             {
@@ -2358,7 +2358,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contract = new Contract
             {
                 Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
-                Currency = securityCurrency ?? "USD",
+                Currency = securityCurrency ?? _cashBookAccountCurrency,
                 Exchange = exchangeSpecifier,
                 SecType = ConvertSecurityType(securityType)
             };
