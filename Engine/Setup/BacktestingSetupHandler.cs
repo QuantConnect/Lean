@@ -184,6 +184,8 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
+                    resultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
+
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
 
