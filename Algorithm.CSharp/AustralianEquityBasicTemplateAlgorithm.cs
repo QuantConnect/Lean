@@ -37,17 +37,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            // Find more symbols here: http://quantconnect.com/data
-            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            // Futures Resolution: Tick, Second, Minute
-            // Options Resolution: Minute Only.
-            //AddEquity("BHP", Resolution.Daily);
-            AddEquity("BHP", Resolution.Daily, Market.AU);
+            AddEquity("BHP", Resolution.Daily);
             
             SetBenchmark(dt => 1m);
             
-            // There are other assets with similar methods. See "Selecting Options" etc for more details.
-            // AddFuture, AddForex, AddCfd, AddOption
         }
 
         /// <summary>
