@@ -61,24 +61,29 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data)
         {
+            var maxLevels = 0;
             var sliceDataDict = new Dictionary<Symbol, PandasData>();
 
             foreach (var slice in data)
             {
                 foreach (var baseData in slice.Values)
                 {
-                    if (!sliceDataDict.ContainsKey(baseData.Symbol))
+                    PandasData value;
+                    if (!sliceDataDict.TryGetValue(baseData.Symbol, out value))
                     {
-                        sliceDataDict.Add(baseData.Symbol, new PandasData(baseData));
+                        sliceDataDict.Add(baseData.Symbol, value = new PandasData(baseData));
+                        maxLevels = Math.Max(maxLevels, value.Levels);
                     }
-                    sliceDataDict[baseData.Symbol].Add(baseData);
+                    value.Add(baseData);
                 }
             }
 
-            var maxLevels = sliceDataDict.Max(x => x.Value.Levels);
-
             using (Py.GIL())
             {
+                if (sliceDataDict.Count == 0)
+                {
+                    return _pandas.DataFrame();
+                }
                 var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(_pandas, maxLevels));
                 return _pandas.concat(dataFrames.ToArray());
             }
@@ -92,10 +97,24 @@ namespace QuantConnect.Python
         public PyObject GetDataFrame<T>(IEnumerable<T> data)
             where T : IBaseData
         {
-            var sliceData = new PandasData(data.FirstOrDefault());
-            foreach (var baseData in data)
+            PandasData sliceData = null;
+            foreach (var datum in data)
             {
-                sliceData.Add(baseData);
+                if (sliceData == null)
+                {
+                    sliceData = new PandasData(datum);
+                }
+                sliceData.Add(datum);
+            }
+
+            // If sliceData is still null, data is an empty enumerable
+            // returns an empty pandas.DataFrame
+            if (sliceData == null)
+            {
+                using (Py.GIL())
+                {
+                    return _pandas.DataFrame();
+                }
             }
             return sliceData.ToPandasDataFrame(_pandas);
         }
@@ -113,8 +132,14 @@ namespace QuantConnect.Python
 
                 foreach (var kvp in data)
                 {
-                    var index = kvp.Value.Select(x => x.EndTime).ToList();
-                    var values = kvp.Value.Select(x => (double)x.Value).ToList();
+                    var index = new List<DateTime>();
+                    var values = new List<double>();
+
+                    foreach (var item in kvp.Value)
+                    {
+                        index.Add(item.EndTime);
+                        values.Add((double)item.Value);
+                    }
                     pyDict.SetItem(kvp.Key.ToLower(), _pandas.Series(values, index));
                 }
 
@@ -139,23 +164,14 @@ namespace QuantConnect.Python
     /// </summary>
     public class PandasData
     {
-        private Symbol _symbol;
-        private List<DateTime> _timeIndex;
-        private Dictionary<string, List<double>> _series;
+        private readonly Symbol _symbol;
+        private readonly List<DateTime> _timeIndex;
+        private readonly Dictionary<string, List<double>> _series;
 
         /// <summary>
         /// Implied levels of a multi index pandas.Series (depends on the security type)
         /// </summary>
-        public int Levels
-        {
-            get
-            {
-                var levels = 2;
-                if (_symbol.SecurityType == SecurityType.Future) levels += 1;
-                if (_symbol.SecurityType == SecurityType.Option) levels += 3;
-                return levels;
-            }
-        }
+        public int Levels { get; }
 
         /// <summary>
         /// Initializes an instance of <see cref="PandasData"/> with a sample <see cref="IBaseData"/> object
@@ -175,12 +191,18 @@ namespace QuantConnect.Python
             }
             else if (baseData is DynamicData)
             {
+                // We get the fields of DynamicData from the storage dictionary
+                // and add the field named 'value' since it is the reference value
                 columns = "value," + string.Join(",", ((DynamicData)baseData).GetStorageDictionary().Keys);
             }
 
             _series = columns.Split(',').ToDictionary(k => k, v => new List<double>());
             _symbol = baseData.Symbol;
             _timeIndex = new List<DateTime>();
+
+            Levels = 2;
+            if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
+            if (_symbol.SecurityType == SecurityType.Option) Levels = 5;
         }
 
         /// <summary>
@@ -189,7 +211,7 @@ namespace QuantConnect.Python
         /// <param name="baseData"><see cref="IBaseData"/> object that contains information to be saved in an instance of <see cref="PandasData"/></param>
         public void Add(IBaseData baseData)
         {
-            _timeIndex.Add(baseData.Time);
+            _timeIndex.Add(baseData.EndTime);
 
             var bar = baseData as IBaseDataBar;
             if (bar != null)
