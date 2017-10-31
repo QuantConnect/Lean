@@ -240,7 +240,7 @@ namespace QuantConnect.ToolBox
         /// <returns>The full path to the output zip file</returns>
         private string GetZipOutputFileName(string baseDirectory, DateTime time)
         {
-            return LeanData.GenerateZipFilePath(baseDirectory, _symbol.Value, _securityType, _market, time, _resolution);
+            return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _dataType);
         }
 
     }
