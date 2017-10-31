@@ -415,7 +415,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetBaseCurrencyConversion(currency))).ToList();
+            return _cashBalances.Select(x => new Cash(x.Key, x.Value, 1m)).ToList();
         }
 
         /// <summary>
