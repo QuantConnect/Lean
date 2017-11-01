@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : IRealTimeHandler
     {
-        private bool _isActive = true;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
         // so we want to be ready to accept events as soon as possible
@@ -46,10 +45,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Boolean flag indicating thread state.
         /// </summary>
-        public bool IsActive
-        {
-            get { return _isActive; }
-        }
+        public bool IsActive { get; private set; }
 
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
@@ -103,7 +99,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Run()
         {
-            _isActive = true;
+            IsActive = true;
 
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
@@ -138,7 +134,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
             }
 
-            _isActive = false;
+            IsActive = false;
             Log.Trace("LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: " + _cancellationTokenSource.IsCancellationRequested);
         }
 
