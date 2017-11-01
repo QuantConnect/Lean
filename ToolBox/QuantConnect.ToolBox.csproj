@@ -211,6 +211,7 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
+    <Compile Include="KaikoDataConverter\Program.cs" />
     <Compile Include="KrakenDataDownloader\KrakenDataDownloader.cs" />
     <Compile Include="KrakenDataDownloader\Program.cs" />
     <Compile Include="LazyStreamWriter.cs" />
