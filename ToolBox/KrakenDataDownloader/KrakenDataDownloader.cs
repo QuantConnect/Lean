@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-// TODO: Keep running API to get all trade data
-// TODO: Make sure the date saved in each Tick is correct
-// TODO: Make sure the files are saved correctly
-
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
@@ -53,8 +49,8 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 throw new NotSupportedException("Only Tick Resolution is supported.");
             }
 
-            var startUnixTime = ToUnixTime(startUtc);
-            var endUnixTime = ToUnixTime(endUtc);
+            var startUnixTime = ToUnixTime(startUtc) * 1000000000; // Multiply by 10^9 per Kraken API
+            var endUnixTime = ToUnixTime(endUtc) * 1000000000;
             var url = string.Format(UrlPrototype, symbol.Value, startUnixTime);
             List<List<string>> data;
 
@@ -68,6 +64,32 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 }
 
                 data = result.result[symbol.Value].ToObject<List<List<string>>>();
+
+                var last = Convert.ToInt64(result.result.last);
+                while (last < endUnixTime)
+                {
+                    url = string.Format(UrlPrototype, symbol.Value, last);
+                    response = client.DownloadString(url);
+                    result = JsonConvert.DeserializeObject<dynamic>(response);
+
+                    var errorCount = 0;
+                    while (result.error.Count != 0 && errorCount < 10)
+                    {
+                        errorCount++;
+                        System.Threading.Thread.Sleep(6000);
+                        response = client.DownloadString(url);
+                        result = JsonConvert.DeserializeObject<dynamic>(response);
+                    }
+
+                    if (result.error.Count != 0 && errorCount >= 10)
+                    {
+                        throw new Exception("Error in Kraken API: " + result.error[0]);
+                    }
+
+                    List<List<string>> newData = result.result[symbol.Value].ToObject<List<List<string>>>();
+                    data.AddRange(newData);
+                    last = Convert.ToInt64(result.result.last);
+                }
             }
 
             foreach (var i in data)
