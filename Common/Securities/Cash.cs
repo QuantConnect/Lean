@@ -40,7 +40,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the symbol used to represent this cash
         /// </summary>
-        public string Symbol { get; private set; }
+        public string Symbol { get; }
 
         /// <summary>
         /// Gets or sets the amount of cash held
@@ -55,10 +55,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the value of this cash in the accout currency
         /// </summary>
-        public decimal ValueInAccountCurrency
-        {
-            get { return Amount*ConversionRate; }
-        }
+        public decimal ValueInAccountCurrency => Amount * ConversionRate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Cash"/> class
@@ -188,7 +185,7 @@ namespace QuantConnect.Securities
                     Cash quoteCash;
                     if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
                     {
-                        throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.ToString());
+                        throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
                     }
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
@@ -220,21 +217,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Returns a <see cref="System.String"/> that represents the current <see cref="QuantConnect.Securities.Cash"/>.
+        /// Returns a <see cref="string"/> that represents the current <see cref="Cash"/>.
         /// </summary>
-        /// <returns>A <see cref="System.String"/> that represents the current <see cref="QuantConnect.Securities.Cash"/>.</returns>
+        /// <returns>A <see cref="string"/> that represents the current <see cref="Cash"/>.</returns>
         public override string ToString()
         {
             // round the conversion rate for output
-            decimal rate = ConversionRate;
+            var rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return string.Format("{0}: {1,15} @ ${2,10} = {3}{4}",
-                Symbol,
-                Amount.ToString("0.00"),
-                rate.ToString("0.00####"),
-                Currencies.GetCurrencySymbol(Symbol),
-                Math.Round(ValueInAccountCurrency, 2)
-                );
+            return $"{Symbol}: {Currencies.GetCurrencySymbol(Symbol)}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}";
         }
 
         private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)
