@@ -300,41 +300,32 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="data"></param>
         private void EmitTick(string data)
         {
-
             var message = JsonConvert.DeserializeObject<Messages.Ticker>(data, JsonSettings);
 
             var symbol = ConvertProductId(message.ProductId);
 
             lock (_tickLocker)
             {
-                Tick updating = new Tick
+                Ticks.Add(new Tick
                 {
                     AskPrice = message.BestAsk,
                     BidPrice = message.BestBid,
                     Value = (message.BestAsk + message.BestBid) / 2m,
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
-                    TickType = TickType.Quote,
+                    TickType = TickType.Quote
                     //todo: tick volume
-                };
+                });
 
-                this.Ticks.Add(updating);
-
-                lock (_tickLocker)
+                Ticks.Add(new Tick
                 {
-                    Tick last = new Tick
-                    {
-                        Value = message.Price,
-                        Time = DateTime.UtcNow,
-                        Symbol = symbol,
-                        TickType = TickType.Trade,
-                        Quantity = message.Side == "sell" ? -message.LastSize : message.LastSize
-                    };
-
-                    this.Ticks.Add(last);
-                }
+                    Value = message.Price,
+                    Time = DateTime.UtcNow,
+                    Symbol = symbol,
+                    TickType = TickType.Trade,
+                    Quantity = message.LastSize
+                });
             }
-
         }
 
         #region IDataQueueHandler
