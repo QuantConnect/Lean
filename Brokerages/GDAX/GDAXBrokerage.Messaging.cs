@@ -459,9 +459,14 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
-            var parsing = raw.SelectToken("rates." + currency);
+            var rate = raw.SelectToken("rates." + currency).Value<decimal>();
+            if (rate == 0)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: zero value returned from conversion rate service."));
+                return 0;
+            }
 
-            return parsing.Value<decimal>();
+            return 1m / rate;
         }
 
         private bool IsSubscribeAvailable(Symbol symbol)
