@@ -27,6 +27,27 @@ namespace QuantConnect.Data.Market
     public class Tick : BaseData
     {
         /// <summary>
+        /// Direction of a Trade Tick
+        /// </summary>
+        public enum TickTradeDirection
+        {
+            /// <summary>
+            /// The trade direction can not be determined
+            /// </summary>
+            Unknown,
+
+            /// <summary>
+            /// The trade is a Buy trade (at the ask price)
+            /// </summary>
+            Buy,
+
+            /// <summary>
+            /// The trade is a Sell trade (at the bid price)
+            /// </summary>
+            Sell
+        }
+
+        /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
         public TickType TickType = TickType.Trade;
@@ -34,55 +55,54 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Quantity exchanged in a trade.
         /// </summary>
-        public decimal Quantity = 0;
+        public decimal Quantity;
 
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
         /// </summary>
-        public string Exchange = "";
+        public string Exchange = string.Empty;
 
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
-        public string SaleCondition = "";
+        public string SaleCondition = string.Empty;
 
         /// <summary>
         /// Bool whether this is a suspicious tick
         /// </summary>
-        public bool Suspicious = false;
+        public bool Suspicious;
 
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
         /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
-        public decimal BidPrice = 0;
+        public decimal BidPrice;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
         /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
-        public decimal AskPrice = 0;
+        public decimal AskPrice;
 
         /// <summary>
         /// Alias for "Value" - the last sale for this asset.
         /// </summary>
-        public decimal LastPrice
-        {
-            get
-            {
-                return Value;
-            }
-        }
+        public decimal LastPrice => Value;
 
         /// <summary>
         /// Size of bid quote.
         /// </summary>
-        public decimal BidSize = 0;
+        public decimal BidSize;
 
         /// <summary>
         /// Size of ask quote.
         /// </summary>
-        public decimal AskSize = 0;
+        public decimal AskSize;
+
+        /// <summary>
+        /// Direction of a Trade Tick
+        /// </summary>
+        public TickTradeDirection TradeDirection = TickTradeDirection.Unknown;
 
         //In Base Class: Alias of Closing:
         //public decimal Price;
@@ -130,6 +150,7 @@ namespace QuantConnect.Data.Market
             TickType = original.TickType;
             BidSize = original.BidSize;
             AskSize = original.AskSize;
+            TradeDirection = original.TradeDirection;
         }
 
         /// <summary>
