@@ -206,12 +206,22 @@ namespace QuantConnect.Brokerages
                 {
                     Log.Error(exception);
                 }
-            });
+            }) { IsBackground = true };
             _connectionMonitorThread.Start();
             while (!_connectionMonitorThread.IsAlive)
             {
                 Thread.Sleep(1);
             }
+        }
+
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
+        public override void Disconnect()
+        {
+            // request and wait for thread to stop
+            _cancellationTokenSource?.Cancel();
+            _connectionMonitorThread?.Join();
         }
 
         /// <summary>

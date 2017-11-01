@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
@@ -144,7 +145,6 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (raw.Type == "heartbeat")
                 {
-                    Log.Trace("GDAXBrokerage.OnMessage.heartbeat()");
                     return;
                 }
                 else if (raw.Type == "ticker")
@@ -157,6 +157,7 @@ namespace QuantConnect.Brokerages.GDAX
                     Log.Error($"GDAXBrokerage.OnMessage.error(): Data: {Environment.NewLine}{e.Message}");
                     var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"GDAXBrokerage.OnMessage: {error.Message} {error.Reason}"));
+                    return;
                 }
                 else if (raw.Type == "done")
                 {
@@ -288,8 +289,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
-            var req = new RestRequest(string.Format("/products/{0}/ticker", ConvertSymbol(symbol)), Method.GET);
+            var req = new RestRequest($"/products/{ConvertSymbol(symbol)}/ticker", Method.GET);
             var response = RestClient.Execute(req);
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                throw new Exception($"GDAXBrokerage.GetFee: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
             var tick = JsonConvert.DeserializeObject<Messages.Tick>(response.Content);
             return new Tick(tick.Time, symbol, tick.Bid, tick.Ask) { Quantity = tick.Volume };
         }
@@ -472,7 +478,10 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbols"></param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = _channelNames }));
+            if (WebSocket.IsOpen)
+            {
+                WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = _channelNames}));
+            }
         }
         #endregion
 
