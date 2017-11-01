@@ -681,7 +681,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("RegressionAlgorithm", regressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("UniverseSelectionRegressionAlgorithm", universeSelectionRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.Python),
-                //new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("MACDTrendAlgorithm", macdTrendAlgorithmStatistics, Language.Python),
