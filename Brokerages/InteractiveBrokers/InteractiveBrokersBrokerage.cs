@@ -1746,7 +1746,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // Otherwise we convert Market.* markets into IB exchanges if we have them in our map
 
                 contract.Symbol = ibSymbol;
-                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.YearMonth);
+                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.EightCharacter);
 
                 if (symbol.ID.Market == Market.USA)
                 {
