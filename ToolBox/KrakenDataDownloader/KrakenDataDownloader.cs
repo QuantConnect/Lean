@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.KrakenDownloader
 {
@@ -49,13 +50,16 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 throw new NotSupportedException("Only Tick Resolution is supported.");
             }
 
-            var startUnixTime = ToUnixTime(startUtc) * 1000000000; // Multiply by 10^9 per Kraken API
-            var endUnixTime = ToUnixTime(endUtc) * 1000000000;
+            var startUnixTime = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(startUtc) * 1000000000); // Multiply by 10^9 per Kraken API
+            var endUnixTime = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(endUtc) * 1000000000);
             var url = string.Format(UrlPrototype, symbol.Value, startUnixTime);
             List<List<string>> data;
 
             using (var client = new WebClient())
             {
+                var rateGate = new RateGate(10, TimeSpan.FromMinutes(1)); // 10 calls per minute for Kraken API
+
+                rateGate.WaitToProceed();
                 var response = client.DownloadString(url);
                 dynamic result = JsonConvert.DeserializeObject<dynamic>(response);
                 if (result.error.Count != 0)
@@ -65,10 +69,35 @@ namespace QuantConnect.ToolBox.KrakenDownloader
 
                 data = result.result[symbol.Value].ToObject<List<List<string>>>();
 
+                foreach (var i in data)
+                {
+                    var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(i[2].Split('.')[0]));
+                    if (time > endUtc)
+                    {
+                        break;
+                    }
+
+                    var value = Decimal.Parse(i[0]);
+                    var volume = Decimal.Parse(i[1]);
+
+                    yield return new Tick
+                    {
+                        Value = value,
+                        Time = time,
+                        DataType = MarketDataType.Tick,
+                        Symbol = symbol,
+                        TickType = TickType.Trade,
+                        Quantity = volume,
+                        Exchange = "kraken"
+                    };
+                }
+
                 var last = Convert.ToInt64(result.result.last);
                 while (last < endUnixTime)
                 {
                     url = string.Format(UrlPrototype, symbol.Value, last);
+
+                    rateGate.WaitToProceed();
                     response = client.DownloadString(url);
                     result = JsonConvert.DeserializeObject<dynamic>(response);
 
@@ -76,7 +105,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                     while (result.error.Count != 0 && errorCount < 10)
                     {
                         errorCount++;
-                        System.Threading.Thread.Sleep(6000);
+                        rateGate.WaitToProceed();
                         response = client.DownloadString(url);
                         result = JsonConvert.DeserializeObject<dynamic>(response);
                     }
@@ -86,56 +115,34 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                         throw new Exception("Error in Kraken API: " + result.error[0]);
                     }
 
-                    List<List<string>> newData = result.result[symbol.Value].ToObject<List<List<string>>>();
-                    data.AddRange(newData);
+                    data = result.result[symbol.Value].ToObject<List<List<string>>>();
+
+                    foreach (var i in data)
+                    {
+                        var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(i[2].Split('.')[0]));
+                        if (time > endUtc)
+                        {
+                            break;
+                        }
+
+                        var value = Decimal.Parse(i[0]);
+                        var volume = Decimal.Parse(i[1]);
+
+                        yield return new Tick
+                        {
+                            Value = value,
+                            Time = time,
+                            DataType = MarketDataType.Tick,
+                            Symbol = symbol,
+                            TickType = TickType.Trade,
+                            Quantity = volume,
+                            Exchange = "kraken"
+                        };
+                    }
+
                     last = Convert.ToInt64(result.result.last);
                 }
             }
-
-            foreach (var i in data)
-            {
-                var time = FromUnixTime(Convert.ToInt64(i[2].Split('.')[0]));
-                if (time > endUtc)
-                {
-                    break;
-                }
-
-                var value = Decimal.Parse(i[0]);
-
-                yield return new Tick
-                {
-                    Time = time,
-                    Symbol = symbol,
-                    Value = value,
-                    AskPrice = value,
-                    BidPrice = value,
-                    TickType = TickType.Trade
-                };
-            }
-        }
-
-        /// <summary>
-        /// Convert a DateTime object into a Unix time long value
-        /// </summary>
-        /// <param name="utcDateTime">The DateTime object (UTC)</param>
-        /// <returns>A Unix long time value.</returns>
-        /// <remarks>When we move to NET 4.6, we can replace this with DateTimeOffset.ToUnixTimeSeconds()</remarks>
-        private static long ToUnixTime(DateTime utcDateTime)
-        {
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return (long)(utcDateTime - epoch).TotalSeconds;
-        }
-
-        /// <summary>
-        /// Convert a Unix time long value into a DateTime object
-        /// </summary>
-        /// <param name="unixTime">Unix long time.</param>
-        /// <returns>A DateTime value (UTC)</returns>
-        /// <remarks>When we move to NET 4.6, we can replace this with DateTimeOffset.FromUnixTimeSeconds()</remarks>
-        private static DateTime FromUnixTime(long unixTime)
-        {
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return epoch.AddSeconds(unixTime);
         }
     }
 }
