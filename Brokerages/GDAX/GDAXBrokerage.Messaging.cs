@@ -149,7 +149,7 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else if (raw.Type == "ticker")
                 {
-                    EmitTick(e.Message);
+                    EmitQuoteTick(e.Message);
                     return;
                 }
                 else if (raw.Type == "error")
@@ -187,6 +187,9 @@ namespace QuantConnect.Brokerages.GDAX
         private void OrderMatch(string data)
         {
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
+
+            EmitTradeTick(message);
+
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
 
             var symbol = ConvertProductId(message.ProductId);
@@ -301,10 +304,10 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Converts a ticker message and emits data as a new tick
+        /// Converts a ticker message and emits data as a new quote tick
         /// </summary>
         /// <param name="data"></param>
-        private void EmitTick(string data)
+        private void EmitQuoteTick(string data)
         {
             var message = JsonConvert.DeserializeObject<Messages.Ticker>(data, JsonSettings);
 
@@ -322,14 +325,25 @@ namespace QuantConnect.Brokerages.GDAX
                     TickType = TickType.Quote
                     //todo: tick volume
                 });
+            }
+        }
 
+        /// <summary>
+        /// Emits a new trade tick from a match message
+        /// </summary>
+        private void EmitTradeTick(Messages.Matched message)
+        {
+            var symbol = ConvertProductId(message.ProductId);
+
+            lock (_tickLocker)
+            {
                 Ticks.Add(new Tick
                 {
                     Value = message.Price,
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
                     TickType = TickType.Trade,
-                    Quantity = message.LastSize
+                    Quantity = message.Size
                 });
             }
         }
