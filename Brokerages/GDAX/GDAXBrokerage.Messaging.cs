@@ -178,9 +178,9 @@ namespace QuantConnect.Brokerages.GDAX
 
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, ("GDAXWebsocketsBrokerage.OnMessage: Unexpected message format: " + e.Message)));
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {ex.ToString()}"));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
                 throw;
             }
         }
@@ -188,7 +188,7 @@ namespace QuantConnect.Brokerages.GDAX
         private void OrderMatch(string data)
         {
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
-            
+
             EmitTradeTick(message);
 
             var cached = CachedOrderIDs
