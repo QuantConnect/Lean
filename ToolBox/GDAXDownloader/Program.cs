@@ -57,7 +57,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
                 // Save the data
                 
-                var writer = new LeanDataWriter(Resolution.Hour, symbolObject, dataDirectory, TickType.Quote);
+                var writer = new LeanDataWriter(Resolution.Hour, symbolObject, dataDirectory, TickType.Trade);
                 writer.Write(data);
                 
                 Console.WriteLine("Finish data download");
@@ -66,8 +66,6 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             catch (Exception err)
             {
                 Log.Error(err);
-                Log.Trace(err.Message);
-                Log.Trace(err.StackTrace);
             }
             Console.ReadLine();
         }
