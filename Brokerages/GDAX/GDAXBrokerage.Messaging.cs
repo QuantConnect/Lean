@@ -47,6 +47,7 @@ namespace QuantConnect.Brokerages.GDAX
         private CancellationTokenSource _canceller = new CancellationTokenSource();
         private ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
+        private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
 
         /// <summary>
         /// Rest client used to call missing conversion rates
@@ -225,12 +226,22 @@ namespace QuantConnect.Brokerages.GDAX
                 direction = message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy;
             }
 
+            decimal totalOrderFee;
+            if (!_orderFees.TryGetValue(orderId, out totalOrderFee))
+            {
+                totalOrderFee = GetFee(order);
+                _orderFees[orderId] = totalOrderFee;
+            }
+
+            // apply order fee on a pro rata basis
+            var orderFee = totalOrderFee * Math.Abs(message.Size) / Math.Abs(order.Quantity);
+
             var orderEvent = new OrderEvent
             (
                 orderId, symbol, message.Time, status,
                 direction,
                 message.Price, direction == OrderDirection.Sell ? -message.Size : message.Size,
-                GetFee(order), $"GDAX Match Event {direction}"
+                orderFee, $"GDAX Match Event {direction}"
             );
 
             //if we're filled we won't wait for done event
@@ -238,6 +249,9 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 Order outOrder;
                 CachedOrderIDs.TryRemove(orderId, out outOrder);
+
+                decimal outOrderFee;
+                _orderFees.TryRemove(orderId, out outOrderFee);
             }
 
             OnOrderEvent(orderEvent);
