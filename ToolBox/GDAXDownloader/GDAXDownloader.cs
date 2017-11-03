@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
             while (counter <= endUtc)
             {
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(500);
                 Log.Trace("Getting " + counter.ToShortDateString() + " data..");
 
                 DateTime endDate = counter.AddDays(1);
@@ -62,44 +62,52 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 var request = (HttpWebRequest)WebRequest.Create(requestURL);
                 request.UserAgent = ".NET Framework Test Client";
 
-                var response = (HttpWebResponse)request.GetResponse();
-                var encoding = ASCIIEncoding.ASCII;
 
-                string data;
-                using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
+                try
                 {
-                    data = reader.ReadToEnd();
-                }
-                if (data.Length > 0)
-                {
-                    var a = JArray.Parse(data);
+                    var response = (HttpWebResponse)request.GetResponse();
+                    var encoding = ASCIIEncoding.ASCII;
 
-                    foreach (var token in a.Children())
+                    string data;
+                    using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
                     {
-                        var barValues = JArray.Parse(token.ToString());
+                        data = reader.ReadToEnd();
+                    }
+                    if (data.Length > 0)
+                    {
+                        var a = JArray.Parse(data);
 
-                        for (int i = 0; i < barValues.Count; i++)
+                        foreach (var token in a.Children())
                         {
-                            var dt = Time.UnixTimeStampToDateTime(double.Parse(barValues[0].ToString()));
-                            var tradeBar = new TradeBar()
+                            var barValues = JArray.Parse(token.ToString());
+
+                            for (int i = 0; i < barValues.Count; i++)
                             {
-                                Time = dt,
-                                Symbol = symbol,
-                                Low = decimal.Parse(barValues[1].ToString()),
-                                High = decimal.Parse(barValues[2].ToString()),
-                                Open = decimal.Parse(barValues[3].ToString()),
-                                Close = decimal.Parse(barValues[4].ToString()),
-                                Volume = decimal.Parse(barValues[5].ToString()),
-                                Value = decimal.Parse(barValues[4].ToString()),
-                                DataType = MarketDataType.TradeBar,
-                                Period = Time.OneHour,
-                                EndTime = dt.AddHours(1)
-                            };
-                            returnData.Add(tradeBar);
+                                var dt = Time.UnixTimeStampToDateTime(double.Parse(barValues[0].ToString()));
+                                var tradeBar = new TradeBar()
+                                {
+                                    Time = dt,
+                                    Symbol = symbol,
+                                    Low = decimal.Parse(barValues[1].ToString()),
+                                    High = decimal.Parse(barValues[2].ToString()),
+                                    Open = decimal.Parse(barValues[3].ToString()),
+                                    Close = decimal.Parse(barValues[4].ToString()),
+                                    Volume = decimal.Parse(barValues[5].ToString()),
+                                    Value = decimal.Parse(barValues[4].ToString()),
+                                    DataType = MarketDataType.TradeBar,
+                                    Period = Time.OneHour,
+                                    EndTime = dt.AddHours(1)
+                                };
+                                returnData.Add(tradeBar);
+                            }
                         }
                     }
+                    counter = counter.AddDays(1);
                 }
-                counter = counter.AddDays(1);
+                catch(System.Net.WebException ex)
+                {
+                    Console.WriteLine("BAD REQUEST: " + requestURL);
+                }
             }
             return returnData;
         }
