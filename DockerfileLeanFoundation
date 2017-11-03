@@ -19,7 +19,7 @@ RUN \
   apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 python-pip && \
   pip install --upgrade pip && pip install pycparser pandas scipy numpy sklearn  && \
   pip install blaze cvxopt cvxpy pykalman statistics statsmodels arch copulalib && \
-  pip install xgboost theano keras tensorflow
+  pip install xgboost theano keras tensorflow deap
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
