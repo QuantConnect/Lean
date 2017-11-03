@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,12 +64,12 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
             : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
         {
-            var basePathRest = environment == Environment.Trade ? 
-                "https://api-fxtrade.oanda.com/v3" : 
+            var basePathRest = environment == Environment.Trade ?
+                "https://api-fxtrade.oanda.com/v3" :
                 "https://api-fxpractice.oanda.com/v3";
 
-            var basePathStreaming = environment == Environment.Trade ? 
-                "https://stream-fxtrade.oanda.com/v3" : 
+            var basePathStreaming = environment == Environment.Trade ?
+                "https://stream-fxtrade.oanda.com/v3" :
                 "https://stream-fxpractice.oanda.com/v3";
 
             _apiRest = new DefaultApi(basePathRest);
@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from Oanda</returns>
@@ -123,7 +123,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             return new List<Cash>
             {
-                new Cash(response.Account.Currency, 
+                new Cash(response.Account.Currency,
                     response.Account.Balance.ToDecimal(),
                     GetUsdConversion(response.Account.Currency))
             };
@@ -184,13 +184,18 @@ namespace QuantConnect.Brokerages.Oanda
 
             // send Submitted order event
             const int orderFee = 0;
-            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
-
-            if (order.Type == OrderType.Market)
+            if (order.Type != OrderType.Market)
             {
+                order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+            }
+
+            if (order.Type == OrderType.Market && order.Status != OrderStatus.Filled)
+            {
+                order.Status = OrderStatus.Filled;
+
                 // if market order, also send Filled order event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                 {
                     Status = OrderStatus.Filled,
                     FillPrice = marketOrderFillPrice,
@@ -229,7 +234,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (response.Data.OrderFillTransaction != null)
             {
                 const int orderFee = 0;
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                 {
                     Status = OrderStatus.Filled,
                     FillPrice = response.Data.OrderFillTransaction.Price.ToDecimal(),
@@ -340,8 +345,10 @@ namespace QuantConnect.Brokerages.Oanda
                     var transaction = obj.ToObject<OrderFillTransaction>();
 
                     var order = OrderProvider.GetOrderByBrokerageId(transaction.OrderID);
-                    if (order != null)
+                    if (order != null && (order.Type != OrderType.Market || order.Status != OrderStatus.Filled))
                     {
+                        order.Status = OrderStatus.Filled;
+
                         order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
                         const int orderFee = 0;

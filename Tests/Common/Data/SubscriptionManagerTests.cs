@@ -105,12 +105,12 @@ namespace QuantConnect.Tests.Common.Data
             }
             else
             {
-                Assert.AreEqual(typeof(QuoteBar), types[0].Item1);
-                Assert.AreEqual(typeof(TradeBar), types[1].Item1);
+                Assert.AreEqual(typeof(TradeBar), types[0].Item1);
+                Assert.AreEqual(typeof(QuoteBar), types[1].Item1);
             }
 
-            Assert.AreEqual(TickType.Quote, types[0].Item2);
-            Assert.AreEqual(TickType.Trade, types[1].Item2);
+            Assert.AreEqual(TickType.Trade, types[0].Item2);
+            Assert.AreEqual(TickType.Quote, types[1].Item2);
         }
 
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)

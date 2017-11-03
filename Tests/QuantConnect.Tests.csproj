@@ -312,6 +312,7 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
+    <Compile Include="Python\PandasConverterTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
@@ -381,6 +382,7 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
     <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

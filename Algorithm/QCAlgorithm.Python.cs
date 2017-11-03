@@ -104,7 +104,14 @@ namespace QuantConnect.Algorithm
         public void AddUniverse(PyObject pycoarse)
         {
             var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
-            AddUniverse(c => coarse(c).Select(x => (Symbol)x));
+            if (coarse != null)
+            {
+                AddUniverse(c => coarse(c).Select(x => (Symbol)x));
+                return;
+            }
+
+            var type = (Type)pycoarse.GetPythonType().AsManagedObject(typeof(Type));
+            AddUniverse((dynamic)pycoarse.AsManagedObject(type));
         }
 
         /// <summary>
@@ -417,49 +424,19 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
+        public void PlotIndicator(string chart, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
         {
-            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
+            var array = GetIndicatorArray(first, second, third, fourth);
+            PlotIndicator(chart, array[0], array[1], array[2], array[3]);
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
+        public void PlotIndicator(string chart, bool waitForReady, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
         {
-            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available
-        /// </summary>
-        public void PlotIndicator(string chart, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
-        {
-            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
-        /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
-        {
-            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
-        /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
-        {
-            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
-        /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
-        {
-            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
+            var array = GetIndicatorArray(first, second, third, fourth);
+            PlotIndicator(chart, waitForReady, array[0], array[1], array[2], array[3]);
         }
 
         /// <summary>
@@ -566,6 +543,136 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                        .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
+                if (config == null) return null;
+
+                return CreateHistoryRequest(security, config, start, end, resolution);
+            });
+
+            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                        .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
+                if (config == null) return null;
+                
+                Resolution? res = resolution ?? security.Resolution;
+                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
+                return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
+            });
+
+            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null)
+        {
+            return History(type, tickers, Time - span, Time, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        {
+            var security = Securities[symbol];
+            // verify the types match
+            var requestedType = CreateType(type);
+            var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
+            if (config == null)
+            {
+                var actualType = security.Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
+                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+            }
+
+            var request = CreateHistoryRequest(security, config, start, end, resolution);
+            return _converter.GetDataFrame(History(request).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null)
+        {
+            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            
+            var start = GetStartTimeAlgoTz(symbol, periods, resolution);
+            var end = Time.RoundDown((resolution ?? Securities[symbol].Resolution).ToTimeSpan());
+            return History(type, symbol, start, end, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        {
+            return History(type, symbol, Time - span, Time, resolution);
+        }
+                
+        /// <summary>
         /// Sets the specified function as the benchmark, this function provides the value of
         /// the benchmark at each date/time requested
         /// </summary>
@@ -647,6 +754,48 @@ namespace QuantConnect.Algorithm
                     symbols.Add(symbol);
                 }
                 return symbols.Count == 0 ? null : symbols;
+            }
+        }
+
+        /// <summary>
+        /// Gets indicator base type
+        /// </summary>
+        /// <param name="type">Indicator type</param>
+        /// <returns>Indicator base type</returns>
+        private Type GetIndicatorBaseType(Type type)
+        {
+            if (type.BaseType == typeof(object))
+            {
+                return type;
+            }
+            return GetIndicatorBaseType(type.BaseType);
+        }
+
+        /// <summary>
+        /// Converts the sequence of PyObject objects into an array of dynamic objects that represent indicators of the same type
+        /// </summary>
+        /// <returns>Array of dynamic objects with indicator</returns>
+        private dynamic[] GetIndicatorArray(PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
+        {
+            using (Py.GIL())
+            {
+                var array = new[] { first, second, third, fourth }
+                    .Select(x =>
+                    {
+                        if (x == null) return null;
+                        var type = (Type)x.GetPythonType().AsManagedObject(typeof(Type));
+                        return (dynamic)x.AsManagedObject(type);
+
+                    }).ToArray();
+
+                var types = array.Where(x => x != null).Select(x => GetIndicatorBaseType(x.GetType())).Distinct();
+
+                if (types.Count() > 1)
+                {
+                    throw new Exception("QCAlgorithm.GetIndicatorArray(). All indicators must be of the same type: data point, bar or tradebar.");
+                }
+
+                return array;
             }
         }
 

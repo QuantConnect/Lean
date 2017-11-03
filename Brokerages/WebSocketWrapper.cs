@@ -1,36 +1,29 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using SuperSocket.ClientEngine;
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using WebSocket4Net;
+using WebSocketSharp;
 
 namespace QuantConnect.Brokerages
 {
-
     /// <summary>
     /// Wrapper for WebSocket4Net to enhance testability
     /// </summary>
     public class WebSocketWrapper : IWebSocket
     {
-
-        WebSocket wrapped;
+        private WebSocket _wrapped;
         private string _url;
 
         /// <summary>
@@ -39,12 +32,17 @@ namespace QuantConnect.Brokerages
         /// <param name="url"></param>
         public void Initialize(string url)
         {
+            if (_wrapped != null)
+            {
+                throw new InvalidOperationException("WebSocketWrapper has already been initialized for: " + _url);
+            }
+
             _url = url;
-            wrapped = new WebSocket(url);
-#if DEBUG
-            wrapped.AllowUnstrustedCertificate = true;
-#endif
-            wrapped.EnableAutoSendPing = true;
+            _wrapped = new WebSocket(url);
+
+            _wrapped.OnOpen += (sender, args) => OnOpen();
+            _wrapped.OnMessage += (sender, args) => OnMessage(new WebSocketMessage(args.Data));
+            _wrapped.OnError += (sender, args) => OnError(new WebSocketError(args.Message, args.Exception));
         }
 
         /// <summary>
@@ -53,7 +51,7 @@ namespace QuantConnect.Brokerages
         /// <param name="data"></param>
         public void Send(string data)
         {
-            wrapped.Send(data);
+            _wrapped.Send(data);
         }
 
         /// <summary>
@@ -61,9 +59,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Connect()
         {
-            if (!this.IsOpen)
+            if (!IsOpen)
             {
-                wrapped.Open();
+                _wrapped.Connect();
             }
         }
 
@@ -72,64 +70,55 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Close()
         {
-            wrapped.Close();
+            _wrapped.Close();
         }
 
         /// <summary>
         /// Wraps IsAlive
         /// </summary>
-        public bool IsOpen
-        {
-            get { return wrapped.State == WebSocketState.Open; }
-        }
-
-        /// <summary>
-        /// Wraps IsAlive
-        /// </summary>
-        public bool IsConnecting
-        {
-            get { return wrapped.State == WebSocketState.Connecting; }
-        }
-
-        /// <summary>
-        /// Returns wrapped instance
-        /// </summary>
-        public WebSocket Instance { get { return wrapped; } }
-
-        /// <summary>
-        /// Wraps Url
-        /// </summary>
-        public Uri Url
-        {
-            get { return new Uri(_url); }
-        }
+        public bool IsOpen => _wrapped.IsAlive;
 
         /// <summary>
         /// Wraps message event
         /// </summary>
-        public event EventHandler<MessageReceivedEventArgs> OnMessage
-        {
-            add { wrapped.MessageReceived += value; }
-            remove { wrapped.MessageReceived -= value; }
-        }
+        public event EventHandler<WebSocketMessage> Message;
 
         /// <summary>
         /// Wraps error event
         /// </summary>
-        public event EventHandler<ErrorEventArgs> OnError
-        {
-            add { wrapped.Error += value; }
-            remove { wrapped.Error -= value; }
-        }
+        public event EventHandler<WebSocketError> Error;
 
         /// <summary>
         /// Wraps open method
         /// </summary>
-        public event EventHandler OnOpen
+        public event EventHandler Open;
+
+        /// <summary>
+        /// Event invocator for the <see cref="Message"/> event
+        /// </summary>
+        protected virtual void OnMessage(WebSocketMessage e)
         {
-            add { wrapped.Opened += value; }
-            remove { wrapped.Opened -= value; }
+            //Logging.Log.Trace("WebSocketWrapper.OnMessage(): " + e.Message);
+            Message?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// Event invocator for the <see cref="Error"/> event
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnError(WebSocketError e)
+        {
+            Logging.Log.Error(e.Exception, "WebSocketWrapper.OnError(): " + e.Message);
+            Error?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="Open"/> event
+        /// </summary>
+        protected virtual void OnOpen()
+        {
+            Logging.Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened({IsOpen}): {_url}");
+            Open?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

@@ -16,6 +16,7 @@
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,6 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Set the cash for the strategy:
             SetCash(100000);
+            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
             var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 3.3m, true);
@@ -45,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void DataConsolidated(object sender, QuoteBar e)
         {
-            var quantity = Math.Truncate(Portfolio.Cash / Math.Abs(e.Value + 1));
+            var quantity = Math.Truncate((Portfolio.Cash + Portfolio.TotalFees) / Math.Abs(e.Value + 1));
             if (!Portfolio.Invested)
             {
                 Order("BTCUSD", quantity);

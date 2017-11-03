@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,17 +26,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// <summary>
         /// The request's identifier.
         /// </summary>
-        public int RequestId { get; private set; }
+        public int RequestId { get; }
 
         /// <summary>
         /// This structure contains a full description of the contract that was executed.
         /// </summary>
-        public Contract Contract { get; private set; }
+        public Contract Contract { get; }
 
         /// <summary>
         /// This structure contains addition order execution details.
         /// </summary>
-        public Execution Execution { get; private set; }
+        public Execution Execution { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecutionDetailsEventArgs"/> class
@@ -53,9 +53,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         public override string ToString()
         {
-            return string.Format(
-                "RequestId: {0}, Symbol: {1}, OrderId: {2}, Time: {3}, Side: {4}, Shares: {5}, Price: {6}, CumQty: {7}, PermId: {8}",
-                RequestId, Contract.Symbol, Execution.OrderId, Execution.Time, Execution.Side, Execution.Shares, Execution.Price, Execution.CumQty, Execution.PermId);
+            return $"RequestId: {RequestId}, Symbol: {Contract.Symbol}, OrderId: {Execution.OrderId}, Time: {Execution.Time}, Side: {Execution.Side}, Shares: {Execution.Shares}, Price: {Execution.Price}, CumQty: {Execution.CumQty}, PermId: {Execution.PermId}, Account: {Execution.AcctNumber}, ExecId: {Execution.ExecId}";
         }
     }
 }

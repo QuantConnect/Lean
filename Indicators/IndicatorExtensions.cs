@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +16,7 @@
 using System;
 using System.Globalization;
 using QuantConnect.Data;
-using System.Collections.Generic;
-using System.Linq;
+using Python.Runtime;
 
 namespace QuantConnect.Indicators
 {
@@ -329,6 +328,87 @@ namespace QuantConnect.Indicators
         {
             SimpleMovingAverage smaOfLeft = new SimpleMovingAverage(string.Format("SMA{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
             return smaOfLeft;
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref="Of{T, TSecond}(TSecond, IndicatorBase{T}, bool)"/> in python
+        /// </summary>
+        /// <param name="second">The indicator that receives data from the first</param>
+        /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <returns>The reference to the second indicator to allow for method chaining</returns>
+        public static object Of(PyObject second, PyObject first, bool waitForFirstToReady = true)
+        {
+            dynamic indicator1 = first.AsManagedObject((Type)first.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator2 = second.AsManagedObject((Type)second.GetPythonType().AsManagedObject(typeof(Type)));
+            return Of(indicator2, indicator1, waitForFirstToReady);
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref="WeightedBy{T, TWeight}(IndicatorBase{T}, TWeight, int)"/> in python
+        /// </summary>
+        /// <param name="value">Indicator that will be averaged</param>
+        /// <param name="weight">Indicator that provides the average weights</param>
+        /// <param name="period">Average period</param>
+        /// <returns>Indicator that results of the average of first by weights given by second</returns>
+        public static CompositeIndicator<IndicatorDataPoint> WeightedBy(PyObject value, PyObject weight, int period)
+        {
+            dynamic indicator1 = value.AsManagedObject((Type)value.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicator2 = weight.AsManagedObject((Type)weight.GetPythonType().AsManagedObject(typeof(Type)));
+            return WeightedBy(indicator1, indicator2, period);
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref="EMA{T}(IndicatorBase{T}, int, decimal?, bool)"/> in python
+        /// </summary>
+        /// <param name="left">The ExponentialMovingAverage indicator will be created using the data from left</param>
+        /// <param name="period">The period of the ExponentialMovingAverage indicators</param>
+        /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <returns>A reference to the ExponentialMovingAverage indicator to allow for method chaining</returns>
+        public static ExponentialMovingAverage EMA(PyObject left, int period, decimal? smoothingFactor = null, bool waitForFirstToReady = true)
+        {
+            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return EMA(indicator, period, smoothingFactor, waitForFirstToReady);
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref="MAX{T}(IndicatorBase{T}, int, bool)"/> in python
+        /// </summary>
+        /// <param name="left">The Maximum indicator will be created using the data from left</param>
+        /// <param name="period">The period of the Maximum indicator</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
+        public static Maximum MAX(PyObject left, int period, bool waitForFirstToReady = true)
+        {
+            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return MAX(indicator, period, waitForFirstToReady);
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref="MIN{T}(IndicatorBase{T}, int, bool)"/> in python
+        /// </summary>
+        /// <param name="left">The Minimum indicator will be created using the data from left</param>
+        /// <param name="period">The period of the Minimum indicator</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <returns>A reference to the Minimum indicator to allow for method chaining</returns>
+        public static Minimum MIN(PyObject left, int period, bool waitForFirstToReady = true)
+        {
+            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return MIN(indicator, period, waitForFirstToReady);
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref="SMA{T}(IndicatorBase{T}, int, bool)"/> in python
+        /// </summary>
+        /// <param name="left">The SimpleMovingAverage indicator will be created using the data from left</param>
+        /// <param name="period">The period of the SMA</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
+        public static SimpleMovingAverage SMA(PyObject left, int period, bool waitForFirstToReady = true)
+        {
+            dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return SMA(indicator, period, waitForFirstToReady);
         }
     }
 }

@@ -35,6 +35,19 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(disposable.DisposeWasCalled);
         }
 
+        [Test]
+        public void SwallowsObjectDisposedException()
+        {
+            var errorHandlerWasInvoked = false;
+            var disposable = new Disposable();
+            disposable.Dispose();
+            Assert.IsTrue(disposable.DisposeWasCalled);
+
+            var result = disposable.DisposeSafely(error => errorHandlerWasInvoked = true);
+            Assert.IsTrue(result);
+            Assert.IsFalse(errorHandlerWasInvoked);
+        }
+
         private sealed class Disposable : IDisposable
         {
             private readonly bool _throwException;
@@ -47,7 +60,13 @@ namespace QuantConnect.Tests.Common.Util
 
             public void Dispose()
             {
+                if (DisposeWasCalled)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
+
                 DisposeWasCalled = true;
+
                 if (_throwException)
                 {
                     throw new Exception();
