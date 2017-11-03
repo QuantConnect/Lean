@@ -80,7 +80,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
                         for (int i = 0; i < barValues.Count; i++)
                         {
-                            var dt = DateTimeOffset.FromUnixTimeSeconds(long.Parse(barValues[0].ToString())).DateTime;
+                            var dt = Time.UnixTimeStampToDateTime(double.Parse(barValues[0].ToString()));
                             var tradeBar = new TradeBar()
                             {
                                 Time = dt,
