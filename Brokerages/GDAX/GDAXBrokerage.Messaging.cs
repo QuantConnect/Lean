@@ -47,6 +47,7 @@ namespace QuantConnect.Brokerages.GDAX
         private CancellationTokenSource _canceller = new CancellationTokenSource();
         private ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
+        private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
 
         /// <summary>
         /// Rest client used to call missing conversion rates
@@ -177,9 +178,9 @@ namespace QuantConnect.Brokerages.GDAX
 
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, ("GDAXWebsocketsBrokerage.OnMessage: Unexpected message format: " + e.Message)));
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {ex.ToString()}"));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
                 throw;
             }
         }
@@ -190,34 +191,36 @@ namespace QuantConnect.Brokerages.GDAX
 
             EmitTradeTick(message);
 
-            var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
+            var cached = CachedOrderIDs
+                .Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId))
+                .ToList();
 
             var symbol = ConvertProductId(message.ProductId);
 
-            if (!cached.Any())
+            if (cached.Count == 0)
             {
                 return;
             }
 
             Log.Trace($"GDAXBrokerage.OrderMatch(): Match: {message.ProductId} {data}");
-            var orderId = cached.First().Key;
-            var orderObj = cached.First().Value;
+            var orderId = cached[0].Key;
+            var order = cached[0].Value;
 
             if (!FillSplit.ContainsKey(orderId))
             {
-                FillSplit[orderId] = new GDAXFill(orderObj);
+                FillSplit[orderId] = new GDAXFill(order);
             }
 
             var split = FillSplit[orderId];
             split.Add(message);
 
             //is this the total order at once? Is this the last split fill?
-            var status = Math.Abs(message.Size) == Math.Abs(cached.Single().Value.Quantity) || Math.Abs(split.OrderQuantity) == Math.Abs(split.TotalQuantity())
+            var status = Math.Abs(message.Size) == Math.Abs(order.Quantity) || Math.Abs(split.OrderQuantity) == Math.Abs(split.TotalQuantity())
                 ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
             OrderDirection direction;
             // Messages are always from the perspective of the market maker. Flip it in cases of a market order.
-            if (orderObj.Type == OrderType.Market)
+            if (order.Type == OrderType.Market)
             {
                 direction = message.Side == "sell" ? OrderDirection.Buy : OrderDirection.Sell;
             }
@@ -226,19 +229,32 @@ namespace QuantConnect.Brokerages.GDAX
                 direction = message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy;
             }
 
+            decimal totalOrderFee;
+            if (!_orderFees.TryGetValue(orderId, out totalOrderFee))
+            {
+                totalOrderFee = GetFee(order);
+                _orderFees[orderId] = totalOrderFee;
+            }
+
+            // apply order fee on a pro rata basis
+            var orderFee = totalOrderFee * Math.Abs(message.Size) / Math.Abs(order.Quantity);
+
             var orderEvent = new OrderEvent
             (
-                cached.First().Key, symbol, message.Time, status,
+                orderId, symbol, message.Time, status,
                 direction,
                 message.Price, direction == OrderDirection.Sell ? -message.Size : message.Size,
-                GetFee(cached.First().Value), $"GDAX Match Event {direction}"
+                orderFee, $"GDAX Match Event {direction}"
             );
 
             //if we're filled we won't wait for done event
             if (orderEvent.Status == OrderStatus.Filled)
             {
-                Orders.Order outOrder = null;
-                CachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
+                Order outOrder;
+                CachedOrderIDs.TryRemove(orderId, out outOrder);
+
+                decimal outOrderFee;
+                _orderFees.TryRemove(orderId, out outOrderFee);
             }
 
             OnOrderEvent(orderEvent);
@@ -257,30 +273,33 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             //is this our order?
-            var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.OrderId));
+            var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.OrderId)).ToList();
 
-            if (!cached.Any() || cached.Single().Value.Status == OrderStatus.Filled)
+            if (cached.Count == 0 || cached[0].Value.Status == OrderStatus.Filled)
             {
                 Log.Trace($"GDAXBrokerage.Messaging.OrderDone(): Order could not locate order in cache with order id {message.OrderId}");
                 return;
             }
 
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1,
-                $"GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId: {message.OrderId} orderId: {cached.FirstOrDefault().Key}"));
+            var orderId = cached[0].Key;
+            var order = cached[0].Value;
 
-            var split = this.FillSplit[cached.First().Key];
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1,
+                $"GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId: {message.OrderId} orderId: {orderId}"));
+
+            var split = FillSplit[orderId];
 
             //should have already been filled but match message may have been missed. Let's say we've filled now
             var orderEvent = new OrderEvent
             (
-                cached.First().Key, ConvertProductId(message.ProductId), message.Time, OrderStatus.Filled,
+                orderId, ConvertProductId(message.ProductId), message.Time, OrderStatus.Filled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
                 message.Price, message.Side == "sell" ? -split.TotalQuantity() : split.TotalQuantity(),
-                GetFee(cached.First().Value), "GDAX Fill Event"
+                GetFee(order), "GDAX Fill Event"
             );
 
-            Orders.Order outOrder = null;
-            CachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
+            Order outOrder;
+            CachedOrderIDs.TryRemove(orderId, out outOrder);
 
             OnOrderEvent(orderEvent);
         }
