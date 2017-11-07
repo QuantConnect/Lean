@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 using System;
+using System.Linq;
 using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using System.Threading;
 
 namespace QuantConnect.ToolBox.GDAXDownloader
 {
@@ -26,6 +28,8 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// </summary>
         static void Main(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
             if (args.Length == 2)
             {
                 args = new [] { args[0], DateTime.UtcNow.ToString("yyyyMMdd"), args[1] };
@@ -58,14 +62,18 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 // Save the data
                 
                 var writer = new LeanDataWriter(Resolution.Hour, symbolObject, dataDirectory, TickType.Trade);
-                writer.Write(data);
+                var distinctData= data.GroupBy(i => i.Time, (key, group) => group.First()).ToArray();
                 
-                Console.WriteLine("Finish data download");
+                writer.Write(distinctData);
+                
+                Log.Trace("Finish data download");
                 
             }
             catch (Exception err)
             {
                 Log.Error(err);
+                Log.Trace(err.Message);
+                Log.Trace(err.StackTrace);
             }
             Console.ReadLine();
         }
