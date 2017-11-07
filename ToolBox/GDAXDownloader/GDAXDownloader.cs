@@ -77,11 +77,12 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                     {
                         var a = JArray.Parse(data);
 
-                        foreach (var token in a.Children())
-                        {
-                            var barValues = JArray.Parse(token.ToString());
+                        var parsedData = JsonConvert.DeserializeObject<string[][]>(data);
 
-                            for (int i = 0; i < barValues.Count; i++)
+                        for(int j= 0; j < parsedData.Length; j++)
+                        {
+                            var barValues = parsedData[j];
+                            for (int i = 0; i < barValues.Length; i++)
                             {
                                 var dt = Time.UnixTimeStampToDateTime(double.Parse(barValues[0].ToString()));
                                 var tradeBar = new TradeBar()
@@ -101,12 +102,13 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                                 returnData.Add(tradeBar);
                             }
                         }
+                        
                     }
                     counter = counter.AddDays(1);
                 }
                 catch(System.Net.WebException ex)
                 {
-                    Console.WriteLine("BAD REQUEST: " + requestURL);
+                    Log.Error("BAD REQUEST: " + requestURL);
                 }
             }
             return returnData;
