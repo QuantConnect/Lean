@@ -226,7 +226,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
 
-                EmitQuoteTick(symbol, orderBook.BestBidPrice, orderBook.BestAskPrice);
+                EmitQuoteTick(symbol, orderBook.BestBidPrice, orderBook.BestBidSize, orderBook.BestAskPrice, orderBook.BestAskSize);
             }
             catch (Exception e)
             {
@@ -237,7 +237,7 @@ namespace QuantConnect.Brokerages.GDAX
 
         private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)
         {
-            EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestAskPrice);
+            EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
         }
 
         private void OnL2Update(string data)
@@ -417,7 +417,7 @@ namespace QuantConnect.Brokerages.GDAX
             var response = RestClient.Execute(req);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                throw new Exception($"GDAXBrokerage.GetFee: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                throw new Exception($"GDAXBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
             var tick = JsonConvert.DeserializeObject<Messages.Tick>(response.Content);
@@ -429,8 +429,10 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="bidPrice">The bid price</param>
+        /// <param name="bidSize">The bid size</param>
         /// <param name="askPrice">The ask price</param>
-        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal askPrice)
+        /// <param name="askSize">The ask price</param>
+        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             lock (_tickLocker)
             {
@@ -441,8 +443,9 @@ namespace QuantConnect.Brokerages.GDAX
                     Value = (askPrice + bidPrice) / 2m,
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
-                    TickType = TickType.Quote
-                    //todo: tick volume
+                    TickType = TickType.Quote,
+                    AskSize = askSize,
+                    BidSize = bidSize
                 });
             }
         }
@@ -541,7 +544,7 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Send(json);
 
 
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subcribe."));
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subscribe."));
 
         }
 

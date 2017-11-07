@@ -42,9 +42,19 @@ namespace QuantConnect.Brokerages.GDAX
         public decimal BestBidPrice { get; private set; }
 
         /// <summary>
+        /// The best bid size
+        /// </summary>
+        public decimal BestBidSize { get; private set; }
+
+        /// <summary>
         /// The best ask price
         /// </summary>
         public decimal BestAskPrice { get; private set; }
+
+        /// <summary>
+        /// The best ask size
+        /// </summary>
+        public decimal BestAskSize { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderBook"/> class
@@ -67,7 +77,9 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             BestBidPrice = 0;
+            BestBidSize = 0;
             BestAskPrice = 0;
+            BestAskSize = 0;
         }
 
         /// <summary>
@@ -82,11 +94,12 @@ namespace QuantConnect.Brokerages.GDAX
                 _bids[price] = size;
             }
 
-            if (BestBidPrice == 0 || price > BestBidPrice)
+            if (BestBidPrice == 0 || price >= BestBidPrice)
             {
                 BestBidPrice = price;
+                BestBidSize = size;
 
-                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestAskPrice));
+                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
             }
         }
 
@@ -102,11 +115,12 @@ namespace QuantConnect.Brokerages.GDAX
                 _asks[price] = size;
             }
 
-            if (BestAskPrice == 0 || price < BestAskPrice)
+            if (BestAskPrice == 0 || price <= BestAskPrice)
             {
                 BestAskPrice = price;
+                BestAskSize = size;
 
-                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestAskPrice));
+                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
             }
         }
 
@@ -126,9 +140,10 @@ namespace QuantConnect.Brokerages.GDAX
                 lock(_locker)
                 {
                     BestBidPrice = _bids.Keys.LastOrDefault();
+                    BestBidSize = BestBidPrice > 0 ? _bids[BestBidPrice] : 0;
                 }
 
-                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestAskPrice));
+                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
             }
         }
 
@@ -148,9 +163,10 @@ namespace QuantConnect.Brokerages.GDAX
                 lock(_locker)
                 {
                     BestAskPrice = _asks.Keys.FirstOrDefault();
+                    BestAskSize = BestAskPrice > 0 ? _asks[BestAskPrice] : 0;
                 }
 
-                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestAskPrice));
+                BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
             }
         }
     }

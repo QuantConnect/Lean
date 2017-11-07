@@ -33,21 +33,35 @@ namespace QuantConnect.Brokerages.GDAX
         public readonly decimal BestBidPrice;
 
         /// <summary>
+        /// Gets the new best bid size
+        /// </summary>
+        public readonly decimal BestBidSize;
+
+        /// <summary>
         /// Gets the new best ask price
         /// </summary>
         public readonly decimal BestAskPrice;
+
+        /// <summary>
+        /// Gets the new best ask size
+        /// </summary>
+        public readonly decimal BestAskSize;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BestBidAskUpdatedEventArgs"/> class
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="bestBidPrice">The newly updated best bid price</param>
+        /// <param name="bestBidSize">>The newly updated best bid size</param>
         /// <param name="bestAskPrice">The newly updated best ask price</param>
-        public BestBidAskUpdatedEventArgs(Symbol symbol, decimal bestBidPrice, decimal bestAskPrice)
+        /// <param name="bestAskSize">The newly updated best ask size</param>
+        public BestBidAskUpdatedEventArgs(Symbol symbol, decimal bestBidPrice, decimal bestBidSize, decimal bestAskPrice, decimal bestAskSize)
         {
             Symbol = symbol;
             BestBidPrice = bestBidPrice;
+            BestBidSize = bestBidSize;
             BestAskPrice = bestAskPrice;
+            BestAskSize = bestAskSize;
         }
     }
 }
