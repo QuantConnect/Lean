@@ -1186,13 +1186,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(requestId);
-                const int orderFee = 0;
-                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                if (order != null)
                 {
-                    Status = OrderStatus.Invalid,
-                    Message = message
-                };
-                OnOrderEvent(orderEvent);
+                    const int orderFee = 0;
+                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                    {
+                        Status = OrderStatus.Invalid,
+                        Message = message
+                    };
+                    OnOrderEvent(orderEvent);
+                }
+                else
+                {
+                    Log.Error($"InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Unable to locate order with BrokerageID {requestId}");
+                }
             }
 
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
