@@ -26,7 +26,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
     /// <summary>
     /// Kraken Data Downloader class
     /// </summary>
-    class KrakenDataDownloader : IDataDownloader
+    public class KrakenDataDownloader : IDataDownloader
     {
         private const string UrlPrototype = @"https://api.kraken.com/0/public/Trades?pair={0}&since={1}";
 
