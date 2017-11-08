@@ -21,6 +21,7 @@ using QuantConnect.Orders;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using QuantConnect.Packets;
@@ -33,7 +34,6 @@ namespace QuantConnect.Brokerages.GDAX
 {
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-
         #region Declarations
         private object _tickLocker = new object();
         /// <summary>
@@ -43,11 +43,12 @@ namespace QuantConnect.Brokerages.GDAX
         private string _passPhrase;
         private const string _symbolMatching = "ETH|LTC|BTC";
         private IAlgorithm _algorithm;
-        private static string[] _channelNames = new string[] { "heartbeat", "ticker", "user", "matches" };
+        private static string[] _channelNames = new string[] { "heartbeat", "level2", "user", "matches" };
         private CancellationTokenSource _canceller = new CancellationTokenSource();
         private ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
+        private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
 
         /// <summary>
         /// Rest client used to call missing conversion rates
@@ -148,9 +149,14 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     return;
                 }
-                else if (raw.Type == "ticker")
+                else if (raw.Type == "snapshot")
                 {
-                    EmitQuoteTick(e.Message);
+                    OnSnapshot(e.Message);
+                    return;
+                }
+                else if (raw.Type == "l2update")
+                {
+                    OnL2Update(e.Message);
                     return;
                 }
                 else if (raw.Type == "error")
@@ -181,6 +187,102 @@ namespace QuantConnect.Brokerages.GDAX
             catch (Exception exception)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
+                throw;
+            }
+        }
+
+        private void OnSnapshot(string data)
+        {
+            try
+            {
+                var message = JsonConvert.DeserializeObject<Messages.Snapshot>(data);
+
+                var symbol = ConvertProductId(message.ProductId);
+
+                OrderBook orderBook;
+                if (!_orderBooks.TryGetValue(symbol, out orderBook))
+                {
+                    orderBook = new OrderBook(symbol);
+                    _orderBooks[symbol] = orderBook;
+                }
+                else
+                {
+                    orderBook.BestBidAskUpdated -= OnBestBidAskUpdated;
+                    orderBook.Clear();
+                }
+
+                foreach (var row in message.Bids)
+                {
+                    var price = decimal.Parse(row[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    var size = decimal.Parse(row[1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    orderBook.UpdateBidRow(price, size);
+                }
+                foreach (var row in message.Asks)
+                {
+                    var price = decimal.Parse(row[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    var size = decimal.Parse(row[1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    orderBook.UpdateAskRow(price, size);
+                }
+
+                orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
+
+                EmitQuoteTick(symbol, orderBook.BestBidPrice, orderBook.BestBidSize, orderBook.BestAskPrice, orderBook.BestAskSize);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
+        }
+
+        private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)
+        {
+            EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
+        }
+
+        private void OnL2Update(string data)
+        {
+            try
+            {
+                var message = JsonConvert.DeserializeObject<Messages.L2Update>(data);
+
+                var symbol = ConvertProductId(message.ProductId);
+
+                var orderBook = _orderBooks[symbol];
+
+                foreach (var row in message.Changes)
+                {
+                    var side = row[0];
+                    var price = Convert.ToDecimal(row[1], CultureInfo.InvariantCulture);
+                    var size = decimal.Parse(row[2], NumberStyles.Float, CultureInfo.InvariantCulture);
+                    if (side == "buy")
+                    {
+                        if (size == 0)
+                        {
+                            orderBook.RemoveBidRow(price);
+                        }
+                        else
+                        {
+                            orderBook.UpdateBidRow(price, size);
+                        }
+                    }
+                    else if (side == "sell")
+                    {
+                        if (size == 0)
+                        {
+                            orderBook.RemoveAskRow(price);
+                        }
+                        else
+                        {
+                            orderBook.UpdateAskRow(price, size);
+                        }
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Data: " + data);
                 throw;
             }
         }
@@ -315,7 +417,7 @@ namespace QuantConnect.Brokerages.GDAX
             var response = RestClient.Execute(req);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                throw new Exception($"GDAXBrokerage.GetFee: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                throw new Exception($"GDAXBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
             var tick = JsonConvert.DeserializeObject<Messages.Tick>(response.Content);
@@ -323,26 +425,27 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Converts a ticker message and emits data as a new quote tick
+        /// Emits a new quote tick
         /// </summary>
-        /// <param name="data"></param>
-        private void EmitQuoteTick(string data)
+        /// <param name="symbol">The symbol</param>
+        /// <param name="bidPrice">The bid price</param>
+        /// <param name="bidSize">The bid size</param>
+        /// <param name="askPrice">The ask price</param>
+        /// <param name="askSize">The ask price</param>
+        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
-            var message = JsonConvert.DeserializeObject<Messages.Ticker>(data, JsonSettings);
-
-            var symbol = ConvertProductId(message.ProductId);
-
             lock (_tickLocker)
             {
                 Ticks.Add(new Tick
                 {
-                    AskPrice = message.BestAsk,
-                    BidPrice = message.BestBid,
-                    Value = (message.BestAsk + message.BestBid) / 2m,
+                    AskPrice = askPrice,
+                    BidPrice = bidPrice,
+                    Value = (askPrice + bidPrice) / 2m,
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
-                    TickType = TickType.Quote
-                    //todo: tick volume
+                    TickType = TickType.Quote,
+                    AskSize = askSize,
+                    BidSize = bidSize
                 });
             }
         }
@@ -389,25 +492,6 @@ namespace QuantConnect.Brokerages.GDAX
                 else
                 {
                     this.ChannelList[item.Value] = new Channel { Name = item.Value, Symbol = item.Value };
-
-                    //emit baseline tick
-                    var message = GetTick(item);
-
-                    lock (_tickLocker)
-                    {
-                        Tick updating = new Tick
-                        {
-                            AskPrice = message.AskPrice,
-                            BidPrice = message.BidPrice,
-                            Value = (message.AskPrice + message.BidPrice) / 2m,
-                            Time = DateTime.UtcNow,
-                            Symbol = item,
-                            TickType = TickType.Quote
-                            //todo: tick volume
-                        };
-
-                        this.Ticks.Add(updating);
-                    }
                 }
             }
 
@@ -441,7 +525,7 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Send(json);
 
 
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subcribe."));
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subscribe."));
 
         }
 
