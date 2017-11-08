@@ -230,10 +230,12 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <returns>A single Lean quote tick</returns>
         private static Tick CreateQuoteTick(Symbol symbol, DateTime date, List<KaikoTick> currentEpcohTicks)
         {
+            // lowest ask
             var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
-                                        .OrderByDescending(x => x.Value)
+                                        .OrderBy(x => x.Value)
                                         .FirstOrDefault();
 
+            // highest bid
             var bestBid = currentEpcohTicks.Where(x => x.OrderDirection == "b")
                                         .OrderByDescending(x => x.Value)
                                         .FirstOrDefault();
