@@ -595,24 +595,24 @@ namespace QuantConnect.Tests
             var fractionalQuantityRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "6"},
-                {"Average Win", "0.53%"},
-                {"Average Loss", "-2.00%"},
-                {"Compounding Annual Return", "65.652%"},
-                {"Drawdown", "5.000%"},
-                {"Expectancy", "-0.158"},
-                {"Net Profit", "0.555%"},
-                {"Sharpe Ratio", "0.731"},
+                {"Average Win", "2.45%"},
+                {"Average Loss", "-2.03%"},
+                {"Compounding Annual Return", "2313.556%"},
+                {"Drawdown", "4.500%"},
+                {"Expectancy", "0.473"},
+                {"Net Profit", "4.458%"},
+                {"Sharpe Ratio", "3.408"},
                 {"Loss Rate", "33%"},
                 {"Win Rate", "67%"},
-                {"Profit-Loss Ratio", "0.26"},
-                {"Alpha", "-1.237"},
-                {"Beta", "1.189"},
-                {"Annual Standard Deviation", "0.544"},
-                {"Annual Variance", "0.296"},
-                {"Information Ratio", "-8.473"},
-                {"Tracking Error", "0.115"},
-                {"Treynor Ratio", "0.335"},
-                {"Total Fees", "$2023.72"}
+                {"Profit-Loss Ratio", "1.21"},
+                {"Alpha", "-0.4"},
+                {"Beta", "0.831"},
+                {"Annual Standard Deviation", "0.579"},
+                {"Annual Variance", "0.336"},
+                {"Information Ratio", "-5.399"},
+                {"Tracking Error", "0.163"},
+                {"Treynor Ratio", "2.375"},
+                {"Total Fees", "$2092.41"}
             };
 
             var basicTemplateFuturesAlgorithmDailyStatistics = new Dictionary<string, string>
