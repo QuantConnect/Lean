@@ -1036,11 +1036,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // we also need to check for negative values, IB returns -1 on Saturday
             if (rate <= 0)
             {
+                string errorMessage;
                 bool pacingViolation;
                 const int pacingDelaySeconds = 60;
 
                 do
                 {
+                    errorMessage = string.Empty;
                     pacingViolation = false;
                     manualResetEvent.Reset();
 
@@ -1072,6 +1074,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             // pacing violation happened
                             pacingViolation = true;
                         }
+                        else
+                        {
+                            errorMessage = $"Code: {args.Code} - ErrorMessage: {args.Message}";
+                        }
                     };
 
                     Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting historical data for " + currencyPair);
@@ -1102,7 +1108,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         var mostRecentQuote = ordered.FirstOrDefault();
                         if (mostRecentQuote == null)
                         {
-                            throw new Exception("Unable to get recent quote for " + currencyPair);
+                            throw new Exception("Unable to get recent quote for " + currencyPair + " - " + errorMessage);
                         }
 
                         rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
