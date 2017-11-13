@@ -150,7 +150,8 @@
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
-	<Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
+    <Compile Include="Orders\Fills\CurrentPriceFillModel.cs" />
+    <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
     <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
