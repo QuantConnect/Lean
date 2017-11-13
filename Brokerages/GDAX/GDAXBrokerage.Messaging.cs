@@ -32,20 +32,20 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.GDAX
 {
-    public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
+    public partial class GDAXBrokerage
     {
         #region Declarations
-        private object _tickLocker = new object();
+        private readonly object _tickLocker = new object();
         /// <summary>
         /// Collection of partial split messages
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
-        private string _passPhrase;
-        private const string _symbolMatching = "ETH|LTC|BTC";
-        private IAlgorithm _algorithm;
-        private static string[] _channelNames = new string[] { "heartbeat", "level2", "user", "matches" };
-        private CancellationTokenSource _canceller = new CancellationTokenSource();
-        private ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
+        private readonly string _passPhrase;
+        private const string SymbolMatching = "ETH|LTC|BTC";
+        private readonly IAlgorithm _algorithm;
+        private static readonly string[] ChannelNames = { "heartbeat", "level2", "user", "matches" };
+        private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
+        private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
@@ -501,7 +501,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 type = "subscribe",
                 product_ids = products,
-                channels = _channelNames
+                channels = ChannelNames
             };
 
             if (payload.product_ids.Length == 0)
@@ -585,7 +585,7 @@ namespace QuantConnect.Brokerages.GDAX
 
         private bool IsSubscribeAvailable(Symbol symbol)
         {
-            return Regex.IsMatch(symbol.Value, _symbolMatching);
+            return Regex.IsMatch(symbol.Value, SymbolMatching);
         }
 
         /// <summary>
@@ -597,7 +597,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             if (WebSocket.IsOpen)
             {
-                WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = _channelNames}));
+                WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = ChannelNames}));
             }
         }
         #endregion
