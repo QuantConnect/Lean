@@ -267,7 +267,7 @@ namespace QuantConnect.Brokerages
             finally
             {
                 WebSocket.Error += this.OnError;
-                this.Subscribe(null, subscribed);
+                this.Subscribe(subscribed);
             }
         }
 
@@ -288,9 +288,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Handles the creation of websocket subscriptions
         /// </summary>
-        /// <param name="job"></param>
         /// <param name="symbols"></param>
-        public abstract void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
+        public abstract void Subscribe(IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Gets a list of current subscriptions

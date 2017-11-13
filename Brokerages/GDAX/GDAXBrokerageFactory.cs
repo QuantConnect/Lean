@@ -76,10 +76,23 @@ namespace QuantConnect.Brokerages.GDAX
             var restClient = new RestClient("https://api.gdax.com");
             var webSocketClient = new WebSocketWrapper();
 
-            var brokerage = new GDAXBrokerage(job.BrokerageData["gdax-url"], webSocketClient, restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                job.BrokerageData["gdax-passphrase"], algorithm);
+            IBrokerage brokerage;
+            if (job.DataQueueHandler.EndsWith("GDAXDataQueueHandler"))
+            {
+                var dataQueueHandler = new GDAXDataQueueHandler(job.BrokerageData["gdax-url"], webSocketClient,
+                    restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
+                    job.BrokerageData["gdax-passphrase"], algorithm);
 
-            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+                Composer.Instance.AddPart<IDataQueueHandler>(dataQueueHandler);
+
+                brokerage = dataQueueHandler;
+            }
+            else
+            {
+                brokerage = new GDAXBrokerage(job.BrokerageData["gdax-url"], webSocketClient,
+                    restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
+                    job.BrokerageData["gdax-passphrase"], algorithm);
+            }
 
             return brokerage;
         }

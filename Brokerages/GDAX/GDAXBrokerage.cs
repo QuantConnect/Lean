@@ -14,7 +14,6 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
@@ -25,7 +24,7 @@ using System.Linq;
 
 namespace QuantConnect.Brokerages.GDAX
 {
-    public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
+    public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
 
         #region IBrokerage
@@ -263,20 +262,6 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             return list;
-        }
-
-        /// <summary>
-        /// Get queued tick data
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<Data.BaseData> GetNextTicks()
-        {
-            lock (Ticks)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
         }
         #endregion
 
