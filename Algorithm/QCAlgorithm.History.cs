@@ -592,7 +592,8 @@ namespace QuantConnect.Algorithm
             {
                 DataType = dataType,
                 Resolution = resolution.Value,
-                FillForwardResolution = subscription.FillDataForward ? resolution : null
+                FillForwardResolution = subscription.FillDataForward ? resolution : null,
+                TickType = subscription.TickType
             };
 
             return request;
