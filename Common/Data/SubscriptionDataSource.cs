@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data
 {
@@ -38,15 +40,18 @@ namespace QuantConnect.Data
         public readonly SubscriptionTransportMedium TransportMedium;
 
         /// <summary>
+        /// Gets the header values to be used in the web request.
+        /// </summary>
+        public readonly IReadOnlyList<KeyValuePair<string, string>> Headers;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium)
+            : this(source, transportMedium, FileFormat.Csv)
         {
-            Source = source;
-            Format = FileFormat.Csv;
-            TransportMedium = transportMedium;
         }
 
         /// <summary>
@@ -56,10 +61,24 @@ namespace QuantConnect.Data
         /// <param name="format">The format of the data within the source</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format)
+            : this(source, transportMedium, format, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class with <see cref="SubscriptionTransportMedium.Rest"/>
+        /// including the specified header values
+        /// </summary>
+        /// <param name="source">The subscription's data source location</param>
+        /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
+        /// <param name="format">The format of the data within the source</param>
+        /// <param name="headers">The headers to be used for this source</param>
+        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format, IEnumerable<KeyValuePair<string, string>> headers)
         {
             Source = source;
             Format = format;
             TransportMedium = transportMedium;
+            Headers = (headers?.ToList() ?? new List<KeyValuePair<string, string>>()).AsReadOnly();
         }
 
         /// <summary>
@@ -73,7 +92,9 @@ namespace QuantConnect.Data
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(Source, other.Source) && TransportMedium == other.TransportMedium;
+            return string.Equals(Source, other.Source)
+                && TransportMedium == other.TransportMedium
+                && Headers.SequenceEqual(other.Headers);
         }
 
         /// <summary>
@@ -92,7 +113,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Serves as a hash function for a particular type. 
+        /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
         /// A hash code for the current <see cref="T:System.Object"/>.

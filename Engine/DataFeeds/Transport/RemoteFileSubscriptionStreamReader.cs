@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using QuantConnect.Interfaces;
@@ -35,7 +36,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
         /// <param name="source">The remote url to be downloaded via web client</param>
         /// <param name="downloadDirectory">The local directory and destination of the download</param>
-        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory)
+        /// <param name="headers">Defines header values to add to the request</param>
+        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers)
         {
             // create a hash for a new filename
             var filename = Guid.NewGuid() + source.GetExtension();
@@ -44,6 +46,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             using (var client = new WebClient())
             {
                 client.Proxy = WebRequest.GetSystemWebProxy();
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        client.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
                 client.DownloadFile(source, destination);
             }
 
