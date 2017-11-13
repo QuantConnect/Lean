@@ -25,7 +25,7 @@ namespace QuantConnect.Orders.Fills
     /// ignore the trade/quote distinction and return the latest pricing information
     /// in order to determine the correct fill price
     /// </summary>
-    public class CurrentPriceFillModel : ImmediateFillModel
+    public class LatestPriceFillModel : ImmediateFillModel
     {
         /// <summary>
         /// Get the minimum and maximum price for this security in the last bar

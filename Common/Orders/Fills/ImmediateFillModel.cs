@@ -448,7 +448,7 @@ namespace QuantConnect.Orders.Fills
             return true;
         }
 
-        protected class Prices
+        public class Prices
         {
             public readonly decimal Current;
             public readonly decimal Open;
