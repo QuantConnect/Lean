@@ -10,7 +10,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
     [TestFixture]
-    public class CurrentPriceFillModelTests
+    public class LatestPriceFillModelTests
     {
         private TestableLatestFillModel _fillModel;
 

@@ -33,7 +33,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
-        protected new Prices GetPrices(Security asset, OrderDirection direction)
+        protected override Prices GetPrices(Security asset, OrderDirection direction)
         {
             var low = asset.Low;
             var high = asset.High;
@@ -73,7 +73,7 @@ namespace QuantConnect.Orders.Fills
             var quoteBar = asset.Cache.GetData<QuoteBar>();
             var tradeBar = asset.Cache.GetData<TradeBar>();
 
-            if (tradeBar.Time > quoteBar.Time)
+            if (tradeBar.EndTime > quoteBar.EndTime)
             {
                 // The latest pricing data came from a trade
                 return new Prices(tradeBar);

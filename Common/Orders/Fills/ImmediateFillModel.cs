@@ -376,7 +376,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
-        protected Prices GetPrices(Security asset, OrderDirection direction)
+        protected virtual Prices GetPrices(Security asset, OrderDirection direction)
         {
             var low = asset.Low;
             var high = asset.High;
