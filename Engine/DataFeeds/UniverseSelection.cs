@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,6 +62,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeData">The data provided to perform selection with</param>
         public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
+            var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
+            if (dateTimeUtc > algorithmEndDateUtc)
+            {
+                return SecurityChanges.None;
+            }
+
             IEnumerable<Symbol> selectSymbolsResult;
 
             // check if this universe must be filtered with fine fundamental data
@@ -116,7 +122,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var additions = new List<Security>();
             var removals = new List<Security>();
-            var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
 
             // remove previously deselected members which were kept in the universe because of holdings or open orders
             foreach (var member in _pendingRemovals.ToList())
