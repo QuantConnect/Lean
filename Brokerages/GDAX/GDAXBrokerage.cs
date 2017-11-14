@@ -57,6 +57,15 @@ namespace QuantConnect.Brokerages.GDAX
                 payload.overdraft_enabled = true;
             }
 
+            var orderProperties = order.Properties as GDAXOrderProperties;
+            if (orderProperties != null)
+            {
+                if (order.Type == OrderType.Limit)
+                {
+                    payload.post_only = orderProperties.PostOnly;
+                }
+            }
+
             req.AddJsonBody(payload);
 
             GetAuthenticationToken(req);
@@ -69,6 +78,13 @@ namespace QuantConnect.Brokerages.GDAX
                 if (raw?.Id == null)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    UnlockStream();
+                    return false;
+                }
+
+                if (raw.Status == "rejected")
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = "Reject reason: " + raw.RejectReason });
                     UnlockStream();
                     return false;
                 }
