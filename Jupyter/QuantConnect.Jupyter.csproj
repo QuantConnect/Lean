@@ -54,6 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmAnalysis.cs" />
+    <Compile Include="BacktestingFutureChainProvider.cs" />
+    <Compile Include="FutureHistory.cs" />
     <Compile Include="OptionHistory.cs" />
     <Compile Include="QuantBook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -70,6 +72,10 @@
     <ProjectReference Include="..\Common\QuantConnect.csproj">
       <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj">
+      <Project>{bc3bc77e-0502-43db-a727-b94f9765d74b}</Project>
+      <Name>QuantConnect.Compression</Name>
     </ProjectReference>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>

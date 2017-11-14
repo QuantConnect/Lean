@@ -186,14 +186,14 @@ namespace QuantConnect.Jupyter
         }
 
         /// <summary>
-            /// Creates and adds a new equity <see cref="Option"/> security to the algorithm
-            /// </summary>
-            /// <param name="underlying">The underlying equity symbol</param>
-            /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-            /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-            /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-            /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-            /// <returns>The new <see cref="Option"/> security</returns>
+        /// Creates and adds a new equity <see cref="Option"/> security to the algorithm
+        /// </summary>
+        /// <param name="underlying">The underlying equity symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Option"/> security</returns>
         public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return _algorithm.AddOption(underlying, resolution, market, fillDataForward, leverage);
@@ -367,6 +367,41 @@ namespace QuantConnect.Jupyter
 
             return new OptionHistory(_algorithm.HistoryProvider.GetHistory(requests.OrderByDescending(x => x.Symbol.SecurityType), _algorithm.TimeZone).Memoize());
         }
+
+        /// <summary>
+        /// Gets <see cref="FutureHistory"/> object for a given symbol, date and resolution
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical future data for</param>
+        /// <param name="date">Date of the data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A <see cref="FutureHistory"/> object that contains historical future data.</returns>
+        public FutureHistory GetFutureHistory(Symbol symbol, DateTime date, Resolution? resolution = null)
+        {
+            SetStartDate(date.AddDays(1));
+            var future = _algorithm.Securities[symbol] as Future;
+
+            var provider = new BacktestingFutureChainProvider();
+            var allSymbols = provider.GetFutureContractList(future.Symbol, date);
+
+            var requests = future.ContractFilter.Filter(new FutureFilterUniverse(allSymbols, new Tick { Time = date }))
+                .Select(x =>
+                     new HistoryRequest(date.AddDays(-1),
+                                        date,
+                                        typeof(QuoteBar),
+                                        x,
+                                        resolution ?? future.Resolution,
+                                        future.Exchange.Hours,
+                                        MarketHoursDatabase.FromDataFolder().GetDataTimeZone(future.Symbol.ID.Market, future.Symbol, future.Type),
+                                        Resolution.Minute,
+                                        future.IsExtendedMarketHours,
+                                        future.IsCustomData(),
+                                        DataNormalizationMode.Raw,
+                                        LeanData.GetCommonTickTypeForCommonDataTypes(typeof(QuoteBar), future.Type))
+                    );
+
+            return new FutureHistory(_algorithm.HistoryProvider.GetHistory(requests, _algorithm.TimeZone).Memoize());
+        }
+
 
         /// <summary>
         /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned. 
