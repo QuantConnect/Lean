@@ -490,10 +490,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
-
             foreach (var item in symbols)
             {
-                if (item.Value.Contains("UNIVERSE")) continue;
+                if (item.Value.Contains("UNIVERSE") ||
+                    item.SecurityType != SecurityType.Forex && item.SecurityType != SecurityType.Crypto)
+                {
+                    continue;
+                }
 
                 if (!IsSubscribeAvailable(item))
                 {
