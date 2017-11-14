@@ -112,6 +112,9 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # tensorflow test
         tensorflow_test()
+        
+        # deap test
+        deap_test()
 
 
     def OnData(self, data): pass
