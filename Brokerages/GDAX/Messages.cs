@@ -114,6 +114,12 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public string Side { get; set; }
         public string Stp { get; set; }
         public string Type { get; set; }
+        [JsonProperty("time_in_force")]
+        public string TimeInForce { get; set; }
+        [JsonProperty("post_only")]
+        public bool PostOnly { get; set; }
+        [JsonProperty("reject_reason")]
+        public string RejectReason { get; set; }
         [JsonProperty("fill_fees")]
         public decimal FillFees { get; set; }
         [JsonProperty("filled_size")]

@@ -73,6 +73,13 @@ namespace QuantConnect.Brokerages.GDAX
                     return false;
                 }
 
+                if (raw.Status == "rejected")
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = "Reject reason: " + raw.RejectReason });
+                    UnlockStream();
+                    return false;
+                }
+
                 var brokerId = raw.Id;
                 if (CachedOrderIDs.ContainsKey(order.Id))
                 {
