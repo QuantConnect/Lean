@@ -57,6 +57,15 @@ namespace QuantConnect.Brokerages.GDAX
                 payload.overdraft_enabled = true;
             }
 
+            var orderProperties = order.Properties as GDAXOrderProperties;
+            if (orderProperties != null)
+            {
+                if (order.Type == OrderType.Limit)
+                {
+                    payload.post_only = orderProperties.PostOnly;
+                }
+            }
+
             req.AddJsonBody(payload);
 
             GetAuthenticationToken(req);
