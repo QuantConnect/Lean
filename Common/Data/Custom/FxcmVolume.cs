@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Custom
             {
                 var source = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}", _baseUrl, _ver, _sid,
                                            interval, symbolId);
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest, FileFormat.Collection);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest, FileFormat.Csv);
             }
             else
             {
