@@ -2182,11 +2182,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 yield return tick;
 
-                if (_underlyings.ContainsKey(tick.Symbol))
+                lock (_sync)
                 {
-                    var underlyingTick = tick.Clone();
-                    underlyingTick.Symbol = _underlyings[tick.Symbol];
-                    yield return underlyingTick;
+                    if (_underlyings.ContainsKey(tick.Symbol))
+                    {
+                        var underlyingTick = tick.Clone();
+                        underlyingTick.Symbol = _underlyings[tick.Symbol];
+                        yield return underlyingTick;
+                    }
                 }
             }
         }
