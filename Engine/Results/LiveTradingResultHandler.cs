@@ -459,12 +459,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var chart = new Chart(deltaChart.Name);
                 current.Add(deltaChart.Name, chart);
 
-                if (deltaChart.Name == _subscription || _subscription == "*")
+                if (deltaChart.Name == _subscription || (_subscription == "*" && deltaChart.Name == "Strategy Equity"))
                 {
                     chart.Series = deltaChart.Series;
                 }
 
-                if (current.Count >= groupSize)
+                // If there is room left in the group. add the subscription
+                // to the packet unless it is a wildcard subscription
+                if (current.Count >= groupSize && _subscription != "*")
                 {
                     // Add the micro packet to transport.
                     chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
@@ -473,8 +475,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
 
-            //Add whatever is left over here too.
-            if (current.Count > 0)
+            // Add whatever is left over here too
+            // unless it is a wildcard subscription
+            if (current.Count > 0 && _subscription != "*")
             {
                 chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
             }
@@ -492,7 +495,6 @@ namespace QuantConnect.Lean.Engine.Results
                 })
             };
 
-            // combine all the packets to be sent to through pubnub
             return packets.Concat(chartPackets);
         }
 
