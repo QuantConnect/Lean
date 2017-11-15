@@ -66,15 +66,32 @@ namespace QuantConnect.Python
 
             foreach (var slice in data)
             {
-                foreach (var baseData in slice.Values)
+                foreach (var key in slice.Keys)
                 {
                     PandasData value;
-                    if (!sliceDataDict.TryGetValue(baseData.Symbol, out value))
+
+                    var ticks = slice[key] as List<Tick>;
+                    if (ticks == null)
                     {
-                        sliceDataDict.Add(baseData.Symbol, value = new PandasData(baseData));
-                        maxLevels = Math.Max(maxLevels, value.Levels);
+                        if (!sliceDataDict.TryGetValue(key, out value))
+                        {
+                            sliceDataDict.Add(key, value = new PandasData(slice[key]));
+                            maxLevels = Math.Max(maxLevels, value.Levels);
+                        }
+                        value.Add(slice[key]);
                     }
-                    value.Add(baseData);
+                    else
+                    {
+                        if (!sliceDataDict.TryGetValue(key, out value))
+                        {
+                            sliceDataDict.Add(key, value = new PandasData(ticks.First()));
+                            maxLevels = Math.Max(maxLevels, value.Levels);
+                        }
+                        foreach (var tick in ticks)
+                        {
+                            value.Add(tick);
+                        }
+                    }
                 }
             }
 
@@ -166,7 +183,8 @@ namespace QuantConnect.Python
     {
         private readonly Symbol _symbol;
         private readonly List<DateTime> _timeIndex;
-        private readonly Dictionary<string, List<double>> _series;
+        private readonly Dictionary<string, List<double>> _doubleSeries;
+        private readonly Dictionary<string, List<string>> _stringSeries = new Dictionary<string, List<string>>();
 
         /// <summary>
         /// Implied levels of a multi index pandas.Series (depends on the security type)
@@ -181,7 +199,12 @@ namespace QuantConnect.Python
         {
             var columns = "open,high,low,close";
 
-            if (baseData is TradeBar)
+            if (baseData is Tick)
+            {
+                columns = "askprice,asksize,bidprice,bidsize,lastprice,quantity";
+                _stringSeries.Add("exchange", new List<string>());
+            }
+            else if (baseData is TradeBar)
             {
                 columns += ",volume";
             }
@@ -195,8 +218,8 @@ namespace QuantConnect.Python
                 // and add the field named 'value' since it is the reference value
                 columns = "value," + string.Join(",", ((DynamicData)baseData).GetStorageDictionary().Keys);
             }
-
-            _series = columns.Split(',').ToDictionary(k => k, v => new List<double>());
+            
+            _doubleSeries = columns.Split(',').ToDictionary(k => k, v => new List<double>());
             _symbol = baseData.Symbol;
             _timeIndex = new List<DateTime>();
 
@@ -216,53 +239,71 @@ namespace QuantConnect.Python
             var bar = baseData as IBaseDataBar;
             if (bar != null)
             {
-                _series["open"].Add((double)bar.Open);
-                _series["high"].Add((double)bar.High);
-                _series["low"].Add((double)bar.Low);
-                _series["close"].Add((double)bar.Close);
+                _doubleSeries["open"].Add((double)bar.Open);
+                _doubleSeries["high"].Add((double)bar.High);
+                _doubleSeries["low"].Add((double)bar.Low);
+                _doubleSeries["close"].Add((double)bar.Close);
 
                 var tradeBar = bar as TradeBar;
                 if (tradeBar != null)
                 {
-                    _series["volume"].Add((double)tradeBar.Volume);
+                    _doubleSeries["volume"].Add((double)tradeBar.Volume);
                 }
 
                 var quoteBar = bar as QuoteBar;
                 if (quoteBar != null)
                 {
-                    _series["asksize"].Add((double)quoteBar.LastAskSize);
-                    _series["bidsize"].Add((double)quoteBar.LastBidSize);
+                    _doubleSeries["asksize"].Add((double)quoteBar.LastAskSize);
+                    _doubleSeries["bidsize"].Add((double)quoteBar.LastBidSize);
 
                     if (quoteBar.Ask != null)
                     {
-                        _series["askopen"].Add((double)quoteBar.Ask.Open);
-                        _series["askhigh"].Add((double)quoteBar.Ask.High);
-                        _series["asklow"].Add((double)quoteBar.Ask.Low);
-                        _series["askclose"].Add((double)quoteBar.Ask.Close);
+                        _doubleSeries["askopen"].Add((double)quoteBar.Ask.Open);
+                        _doubleSeries["askhigh"].Add((double)quoteBar.Ask.High);
+                        _doubleSeries["asklow"].Add((double)quoteBar.Ask.Low);
+                        _doubleSeries["askclose"].Add((double)quoteBar.Ask.Close);
                     }
                     else
                     {
-                        _series["askopen"].Add(double.NaN);
-                        _series["askhigh"].Add(double.NaN);
-                        _series["asklow"].Add(double.NaN);
-                        _series["askclose"].Add(double.NaN);
+                        _doubleSeries["askopen"].Add(double.NaN);
+                        _doubleSeries["askhigh"].Add(double.NaN);
+                        _doubleSeries["asklow"].Add(double.NaN);
+                        _doubleSeries["askclose"].Add(double.NaN);
                     }
 
                     if (quoteBar.Bid != null)
                     {
-                        _series["bidopen"].Add((double)quoteBar.Bid.Open);
-                        _series["bidhigh"].Add((double)quoteBar.Bid.High);
-                        _series["bidlow"].Add((double)quoteBar.Bid.Low);
-                        _series["bidclose"].Add((double)quoteBar.Bid.Close);
+                        _doubleSeries["bidopen"].Add((double)quoteBar.Bid.Open);
+                        _doubleSeries["bidhigh"].Add((double)quoteBar.Bid.High);
+                        _doubleSeries["bidlow"].Add((double)quoteBar.Bid.Low);
+                        _doubleSeries["bidclose"].Add((double)quoteBar.Bid.Close);
                     }
                     else
                     {
-                        _series["bidopen"].Add(double.NaN);
-                        _series["bidhigh"].Add(double.NaN);
-                        _series["bidlow"].Add(double.NaN);
-                        _series["bidclose"].Add(double.NaN);
+                        _doubleSeries["bidopen"].Add(double.NaN);
+                        _doubleSeries["bidhigh"].Add(double.NaN);
+                        _doubleSeries["bidlow"].Add(double.NaN);
+                        _doubleSeries["bidclose"].Add(double.NaN);
                     }
                 }
+            }
+
+            var tick = baseData as Tick;
+            if (tick != null)
+            {
+                if (tick.TickType == TickType.Quote)
+                {
+                    _doubleSeries["askprice"].Add((double)tick.AskPrice);
+                    _doubleSeries["asksize"].Add((double)tick.AskSize);
+                    _doubleSeries["bidprice"].Add((double)tick.BidPrice);
+                    _doubleSeries["bidsize"].Add((double)tick.BidSize);
+                }
+                else
+                {
+                    _stringSeries["exchange"].Add(tick.Exchange);
+                }
+                _doubleSeries["lastprice"].Add((double)tick.LastPrice);
+                _doubleSeries["quantity"].Add((double)tick.Quantity);
             }
 
             var data = baseData as DynamicData;
@@ -270,9 +311,9 @@ namespace QuantConnect.Python
             {
                 foreach (var kvp in data.GetStorageDictionary())
                 {
-                    _series[kvp.Key].Add(Convert.ToDouble(kvp.Value));
+                    _doubleSeries[kvp.Key].Add(Convert.ToDouble(kvp.Value));
                 }
-                _series["value"].Add((double)data.Value);
+                _doubleSeries["value"].Add((double)data.Value);
             }
         }
 
@@ -346,7 +387,18 @@ namespace QuantConnect.Python
                 var index = pandas.MultiIndex.from_tuples(tuples, names: names.Split(','));
 
                 // Returns a dictionary keyed by column name where values are pandas.Series objects
-                return _series.ToDictionary(k => k.Key, v => pandas.Series(v.Value, index));
+                var pandasSeries = new Dictionary<string, dynamic>();
+                foreach (var kvp in _doubleSeries)
+                {
+                    if (kvp.Value.Count != tuples.Length) continue;
+                    pandasSeries.Add(kvp.Key, pandas.Series(kvp.Value, index));
+                }
+                foreach (var kvp in _stringSeries)
+                {
+                    if (kvp.Value.Count != tuples.Length) continue;
+                    pandasSeries.Add(kvp.Key, pandas.Series(kvp.Value, index));
+                }
+                return pandasSeries;
             }
         }
     }
