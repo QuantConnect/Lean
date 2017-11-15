@@ -1,23 +1,24 @@
-using QuantConnect.Util;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Custom
 {
     /// <summary>
-    /// FXCM Real FOREX Volume and Transaction data from its clients base, available for the following pairs:
+    ///     FXCM Real FOREX Volume and Transaction data from its clients base, available for the following pairs:
     ///     - EURUSD, USDJPY, GBPUSD, USDCHF, EURCHF, AUDUSD, USDCAD,
     ///       NZDUSD, EURGBP, EURJPY, GBPJPY, EURAUD, EURCAD, AUDJPY
-    /// FXCM only provides support for FX symbols which produced over 110 million average daily volume (ADV) during 2013.
-    /// This limit is imposed to ensure we do not highlight low volume/low ticket symbols in addition to other financial reporting concerns.
-    ///
+    ///     FXCM only provides support for FX symbols which produced over 110 million average daily volume (ADV) during 2013.
+    ///     This limit is imposed to ensure we do not highlight low volume/low ticket symbols in addition to other financial
+    ///     reporting concerns.
     /// </summary>
     /// <seealso cref="QuantConnect.Data.BaseData" />
     public class FxcmVolume : BaseData
     {
+        /// <summary>
+        /// Auxiliary enum used to map the pair symbol into FXCM request code.
+        /// </summary>
         private enum FxcmSymbolId
         {
             EURUSD = 1,
@@ -49,7 +50,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
+        private readonly long[] _transactionsIdx = {27, 29, 31, 33};
 
         /// <summary>
         ///     Integer representing client version.
@@ -59,7 +60,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
+        private readonly int[] _volumeIdx = {26, 28, 30, 32};
 
         /// <summary>
         ///     Sum of opening and closing Transactions for the entire time interval.
@@ -93,7 +94,8 @@ namespace QuantConnect.Data.Custom
 
             if (isLiveMode)
             {
-                var source = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}", _baseUrl, _ver, _sid, interval, symbolId);
+                var source = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}", _baseUrl, _ver, _sid,
+                                           interval, symbolId);
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest, FileFormat.Collection);
             }
             else
@@ -101,24 +103,6 @@ namespace QuantConnect.Data.Custom
                 var source = GenerateZipFilePath(config, date);
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
             }
-        }
-
-        private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
-        {
-            var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
-            string filename;
-
-            if (config.Resolution == Resolution.Minute)
-            {
-                filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
-                source = Path.Combine(source, config.Symbol.Value.ToLower(), filename);
-            }
-            else
-            {
-                filename = string.Format("{0}_volume.zip", config.Symbol.Value.ToLower());
-                source = Path.Combine(source, filename);
-            }
-            return source;
         }
 
         /// <summary>
@@ -140,7 +124,7 @@ namespace QuantConnect.Data.Custom
                 var obs = line.Split('\n')[2].Split(';');
                 var stringDate = obs[0].Substring(startIndex: 3);
                 var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
-                                              DateTimeFormatInfo.InvariantInfo);
+                                                  DateTimeFormatInfo.InvariantInfo);
                 var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
                 var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
                 return new FxcmVolume
@@ -169,9 +153,27 @@ namespace QuantConnect.Data.Custom
                     Symbol = config.Symbol,
                     Time = time,
                     Value = long.Parse(obs[1]),
-                    Transactions = int.Parse(obs[2]),
+                    Transactions = int.Parse(obs[2])
                 };
             }
+        }
+
+        private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
+        {
+            var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
+            string filename;
+
+            if (config.Resolution == Resolution.Minute)
+            {
+                filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
+                source = Path.Combine(source, config.Symbol.Value.ToLower(), filename);
+            }
+            else
+            {
+                filename = string.Format("{0}_volume.zip", config.Symbol.Value.ToLower());
+                source = Path.Combine(source, filename);
+            }
+            return source;
         }
 
         /// <summary>
@@ -185,11 +187,12 @@ namespace QuantConnect.Data.Custom
             int symbolId;
             try
             {
-                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
             }
             catch (ArgumentException)
             {
-                throw new ArgumentException("Volume data is not available for the selected symbol.", nameof(symbol));
+                throw new ArgumentOutOfRangeException(nameof(symbol), symbol,
+                                                      "Volume data is not available for the selected symbol.");
             }
             return symbolId;
         }
@@ -222,10 +225,9 @@ namespace QuantConnect.Data.Custom
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution,
-                                                          "tick or second resolution are not supported for Forex Volume.");
+                                                          "Tick or second resolution are not supported for Forex Volume. Available resolutions are Minute, Hour and Daily.");
             }
             return interval;
         }
-
     }
 }
