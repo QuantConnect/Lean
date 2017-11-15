@@ -1161,12 +1161,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // code 1100 is a connection failure, we'll wait a minute before exploding gracefully
-            if (errorCode == 1100 && !_disconnected1100Fired)
+            if (errorCode == 1100)
             {
-                _disconnected1100Fired = true;
+                if (!_disconnected1100Fired)
+                {
+                    _disconnected1100Fired = true;
 
-                // begin the try wait logic
-                TryWaitForReconnect();
+                    // begin the try wait logic
+                    TryWaitForReconnect();
+                }
+                else
+                {
+                    // The IB API sends many consecutive disconnect messages (1100) during nightly reset periods and weekends,
+                    // so we send the message event only when we transition from connected to disconnected state,
+                    // to avoid flooding the logs with the same message.
+                    return;
+                }
             }
             else if (errorCode == 1102 || errorCode == 1101)
             {
