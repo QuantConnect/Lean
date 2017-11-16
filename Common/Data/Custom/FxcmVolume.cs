@@ -119,25 +119,21 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
+            DateTime time;
+            long volume;
+            int transactions;
             if (isLiveMode)
             {
                 var obs = line.Split('\n')[2].Split(';');
                 var stringDate = obs[0].Substring(startIndex: 3);
-                var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
+                time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
                                                   DateTimeFormatInfo.InvariantInfo);
-                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-                var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                return new FxcmVolume
-                {
-                    Symbol = config.Symbol,
-                    Time = obsTime,
-                    Value = volume,
-                    Transactions = transactions
-                };
+                volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+                transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                
             }
             else
             {
-                DateTime time;
                 var obs = line.Split(',');
                 if (config.Resolution == Resolution.Minute)
                 {
@@ -147,15 +143,18 @@ namespace QuantConnect.Data.Custom
                 {
                     time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                 }
-                return new FxcmVolume
-                {
-                    DataType = MarketDataType.Base,
-                    Symbol = config.Symbol,
-                    Time = time,
-                    Value = long.Parse(obs[1]),
-                    Transactions = int.Parse(obs[2])
-                };
+                volume = long.Parse(obs[1]);
+                transactions = int.Parse(obs[2]);
             }
+            return new FxcmVolume
+            {
+                DataType = MarketDataType.Base,
+                Symbol = config.Symbol,
+                Time = time,
+                Value = volume,
+                Transactions = transactions
+            };
+
         }
 
         private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
