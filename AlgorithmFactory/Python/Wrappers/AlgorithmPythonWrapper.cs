@@ -363,6 +363,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        public IFutureChainProvider FutureChainProvider
+        {
+            get
+            {
+                return _baseAlgorithm.FutureChainProvider;
+            }
+        }
+
+        /// <summary>
         /// Algorithm start date for backtesting, set by the SetStartDate methods.
         /// </summary>
         public DateTime StartDate
@@ -414,6 +425,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetOptionChainProvider(IOptionChainProvider optionChainProvider)
         {
             _baseAlgorithm.SetOptionChainProvider(optionChainProvider);
+        }
+
+        /// <summary>
+        /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
+        {
+            _baseAlgorithm.SetFutureChainProvider(futureChainProvider);
         }
 
         /// <summary>

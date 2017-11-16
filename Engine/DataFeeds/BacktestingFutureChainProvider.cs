@@ -13,18 +13,19 @@
  * limitations under the License.
 */
 
-using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// An implementation of <see cref="BacktestingFutureChainProvider"/> that reads the list of contracts from open interest zip data files
+    /// An implementation of <see cref="IFutureChainProvider"/> that reads the list of contracts from open interest zip data files
     /// </summary>
-    public class BacktestingFutureChainProvider
+    public class BacktestingFutureChainProvider : IFutureChainProvider
     {
         /// <summary>
         /// Gets the list of future contracts for a given underlying symbol

@@ -299,6 +299,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        IFutureChainProvider FutureChainProvider
+        {
+            get;
+        }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
@@ -585,5 +593,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="optionChainProvider">The option chain provider</param>
         void SetOptionChainProvider(IOptionChainProvider optionChainProvider);
+
+        /// <summary>
+        /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        void SetFutureChainProvider(IFutureChainProvider futureChainProvider);
     }
 }

@@ -22,7 +22,7 @@ using System.Linq;
 namespace QuantConnect.Jupyter
 {
     /// <summary>
-    /// Class to manage information from History Request of Options
+    /// Class to manage information from History Request of Futures
     /// </summary>
     public class FutureHistory
     {
