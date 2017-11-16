@@ -90,7 +90,7 @@ namespace QuantConnect.Data.Custom
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var interval = GetIntervalFromResolution(config.Resolution);
-            var symbolId = GetFxcmIDFromSymbol(config.Symbol);
+            var symbolId = GetFxcmIDFromSymbol(config.Symbol.Value.Split('_').First());
 
             if (isLiveMode)
             {
@@ -162,14 +162,15 @@ namespace QuantConnect.Data.Custom
             var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
             string filename;
 
+            var symbol = config.Symbol.Value.Split('_').First().ToLower();
             if (config.Resolution == Resolution.Minute)
             {
                 filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
-                source = Path.Combine(source, config.Symbol.Value.ToLower(), filename);
+                source = Path.Combine(source, symbol, filename);
             }
             else
             {
-                filename = string.Format("{0}_volume.zip", config.Symbol.Value.ToLower());
+                filename = string.Format("{0}_volume.zip", symbol);
                 source = Path.Combine(source, filename);
             }
             return source;
@@ -181,12 +182,12 @@ namespace QuantConnect.Data.Custom
         /// <param name="symbol">The pair symbol.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentException">Volume data is not available for the selected symbol. - symbol</exception>
-        private int GetFxcmIDFromSymbol(Symbol symbol)
+        private int GetFxcmIDFromSymbol(string symbol)
         {
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol);
             }
             catch (ArgumentException)
             {
