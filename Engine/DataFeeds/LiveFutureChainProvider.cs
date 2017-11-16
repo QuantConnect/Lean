@@ -35,8 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The list of future contracts</returns>
         public IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
         {
-            // Returns an empty list of contracts until we can find a source for it in live trading.
-            return Enumerable.Empty<Symbol>();
+            throw new NotImplementedException("LiveFutureChainProvider.GetFutureContractList() has not been implemented yet.");
         }
     }
 }
