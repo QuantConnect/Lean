@@ -51,12 +51,11 @@ namespace QuantConnect.Algorithm
         /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
-        /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
         {
-            AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
         }
-
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
@@ -67,9 +66,10 @@ namespace QuantConnect.Algorithm
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -81,7 +81,8 @@ namespace QuantConnect.Algorithm
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
@@ -94,6 +95,7 @@ namespace QuantConnect.Algorithm
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
+            return security;
         }
 
         /// <summary>
