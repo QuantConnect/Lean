@@ -37,7 +37,7 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "ISlippageModel.GetSlippageApproximation(Security, Order)" /> in Python
+        /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
         /// <param name="asset">The security matching the order</param>
         /// <param name="order">The order to compute slippage for</param>

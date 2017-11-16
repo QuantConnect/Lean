@@ -35,7 +35,7 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "ISecurityInitializer.Initialize(Security, bool)" /> in Python
+        /// Initializes the specified security
         /// </summary>
         /// <param name="security">The security to be initialized</param>
         /// <param name="seedSecurity">True to seed the security, false otherwise</param>
