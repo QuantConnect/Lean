@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
         private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
+        private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -157,14 +158,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            var keys = _pendingSecurityAdditions.Keys;
+            if (keys.Any() && keys.Single() != dateTimeUtc)
+            {
+                // if the frontier moved forward then we've added these securities to the algorithm
+                _pendingSecurityAdditions.Clear();
+            }
+
+            Dictionary<Symbol, Security> pendingAdditions;
+            if (!_pendingSecurityAdditions.TryGetValue(dateTimeUtc, out pendingAdditions))
+            {
+                // keep track of created securities so we don't create the same security twice, leads to bad things :)
+                pendingAdditions = new Dictionary<Symbol, Security>();
+                _pendingSecurityAdditions[dateTimeUtc] = pendingAdditions;
+            }
+
             // find new selections and add them to the algorithm
             foreach (var symbol in selections)
             {
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
-                if (!_algorithm.Securities.TryGetValue(symbol, out security))
+                if (!pendingAdditions.TryGetValue(symbol, out security) || !_algorithm.Securities.TryGetValue(symbol, out security))
                 {
                     security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
+                    pendingAdditions.Add(symbol, security);
                 }
 
                 var addedSubscription = false;
