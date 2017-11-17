@@ -154,6 +154,7 @@
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
+    <Compile Include="Python\PandasData.cs" />
     <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
     <Compile Include="Python\SlippageModelPythonWrapper.cs" />
     <Compile Include="Python\FillModelPythonWrapper.cs" />
