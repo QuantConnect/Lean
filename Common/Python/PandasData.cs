@@ -165,11 +165,8 @@ namespace QuantConnect.Python
                     _series["bidprice"].Add((double)tick.BidPrice);
                     _series["bidsize"].Add((double)tick.BidSize);
                 }
-                else
-                {
-                    _series["exchange"].Add(tick.Exchange);
-                    _series["suspicious"].Add(tick.Suspicious);
-                }
+                _series["exchange"].Add(tick.Exchange);
+                _series["suspicious"].Add(tick.Suspicious);
                 _series["lastprice"].Add((double)tick.LastPrice);
                 _series["quantity"].Add((double)tick.Quantity);
             }
@@ -179,7 +176,9 @@ namespace QuantConnect.Python
             {
                 foreach (var kvp in data.GetStorageDictionary())
                 {
-                    _series[kvp.Key].Add(Convert.ToDouble(kvp.Value));
+                    var value = kvp.Value;
+                    if (value is decimal) value = (double)value;
+                    _series[kvp.Key].Add(value);
                 }
                 _series["value"].Add((double)data.Value);
             }
