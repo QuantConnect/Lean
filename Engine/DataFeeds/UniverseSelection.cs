@@ -22,7 +22,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -36,7 +35,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
-        private readonly SubscriptionLimiter _limiter;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
         private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
@@ -46,12 +44,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        /// <param name="controls">Specifies limits on the algorithm's memory usage</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm, Controls controls)
+        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
-            _limiter = new SubscriptionLimiter(() => dataFeed.Subscriptions, controls.TickLimit, controls.SecondLimit, controls.MinuteLimit);
         }
 
         /// <summary>
@@ -175,16 +171,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
-                    // ask the limiter if we can add another subscription at that resolution
-                    string reason;
-                    if (!_limiter.CanAddSubscription(request.Configuration.Resolution, out reason))
-                    {
-                        // should we be counting universe subscriptions against user subscriptions limits?
-
-                        _algorithm.Error(reason);
-                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + request.Configuration.Symbol.ToString() + ": " + reason);
-                        continue;
-                    }
                     // add the new subscriptions to the data feed
                     _dataFeed.AddSubscription(request);
 
