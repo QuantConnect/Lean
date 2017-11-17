@@ -18,12 +18,9 @@ AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
-from datetime import datetime
 import decimal as d
-import pandas as pd
 
 ### <summary>
 ### In this algortihm we show how you can easily use the universe selection feature to fetch symbols
@@ -38,51 +35,48 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013,1,1)
         self.SetEndDate(2013,12,31)
-        
-        self.backtestSymbolsPerDay = None
+
+        self.backtestSymbolsPerDay = {}
         self.current_universe = []
 
         self.UniverseSettings.Resolution = Resolution.Daily;
         self.AddUniverse("my-dropbox-universe", self.selector)
-    
-    def selector(self, data):
+
+    def selector(self, date):
         # handle live mode file format
         if self.LiveMode:
             # fetch the file from dropbox
-            url = "https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1"
-            df = pd.read_csv(url, header = None)
-            # if we have a file for today, return symbols
-            if not df.empty: 
-                self.current_universe = df.iloc[0,:].tolist()
-            # no symbol today, leave universe unchanged
+            str = self.Fetch("https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1")
+            # if we have a file for today, return symbols, else leave universe unchanged
+            self.current_universe = str.split(',') if len(str) > 0 else self.current_universe
             return self.current_universe
 
         # backtest - first cache the entire file
-        if self.backtestSymbolsPerDay is None:
-            url = "https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1"
-            self.backtestSymbolsPerDay = pd.read_csv(url, header = None, index_col = 0)
-        
-        index = int(data.strftime("%Y%m%d"))
-        if index in self.backtestSymbolsPerDay.index:
-            self.current_universe = self.backtestSymbolsPerDay.loc[index,:].dropna().tolist()
+        if len(self.backtestSymbolsPerDay) == 0:
+            str = self.Fetch("https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1")
+            for line in str.splitlines():
+                data = line.split(',')
+                self.backtestSymbolsPerDay[data[0]] = data[1:]
+
+        index = date.strftime("%Y%m%d")
+        self.current_universe = self.backtestSymbolsPerDay.get(index, self.current_universe)
 
         return self.current_universe
-
 
     def OnData(self, slice):
 
         if slice.Bars.Count == 0: return
         if self.changes == None: return
-        
+
         # start fresh
         self.Liquidate()
 
         percentage = 1 / d.Decimal(slice.Bars.Count)
         for tradeBar in slice.Bars.Values:
             self.SetHoldings(tradeBar.Symbol, percentage)
-        
+
         # reset changes
         self.changes = None
-    
+
     def OnSecuritiesChanged(self, changes):
         self.changes = changes
