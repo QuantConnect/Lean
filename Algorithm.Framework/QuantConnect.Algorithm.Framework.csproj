@@ -53,6 +53,8 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Execution\IExecutionModel.cs" />
+    <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="INotifiedSecuritiesChanged.cs" />
     <Compile Include="NotifiedSecurityChanged.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
