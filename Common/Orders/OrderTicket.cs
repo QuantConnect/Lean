@@ -269,8 +269,13 @@ namespace QuantConnect.Orders
 
             lock (_cancelRequestLock)
             {
-                return _cancelRequest.Response;
+                if (_cancelRequest != null)
+                {
+                    return _cancelRequest.Response;
+                }
             }
+
+            throw new ArgumentException("CancelRequest is null.");
         }
 
         /// <summary>
