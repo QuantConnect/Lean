@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Orders;
@@ -57,6 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             Signal = new ConstantSignalModel(SignalType.Price, Direction.Up);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
             Execution = new ImmediateExecutionModel();
+            RiskManagement = new NullRiskManagementModel();
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data;
@@ -44,6 +45,11 @@ namespace QuantConnect.Algorithm.Framework
         /// Gets or sets the execution model
         /// </summary>
         public IExecutionModel Execution { get; set; }
+
+        /// <summary>
+        /// Gets or sets the risk management model
+        /// </summary>
+        public IRiskManagementModel RiskManagement { get; set; }
 
         public QCAlgorithmFramework()
         {
@@ -77,6 +83,7 @@ namespace QuantConnect.Algorithm.Framework
             var signals = Signal.Update(this, slice);
             var targets = PortfolioConstruction.CreateTargets(this, signals);
             Execution.Execute(this, targets);
+            RiskManagement.ManageRisk(this);
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -84,6 +91,7 @@ namespace QuantConnect.Algorithm.Framework
             Signal.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);
             Execution.OnSecuritiesChanged(this, changes);
+            RiskManagement.OnSecuritiesChanged(this, changes);
         }
 
         private void CheckModels()
@@ -103,6 +111,10 @@ namespace QuantConnect.Algorithm.Framework
             if (Execution == null)
             {
                 throw new Exception("Framework algorithms must specify an execution model using the 'Execution' property.");
+            }
+            if (RiskManagement == null)
+            {
+                throw new Exception("Framework algorithms must specify an risk management model using the 'RiskManagement' property.");
             }
         }
     }
