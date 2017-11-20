@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -50,6 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             };
 
             PortfolioSelection = new ManualPortfolioSelectionModel(symbols, UniverseSettings, SecurityInitializer);
+            Signal = new ConstantSignalModel(SignalType.Price, Direction.Up);
         }
 
         /// <summary>

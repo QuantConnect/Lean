@@ -13,7 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Algorithm.Framework.Signals;
+using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework
 {
@@ -24,6 +28,26 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         public IPortfolioSelectionModel PortfolioSelection { get; set; }
 
+        /// <summary>
+        /// Gets or sets the signal model
+        /// </summary>
+        public ISignalModel Signal { get; set; }
+
+        public QCAlgorithmFramework()
+        {
+            var type = GetType();
+            var onDataSlice = type.GetMethod("OnData", new[] { typeof(Slice) });
+            if (onDataSlice.DeclaringType != typeof(QCAlgorithmFramework))
+            {
+                throw new Exception("Framework algorithms can not override OnData(Slice)");
+            }
+            var onSecuritiesChanged = type.GetMethod("OnSecuritiesChanged", new[] { typeof(SecurityChanges) });
+            if (onSecuritiesChanged.DeclaringType != typeof(QCAlgorithmFramework))
+            {
+                throw new Exception("Framework algorithms can not override OnSecuritiesChanged(SecurityChanges)");
+            }
+        }
+
         public override void PostInitialize()
         {
             foreach (var universe in PortfolioSelection.CreateUniverses(this))
@@ -32,6 +56,16 @@ namespace QuantConnect.Algorithm.Framework
             }
 
             base.PostInitialize();
+        }
+
+        public override void OnData(Slice slice)
+        {
+            var signals = Signal.Update(this, slice);
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            Signal.OnSecuritiesChanged(this, changes);
         }
     }
 }
