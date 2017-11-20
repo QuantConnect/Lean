@@ -15,9 +15,11 @@
 
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -52,22 +54,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             PortfolioSelection = new ManualPortfolioSelectionModel(symbols, UniverseSettings, SecurityInitializer);
             Signal = new ConstantSignalModel(SignalType.Price, Direction.Up);
+            PortfolioConstruction = new SimplePortfolioConstructionModel();
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (!Portfolio.Invested)
+            if (orderEvent.Status.IsFill())
             {
-                var percentage = 1m/Securities.Count;
-                foreach (var security in Securities)
-                {
-                    SetHoldings(security.Key, percentage);
-                    Debug($"Purchased Stock: {security.Key}");
-                }
+                Debug($"Purchased Stock: {orderEvent.Symbol}");
             }
         }
     }

@@ -54,6 +54,13 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="INotifiedSecuritiesChanged.cs" />
+    <Compile Include="NotifiedSecurityChanged.cs" />
+    <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\IPortfolioTarget.cs" />
+    <Compile Include="Portfolio\PercentPortfolioTarget.cs" />
+    <Compile Include="Portfolio\PortfolioTarget.cs" />
+    <Compile Include="Portfolio\QuantityPortfolioTarget.cs" />
+    <Compile Include="Portfolio\SimplePortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
     <Compile Include="Selection\IPortfolioSelectionModel.cs" />
