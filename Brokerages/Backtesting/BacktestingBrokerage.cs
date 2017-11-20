@@ -126,6 +126,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
+            Log.Trace("BacktestingBrokerage.PlaceOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
             if (order.Status == OrderStatus.New)
             {
                 lock (_needsScanLock)
@@ -154,6 +156,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
+            Log.Trace("BacktestingBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+
             lock (_needsScanLock)
             {
                 Order pending;
@@ -185,6 +189,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
+            Log.Trace("BacktestingBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
             lock (_needsScanLock)
             {
                 Order pending;
