@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
@@ -63,6 +62,8 @@ namespace QuantConnect.Algorithm.Framework
 
         public override void PostInitialize()
         {
+            CheckModels();
+
             foreach (var universe in PortfolioSelection.CreateUniverses(this))
             {
                 AddUniverse(universe);
@@ -83,6 +84,26 @@ namespace QuantConnect.Algorithm.Framework
             Signal.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);
             Execution.OnSecuritiesChanged(this, changes);
+        }
+
+        private void CheckModels()
+        {
+            if (PortfolioSelection == null)
+            {
+                throw new Exception("Framework algorithms must specify a portfolio selection model using the 'PortfolioSelection' property.");
+            }
+            if (Signal == null)
+            {
+                throw new Exception("Framework algorithms must specify a signal model using the 'Signal' property.");
+            }
+            if (PortfolioConstruction == null)
+            {
+                throw new Exception("Framework algorithms must specify a portfolio construction model using the 'PortfolioConstruction' property");
+            }
+            if (Execution == null)
+            {
+                throw new Exception("Framework algorithms must specify an execution model using the 'Execution' property.");
+            }
         }
     }
 }
