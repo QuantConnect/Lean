@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="BasicTemplateFrameworkAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
     <Compile Include="RollingWindowAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
@@ -175,6 +176,10 @@
     <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">
+      <Project>{75981418-7246-4b91-b136-482728e02901}</Project>
+      <Name>QuantConnect.Algorithm.Framework</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
       <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
       <Name>QuantConnect.Algorithm</Name>
