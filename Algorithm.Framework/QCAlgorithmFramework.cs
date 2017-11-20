@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Linq;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data;
@@ -32,6 +34,11 @@ namespace QuantConnect.Algorithm.Framework
         /// Gets or sets the signal model
         /// </summary>
         public ISignalModel Signal { get; set; }
+
+        /// <summary>
+        /// Gets or sets the portoflio construction model
+        /// </summary>
+        public IPortfolioConstructionModel PortfolioConstruction { get; set; }
 
         public QCAlgorithmFramework()
         {
@@ -61,11 +68,23 @@ namespace QuantConnect.Algorithm.Framework
         public override void OnData(Slice slice)
         {
             var signals = Signal.Update(this, slice);
+            var targets = PortfolioConstruction.CreateTargets(this, signals);
+            foreach (var target in targets)
+            {
+                var existing = Securities[target.Symbol].Holdings.Quantity
+                    + Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
+                var quantity = target.GetTargetQuantity(this) - existing;
+                if (quantity != 0)
+                {
+                    MarketOrder(target.Symbol, quantity);
+                }
+            }
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Signal.OnSecuritiesChanged(this, changes);
+            PortfolioConstruction.OnSecuritiesChanged(this, changes);
         }
     }
 }
