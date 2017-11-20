@@ -483,7 +483,7 @@ namespace QuantConnect.Algorithm
         /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
         /// the data gather in the Initialize method
         /// </summary>
-        public void PostInitialize()
+        public virtual void PostInitialize()
         {
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
