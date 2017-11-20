@@ -15,10 +15,10 @@
 
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Framework.Signals;
-using QuantConnect.Data;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -52,9 +52,11 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
             };
 
+            // set algorithm framework models
             PortfolioSelection = new ManualPortfolioSelectionModel(symbols, UniverseSettings, SecurityInitializer);
             Signal = new ConstantSignalModel(SignalType.Price, Direction.Up);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
+            Execution = new ImmediateExecutionModel();
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
