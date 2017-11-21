@@ -139,6 +139,7 @@
     <None Include="CustomSecurityInitializerAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="BasicTemplateFrameworkAlgorithm.py" />
     <Content Include="HistoryAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
   </ItemGroup>
