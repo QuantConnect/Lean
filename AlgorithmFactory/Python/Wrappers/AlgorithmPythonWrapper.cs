@@ -696,6 +696,18 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        public void FrameworkOnData(Slice slice)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.FrameworkOnData(slice);
+            }
+        }
+
+        /// <summary>
         /// Call this event at the end of the algorithm running.
         /// </summary>
         public void OnEndOfAlgorithm()
@@ -849,12 +861,24 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         public void OnSecuritiesChanged(SecurityChanges changes)
         {
             using (Py.GIL())
             {
                 _algorithm.OnSecuritiesChanged(changes);
+            }
+        }
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public void FrameworkOnSecuritiesChanged(SecurityChanges changes)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.FrameworkOnSecuritiesChanged(changes);
             }
         }
 

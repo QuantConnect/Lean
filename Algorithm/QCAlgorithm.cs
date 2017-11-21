@@ -668,11 +668,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        public virtual void FrameworkOnData(Slice slice)
+        {
+            // NOP - overriden by QCAlgorithmFramework
+        }
+
+        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
+        }
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public virtual void FrameworkOnSecuritiesChanged(SecurityChanges changes)
+        {
+            // NOP - overriden by QCAlgorithmFramework
         }
 
         // <summary>

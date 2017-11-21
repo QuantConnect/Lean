@@ -364,10 +364,22 @@ namespace QuantConnect.Interfaces
         void OnData(Slice slice);
 
         /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        void FrameworkOnData(Slice slice);
+
+        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         void OnSecuritiesChanged(SecurityChanges changes);
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        void FrameworkOnSecuritiesChanged(SecurityChanges changes);
 
         /// <summary>
         /// Send debug message
