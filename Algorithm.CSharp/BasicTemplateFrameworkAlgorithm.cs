@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            var symbols = new List<Symbol>
+            var symbols = new []
             {
                 QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
             };

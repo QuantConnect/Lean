@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -37,8 +38,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// security initializer and universe settings
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
-        public ManualPortfolioSelectionModel(IEnumerable<Symbol> symbols)
+        public ManualPortfolioSelectionModel(params Symbol[] symbols)
         {
+            if (symbols == null)
+            {
+                throw new ArgumentNullException(nameof(symbols));
+            }
+
             _symbols = symbols.ToList();
         }
 
