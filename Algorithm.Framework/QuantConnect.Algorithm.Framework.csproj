@@ -66,6 +66,7 @@
     <Compile Include="Risk\IRiskManagementModel.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
+    <Compile Include="Selection\FundamentalPortfolioSelectionModel.cs" />
     <Compile Include="Selection\IPortfolioSelectionModel.cs" />
     <Compile Include="Selection\ManualPortfolioSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
