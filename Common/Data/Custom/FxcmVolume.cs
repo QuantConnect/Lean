@@ -75,7 +75,7 @@ namespace QuantConnect.Data.Custom
         ///     The volume measured in the QUOTE CURRENCY.
         /// </summary>
         /// <remarks>Please remember to convert this data to a common currency before making comparison between different pairs.</remarks>
-        public long Value { get; set; }
+        public long Volume { get; set; }
 
         /// <summary>
         ///     Return the URL string source of the file. This will be converted to a stream
@@ -119,43 +119,44 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            DateTime time;
-            long volume;
-            int transactions;
+
+            var fxcmVolume = new FxcmVolume { DataType = MarketDataType.Base, Symbol = config.Symbol };
             if (isLiveMode)
             {
-                var obs = line.Split('\n')[2].Split(';');
-                var stringDate = obs[0].Substring(startIndex: 3);
-                time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
-                                                  DateTimeFormatInfo.InvariantInfo);
-                volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-                transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                
+                try
+                {
+                    var obs = line.Split('\n')[2].Split(';');
+                    var stringDate = obs[0].Substring(startIndex: 3);
+                    fxcmVolume.Time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm", DateTimeFormatInfo.InvariantInfo);
+                    fxcmVolume.Volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+                    fxcmVolume.Transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                    fxcmVolume.Value = fxcmVolume.Volume;
+                }
+                catch (Exception exception)
+                {
+                    Logging.Log.Error($"Ivalid data. Line: {line}. Exception: {exception.Message}");
+                    return null;
+                }
             }
             else
             {
                 var obs = line.Split(',');
                 if (config.Resolution == Resolution.Minute)
                 {
-                    time = date.Date.AddMilliseconds(int.Parse(obs[0]));
+                    fxcmVolume.Time = date.Date.AddMilliseconds(int.Parse(obs[0]));
                 }
                 else
                 {
-                    time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
+                    fxcmVolume.Time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                 }
-                volume = long.Parse(obs[1]);
-                transactions = int.Parse(obs[2]);
+                fxcmVolume.Volume = long.Parse(obs[1]);
+                fxcmVolume.Transactions = int.Parse(obs[2]);
+                fxcmVolume.Value = fxcmVolume.Volume;
             }
-            return new FxcmVolume
-            {
-                DataType = MarketDataType.Base,
-                Symbol = config.Symbol,
-                Time = time,
-                Value = volume,
-                Transactions = transactions
-            };
-
+            return fxcmVolume;
         }
+
+        
 
         private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
         {
