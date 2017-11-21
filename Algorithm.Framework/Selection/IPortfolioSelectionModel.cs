@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public interface IPortfolioSelectionModel
     {
         /// <summary>
-        /// Creates te universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
+        /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
