@@ -24,6 +24,9 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework
 {
+    /// <summary>
+    /// Algorithm framework base class that enforces a modular approach to algorithm development
+    /// </summary>
     public class QCAlgorithmFramework : QCAlgorithm
     {
         /// <summary>
@@ -51,6 +54,9 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         public IRiskManagementModel RiskManagement { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QCAlgorithmFramework"/> class
+        /// </summary>
         public QCAlgorithmFramework()
         {
             var type = GetType();
@@ -66,6 +72,10 @@ namespace QuantConnect.Algorithm.Framework
             }
         }
 
+        /// <summary>
+        /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
+        /// the data gather in the Initialize method
+        /// </summary>
         public override void PostInitialize()
         {
             CheckModels();
@@ -78,6 +88,20 @@ namespace QuantConnect.Algorithm.Framework
             base.PostInitialize();
         }
 
+        /// <summary>
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// </summary>
+        /// <code>
+        /// TradeBars bars = slice.Bars;
+        /// Ticks ticks = slice.Ticks;
+        /// TradeBar spy = slice["SPY"];
+        /// List{Tick} aaplTicks = slice["AAPL"]
+        /// Quandl oil = slice["OIL"]
+        /// dynamic anySymbol = slice[symbol];
+        /// DataDictionary{Quandl} allQuandlData = slice.Get{Quand}
+        /// Quandl oil = slice.Get{Quandl}("OIL")
+        /// </code>
+        /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
             var signals = Signal.Update(this, slice);
@@ -86,12 +110,61 @@ namespace QuantConnect.Algorithm.Framework
             RiskManagement.ManageRisk(this);
         }
 
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="changes">Securities added and removed from the algorithm</param>
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Signal.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);
             Execution.OnSecuritiesChanged(this, changes);
             RiskManagement.OnSecuritiesChanged(this, changes);
+        }
+
+        /// <summary>
+        /// Sets the portfolio selection model
+        /// </summary>
+        /// <param name="portfolioSelection">Model defining universes for the algorithm</param>
+        public void SetPortfolioSelection(IPortfolioSelectionModel portfolioSelection)
+        {
+            PortfolioSelection = portfolioSelection;
+        }
+
+        /// <summary>
+        /// Sets the signal model
+        /// </summary>
+        /// <param name="signal">Model defining trading signals</param>
+        public void SetSignal(ISignalModel signal)
+        {
+            Signal = signal;
+        }
+
+        /// <summary>
+        /// Sets the portfolio construction model
+        /// </summary>
+        /// <param name="portfolioConstruction">Model defining how to build a portoflio from signals</param>
+        public void SetPortfolioConstruction(IPortfolioConstructionModel portfolioConstruction)
+        {
+            PortfolioConstruction = portfolioConstruction;
+        }
+
+        /// <summary>
+        /// Sets the execution model
+        /// </summary>
+        /// <param name="execution">Model defining how to execute trades to reach a portfolio target</param>
+        public void SetExecution(IExecutionModel execution)
+        {
+            Execution = execution;
+        }
+
+        /// <summary>
+        /// Sets the risk management model
+        /// </summary>
+        /// <param name="riskManagement">Model defining </param>
+        public void SetRiskManagement(IRiskManagementModel riskManagement)
+        {
+            RiskManagement = riskManagement;
         }
 
         private void CheckModels()
