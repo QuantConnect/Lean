@@ -90,7 +90,7 @@ namespace QuantConnect.Data.Custom
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var interval = GetIntervalFromResolution(config.Resolution);
-            var symbolId = GetFxcmIDFromSymbol(config.Symbol);
+            var symbolId = GetFxcmIDFromSymbol(config.Symbol.Value.Split('_').First());
 
             if (isLiveMode)
             {
@@ -119,25 +119,21 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
+            DateTime time;
+            long volume;
+            int transactions;
             if (isLiveMode)
             {
                 var obs = line.Split('\n')[2].Split(';');
                 var stringDate = obs[0].Substring(startIndex: 3);
-                var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
+                time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
                                                   DateTimeFormatInfo.InvariantInfo);
-                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-                var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                return new FxcmVolume
-                {
-                    Symbol = config.Symbol,
-                    Time = obsTime,
-                    Value = volume,
-                    Transactions = transactions
-                };
+                volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+                transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                
             }
             else
             {
-                DateTime time;
                 var obs = line.Split(',');
                 if (config.Resolution == Resolution.Minute)
                 {
@@ -147,15 +143,18 @@ namespace QuantConnect.Data.Custom
                 {
                     time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                 }
-                return new FxcmVolume
-                {
-                    DataType = MarketDataType.Base,
-                    Symbol = config.Symbol,
-                    Time = time,
-                    Value = long.Parse(obs[1]),
-                    Transactions = int.Parse(obs[2])
-                };
+                volume = long.Parse(obs[1]);
+                transactions = int.Parse(obs[2]);
             }
+            return new FxcmVolume
+            {
+                DataType = MarketDataType.Base,
+                Symbol = config.Symbol,
+                Time = time,
+                Value = volume,
+                Transactions = transactions
+            };
+
         }
 
         private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
@@ -163,36 +162,37 @@ namespace QuantConnect.Data.Custom
             var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
             string filename;
 
+            var symbol = config.Symbol.Value.Split('_').First().ToLower();
             if (config.Resolution == Resolution.Minute)
             {
                 filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
-                source = Path.Combine(source, config.Symbol.Value.ToLower(), filename);
+                source = Path.Combine(source, symbol, filename);
             }
             else
             {
-                filename = string.Format("{0}_volume.zip", config.Symbol.Value.ToLower());
+                filename = string.Format("{0}_volume.zip", symbol);
                 source = Path.Combine(source, filename);
             }
             return source;
         }
 
         /// <summary>
-        ///     Gets the FXCM identifier from a FOREX pair symbol.
+        ///     Gets the FXCM identifier from a FOREX pair ticker.
         /// </summary>
-        /// <param name="symbol">The pair symbol.</param>
+        /// <param name="ticker">The pair ticker.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">Volume data is not available for the selected symbol. - symbol</exception>
-        private int GetFxcmIDFromSymbol(Symbol symbol)
+        /// <exception cref="System.ArgumentException">Volume data is not available for the selected ticker. - ticker</exception>
+        private int GetFxcmIDFromSymbol(string ticker)
         {
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), ticker);
             }
             catch (ArgumentException)
             {
-                throw new ArgumentOutOfRangeException(nameof(symbol), symbol,
-                                                      "Volume data is not available for the selected symbol.");
+                throw new ArgumentOutOfRangeException(nameof(ticker), ticker,
+                                                      "Volume data is not available for the selected ticker.");
             }
             return symbolId;
         }
