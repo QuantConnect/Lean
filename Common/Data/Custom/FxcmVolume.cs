@@ -177,22 +177,22 @@ namespace QuantConnect.Data.Custom
         }
 
         /// <summary>
-        ///     Gets the FXCM identifier from a FOREX pair symbol.
+        ///     Gets the FXCM identifier from a FOREX pair ticker.
         /// </summary>
-        /// <param name="symbol">The pair symbol.</param>
+        /// <param name="ticker">The pair ticker.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">Volume data is not available for the selected symbol. - symbol</exception>
-        private int GetFxcmIDFromSymbol(string symbol)
+        /// <exception cref="System.ArgumentException">Volume data is not available for the selected ticker. - ticker</exception>
+        private int GetFxcmIDFromSymbol(string ticker)
         {
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol);
+                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), ticker);
             }
             catch (ArgumentException)
             {
-                throw new ArgumentOutOfRangeException(nameof(symbol), symbol,
-                                                      "Volume data is not available for the selected symbol.");
+                throw new ArgumentOutOfRangeException(nameof(ticker), ticker,
+                                                      "Volume data is not available for the selected ticker.");
             }
             return symbolId;
         }

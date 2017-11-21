@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);                //Set Strategy Cash
 
             // Find more symbols here: https://www.quantconnect.com/data
-            EURUSD = AddForex("EURUSD", Resolution.Minute, Market.Oanda).Symbol;
+            EURUSD = AddForex("EURUSD", Resolution.Minute).Symbol;
 
             AddData<FxcmVolume>("EURUSD_Vol", Resolution.Minute, DateTimeZone.Utc);
             var _price = Identity(EURUSD);
