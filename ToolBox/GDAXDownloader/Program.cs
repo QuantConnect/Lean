@@ -9,7 +9,7 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * See the License for the specific language governing permissions and 
  * limitations under the License.
 */
 using System;
@@ -30,23 +30,26 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-            if (args.Length == 2)
+            if (args.Length < 3)
             {
-                args = new [] { args[0], DateTime.UtcNow.ToString("yyyyMMdd"), args[1] };
-            }
-            else if (args.Length < 3)
-            {
-                Console.WriteLine("Usage: GDAX Downloader SYMBOL FROMDATE TODATE");
-                Console.WriteLine("FROMDATE = yyyymmdd");
-                Console.WriteLine("TODATE = yyyymmdd");
+                Console.WriteLine("Usage: GDAX Downloader SYMBOL RESOLUTION FROMDATE TODATE");
+                Console.WriteLine("SYMBOL   = ETH-USD, ETH-BTC, BTC-USD etc.");
+                Console.WriteLine("RESOLUTION   = Second/Minute/Hour/Daily");
+                Console.WriteLine("FROMDATE = yyyyMMdd HH:mm:ss");
+                Console.WriteLine("TODATE = yyyyMMdd HH:mm:ss");
                 Environment.Exit(1);
             }
 
             try
             {
+                var resolution = (Resolution)Enum.Parse(typeof(Resolution), args[1]);
                 // Load settings from command line
-                var startDate = DateTime.ParseExact(args[1], "yyyyMMdd", CultureInfo.InvariantCulture);
-                var endDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
+                var startDate = DateTime.ParseExact(args[2], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+                var endDate = DateTime.UtcNow;
+                if (args[3] != null)
+                {
+                    endDate = DateTime.ParseExact(args[3], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+                }
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
@@ -57,17 +60,17 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
                 // Download the data
                 var symbolObject = Symbol.Create(args[0], SecurityType.Crypto, market);
-                var data = downloader.Get(symbolObject, Resolution.Hour, startDate, endDate);
+                var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                 // Save the data
-                
-                var writer = new LeanDataWriter(Resolution.Hour, symbolObject, dataDirectory, TickType.Trade);
-                var distinctData= data.GroupBy(i => i.Time, (key, group) => group.First()).ToArray();
-                
+
+                var writer = new LeanDataWriter(resolution, symbolObject, dataDirectory, TickType.Trade);
+                var distinctData = data.GroupBy(i => i.Time, (key, group) => group.First()).ToArray();
+
                 writer.Write(distinctData);
-                
-                Log.Trace("Finish data download");
-                
+
+                Log.Trace("Finish data download. Press any key to continue..");
+
             }
             catch (Exception err)
             {
