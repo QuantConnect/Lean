@@ -71,6 +71,7 @@
     <Compile Include="Selection\ManualPortfolioSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Signals\ConstantSignalModel.cs" />
+    <Compile Include="Signals\MACDSignalModel.cs" />
     <Compile Include="Signals\SignalDirection.cs" />
     <Compile Include="Signals\ISignal.cs" />
     <Compile Include="Signals\ISignalModel.cs" />
@@ -85,6 +86,10 @@
     <ProjectReference Include="..\Common\QuantConnect.csproj">
       <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
+      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
+      <Name>QuantConnect.Indicators</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -58,6 +58,17 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="symbol">The symbol this signal is for</param>
         /// <param name="type">The type of signal, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
+        public Signal(Symbol symbol, SignalType type, SignalDirection direction)
+            : this(symbol, type, direction, null, null, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Signal"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol this signal is for</param>
+        /// <param name="type">The type of signal, price/volatility</param>
+        /// <param name="direction">The predicted direction</param>
         /// <param name="percentChange">The predicted percent change</param>
         /// <param name="confidence">The confidence in this signal</param>
         /// <param name="period">The period over which the prediction will come true</param>
