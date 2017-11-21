@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             };
 
             // set algorithm framework models
-            PortfolioSelection = new ManualPortfolioSelectionModel(symbols, UniverseSettings, SecurityInitializer);
+            PortfolioSelection = new ManualPortfolioSelectionModel(symbols);
             Signal = new ConstantSignalModel(SignalType.Price, Direction.Up);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
             Execution = new ImmediateExecutionModel();
