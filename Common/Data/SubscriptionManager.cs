@@ -196,6 +196,20 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Removes the specified consolidator for the symbol
+        /// </summary>
+        /// <param name="symbol">The symbol the consolidator is receiving data from</param>
+        /// <param name="consolidator">The consolidator instance to be removed</param>
+        public void RemoveConsolidator(Symbol symbol, IDataConsolidator consolidator)
+        {
+            // remove consolidator from each subscription
+            foreach (var subscription in Subscriptions.Where(x => x.Symbol == symbol))
+            {
+                subscription.Consolidators.Remove(consolidator);
+            }
+        }
+
+        /// <summary>
         /// Hard code the set of default available data feeds
         /// </summary>
         public Dictionary<SecurityType, List<TickType>> DefaultDataTypes()
