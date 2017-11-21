@@ -70,6 +70,10 @@ namespace QuantConnect.Algorithm.Framework
             {
                 throw new Exception("Framework algorithms can not override FrameworkOnSecuritiesChanged(SecurityChanges)");
             }
+
+            // set model defaults
+            Execution = new ImmediateExecutionModel();
+            RiskManagement = new NullRiskManagementModel();
         }
 
         /// <summary>
