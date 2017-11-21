@@ -24,8 +24,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Provides an implementation of <see cref="IPortfolioConstructionModel"/> that gives equal weighting to all
     /// securities. The target percent holdings of each security is 1/N where N is the number of securities. For
-    /// signals of direction <see cref="Direction.Up"/>, long targets are returned and for signals of direction
-    /// <see cref="Direction.Down"/>, short targets are returned.
+    /// signals of direction <see cref="SignalDirection.Up"/>, long targets are returned and for signals of direction
+    /// <see cref="SignalDirection.Down"/>, short targets are returned.
     /// </summary>
     public class SimplePortfolioConstructionModel : IPortfolioConstructionModel
     {

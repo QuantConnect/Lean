@@ -71,7 +71,7 @@
     <Compile Include="Selection\ManualPortfolioSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Signals\ConstantSignalModel.cs" />
-    <Compile Include="Signals\Direction.cs" />
+    <Compile Include="Signals\SignalDirection.cs" />
     <Compile Include="Signals\ISignal.cs" />
     <Compile Include="Signals\ISignalModel.cs" />
     <Compile Include="Signals\Signal.cs" />

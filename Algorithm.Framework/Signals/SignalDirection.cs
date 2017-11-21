@@ -18,7 +18,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
     /// <summary>
     /// Specifies the predicted direction for a signal (price/volatility)
     /// </summary>
-    public enum Direction
+    public enum SignalDirection
     {
         /// <summary>
         /// The value will go down

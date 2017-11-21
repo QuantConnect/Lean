@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public class ConstantSignalModel : ISignalModel
     {
         private readonly SignalType _type;
-        private readonly Direction _direction;
+        private readonly SignalDirection _direction;
         private readonly double? _percentChange;
         private readonly double? _confidence;
         private readonly TimeSpan? _period;
@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// </summary>
         /// <param name="type">The type of signal</param>
         /// <param name="direction">The direction of the signal</param>
-        public ConstantSignalModel(SignalType type, Direction direction)
+        public ConstantSignalModel(SignalType type, SignalDirection direction)
             : this(type, direction, null, null, null)
         {
         }
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="percentChange">The predicted percent change</param>
         /// <param name="confidence">The confidence in the signal</param>
         /// <param name="period">The period over which the signal with come to fruition</param>
-        public ConstantSignalModel(SignalType type, Direction direction, double? percentChange, double? confidence, TimeSpan? period)
+        public ConstantSignalModel(SignalType type, SignalDirection direction, double? percentChange, double? confidence, TimeSpan? period)
         {
             _type = type;
             _direction = direction;

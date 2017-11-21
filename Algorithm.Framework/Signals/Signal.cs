@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// Gets the predicted direction, down, flat or up
         /// </summary>
-        public Direction Direction { get; }
+        public SignalDirection Direction { get; }
 
         /// <summary>
         /// Gets the predicted percent change in the signal type (price/volatility)
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="percentChange">The predicted percent change</param>
         /// <param name="confidence">The confidence in this signal</param>
         /// <param name="period">The period over which the prediction will come true</param>
-        public Signal(Symbol symbol, SignalType type, Direction direction, double? percentChange, double? confidence, TimeSpan? period)
+        public Signal(Symbol symbol, SignalType type, SignalDirection direction, double? percentChange, double? confidence, TimeSpan? period)
         {
             Symbol = symbol;
             Type = type;

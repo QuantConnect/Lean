@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// Gets the predicted direction, down, flat or up
         /// </summary>
-        Direction Direction { get; }
+        SignalDirection Direction { get; }
 
         /// <summary>
         /// Gets the predicted percent change in the signal type (price/volatility)

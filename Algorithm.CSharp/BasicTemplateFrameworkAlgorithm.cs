@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set algorithm framework models
             PortfolioSelection = new ManualPortfolioSelectionModel(symbols);
-            Signal = new ConstantSignalModel(SignalType.Price, Direction.Up);
+            Signal = new ConstantSignalModel(SignalType.Price, SignalDirection.Up);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
 
             // these are the default values for Execution and RiskManagement models
