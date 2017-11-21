@@ -16,30 +16,55 @@
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Provides convenience methods for creating instances of <see cref="IPortfolioTarget"/>
+    /// Provides an implementation of <see cref="IPortfolioTarget"/> that specifies a
+    /// specified quantity of a security to be held by the algorithm
     /// </summary>
-    public static class PortfolioTarget
+    public class PortfolioTarget : IPortfolioTarget
     {
+        /// <summary>
+        /// Gets the symbol of this target
+        /// </summary>
+        public Symbol Symbol { get; }
+
+        /// <summary>
+        /// Gets the target quantity for the symbol
+        /// </summary>
+        public decimal Quantity { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PortfolioTarget"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol this target is for</param>
+        /// <param name="quantity">The target quantity</param>
+        public PortfolioTarget(Symbol symbol, decimal quantity)
+        {
+            Symbol = symbol;
+            Quantity = quantity;
+        }
+
+
         /// <summary>
         /// Creates a new target for the specified percent
         /// </summary>
+        /// <param name="algorithm">The algorithm instance, used for getting total portfolio value and current security price</param>
         /// <param name="symbol">The symbol the target is for</param>
         /// <param name="percent">The requested target percent of total portfolio value</param>
         /// <returns>A portfolio target for the specified symbol/percent</returns>
-        public static IPortfolioTarget Percent(Symbol symbol, decimal percent)
+        public static IPortfolioTarget Percent(QCAlgorithmFramework algorithm, Symbol symbol, decimal percent)
         {
-            return new PercentPortfolioTarget(symbol, percent);
-        }
+            var security = algorithm.Securities[symbol];
+            if (security.Price == 0)
+            {
+                return new PortfolioTarget(symbol, 0);
+            }
 
-        /// <summary>
-        /// Creates a new target for the specified quantity
-        /// </summary>
-        /// <param name="symbol">The symbol the target is for</param>
-        /// <param name="quantity">The requested target quantity</param>
-        /// <returns>A portoflio target for the specified symbol/quantity</returns>
-        public static IPortfolioTarget Quantity(Symbol symbol, decimal quantity)
-        {
-            return new QuantityPortfolioTarget(symbol, quantity);
+            var quantity = percent * algorithm.Portfolio.TotalPortfolioValue / security.Price;
+
+            // round down to nearest lot size
+            var remainder = quantity % security.SymbolProperties.LotSize;
+            quantity = quantity - remainder;
+
+            return new PortfolioTarget(symbol, quantity);
         }
     }
 }
