@@ -57,8 +57,10 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithmFramework):
         self.PortfolioSelection = ManualPortfolioSelectionModel(symbols)
         self.Signal = ConstantSignalModel(SignalType.Price, Direction.Up)
         self.PortfolioConstruction = SimplePortfolioConstructionModel()
-        self.Execution = ImmediateExecutionModel()
-        self.RiskManagement = NullRiskManagementModel()
+
+        # these are the default values for Execution and RiskManagement models
+        #self.Execution = ImmediateExecutionModel()
+        #self.RiskManagement = NullRiskManagementModel()
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
     def OnOrderEvent(self, orderEvent):
