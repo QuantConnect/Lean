@@ -29,8 +29,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Gets the quantity of this symbol the algorithm should hold
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <returns>The quantity of shares the algorithm should hold for this symbol</returns>
-        decimal GetTargetQuantity(QCAlgorithmFramework algorithm);
+        decimal Quantity { get; }
     }
 }

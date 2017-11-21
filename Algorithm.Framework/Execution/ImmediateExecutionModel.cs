@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             {
                 var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
                     + algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
-                var quantity = target.GetTargetQuantity(algorithm) - existing;
+                var quantity = target.Quantity - existing;
                 if (quantity != 0)
                 {
                     algorithm.MarketOrder(target.Symbol, quantity);

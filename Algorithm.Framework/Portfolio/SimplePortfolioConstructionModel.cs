@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -40,15 +41,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             if (_securities.Count == 0)
             {
-                yield break;
+                return Enumerable.Empty<IPortfolioTarget>();
             }
 
+            // give equal weighting to each security
             var percent = 1m / _securities.Count;
-            foreach (var signal in signals)
-            {
-                var target = (int)signal.Direction * percent;
-                yield return PortfolioTarget.Percent(signal.Symbol, target);
-            }
+            return signals.Select(signal =>
+                PortfolioTarget.Percent(algorithm, signal.Symbol, (int) signal.Direction * percent)
+            );
         }
 
         /// <summary>
