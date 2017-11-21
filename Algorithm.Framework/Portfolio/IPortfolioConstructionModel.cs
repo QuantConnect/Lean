@@ -21,7 +21,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Algorithm framework model that
     /// </summary>
-    public interface IPortfolioConstructionModel : INotifiedSecuritiesChanged
+    public interface IPortfolioConstructionModel : INotifiedSecurityChanges
     {
         /// <summary>
         /// Create portfolio targets from the specified signals

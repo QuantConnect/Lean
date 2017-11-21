@@ -18,7 +18,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// <summary>
     /// Algorithm framework model that manage's an algorithm's risk/downside
     /// </summary>
-    public interface IRiskManagementModel : INotifiedSecuritiesChanged
+    public interface IRiskManagementModel : INotifiedSecurityChanges
     {
         /// <summary>
         /// Manages the algorithm's risk at each time step

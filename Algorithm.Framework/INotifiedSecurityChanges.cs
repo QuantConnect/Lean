@@ -13,32 +13,20 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework
 {
     /// <summary>
-    /// Provides convenience methods for handling security changes
+    /// Types implementing this interface will be called when the algorithm's set of securities changes
     /// </summary>
-    public static class NotifiedSecurityChanged
+    public interface INotifiedSecurityChanges
     {
         /// <summary>
-        /// Adds and removes the security changes to/from the collection
+        /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="securities">The securities collection to be updated with the changes</param>
-        /// <param name="changes">The changes to be applied to the securities collection</param>
-        public static void UpdateCollection(ICollection<Security> securities, SecurityChanges changes)
-        {
-            foreach (var added in changes.AddedSecurities)
-            {
-                securities.Add(added);
-            }
-            foreach (var removed in changes.RemovedSecurities)
-            {
-                securities.Remove(removed);
-            }
-        }
+        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
+        /// <param name="changes">The security additions and removals from the algorithm</param>
+        void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes);
     }
 }

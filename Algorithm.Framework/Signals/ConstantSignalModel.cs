@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
-            NotifiedSecurityChanged.UpdateCollection(_securities, changes);
+            NotifiedSecurityChanges.UpdateCollection(_securities, changes);
         }
     }
 }

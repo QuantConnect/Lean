@@ -55,8 +55,8 @@
     </Compile>
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
-    <Compile Include="INotifiedSecuritiesChanged.cs" />
-    <Compile Include="NotifiedSecurityChanged.cs" />
+    <Compile Include="INotifiedSecurityChanges.cs" />
+    <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioTarget.cs" />
     <Compile Include="Portfolio\PortfolioTarget.cs" />

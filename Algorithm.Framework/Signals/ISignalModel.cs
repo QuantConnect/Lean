@@ -21,7 +21,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
     /// <summary>
     /// Algorithm framework model that produces signals
     /// </summary>
-    public interface ISignalModel : INotifiedSecuritiesChanged
+    public interface ISignalModel : INotifiedSecurityChanges
     {
         /// <summary>
         /// Updates this signal model with the latest data from the algorithm.

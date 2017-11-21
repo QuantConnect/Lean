@@ -21,7 +21,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// <summary>
     /// Algorithm framework model that executes portoflio targets
     /// </summary>
-    public interface IExecutionModel : INotifiedSecuritiesChanged
+    public interface IExecutionModel : INotifiedSecurityChanges
     {
         /// <summary>
         /// Submit orders for the specified portolio targets.
