@@ -60,15 +60,15 @@ namespace QuantConnect.Algorithm.Framework
         public QCAlgorithmFramework()
         {
             var type = GetType();
-            var onDataSlice = type.GetMethod("OnData", new[] { typeof(Slice) });
-            if (onDataSlice.DeclaringType != typeof(QCAlgorithmFramework))
+            var frameworkOnData = type.GetMethod(nameof(FrameworkOnData), new[] {typeof(Slice)});
+            if (frameworkOnData.DeclaringType != typeof(QCAlgorithmFramework))
             {
-                throw new Exception("Framework algorithms can not override OnData(Slice)");
+                throw new Exception("Framework algorithms can not override FrameworkOnData(Slice)");
             }
-            var onSecuritiesChanged = type.GetMethod("OnSecuritiesChanged", new[] { typeof(SecurityChanges) });
-            if (onSecuritiesChanged.DeclaringType != typeof(QCAlgorithmFramework))
+            var frameworkOnSecuritiesChanged = type.GetMethod(nameof(FrameworkOnSecuritiesChanged), new[] {typeof(SecurityChanges)});
+            if (frameworkOnSecuritiesChanged.DeclaringType != typeof(QCAlgorithmFramework))
             {
-                throw new Exception("Framework algorithms can not override OnSecuritiesChanged(SecurityChanges)");
+                throw new Exception("Framework algorithms can not override FrameworkOnSecuritiesChanged(SecurityChanges)");
             }
         }
 
@@ -89,20 +89,10 @@ namespace QuantConnect.Algorithm.Framework
         }
 
         /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// Used to send data updates to algorithm framework models
         /// </summary>
-        /// <code>
-        /// TradeBars bars = slice.Bars;
-        /// Ticks ticks = slice.Ticks;
-        /// TradeBar spy = slice["SPY"];
-        /// List{Tick} aaplTicks = slice["AAPL"]
-        /// Quandl oil = slice["OIL"]
-        /// dynamic anySymbol = slice[symbol];
-        /// DataDictionary{Quandl} allQuandlData = slice.Get{Quand}
-        /// Quandl oil = slice.Get{Quandl}("OIL")
-        /// </code>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
-        public override void OnData(Slice slice)
+        /// <param name="slice">The current data slice</param>
+        public override void FrameworkOnData(Slice slice)
         {
             var signals = Signal.Update(this, slice);
             var targets = PortfolioConstruction.CreateTargets(this, signals);
@@ -111,10 +101,10 @@ namespace QuantConnect.Algorithm.Framework
         }
 
         /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
+        /// Used to send security changes to algorithm framework models
         /// </summary>
-        /// <param name="changes">Securities added and removed from the algorithm</param>
-        public override void OnSecuritiesChanged(SecurityChanges changes)
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public override void FrameworkOnSecuritiesChanged(SecurityChanges changes)
         {
             Signal.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);
