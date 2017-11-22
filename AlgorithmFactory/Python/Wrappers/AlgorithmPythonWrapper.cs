@@ -81,7 +81,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _baseAlgorithm = (QCAlgorithm)_algorithm;
 
                             // Set pandas
-                            _baseAlgorithm.SetPandas();
+                            _baseAlgorithm.SetPandasConverter();
 
                             return;
                         }
