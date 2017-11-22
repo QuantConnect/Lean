@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Globalization;
 using System.IO;
@@ -50,7 +65,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly long[] _transactionsIdx = {27, 29, 31, 33};
+        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
 
         /// <summary>
         ///     Integer representing client version.
@@ -60,7 +75,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = {26, 28, 30, 32};
+        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
 
         /// <summary>
         ///     Sum of opening and closing Transactions for the entire time interval.
@@ -75,7 +90,7 @@ namespace QuantConnect.Data.Custom
         ///     The volume measured in the QUOTE CURRENCY.
         /// </summary>
         /// <remarks>Please remember to convert this data to a common currency before making comparison between different pairs.</remarks>
-        public long Value { get; set; }
+        public long Volume { get; set; }
 
         /// <summary>
         ///     Return the URL string source of the file. This will be converted to a stream
@@ -119,47 +134,45 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            DateTime time;
-            long volume;
-            int transactions;
+            var fxcmVolume = new FxcmVolume { DataType = MarketDataType.Base, Symbol = config.Symbol };
             if (isLiveMode)
             {
-                var obs = line.Split('\n')[2].Split(';');
-                var stringDate = obs[0].Substring(startIndex: 3);
-                time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
-                                                  DateTimeFormatInfo.InvariantInfo);
-                volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-                transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                
+                try
+                {
+                    var obs = line.Split('\n')[2].Split(';');
+                    var stringDate = obs[0].Substring(startIndex: 3);
+                    fxcmVolume.Time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm", DateTimeFormatInfo.InvariantInfo);
+                    fxcmVolume.Volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+                    fxcmVolume.Transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                    fxcmVolume.Value = fxcmVolume.Volume;
+                }
+                catch (Exception exception)
+                {
+                    Logging.Log.Error($"Invalid data. Line: {line}. Exception: {exception.Message}");
+                    return null;
+                }
             }
             else
             {
                 var obs = line.Split(',');
                 if (config.Resolution == Resolution.Minute)
                 {
-                    time = date.Date.AddMilliseconds(int.Parse(obs[0]));
+                    fxcmVolume.Time = date.Date.AddMilliseconds(int.Parse(obs[0]));
                 }
                 else
                 {
-                    time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
+                    fxcmVolume.Time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                 }
-                volume = long.Parse(obs[1]);
-                transactions = int.Parse(obs[2]);
+                fxcmVolume.Volume = long.Parse(obs[1]);
+                fxcmVolume.Transactions = int.Parse(obs[2]);
+                fxcmVolume.Value = fxcmVolume.Volume;
             }
-            return new FxcmVolume
-            {
-                DataType = MarketDataType.Base,
-                Symbol = config.Symbol,
-                Time = time,
-                Value = volume,
-                Transactions = transactions
-            };
-
+            return fxcmVolume;
         }
 
         private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
         {
-            var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
+            var source = Path.Combine(new[] { Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower() });
             string filename;
 
             var symbol = config.Symbol.Value.Split('_').First().ToLower();
@@ -187,7 +200,7 @@ namespace QuantConnect.Data.Custom
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), ticker);
+                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), ticker);
             }
             catch (ArgumentException)
             {

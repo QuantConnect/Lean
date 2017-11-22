@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
             volume.Update(new IndicatorDataPoint
             {
                 Time = Time,
-                Value = fxVolume.Value
+                Value = fxVolume.Volume
             });
         }
     }
