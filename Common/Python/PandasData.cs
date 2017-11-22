@@ -186,7 +186,7 @@ namespace QuantConnect.Python
                 foreach (var kvp in data.GetStorageDictionary())
                 {
                     var value = kvp.Value;
-                    if (value is decimal) value = (double)value;
+                    if (value is decimal) value = Convert.ToDouble(value);
                     _series[kvp.Key].Add(value);
                 }
                 _series["value"].Add((double)data.Value);
