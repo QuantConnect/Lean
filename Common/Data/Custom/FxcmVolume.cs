@@ -50,7 +50,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly long[] _transactionsIdx = {27, 29, 31, 33};
+        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
 
         /// <summary>
         ///     Integer representing client version.
@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = {26, 28, 30, 32};
+        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
 
         /// <summary>
         ///     Sum of opening and closing Transactions for the entire time interval.
@@ -119,7 +119,6 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-
             var fxcmVolume = new FxcmVolume { DataType = MarketDataType.Base, Symbol = config.Symbol };
             if (isLiveMode)
             {
@@ -134,7 +133,7 @@ namespace QuantConnect.Data.Custom
                 }
                 catch (Exception exception)
                 {
-                    Logging.Log.Error($"Ivalid data. Line: {line}. Exception: {exception.Message}");
+                    Logging.Log.Error($"Invalid data. Line: {line}. Exception: {exception.Message}");
                     return null;
                 }
             }
@@ -156,11 +155,9 @@ namespace QuantConnect.Data.Custom
             return fxcmVolume;
         }
 
-        
-
         private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
         {
-            var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
+            var source = Path.Combine(new[] { Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower() });
             string filename;
 
             var symbol = config.Symbol.Value.Split('_').First().ToLower();
@@ -188,7 +185,7 @@ namespace QuantConnect.Data.Custom
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), ticker);
+                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), ticker);
             }
             catch (ArgumentException)
             {
