@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace QuantConnect.Python
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class PandasData
     {
+        private readonly Type _type;
         private readonly Symbol _symbol;
         private readonly List<DateTime> _timeIndex;
         private readonly Dictionary<string, List<object>> _series;
@@ -63,8 +65,15 @@ namespace QuantConnect.Python
                 // and add the field named 'value' since it is the reference value
                 columns = "value," + string.Join(",", ((DynamicData)baseData).GetStorageDictionary().Keys);
             }
-            
-            _series = columns.Split(',').ToDictionary(k => k, v => new List<object>());
+            // C# custom data
+            else if (baseData is BaseData)
+            {
+                _type = baseData.GetType();
+                var properties = _type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                columns = "Value," + string.Join(",", properties.Select(x => x.Name));
+            }
+
+            _series = columns.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(k => k, v => new List<object>());
             _symbol = baseData.Symbol;
             _timeIndex = new List<DateTime>();
 
@@ -181,6 +190,15 @@ namespace QuantConnect.Python
                     _series[kvp.Key].Add(value);
                 }
                 _series["value"].Add((double)data.Value);
+            }
+
+            if (_type != null)
+            {
+                foreach (var kvp in _series)
+                {
+                    var item = _type.GetProperty(kvp.Key).GetValue(baseData);
+                    kvp.Value.Add(item);
+                }
             }
         }
 
