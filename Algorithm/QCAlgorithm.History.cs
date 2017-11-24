@@ -527,7 +527,7 @@ namespace QuantConnect.Algorithm
                 security.Symbol,
                 resolution,
                 security.Exchange.Hours,
-                MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType),
+                security.Exchange.TimeZone,
                 resolution,
                 security.IsExtendedMarketHours,
                 security.IsCustomData(),

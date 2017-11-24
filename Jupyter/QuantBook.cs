@@ -232,7 +232,7 @@ namespace QuantConnect.Jupyter
                                         x, 
                                         resolution ?? option.Resolution, 
                                         underlying.Exchange.Hours,
-                                        MarketHoursDatabase.FromDataFolder().GetDataTimeZone(underlying.Symbol.ID.Market, underlying.Symbol, underlying.Type),
+                                        underlying.Exchange.TimeZone,
                                         Resolution.Minute, 
                                         underlying.IsExtendedMarketHours, 
                                         underlying.IsCustomData(), 

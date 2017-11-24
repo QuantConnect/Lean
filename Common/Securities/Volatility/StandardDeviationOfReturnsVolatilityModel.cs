@@ -116,7 +116,7 @@ namespace QuantConnect.Securities
                                    security.Symbol, 
                                    Resolution.Daily, 
                                    security.Exchange.Hours, 
-                                   MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Type), 
+                                   security.Exchange.TimeZone, 
                                    Resolution.Daily, 
                                    security.IsExtendedMarketHours, 
                                    security.IsCustomData(), 
