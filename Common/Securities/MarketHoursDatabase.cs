@@ -34,7 +34,7 @@ namespace QuantConnect.Securities
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, Entry> _entries;
+        private Dictionary<SecurityDatabaseKey, Entry> _entries;
 
         /// <summary>
         /// Gets an instant of <see cref="MarketHoursDatabase"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -236,6 +236,11 @@ namespace QuantConnect.Securities
                 var tz = overrideTimeZone ?? TimeZones.Utc;
                 return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
             }
+        }
+
+        public void AddEntry(SecurityDatabaseKey key, Entry entry)
+        {
+            _entries[key] = entry;
         }
     }
 }
