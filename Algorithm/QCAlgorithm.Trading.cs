@@ -977,8 +977,9 @@ namespace QuantConnect.Algorithm
                 orderValue = order.GetValue(security);
                 orderFees = security.FeeModel.GetOrderFee(security, order);
 
-                // calculate feeToPriceRatio, if lower than lot size, use lot size instead
+                // find an incremental delta value for the next iteration step
                 feeToPriceRatio = orderFees / unitPrice;
+                feeToPriceRatio -= feeToPriceRatio % security.SymbolProperties.LotSize;
                 if (feeToPriceRatio < security.SymbolProperties.LotSize)
                 {
                     feeToPriceRatio = security.SymbolProperties.LotSize;
@@ -988,9 +989,6 @@ namespace QuantConnect.Algorithm
                 marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
             } while (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue);
-
-            var remainder = orderQuantity % security.SymbolProperties.LotSize;
-            if (remainder > 0) orderQuantity -= remainder;
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
