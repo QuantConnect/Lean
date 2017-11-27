@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ namespace QuantConnect.Orders
     {
         private readonly object _orderEventsLock = new object();
         private readonly object _updateRequestsLock = new object();
-        private readonly object _setCancelRequestLock = new object();
+        private readonly object _cancelRequestLock = new object();
 
         private Order _order;
         private OrderStatus? _orderStatusOverride;
@@ -39,7 +39,7 @@ namespace QuantConnect.Orders
         private decimal _averageFillPrice;
 
         private readonly int _orderId;
-        private readonly List<OrderEvent> _orderEvents; 
+        private readonly List<OrderEvent> _orderEvents;
         private readonly SubmitOrderRequest _submitRequest;
         private readonly ManualResetEvent _orderStatusClosedEvent;
         private readonly List<UpdateOrderRequest> _updateRequests;
@@ -128,7 +128,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the order's current tag
         /// </summary>
-        public string Tag 
+        public string Tag
         {
             get { return _order == null ? _submitRequest.Tag : _order.Tag; }
         }
@@ -162,7 +162,13 @@ namespace QuantConnect.Orders
         /// </summary>
         public CancelOrderRequest CancelRequest
         {
-            get { return _cancelRequest; }
+            get
+            {
+                lock (_cancelRequestLock)
+                {
+                    return _cancelRequest;
+                }
+            }
         }
 
         /// <summary>
@@ -260,7 +266,16 @@ namespace QuantConnect.Orders
         {
             var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
             _transactionManager.ProcessRequest(request);
-            return CancelRequest.Response;
+
+            lock (_cancelRequestLock)
+            {
+                if (_cancelRequest != null)
+                {
+                    return _cancelRequest.Response;
+                }
+            }
+
+            throw new ArgumentException("CancelRequest is null.");
         }
 
         /// <summary>
@@ -278,10 +293,14 @@ namespace QuantConnect.Orders
         /// <returns>The most recent <see cref="OrderRequest"/> for this ticket</returns>
         public OrderRequest GetMostRecentOrderRequest()
         {
-            if (CancelRequest != null)
+            lock (_cancelRequestLock)
             {
-                return CancelRequest;
+                if (_cancelRequest != null)
+                {
+                    return _cancelRequest;
+                }
             }
+
             var lastUpdate = _updateRequests.LastOrDefault();
             if (lastUpdate != null)
             {
@@ -361,7 +380,8 @@ namespace QuantConnect.Orders
             {
                 throw new ArgumentException("Received CancelOrderRequest for incorrect order id.");
             }
-            lock (_setCancelRequestLock)
+
+            lock (_cancelRequestLock)
             {
                 if (_cancelRequest != null)
                 {
@@ -369,6 +389,7 @@ namespace QuantConnect.Orders
                 }
                 _cancelRequest = request;
             }
+
             return true;
         }
 
@@ -439,14 +460,27 @@ namespace QuantConnect.Orders
 
         private int ResponseCount()
         {
-            return (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1) 
-                 + (_cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1)
-                 + _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
+            var count = (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1) +
+                        _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
+
+            lock (_cancelRequestLock)
+            {
+                count += _cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
+            }
+
+            return count;
         }
 
         private int RequestCount()
         {
-            return 1 + _updateRequests.Count + (_cancelRequest == null ? 0 : 1);
+            var count = 1 + _updateRequests.Count;
+
+            lock (_cancelRequestLock)
+            {
+                count += _cancelRequest == null ? 0 : 1;
+            }
+
+            return count;
         }
 
         /// <summary>
