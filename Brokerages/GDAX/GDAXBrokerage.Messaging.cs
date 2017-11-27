@@ -336,8 +336,8 @@ namespace QuantConnect.Brokerages.GDAX
                 ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
             OrderDirection direction;
-            // Messages are always from the perspective of the market maker. Flip it in cases of a market order.
-            if (order.Type == OrderType.Market)
+            // Messages are always from the perspective of the market maker. Flip direction if executed as a taker.
+            if (order.BrokerId[0] == message.TakerOrderId)
             {
                 direction = message.Side == "sell" ? OrderDirection.Buy : OrderDirection.Sell;
             }
