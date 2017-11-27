@@ -330,7 +330,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
-                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, deltaStatistics, runtimeStatistics, serverStatistics);
+                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics);
 
                     foreach (var liveResultPacket in splitPackets)
                     {
@@ -353,7 +353,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics));
                         StoreResult(complete);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
@@ -439,6 +439,7 @@ namespace QuantConnect.Lean.Engine.Results
         private IEnumerable<LiveResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts,
             Dictionary<int, Order> deltaOrders,
             Dictionary<string, Holding> holdings,
+            CashBook cashbook,
             Dictionary<string, string> deltaStatistics,
             Dictionary<string, string> runtimeStatistics,
             Dictionary<string, string> serverStatistics)
@@ -459,12 +460,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var chart = new Chart(deltaChart.Name);
                 current.Add(deltaChart.Name, chart);
 
-                if (deltaChart.Name == _subscription || _subscription == "*")
+                if (deltaChart.Name == _subscription || (_subscription == "*" && deltaChart.Name == "Strategy Equity"))
                 {
                     chart.Series = deltaChart.Series;
                 }
 
-                if (current.Count >= groupSize)
+                // If there is room left in the group. add the subscription
+                // to the packet unless it is a wildcard subscription
+                if (current.Count >= groupSize && _subscription != "*")
                 {
                     // Add the micro packet to transport.
                     chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
@@ -473,8 +476,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
 
-            //Add whatever is left over here too.
-            if (current.Count > 0)
+            // Add whatever is left over here too
+            // unless it is a wildcard subscription
+            if (current.Count > 0 && _subscription != "*")
             {
                 chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
             }
@@ -483,7 +487,7 @@ namespace QuantConnect.Lean.Engine.Results
             var packets = new[]
             {
                 new LiveResultPacket(_job, new LiveResult {Orders = deltaOrders}),
-                new LiveResultPacket(_job, new LiveResult {Holdings = holdings}),
+                new LiveResultPacket(_job, new LiveResult {Holdings = holdings, Cash = cashbook}),
                 new LiveResultPacket(_job, new LiveResult
                 {
                     Statistics = deltaStatistics,
@@ -492,7 +496,6 @@ namespace QuantConnect.Lean.Engine.Results
                 })
             };
 
-            // combine all the packets to be sent to through pubnub
             return packets.Concat(chartPackets);
         }
 
@@ -772,9 +775,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="orders">Collection of orders from the algorithm</param>
         /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
         /// <param name="holdings">Current holdings state for the algorithm</param>
+        /// <param name="cashbook">Cashbook of the current cash of the algorithm</param>
         /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
         /// <param name="runtime">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> runtime)
+        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> runtime)
         {
             try
             {
@@ -782,7 +786,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var charts = new Dictionary<string, Chart>(Charts);
 
                 //Create a packet:
-                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, statisticsResults.Summary, runtime));
+                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime));
 
                 //Save the processing time:
                 result.ProcessingTime = (DateTime.Now - _startTime).TotalSeconds;
@@ -1057,7 +1061,10 @@ namespace QuantConnect.Lean.Engine.Results
                             else
                             {
                                 // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                                security.SetMarketPrice(new Tick(time, subscription.Configuration.Symbol, price, price));
+                                if (price > 0)
+                                {
+                                    security.SetMarketPrice(new Tick(time, subscription.Configuration.Symbol, price, price));
+                                }
                             }
 
                             //Sample Asset Pricing:

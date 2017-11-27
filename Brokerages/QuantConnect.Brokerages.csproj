@@ -185,6 +185,7 @@
     <Compile Include="GDAX\GDAXBrokerage.Utility.cs" />
     <Compile Include="GDAX\GDAXBrokerage.cs" />
     <Compile Include="GDAX\GDAXBrokerageFactory.cs" />
+    <Compile Include="GDAX\GDAXDataQueueHandler.cs" />
     <Compile Include="GDAX\GDAXFill.cs" />
     <Compile Include="GDAX\GDAXBrokerage.Messaging.cs" />
     <Compile Include="GDAX\OrderBook.cs" />

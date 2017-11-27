@@ -53,6 +53,7 @@ from arch import arch_model
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 import tensorflow as tf
+from deap import algorithms, base, creator, tools
 
 ### <summary>
 ### Demonstration of all the packages you can import with the QuantConnect/LEAN trading engine.s
@@ -111,6 +112,9 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # tensorflow test
         tensorflow_test()
+        
+        # deap test
+        deap_test()
 
 
     def OnData(self, data): pass
@@ -224,3 +228,33 @@ def tensorflow_test():
     sess = tf.Session()
     node3 = tf.add(node1, node2)
     print "tensorflow test >>>", "sess.run(node3): ", sess.run(node3)
+
+def deap_test():
+    # onemax example evolves to print list of ones: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    numpy.random.seed(1)
+    def evalOneMax(individual):
+        return sum(individual),
+
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+    creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+
+    toolbox = base.Toolbox()
+    toolbox.register("attr_bool", numpy.random.randint, 0, 1)
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, 10)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox.register("evaluate", evalOneMax)
+    toolbox.register("mate", tools.cxTwoPoint)
+    toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+    toolbox.register("select", tools.selTournament, tournsize=3)
+
+    pop   = toolbox.population(n=50)
+    hof   = tools.HallOfFame(1)
+    stats = tools.Statistics(lambda ind: ind.fitness.values)
+    stats.register("avg", numpy.mean)
+    stats.register("std", numpy.std)
+    stats.register("min", numpy.min)
+    stats.register("max", numpy.max)
+
+    pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=30, 
+                                   stats=stats, halloffame=hof, verbose=False) # change to verbose=True to see evolution table
+    print "deap test >>>", hof[0]

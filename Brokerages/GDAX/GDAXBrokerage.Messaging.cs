@@ -24,7 +24,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using QuantConnect.Packets;
 using System.Threading;
 using RestSharp;
 using System.Text.RegularExpressions;
@@ -32,29 +31,34 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.GDAX
 {
-    public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
+    public partial class GDAXBrokerage
     {
         #region Declarations
-        private object _tickLocker = new object();
+        private readonly object _tickLocker = new object();
         /// <summary>
         /// Collection of partial split messages
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
-        private string _passPhrase;
-        private const string _symbolMatching = "ETH|LTC|BTC";
-        private IAlgorithm _algorithm;
-        private static string[] _channelNames = new string[] { "heartbeat", "level2", "user", "matches" };
-        private CancellationTokenSource _canceller = new CancellationTokenSource();
-        private ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
+        private readonly string _passPhrase;
+        private const string SymbolMatching = "ETH|LTC|BTC";
+        private readonly IAlgorithm _algorithm;
+        private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
+        private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
+        private readonly bool _isDataQueueHandler;
 
         /// <summary>
         /// Rest client used to call missing conversion rates
         /// </summary>
         public IRestClient RateClient { get; set; }
         #endregion
+
+        /// <summary>
+        /// The list of websocket channels to subscribe
+        /// </summary>
+        protected virtual string[] ChannelNames { get; } = { "heartbeat", "user", "matches" };
 
         /// <summary>
         /// Constructor for brokerage
@@ -77,8 +81,10 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Open += (sender, args) =>
             {
                 var tickers = new[] {"LTCUSD", "LTCEUR", "LTCBTC", "BTCUSD", "BTCEUR", "BTCGBP", "ETHBTC", "ETHUSD", "ETHEUR"};
-                Subscribe(null, tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
+                Subscribe(tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
             };
+
+            _isDataQueueHandler = this is GDAXDataQueueHandler;
         }
 
         /// <summary>
@@ -226,7 +232,10 @@ namespace QuantConnect.Brokerages.GDAX
 
                 orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
 
-                EmitQuoteTick(symbol, orderBook.BestBidPrice, orderBook.BestBidSize, orderBook.BestAskPrice, orderBook.BestAskSize);
+                if (_isDataQueueHandler)
+                {
+                    EmitQuoteTick(symbol, orderBook.BestBidPrice, orderBook.BestBidSize, orderBook.BestAskPrice, orderBook.BestAskSize);
+                }
             }
             catch (Exception e)
             {
@@ -237,7 +246,10 @@ namespace QuantConnect.Brokerages.GDAX
 
         private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)
         {
-            EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
+            if (_isDataQueueHandler)
+            {
+                EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
+            }
         }
 
         private void OnL2Update(string data)
@@ -291,7 +303,10 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
 
-            EmitTradeTick(message);
+            if (_isDataQueueHandler)
+            {
+                EmitTradeTick(message);
+            }
 
             var cached = CachedOrderIDs
                 .Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId))
@@ -470,18 +485,18 @@ namespace QuantConnect.Brokerages.GDAX
             }
         }
 
-        #region IDataQueueHandler
         /// <summary>
         /// Creates websocket message subscriptions for the supplied symbols
         /// </summary>
-        /// <param name="job"></param>
-        /// <param name="symbols"></param>
-        public override void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public override void Subscribe(IEnumerable<Symbol> symbols)
         {
-
             foreach (var item in symbols)
             {
-                if (item.Value.Contains("UNIVERSE")) continue;
+                if (item.Value.Contains("UNIVERSE") ||
+                    item.SecurityType != SecurityType.Forex && item.SecurityType != SecurityType.Crypto)
+                {
+                    continue;
+                }
 
                 if (!IsSubscribeAvailable(item))
                 {
@@ -501,7 +516,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 type = "subscribe",
                 product_ids = products,
-                channels = _channelNames
+                channels = ChannelNames
             };
 
             if (payload.product_ids.Length == 0)
@@ -585,22 +600,19 @@ namespace QuantConnect.Brokerages.GDAX
 
         private bool IsSubscribeAvailable(Symbol symbol)
         {
-            return Regex.IsMatch(symbol.Value, _symbolMatching);
+            return Regex.IsMatch(symbol.Value, SymbolMatching);
         }
 
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
-        /// <param name="job"></param>
-        /// <param name="symbols"></param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             if (WebSocket.IsOpen)
             {
-                WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = _channelNames}));
+                WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = ChannelNames}));
             }
         }
-        #endregion
 
     }
 }
