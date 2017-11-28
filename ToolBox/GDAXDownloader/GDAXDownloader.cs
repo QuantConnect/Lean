@@ -12,21 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
+using Newtonsoft.Json;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.GDAXDownloader
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Net;
-    using System.Text;
-    using System.Threading;
-    using Newtonsoft.Json;
-    using QuantConnect.Data;
-    using QuantConnect.Data.Market;
-    using QuantConnect.Logging;
-
     /// <summary>
     /// GDAX Data Downloader class 
     /// </summary>
@@ -50,11 +49,14 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             var granularity = resolution.ToTimeSpan().TotalSeconds;
 
             DateTime windowStartTime = startUtc;
-            DateTime windowEndTime = startUtc.AddSeconds((MaxDatapointsPerRequest - 1) * granularity);
-            windowEndTime = windowEndTime > endUtc ? endUtc : windowEndTime;
+            DateTime windowEndTime = startUtc;
 
-            while (windowStartTime != windowEndTime)
+            do
             {
+                windowStartTime = windowEndTime;
+                windowEndTime = windowStartTime.AddSeconds(MaxDatapointsPerRequest * granularity);
+                windowEndTime = windowEndTime > endUtc ? endUtc : windowEndTime;
+
                 Log.Trace(String.Format("Getting data for timeperiod from {0} to {1}..", windowStartTime, windowEndTime));
 
                 var requestURL = string.Format(HistoricCandlesUrl, symbol.Value, windowStartTime.ToString(), windowEndTime.ToString(), granularity);
@@ -63,11 +65,9 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
                 string data = GetWithRetry(request);
                 returnData.AddRange(ParseCandleData(symbol, granularity, data));
-
-                windowStartTime = windowEndTime;
-                windowEndTime = windowStartTime.AddSeconds(MaxDatapointsPerRequest * granularity);
-                windowEndTime = windowEndTime > endUtc ? endUtc : windowEndTime;
             }
+            while (windowStartTime != windowEndTime);
+            
             return returnData;
         }
 
