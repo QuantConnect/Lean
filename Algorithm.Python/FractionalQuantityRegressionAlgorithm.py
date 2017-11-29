@@ -47,7 +47,7 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
 
         self.SetTimeZone(DateTimeZone.Utc)
 
-        security = self.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, False, 3.3, True)
+        security = self.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, False, d.Decimal(3.3), True)
         con = QuoteBarConsolidator(timedelta(1))
         self.SubscriptionManager.AddConsolidator("BTCUSD", con)
         con.DataConsolidated += self.DataConsolidated
