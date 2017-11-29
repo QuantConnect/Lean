@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -68,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 universeData.Clear();
                 newChanges = SecurityChanges.None;
-                foreach (var subscription in subscriptions.ToList())
+                foreach (var subscription in subscriptions)
                 {
                     if (subscription.EndOfStream)
                     {
