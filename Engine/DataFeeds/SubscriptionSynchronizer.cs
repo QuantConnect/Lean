@@ -65,7 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SecurityChanges newChanges;
             do
             {
-
                 universeData.Clear();
                 newChanges = SecurityChanges.None;
                 foreach (var subscription in subscriptions)
