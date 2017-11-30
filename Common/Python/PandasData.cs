@@ -16,11 +16,10 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace QuantConnect.Python
 {
@@ -45,32 +44,38 @@ namespace QuantConnect.Python
         /// <param name="baseData"><see cref="IBaseData"/> object that contains information to be saved in an instance of <see cref="PandasData"/></param>
         public PandasData(IBaseData baseData)
         {
-            var columns = "open,high,low,close";
+            var columns = "open,high,low,close,volume,askopen,askhigh,asklow,askclose,asksize,bidopen,bidhigh,bidlow,bidclose,bidsize";
+            var type = baseData.GetType();
 
-            if (baseData is Tick)
-            {
-                columns = "askprice,asksize,bidprice,bidsize,lastprice,quantity,exchange,suspicious";
-            }
-            else if (baseData is TradeBar)
-            {
-                columns += ",volume";
-            }
-            else if (baseData is QuoteBar)
-            {
-                columns += ",askopen,askhigh,asklow,askclose,asksize,bidopen,bidhigh,bidlow,bidclose,bidsize";
-            }
-            else if (baseData is DynamicData)
+            if (baseData is DynamicData)
             {
                 // We get the fields of DynamicData from the storage dictionary
                 // and add the field named 'value' since it is the reference value
                 columns = "value," + string.Join(",", ((DynamicData)baseData).GetStorageDictionary().Keys);
             }
-            // C# custom data
-            else if (baseData is BaseData)
+            else if (type == typeof(Tick))
             {
-                _type = baseData.GetType();
-                var properties = _type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                columns = "Value," + string.Join(",", properties.Select(x => x.Name));
+                columns = "askprice,asksize,bidprice,bidsize,lastprice,quantity,exchange,suspicious";
+            }
+            // C# custom data
+            else if (type != typeof(TradeBar) && type != typeof(QuoteBar))
+            {
+                columns = "Value";
+                var properties = type.GetProperties();
+                var baseDataProperties = typeof(BaseData).GetProperties().Select(p => p.Name).ToHashSet();
+
+                foreach (var property in properties.GroupBy(x => x.Name))
+                {
+                    if (property.Count() > 1)
+                    {
+                        throw new ArgumentException($"More than one \'{property.Key}\' member was found in \'{type.Name}\' class.");
+                    }
+                    if (!baseDataProperties.Contains(property.Key))
+                    {
+                        columns += $",{property.Key}";
+                    }
+                }
+                _type = type;
             }
 
             _series = columns.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(k => k, v => new List<object>());
@@ -112,6 +117,17 @@ namespace QuantConnect.Python
         {
             _timeIndex.Add(baseData.EndTime);
 
+            if (_type != null)
+            {
+                foreach (var kvp in _series)
+                {
+                    var value = _type.GetProperty(kvp.Key).GetValue(baseData);
+                    if (value is decimal) value = Convert.ToDouble(value);
+                    kvp.Value.Add(value);
+                }
+                return;
+            }
+
             var bar = baseData as IBaseDataBar;
             if (bar != null)
             {
@@ -121,46 +137,41 @@ namespace QuantConnect.Python
                 _series["close"].Add((double)bar.Close);
 
                 var tradeBar = bar as TradeBar;
-                if (tradeBar != null)
+                _series["volume"].Add(tradeBar == null ? double.NaN : (double)tradeBar.Volume);
+                
+                var quoteBar = bar as QuoteBar;
+                if (quoteBar != null && quoteBar.Ask != null)
                 {
-                    _series["volume"].Add((double)tradeBar.Volume);
+                    _series["askopen"].Add((double)quoteBar.Ask.Open);
+                    _series["askhigh"].Add((double)quoteBar.Ask.High);
+                    _series["asklow"].Add((double)quoteBar.Ask.Low);
+                    _series["askclose"].Add((double)quoteBar.Ask.Close);
+                    _series["asksize"].Add((double)quoteBar.LastAskSize);
+                }
+                else
+                {
+                    _series["askopen"].Add(double.NaN);
+                    _series["askhigh"].Add(double.NaN);
+                    _series["asklow"].Add(double.NaN);
+                    _series["askclose"].Add(double.NaN);
+                    _series["asksize"].Add(double.NaN);
                 }
 
-                var quoteBar = bar as QuoteBar;
-                if (quoteBar != null)
+                if (quoteBar != null && quoteBar.Bid != null)
                 {
-                    _series["asksize"].Add((double)quoteBar.LastAskSize);
+                    _series["bidopen"].Add((double)quoteBar.Bid.Open);
+                    _series["bidhigh"].Add((double)quoteBar.Bid.High);
+                    _series["bidlow"].Add((double)quoteBar.Bid.Low);
+                    _series["bidclose"].Add((double)quoteBar.Bid.Close);
                     _series["bidsize"].Add((double)quoteBar.LastBidSize);
-
-                    if (quoteBar.Ask != null)
-                    {
-                        _series["askopen"].Add((double)quoteBar.Ask.Open);
-                        _series["askhigh"].Add((double)quoteBar.Ask.High);
-                        _series["asklow"].Add((double)quoteBar.Ask.Low);
-                        _series["askclose"].Add((double)quoteBar.Ask.Close);
-                    }
-                    else
-                    {
-                        _series["askopen"].Add(double.NaN);
-                        _series["askhigh"].Add(double.NaN);
-                        _series["asklow"].Add(double.NaN);
-                        _series["askclose"].Add(double.NaN);
-                    }
-
-                    if (quoteBar.Bid != null)
-                    {
-                        _series["bidopen"].Add((double)quoteBar.Bid.Open);
-                        _series["bidhigh"].Add((double)quoteBar.Bid.High);
-                        _series["bidlow"].Add((double)quoteBar.Bid.Low);
-                        _series["bidclose"].Add((double)quoteBar.Bid.Close);
-                    }
-                    else
-                    {
-                        _series["bidopen"].Add(double.NaN);
-                        _series["bidhigh"].Add(double.NaN);
-                        _series["bidlow"].Add(double.NaN);
-                        _series["bidclose"].Add(double.NaN);
-                    }
+                }
+                else
+                {
+                    _series["bidopen"].Add(double.NaN);
+                    _series["bidhigh"].Add(double.NaN);
+                    _series["bidlow"].Add(double.NaN);
+                    _series["bidclose"].Add(double.NaN);
+                    _series["bidsize"].Add(double.NaN);
                 }
             }
 
@@ -190,15 +201,6 @@ namespace QuantConnect.Python
                     _series[kvp.Key].Add(value);
                 }
                 _series["value"].Add((double)data.Value);
-            }
-
-            if (_type != null)
-            {
-                foreach (var kvp in _series)
-                {
-                    var item = _type.GetProperty(kvp.Key).GetValue(baseData);
-                    kvp.Value.Add(item);
-                }
             }
         }
 
@@ -288,6 +290,7 @@ namespace QuantConnect.Python
                 foreach (var kvp in _series)
                 {
                     if (kvp.Value.Count != tuples.Length) continue;
+                    if (kvp.Value.All(x => x is double && ((double)x).IsNaNOrZero())) continue;
                     pandasSeries.Add(kvp.Key, pandas.Series(kvp.Value, index));
                 }
                 return pandasSeries;
