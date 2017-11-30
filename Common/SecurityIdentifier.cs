@@ -388,6 +388,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a Crypto pair
+        /// </summary>
+        /// <param name="symbol">The currency pair in the format similar to: 'EURUSD'</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified Crypto pair</returns>
+        public static SecurityIdentifier GenerateCrypto(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.Crypto, market);
+        }
+
+        /// <summary>
         /// Generates a new <see cref="SecurityIdentifier"/> for a CFD security
         /// </summary>
         /// <param name="symbol">The CFD contract symbol</param>

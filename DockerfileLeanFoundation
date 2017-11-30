@@ -1,11 +1,11 @@
 #
-#	LEAN Foundation Docker Container 20170623
-#	Cross platform deployment for multiple brokerages	
+#	LEAN Foundation Docker Container 20171026
+#	Cross platform deployment for multiple brokerages
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:0.9.19
+FROM phusion/baseimage:0.9.22
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -19,7 +19,7 @@ RUN \
   apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 python-pip && \
   pip install --upgrade pip && pip install pycparser pandas scipy numpy sklearn  && \
   pip install blaze cvxopt cvxpy pykalman statistics statsmodels arch copulalib && \
-  pip install xgboost theano keras tensorflow
+  pip install xgboost theano keras tensorflow deap
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
@@ -30,24 +30,24 @@ RUN \
   apt-get install -y oracle-java8-installer && \
   rm -rf /var/lib/apt/lists/* && \
   rm -rf /var/cache/oracle-jdk8-installer
-  
+
 # Install IB Gateway: Installs to ~/Jts
 RUN \
-	wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
-	chmod 777 ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
-	./ibgateway-latest-standalone-linux-x64-v960.2a.sh -q && \
-	wget -O ~/Jts/jts.ini http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v960.2a.jts.ini && \
-	rm ibgateway-latest-standalone-linux-x64-v960.2a.sh
-	
+    wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
+    ./ibgateway-latest-standalone-linux-x64-v968.2d.sh -q && \
+    wget -O ~/Jts/jts.ini http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.jts.ini && \
+    rm ibgateway-latest-standalone-linux-x64-v968.2d.sh
+
 # Install IB Controller: Installs to ~/IBController
 RUN \
-	wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.zip && \
-	unzip IBController-QuantConnect-3.2.0.zip -d ~/IBController && \
-	chmod -R 777 ~/IBController && \
-	rm IBController-QuantConnect-3.2.0.zip
-  
+    wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.2.zip && \
+    unzip IBController-QuantConnect-3.2.0.2.zip -d ~/IBController && \
+    chmod -R 777 ~/IBController && \
+    rm IBController-QuantConnect-3.2.0.2.zip
+
 # Mono C# for LEAN:
-# From https://github.com/mono/docker/blob/master/4.6.1.5/	
+# From https://github.com/mono/docker/blob/master/
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
 RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > /etc/apt/sources.list.d/mono-xamarin.list \
@@ -56,9 +56,10 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
   && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install Python.NET
-RUN nuget install QuantConnect.pythonnet -Version 1.0.4.4 \
-    && cp QuantConnect.pythonnet.1.0.4.4/lib/Python.Runtime.dll /usr/lib
-	
+# Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
+RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.1 \
+    && cp QuantConnect.pythonnet.1.0.5.1/lib/Python.Runtime.dll /usr/lib
+
 RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
 
 # Install TA-lib for python
@@ -67,5 +68,12 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
     && cd ta-lib \
     && ./configure --prefix=/usr \
     && make \
-    && make install \ 
-    && pip install TA-lib
+    && make install \
+    && pip install TA-lib \
+    && cd ..
+
+# Install R
+RUN apt-get update \
+    && apt-get install -y r-base \
+    && apt-get install -y pandoc \
+    && apt-get install -y libcurl4-openssl-dev

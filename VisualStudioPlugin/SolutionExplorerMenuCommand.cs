@@ -307,6 +307,22 @@ namespace QuantConnect.VisualStudioPlugin
                     selectedFiles.Add(selectedItem);
                 }
             }
+
+            // Check if the user selected a folder, and include files in directories otherwise language inference breaks.
+            // Also to maintain child folder structure on webclient tweak the filename to contain folders expressed in URI format.
+            if (selectedFiles.Count == 1 &&
+                string.IsNullOrEmpty(Path.GetExtension(selectedFiles.First().FilePath)))
+            {
+                var basePath = selectedFiles.First().FilePath;
+                var nonFolders = Directory.GetFiles(selectedFiles.First().FilePath, "*", SearchOption.AllDirectories);
+
+                selectedFiles = nonFolders.Select(c => new SelectedItem
+                {
+                    FileName = "/" + c.Replace(basePath, string.Empty).Replace("\\", "/"),
+                    FilePath = c
+                }).ToList();
+            }
+
             return selectedFiles;
         }
     }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -76,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFileProvider = factorFileProvider;
             _dataProvider = dataProvider;
             _subscriptions = new SubscriptionCollection();
-            _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
+            _universeSelection = new UniverseSelection(this, algorithm);
             _cancellationTokenSource = new CancellationTokenSource();
             _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
 
@@ -211,8 +212,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            var subscription = request.IsUniverseSubscription 
-                ? CreateUniverseSubscription(request) 
+            var subscription = request.IsUniverseSubscription
+                ? CreateUniverseSubscription(request)
                 : CreateSubscription(request);
 
             if (subscription == null)
@@ -271,7 +272,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
+                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message);
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     _cancellationTokenSource.Cancel();
@@ -384,7 +385,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (request.Universe is OptionChainUniverse)
                 {
-                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), 
+                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e),
                         _mapFileProvider.Get(request.Security.Symbol.ID.Market), _factorFileProvider);
                 }
                 if (request.Universe is FuturesChainUniverse)
@@ -478,7 +479,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     break;
                 }
-                
+
                 // syncer returns MaxValue on failure/end of data
                 if (timeSlice.Time != DateTime.MaxValue)
                 {
@@ -487,7 +488,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // end of data signal
                     if (nextFrontier == DateTime.MaxValue) break;
 
-                    _frontierUtc = nextFrontier;    
+                    _frontierUtc = nextFrontier;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {
@@ -533,12 +534,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // optionally apply fill forward logic, but never for tick data
             if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
             {
+                // copy forward Bid/Ask bars for QuoteBars
+                if (request.Configuration.Type == typeof(QuoteBar))
+                {
+                    enumerator = new QuoteBarFillForwardEnumerator(enumerator);
+                }
+
                 var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
 
                 UpdateFillForwardResolution(subscriptionConfigs);
 
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, _fillForwardResolution,
-                    request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan());
+                    request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
             }
 
             // optionally apply exchange/user filters

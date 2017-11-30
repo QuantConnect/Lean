@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Securities.Equity;
@@ -28,10 +27,15 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm demonstrates the various ways you can call the History function,
     /// what it returns, and what you can do with the returned values.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="history and warm up" />
+    /// <meta name="tag" content="history" />
+    /// <meta name="tag" content="warm up" />
     public class HistoryAlgorithm : QCAlgorithm
     {
-        public SimpleMovingAverage spyDailySma;
-        private int _count = 0;
+        private int _count;
+        private SimpleMovingAverage _spyDailySma;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -48,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             Securities["CHRIS/CME_SP1"].Exchange = new EquityExchange();
 
             // we can get history in initialize to set up indicators and such
-            spyDailySma = new SimpleMovingAverage(14);
+            _spyDailySma = new SimpleMovingAverage(14);
 
             // get the last calendar year's worth of SPY data at the configured resolution (daily)
             var tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(365));
@@ -70,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             // we can use these TradeBars to initialize indicators or perform other math
             foreach (TradeBar tradeBar in tradeBarHistory)
             {
-                spyDailySma.Update(tradeBar.EndTime, tradeBar.Close);
+                _spyDailySma.Update(tradeBar.EndTime, tradeBar.Close);
             }
 
             // get the last calendar year's worth of quandl data at the configured resolution (daily)
@@ -85,10 +89,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             // we can loop over the return values from these functions and we'll get Quandl data
             // this can be used in much the same way as the tradeBarHistory above
-            spyDailySma.Reset();
+            _spyDailySma.Reset();
             foreach (QuandlFuture quandl in quandlHistory)
             {
-                spyDailySma.Update(quandl.EndTime, quandl.Value);
+                _spyDailySma.Update(quandl.EndTime, quandl.Value);
             }
 
             // get the last year's worth of all configured Quandl data at the configured resolution (daily)

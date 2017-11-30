@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,6 +72,10 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
                     break;
 
+                case SecurityType.Crypto:
+                    sid = SecurityIdentifier.GenerateCrypto(ticker, market);
+                    break;
+
                 case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
@@ -89,7 +93,7 @@ namespace QuantConnect
         /// <param name="right">The option right (Put/Call)</param>
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
-        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from diferent markets</param>
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
@@ -110,13 +114,13 @@ namespace QuantConnect
         /// <param name="right">The option right (Put/Call)</param>
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
-        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from diferent markets</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
             var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
-    
+
             if (expiry == SecurityIdentifier.DefaultDate)
             {
                 alias = alias ?? "?" + underlyingSymbol.Value.ToUpper();
@@ -138,7 +142,7 @@ namespace QuantConnect
         /// <param name="ticker">The ticker</param>
         /// <param name="market">The market the future resides in</param>
         /// <param name="expiry">The future expiry date</param>
-        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from different markets</param>
         /// <returns>A new Symbol object for the specified future contract</returns>
         public static Symbol CreateFuture(string ticker, string market, DateTime expiry, string alias = null)
@@ -164,7 +168,7 @@ namespace QuantConnect
         /// <returns>true, if symbol is a derivative canonical symbol</returns>
         public bool IsCanonical()
         {
-            return 
+            return
                 (ID.SecurityType == SecurityType.Future ||
                 (ID.SecurityType == SecurityType.Option && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
@@ -227,7 +231,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Creates new symbol with updated mapped symbol. Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
-        /// Method returns newly created symbol 
+        /// Method returns newly created symbol
         /// </summary>
         public Symbol UpdateMappedSymbol(string mappedSymbol)
         {
@@ -294,7 +298,7 @@ namespace QuantConnect
                     return ID.Equals(sid);
                 }
             }
-            
+
             // compare a sid just as you would a symbol object
             if (obj is SecurityIdentifier)
             {
@@ -306,7 +310,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Serves as a hash function for a particular type. 
+        /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
         /// A hash code for the current <see cref="T:System.Object"/>.
@@ -322,7 +326,7 @@ namespace QuantConnect
         /// Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.
         /// </summary>
         /// <returns>
-        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order. 
+        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order.
         /// </returns>
         /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
         public int CompareTo(object obj)
@@ -373,7 +377,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Equals operator 
+        /// Equals operator
         /// </summary>
         /// <param name="left">The left operand</param>
         /// <param name="right">The right operand</param>
@@ -385,7 +389,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Not equals operator 
+        /// Not equals operator
         /// </summary>
         /// <param name="left">The left operand</param>
         /// <param name="right">The right operand</param>
@@ -430,7 +434,7 @@ namespace QuantConnect
             {
                 return new Symbol(sid, sid.Symbol);
             }
-            
+
             return Empty;
         }
 

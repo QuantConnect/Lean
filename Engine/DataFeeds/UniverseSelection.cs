@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -35,22 +35,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
-        private readonly SubscriptionLimiter _limiter;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
         private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
+        private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        /// <param name="controls">Specifies limits on the algorithm's memory usage</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm, Controls controls)
+        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
-            _limiter = new SubscriptionLimiter(() => dataFeed.Subscriptions, controls.TickLimit, controls.SecondLimit, controls.MinuteLimit);
         }
 
         /// <summary>
@@ -61,6 +59,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeData">The data provided to perform selection with</param>
         public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
+            var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
+            if (dateTimeUtc > algorithmEndDateUtc)
+            {
+                return SecurityChanges.None;
+            }
+
             IEnumerable<Symbol> selectSymbolsResult;
 
             // check if this universe must be filtered with fine fundamental data
@@ -85,7 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
 
-                    var request = new SubscriptionRequest(true, universe, security, config, dateTimeUtc, dateTimeUtc);
+                    var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), dateTimeUtc, dateTimeUtc);
                     using (var enumerator = factory.CreateEnumerator(request, dataProvider))
                     {
                         if (enumerator.MoveNext())
@@ -115,7 +119,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var additions = new List<Security>();
             var removals = new List<Security>();
-            var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
 
             // remove previously deselected members which were kept in the universe because of holdings or open orders
             foreach (var member in _pendingRemovals.ToList())
@@ -155,30 +158,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            var keys = _pendingSecurityAdditions.Keys;
+            if (keys.Any() && keys.Single() != dateTimeUtc)
+            {
+                // if the frontier moved forward then we've added these securities to the algorithm
+                _pendingSecurityAdditions.Clear();
+            }
+
+            Dictionary<Symbol, Security> pendingAdditions;
+            if (!_pendingSecurityAdditions.TryGetValue(dateTimeUtc, out pendingAdditions))
+            {
+                // keep track of created securities so we don't create the same security twice, leads to bad things :)
+                pendingAdditions = new Dictionary<Symbol, Security>();
+                _pendingSecurityAdditions[dateTimeUtc] = pendingAdditions;
+            }
+
             // find new selections and add them to the algorithm
             foreach (var symbol in selections)
             {
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
-                if (!_algorithm.Securities.TryGetValue(symbol, out security))
+                if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
                 {
                     security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
+                    pendingAdditions.Add(symbol, security);
                 }
 
                 var addedSubscription = false;
 
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
-                    // ask the limiter if we can add another subscription at that resolution
-                    string reason;
-                    if (!_limiter.CanAddSubscription(request.Configuration.Resolution, out reason))
-                    {
-                        // should we be counting universe subscriptions against user subscriptions limits?
-
-                        _algorithm.Error(reason);
-                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + request.Configuration.Symbol.ToString() + ": " + reason);
-                        continue;
-                    }
                     // add the new subscriptions to the data feed
                     _dataFeed.AddSubscription(request);
 
@@ -207,7 +216,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var security in addedSecurities)
                 {
                     // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, security.Subscriptions.First(), dateTimeUtc, algorithmEndDateUtc));
+                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, new SubscriptionDataConfig(security.Subscriptions.First()), dateTimeUtc, algorithmEndDateUtc));
                 }
             }
 

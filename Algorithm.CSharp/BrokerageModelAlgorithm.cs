@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,19 +13,20 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Quick demo algorithm showing usage of the BrokerageModel property. The BrokerageModel helps to
-    /// improve backtesting fidelity through simulation of a specific brokerage's rules around restrictions
+    /// Demonstrate the usage of the BrokerageModel property to help improve backtesting
+    /// accuracy through simulation of a specific brokerage's rules around restrictions
     /// on submitting orders as well as fee structure.
     /// </summary>
+    /// <meta name="tag" content="trading and orders" />
+    /// <meta name="tag" content="brokerage models" />
     public class BrokerageModelAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -41,7 +42,6 @@ namespace QuantConnect.Algorithm.Examples
 
             // there's two ways to set your brokerage model. The easiest would be to call
             // SetBrokerageModel( BrokerageName ); // BrokerageName is an enum
-            //SetBrokerageModel(BrokerageName.TradierBrokerage);
             //SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
             //SetBrokerageModel(BrokerageName.Default);
 
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.Examples
             SetBrokerageModel(new MinimumAccountBalanceBrokerageModel(this, 500.00m));
         }
 
-        private decimal last = 1.0m;
+        private decimal _last = 1.0m;
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -64,16 +64,16 @@ namespace QuantConnect.Algorithm.Examples
             if (!Portfolio.Invested)
             {
                 //fails first several times, we'll keep decrementing until it succeeds
-                SetHoldings("SPY", last);
+                SetHoldings("SPY", _last);
                 if (Portfolio["SPY"].Quantity == 0)
                 {
                     // each time we fail to purchase we'll decrease our set holdings percentage
-                    Debug(Time + " - Failed to purchase stock"); 
-                    last *= 0.95m;
+                    Debug(Time + " - Failed to purchase stock");
+                    _last *= 0.95m;
                 }
                 else
                 {
-                    Debug(Time + " - Purchased Stock @ SetHoldings( " + last + " )");
+                    Debug(Time + " - Purchased Stock @ SetHoldings( " + _last + " )");
                 }
             }
         }
@@ -98,16 +98,16 @@ namespace QuantConnect.Algorithm.Examples
             public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
             {
                 message = null;
-                
+
                 // we want to model brokerage requirement of _minimumAccountBalance cash value in account
-                
+
                 var orderCost = order.GetValue(security);
                 var cash = _algorithm.Portfolio.Cash;
                 var cashAfterOrder = cash - orderCost;
                 if (cashAfterOrder < _minimumAccountBalance)
                 {
                     // return a message describing why we're not allowing this order
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InsufficientRemainingCapital", 
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InsufficientRemainingCapital",
                         string.Format("Account must maintain a minimum of ${0} USD at all times. Order ID: {1}", _minimumAccountBalance, order.Id)
                         );
                     return false;

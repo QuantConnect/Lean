@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "264.956%"},
                 {"Drawdown", "2.200%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "1.669%"},
                 {"Sharpe Ratio", "4.411"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "155.210%"},
                 {"Drawdown", "84.800%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "5123.170%"},
                 {"Sharpe Ratio", "1.199"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -278,7 +278,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "278.616%"},
                 {"Drawdown", "0.300%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "1.717%"},
                 {"Sharpe Ratio", "11.017"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -301,7 +301,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "372.677%"},
                 {"Drawdown", "1.100%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "1.717%"},
                 {"Sharpe Ratio", "4.521"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -364,25 +364,25 @@ namespace QuantConnect.Tests
 
             var macdTrendAlgorithmStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "127"},
-                {"Average Win", "3.65%"},
-                {"Average Loss", "-2.38%"},
-                {"Compounding Annual Return", "2.295%"},
-                {"Drawdown", "31.900%"},
-                {"Expectancy", "0.209"},
-                {"Net Profit", "28.377%"},
-                {"Sharpe Ratio", "0.226"},
-                {"Loss Rate", "52%"},
-                {"Win Rate", "48%"},
-                {"Profit-Loss Ratio", "1.54"},
-                {"Alpha", "-0.006"},
-                {"Beta", "0.394"},
-                {"Annual Standard Deviation", "0.108"},
-                {"Annual Variance", "0.012"},
-                {"Information Ratio", "-0.392"},
-                {"Tracking Error", "0.135"},
-                {"Treynor Ratio", "0.062"},
-                {"Total Fees", "$604.31"},
+                {"Total Trades", "84"},
+                {"Average Win", "4.79%"},
+                {"Average Loss", "-4.17%"},
+                {"Compounding Annual Return", "2.967%"},
+                {"Drawdown", "34.800%"},
+                {"Expectancy", "0.228"},
+                {"Net Profit", "37.970%"},
+                {"Sharpe Ratio", "0.27"},
+                {"Loss Rate", "43%"},
+                {"Win Rate", "57%"},
+                {"Profit-Loss Ratio", "1.15"},
+                {"Alpha", "-0.002"},
+                {"Beta", "0.411"},
+                {"Annual Standard Deviation", "0.112"},
+                {"Annual Variance", "0.013"},
+                {"Information Ratio", "-0.352"},
+                {"Tracking Error", "0.134"},
+                {"Treynor Ratio", "0.073"},
+                {"Total Fees", "$420.57"},
             };
 
             var optionSplitRegressionAlgorithmStatistics = new Dictionary<string, string>
@@ -417,17 +417,17 @@ namespace QuantConnect.Tests
                 {"Drawdown", "0.000%"},
                 {"Expectancy", "-1"},
                 {"Net Profit", "-0.006%"},
-                {"Sharpe Ratio", "-3.235"},
+                {"Sharpe Ratio", "-3.403"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
                 {"Alpha", "-0.016"},
                 {"Beta", "-0.001"},
-                {"Annual Standard Deviation", "0.002"},
+                {"Annual Standard Deviation", "0.001"},
                 {"Annual Variance", "0"},
                 {"Information Ratio", "10.014"},
                 {"Tracking Error", "0.877"},
-                {"Treynor Ratio", "3.955"},
+                {"Treynor Ratio", "4.203"},
                 {"Total Fees", "$2.50"},
             };
 
@@ -499,19 +499,20 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0.391"},
                 {"Total Fees", "$23.05"},
             };
-        var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
+
+            var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "4"},
                 {"Average Win", "0.30%"},
-                {"Average Loss", "-0.20%"},
-                {"Compounding Annual Return", "-42.722%"},
+                {"Average Loss", "-0.32%"},
+                {"Compounding Annual Return", "-85.023%"},
                 {"Drawdown", "0.400%"},
-                {"Expectancy", "-0.168"},
-                {"Net Profit", "-0.103%"},
+                {"Expectancy", "-0.359"},
+                {"Net Profit", "-0.350%"},
                 {"Sharpe Ratio", "0"},
                 {"Loss Rate", "67%"},
                 {"Win Rate", "33%"},
-                {"Profit-Loss Ratio", "1.50"},
+                {"Profit-Loss Ratio", "0.92"},
                 {"Alpha", "0"},
                 {"Beta", "0"},
                 {"Annual Standard Deviation", "0"},
@@ -530,7 +531,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "244.780%"},
                 {"Drawdown", "1.100%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "4.153%"},
                 {"Sharpe Ratio", "6.165"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -553,7 +554,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "-0.096%"},
                 {"Drawdown", "0.000%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "-0.001%"},
                 {"Sharpe Ratio", "-11.225"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -576,7 +577,7 @@ namespace QuantConnect.Tests
                 {"Compounding Annual Return", "-1.444%"},
                 {"Drawdown", "0.000%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0%"},
+                {"Net Profit", "-0.007%"},
                 {"Sharpe Ratio", "-11.225"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
@@ -590,28 +591,28 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0"},
                 {"Total Fees", "$1.00"}
             };
-            
+
             var fractionalQuantityRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "6"},
-                {"Average Win", "1.29%"},
-                {"Average Loss", "0.0%"},
-                {"Compounding Annual Return", "920.568%"},
-                {"Drawdown", "3.300%"},
-                {"Expectancy", "-0.333"},
-                {"Net Profit", "2.578%"},
-                {"Sharpe Ratio", "3.031"},
+                {"Average Win", "2.45%"},
+                {"Average Loss", "-2.03%"},
+                {"Compounding Annual Return", "2313.556%"},
+                {"Drawdown", "4.500%"},
+                {"Expectancy", "0.473"},
+                {"Net Profit", "4.458%"},
+                {"Sharpe Ratio", "3.408"},
                 {"Loss Rate", "33%"},
                 {"Win Rate", "67%"},
-                {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-0.001"},
-                {"Beta", "0.995"},
-                {"Annual Standard Deviation", "0.451"},
-                {"Annual Variance", "0.203"},
-                {"Information Ratio", "-3.42"},
-                {"Tracking Error", "0.002"},
-                {"Treynor Ratio", "1.374"},
-                {"Total Fees", "$0.00"}
+                {"Profit-Loss Ratio", "1.21"},
+                {"Alpha", "-0.4"},
+                {"Beta", "0.831"},
+                {"Annual Standard Deviation", "0.579"},
+                {"Annual Variance", "0.336"},
+                {"Information Ratio", "-5.399"},
+                {"Tracking Error", "0.163"},
+                {"Treynor Ratio", "2.375"},
+                {"Total Fees", "$2092.41"}
             };
 
             var basicTemplateFuturesAlgorithmDailyStatistics = new Dictionary<string, string>
@@ -666,6 +667,34 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HourSplitRegressionAlgorithm", hourSplitStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.CSharp),
+
+                // Python
+                // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("DropboxUniverseSelectionAlgorithm", dropboxUniverseSelectionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("LimitFillRegressionAlgorithm", limitFillRegressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("ParameterizedAlgorithm", parameterizedStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("RegressionAlgorithm", regressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("UniverseSelectionRegressionAlgorithm", universeSelectionRegressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("MACDTrendAlgorithm", macdTrendAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("OptionSplitRegressionAlgorithm", optionSplitRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("OptionRenameRegressionAlgorithm", optionRenameRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("OptionOpenInterestRegressionAlgorithm", optionOpenInterestRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("OptionChainConsistencyRegressionAlgorithm", optionChainConsistencyRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("WeeklyUniverseSelectionRegressionAlgorithm", weeklyUniverseSelectionRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("OptionExerciseAssignRegressionAlgorithm",optionExerciseAssignRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("BasicTemplateDailyAlgorithm", basicTemplateDailyStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("HourSplitRegressionAlgorithm", hourSplitStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.Python),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

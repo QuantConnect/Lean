@@ -11,7 +11,7 @@
     <AssemblyName>QuantConnect.ToolBox</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -36,7 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.OandaDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.GDAXDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -153,6 +153,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
+    <Compile Include="GDAXDownloader\Program.cs" />
+    <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
@@ -173,6 +176,10 @@
     <Compile Include="FactorFileGenerator.cs" />
     <Compile Include="FileStreamProvider.cs" />
     <Compile Include="FilteredDataProcessor.cs" />
+    <Compile Include="FxcmVolumeDownloader\FxcmVolumeAuxiliaryMethods.cs" />
+    <Compile Include="FxcmVolumeDownloader\FxcmVolumeWriter.cs" />
+    <Compile Include="FxcmVolumeDownloader\FxcmVolumeDownloader.cs" />
+    <Compile Include="FxcmVolumeDownloader\Program.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
@@ -192,6 +199,7 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
+    <Compile Include="KaikoDataConverter\Program.cs" />
     <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataReader.cs" />
     <Compile Include="LeanDataWriter.cs" />

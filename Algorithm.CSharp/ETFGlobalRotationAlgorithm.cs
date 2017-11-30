@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,22 +18,24 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Orders;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// ETF Global Rotation Strategy
+    /// Strategy example using a portfolio of ETF Global Rotation
     /// </summary>
-    public class ETFGlobalRotationAlgorithm : QCAlgorithm
+    /// <meta name="tag" content="strategy example" />
+    /// <meta name="tag" content="momentum" />
+    /// <meta name="tag" content="using data" />
+    public class EtfGlobalRotationAlgorithm : QCAlgorithm
     {
         // we'll use this to tell us when the month has ended
-        DateTime LastRotationTime = DateTime.MinValue;
-        TimeSpan RotationInterval = TimeSpan.FromDays(30);
-        private bool first = true;
+        private DateTime _lastRotationTime = DateTime.MinValue;
+        private TimeSpan _rotationInterval = TimeSpan.FromDays(30);
+        private bool _first = true;
 
         // these are the growth symbols we'll rotate through
-        List<string> GrowthSymbols = new List<string>
+        List<string> _growthSymbols = new List<string>
         {
             "MDY", // US S&P mid cap 400
             "IEV", // iShares S&P europe 350
@@ -43,14 +45,14 @@ namespace QuantConnect.Algorithm.Examples
         };
 
         // these are the safety symbols we go to when things are looking bad for growth
-        List<string> SafetySymbols = new List<string>
+        List<string> _safetySymbols = new List<string>
         {
             "EDV", // Vangaurd TSY 25yr+
             "SHY"  // Barclays Low Duration TSY
         };
 
         // we'll hold some computed data in these guys
-        List<SymbolData> SymbolData = new List<SymbolData>();
+        List<SymbolData> _symbolData = new List<SymbolData>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -60,14 +62,14 @@ namespace QuantConnect.Algorithm.Examples
             SetCash(25000);
             SetStartDate(2007, 1, 1);
 
-            foreach (var symbol in GrowthSymbols.Union(SafetySymbols))
+            foreach (var symbol in _growthSymbols.Union(_safetySymbols))
             {
                 // ideally we would use daily data
                 AddSecurity(SecurityType.Equity, symbol, Resolution.Minute);
                 var oneMonthPerformance = MOM(symbol, 30, Resolution.Daily);
                 var threeMonthPerformance = MOM(symbol, 90, Resolution.Daily);
 
-                SymbolData.Add(new SymbolData
+                _symbolData.Add(new SymbolData
                 {
                     Symbol = symbol,
                     OneMonthPerformance = oneMonthPerformance,
@@ -87,20 +89,20 @@ namespace QuantConnect.Algorithm.Examples
             {
                 // the first time we come through here we'll need to do some things such as allocation
                 // and initializing our symbol data
-                if (first)
+                if (_first)
                 {
-                    first = false;
-                    LastRotationTime = Time;
+                    _first = false;
+                    _lastRotationTime = Time;
                     return;
                 }
 
-                var delta = Time.Subtract(LastRotationTime);
-                if (delta > RotationInterval)
+                var delta = Time.Subtract(_lastRotationTime);
+                if (delta > _rotationInterval)
                 {
-                    LastRotationTime = Time;
+                    _lastRotationTime = Time;
 
                     // pick which one is best from growth and safety symbols
-                    var orderedObjScores = SymbolData.OrderByDescending(x => x.ObjectiveScore).ToList();
+                    var orderedObjScores = _symbolData.OrderByDescending(x => x.ObjectiveScore).ToList();
                     foreach (var orderedObjScore in orderedObjScores)
                     {
                         Log(">>SCORE>>" + orderedObjScore.Symbol + ">>" + orderedObjScore.ObjectiveScore);
@@ -115,7 +117,7 @@ namespace QuantConnect.Algorithm.Examples
                             Liquidate();
                         }
                         Log(">>BUY>>" + bestGrowth.Symbol + "@" + (100 * bestGrowth.OneMonthPerformance).ToString("00.00"));
-                        decimal qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
+                        var qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
                         MarketOrder(bestGrowth.Symbol, (int) qty);
                     }
                     else

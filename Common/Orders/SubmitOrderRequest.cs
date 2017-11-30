@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
@@ -79,6 +80,14 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the order properties for this request
+        /// </summary>
+        public IOrderProperties OrderProperties
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
@@ -90,7 +99,8 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">The limit price for limit orders, non-limit orders this value is ignored</param>
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
-        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag)
+        /// <param name="properties">The order properties for this request</param>
+        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag, IOrderProperties properties = null)
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
@@ -99,6 +109,7 @@ namespace QuantConnect.Orders
             Quantity = quantity;
             LimitPrice = limitPrice;
             StopPrice = stopPrice;
+            OrderProperties = properties;
         }
 
         /// <summary>

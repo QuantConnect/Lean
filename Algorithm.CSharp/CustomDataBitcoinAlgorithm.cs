@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,21 +15,17 @@
 
 using System;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// 3.0 CUSTOM DATA SOURCE: USE YOUR OWN MARKET DATA (OPTIONS, FOREX, FUTURES, DERIVATIVES etc).
-    /// 
-    /// The new QuantConnect Lean Backtesting Engine is incredibly flexible and allows you to define your own data source. 
-    /// 
-    /// This includes any data source which has a TIME and VALUE. These are the *only* requirements. To demonstrate this we're loading
-    /// in "Bitcoin" data.
-    /// 
+    /// Demonstration of using an external custom datasource. LEAN Engine is incredibly flexible and allows you to define your own data source.
+    /// This includes any data source which has a TIME and VALUE. These are the *only* requirements. To demonstrate this we're loading in "Bitcoin" data.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="custom data" />
+    /// <meta name="tag" content="crypto" />
     public class CustomDataBitcoinAlgorithm : QCAlgorithm
     {
-
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -47,7 +43,7 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// Event Handler for Bitcoin Data Events: These weather objects are created from our 
+        /// Event Handler for Bitcoin Data Events: These weather objects are created from our
         /// "Weather" type below and fired into this event handler.
         /// </summary>
         /// <param name="data">One(1) Weather Object, streamed into our algorithm synchronised in time with our other data streams</param>
@@ -56,7 +52,7 @@ namespace QuantConnect.Algorithm.Examples
             //If we don't have any weather "SHARES" -- invest"
             if (!Portfolio.Invested)
             {
-                //Weather used as a tradable asset, like stocks, futures etc. 
+                //Weather used as a tradable asset, like stocks, futures etc.
                 if (data.Close != 0)
                 {
                     Order("BTC", (Portfolio.MarginRemaining / Math.Abs(data.Close + 1)));

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,10 +24,14 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add option strategies for a given underlying equity security.
-    /// It also shows how you can prefilter contracts easily based on strikes and expirations.
-    /// It also shows how you can inspect the option chain to pick a specific option contract to trade.
+    /// This algorithm demonstrate how to use Option Strategies (e.g. OptionStrategies.Straddle) helper classes to batch send orders for common strategies.
+    /// It also shows how you can prefilter contracts easily based on strikes and expirations, and how you can inspect the
+    /// option chain to pick a specific option contract to trade.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="options" />
+    /// <meta name="tag" content="option strategies" />
+    /// <meta name="tag" content="filter selection" />
     public class BasicTemplateOptionStrategyAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "GOOG";
@@ -52,10 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetBenchmark(equity.Symbol);
         }
 
-        /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
-        /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)

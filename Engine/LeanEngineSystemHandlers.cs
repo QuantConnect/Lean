@@ -19,6 +19,7 @@ using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Server;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -31,7 +32,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IApi _api;
         private readonly IMessagingHandler _notify;
         private readonly IJobQueueHandler _jobQueue;
-        private readonly ILeanManagement _leanManagement;
+        private readonly ILeanManager _leanManager;
 
         /// <summary>
         /// Gets the api instance used for communicating algorithm limits, status, and storing of log data
@@ -59,11 +60,11 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Gets the ILeanManagement implementation using to enhance the hosting environment
+        /// Gets the ILeanManager implementation using to enhance the hosting environment
         /// </summary>
-        public ILeanManagement LeanManagement
+        public ILeanManager LeanManager
         {
-            get { return _leanManagement; }
+            get { return _leanManager; }
         }
 
         /// <summary>
@@ -72,8 +73,8 @@ namespace QuantConnect.Lean.Engine
         /// <param name="jobQueue">The job queue used to acquire algorithm jobs</param>
         /// <param name="api">The api instance used for communicating limits and status</param>
         /// <param name="notify">The messaging handler user for passing messages from the algorithm to listeners</param>
-        /// <param name="leanManagement"></param>
-        public LeanEngineSystemHandlers(IJobQueueHandler jobQueue, IApi api, IMessagingHandler notify, ILeanManagement leanManagement)
+        /// <param name="leanManager"></param>
+        public LeanEngineSystemHandlers(IJobQueueHandler jobQueue, IApi api, IMessagingHandler notify, ILeanManager leanManager)
         {
             if (jobQueue == null)
             {
@@ -87,14 +88,14 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("notify");
             }
-            if (leanManagement == null)
+            if (leanManager == null)
             {
-                throw new ArgumentNullException("leanManagement");
+                throw new ArgumentNullException("leanManager");
             }
             _api = api;
             _jobQueue = jobQueue;
             _notify = notify;
-            _leanManagement = leanManagement;
+            _leanManager = leanManager;
         }
 
         /// <summary>
@@ -109,7 +110,7 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler")),
                 composer.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")),
                 composer.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler")), 
-                composer.GetExportedValueByTypeName<ILeanManagement>(Config.Get("lean-management-type", "LocalLeanManagement")));
+                composer.GetExportedValueByTypeName<ILeanManager>(Config.Get("lean-manager-type", "LocalLeanManager")));
         }
 
         /// <summary>
@@ -129,7 +130,8 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Api.Dispose();
-            LeanManagement.Dispose();
+            LeanManager.Dispose();
+            Log.Trace("LeanEngineSystemHandlers.Dispose(): Disposed of system handlers.");
         }
     }
 }

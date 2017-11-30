@@ -43,7 +43,8 @@ namespace QuantConnect.Brokerages
             {SecurityType.Option, Market.USA},
             {SecurityType.Future, Market.USA},
             {SecurityType.Forex, Market.FXCM},
-            {SecurityType.Cfd, Market.FXCM}
+            {SecurityType.Cfd, Market.FXCM},
+            {SecurityType.Crypto, Market.GDAX}
         }.ToReadOnlyDictionary();
 
         /// <summary>
@@ -144,8 +145,13 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security's whose leverage we seek</param>
         /// <returns>The leverage for the specified security</returns>
-        public decimal GetLeverage(Security security)
+        public virtual decimal GetLeverage(Security security)
         {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+                    
             switch (security.Type)
             {
                 case SecurityType.Equity:
@@ -154,6 +160,9 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                     return 50m;
+
+                case SecurityType.Crypto:
+                    return 1m;
 
                 case SecurityType.Base:
                 case SecurityType.Commodity:
@@ -186,6 +195,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Base:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     return new ConstantFeeModel(0m);
 
                 case SecurityType.Equity:
@@ -214,6 +224,7 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     return new ConstantSlippageModel(0);
 
                 case SecurityType.Commodity:

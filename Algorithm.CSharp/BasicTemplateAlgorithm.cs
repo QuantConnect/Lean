@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,12 +18,16 @@ using QuantConnect.Data;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
+    /// framework you can use for designing an algorithm.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="using quantconnect" />
+    /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateAlgorithm : QCAlgorithm
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -32,8 +36,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
+
             // Find more symbols here: http://quantconnect.com/data
-            AddEquity("SPY", Resolution.Second);
+            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
+            // Futures Resolution: Tick, Second, Minute
+            // Options Resolution: Minute Only.
+            AddEquity("SPY", Resolution.Minute);
+
+            // There are other assets with similar methods. See "Selecting Options" etc for more details.
+            // AddFuture, AddForex, AddCfd, AddOption
         }
 
         /// <summary>

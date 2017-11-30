@@ -2,7 +2,7 @@
 
 :: IB Controller Sourced-Modified from https://github.com/ib-controller/ib-controller
 @echo off
-set TWS_MAJOR_VRSN=960
+set TWS_MAJOR_VRSN=968
 set TRADING_MODE=%6
 
 set IBC_PATH=%1

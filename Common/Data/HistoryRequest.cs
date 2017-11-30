@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ using System;
 using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -32,7 +33,7 @@ namespace QuantConnect.Data
         public DateTime StartTimeUtc { get; set; }
 
         /// <summary>
-        /// Gets the end time of the request. 
+        /// Gets the end time of the request.
         /// </summary>
         public DateTime EndTimeUtc { get; set; }
 
@@ -69,7 +70,12 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the time zone of the time stamps on the raw input data
         /// </summary>
-        public DateTimeZone TimeZone { get; set; }
+        public DateTimeZone DataTimeZone { get; set; }
+
+        /// <summary>
+        /// TickType of the history request
+        /// </summary>
+        public TickType TickType { get; set; }
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -81,22 +87,6 @@ namespace QuantConnect.Data
         /// </summary>
         public DataNormalizationMode DataNormalizationMode { get; set; }
 
-        /// <summary>
-        /// Initializes a new default instance of the <see cref="HistoryRequest"/> class
-        /// </summary>
-        public HistoryRequest()
-        {
-            StartTimeUtc = EndTimeUtc = DateTime.UtcNow;
-            Symbol = Symbol.Empty;
-            ExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            Resolution = Resolution.Minute;
-            FillForwardResolution = Resolution.Minute;
-            IncludeExtendedMarketHours = false;
-            DataType = typeof (TradeBar);
-            TimeZone = TimeZones.NewYork;
-            IsCustomData = false;
-            DataNormalizationMode = DataNormalizationMode.Adjusted;
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified parameters
@@ -107,33 +97,37 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol to request data for</param>
         /// <param name="resolution">The requested data resolution</param>
         /// <param name="exchangeHours">The exchange hours used in fill forward processing</param>
+        /// <param name="dataTimeZone">The time zone of the data</param>
         /// <param name="fillForwardResolution">The requested fill forward resolution for this request</param>
         /// <param name="includeExtendedMarketHours">True to include data from pre/post market hours</param>
         /// <param name="isCustomData">True for custom user data, false for normal QC data</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
-        public HistoryRequest(DateTime startTimeUtc, 
+        /// <param name="tickType">The tick type used to created the <see cref="SubscriptionDataConfig"/> for the retrieval of history data</param>
+        public HistoryRequest(DateTime startTimeUtc,
             DateTime endTimeUtc,
             Type dataType,
             Symbol symbol,
             Resolution resolution,
             SecurityExchangeHours exchangeHours,
+            DateTimeZone dataTimeZone,
             Resolution? fillForwardResolution,
             bool includeExtendedMarketHours,
             bool isCustomData,
-            DataNormalizationMode dataNormalizationMode
-            )
+            DataNormalizationMode dataNormalizationMode,
+            TickType tickType)
         {
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
             Symbol = symbol;
             ExchangeHours = exchangeHours;
+            DataTimeZone = dataTimeZone;
             Resolution = resolution;
             FillForwardResolution = fillForwardResolution;
             IncludeExtendedMarketHours = includeExtendedMarketHours;
             DataType = dataType;
             IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
-            TimeZone = exchangeHours.TimeZone;
+            TickType = tickType;
         }
 
         /// <summary>
@@ -155,7 +149,8 @@ namespace QuantConnect.Data
             DataType = config.Type;
             IsCustomData = config.IsCustomData;
             DataNormalizationMode = config.DataNormalizationMode;
-            TimeZone = config.DataTimeZone;
+            DataTimeZone = config.DataTimeZone;
+            TickType = config.TickType;
         }
     }
 }

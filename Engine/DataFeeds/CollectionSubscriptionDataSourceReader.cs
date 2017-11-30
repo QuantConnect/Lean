@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class CollectionSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
-        
+
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public event EventHandler<InvalidSourceEventArgs> InvalidSource;
 
         /// <summary>
-        /// Event fired when an exception is thrown during a call to 
+        /// Event fired when an exception is thrown during a call to
         /// <see cref="BaseData.Reader(SubscriptionDataConfig, string, DateTime, bool)"/>
         /// </summary>
         public event EventHandler<ReaderErrorEventArgs> ReaderError;
@@ -73,42 +73,54 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SubscriptionDataSourceReader.CheckRemoteFileCache();
 
             IStreamReader reader = null;
-            var instances = new BaseDataCollection();
             try
             {
                 switch (source.TransportMedium)
                 {
                     default:
                     case SubscriptionTransportMedium.Rest:
-                        reader = new RestSubscriptionStreamReader(source.Source);
+                        reader = new RestSubscriptionStreamReader(source.Source, source.Headers);
                         break;
                     case SubscriptionTransportMedium.LocalFile:
                         reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
                         break;
                     case SubscriptionTransportMedium.RemoteFile:
-                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache);
+                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
                         break;
                 }
 
                 var raw = "";
-                try
+                while (!reader.EndOfStream)
                 {
-                    raw = reader.ReadLine();
-                    var result = _factory.Reader(_config, raw, _date, _isLiveMode);
-                    instances = result as BaseDataCollection;
-                    if (instances == null)
+                    BaseDataCollection instances;
+                    try
                     {
-                        OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
+                        raw = reader.ReadLine();
+                        var result = _factory.Reader(_config, raw, _date, _isLiveMode);
+                        instances = result as BaseDataCollection;
+                        if (instances == null)
+                        {
+                            OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
+                            continue;
+                        }
                     }
-                }
-                catch (Exception err)
-                {
-                    OnReaderError(raw, err);
-                }
+                    catch (Exception err)
+                    {
+                        OnReaderError(raw, err);
+                        continue;
+                    }
 
-                foreach (var instance in instances.Data)
-                {
-                    yield return instance;
+                    if (_isLiveMode)
+                    {
+                        yield return instances;
+                    }
+                    else
+                    {
+                        foreach (var instance in instances.Data)
+                        {
+                            yield return instance;
+                        }
+                    }
                 }
             }
             finally

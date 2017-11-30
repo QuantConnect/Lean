@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,40 +18,32 @@ using System;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example algorithm giving an introduction into using IDataConsolidators.  
-    /// 
+    /// Example algorithm giving an introduction into using IDataConsolidators.
     /// This is an advanced QC concept and requires a certain level of comfort using C# and its event system.
-    /// 
+    ///
     /// What is an IDataConsolidator?
     /// IDataConsolidator is a plugin point that can be used to transform your data more easily.
     /// In this example we show one of the simplest consolidators, the TradeBarConsolidator.
     /// This type is capable of taking a timespan to indicate how long each bar should be, or an
     /// integer to indicate how many bars should be aggregated into one.
-    /// 
+    ///
     /// When a new 'consolidated' piece of data is produced by the IDataConsolidator, an event is fired
     /// with the argument of the new data.
-    /// 
-    /// If you are unfamiliar with C# events, or events in general, you may find this useful. This is
-    /// Microsoft's overview of events in C#
-    /// 
-    ///     http://msdn.microsoft.com/en-us/library/aa645739%28v=vs.71%29.aspx
-    /// 
-    /// Also, if you're unfamiliar with using lambda expressions in C#, you may find this useful. This
-    /// is Microsoft's overview of lambda expressions in C# (anonymous functions)
-    /// 
-    ///     http://msdn.microsoft.com/en-us/library/bb397687.aspx
-    /// 
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="consolidating data" />
     public class DataConsolidationAlgorithm : QCAlgorithm
     {
-        TradeBar _last;
+        private TradeBar _last;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
+        /// <meta name="tag" content="using data" />
+        /// <meta name="tag" content="consolidating data" />
         public override void Initialize()
         {
             AddSecurity(SecurityType.Equity, "SPY");
@@ -64,7 +56,7 @@ namespace QuantConnect.Algorithm.Examples
             // define our 30 minute trade bar consolidator. we can access the 30 minute bar
             // from the DataConsolidated events
             var thirtyMinuteConsolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(30));
-            
+
             // attach our event handler. the event handler is a function that will be called each time we produce
             // a new consolidated piece of data.
             thirtyMinuteConsolidator.DataConsolidated += ThirtyMinuteBarHandler;

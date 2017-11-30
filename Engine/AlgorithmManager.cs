@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine
         private readonly object _lock = new object();
         private string _algorithmId = "";
         private DateTime _currentTimeStepTime;
-        private readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 10));
+        private readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20));
         private long _dataPointCount;
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     return "Algorithm took longer than 10 minutes on a single time loop.";
                 }
-                
+
                 return null;
             };
             _liveMode = liveMode;
@@ -130,10 +130,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
         /// <param name="systemHandlersServer"></param>
-        /// <param name="leanManagement">ILeanManagement implementation that is updated periodically with the IAlgorithm instance</param>
+        /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManagement leanManagement, CancellationToken token) 
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token)
         {
             //Initialize:
             _dataPointCount = 0;
@@ -173,10 +173,10 @@ namespace QuantConnect.Lean.Engine
                 .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
-            foreach (var config in algorithm.SubscriptionManager.Subscriptions) 
+            foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
                 //If type is a custom feed, check for a dedicated event handler
-                if (config.IsCustomData) 
+                if (config.IsCustomData)
                 {
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
@@ -219,8 +219,8 @@ namespace QuantConnect.Lean.Engine
                     return;
                 }
 
-                // Update the ILeanManagement 
-                leanManagement.Update();
+                // Update the ILeanManager
+                leanManager.Update();
 
                 var time = timeSlice.Time;
                 _dataPointCount += timeSlice.DataPointCount;
@@ -266,7 +266,7 @@ namespace QuantConnect.Lean.Engine
 
                 //Update algorithm state after capturing performance from previous day
 
-                // If backtesting, we need to check if there are realtime events in the past 
+                // If backtesting, we need to check if there are realtime events in the past
                 // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
                 // and fire them with the correct date/time.
                 if (backtestMode)
@@ -461,21 +461,13 @@ namespace QuantConnect.Lean.Engine
                 {
                     foreach (var update in timeSlice.ConsolidatorUpdateData)
                     {
-                        var resolutionTimeSpan = update.Target.Resolution.ToTimeSpan();
                         var consolidators = update.Target.Consolidators;
                         foreach (var consolidator in consolidators)
                         {
                             foreach (var dataPoint in update.Data)
                             {
-                                // Filter out data with resolution higher than the data subscription resolution.
-                                // This is needed to avoid feeding in higher resolution data, typically fill-forward bars.
-                                // It also prevents volume-based indicators or consolidators summing up volume to generate
-                                // invalid values.
-                                var algorithmTimeSpan = resolutionTimeSpan == TimeSpan.FromTicks(0)
-                                    ? TimeSpan.FromTicks(0)
-                                    : TimeSpan.FromSeconds(1);
-                                if (update.Target.Resolution == Resolution.Tick ||
-                                    algorithm.UtcTime.RoundDown(algorithmTimeSpan) == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.ExchangeTimeZone))
+                                // only push data into consolidators on the native, subscribed to resolution
+                                if (EndTimeIsInNativeResolution(update.Target, dataPoint.EndTime))
                                 {
                                     consolidator.Update(dataPoint);
                                 }
@@ -555,7 +547,7 @@ namespace QuantConnect.Lean.Engine
                 {
 
                     // TODO: For backwards compatibility only. Remove in 2017
-                    // For compatibility with Forex Trade data, moving 
+                    // For compatibility with Forex Trade data, moving
                     if (timeSlice.Slice.QuoteBars.Count > 0)
                     {
                         foreach (var tradeBar in timeSlice.Slice.QuoteBars.Where(x => x.Key.ID.SecurityType == SecurityType.Forex))
@@ -655,7 +647,7 @@ namespace QuantConnect.Lean.Engine
             results.SampleRange(algorithm.GetChartUpdates());
             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
             SampleBenchmark(algorithm, results, backtestMode ? _previousTime.Date : _previousTime);
-            
+
             //Check for divide by zero
             if (portfolioValue == 0m)
             {
@@ -663,7 +655,7 @@ namespace QuantConnect.Lean.Engine
             }
             else
             {
-                results.SamplePerformance(backtestMode ? _previousTime.Date : _previousTime, 
+                results.SamplePerformance(backtestMode ? _previousTime.Date : _previousTime,
                     Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
             }
         } // End of Run();
@@ -675,7 +667,7 @@ namespace QuantConnect.Lean.Engine
         {
             lock (_lock)
             {
-                //We don't want anyone elseto set our internal state to "Running". 
+                //We don't want anyone elseto set our internal state to "Running".
                 //This is controlled by the algorithm private variable only.
                 if (state != AlgorithmStatus.Running)
                 {
@@ -789,7 +781,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         yield return timeSlice;
                         lastHistoryTimeUtc = timeSlice.Time;
-                    } 
+                    }
                 }
             }
 
@@ -832,7 +824,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             continue;
                         }
-                        
+
                         // prevent us from doing these checks every loop
                         lastHistoryTimeUtc = null;
                     }
@@ -851,7 +843,7 @@ namespace QuantConnect.Lean.Engine
                         // catching up to real time data
                         nextStatusTime = DateTime.UtcNow.AddSeconds(1);
                         var percent = (int) (100*(timeSlice.Time.Ticks - start)/(double) (DateTime.UtcNow.Ticks - start));
-                        results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));   
+                        results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
                     }
                 }
                 yield return timeSlice;
@@ -905,7 +897,7 @@ namespace QuantConnect.Lean.Engine
 
 
         /// <summary>
-        /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>. 
+        /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>.
         /// </summary>
         private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, List<Delisting> delistings)
         {
@@ -996,6 +988,20 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Determines if a data point is in it's native, configured resolution
+        /// </summary>
+        private static bool EndTimeIsInNativeResolution(SubscriptionDataConfig config, DateTime dataPointEndTime)
+        {
+            if (config.Increment == TimeSpan.Zero)
+            {
+                return true;
+            }
+
+            var roundedDataPointEndTime = dataPointEndTime.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
+            return dataPointEndTime == roundedDataPointEndTime;
         }
     }
 }

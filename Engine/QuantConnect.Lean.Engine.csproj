@@ -31,7 +31,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -92,7 +92,6 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\Release\</OutputPath>
@@ -104,7 +103,6 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -145,6 +143,11 @@
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />
+    <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
@@ -184,7 +187,6 @@
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\SubscriptionLimiter.cs" />
     <Compile Include="DataFeeds\SubscriptionSynchronizer.cs" />
     <Compile Include="DataFeeds\Subscription.cs" />
     <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />
@@ -201,11 +203,12 @@
     <Compile Include="DataFeeds\UpdateData.cs" />
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
-    <Compile Include="Server\LocalLeanManagement.cs" />
+    <Compile Include="Results\BaseResultsHandler.cs" />
+    <Compile Include="Server\LocalLeanManager.cs" />
     <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
     <Compile Include="HistoricalData\SynchronizingHistoryProvider.cs" />
-    <Compile Include="Server\ILeanManagement.cs" />
+    <Compile Include="Server\ILeanManager.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />
     <Compile Include="LeanEngineSystemHandlers.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />

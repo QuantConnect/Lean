@@ -2,7 +2,8 @@
 Lean C# Algorithmic Trading Engine
 =========
 
-[![Join the chat at https://quantconnect-slack.herokuapp.com](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://quantconnect-slack.herokuapp.com/) &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">  &nbsp;&nbsp;&nbsp;&nbsp;  [![Coverage Status](https://coveralls.io/repos/QuantConnect/Lean/badge.svg?branch=master&service=github)](https://coveralls.io/github/QuantConnect/Lean?branch=master)
+[![Join the chat at https://www.quantconnect.com/slack](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://www.quantconnect.com/slack) &nbsp;&nbsp;&nbsp;&nbsp;
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean)
 
 [Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
 
@@ -10,11 +11,11 @@ Lean C# Algorithmic Trading Engine
 
 ## Introduction ##
 
-Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. The community has contributed additional connectors to F#, Visual Basic and Java.
-
-Lean drives the web based backtesting platform [QuantConnect][4].
+Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. Lean drives the web based algorithmic trading platform [QuantConnect][4].
 
 ## System Overview ##
+
+![alt tag](Documentation/2-Overview-Detailed-New.png)
 
 Lean outsourced key infrastructure management to plugins. The most important plugins are:
 
@@ -62,7 +63,7 @@ mono QuantConnect.Lean.Launcher.exe
 
 ### Linux (Debian, Ubuntu)
 
-- Install [Mono](http://www.mono-project.com/docs/getting-started/install/linux/):
+- Install [Mono](http://www.mono-project.com/download/#download-lin):
 ```
 sudo apt-get update && rm -rf /var/lib/apt/lists/*
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
@@ -72,22 +73,30 @@ sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceass
 ```
 - Install Nuget and Python
 ```
-sudo apt-get update && apt-get install -y nuget python-pip
+sudo apt-get update && sudo apt-get install -y nuget python-pip
 ```
 - Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
-xbuild
+xbuild QuantConnect.Lean.sln
 ```
 If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
 
 If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
+
+If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
 
 - Run the compiled `exe` file:
 ```
 cd Lean/Launcher/bin/Debug
 mono ./QuantConnect.Lean.Launcher.exe
 ```
+- Interactive Brokers set up details
+
+Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
+
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001 to match the settings in your IBGateway/TWS.
+
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
@@ -98,9 +107,17 @@ By default Visual Studio includes NuGet, if your version cannot find DLL referen
 
 ### Python Support
 
-- Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-- Windows: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
-- macOs: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.mac` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
+A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
+
+### R Support
+
+- Install R-base if you need to call R in your algorithm.
+For Linux users:
+```
+sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
+```
+For Windows and macOs users:
+Please visit the official [R website](https://www.r-project.org/) to download R. 
 
 ### QuantConnect plugin
 
@@ -112,7 +129,6 @@ VisualStudio plugin writes log data to the VisualStudio activity log, but only i
 ```
 devenv /log <path-to-log>
 ```
-
 
 ## Issues and Feature Requests ##
 
@@ -126,8 +142,7 @@ The mailing list for the project can be found on [Google Groups][6]
 
 Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
-## Build Status ##
-<img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
+All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
 ## Acknowledgements ##
 
@@ -136,8 +151,8 @@ The open sourcing of QuantConnect would not have been possible without the suppo
 Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan, Paul R, Nik M, Scott Y, BinaryExecutor.com, Tadas T, Matt B, Binumon P, Zyron, Mike O, TC, Luigi, Lester Z, Andreas H, Eugene K, Hugo P, Robert N, Christofer O, Ramesh L, Nicholas S, Jonathan E, Marc R, Raghav N, Marcus, Hakan D, Sergey M, Peter McE, Jim M, INTJCapital.com, Richard E, Dominik, John L, H. Orlandella, Stephen L, Risto K, E.Subasi, Peter W, Hui Z, Ross F, Archibald112, MooMooForex.com, Jae S, Eric S, Marco D, Jerome B, James B. Crocker, David Lypka, Edward T, Charlie Guse, Thomas D, Jordan I, Mark S, Bengt K, Marc D, Al C, Jan W, Ero C, Eranmn, Mitchell S, Helmuth V, Michael M, Jeremy P, PVS78, Ross D, Sergey K, John Grover, Fahiz Y, George L.Z., Craig E, Sean S, Brad G, Dennis H, Camila C, Egor U, David T, Cameron W, Napoleon Hernandez, Keeshen A, Daniel E, Daniel H, M.Patterson, Asen K, Virgil J, Balazs Trader, Stan L, Con L, Will D, Scott K, Barry K, Pawel D, S Ray, Richard C, Peter L, Thomas L., Wang H, Oliver Lee, Christian L.
 
 
-  [1]: https://lean.quantconnect.com "Lean Open Source Home Page"
-  [2]: https://lean.quantconnect.com/docs "Lean Documentation"
+  [1]: https://www.quantconnect.com/lean "Lean Open Source Home Page"
+  [2]: https://www.quantconnect.com/lean/docs "Lean Documentation"
   [3]: https://github.com/QuantConnect/Lean/archive/master.zip
   [4]: https://www.quantconnect.com "QuantConnect"
   [5]: https://github.com/QuantConnect/Lean/issues

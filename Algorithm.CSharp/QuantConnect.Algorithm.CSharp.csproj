@@ -11,7 +11,7 @@
     <AssemblyName>QuantConnect.Algorithm.CSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -51,6 +51,9 @@
     <Reference Include="Accord.Statistics, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Statistics.3.6.0\lib\net45\Accord.Statistics.dll</HintPath>
     </Reference>
+    <Reference Include="DynamicInterop, Version=0.7.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicInterop.0.7.4\lib\net40\DynamicInterop.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -60,13 +63,19 @@
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
-    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.4.4\lib\Python.Runtime.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.1\lib\Python.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="RDotNet, Version=1.6.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\R.NET.Community.1.6.5\lib\net40\RDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="RDotNet.NativeLibrary, Version=1.6.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\R.NET.Community.1.6.5\lib\net40\RDotNet.NativeLibrary.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -75,8 +84,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
+    <Compile Include="RollingWindowAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
+    <Compile Include="BasicTemplateFxcmVolumeAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesAlgorithmDaily.cs" />
+    <Compile Include="CallingRFromCSharp.cs" />
     <Compile Include="FuturesMomentumAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesConsolidationAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesHistoryAlgorithm.cs" />
@@ -115,12 +128,10 @@
     </Compile>
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
-    <Compile Include="EquitiesLabAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
-    <Compile Include="BenchmarkAlgorithm.cs" />
     <Compile Include="BrokerageModelAlgorithm.cs" />
     <Compile Include="BubbleAlgorithm.cs" />
     <Compile Include="CustomChartingAlgorithm.cs" />
@@ -185,16 +196,19 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets'))" />
     <Error Condition="!Exists('..\packages\Accord.3.6.0\build\Accord.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.3.6.0\build\Accord.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets'))" />
   </Target>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" />
   <Import Project="..\packages\Accord.3.6.0\build\Accord.targets" Condition="Exists('..\packages\Accord.3.6.0\build\Accord.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

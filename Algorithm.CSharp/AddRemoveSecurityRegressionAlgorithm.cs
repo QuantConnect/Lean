@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,16 +14,18 @@
 */
 
 using System;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// This algorithm demonstrates the runtime addition and removal of securities from your algorithm.
+    /// With LEAN it is possible to add and remove securities after the initialization.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="assets" />
+    /// <meta name="tag" content="regression test" />
     public class AddRemoveSecurityRegressionAlgorithm : QCAlgorithm
     {
         private DateTime lastAction;
@@ -40,8 +42,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
-            // Find more symbols here: http://quantconnect.com/data
-
             AddSecurity(SecurityType.Equity, "SPY");
         }
 
@@ -78,15 +78,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// Order events are triggered on order status changes. There are many order events including non-fill messages.
+        /// </summary>
+        /// <param name="orderEvent">OrderEvent object with details about the order status</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             if (orderEvent.Status == OrderStatus.Submitted)
             {
-                Console.WriteLine(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
+                Debug(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
             if (orderEvent.Status.IsFill())
             {
-                Console.WriteLine(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
+                Debug(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
         }
     }

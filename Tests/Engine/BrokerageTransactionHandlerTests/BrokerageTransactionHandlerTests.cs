@@ -266,18 +266,19 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algo.SetCash(100000);
 
             // Sets the Security
-            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+
+            var security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Hour, Market.GDAX, false, 3.3m, true);
 
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
             transactionHandler.Initialize(algo, new BacktestingBrokerage(algo), new BacktestingResultHandler());
 
             // Creates the order
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 123.456m, 0, 0, DateTime.Now, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 123.123456789m, 0, 0, DateTime.Now, "");
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 
-            Assert.AreEqual(123.45m, actual);
+            Assert.AreEqual(123.12345678m, actual);
         }
 
         [Test]
@@ -288,18 +289,19 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algo.SetCash(100000);
 
             // Sets the Security
-            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+
+            var security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Hour, Market.GDAX, false, 3.3m, true);
 
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
             transactionHandler.Initialize(algo, new BacktestingBrokerage(algo), new BacktestingResultHandler());
 
             // Creates the order
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -123.454m, 0, 0, DateTime.Now, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -123.123456789m, 0, 0, DateTime.Now, "");
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 
-            Assert.AreEqual(-123.45m, actual);
+            Assert.AreEqual(-123.12345678m, actual);
         }
 
         [Test]
@@ -310,14 +312,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algo.SetCash(100000);
 
             // Sets the Security
-            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+
+            var security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Hour, Market.GDAX, false, 3.3m, true);
 
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
             transactionHandler.Initialize(algo, new BacktestingBrokerage(algo), new BacktestingResultHandler());
 
             // Creates the order
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 0.009m, 0, 0, DateTime.Now, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 0.000000009m, 0, 0, DateTime.Now, "");
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 

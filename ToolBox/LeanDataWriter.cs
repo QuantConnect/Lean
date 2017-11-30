@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,7 +61,7 @@ namespace QuantConnect.ToolBox
             }
 
             // Can only process Fx and equity for now
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
@@ -240,7 +240,7 @@ namespace QuantConnect.ToolBox
         /// <returns>The full path to the output zip file</returns>
         private string GetZipOutputFileName(string baseDirectory, DateTime time)
         {
-            return LeanData.GenerateZipFilePath(baseDirectory, _symbol.Value, _securityType, _market, time, _resolution);
+            return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _dataType);
         }
 
     }

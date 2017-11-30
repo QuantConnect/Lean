@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,26 +24,27 @@ from QuantConnect.Python import PythonData
 from datetime import datetime, timedelta
 import decimal
 
+### <summary>
+### Using weather in NYC to rebalance portfolio. Assumption is people are happier when its warm.
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="custom data" />
+### <meta name="tag" content="strategy example" />
+class QCUWeatherBasedRebalancing(QCAlgorithm):
 
-class QCUWeatherBasedRebalancing(QCAlgorithm):    
-    '''Initialize: Storage for our custom data:
-    Source: http://www.wunderground.com/history/
-    Make sure to link to the actual file download URL if using dropbox.
-    url = "https://dl.dropboxusercontent.com/u/44311500/KNYC.csv"'''
-    
     def Initialize(self):
         self.SetStartDate(2013,1,1)  #Set Start Date
         self.SetEndDate(2016,1,1)    #Set End Date
-        self.SetCash(25000)          #Set Strategy Cash        
+        self.SetCash(25000)          #Set Strategy Cash
 
         self.AddEquity("SPY", Resolution.Daily)
-        self.symbol = self.Securities["SPY"].Symbol    
-    
+        self.symbol = self.Securities["SPY"].Symbol
+
         # KNYC is NYC Central Park. Find other locations at
         # https://www.wunderground.com/history/
         self.AddData(Weather, "KNYC", Resolution.Minute)
         self.weather = self.Securities["KNYC"].Symbol
-        
+
         self.tradingDayCount = 0
         self.rebalanceFrequency = 10
 
@@ -55,9 +56,9 @@ class QCUWeatherBasedRebalancing(QCAlgorithm):
         # Scale from -5C to +25C :: -5C == 100%, +25C = 0% invested
         fraction = -(data[self.weather].MinC + 5) / 30 if self.weather in data else 0
         #self.Debug("Faction {0}".format(faction))
-        
+
         # Rebalance every 10 days:
-        if self.tradingDayCount >= self.rebalanceFrequency: 
+        if self.tradingDayCount >= self.rebalanceFrequency:
             self.SetHoldings(self.symbol, fraction)
             self.tradingDayCount = 0
 
@@ -68,17 +69,17 @@ class QCUWeatherBasedRebalancing(QCAlgorithm):
 
 class Weather(PythonData):
     ''' Weather based rebalancing'''
-    
+
     def GetSource(self, config, date, isLive):
         source = "https://dl.dropboxusercontent.com/u/44311500/KNYC.csv"
         source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.year);
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);       
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
 
 
     def Reader(self, config, line, date, isLive):
         # If first character is not digit, pass
         if not (line.strip() and line[0].isdigit()): return None
-        
+
         data = line.split(',')
         weather = Weather()
         weather.Symbol = config.Symbol

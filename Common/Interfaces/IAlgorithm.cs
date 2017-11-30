@@ -121,7 +121,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         IHistoryProvider HistoryProvider
         {
-            get; 
+            get;
             set;
         }
 
@@ -130,7 +130,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         AlgorithmStatus Status
         {
-            get; 
+            get;
             set;
         }
 
@@ -149,6 +149,7 @@ namespace QuantConnect.Interfaces
         string Name
         {
             get;
+            set;
         }
 
         /// <summary>
@@ -261,7 +262,7 @@ namespace QuantConnect.Interfaces
         /// the value of the benchmark at a requested date/time
         /// </summary>
         IBenchmark Benchmark
-        { 
+        {
             get;
         }
 
@@ -285,6 +286,14 @@ namespace QuantConnect.Interfaces
         /// Gets the user settings for the algorithm
         /// </summary>
         AlgorithmSettings Settings
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        IOptionChainProvider OptionChainProvider
         {
             get;
         }
@@ -546,7 +555,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="handler">The message handler to use</param>
         void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
-        
+
         /// <summary>
         /// Set the historical data provider
         /// </summary>
@@ -570,5 +579,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
         void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes);
+
+        /// <summary>
+        /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        /// <param name="optionChainProvider">The option chain provider</param>
+        void SetOptionChainProvider(IOptionChainProvider optionChainProvider);
     }
 }

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data.Market;
 
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             InteractiveBrokersGatewayRunner.StartFromConfiguration();
             
-            var ib = new InteractiveBrokersBrokerage(new OrderProvider(), new SecurityProvider());
+            var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider());
             ib.Connect();
 
             ib.Subscribe(null, new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});

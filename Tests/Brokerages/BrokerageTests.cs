@@ -24,6 +24,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.GDAX;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -43,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                return new []
+                return new[]
                 {
                     new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
                     new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
@@ -123,6 +125,12 @@ namespace QuantConnect.Tests.Brokerages
                 Assert.Fail("Failed to connect to brokerage");
             }
 
+            //gdax does not have a user data stream. Instead, we need to symbol subscribe and monitor for our orders.
+            if (brokerage.Name == "GDAX")
+            {
+                ((QuantConnect.Brokerages.GDAX.GDAXBrokerage)brokerage).Subscribe(new[] { Symbol });
+            }
+
             Log.Trace("");
             Log.Trace("GET OPEN ORDERS");
             Log.Trace("");
@@ -176,11 +184,11 @@ namespace QuantConnect.Tests.Brokerages
         internal static Security CreateSecurity(Symbol symbol)
         {
             return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
         }
 
-        public OrderProvider OrderProvider 
+        public OrderProvider OrderProvider
         {
             get { return _orderProvider ?? (_orderProvider = new OrderProvider()); }
         }
@@ -268,9 +276,9 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// Gets the default order quantity
         /// </summary>
-        protected virtual int GetDefaultQuantity()
+        protected virtual decimal GetDefaultQuantity()
         {
-            return 1; 
+            return 1;
         }
 
         [Test]
@@ -390,7 +398,7 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(GetDefaultQuantity(), afterQuantity - beforeQuantity);
         }
 
-        [Test, Ignore("This test requires reading the output and selection of a low volume security for the Brokerageage")]
+        [Test, Ignore("This test requires reading the output and selection of a low volume security for the Brokerage")]
         public void PartialFills()
         {
             var manualResetEvent = new ManualResetEvent(false);
@@ -431,7 +439,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="order">The order to be modified</param>
         /// <param name="parameters">The order test parameters that define how to modify the order</param>
         /// <param name="secondsTimeout">Maximum amount of time to wait until the order fills</param>
-        protected void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90)
+        protected virtual void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90)
         {
             if (order.Status == OrderStatus.Filled)
             {
@@ -515,14 +523,14 @@ namespace QuantConnect.Tests.Brokerages
             };
 
             Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
-            
+
             OrderProvider.Add(order);
             if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
             {
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }
-            requiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "Expected every order to fire a submitted or invalid status event");
-            desiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
+            requiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "Expected every order to fire a submitted or invalid status event");
+            desiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
 
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 

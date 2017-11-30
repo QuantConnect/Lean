@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,15 +18,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : IDictionary<Symbol, SecurityHolding>, ISecurityProvider 
+    public class SecurityPortfolioManager : IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -63,11 +64,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
-        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions) 
+        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions, IOrderProperties defaultOrderProperties = null)
         {
             Securities = securityManager;
             Transactions = transactions;
-            MarginCallModel = new DefaultMarginCallModel(this);
+            MarginCallModel = new DefaultMarginCallModel(this, defaultOrderProperties);
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
@@ -288,7 +289,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the total absolute holdings cost of the portfolio. This sums up the individual 
+        /// Gets the total absolute holdings cost of the portfolio. This sums up the individual
         /// absolute cost of each holding
         /// </summary>
         public decimal TotalAbsoluteHoldingsCost
@@ -331,7 +332,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Get the total unrealised profit in our portfolio from the individual security unrealized profits.
         /// </summary>
-        public decimal TotalUnrealisedProfit 
+        public decimal TotalUnrealisedProfit
         {
             get
             {
@@ -362,27 +363,27 @@ namespace QuantConnect.Securities
             {
                 // we can't include forex in this calculation since we would be double accounting with respect to the cash book
                 // we exclude futures as they are calculated separately
-                decimal totalHoldingsValueWithoutForex = 0;
+                decimal totalHoldingsValueWithoutForexAndCrypto = 0;
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
-                    if (position.Type != SecurityType.Forex &&
-                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
+                    if (position.Type != SecurityType.Forex && position.Type != SecurityType.Crypto &&
+                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForexAndCrypto += position.Holdings.HoldingsValue;
                 }
 
                 var totalFuturesHoldingsValue = Securities.Where(x => x.Value.Type == SecurityType.Future)
                                                            .Sum(x => x.Value.Holdings.UnrealizedProfit);
 
-                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex + totalFuturesHoldingsValue;
+                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForexAndCrypto + totalFuturesHoldingsValue;
             }
         }
 
         /// <summary>
         /// Total fees paid during the algorithm operation across all securities in portfolio.
         /// </summary>
-        public decimal TotalFees 
+        public decimal TotalFees
         {
-            get 
+            get
             {
                 return (from position in Securities.Values
                         select position.Holdings.TotalFees).Sum();
@@ -392,9 +393,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Sum of all gross profit across all securities in portfolio.
         /// </summary>
-        public decimal TotalProfit 
+        public decimal TotalProfit
         {
-            get 
+            get
             {
                 return (from position in Securities.Values
                         select position.Holdings.Profit).Sum();
@@ -404,9 +405,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Total sale volume since the start of algorithm operations.
         /// </summary>
-        public decimal TotalSaleVolume 
+        public decimal TotalSaleVolume
         {
-            get 
+            get
             {
                 return (from position in Securities.Values
                         select position.Holdings.TotalSaleVolume).Sum();
@@ -470,7 +471,7 @@ namespace QuantConnect.Securities
         /// Set the base currrency cash this algorithm is to manage.
         /// </summary>
         /// <param name="cash">Decimal cash value of portfolio</param>
-        public void SetCash(decimal cash) 
+        public void SetCash(decimal cash)
         {
             _baseCurrencyCash.SetAmount(cash);
         }
@@ -520,7 +521,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Calculate the new average price after processing a partial/complete order fill event. 
+        /// Calculate the new average price after processing a partial/complete order fill event.
         /// </summary>
         /// <remarks>
         ///     For purchasing stocks from zero holdings, the new average price is the sale price.
@@ -534,7 +535,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Scan the portfolio and the updated data for a potential margin call situation which may get the holdings below zero! 
+        /// Scan the portfolio and the updated data for a potential margin call situation which may get the holdings below zero!
         /// If there is a margin call, liquidate the portfolio immediately before the portfolio gets sub zero.
         /// </summary>
         /// <param name="issueMarginCallWarning">Set to true if a warning should be issued to the algorithm</param>
@@ -633,7 +634,7 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // only apply splits in raw data mode, 
+            // only apply splits in raw data mode,
             var mode = security.DataNormalizationMode;
             if (mode != DataNormalizationMode.Raw)
             {
@@ -698,7 +699,7 @@ namespace QuantConnect.Securities
                 var symbol = securityKV.Key;
                 var security = securityKV.Value;
 
-                // only apply splits in raw data mode, 
+                // only apply splits in raw data mode,
                 var mode = security.DataNormalizationMode;
                 if (mode != DataNormalizationMode.Raw)
                 {
@@ -730,7 +731,7 @@ namespace QuantConnect.Securities
             decimal newStrike = 0.0m;
             string newRootSymbol = null;
 
-            Func<Symbol, bool> symbolIsFound = x => 
+            Func<Symbol, bool> symbolIsFound = x =>
             {
                 var rootSymbol = newRootSymbol ?? symbol.Underlying.Value;
                 var strike = newStrike != 0.0m ? newStrike : symbol.ID.StrikePrice;
@@ -769,7 +770,7 @@ namespace QuantConnect.Securities
                     .Where(symbolIsFound)
                     .FirstOrDefault();
         }
-        
+
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.
         /// </summary>

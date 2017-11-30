@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api) 
+        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
         {
             //Initialize:
             _algorithm = algorithm;
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
 
             // set up the events for each security to fire every tradeable date before market close
-            foreach (var security in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()))
+            foreach (var security in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()))
             {
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
             }
@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 scheduledEvent.Value.IsLoggingEnabled = Log.DebuggingEnabled;
             }
         }
-        
+
         /// <summary>
         /// Normally this would run the realtime event monitoring. Backtesting is in fastforward so the realtime is linked to the backtest clock.
         /// This thread does nothing. Wait until the job is over.
@@ -133,7 +133,23 @@ namespace QuantConnect.Lean.Engine.RealTime
                 while (scheduledEvent.Value.NextEventUtcTime < time)
                 {
                     _algorithm.SetDateTime(scheduledEvent.Value.NextEventUtcTime);
-                    scheduledEvent.Value.Scan(scheduledEvent.Value.NextEventUtcTime);
+
+                    try
+                    {
+                        scheduledEvent.Value.Scan(scheduledEvent.Value.NextEventUtcTime);
+                    }
+                    catch (ScheduledEventException scheduledEventException)
+                    {
+                        var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.ScheduledEventExceptionMessage}";
+
+                        Log.Error(errorMessage);
+
+                        _resultHandler.RuntimeError(errorMessage);
+
+                        // Errors in scheduled event should be treated as runtime error
+                        // Runtime errors should end Lean execution
+                        _algorithm.RunTimeError = new Exception(errorMessage);
+                    }
                 }
             }
         }

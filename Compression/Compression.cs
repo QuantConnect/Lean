@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -23,16 +22,11 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Ionic.Zip;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
 using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 namespace QuantConnect
 {
@@ -379,13 +373,25 @@ namespace QuantConnect
             try
             {
                 if (File.Exists(destination)) File.Delete(destination);
-                System.IO.Compression.ZipFile.CreateFromDirectory(directory, destination, CompressionLevel.Fastest, includeRootInZip);
+                System.IO.Compression.ZipFile.CreateFromDirectory(directory, destination, CompressionLevel.Fastest, includeRootInZip, new PathEncoder());
                 return true;
             }
             catch (Exception err)
             {
                 Log.Error(err);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Encode the paths as linux format for cross platform compatibility
+        /// </summary>
+        private class PathEncoder : UTF8Encoding
+        {
+            public override byte[] GetBytes(string s)
+            {
+                s = s.Replace("\\", "/");
+                return base.GetBytes(s);
             }
         }
 
@@ -502,7 +508,7 @@ namespace QuantConnect
                         var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            // Unable to locate zip entry 
+                            // Unable to locate zip entry
                             return null;
                         }
 
@@ -634,7 +640,7 @@ namespace QuantConnect
             StreamReader reader = null;
             try
             {
-                //Initialise:                    
+                //Initialise:
                 MemoryStream file;
 
                 //If file exists, open a zip stream for it.
@@ -724,7 +730,7 @@ namespace QuantConnect
 
                     //Save the file name for later:
                     files.Add(fullZipToPath);
-                    //Log.Trace("Data.UnzipToFolder(): Input File: " + zipFile + ", Output Directory: " + fullZipToPath); 
+                    //Log.Trace("Data.UnzipToFolder(): Input File: " + zipFile + ", Output Directory: " + fullZipToPath);
 
                     //Copy the data in buffer chunks
                     using (var streamWriter = File.Create(fullZipToPath))
@@ -843,6 +849,22 @@ namespace QuantConnect
             using (var zip = new ICSharpCode.SharpZipLib.Zip.ZipFile(path))
             {
                 return zip.TestArchive(true);
+            }
+        }
+
+        /// <summary>
+        /// Returns the entry file names contained in a zip file
+        /// </summary>
+        /// <param name="zipFileName">The zip file name</param>
+        /// <returns>An IEnumerable of entry file names</returns>
+        public static IEnumerable<string> GetZipEntryFileNames(string zipFileName)
+        {
+            using (var zip = ZipFile.Read(zipFileName))
+            {
+                foreach (var entry in zip)
+                {
+                    yield return entry.FileName;
+                }
             }
         }
     }

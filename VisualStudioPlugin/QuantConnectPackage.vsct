@@ -52,7 +52,7 @@
         <Parent guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" />
         <Icon guid="quantConnectImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Send for backtesting</ButtonText>
+          <ButtonText>Send for Backtesting</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidQuantConnectSolutionExplorerSet" id="SaveToQuantConnect" priority="0x0101" type="Button">

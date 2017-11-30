@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var file = OS.IsWindows ? batchFilename : bashFilename;
                 var arguments = string.Format("{0} {1} {2} {3} {4} {5} {6}", file, ibControllerDirectory, twsDirectory, userId, password, useTwsSwitch, tradingMode);
 
-                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for account " + userId + "...");
+                Log.Trace($"InteractiveBrokersGatewayRunner.Start(): Launching IBController: {file} {ibControllerDirectory} {twsDirectory} {userId} XXX {useTwsSwitch} {tradingMode}");
 
                 var processStartInfo = OS.IsWindows ? new ProcessStartInfo("cmd.exe", "/C " + arguments) : new ProcessStartInfo("bash", arguments);
 
@@ -92,6 +92,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 processStartInfo.RedirectStandardOutput = false;
                 var process = Process.Start(processStartInfo);
                 _scriptProcessId = process != null ? process.Id : 0;
+
+                // wait a few seconds for IB to start up
+                Thread.Sleep(TimeSpan.FromSeconds(30));
             }
             catch (Exception err)
             {
@@ -212,9 +215,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public static void Restart()
         {
             Start(_ibControllerDirectory, _twsDirectory, _userId, _password, _tradingMode, _useTws);
-
-            // wait a few seconds for IB to start up
-            Thread.Sleep(TimeSpan.FromSeconds(30));
         }
 
         /// <summary>

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,12 +24,12 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Universe Selection regression algorithm simulates an edge case.
-    /// In one week, Google listed two new symbols, delisted one of them and changed tickers.
+    /// Universe Selection regression algorithm simulates an edge case. In one week, Google listed two new symbols, delisted one of them and changed tickers.
     /// </summary>
+    /// <meta name="tag" content="regression test" />
     public class UniverseSelectionRegressionAlgorithm : QCAlgorithm
     {
-        private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>(); 
+        private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>();
         private SecurityChanges _changes;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _changes = null;
             }
         }
-        
+
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             _changes = changes;
@@ -123,10 +123,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var security in Portfolio.Securities.Values.Where(x => x.Invested))
             {
-                // At the end, we should hold 100 shares of: 
+                // At the end, we should hold 100 shares of:
                 // - SPY                (bought on March, 25th 2014),
                 // - GOOG  T1AZ164W5VTX (bought on March, 26th 2014),
-                // - GOOCV VP83T1ZUHROL (bought on March, 28th 2014). 
+                // - GOOCV VP83T1ZUHROL (bought on March, 28th 2014).
                 AssertQuantity(security, 100);
             }
         }

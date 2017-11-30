@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// TradeBar class for second and minute resolution data: 
+    /// TradeBar class for second and minute resolution data:
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
     public class TradeBar : BaseData, IBaseDataBar
@@ -98,7 +98,7 @@ namespace QuantConnect.Data.Market
         public override DateTime EndTime
         {
             get { return Time + Period; }
-            set { Period = value - Time; } 
+            set { Period = value - Time; }
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Cloner constructor for implementing fill forward. 
+        /// Cloner constructor for implementing fill forward.
         /// Return a new instance with the same values as this original.
         /// </summary>
         /// <param name="original">Original tradebar object we seek to clone</param>
@@ -179,7 +179,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) 
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             //Handle end of file:
             if (line == null)
@@ -204,6 +204,9 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Forex:
                         return ParseForex<TradeBar>(config, line, date);
 
+                    case SecurityType.Crypto:
+                        return ParseCrypto<TradeBar>(config, line, date);
+
                     case SecurityType.Cfd:
                         return ParseCfd<TradeBar>(config, line, date);
 
@@ -212,6 +215,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, line, date);
+
                 }
             }
             catch (Exception err)
@@ -235,6 +239,7 @@ namespace QuantConnect.Data.Market
                     return ParseEquity(config, line, baseDate);
 
                 case SecurityType.Forex:
+                case SecurityType.Crypto:
                     return ParseForex(config, line, baseDate);
 
                 case SecurityType.Cfd:
@@ -327,6 +332,43 @@ namespace QuantConnect.Data.Market
             tradeBar.High = csv[2].ToDecimal();
             tradeBar.Low = csv[3].ToDecimal();
             tradeBar.Close = csv[4].ToDecimal();
+
+            return tradeBar;
+        }
+
+        /// <summary>
+        /// Parses crypto trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        public static T ParseCrypto<T>(SubscriptionDataConfig config, string line, DateTime date)
+            where T : TradeBar, new()
+        {
+            var tradeBar = new T
+            {
+                Symbol = config.Symbol,
+                Period = config.Increment
+            };
+
+            var csv = line.ToCsv(6);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                //Fast decimal conversion
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            tradeBar.Open = csv[1].ToDecimal();
+            tradeBar.High = csv[2].ToDecimal();
+            tradeBar.Low = csv[3].ToDecimal();
+            tradeBar.Close = csv[4].ToDecimal();
+            tradeBar.Volume = csv[5].ToDecimal();
 
             return tradeBar;
         }

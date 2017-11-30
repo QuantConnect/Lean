@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,11 +35,13 @@ namespace QuantConnect.Brokerages.Backtesting
         // is not exactly the fastest operation and Scan gets called at least twice per
         // time loop
         private bool _needsScan;
-        // this is the algorithm under test
-        protected readonly IAlgorithm Algorithm;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
 
+        /// <summary>
+        /// This is the algorithm under test
+        /// </summary>
+        protected readonly IAlgorithm Algorithm;
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -68,6 +70,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Creates a new BacktestingBrokerage for the specified algorithm. Adds market simulation to BacktestingBrokerage;
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketSimulation">The backtesting market simulation instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
             : base("Backtesting Brokerage")
         {
@@ -102,8 +105,8 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol) 
-                    where security.Holdings.AbsoluteQuantity > 0 
+            return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol)
+                    where security.Holdings.AbsoluteQuantity > 0
                     select new Holding(security)).ToList();
         }
 
@@ -123,6 +126,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
+            Log.Trace("BacktestingBrokerage.PlaceOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
             if (order.Status == OrderStatus.New)
             {
                 lock (_needsScanLock)
@@ -151,7 +156,9 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            if (true)
+            Log.Trace("BacktestingBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+
+            lock (_needsScanLock)
             {
                 Order pending;
                 if (!_pending.TryGetValue(order.Id, out pending))
@@ -160,22 +167,19 @@ namespace QuantConnect.Brokerages.Backtesting
                     return false;
                 }
 
-                lock (_needsScanLock)
-                {
-                    _needsScan = true;
-                    SetPendingOrder(order);
-                }
-
-                var orderId = order.Id.ToString();
-                if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
-
-                // fire off the event that says this order has been updated
-                const int orderFee = 0;
-                var updated = new OrderEvent(order, Algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
-                OnOrderEvent(updated);
-
-                return true;
+                _needsScan = true;
+                SetPendingOrder(order);
             }
+
+            var orderId = order.Id.ToString();
+            if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
+
+            // fire off the event that says this order has been updated
+            const int orderFee = 0;
+            var updated = new OrderEvent(order, Algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
+            OnOrderEvent(updated);
+
+            return true;
         }
 
         /// <summary>
@@ -185,11 +189,16 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            Order pending;
-            if (!_pending.TryRemove(order.Id, out pending))
+            Log.Trace("BacktestingBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
+            lock (_needsScanLock)
             {
-                // can't cancel something that isn't there
-                return false;
+                Order pending;
+                if (!_pending.TryRemove(order.Id, out pending))
+                {
+                    // can't cancel something that isn't there
+                    return false;
+                }
             }
 
             var orderId = order.Id.ToString();
@@ -227,6 +236,12 @@ namespace QuantConnect.Brokerages.Backtesting
                 foreach (var kvp in _pending.OrderBy(x => x.Key))
                 {
                     var order = kvp.Value;
+                    if (order == null)
+                    {
+                        Log.Error("BacktestingBrokerage.Scan(): Null pending order found: " + kvp.Key);
+                        _pending.TryRemove(kvp.Key, out order);
+                        continue;
+                    }
 
                     if (order.Status.IsClosed())
                     {
@@ -366,7 +381,7 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
-        /// Runs market simulation 
+        /// Runs market simulation
         /// </summary>
         public void SimulateMarket()
         {

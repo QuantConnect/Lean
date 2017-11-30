@@ -121,7 +121,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 var algorithmManager = new AlgorithmManager(liveMode);
 
-                leanEngineSystemHandlers.LeanManagement.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+                leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
 
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
                 engine.Run(job, algorithmManager, assemblyPath);
@@ -136,6 +136,10 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineSystemHandlers.Dispose();
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
+
+                Log.Trace("Program.Main(): Exiting Lean...");
+
+                Environment.Exit(0);
             }
         }
     }

@@ -211,7 +211,8 @@ namespace QuantConnect.AlgorithmFactory
                 
                 // if the assembly is located in the base directory then don't bother loading the pdbs
                 // manually, they'll be loaded automatically by the .NET runtime.
-                if (new FileInfo(assemblyPath).DirectoryName == AppDomain.CurrentDomain.BaseDirectory)
+                var directoryName = new FileInfo(assemblyPath).DirectoryName;
+                if (directoryName != null && directoryName.TrimEnd(Path.DirectorySeparatorChar) != AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar))
                 {
                     // see if the pdb exists
                     var mdbFilename = assemblyPath + ".mdb";

@@ -11,8 +11,10 @@
     <AssemblyName>QuantConnect.Algorithm.Python</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,119 +36,85 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="QuandlFuturesDataAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CustomChartingAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="PythonPackageTestAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="BasicTemplateFuturesAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="BasicTemplateOptionsAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CustomDataBitcoinAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Compile Include="PythonAlgorithm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="build.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="build.bat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="BasicTemplateAlgorithm.py" />
+    <None Include="BasicTemplateDailyAlgorithm.py" />
+    <None Include="BasicTemplateFillForwardAlgorithm.py" />
+    <None Include="BasicTemplateForexAlgorithm.py" />
+    <None Include="BasicTemplateFuturesAlgorithm.py" />
+    <None Include="BasicTemplateFuturesConsolidationAlgorithm.py" />
+    <None Include="BasicTemplateFuturesHistoryAlgorithm.py" />
+    <None Include="BasicTemplateOptionsAlgorithm.py" />
+    <None Include="BasicTemplateOptionsFilterUniverseAlgorithm.py" />
+    <None Include="BasicTemplateOptionsHistoryAlgorithm.py" />
+    <None Include="BasicTemplateOptionStrategyAlgorithm.py" />
+    <None Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <None Include="BrokerageModelAlgorithm.py" />
+    <None Include="BubbleAlgorithm.py" />
+    <None Include="build.sh" />
+    <None Include="build.bat" />
+    <None Include="CoarseFineFundamentalComboAlgorithm.py" />
+    <None Include="CoarseFineFundamentalRegressionAlgorithm.py" />
+    <None Include="CoarseFundamentalTop5Algorithm.py" />
+    <None Include="CustomBenchmarkAlgorithm.py" />
+    <None Include="CustomChartingAlgorithm.py" />
+    <None Include="CustomDataBitcoinAlgorithm.py" />
+    <None Include="CustomDataNIFTYAlgorithm.py" />
+    <None Include="CustomDataRegressionAlgorithm.py" />
+    <None Include="CustomDataUniverseAlgorithm.py" />
+    <None Include="CustomModelsAlgorithm.py" />
+    <None Include="DailyAlgorithm.py" />
+    <None Include="DailyFxAlgorithm.py" />
+    <None Include="DataConsolidationAlgorithm.py" />
+    <None Include="DelistingEventsAlgorithm.py" />
+    <None Include="DividendAlgorithm.py" />
+    <None Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
+    <None Include="DropboxUniverseSelectionAlgorithm.py" />
+    <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
+    <None Include="ETFGlobalRotationAlgorithm.py" />
+    <None Include="FilteredIdentityAlgorithm.py" />
+    <None Include="FinancialAdvisorDemoAlgorithm.py" />
+    <None Include="FractionalQuantityRegressionAlgorithm.py" />
+    <None Include="FuturesMomentumAlgorithm.py" />
+    <None Include="HistoryAndWarmupRegressionAlgorithm.py" />
+    <None Include="LimitFillRegressionAlgorithm.py" />
+    <None Include="MACDTrendAlgorithm.py" />
+    <None Include="main.py" />
+    <None Include="MarginCallEventsAlgorithm.py" />
+    <None Include="MarketOnOpenOnCloseAlgorithm.py" />
+    <None Include="MovingAverageCrossAlgorithm.py" />
+    <None Include="OptionChainProviderAlgorithm.py" />
+    <None Include="OptionExerciseAssignRegressionAlgorithm.py" />
+    <None Include="OptionOpenInterestRegressionAlgorithm.py" />
+    <None Include="OptionRenameRegressionAlgorithm.py" />
+    <None Include="OrderTicketDemoAlgorithm.py" />
     <None Include="packages.config" />
+    <None Include="ParameterizedAlgorithm.py" />
+    <None Include="PythonPackageTestAlgorithm.py" />
+    <None Include="QCUWeatherBasedRebalancing.py" />
+    <None Include="QuandlFuturesDataAlgorithm.py" />
+    <None Include="QuandlImporterAlgorithm.py" />
     <None Include="readme.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CustomDataNIFTYAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataConsolidationAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HistoryAndWarmupRegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DelistingEventsAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DividendAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ETFGlobalRotationAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="MACDTrendAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="QCUWeatherBasedRebalancing.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="QuandlImporterAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="OrderTicketDemoAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DailyAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="MarketOnOpenOnCloseAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ParameterizedAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CoarseFineFundamentalComboAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="RollingWindowAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ScheduledEventsAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="UniverseSelectionRegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="UpdateOrderRegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="BasicTemplateAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CustomBenchmarkAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="LimitFillRegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="MovingAverageCrossAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="RegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="WarmupAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="WarmupHistoryAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="RegressionAlgorithm.py" />
+    <None Include="RegressionChannelAlgorithm.py" />
+    <None Include="RollingWindowAlgorithm.py" />
+    <None Include="ScheduledEventsAlgorithm.py" />
+    <None Include="UniverseSelectionRegressionAlgorithm.py" />
+    <None Include="UpdateOrderRegressionAlgorithm.py" />
+    <None Include="UserDefinedUniverseAlgorithm.py" />
+    <None Include="WarmupAlgorithm.py" />
+    <None Include="WarmupHistoryAlgorithm.py" />
+    <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+    <None Include="OptionSplitRegressionAlgorithm.py" />
+    <None Include="OptionChainConsistencyRegressionAlgorithm.py" />
+    <None Include="HourSplitRegressionAlgorithm.py" />
+    <None Include="HourReverseSplitRegressionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
@@ -163,10 +131,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.4.4\lib\Python.Runtime.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.1\lib\Python.Runtime.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CustomSecurityInitializerAlgorithm.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="HistoryAlgorithm.py" />
+    <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -177,12 +151,12 @@
       ./build.sh
     </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

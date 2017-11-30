@@ -25,6 +25,25 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         /// <summary>
+        /// Creates a new Acceleration Bands indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Acceleration Bands we want.</param>
+        /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
+        /// <param name="width">A coefficient specifying the distance between the middle band and upper or lower bands.</param>
+        /// <param name="movingAverageType">Type of the moving average.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar.</param>
+        /// <returns></returns>
+        public AccelerationBands ABANDS(Symbol symbol, int period, decimal width = 4, MovingAverageType movingAverageType = MovingAverageType.Simple,
+            Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("ABANDS_{0}_{1}", period, width), resolution);
+            var abands = new AccelerationBands(name, period, width, movingAverageType);
+            RegisterIndicator(symbol, abands, resolution, selector);
+            return abands;
+        }
+
+        /// <summary>
         /// Creates a new AccumulationDistribution indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose AD we want</param>
@@ -78,7 +97,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose ADXR we want</param>
         /// <param name="period">The period over which to compute the ADXR</param>
-        /// <param name="resolution">The resolution</param>
+        /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The AverageDirectionalMovementIndexRating indicator for the requested symbol over the specified period</returns>
         public AverageDirectionalMovementIndexRating ADXR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
@@ -292,6 +311,24 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, dema, resolution, selector);
             return dema;
         }
+
+        /// <summary>
+        /// Creates a new <see cref="DetrendedPriceOscillator"/> indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose DPO we want</param>
+        /// <param name="period">The period over which to compute the DPO</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>A new registered DetrendedPriceOscillator indicator for the requested symbol over the specified period</returns>
+        public DetrendedPriceOscillator DPO(Symbol symbol, int period, Resolution? resolution = null,
+                                            Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "DPO" + period, resolution);
+            var dpo = new DetrendedPriceOscillator(name, period);
+            RegisterIndicator(symbol, dpo, resolution, selector);
+            return dpo;
+        }
+
 
         /// <summary>
         /// Creates an ExponentialMovingAverage indicator for the symbol. The indicator will be automatically
@@ -642,6 +679,25 @@ namespace QuantConnect.Algorithm
             var mfi = new MoneyFlowIndex(name, period);
             RegisterIndicator(symbol, mfi, resolution, selector);
             return mfi;
+        }
+
+
+        /// <summary>
+        /// Creates a new Mass Index indicator. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Mass Index we want.</param>
+        /// <param name="emaPeriod">The period used by both EMA.</param>
+        /// <param name="sumPeriod">The sum period.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Mass Index indicator for the requested symbol over the specified period</returns>
+        public MassIndex MASS(Symbol symbol, int emaPeriod = 9, int sumPeriod = 25, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "MII" + emaPeriod + sumPeriod, resolution);
+            var mi = new MassIndex(name, emaPeriod, sumPeriod);
+            RegisterIndicator(symbol, mi, resolution, selector);
+            return mi;
         }
 
         /// <summary>

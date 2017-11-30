@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ import zlib
 
 # Third party libraries added with pip
 from sklearn.ensemble import RandomForestClassifier
-import blaze   # includes sqlalchemy, odo 
+import blaze   # includes sqlalchemy, odo
 import numpy
 import scipy
 import cvxopt
@@ -47,13 +47,19 @@ from pykalman import KalmanFilter
 import statsmodels.api as sm
 import talib
 from copulalib.copulalib import Copula
-import theano 
+import theano
 import xgboost
 from arch import arch_model
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 import tensorflow as tf
+from deap import algorithms, base, creator, tools
 
+### <summary>
+### Demonstration of all the packages you can import with the QuantConnect/LEAN trading engine.s
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="using quantconnect" />
 class PythonPackageTestAlgorithm(QCAlgorithm):
     '''Algorithm to test third party libraries'''
 
@@ -64,13 +70,13 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # numpy test
         print "numpy test >>> print numpy.pi: " , numpy.pi
-        
-        # scipy test: 
+
+        # scipy test:
         print "scipy test >>> print mean of 1 2 3 4 5:", scipy.mean(numpy.array([1, 2, 3, 4, 5]))
 
         #sklearn test
         print "sklearn test >>> default RandomForestClassifier:", RandomForestClassifier()
-        
+
         # cvxopt matrix test
         print "cvxopt >>>", cvxopt.matrix([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (2,3))
 
@@ -79,7 +85,7 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # blaze test
         blaze_test()
-        
+
         # cvxpy test
         cvxpy_test()
 
@@ -106,6 +112,9 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # tensorflow test
         tensorflow_test()
+        
+        # deap test
+        deap_test()
 
 
     def OnData(self, data): pass
@@ -133,10 +142,10 @@ def cvxpy_test():
 
     w = cvxpy.Variable(n)
     gamma = cvxpy.Parameter(sign='positive')
-    ret = mu.T*w 
+    ret = mu.T*w
     risk = cvxpy.quad_form(w, Sigma)
-    print "csvpy test >>> ", cvxpy.Problem(cvxpy.Maximize(ret - gamma*risk), 
-               [cvxpy.sum_entries(w) == 1, 
+    print "csvpy test >>> ", cvxpy.Problem(cvxpy.Maximize(ret - gamma*risk),
+               [cvxpy.sum_entries(w) == 1,
                 w >= 0])
 
 def statsmodels_test():
@@ -160,11 +169,11 @@ def pykalman_test():
     print "pykalman test >>>", kf.filter(measurements)
 
 def copulalib_test():
-    x = numpy.random.normal(size=100) 
-    y = 2.5 * x + numpy.random.normal(size=100) 
+    x = numpy.random.normal(size=100)
+    y = 2.5 * x + numpy.random.normal(size=100)
 
-    #Make the instance of Copula class with x, y and clayton family:: 
-    print "copulalib test >>>", Copula(x, y, family='clayton') 
+    #Make the instance of Copula class with x, y and clayton family::
+    print "copulalib test >>>", Copula(x, y, family='clayton')
 
 def theano_test():
     a = theano.tensor.vector() # declare variable
@@ -202,13 +211,13 @@ def keras_test():
     # Initialize the constructor
     model = Sequential()
 
-    # Add an input layer 
+    # Add an input layer
     model.add(Dense(12, activation='relu', input_shape=(11,)))
 
-    # Add one hidden layer 
+    # Add one hidden layer
     model.add(Dense(8, activation='relu'))
 
-    # Add an output layer 
+    # Add an output layer
     model.add(Dense(1, activation='sigmoid'))
 
     print "keras test >>>", model
@@ -219,4 +228,33 @@ def tensorflow_test():
     sess = tf.Session()
     node3 = tf.add(node1, node2)
     print "tensorflow test >>>", "sess.run(node3): ", sess.run(node3)
-    
+
+def deap_test():
+    # onemax example evolves to print list of ones: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    numpy.random.seed(1)
+    def evalOneMax(individual):
+        return sum(individual),
+
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+    creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+
+    toolbox = base.Toolbox()
+    toolbox.register("attr_bool", numpy.random.randint, 0, 1)
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, 10)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox.register("evaluate", evalOneMax)
+    toolbox.register("mate", tools.cxTwoPoint)
+    toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+    toolbox.register("select", tools.selTournament, tournsize=3)
+
+    pop   = toolbox.population(n=50)
+    hof   = tools.HallOfFame(1)
+    stats = tools.Statistics(lambda ind: ind.fitness.values)
+    stats.register("avg", numpy.mean)
+    stats.register("std", numpy.std)
+    stats.register("min", numpy.min)
+    stats.register("max", numpy.max)
+
+    pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=30, 
+                                   stats=stats, halloffame=hof, verbose=False) # change to verbose=True to see evolution table
+    print "deap test >>>", hof[0]

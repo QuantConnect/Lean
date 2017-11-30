@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : IRealTimeHandler
     {
-        private bool _isActive = true;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
         // so we want to be ready to accept events as soon as possible
@@ -46,10 +45,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Boolean flag indicating thread state.
         /// </summary>
-        public bool IsActive
-        {
-            get { return _isActive; }
-        }
+        public bool IsActive { get; private set; }
 
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
@@ -82,7 +78,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
-            foreach (var security in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()))
+            foreach (var security in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()))
             {
                 // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
@@ -98,38 +94,47 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Execute the live realtime event thread montioring. 
+        /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
         public void Run()
         {
-            _isActive = true;
+            IsActive = true;
 
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                try
+
+                var time = DateTime.UtcNow;
+
+                // pause until the next second
+                var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
+                var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
+                Thread.Sleep(delay < 0 ? 1 : delay);
+
+                // poke each event to see if it should fire
+                foreach (var scheduledEvent in _scheduledEvents)
                 {
-                    var time = DateTime.UtcNow;
-
-                    // pause until the next second
-                    var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
-                    var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
-                    Thread.Sleep(delay < 0 ? 1 : delay);
-
-                    // poke each event to see if it should fire
-                    foreach (var scheduledEvent in _scheduledEvents)
+                    try
                     {
                         scheduledEvent.Value.Scan(time);
                     }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
+                    catch (ScheduledEventException scheduledEventException)
+                    {
+                        var errorMessage = $"LiveTradingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.ScheduledEventExceptionMessage}";
+
+                        Log.Error(errorMessage);
+
+                        _resultHandler.RuntimeError(errorMessage);
+
+                        // Errors in scheduled event should be treated as runtime error
+                        // Runtime errors should end Lean execution
+                        _algorithm.RunTimeError = new Exception(errorMessage);
+                    }
                 }
             }
 
-            _isActive = false;
+            IsActive = false;
             Log.Trace("LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: " + _cancellationTokenSource.IsCancellationRequested);
         }
 
