@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Intrinio;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,8 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2015, 01, 01); //Set Start Date
-            SetEndDate(2016, 12, 31); //Set End Date
+            SetStartDate(2016, 01, 01); //Set Start Date
+            SetEndDate(2016, 03, 31); //Set End Date
             SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
@@ -44,7 +46,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Options Resolution: Minute Only.
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
 
-            AddData<IntrinioEconomicData>("$BAMLH0A0HYM2", Resolution.Daily);
+            AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilWTI, Resolution.Daily);
+            AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilBrent, Resolution.Daily);
         }
 
         /// <summary>
@@ -62,8 +65,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnData(IntrinioEconomicData economicData)
         {
-            var asd = economicData.Value;
-            Log("Value for {} ");
+            string oilMarket;
+            if (economicData.Symbol.Value == EconomicDataSources.Commodities.CrudeOilWTI)
+            {
+                oilMarket = "West Texas Intermediate";
+            }
+            else
+            {
+                oilMarket = "Brent";
+            }
+            Log(string.Format("Crude Oil {0} price {1:F4}", oilMarket, economicData.Value));
         }
     }
 }
