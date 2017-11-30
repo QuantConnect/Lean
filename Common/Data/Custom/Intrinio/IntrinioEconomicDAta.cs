@@ -9,6 +9,49 @@ using QuantConnect.Configuration;
 namespace QuantConnect.Data.Custom.Intrinio
 {
     /// <summary>
+    /// TRanformation available for the Economic data.
+    /// </summary>
+    public enum IntrinioDataTransformation
+    {
+        /// <summary>
+        /// The rate of change
+        /// </summary>
+        Roc,
+        /// <summary>
+        /// Rate of change from Year Ago
+        /// </summary>
+        AnnualyRoc,
+        /// <summary>
+        /// The compounded annual rate of change
+        /// </summary>
+        CompoundedAnnualRoc,
+        /// <summary>
+        /// The continuously compounded annual rate of change
+        /// </summary>
+        AnnualyCCRoc,
+        /// <summary>
+        /// The continuously compounded rateof change
+        /// </summary>
+        CCRoc,
+        /// <summary>
+        /// The level, no transformation.
+        /// </summary>
+        Level,
+        /// <summary>
+        /// The natural log
+        /// </summary>
+        Ln,
+        /// <summary>
+        /// The percent change
+        /// </summary>
+        Pc,
+        /// <summary>
+        /// The percent change from year ago
+        /// </summary>
+        AnnualyPc,
+    }
+
+    /// <summary>
     /// Access the massive repository of economic data from the Federal Reserve Economic Data system via the Intrinio API.
     /// </summary>
     /// <seealso cref="QuantConnect.Data.BaseData" />
@@ -17,20 +60,22 @@ namespace QuantConnect.Data.Custom.Intrinio
         private readonly string _user = Config.Get("intrinio-username");
         private readonly string _password = Config.Get("intrinio-password");
 
-        private string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
-        private readonly string _item;
+        private bool _firstTime = true;
+
+        private string _baseUrl = @"https://api.intrinio.com/historical_data.csv?sort_order=asc&";
+        private readonly IntrinioDataTransformation _dataTransformation;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IntrinioEconomicData"/> class.
         /// </summary>
-        public IntrinioEconomicData() : this("level")
+        public IntrinioEconomicData() : this(IntrinioDataTransformation.Level)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IntrinioEconomicData"/> class.
         /// </summary>
-        /// <param name="item">The item.</param>
-        public IntrinioEconomicData(string item) { _item = item; }
+        /// <param name="dataTransformation">The item.</param>
+        public IntrinioEconomicData(IntrinioDataTransformation dataTransformation) { _dataTransformation = dataTransformation; }
 
 
         /// <summary>
@@ -44,16 +89,27 @@ namespace QuantConnect.Data.Custom.Intrinio
         /// </returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var url = string.Format("{0}identifier={1}&item={2}", _baseUrl,
-                                    config.Symbol.Value, _item);
-            var byteKey = Encoding.ASCII.GetBytes(string.Format("{0}:{1}", _user, _password));
-            var authorizationHeaders = new List<KeyValuePair<string, string>>
+            SubscriptionDataSource subscription;
+            if (_firstTime)
             {
-                new KeyValuePair<string, string>("Authorization",
-                                                 string.Format("Basic ({0})", Convert.ToBase64String(byteKey)))
-            };
-
-            return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, authorizationHeaders);
+                var item = GetStringForDataTransformation(_dataTransformation);
+                var url = string.Format("{0}identifier={1}&item={2}", _baseUrl,
+                                        config.Symbol.Value, item);
+                var byteKey = Encoding.ASCII.GetBytes(string.Format("{0}:{1}", _user, _password));
+                var authorizationHeaders = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("Authorization",
+                                                     string.Format("Basic ({0})", Convert.ToBase64String(byteKey)))
+                };
+                _firstTime = false;
+                subscription = new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
+                                                          authorizationHeaders);
+            }
+            else
+            {
+                subscription = new SubscriptionDataSource("", SubscriptionTransportMedium.RemoteFile);
+            }
+            return subscription;
         }
 
         /// <summary>
@@ -70,17 +126,53 @@ namespace QuantConnect.Data.Custom.Intrinio
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var obs = line.Split(',');
-            if (obs.Length != 2) return null;
-            var time = DateTime.ParseExact(obs[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var time = DateTime.MinValue;
+            if (!DateTime.TryParseExact(obs[0], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out time)) return null;
             var value = obs[1].ToDecimal();
             return new IntrinioEconomicData
             {
                 Symbol = config.Symbol,
-                Time=time,
-                EndTime = time + QuantConnect.Time.OneDay,
+                Time = time,
+                //EndTime = time + QuantConnect.Time.OneDay,
                 Value = value,
-                DataType = MarketDataType.Auxiliary
+                //DataType = MarketDataType.Auxiliary
             };
+        }
+
+        private static string GetStringForDataTransformation(IntrinioDataTransformation dataTransformation)
+        {
+            var item = "level";
+            switch (dataTransformation)
+            {
+                case IntrinioDataTransformation.Roc:
+                    item = "change";
+                    break;
+                case IntrinioDataTransformation.AnnualyRoc:
+                    item = "yr_change";
+                    break;
+                case IntrinioDataTransformation.CompoundedAnnualRoc:
+                    item = "c_annual_roc";
+                    break;
+                case IntrinioDataTransformation.AnnualyCCRoc:
+                    item = "cc_annual_roc";
+                    break;
+                case IntrinioDataTransformation.CCRoc:
+                    item = "cc_roc";
+                    break;
+                case IntrinioDataTransformation.Level:
+                    item = "level";
+                    break;
+                case IntrinioDataTransformation.Ln:
+                    item = "log";
+                    break;
+                case IntrinioDataTransformation.Pc:
+                    item = "percent_change";
+                    break;
+                case IntrinioDataTransformation.AnnualyPc:
+                    item = "yr_percent_change";
+                    break;
+            }
+            return item;
         }
     }
 }

@@ -151,6 +151,7 @@
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
+    <Compile Include="Data\Custom\Intrinio\IntrinioEconomicDataSources.cs" />
     <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
