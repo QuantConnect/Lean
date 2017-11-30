@@ -53,6 +53,7 @@ namespace QuantConnect.Algorithm
         {
             _warmupBarCount = null;
             _warmupTimeSpan = timeSpan;
+            _warmupResolution = null;
         }
 
         /// <summary>
@@ -62,6 +63,28 @@ namespace QuantConnect.Algorithm
         public void SetWarmUp(TimeSpan timeSpan)
         {
             SetWarmup(timeSpan);
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmup(TimeSpan timeSpan, Resolution resolution)
+        {
+            _warmupBarCount = null;
+            _warmupTimeSpan = timeSpan;
+            _warmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmUp(TimeSpan timeSpan, Resolution resolution)
+        {
+            SetWarmup(timeSpan, resolution);
         }
 
         /// <summary>
@@ -75,6 +98,7 @@ namespace QuantConnect.Algorithm
         {
             _warmupTimeSpan = null;
             _warmupBarCount = barCount;
+            _warmupResolution = null;
         }
 
         /// <summary>
@@ -87,6 +111,30 @@ namespace QuantConnect.Algorithm
         public void SetWarmUp(int barCount)
         {
             SetWarmup(barCount);
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmup(int barCount, Resolution resolution)
+        {
+            _warmupTimeSpan = null;
+            _warmupBarCount = barCount;
+            _warmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmUp(int barCount, Resolution resolution)
+        {
+            SetWarmup(barCount, resolution);
         }
 
         /// <summary>
@@ -105,12 +153,12 @@ namespace QuantConnect.Algorithm
         {
             if (_warmupBarCount.HasValue)
             {
-                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value);
+                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution);
             }
             if (_warmupTimeSpan.HasValue)
             {
                 var end = UtcTime.ConvertFromUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end);
+                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end, _warmupResolution);
             }
 
             // if not warmup requested return nothing
@@ -182,7 +230,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null) 
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
             where T : IBaseData
         {
             var requests = symbols.Select(x =>
@@ -208,7 +256,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null) 
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
             var requests = symbols.Select(x =>
@@ -256,7 +304,7 @@ namespace QuantConnect.Algorithm
                 Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -326,7 +374,7 @@ namespace QuantConnect.Algorithm
                 Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            return History(new[] {symbol}, span, resolution).Get(symbol).Memoize();
+            return History(new[] { symbol }, span, resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -345,7 +393,7 @@ namespace QuantConnect.Algorithm
                 Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            return History(new[] {symbol}, start, end, resolution).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, end, resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -412,7 +460,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice satisfying the specified history request</returns>
         public IEnumerable<Slice> History(HistoryRequest request)
         {
-            return History(new[] {request}).Memoize();
+            return History(new[] { request }).Memoize();
         }
 
         /// <summary>
@@ -433,7 +481,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         public BaseData GetLastKnownPrice(Security security)
         {
-            
+
             if (security.Symbol.IsCanonical())
             {
                 return null;
@@ -443,7 +491,7 @@ namespace QuantConnect.Algorithm
             var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)security.Resolution);
 
             var startTime = GetStartTimeAlgoTzForSecurity(security, 1, resolution);
-            var endTime   = Time.RoundDown(resolution.ToTimeSpan());
+            var endTime = Time.RoundDown(resolution.ToTimeSpan());
 
             // Get the config with the largest resolution
             var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
@@ -452,7 +500,7 @@ namespace QuantConnect.Algorithm
             {
                 StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type :  typeof(TradeBar),
+                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type : typeof(TradeBar),
                 Resolution = resolution,
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
@@ -465,7 +513,7 @@ namespace QuantConnect.Algorithm
             {
                 return history.First().Values.First();
             }
-            
+
 
             return null;
         }
@@ -508,7 +556,7 @@ namespace QuantConnect.Algorithm
             }
 
             // filter out future data to prevent look ahead bias
-            return ((IAlgorithm) this).HistoryProvider.GetHistory(reqs, timeZone);
+            return ((IAlgorithm)this).HistoryProvider.GetHistory(reqs, timeZone);
         }
 
         /// <summary>
@@ -519,7 +567,7 @@ namespace QuantConnect.Algorithm
             return symbols.Where(x => !x.IsCanonical()).Select(x =>
             {
                 var security = Securities[x];
-                var config = GetMatchingSubscription(security, typeof (BaseData));
+                var config = GetMatchingSubscription(security, typeof(BaseData));
                 var request = CreateHistoryRequest(security, config, startAlgoTz, endAlgoTz, resolution);
 
                 // apply overrides
