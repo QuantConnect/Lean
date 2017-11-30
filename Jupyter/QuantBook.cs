@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,12 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -48,7 +50,7 @@ namespace QuantConnect.Jupyter
         private QCAlgorithm _algorithm;
         private IDataCacheProvider _dataCacheProvider;
         private PandasConverter _converter;
-        
+
         /// <summary>
         /// <see cref = "QuantBook" /> constructor.
         /// Provides access to data for quantitative analysis
@@ -66,10 +68,10 @@ namespace QuantConnect.Jupyter
 
                 // Create new instance of QCAlgorithm we are going to wrap
                 _algorithm = new QCAlgorithm();
-                
+
                 // By default, set start date to end data which is yesterday
                 SetStartDate(_algorithm.EndDate);
-                
+
                 // Initialize History Provider
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
@@ -110,6 +112,20 @@ namespace QuantConnect.Jupyter
         public void SetStartDate(int year, int month, int day)
         {
             _algorithm.SetStartDate(year, month, day);
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Crypto"/> security to the algorithm
+        /// </summary>
+        /// <param name="ticker">The currency pair</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Crypto"/> security</returns>
+        public Crypto AddCrypto(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return _algorithm.AddCrypto(ticker, resolution, market, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -494,6 +510,112 @@ namespace QuantConnect.Jupyter
         {
             var history = _algorithm.History<TradeBar>(symbol, start, end, resolution);
             return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets Portfolio Statistics from a pandas.DataFrame with equity and benchmark values
+        /// </summary>
+        /// <param name="dataFrame">pandas.DataFrame with the information required to compute the Portfolio statistics</param>
+        /// <returns><see cref="PortfolioStatistics"/> object wrapped in a <see cref="PyDict"/> with the portfolio statistics.</returns>
+        public PyDict GetPortfolioStatistics(PyObject dataFrame)
+        {
+            var dictBenchmark = new SortedDictionary<DateTime, double>();
+            var dictEquity = new SortedDictionary<DateTime, double>();
+            var dictPL = new SortedDictionary<DateTime, double>();
+
+            using (Py.GIL())
+            {
+                var result = new PyDict();
+
+                try
+                {
+                    // Converts the data from pandas.DataFrame into dictionaries keyed by time
+                    var df = ((dynamic)dataFrame).dropna();
+                    dictBenchmark = GetDictionaryFromSeries((PyObject)df["benchmark"]);
+                    dictEquity = GetDictionaryFromSeries((PyObject)df["equity"]);
+                    dictPL = GetDictionaryFromSeries((PyObject)df["equity"].pct_change());
+                }
+                catch (PythonException e)
+                {
+                    result.SetItem("Runtime Error", e.Message.ToPython());
+                    return result;
+                }
+
+                // Convert the double into decimal
+                var equity = new SortedDictionary<DateTime, decimal>(dictEquity.ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
+                var profitLoss = new SortedDictionary<DateTime, decimal>(dictPL.ToDictionary(kvp => kvp.Key, kvp => double.IsNaN(kvp.Value) ? 0 : (decimal)kvp.Value));
+
+                // Gets the last value of the day of the benchmark and equity
+                var listBenchmark = CalculateDailyRateOfChange(dictBenchmark);
+                var listPerformance = CalculateDailyRateOfChange(dictEquity);
+
+                // Gets the startting capital
+                var startingCapital = Convert.ToDecimal(dictEquity.FirstOrDefault().Value);
+
+                // Compute portfolio statistics
+                var stats = new PortfolioStatistics(profitLoss, equity, listPerformance, listBenchmark, startingCapital);
+
+                result.SetItem("Average Win (%)", Convert.ToDouble(stats.AverageWinRate * 100).ToPython());
+                result.SetItem("Average Loss (%)", Convert.ToDouble(stats.AverageLossRate * 100).ToPython());
+                result.SetItem("Compounding Annual Return (%)", Convert.ToDouble(stats.CompoundingAnnualReturn * 100m).ToPython());
+                result.SetItem("Drawdown (%)", Convert.ToDouble(stats.Drawdown * 100).ToPython());
+                result.SetItem("Expectancy", Convert.ToDouble(stats.Expectancy).ToPython());
+                result.SetItem("Net Profit (%)", Convert.ToDouble(stats.TotalNetProfit * 100).ToPython());
+                result.SetItem("Sharpe Ratio", Convert.ToDouble(stats.SharpeRatio).ToPython());
+                result.SetItem("Win Rate (%)", Convert.ToDouble(stats.WinRate * 100).ToPython());
+                result.SetItem("Loss Rate (%)", Convert.ToDouble(stats.LossRate * 100).ToPython());
+                result.SetItem("Profit-Loss Ratio", Convert.ToDouble(stats.ProfitLossRatio).ToPython());
+                result.SetItem("Alpha", Convert.ToDouble(stats.Alpha).ToPython());
+                result.SetItem("Beta", Convert.ToDouble(stats.Beta).ToPython());
+                result.SetItem("Annual Standard Deviation", Convert.ToDouble(stats.AnnualStandardDeviation).ToPython());
+                result.SetItem("Annual Variance", Convert.ToDouble(stats.AnnualVariance).ToPython());
+                result.SetItem("Information Ratio", Convert.ToDouble(stats.InformationRatio).ToPython());
+                result.SetItem("Tracking Error", Convert.ToDouble(stats.TrackingError).ToPython());
+                result.SetItem("Treynor Ratio", Convert.ToDouble(stats.TreynorRatio).ToPython());
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Converts a pandas.Series into a <see cref="SortedDictionary{DateTime, Double}"/>
+        /// </summary>
+        /// <param name="series">pandas.Series to be converted</param>
+        /// <returns><see cref="SortedDictionary{DateTime, Double}"/> with pandas.Series information</returns>
+        private SortedDictionary<DateTime, double> GetDictionaryFromSeries(PyObject series)
+        {
+            var dictionary = new SortedDictionary<DateTime, double>();
+
+            var pyDict = new PyDict(((dynamic)series).to_dict());
+            foreach (PyObject item in pyDict.Items())
+            {
+                var key = (DateTime)item[0].AsManagedObject(typeof(DateTime));
+                var value = (double)item[1].AsManagedObject(typeof(double));
+                dictionary.Add(key, value);
+            }
+
+            return dictionary;
+        }
+
+        /// <summary>
+        /// Calculates the daily rate of change 
+        /// </summary>
+        /// <param name="dictionary"><see cref="IDictionary{DateTime, Double}"/> with prices keyed by time</param>
+        /// <returns><see cref="List{Double}"/> with daily rate of change</returns>
+        private List<double> CalculateDailyRateOfChange(IDictionary<DateTime, double> dictionary)
+        {
+            var daily = dictionary.GroupBy(kvp => kvp.Key.Date)
+                .ToDictionary(x => x.Key, v => v.LastOrDefault().Value)
+                .Values.ToArray();
+
+            var rocp = new double[daily.Length];
+            for (var i = 1; i < daily.Length; i++)
+            {
+                rocp[i] = (daily[i] - daily[i - 1]) / daily[i - 1];
+            }
+            rocp[0] = 0;
+
+            return rocp.ToList();
         }
 
         /// <summary>

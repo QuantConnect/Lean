@@ -142,6 +142,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Double unix timestamp (Time since Midnight Jan 1 1970) in milliseconds</param>
+        /// <returns>C# date timeobject</returns>
+        public static DateTime UnixMillisecondTimeStampToDateTime(double unixTimeStamp)
+        {
+            DateTime time;
+            try
+            {
+                // Unix timestamp is seconds past epoch
+                time = EpochTime.AddMilliseconds(unixTimeStamp);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "UnixTimeStamp: " + unixTimeStamp);
+                time = DateTime.Now;
+            }
+            return time;
+        }
+
+        /// <summary>
         /// Convert a Datetime to Unix Timestamp
         /// </summary>
         /// <param name="time">C# datetime object</param>

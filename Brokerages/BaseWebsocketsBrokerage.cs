@@ -1,4 +1,19 @@
-﻿using Newtonsoft.Json;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -76,7 +91,12 @@ namespace QuantConnect.Brokerages
         public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) : base(name)
         {
             WebSocket = websocket;
+
             WebSocket.Initialize(wssUrl);
+
+            WebSocket.Message += OnMessage;
+            WebSocket.Error += OnError;
+
             RestClient = restClient;
             _market = market;
             ApiSecret = apiSecret;
@@ -95,9 +115,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public override void Connect()
         {
-            WebSocket.Message += OnMessage;
-            WebSocket.Error += OnError;
-            WebSocket.Open += delegate { Log.Trace($"BaseWebSocketsBrokerage.Connect(): Connection Opened. IsConnected: {IsConnected}"); };
+            if (IsConnected)
+                return;
 
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
             WebSocket.Connect();
@@ -187,12 +206,22 @@ namespace QuantConnect.Brokerages
                 {
                     Log.Error(exception);
                 }
-            });
+            }) { IsBackground = true };
             _connectionMonitorThread.Start();
             while (!_connectionMonitorThread.IsAlive)
             {
                 Thread.Sleep(1);
             }
+        }
+
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
+        public override void Disconnect()
+        {
+            // request and wait for thread to stop
+            _cancellationTokenSource?.Cancel();
+            _connectionMonitorThread?.Join();
         }
 
         /// <summary>
@@ -238,7 +267,7 @@ namespace QuantConnect.Brokerages
             finally
             {
                 WebSocket.Error += this.OnError;
-                this.Subscribe(null, subscribed);
+                this.Subscribe(subscribed);
             }
         }
 
@@ -259,9 +288,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Handles the creation of websocket subscriptions
         /// </summary>
-        /// <param name="job"></param>
         /// <param name="symbols"></param>
-        public abstract void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
+        public abstract void Subscribe(IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Gets a list of current subscriptions

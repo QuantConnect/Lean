@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -989,7 +989,7 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
             Assert.AreEqual(0m, actual);
         }
-        
+
         //[Test]
         //public void SetHoldings_LongToLonger_PriceRise()
         //{
@@ -1070,7 +1070,7 @@ namespace QuantConnect.Tests.Algorithm
         //    //Now: 2000 * 50 = $0k Net Holdings, $50k Cash: $50k. MSFT is 0% of holdings.
         //    var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
 
-        //    //Want to hold -75% of MSFT: 50k total, -37.5k / $50-share = -750 TOTAL. 
+        //    //Want to hold -75% of MSFT: 50k total, -37.5k / $50-share = -750 TOTAL.
         //    // Currently -2000, so net order +1250.
         //    Assert.AreEqual(1250, actual);
         //}
@@ -1106,7 +1106,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<IOrderProcessor>();
-            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null);
+            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<Orders.OrderRequest>())).Returns(new Orders.OrderTicket(null, request.Object));
             algo.Transactions.SetOrderProcessor(mock.Object);
 

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
@@ -23,7 +24,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Order struct for placing new trade
     /// </summary>
-    public abstract class Order 
+    public abstract class Order
     {
         /// <summary>
         /// Order ID.
@@ -48,7 +49,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Price of the Order.
         /// </summary>
-        public decimal Price { get; internal set; }
+        public decimal Price
+        {
+            get { return price; }
+            internal set { price = value.Normalize(); }
+        }
 
         /// <summary>
         /// Currency for the order price
@@ -63,7 +68,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares to execute.
         /// </summary>
-        public decimal Quantity { get; internal set; }
+        public decimal Quantity
+        {
+            get { return quantity; }
+            internal set { quantity = value.Normalize(); }
+        }
 
         /// <summary>
         /// Order Type
@@ -86,6 +95,11 @@ namespace QuantConnect.Orders
         public string Tag { get; internal set; }
 
         /// <summary>
+        /// Additional properties of the order
+        /// </summary>
+        public IOrderProperties Properties { get; private set; }
+
+        /// <summary>
         /// The symbol's security type
         /// </summary>
         public SecurityType SecurityType { get { return Symbol.ID.SecurityType; } }
@@ -93,15 +107,15 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
-        public OrderDirection Direction 
+        public OrderDirection Direction
         {
-            get 
+            get
             {
-                if (Quantity > 0) 
+                if (Quantity > 0)
                 {
                     return OrderDirection.Buy;
-                } 
-                if (Quantity < 0) 
+                }
+                if (Quantity < 0)
                 {
                     return OrderDirection.Sell;
                 }
@@ -142,6 +156,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Properties = null;
         }
 
         /// <summary>
@@ -151,7 +166,8 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "")
+        /// <param name="properties">The order properties for this order</param>
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
         {
             Time = time;
             Price = 0;
@@ -164,6 +180,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Properties = properties;
         }
 
         /// <summary>
@@ -241,6 +258,7 @@ namespace QuantConnect.Orders
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
+            order.Properties = Properties?.Clone();
         }
 
         /// <summary>
@@ -254,25 +272,25 @@ namespace QuantConnect.Orders
             switch (request.OrderType)
             {
                 case OrderType.Market:
-                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.Limit:
-                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag);
+                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.StopMarket:
-                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag);
+                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.StopLimit:
-                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag);
+                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.MarketOnOpen:
-                    order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.MarketOnClose:
-                    order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.OptionExercise:
-                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -290,5 +308,8 @@ namespace QuantConnect.Orders
         /// Order Expiry on a specific UTC time.
         /// </summary>
         public DateTime DurationValue;
+
+        private decimal quantity;
+        private decimal price;
     }
 }

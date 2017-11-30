@@ -24,10 +24,38 @@ namespace QuantConnect
     public static class Currencies
     {
         /// <summary>
+        /// Gets the listing of crypto pairs used for currency conversion rates
+        /// </summary>
+        /// <remarks>
+        /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
+        /// </remarks>
+        public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>
+        {
+            "BTCUSD",
+            "LTCUSD",
+            "ETHUSD",
+            "BTCEUR",
+            "LTCEUR",
+            "ETHEUR"
+        };
+
+        /// <summary>
+        /// Gets the listing of cfds used for currency conversion rates
+        /// </summary>
+        /// <remarks>
+        /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
+        /// </remarks>
+        public static readonly IReadOnlyList<string> CfdCurrencyPairs = new List<string>
+        {
+            "XAUUSD",
+            "XAGUSD"
+        };
+
+        /// <summary>
         /// Gets the listing of currently supported currency pairs.
         /// </summary>
         /// <remarks>
-        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
+        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#forex
         /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
         /// </remarks>
         public static readonly IReadOnlyList<string> CurrencyPairs = new List<string>
@@ -50,7 +78,6 @@ namespace QuantConnect
             "USDJPY",
             "USDHKD",
             "USDSGD",
-            "XAGUSD",
 
             "BTCUSD",
             "LTCUSD",
@@ -246,6 +273,7 @@ namespace QuantConnect
             {"HKD", "$"},
             {"SGD", "$"},
             {"XAG", "Ag"},
+            {"XAU", "Au"},
             {"CNH", "¥"},
             {"CNY", "¥"},
             {"CZK", "Kč"},
@@ -260,7 +288,11 @@ namespace QuantConnect
             {"THB", "฿"},
             {"TRY", "₺"},
             {"TWD", "NT$"},
-            {"ZAR", "R"}
+            {"ZAR", "R"},
+
+            {"BTC", "฿"},
+            {"LTC", "Ł"},
+            {"ETH", "Ether"}
         };
 
         /// <summary>

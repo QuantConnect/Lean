@@ -187,7 +187,6 @@
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\SubscriptionLimiter.cs" />
     <Compile Include="DataFeeds\SubscriptionSynchronizer.cs" />
     <Compile Include="DataFeeds\Subscription.cs" />
     <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ namespace QuantConnect.Data
         public bool HasCustomData { get; set; }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public Dictionary<SecurityType, List<TickType>> AvailableDataTypes
         {
@@ -69,11 +69,11 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count 
+        public int Count
         {
-            get 
-            { 
-                return Subscriptions.Count; 
+            get
+            {
+                return Subscriptions.Count;
             }
         }
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Data
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
-            if (resolution == Resolution.Tick) 
+            if (resolution == Resolution.Tick)
             {
                 dataType = typeof(Tick);
             }
@@ -190,9 +190,23 @@ namespace QuantConnect.Data
 
             throw new ArgumentException(string.Format("Type mismatch found between consolidator and symbol. " +
                 "Symbol: {0} does not support input type: {1}. Supported types: {2}.",
-                symbol.Value, 
+                symbol.Value,
                 consolidator.InputType.Name,
                 string.Join(",", subscriptions.Select(x => x.Type.Name))));
+        }
+
+        /// <summary>
+        /// Removes the specified consolidator for the symbol
+        /// </summary>
+        /// <param name="symbol">The symbol the consolidator is receiving data from</param>
+        /// <param name="consolidator">The consolidator instance to be removed</param>
+        public void RemoveConsolidator(Symbol symbol, IDataConsolidator consolidator)
+        {
+            // remove consolidator from each subscription
+            foreach (var subscription in Subscriptions.Where(x => x.Symbol == symbol))
+            {
+                subscription.Consolidators.Remove(consolidator);
+            }
         }
 
         /// <summary>
@@ -209,7 +223,7 @@ namespace QuantConnect.Data
                 {SecurityType.Cfd, new List<TickType>() { TickType.Quote } },
                 {SecurityType.Future, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
                 {SecurityType.Commodity, new List<TickType>() { TickType.Trade } },
-                {SecurityType.Crypto, new List<TickType>() { TickType.Quote, TickType.Trade } },
+                {SecurityType.Crypto, new List<TickType>() { TickType.Trade, TickType.Quote } },
             };
         }
 
@@ -222,7 +236,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Get the data feed types for a given <see cref="SecurityType"/> <see cref="Resolution"/> 
+        /// Get the data feed types for a given <see cref="SecurityType"/> <see cref="Resolution"/>
         /// </summary>
         /// <param name="symbolSecurityType">The <see cref="SecurityType"/> used to determine the types</param>
         /// <param name="resolution">The resolution of the data requested</param>

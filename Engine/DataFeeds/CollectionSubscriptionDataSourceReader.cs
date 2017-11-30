@@ -79,13 +79,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     default:
                     case SubscriptionTransportMedium.Rest:
-                        reader = new RestSubscriptionStreamReader(source.Source);
+                        reader = new RestSubscriptionStreamReader(source.Source, source.Headers);
                         break;
                     case SubscriptionTransportMedium.LocalFile:
                         reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
                         break;
                     case SubscriptionTransportMedium.RemoteFile:
-                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache);
+                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
                         break;
                 }
 
@@ -110,7 +110,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    yield return instances;
+                    if (_isLiveMode)
+                    {
+                        yield return instances;
+                    }
+                    else
+                    {
+                        foreach (var instance in instances.Data)
+                        {
+                            yield return instance;
+                        }
+                    }
                 }
             }
             finally

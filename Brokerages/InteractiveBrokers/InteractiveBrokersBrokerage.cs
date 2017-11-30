@@ -74,14 +74,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
-        // tracks remaining quantity for orders waiting to be filled completely (updated on partial fills)
-        private readonly Dictionary<int, int> _orderFills = new Dictionary<int, int>();
+        // tracks executions before commission reports, map: execId -> execution
+        private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
+        // tracks commission reports before executions, map: execId -> commission report
+        private readonly ConcurrentDictionary<string, CommissionReport> _commissionReports = new ConcurrentDictionary<string, CommissionReport>();
+
+        // holds account properties, cash balances and holdings for the account
+        private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
 
         private readonly object _sync = new object();
-        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>();
-        private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
-        // number of shares per symbol
-        private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
         private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, ContractDetails>();
 
@@ -123,6 +124,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return _client != null && _client.Connected && !_disconnected1100Fired;
             }
         }
+
+        /// <summary>
+        /// Returns true if the connected user is a financial advisor
+        /// </summary>
+        public bool IsFinancialAdvisor => _account.Contains("F");
 
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage using values from configuration:
@@ -188,13 +194,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
+
+            Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
+
             _client = new IB.InteractiveBrokersClient(_signal);
 
             // set up event handlers
             _client.UpdatePortfolio += HandlePortfolioUpdates;
             _client.OrderStatus += HandleOrderStatusUpdates;
+            _client.OpenOrder += HandleOpenOrder;
+            _client.OpenOrderEnd += HandleOpenOrderEnd;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.ExecutionDetails += HandleExecutionDetails;
+            _client.CommissionReport += HandleCommissionReport;
             _client.Error += HandleError;
             _client.TickPrice += HandleTickPrice;
             _client.TickSize += HandleTickSize;
@@ -376,7 +388,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            var holdings = _accountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
+            if (!IsConnected)
+            {
+                Log.Trace("InteractiveBrokersBrokerage.GetAccountHoldings(): not connected, connecting now");
+                Connect();
+            }
+
+            var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
             // fire up tasks to resolve the conversion rates so we can do them in parallel
             var tasks = holdings.Select(local =>
@@ -413,7 +431,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            if (!IsConnected)
+            {
+                Log.Trace("InteractiveBrokersBrokerage.GetCashBalance(): not connected, connecting now");
+                Connect();
+            }
+
+            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
 
         /// <summary>
@@ -476,13 +500,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (IsConnected) return;
 
-            // we're going to receive fresh values for both of these collections, so clear them
-            _accountHoldings.Clear();
-            _accountProperties.Clear();
+            // we're going to receive fresh values for all account data, so we clear all
+            _accountData.Clear();
 
             var attempt = 1;
             const int maxAttempts = 5;
             var existingSessionDetected = false;
+            var securityDialogDetected = false;
             while (true)
             {
                 try
@@ -530,11 +554,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         // no response, disconnect and retry
                         Disconnect();
 
+                        var ibcLogContent = LoadCurrentIbControllerLogFile();
+
                         // if existing session detected from IBController log file, log error and throw exception
-                        if (ExistingSessionDetected())
+                        if (ExistingSessionDetected(ibcLogContent))
                         {
                             existingSessionDetected = true;
                             throw new Exception("InteractiveBrokersBrokerage.Connect(): An existing session was detected and will not be automatically disconnected. Please close the existing session manually.");
+                        }
+
+                        // if security dialog detected from IBController log file, log error and throw exception
+                        if (SecurityDialogDetected(ibcLogContent))
+                        {
+                            securityDialogDetected = true;
+                            throw new Exception("InteractiveBrokersBrokerage.Connect(): A security dialog was detected for Second Factor/Code Card Authentication. Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
                         }
 
                         // max out at 5 attempts to connect ~1 minute
@@ -551,19 +584,39 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
 
-                    if (!DownloadAccount())
+                    if (IsFinancialAdvisor)
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
-
-                        Disconnect();
-
-                        if (attempt++ < maxAttempts)
+                        if (!DownloadFinancialAdvisorAccount(_account))
                         {
-                            Thread.Sleep(1000);
-                            continue;
-                        }
+                            Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorAccount failed.");
 
-                        throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                            Disconnect();
+
+                            if (attempt++ < maxAttempts)
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorAccount failed.");
+                        }
+                    }
+                    else
+                    {
+                        if (!DownloadAccount(_account))
+                        {
+                            Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
+
+                            Disconnect();
+
+                            if (attempt++ < maxAttempts)
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                        }
                     }
 
                     // enable detailed logging
@@ -573,8 +626,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    // if existing session detected from IBController log file, log error and throw exception
-                    if (existingSessionDetected)
+                    // if existing session or security dialog detected from IBController log file, log error and throw exception
+                    if (existingSessionDetected || securityDialogDetected)
                     {
                         Log.Error(err);
                         throw;
@@ -590,25 +643,37 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // we couldn't connect after several attempts, log the error and throw an exception
                     Log.Error(err);
 
-                    // add a blurb about TWS for connection refused errors
-                    if (err.Message.Contains("Connection refused"))
-                    {
-                        throw new Exception(err.Message + ". Be sure to logout of Trader Workstation. " +
-                            "IB only allows one active log in at a time. " +
-                            "This can also be caused by requiring two-factor authentication. " +
-                            "Be sure to disable this in IB Account Management > Security > SLS Opt out.", err);
-                    }
-
                     throw;
                 }
             }
         }
 
         /// <summary>
+        /// Downloads the financial advisor configuration information.
+        /// This method is called upon successful connection.
+        /// </summary>
+        private bool DownloadFinancialAdvisorAccount(string account)
+        {
+            if (!_accountData.FinancialAdvisorConfiguration.Load(_client))
+                return false;
+
+            // Only one account can be subscribed at a time.
+            // With Financial Advisory (FA) account structures there is an alternative way of
+            // specifying the account code such that information is returned for 'All' sub accounts.
+            // This is done by appending the letter 'A' to the end of the account number
+            // https://interactivebrokers.github.io/tws-api/account_updates.html#gsc.tab=0
+
+            // subscribe to the FA account
+            DownloadAccount(account + "A");
+
+            return true;
+        }
+
+        /// <summary>
         /// Downloads the account information and subscribes to account updates.
         /// This method is called upon successful connection.
         /// </summary>
-        private bool DownloadAccount()
+        private bool DownloadAccount(string account)
         {
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
             EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
@@ -629,7 +694,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.UpdateAccountValue += clientOnUpdateAccountValue;
 
             // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
-            _client.ClientSocket.reqAccountUpdates(true, _account);
+            _client.ClientSocket.reqAccountUpdates(true, account);
 
             // wait to see the first account value update
             firstAccountUpdateReceived.WaitOne(2500);
@@ -687,14 +752,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _messagingRateLimiter.Dispose();
 
             _ctsRestartGateway.Cancel(false);
-        }
-
-        /// <summary>
-        /// Gets the raw account values sent from IB
-        /// </summary>
-        public Dictionary<string, string> GetAccountValues()
-        {
-            return new Dictionary<string, string>(_accountProperties);
         }
 
         /// <summary>
@@ -980,11 +1037,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // we also need to check for negative values, IB returns -1 on Saturday
             if (rate <= 0)
             {
+                string errorMessage;
                 bool pacingViolation;
                 const int pacingDelaySeconds = 60;
 
                 do
                 {
+                    errorMessage = string.Empty;
                     pacingViolation = false;
                     manualResetEvent.Reset();
 
@@ -1016,6 +1075,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             // pacing violation happened
                             pacingViolation = true;
                         }
+                        else
+                        {
+                            errorMessage = $"Code: {args.Code} - ErrorMessage: {args.Message}";
+                        }
                     };
 
                     Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting historical data for " + currencyPair);
@@ -1046,7 +1109,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         var mostRecentQuote = ordered.FirstOrDefault();
                         if (mostRecentQuote == null)
                         {
-                            throw new Exception("Unable to get recent quote for " + currencyPair);
+                            throw new Exception("Unable to get recent quote for " + currencyPair + " - " + errorMessage);
                         }
 
                         rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
@@ -1099,12 +1162,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // code 1100 is a connection failure, we'll wait a minute before exploding gracefully
-            if (errorCode == 1100 && !_disconnected1100Fired)
+            if (errorCode == 1100)
             {
-                _disconnected1100Fired = true;
+                if (!_disconnected1100Fired)
+                {
+                    _disconnected1100Fired = true;
 
-                // begin the try wait logic
-                TryWaitForReconnect();
+                    // begin the try wait logic
+                    TryWaitForReconnect();
+                }
+                else
+                {
+                    // The IB API sends many consecutive disconnect messages (1100) during nightly reset periods and weekends,
+                    // so we send the message event only when we transition from connected to disconnected state,
+                    // to avoid flooding the logs with the same message.
+                    return;
+                }
             }
             else if (errorCode == 1102 || errorCode == 1101)
             {
@@ -1132,13 +1205,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(requestId);
-                const int orderFee = 0;
-                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                if (order != null)
                 {
-                    Status = OrderStatus.Invalid,
-                    Message = message
-                };
-                OnOrderEvent(orderEvent);
+                    const int orderFee = 0;
+                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                    {
+                        Status = OrderStatus.Invalid,
+                        Message = message
+                    };
+                    OnOrderEvent(orderEvent);
+                }
+                else
+                {
+                    Log.Error($"InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Unable to locate order with BrokerageID {requestId}");
+                }
             }
 
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
@@ -1240,17 +1320,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleUpdateAccountValue(object sender, IB.UpdateAccountValueEventArgs e)
         {
-            //https://www.interactivebrokers.com/en/software/api/apiguide/activex/updateaccountvalue.htm
-
             try
             {
-                _accountProperties[e.Currency + ":" + e.Key] = e.Value;
+                _accountData.AccountProperties[e.Currency + ":" + e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value, CultureInfo.InvariantCulture);
-                    _cashBalances.AddOrUpdate(e.Currency, cashBalance);
+                    _accountData.CashBalances.AddOrUpdate(e.Currency, cashBalance);
+
                     OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }
             }
@@ -1293,39 +1372,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (status == OrderStatus.Filled || status == OrderStatus.PartiallyFilled)
                 {
-                    var currentQuantityFilled = Convert.ToInt32(update.Filled);
-                    var totalQuantityFilled = Convert.ToInt32(order.AbsoluteQuantity - update.Remaining);
-                    var remainingQuantity = update.Remaining;
-                    var price = Convert.ToDecimal(update.LastFillPrice);
-
-                    if (!IsFillAlreadyHandled(order, update.OrderId, remainingQuantity))
-                    {
-                        HandleFill(order, currentQuantityFilled, totalQuantityFilled, remainingQuantity, price, status);
-                    }
+                    // fill events will be only processed in HandleExecutionDetails and HandleCommissionReports
+                    return;
                 }
-                else
+
+                // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
+                if (status != order.Status)
                 {
-                    // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
-                    if (status != order.Status)
+                    if (order.Status.IsClosed())
                     {
-                        if (order.Status.IsClosed())
+                        // if the order is already in a closed state, we ignore the event
+                        Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
+                    }
+                    else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
+                    {
+                        // if we receive a New or Submitted event when already partially filled, we ignore it
+                        Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
+                    }
+                    else
+                    {
+                        // fire the event
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
                         {
-                            // if the order is already in a closed state, we ignore the event
-                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
-                        }
-                        else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
-                        {
-                            // if we receive a New or Submitted event when already partially filled, we ignore it
-                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
-                        }
-                        else
-                        {
-                            // fire the event
-                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
-                            {
-                                Status = status
-                            });
-                        }
+                            Status = status
+                        });
                     }
                 }
             }
@@ -1333,6 +1403,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + err);
             }
+        }
+
+        /// <summary>
+        /// Handle OpenOrder event from IB
+        /// </summary>
+        private static void HandleOpenOrder(object sender, IB.OpenOrderEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandleOpenOrder(): {e}");
+        }
+
+        /// <summary>
+        /// Handle OpenOrderEnd event from IB
+        /// </summary>
+        private static void HandleOpenOrderEnd(object sender, EventArgs e)
+        {
+            Log.Trace("InteractiveBrokersBrokerage.HandleOpenOrderEnd()");
         }
 
         /// <summary>
@@ -1368,17 +1454,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
-                var currentQuantityFilled = Convert.ToInt32(executionDetails.Execution.Shares);
-                var totalQuantityFilled = Convert.ToInt32(executionDetails.Execution.CumQty);
-                var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
-                var price = Convert.ToDecimal(executionDetails.Execution.Price);
+                // For financial advisor orders, we first receive executions and commission reports for the master order,
+                // followed by executions and commission reports for all allocations.
+                // We don't want to emit fills for these allocation events,
+                // so we ignore events received after the order is completely filled or
+                // executions for allocations which are already included in the master execution.
 
-                // set order status based on remaining quantity
-                var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
-
-                if (!IsFillAlreadyHandled(order, executionDetails.Execution.OrderId, remainingQuantity))
+                CommissionReport commissionReport;
+                if (_commissionReports.TryGetValue(executionDetails.Execution.ExecId, out commissionReport))
                 {
-                    HandleFill(order, currentQuantityFilled, totalQuantityFilled, remainingQuantity, price, status);
+                    if (CanEmitFill(order, executionDetails.Execution))
+                    {
+                        // we have both execution and commission report, emit the fill
+                        EmitOrderFill(order, executionDetails.Execution, commissionReport);
+                    }
+
+                    _commissionReports.TryRemove(commissionReport.ExecId, out commissionReport);
+                }
+                else
+                {
+                    // save execution in dictionary and wait for commission report
+                    _orderExecutions[executionDetails.Execution.ExecId] = executionDetails.Execution;
                 }
             }
             catch (Exception err)
@@ -1388,18 +1484,84 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Processes the current fill and fires the order event
+        /// Handle commission report events from IB
         /// </summary>
-        private void HandleFill(Order order, int currentQuantityFilled, int totalQuantityFilled, int remainingQuantity, decimal price, OrderStatus status)
+        /// <remarks>
+        /// This method matches commission reports with previously saved executions and fires the OrderEvents.
+        /// </remarks>
+        private void HandleCommissionReport(object sender, IB.CommissionReportEventArgs e)
         {
-            // apply order fees on the first fill event
-            // TODO: What about partial filled orders that get cancelled?
-            var orderFee = 0m;
-            if (currentQuantityFilled == totalQuantityFilled)
+            try
             {
-                var security = _securityProvider.GetSecurity(order.Symbol);
-                orderFee = security.FeeModel.GetOrderFee(security, order);
+                Log.Trace("InteractiveBrokersBrokerage.HandleCommissionReport(): " + e);
+
+                Execution execution;
+                if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out execution))
+                {
+                    // save commission in dictionary and wait for execution event
+                    _commissionReports[e.CommissionReport.ExecId] = e.CommissionReport;
+                    return;
+                }
+
+                var order = _orderProvider.GetOrderByBrokerageId(execution.OrderId);
+                if (order == null)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.HandleExecutionDetails(): Unable to locate order with BrokerageID " + execution.OrderId);
+                    return;
+                }
+
+                if (CanEmitFill(order, execution))
+                {
+                    // we have both execution and commission report, emit the fill
+                    EmitOrderFill(order, execution, e.CommissionReport);
+                }
+
+                // always remove previous execution
+                _orderExecutions.TryRemove(e.CommissionReport.ExecId, out execution);
             }
+            catch (Exception err)
+            {
+                Log.Error("InteractiveBrokersBrokerage.HandleCommissionReport(): " + err);
+            }
+        }
+
+        /// <summary>
+        /// Decide which fills should be emitted, accounting for different types of Financial Advisor orders
+        /// </summary>
+        private bool CanEmitFill(Order order, Execution execution)
+        {
+            if (order.Status == OrderStatus.Filled)
+                return false;
+
+            // non-FA orders
+            if (!IsFinancialAdvisor)
+                return true;
+
+            var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+            if (orderProperties == null)
+                return true;
+
+            return
+                // FA master orders for groups/profiles
+                string.IsNullOrWhiteSpace(orderProperties.Account) && execution.AcctNumber == _account ||
+
+                // FA orders for single managed accounts
+                !string.IsNullOrWhiteSpace(orderProperties.Account) && execution.AcctNumber == orderProperties.Account;
+        }
+
+        /// <summary>
+        /// Emits an order fill (or partial fill) including the actual IB commission paid
+        /// </summary>
+        private void EmitOrderFill(Order order, Execution execution, CommissionReport commissionReport)
+        {
+            var currentQuantityFilled = Convert.ToInt32(execution.Shares);
+            var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
+            var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
+            var price = Convert.ToDecimal(execution.Price);
+            var orderFee = Convert.ToDecimal(commissionReport.Commission);
+
+            // set order status based on remaining quantity
+            var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
 
             // mark sells as negative quantities
             var fillQuantity = order.Direction == OrderDirection.Buy ? currentQuantityFilled : -currentQuantityFilled;
@@ -1420,50 +1582,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Checks if the current fill has already been processed
-        /// </summary>
-        /// <remarks>
-        /// We receive fill events in both IB OrderStatusUpdates and ExecutionDetail callbacks,
-        /// so this function needs to check if it has been called for the same fill
-        /// </remarks>
-        private bool IsFillAlreadyHandled(Order order, int orderId, int newRemainingQuantity)
-        {
-            // ignore calls after the order is filled
-            if (order.Status == OrderStatus.Filled)
-                return true;
-
-            int previousRemainingQuantity;
-            if (_orderFills.TryGetValue(orderId, out previousRemainingQuantity))
-            {
-                if (newRemainingQuantity >= previousRemainingQuantity)
-                {
-                    // fill already processed
-                    return true;
-                }
-            }
-
-            if (newRemainingQuantity > 0)
-            {
-                // still a partial fill, update the remaining quantity for the order
-                _orderFills[orderId] = newRemainingQuantity;
-            }
-            else
-            {
-                // order filled, no need to track it anymore
-                _orderFills.Remove(orderId);
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Handle portfolio changed events from IB
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol.Value] = holding;
+            _accountData.AccountHoldings[holding.Symbol.Value] = holding;
         }
 
         /// <summary>
@@ -1506,6 +1631,40 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var minTick = GetMinTick(contract);
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.LimitPrice, minTick));
                 ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.StopPrice, minTick));
+            }
+
+            // add financial advisor properties
+            if (IsFinancialAdvisor)
+            {
+                // https://interactivebrokers.github.io/tws-api/financial_advisor.html#gsc.tab=0
+
+                var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+                if (orderProperties != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(orderProperties.Account))
+                    {
+                        // order for a single managed account
+                        ibOrder.Account = orderProperties.Account;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(orderProperties.FaProfile))
+                    {
+                        // order for an account profile
+                        ibOrder.FaProfile = orderProperties.FaProfile;
+
+                    }
+                    else if (!string.IsNullOrWhiteSpace(orderProperties.FaGroup))
+                    {
+                        // order for an account group
+                        ibOrder.FaGroup = orderProperties.FaGroup;
+                        ibOrder.FaMethod = orderProperties.FaMethod;
+
+                        if (ibOrder.FaMethod == "PctChange")
+                        {
+                            ibOrder.FaPercentage = orderProperties.FaPercentage.ToString();
+                            ibOrder.TotalQuantity = 0;
+                        }
+                    }
+                }
             }
 
             // not yet supported
@@ -1629,7 +1788,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // Otherwise we convert Market.* markets into IB exchanges if we have them in our map
 
                 contract.Symbol = ibSymbol;
-                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.YearMonth);
+                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.EightCharacter);
 
                 if (symbol.ID.Market == Market.USA)
                 {
@@ -2024,11 +2183,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 yield return tick;
 
-                if (_underlyings.ContainsKey(tick.Symbol))
+                lock (_sync)
                 {
-                    var underlyingTick = tick.Clone();
-                    underlyingTick.Symbol = _underlyings[tick.Symbol];
-                    yield return underlyingTick;
+                    if (_underlyings.ContainsKey(tick.Symbol))
+                    {
+                        var underlyingTick = tick.Clone();
+                        underlyingTick.Symbol = _underlyings[tick.Symbol];
+                        yield return underlyingTick;
+                    }
                 }
             }
         }
@@ -2582,7 +2744,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// For this method to work, the following setting is required in the IBController.ini file:
         /// ExistingSessionDetectedAction=secondary
         /// </remarks>
-        private static bool ExistingSessionDetected()
+        private static bool ExistingSessionDetected(List<string> ibcLogLines)
+        {
+            return IbControllerLogContainsMessage(ibcLogLines, "End this session and let the other session proceed");
+        }
+
+        /// <summary>
+        /// Returns true if an IB security dialog (2FA/code card) was detected by IBController
+        /// </summary>
+        private static bool SecurityDialogDetected(List<string> ibcLogLines)
+        {
+            return IbControllerLogContainsMessage(ibcLogLines, "Second Factor Authentication") ||
+                   IbControllerLogContainsMessage(ibcLogLines, "Security Code Card Authentication");
+        }
+
+        /// <summary>
+        /// Reads the current IBController log file
+        /// </summary>
+        /// <returns>A list containing the lines of the file</returns>
+        private static List<string> LoadCurrentIbControllerLogFile()
         {
             // find the current IBController log file name
             var ibControllerLogPath = Path.Combine(Config.Get("ib-controller-dir"), "Logs");
@@ -2599,17 +2779,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             }
 
-            if (ibControllerLogFileName.IsNullOrEmpty())
-            {
-                return false;
-            }
+            return ibControllerLogFileName.IsNullOrEmpty()
+                ? new List<string>()
+                : File.ReadAllLines(ibControllerLogFileName).ToList();
+        }
 
-            // read the lines and find the message indicating the choice to leave the existing session running
-            var lines = File.ReadAllLines(ibControllerLogFileName).ToList();
+        /// <summary>
+        /// Searches for a message in the IBController log file
+        /// </summary>
+        /// <param name="lines">The lines of text of the IBController log file</param>
+        /// <param name="message">The message text to find</param>
+        /// <returns>true if the message was found</returns>
+        private static bool IbControllerLogContainsMessage(List<string> lines, string message)
+        {
+            // read the lines and find the message
             var separatorLine = new string('-', 60);
             var index = lines.FindLastIndex(x => x.Contains(separatorLine));
 
-            return index >= 0 && lines.Skip(index + 1).Any(line => line.Contains("End this session and let the other session proceed"));
+            return index >= 0 && lines.Skip(index + 1).Any(line => line.Contains(message));
         }
 
         /// <summary>

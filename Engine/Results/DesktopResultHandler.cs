@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using System.Diagnostics;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -49,12 +50,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// A dictionary containing summary statistics
         /// </summary>
-        public Dictionary<string, string> FinalStatistics { get; private set; } 
+        public Dictionary<string, string> FinalStatistics { get; private set; }
 
         /// <summary>
         /// Messaging to store notification messages for processing.
         /// </summary>
-        public ConcurrentQueue<Packet> Messages 
+        public ConcurrentQueue<Packet> Messages
         {
             get;
             set;
@@ -78,14 +79,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Charts collection for storing the master copy of user charting data.
         /// </summary>
-        public ConcurrentDictionary<string, Chart> Charts 
+        public ConcurrentDictionary<string, Chart> Charts
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Boolean flag indicating the result hander thread is busy. 
+        /// Boolean flag indicating the result hander thread is busy.
         /// False means it has completely finished and ready to dispose.
         /// </summary>
         public bool IsActive {
@@ -122,7 +123,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Desktop default constructor
         /// </summary>
-        public DesktopResultHandler() 
+        public DesktopResultHandler()
         {
             FinalStatistics = new Dictionary<string, string>();
             Messages = new ConcurrentQueue<Packet>();
@@ -156,7 +157,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Run()
         {
-            while ( !_exitTriggered || Messages.Count > 0 ) 
+            while ( !_exitTriggered || Messages.Count > 0 )
             {
                 Thread.Sleep(100);
             }
@@ -192,7 +193,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Send a runtime error message back to the browser highlighted with in red 
+        /// Send a runtime error message back to the browser highlighted with in red
         /// </summary>
         /// <param name="message">Error message.</param>
         /// <param name="stacktrace">Stacktrace information string</param>
@@ -311,7 +312,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
         public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
-        { 
+        {
             //NOP. Don't sample asset prices in console.
         }
 
@@ -348,7 +349,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        
+
         /// <summary>
         /// Algorithm final analysis results dumped to the console.
         /// </summary>
@@ -356,15 +357,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="orders">Collection of orders from the algorithm</param>
         /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
         /// <param name="holdings">Current holdings state for the algorithm</param>
+        /// <param name="cashbook">Cashbook for the holdings.</param>
         /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
         /// <param name="banner">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner)
+        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> banner)
         {
             // uncomment these code traces to help write regression tests
             //Log.Trace("var statistics = new Dictionary<string, string>();");
-            
+
             // Bleh. Nicely format statistical analysis on your algorithm results. Save to file etc.
-            foreach (var pair in statisticsResults.Summary) 
+            foreach (var pair in statisticsResults.Summary)
             {
                 DebugMessage("STATISTICS:: " + pair.Key + " " + pair.Value);
             }
@@ -377,7 +379,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="algorithm">Algorithm we're working on.</param>
         /// <remarks>While setting the algorithm the backtest result handler.</remarks>
-        public void SetAlgorithm(IAlgorithm algorithm) 
+        public void SetAlgorithm(IAlgorithm algorithm)
         {
             _algorithm = algorithm;
         }
@@ -415,7 +417,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Clear the outstanding message queue to exit the thread.
         /// </summary>
-        public void PurgeQueue() 
+        public void PurgeQueue()
         {
             Messages.Clear();
         }
@@ -440,7 +442,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Process the synchronous result events, sampling and message reading. 
+        /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
@@ -460,7 +462,7 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleRange(_algorithm.GetChartUpdates());
 
                 //Sample the asset pricing:
-                foreach (var security in _algorithm.Securities.Values) 
+                foreach (var security in _algorithm.Securities.Values)
                 {
                     SampleAssetPrices(security.Symbol, time, security.Price);
                 }
