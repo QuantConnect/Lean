@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -33,7 +32,6 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -349,7 +347,7 @@ namespace QuantConnect.Lean.Engine.Results
                             {
                                 // remove directory pathing characters from chart names
                                 var safeName = chart.Value.Name.Replace('/', '-');
-                                chartComplete.Add(safeName, chart.Value);
+                                chartComplete.Add(safeName, chart.Value.Clone());
                             }
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
@@ -783,7 +781,14 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Convert local dictionary:
-                var charts = new Dictionary<string, Chart>(Charts);
+                var charts = new Dictionary<string, Chart>();
+                lock (_chartLock)
+                {
+                    foreach (var kvp in Charts)
+                    {
+                        charts.Add(kvp.Key, kvp.Value.Clone());
+                    }
+                }
 
                 //Create a packet:
                 var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime));
@@ -837,63 +842,62 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 Log.Debug("LiveTradingResultHandler.StoreResult(): Begin store result sampling");
-                lock (_chartLock)
+
+                // Make sure this is the right type of packet:
+                if (packet.Type != PacketType.LiveResult) return;
+
+                // Port to packet format:
+                var live = packet as LiveResultPacket;
+
+                if (live != null)
                 {
-                    // Make sure this is the right type of packet:
-                    if (packet.Type != PacketType.LiveResult) return;
+                    // we need to down sample
+                    var start = DateTime.UtcNow.Date;
+                    var stop = start.AddDays(1);
 
-                    // Port to packet format:
-                    var live = packet as LiveResultPacket;
+                    // truncate to just today, we don't need more than this for anyone
+                    Truncate(live.Results, start, stop);
 
-                    if (live != null)
+                    var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
+
+                    // minute resoluton data, save today
+                    var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
+                    var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                    // swap out our charts with the sampeld data
+                    live.Results.Charts = minuteCharts;
+                    SaveResults(CreateKey("minute"), live.Results);
+
+                    // 10 minute resolution data, save today
+                    var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
+                    var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                    live.Results.Charts = tenminuteCharts;
+                    SaveResults(CreateKey("10minute"), live.Results);
+
+                    // high resolution data, we only want to save an hour
+                    live.Results.Charts = highResolutionCharts;
+                    start = DateTime.UtcNow.RoundDown(TimeSpan.FromHours(1));
+                    stop = DateTime.UtcNow.RoundUp(TimeSpan.FromHours(1));
+
+                    Truncate(live.Results, start, stop);
+
+                    foreach (var name in live.Results.Charts.Keys)
                     {
-                        // we need to down sample
-                        var start = DateTime.UtcNow.Date;
-                        var stop = start.AddDays(1);
+                        var result = new LiveResult();
+                        result.Orders = new Dictionary<int, Order>(live.Results.Orders);
+                        result.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
+                        result.Charts = new Dictionary<string, Chart>();
+                        result.Charts.Add(name, live.Results.Charts[name]);
 
-                        // truncate to just today, we don't need more than this for anyone
-                        Truncate(live.Results, start, stop);
-
-                        var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
-
-                        // minute resoluton data, save today
-                        var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
-                        var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
-
-                        // swap out our charts with the sampeld data
-                        live.Results.Charts = minuteCharts;
-                        SaveResults(CreateKey("minute"), live.Results);
-
-                        // 10 minute resolution data, save today
-                        var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
-                        var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
-
-                        live.Results.Charts = tenminuteCharts;
-                        SaveResults(CreateKey("10minute"), live.Results);
-
-                        // high resolution data, we only want to save an hour
-                        live.Results.Charts = highResolutionCharts;
-                        start = DateTime.UtcNow.RoundDown(TimeSpan.FromHours(1));
-                        stop = DateTime.UtcNow.RoundUp(TimeSpan.FromHours(1));
-
-                        Truncate(live.Results, start, stop);
-
-                        foreach (var name in live.Results.Charts.Keys)
-                        {
-                            var result = new LiveResult();
-                            result.Orders = new Dictionary<int, Order>(live.Results.Orders);
-                            result.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
-                            result.Charts = new Dictionary<string, Chart>();
-                            result.Charts.Add(name, live.Results.Charts[name]);
-
-                            SaveResults(CreateKey("second_" + CreateSafeChartName(name), "yyyy-MM-dd-HH"), result);
-                        }
-                    }
-                    else
-                    {
-                        Log.Error("LiveResultHandler.StoreResult(): Result Null.");
+                        SaveResults(CreateKey("second_" + CreateSafeChartName(name), "yyyy-MM-dd-HH"), result);
                     }
                 }
+                else
+                {
+                    Log.Error("LiveResultHandler.StoreResult(): Result Null.");
+                }
+
                 Log.Debug("LiveTradingResultHandler.StoreResult(): End store result sampling");
             }
             catch (Exception err)

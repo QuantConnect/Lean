@@ -36,7 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.KaikoDataConverter.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.GDAXDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -153,6 +153,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
+    <Compile Include="GDAXDownloader\Program.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />

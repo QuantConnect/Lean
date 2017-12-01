@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Globalization;
 using System.IO;
@@ -50,7 +65,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly long[] _transactionsIdx = {27, 29, 31, 33};
+        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
 
         /// <summary>
         ///     Integer representing client version.
@@ -60,7 +75,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = {26, 28, 30, 32};
+        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
 
         /// <summary>
         ///     Sum of opening and closing Transactions for the entire time interval.
@@ -75,7 +90,7 @@ namespace QuantConnect.Data.Custom
         ///     The volume measured in the QUOTE CURRENCY.
         /// </summary>
         /// <remarks>Please remember to convert this data to a common currency before making comparison between different pairs.</remarks>
-        public long Value { get; set; }
+        public long Volume { get; set; }
 
         /// <summary>
         ///     Return the URL string source of the file. This will be converted to a stream
@@ -90,7 +105,7 @@ namespace QuantConnect.Data.Custom
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var interval = GetIntervalFromResolution(config.Resolution);
-            var symbolId = GetFxcmIDFromSymbol(config.Symbol);
+            var symbolId = GetFxcmIDFromSymbol(config.Symbol.Value.Split('_').First());
 
             if (isLiveMode)
             {
@@ -119,80 +134,78 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
+            var fxcmVolume = new FxcmVolume { DataType = MarketDataType.Base, Symbol = config.Symbol };
             if (isLiveMode)
             {
-                var obs = line.Split('\n')[2].Split(';');
-                var stringDate = obs[0].Substring(startIndex: 3);
-                var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
-                                                  DateTimeFormatInfo.InvariantInfo);
-                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-                var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                return new FxcmVolume
+                try
                 {
-                    Symbol = config.Symbol,
-                    Time = obsTime,
-                    Value = volume,
-                    Transactions = transactions
-                };
+                    var obs = line.Split('\n')[2].Split(';');
+                    var stringDate = obs[0].Substring(startIndex: 3);
+                    fxcmVolume.Time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm", DateTimeFormatInfo.InvariantInfo);
+                    fxcmVolume.Volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+                    fxcmVolume.Transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                    fxcmVolume.Value = fxcmVolume.Volume;
+                }
+                catch (Exception exception)
+                {
+                    Logging.Log.Error($"Invalid data. Line: {line}. Exception: {exception.Message}");
+                    return null;
+                }
             }
             else
             {
-                DateTime time;
                 var obs = line.Split(',');
                 if (config.Resolution == Resolution.Minute)
                 {
-                    time = date.Date.AddMilliseconds(int.Parse(obs[0]));
+                    fxcmVolume.Time = date.Date.AddMilliseconds(int.Parse(obs[0]));
                 }
                 else
                 {
-                    time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
+                    fxcmVolume.Time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                 }
-                return new FxcmVolume
-                {
-                    DataType = MarketDataType.Base,
-                    Symbol = config.Symbol,
-                    Time = time,
-                    Value = long.Parse(obs[1]),
-                    Transactions = int.Parse(obs[2])
-                };
+                fxcmVolume.Volume = long.Parse(obs[1]);
+                fxcmVolume.Transactions = int.Parse(obs[2]);
+                fxcmVolume.Value = fxcmVolume.Volume;
             }
+            return fxcmVolume;
         }
 
         private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
         {
-            var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
+            var source = Path.Combine(new[] { Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower() });
             string filename;
 
+            var symbol = config.Symbol.Value.Split('_').First().ToLower();
             if (config.Resolution == Resolution.Minute)
             {
                 filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
-                source = Path.Combine(source, config.Symbol.Value.ToLower(), filename);
+                source = Path.Combine(source, symbol, filename);
             }
             else
             {
-                filename = string.Format("{0}_volume.zip", config.Symbol.Value.ToLower());
+                filename = string.Format("{0}_volume.zip", symbol);
                 source = Path.Combine(source, filename);
             }
             return source;
         }
 
         /// <summary>
-        ///     Gets the FXCM identifier from a FOREX pair symbol.
+        ///     Gets the FXCM identifier from a FOREX pair ticker.
         /// </summary>
-        /// <param name="symbol">The pair symbol.</param>
+        /// <param name="ticker">The pair ticker.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">Volume data is not available for the selected symbol. - symbol</exception>
-        private int GetFxcmIDFromSymbol(Symbol symbol)
+        /// <exception cref="System.ArgumentException">Volume data is not available for the selected ticker. - ticker</exception>
+        private int GetFxcmIDFromSymbol(string ticker)
         {
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), ticker);
             }
             catch (ArgumentException)
             {
-                throw new ArgumentOutOfRangeException(nameof(symbol), symbol,
-                                                      "Volume data is not available for the selected symbol.");
+                throw new ArgumentOutOfRangeException(nameof(ticker), ticker,
+                                                      "Volume data is not available for the selected ticker.");
             }
             return symbolId;
         }
