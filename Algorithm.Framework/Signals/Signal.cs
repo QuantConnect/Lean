@@ -81,5 +81,14 @@ namespace QuantConnect.Algorithm.Framework.Signals
             Confidence = confidence;
             Period = period;
         }
+
+        /// <summary>
+        /// Creates a deep clone of this signal instance
+        /// </summary>
+        /// <returns>A new signal with identical values, but new instances</returns>
+        public ISignal Clone()
+        {
+            return new Signal(Symbol, Type, Direction, PercentChange, Confidence, Period);
+        }
     }
 }

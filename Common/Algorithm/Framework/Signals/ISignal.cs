@@ -51,5 +51,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// Gets the period over which this signal is expected to come to fruition
         /// </summary>
         TimeSpan? Period { get; }
+
+        /// <summary>
+        /// Creates a deep clone of this signal instance
+        /// </summary>
+        /// <returns>A new signal with identical values, but new instances</returns>
+        ISignal Clone();
     }
 }
