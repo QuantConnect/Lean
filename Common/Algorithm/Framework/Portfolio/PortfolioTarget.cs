@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Interfaces;
+
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
@@ -50,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="symbol">The symbol the target is for</param>
         /// <param name="percent">The requested target percent of total portfolio value</param>
         /// <returns>A portfolio target for the specified symbol/percent</returns>
-        public static IPortfolioTarget Percent(QCAlgorithmFramework algorithm, Symbol symbol, decimal percent)
+        public static IPortfolioTarget Percent(IAlgorithm algorithm, Symbol symbol, decimal percent)
         {
             var security = algorithm.Securities[symbol];
             if (security.Price == 0)

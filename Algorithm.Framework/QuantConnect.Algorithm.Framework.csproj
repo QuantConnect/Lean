@@ -58,8 +58,6 @@
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\IPortfolioTarget.cs" />
-    <Compile Include="Portfolio\PortfolioTarget.cs" />
     <Compile Include="Portfolio\SimplePortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
@@ -72,11 +70,8 @@
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Signals\ConstantSignalModel.cs" />
     <Compile Include="Signals\MACDSignalModel.cs" />
-    <Compile Include="Signals\SignalDirection.cs" />
-    <Compile Include="Signals\ISignal.cs" />
     <Compile Include="Signals\ISignalModel.cs" />
     <Compile Include="Signals\Signal.cs" />
-    <Compile Include="Signals\SignalType.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

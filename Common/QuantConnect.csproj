@@ -129,6 +129,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmSettings.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
     <Compile Include="API\AuthenticationResponse.cs" />
     <Compile Include="API\Backtest.cs" />
     <Compile Include="API\Compile.cs" />
@@ -489,6 +491,9 @@
     <Compile Include="Securities\SecurityPortfolioManager.cs" />
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
+    <Compile Include="Algorithm\Framework\Signals\ISignal.cs" />
+    <Compile Include="Algorithm\Framework\Signals\SignalDirection.cs" />
+    <Compile Include="Algorithm\Framework\Signals\SignalType.cs" />
     <Compile Include="Statistics\AlgorithmPerformance.cs" />
     <Compile Include="Statistics\PortfolioStatistics.cs" />
     <Compile Include="Statistics\StatisticsBuilder.cs" />
