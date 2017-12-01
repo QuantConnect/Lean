@@ -25,17 +25,31 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Concurrent;
+using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
+    /// Defines an event fired from within an algorithm instance.
+    /// </summary>
+    /// <typeparam name="T">The event type</typeparam>
+    /// <param name="algorithm">The algorithm that fired the event</param>
+    /// <param name="eventData">The event data</param>
+    public delegate void AlgorithmEvent<in T>(IAlgorithm algorithm, T eventData);
+
+    /// <summary>
     /// Interface for QuantConnect algorithm implementations. All algorithms must implement these
     /// basic members to allow interaction with the Lean Backtesting Engine.
     /// </summary>
     public interface IAlgorithm
     {
+        /// <summary>
+        /// Event fired when an algorithm generates a signal
+        /// </summary>
+        event AlgorithmEvent<SignalCollection> SignalsGenerated;
+
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.

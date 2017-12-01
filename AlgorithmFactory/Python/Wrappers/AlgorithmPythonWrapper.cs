@@ -30,6 +30,7 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Signals;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -79,6 +80,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
                             _baseAlgorithm = (QCAlgorithm)_algorithm;
+
+                            // write events such that when the base handles an event it
+                            // will also invoke event handlers defined on this instance
+                            _baseAlgorithm.SignalsGenerated += SignalsGenerated;
 
                             // Set pandas
                             _baseAlgorithm.SetPandasConverter();
@@ -435,6 +440,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             _baseAlgorithm.SetFutureChainProvider(futureChainProvider);
         }
+
+        /// <summary>
+        /// Event fired when an algorithm generates a signal
+        /// </summary>
+        public event AlgorithmEvent<SignalCollection> SignalsGenerated;
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.

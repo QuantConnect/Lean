@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
@@ -98,8 +99,14 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public override void FrameworkOnData(Slice slice)
         {
-            var signals = Signal.Update(this, slice);
+            // generate and emit signals
+            var signals = Signal.Update(this, slice).ToList();
+            OnSignalsGenerated(signals);
+
+            // construct portfolio targets from signals
             var targets = PortfolioConstruction.CreateTargets(this, signals);
+
+            // execute on the targets and manage risk
             Execution.Execute(this, targets);
             RiskManagement.ManageRisk(this);
         }
