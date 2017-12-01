@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -101,5 +101,9 @@ namespace QuantConnect.Securities.Crypto
         /// </remarks>
         public string BaseCurrencySymbol { get; protected set; }
 
+        /// <summary>
+        /// Get the current value of the security.
+        /// </summary>
+        public override decimal Price => Cache.GetData<TradeBar>()?.Close ?? Cache.Price;
     }
 }

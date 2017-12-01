@@ -597,22 +597,22 @@ namespace QuantConnect.Tests
                 {"Total Trades", "6"},
                 {"Average Win", "0.95%"},
                 {"Average Loss", "-2.01%"},
-                {"Compounding Annual Return", "255.854%"},
+                {"Compounding Annual Return", "255.643%"},
                 {"Drawdown", "6.600%"},
                 {"Expectancy", "-0.016"},
-                {"Net Profit", "1.401%"},
-                {"Sharpe Ratio", "1.18"},
+                {"Net Profit", "1.400%"},
+                {"Sharpe Ratio", "1.179"},
                 {"Loss Rate", "33%"},
                 {"Win Rate", "67%"},
                 {"Profit-Loss Ratio", "0.48"},
-                {"Alpha", "-1.135"},
-                {"Beta", "1.08"},
+                {"Alpha", "-1.178"},
+                {"Beta", "1.249"},
                 {"Annual Standard Deviation", "0.812"},
                 {"Annual Variance", "0.66"},
-                {"Information Ratio", "-8.445"},
-                {"Tracking Error", "0.116"},
-                {"Treynor Ratio", "0.888"},
-                {"Total Fees", "$2039.69"}
+                {"Information Ratio", "-4.236"},
+                {"Tracking Error", "0.177"},
+                {"Treynor Ratio", "0.767"},
+                {"Total Fees", "$2040.34"}
             };
 
             var basicTemplateFuturesAlgorithmDailyStatistics = new Dictionary<string, string>
