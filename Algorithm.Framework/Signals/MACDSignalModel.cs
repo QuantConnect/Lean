@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -72,7 +73,14 @@ namespace QuantConnect.Algorithm.Framework.Signals
                     direction = SignalDirection.Down;
                 }
 
-                yield return new Signal(sd.Security.Symbol, SignalType.Price, direction);
+                var signal = new Signal(sd.Security.Symbol, SignalType.Price, direction);
+                if (signal.Equals(sd.PreviousSignal))
+                {
+                    continue;
+                }
+
+                sd.PreviousSignal = signal.Clone();
+                yield return signal;
             }
         }
 
@@ -101,6 +109,8 @@ namespace QuantConnect.Algorithm.Framework.Signals
 
         class SymbolData
         {
+            public ISignal PreviousSignal;
+
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;
             public readonly MovingAverageConvergenceDivergence MACD;

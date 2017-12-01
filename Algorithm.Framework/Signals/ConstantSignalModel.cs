@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         private readonly double? _confidence;
         private readonly TimeSpan? _period;
         private readonly HashSet<Security> _securities = new HashSet<Security>();
+        private readonly HashSet<Symbol> _signalsSent = new HashSet<Symbol>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantSignalModel"/> class
@@ -69,14 +70,17 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <returns>The new signals generated</returns>
         public IEnumerable<Signal> Update(QCAlgorithmFramework algorithm, Slice data)
         {
-            return _securities.Select(security => new Signal(
-                security.Symbol,
-                _type,
-                _direction,
-                _percentChange,
-                _confidence,
-                _period
-            ));
+            // we're only trying to send the up signal once per security
+            // we'll send the signal again if they're removed and then re-added
+            return _securities.Where(security => _signalsSent.Add(security.Symbol))
+                .Select(security => new Signal(
+                    security.Symbol,
+                    _type,
+                    _direction,
+                    _percentChange,
+                    _confidence,
+                    _period
+                ));
         }
 
         /// <summary>
@@ -87,6 +91,12 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             NotifiedSecurityChanges.UpdateCollection(_securities, changes);
+
+            // this will allow the signal to be re-sent when the security re-joins the universe
+            foreach (var removed in changes.RemovedSecurities)
+            {
+                _signalsSent.Remove(removed.Symbol);
+            }
         }
     }
 }
