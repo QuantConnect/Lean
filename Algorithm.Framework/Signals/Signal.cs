@@ -20,7 +20,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
     /// <summary>
     /// Default implementation of <see cref="ISignal"/>
     /// </summary>
-    public class Signal : ISignal
+    public class Signal : ISignal, IEquatable<Signal>
     {
         /// <summary>
         /// Gets the symbol this signal is for
@@ -89,6 +89,98 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public ISignal Clone()
         {
             return new Signal(Symbol, Type, Direction, PercentChange, Confidence, Period);
+        }
+
+        /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
+        /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public bool Equals(Signal other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(Symbol, other.Symbol) &&
+                Direction == other.Direction &&
+                Type == other.Type &&
+                Confidence.Equals(other.Confidence) &&
+                PercentChange.Equals(other.PercentChange) &&
+                Period.Equals(other.Period);
+        }
+
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Signal)obj);
+        }
+
+        /// <summary>Serves as the default hash function. </summary>
+        /// <returns>A hash code for the current object.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (Symbol != null ? Symbol.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (int)Type;
+                hashCode = (hashCode * 397) ^ (int)Direction;
+                hashCode = (hashCode * 397) ^ PercentChange.GetHashCode();
+                hashCode = (hashCode * 397) ^ Confidence.GetHashCode();
+                hashCode = (hashCode * 397) ^ Period.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        /// <summary>
+        /// Determines if the two signals are equal
+        /// </summary>
+        public static bool operator ==(ISignal left, Signal right)
+        {
+            return Equals(left, right);
+        }
+
+        /// <summary>
+        /// Determines if the two signals are equal
+        /// </summary>
+        public static bool operator ==(Signal left, Signal right)
+        {
+            return Equals(left, right);
+        }
+
+        /// <summary>
+        /// Determines if the two signals are equal
+        /// </summary>
+        public static bool operator ==(Signal left, ISignal right)
+        {
+            return Equals(left, right);
+        }
+
+        /// <summary>
+        /// Determines if the two signals are not equal
+        /// </summary>
+        public static bool operator !=(ISignal left, Signal right)
+        {
+            return !Equals(left, right);
+        }
+
+        /// <summary>
+        /// Determines if the two signals are not equal
+        /// </summary>
+        public static bool operator !=(Signal left, Signal right)
+        {
+            return !Equals(left, right);
+        }
+
+        /// <summary>
+        /// Determines if the two signals are not equal
+        /// </summary>
+        public static bool operator !=(Signal left, ISignal right)
+        {
+            return !Equals(left, right);
         }
     }
 }
