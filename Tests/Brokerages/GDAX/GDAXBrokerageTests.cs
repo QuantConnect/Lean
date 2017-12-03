@@ -273,13 +273,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(333.985m, btc.ConversionRate);
         }
 
-        [Test(), Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
+        [Test()]
         public void GetAccountHoldingsTest()
         {
-            SetupResponse(_holdingData);
-
-            _unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { "1" }, Price = 123 });
-
             var actual = _unit.GetAccountHoldings();
 
             Assert.AreEqual(0, actual.Count());

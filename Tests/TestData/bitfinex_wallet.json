@@ -1,0 +1,34 @@
+[
+  {
+    "type": "deposit",
+    "currency": "btc",
+    "amount": "0.0",
+    "available": "0.0"
+  },
+  {
+    "type": "deposit",
+    "currency": "usd",
+    "amount": "1.0",
+    "available": "1.0"
+  },{
+    "type":"exchange",
+    "currency":"btc",
+    "amount":"1",
+    "available":"1"
+  },{
+    "type":"exchange",
+    "currency":"usd",
+    "amount":"1",
+    "available":"1"
+  },{
+    "type":"trading",
+    "currency":"btc",
+    "amount":"2",
+    "available":"2"
+  },{
+    "type":"trading",
+    "currency":"usd",
+    "amount":"1",
+    "available":"1"
+  },
+ ]
