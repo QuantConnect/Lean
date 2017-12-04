@@ -735,7 +735,7 @@ namespace QuantConnect.Algorithm
         /// <param name="userName">The user name associated with the credentials</param>
         /// <param name="password">The password for the user name associated with the credentials</param>
         /// <returns>The requested resource as a <see cref="string"/></returns>
-        public string Fetch(string address, PyObject headers = null, string userName = null, string password = null)
+        public string Download(string address, PyObject headers = null, string userName = null, string password = null)
         {
             var dict = new Dictionary<string, string>();
 
@@ -760,7 +760,7 @@ namespace QuantConnect.Algorithm
                     }
                 }
             }
-            return Fetch(address, dict, userName, password);
+            return Download(address, dict, userName, password);
         }
 
         /// <summary>

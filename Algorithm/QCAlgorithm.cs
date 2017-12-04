@@ -1836,7 +1836,7 @@ namespace QuantConnect.Algorithm
         /// <param name="userName">The user name associated with the credentials</param>
         /// <param name="password">The password for the user name associated with the credentials</param>
         /// <returns>The requested resource as a <see cref="string"/></returns>
-        public string Fetch(string address, IEnumerable<KeyValuePair<string, string>> headers = null, string userName = null, string password = null)
+        public string Download(string address, IEnumerable<KeyValuePair<string, string>> headers = null, string userName = null, string password = null)
         {
             using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
             {
