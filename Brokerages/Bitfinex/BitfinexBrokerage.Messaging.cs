@@ -134,8 +134,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     AskPrice = msg.Ask,
                     BidPrice = msg.Bid,
-                    AskSize = (long)Math.Round(msg.AskSize, 0),
-                    BidSize = (long)Math.Round(msg.BidSize, 0),
+                    AskSize = msg.AskSize,
+                    BidSize = msg.BidSize,
                     Time = DateTime.UtcNow,
                     Value = ((msg.Ask + msg.Bid) / 2m),
                     TickType = TickType.Quote,

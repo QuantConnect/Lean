@@ -13,25 +13,15 @@
  * limitations under the License.
 */
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Brokerages.Bitfinex;
 using NUnit.Framework;
-using WebSocketSharp;
-using Newtonsoft.Json;
 using System.Reflection;
 using Moq;
-using QuantConnect.Configuration;
 using System.Threading;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using QuantConnect.Tests.Indicators;
-using System.Diagnostics;
 using System.IO;
-using QuantConnect.Tests.Brokerages.Bitfinex;
-using QuantConnect.Brokerages.Bitfinex.Rest;
 using RestSharp;
 using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
@@ -213,6 +203,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var actual = _unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
             Assert.AreEqual(432.625m, actual.Price);
+            Assert.AreEqual(5.79789796, ((Tick)actual).BidSize);
+            Assert.AreEqual(0.00009992, ((Tick)actual).AskSize);
         }
 
         [Test()]
