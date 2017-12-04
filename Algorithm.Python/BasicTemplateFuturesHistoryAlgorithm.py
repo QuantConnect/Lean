@@ -47,32 +47,32 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
 
         futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute)
         futureGC.SetFilter(timedelta(0), timedelta(182))
-
+        self.SetBenchmark("SPY")
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:
-                 # Get contracts expiring no earlier than in 90 days
-                contracts = filter(lambda x: x.Expiry > self.Time + timedelta(90), chain.Value)
+                for contract in chain.Value:
+                    self.Log("{0},Bid={1} Ask={2} Last={3} OI={4}".format(
+                            contract.Symbol.Value,
+                            contract.BidPrice,
+                            contract.AskPrice,
+                            contract.LastPrice,
+                            contract.OpenInterest))
 
-                # if there is any contract, trade the front contract
-                if len(contracts) == 0: continue
-                front = sorted(contracts, key = lambda x: x.Expiry, reverse=True)[0]
-                self.MarketOrder(front.Symbol , 1)
-        else:
-            self.Liquidate()
 
+    def OnSecuritiesChanged(self, changes):
+        #if changes == SecurityChanges.None: return
+        for change in changes.AddedSecurities:
+            history = self.History(change.Symbol, 10, Resolution.Daily).sort_index(level='time', ascending=False)[:3]
+        
+            for i in range(len(history)):
+                self.Log("History: " + str(history.iloc[i].name[0])
+                        + ": " + str(history.iloc[i].name[1].strftime("%m/%d/%Y %I:%M:%S %p"))
+                        + " > " + str(history.iloc[i]['close']))
+                        
     def OnOrderEvent(self, orderEvent):
         # Order fill event handler. On an order fill update the resulting information is passed to this method.
         # Order event details containing details of the events
         self.Log(str(orderEvent))
 
-    def OnSecuritiesChanged(self, changes):
-        if changes == SecurityChanges.None: return
-        for change in changes.AddedSecurities:
-            history = self.History(change.Symbol, 1, Resolution.Minute)
-            history = history.sortlevel(['time'], ascending=False)[:1]
-
-            self.Log("History: " + str(history.index.get_level_values('symbol').values[0])
-                        + ": " + str(history.index.get_level_values('time').values[0])
-                        + " > " + str(history['close'].values))

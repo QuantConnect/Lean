@@ -53,6 +53,7 @@ namespace QuantConnect.Algorithm
         {
             _warmupBarCount = null;
             _warmupTimeSpan = timeSpan;
+            _warmupResolution = null;
         }
 
         /// <summary>
@@ -62,6 +63,28 @@ namespace QuantConnect.Algorithm
         public void SetWarmUp(TimeSpan timeSpan)
         {
             SetWarmup(timeSpan);
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmup(TimeSpan timeSpan, Resolution resolution)
+        {
+            _warmupBarCount = null;
+            _warmupTimeSpan = timeSpan;
+            _warmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmUp(TimeSpan timeSpan, Resolution resolution)
+        {
+            SetWarmup(timeSpan, resolution);
         }
 
         /// <summary>
@@ -75,6 +98,7 @@ namespace QuantConnect.Algorithm
         {
             _warmupTimeSpan = null;
             _warmupBarCount = barCount;
+            _warmupResolution = null;
         }
 
         /// <summary>
@@ -90,12 +114,43 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmup(int barCount, Resolution resolution)
+        {
+            _warmupTimeSpan = null;
+            _warmupBarCount = barCount;
+            _warmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        /// <param name="resolution">The resolution to request</param>
+        public void SetWarmUp(int barCount, Resolution resolution)
+        {
+            SetWarmup(barCount, resolution);
+        }
+
+        /// <summary>
         /// Sets <see cref="IAlgorithm.IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
         /// </summary>
         public void SetFinishedWarmingUp()
         {
             IsWarmingUp = false;
         }
+
+        /// <summary>
+        /// Message for exception that is thrown when the implicit conversion between symbol and string fails
+        /// </summary>
+        private readonly string _symbolEmptyErrorMessage = "Cannot create history for the given ticker. " +
+                                                           "Either explicitly use a symbol object to make the history request " +
+                                                           "or ensure the symbol has been added using the AddSecurity() method before making the history request.";
 
         /// <summary>
         /// Gets the history requests required for provide warm up data for the algorithm
@@ -105,12 +160,12 @@ namespace QuantConnect.Algorithm
         {
             if (_warmupBarCount.HasValue)
             {
-                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value);
+                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution);
             }
             if (_warmupTimeSpan.HasValue)
             {
                 var end = UtcTime.ConvertFromUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end);
+                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end, _warmupResolution);
             }
 
             // if not warmup requested return nothing
@@ -247,16 +302,17 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
         {
+            if (symbol == QuantConnect.Symbol.Empty) throw new ArgumentException(_symbolEmptyErrorMessage);
             var security = Securities[symbol];
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
 
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
             {
-                Error("Calling this method on a Forex or CFD or Crypto security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+                Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -272,6 +328,8 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            if (symbol == QuantConnect.Symbol.Empty) throw new ArgumentException(_symbolEmptyErrorMessage);
+
             var security = Securities[symbol];
             // verify the types match
             var requestedType = typeof(T);
@@ -297,6 +355,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
+            if (symbol == QuantConnect.Symbol.Empty) throw new ArgumentException(_symbolEmptyErrorMessage);
             var security = Securities[symbol];
             // verify the types match
             var requestedType = typeof(T);
@@ -321,12 +380,12 @@ namespace QuantConnect.Algorithm
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
             {
-                Error("Calling this method on a Forex or CFD or crypto security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+                Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            return History(new[] {symbol}, span, resolution).Get(symbol).Memoize();
+            return History(new[] { symbol }, span, resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -340,12 +399,12 @@ namespace QuantConnect.Algorithm
         public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
             {
-                Error("Calling this method on a Forex or CFD or cyrpto security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+                Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            return History(new[] {symbol}, start, end, resolution).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, end, resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -412,7 +471,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice satisfying the specified history request</returns>
         public IEnumerable<Slice> History(HistoryRequest request)
         {
-            return History(new[] {request}).Memoize();
+            return History(new[] { request }).Memoize();
         }
 
         /// <summary>
@@ -524,7 +583,7 @@ namespace QuantConnect.Algorithm
             }
 
             // filter out future data to prevent look ahead bias
-            return ((IAlgorithm) this).HistoryProvider.GetHistory(reqs, timeZone);
+            return ((IAlgorithm)this).HistoryProvider.GetHistory(reqs, timeZone);
         }
 
         /// <summary>
@@ -581,7 +640,8 @@ namespace QuantConnect.Algorithm
             {
                 DataType = dataType,
                 Resolution = resolution.Value,
-                FillForwardResolution = subscription.FillDataForward ? resolution : null
+                FillForwardResolution = subscription.FillDataForward ? resolution : null,
+                TickType = subscription.TickType
             };
 
             return request;

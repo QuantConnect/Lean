@@ -206,12 +206,22 @@ namespace QuantConnect.Brokerages
                 {
                     Log.Error(exception);
                 }
-            });
+            }) { IsBackground = true };
             _connectionMonitorThread.Start();
             while (!_connectionMonitorThread.IsAlive)
             {
                 Thread.Sleep(1);
             }
+        }
+
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
+        public override void Disconnect()
+        {
+            // request and wait for thread to stop
+            _cancellationTokenSource?.Cancel();
+            _connectionMonitorThread?.Join();
         }
 
         /// <summary>
@@ -257,7 +267,7 @@ namespace QuantConnect.Brokerages
             finally
             {
                 WebSocket.Error += this.OnError;
-                this.Subscribe(null, subscribed);
+                this.Subscribe(subscribed);
             }
         }
 
@@ -278,9 +288,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Handles the creation of websocket subscriptions
         /// </summary>
-        /// <param name="job"></param>
         /// <param name="symbols"></param>
-        public abstract void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
+        public abstract void Subscribe(IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Gets a list of current subscriptions

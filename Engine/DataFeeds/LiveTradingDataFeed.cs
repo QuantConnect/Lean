@@ -111,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = new SubscriptionCollection();
 
             _bridge = new BusyBlockingCollection<TimeSlice>();
-            _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
+            _universeSelection = new UniverseSelection(this, algorithm);
 
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));

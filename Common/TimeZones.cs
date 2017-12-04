@@ -75,7 +75,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the time zone for Chicago, USA. This is a daylight savings time zone.
         /// </summary>
-        public static readonly DateTimeZone Chicao = DateTimeZoneProviders.Tzdb["America/Chicago"];
+        public static readonly DateTimeZone Chicago = DateTimeZoneProviders.Tzdb["America/Chicago"];
 
         /// <summary>
         /// Gets the time zone for Los Angeles, USA. This is a daylight savings time zone.

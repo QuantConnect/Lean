@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -41,6 +42,9 @@ namespace QuantConnect.Tests
             var statistics = new Dictionary<string, string>();
 
             Composer.Instance.Reset();
+            var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";
+            Directory.CreateDirectory(Path.GetDirectoryName(logFile));
+            File.Delete(logFile);
 
             try
             {
@@ -53,14 +57,16 @@ namespace QuantConnect.Tests
                 Config.Set("api-handler", "QuantConnect.Api.Api");
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler");
                 Config.Set("algorithm-language", language.ToString());
-                Config.Set("algorithm-location",  
+                Config.Set("algorithm-location",
                     language == Language.Python
                         ? "../../../Algorithm.Python/" + algorithm + ".py"
                         : "QuantConnect.Algorithm." + language + ".dll");
-                
+
+
                 var debugEnabled = Log.DebuggingEnabled;
 
-                var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler("regression.log", false)};
+
+                var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler(logFile, false)};
                 using (Log.LogHandler = new CompositeLogHandler(logHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
@@ -84,7 +90,7 @@ namespace QuantConnect.Tests
 
                     var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
                     statistics = backtestingResultHandler.FinalStatistics;
-                    
+
                     Log.DebuggingEnabled = debugEnabled;
                 }
             }
@@ -98,6 +104,13 @@ namespace QuantConnect.Tests
                 Assert.AreEqual(true, statistics.ContainsKey(stat.Key), "Missing key: " + stat.Key);
                 Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
             }
+
+            // we successfully passed the regression test, copy the log file so we don't have to continually
+            // re-run master in order to compare against a passing run
+            var passedFile = logFile.Replace("./regression/", "./passed/");
+            Directory.CreateDirectory(Path.GetDirectoryName(passedFile));
+            File.Delete(passedFile);
+            File.Copy(logFile, passedFile);
         }
     }
 }

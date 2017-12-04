@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.API
 {
@@ -77,7 +78,7 @@ namespace QuantConnect.API
             var success = jObject["success"].Value<bool>();
             if (!success)
             {
-                // Either there was an error in the running algrithm or the algorithm hasn't started 
+                // Either there was an error in the running algrithm or the algorithm hasn't started
                 liveAlgoResults.Errors = jObject.Last.Children().Select(error => error.ToString()).ToList();
                 return liveAlgoResults;
             }
@@ -107,18 +108,19 @@ namespace QuantConnect.API
             }
 
             // Live Results - At this time only that charting data can be returned from the api (9/30/2016)
-            liveAlgoResults.LiveResults.Results = new LiveResult(chartDictionary, 
-                                                                 new Dictionary < int, Order >(), 
-                                                                 new Dictionary < DateTime, decimal >(), 
-                                                                 new Dictionary < string, Holding > (), 
-                                                                 new Dictionary < string, string > (), 
+            liveAlgoResults.LiveResults.Results = new LiveResult(chartDictionary,
+                                                                 new Dictionary < int, Order >(),
+                                                                 new Dictionary < DateTime, decimal >(),
+                                                                 new Dictionary < string, Holding > (),
+                                                                 new CashBook(),
+                                                                 new Dictionary < string, string > (),
                                                                  new Dictionary < string, string >());
 
             return liveAlgoResults;
         }
 
         /// <summary>
-        /// Get series data for a specific chart 
+        /// Get series data for a specific chart
         /// </summary>
         /// <param name="series">Series data and properties for a chart</param>
         /// <returns>Dictionary with the name of the series as the key and the Series itself as the value</returns>

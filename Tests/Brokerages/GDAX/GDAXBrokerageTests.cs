@@ -320,7 +320,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             _unit.Ticks.Clear();
 
-            _unit.Subscribe(Mock.Of<LiveNodePacket>(), new[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX),
+            _unit.Subscribe(new[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX),
                 Symbol.Create("BTCETH", SecurityType.Crypto, Market.GDAX)});
 
             StringAssert.Contains(expected, actual);
@@ -336,7 +336,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             string actual = null;
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
-            _unit.Unsubscribe(null, new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX) });
+            _unit.Unsubscribe(new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX) });
             StringAssert.Contains("user", actual);
             StringAssert.Contains("heartbeat", actual);
             StringAssert.Contains("ticker", actual);

@@ -115,25 +115,25 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// </summary>
         /// <param name="tickType">The tick type being processed</param>
         /// <returns>A collection of <see cref="KaikoDataAggregator"/></returns>
-        private static List<KaikoDataAggregator> GetDataAggregatorsForTickType(TickType tickType)
+        private static List<TickAggregator> GetDataAggregatorsForTickType(TickType tickType)
         {
             if (tickType == TickType.Quote)
             {
-                return new List<KaikoDataAggregator>
+                return new List<TickAggregator>
                 {
-                    new KaikoQuoteDataAggregator(Resolution.Second),
-                    new KaikoQuoteDataAggregator(Resolution.Minute),
-                    new KaikoQuoteDataAggregator(Resolution.Hour),
-                    new KaikoQuoteDataAggregator(Resolution.Daily),
+                    new QuoteTickAggregator(Resolution.Second),
+                    new QuoteTickAggregator(Resolution.Minute),
+                    new QuoteTickAggregator(Resolution.Hour),
+                    new QuoteTickAggregator(Resolution.Daily),
                 };
             }
 
-            return new List<KaikoDataAggregator>
+            return new List<TickAggregator>
             {
-                new KaikoTradeDataAggregator(Resolution.Second),
-                new KaikoTradeDataAggregator(Resolution.Minute),
-                new KaikoTradeDataAggregator(Resolution.Hour),
-                new KaikoTradeDataAggregator(Resolution.Daily),
+                new TradeTickAggregator(Resolution.Second),
+                new TradeTickAggregator(Resolution.Minute),
+                new TradeTickAggregator(Resolution.Hour),
+                new TradeTickAggregator(Resolution.Daily),
             };
         }
 
@@ -230,10 +230,12 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <returns>A single Lean quote tick</returns>
         private static Tick CreateQuoteTick(Symbol symbol, DateTime date, List<KaikoTick> currentEpcohTicks)
         {
+            // lowest ask
             var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
-                                        .OrderByDescending(x => x.Value)
+                                        .OrderBy(x => x.Value)
                                         .FirstOrDefault();
 
+            // highest bid
             var bestBid = currentEpcohTicks.Where(x => x.OrderDirection == "b")
                                         .OrderByDescending(x => x.Value)
                                         .FirstOrDefault();
@@ -324,73 +326,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         internal class KaikoTick : Tick
         {
             public string OrderDirection { get; set; }
-        }
-
-        /// <summary>
-        /// Base class for consolidator
-        /// </summary>
-        internal abstract class KaikoDataAggregator
-        {
-            public abstract List<BaseData> Flush();
-            public abstract IDataConsolidator Consolidator { get; }
-            public List<BaseData> Consolidated { get; protected set; }
-            public Resolution Resolution { get; protected set; }
-        }
-
-        /// <summary>
-        /// Use <see cref="TickQuoteBarConsolidator"/> to consolidate quote ticks into a specified resolution
-        /// </summary>
-        internal class KaikoQuoteDataAggregator : KaikoDataAggregator
-        {
-            public override IDataConsolidator Consolidator => _consolidator;
-
-            private readonly TickQuoteBarConsolidator _consolidator;
-
-            public KaikoQuoteDataAggregator(Resolution resolution)
-            {
-                Resolution = resolution;
-                Consolidated = new List<BaseData>();
-                _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
-                _consolidator.DataConsolidated += (sender, consolidated) =>
-                {
-                    Consolidated.Add(consolidated);
-                };
-            }
-
-            public override List<BaseData> Flush()
-            {
-                // Add the last bar
-                Consolidated.Add(Consolidator.WorkingData as QuoteBar);
-                return Consolidated;
-            }
-        }
-
-        /// <summary>
-        /// Use <see cref="TickQuoteBarConsolidator"/> to consolidate trade ticks into a specified resolution
-        /// </summary>
-        internal class KaikoTradeDataAggregator : KaikoDataAggregator
-        {
-            public override IDataConsolidator Consolidator => _consolidator;
-
-            private readonly TickConsolidator _consolidator;
-
-            public KaikoTradeDataAggregator(Resolution resolution)
-            {
-                Resolution = resolution;
-                Consolidated = new List<BaseData>();
-                _consolidator = new TickConsolidator(resolution.ToTimeSpan());
-                _consolidator.DataConsolidated += (sender, consolidated) =>
-                {
-                    Consolidated.Add(consolidated);
-                };
-            }
-
-            public override List<BaseData> Flush()
-            {
-                // Add the last bar
-                Consolidated.Add(Consolidator.WorkingData as TradeBar);
-                return Consolidated;
-            }
         }
     }
 }

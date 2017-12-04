@@ -19,7 +19,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Calls <see cref="IDisposable.Dispose"/> within a try/catch and invokes the 
+        /// Calls <see cref="IDisposable.Dispose"/> within a try/catch and invokes the
         /// <paramref name="errorHandler"/> on any errors.
         /// </summary>
         /// <param name="disposable">The <see cref="IDisposable"/> to be disposed</param>
@@ -37,6 +37,11 @@ namespace QuantConnect.Util
             try
             {
                 disposable.Dispose();
+                return true;
+            }
+            catch (ObjectDisposedException)
+            {
+                // we got what we wanted, the object has been diposed
                 return true;
             }
             catch (Exception error)

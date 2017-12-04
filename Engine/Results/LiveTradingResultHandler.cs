@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -33,7 +32,6 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -330,7 +328,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
-                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, deltaStatistics, runtimeStatistics, serverStatistics);
+                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics);
 
                     foreach (var liveResultPacket in splitPackets)
                     {
@@ -349,11 +347,11 @@ namespace QuantConnect.Lean.Engine.Results
                             {
                                 // remove directory pathing characters from chart names
                                 var safeName = chart.Value.Name.Replace('/', '-');
-                                chartComplete.Add(safeName, chart.Value);
+                                chartComplete.Add(safeName, chart.Value.Clone());
                             }
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics));
                         StoreResult(complete);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
@@ -439,6 +437,7 @@ namespace QuantConnect.Lean.Engine.Results
         private IEnumerable<LiveResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts,
             Dictionary<int, Order> deltaOrders,
             Dictionary<string, Holding> holdings,
+            CashBook cashbook,
             Dictionary<string, string> deltaStatistics,
             Dictionary<string, string> runtimeStatistics,
             Dictionary<string, string> serverStatistics)
@@ -459,12 +458,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var chart = new Chart(deltaChart.Name);
                 current.Add(deltaChart.Name, chart);
 
-                if (deltaChart.Name == _subscription || _subscription == "*")
+                if (deltaChart.Name == _subscription || (_subscription == "*" && deltaChart.Name == "Strategy Equity"))
                 {
                     chart.Series = deltaChart.Series;
                 }
 
-                if (current.Count >= groupSize)
+                // If there is room left in the group. add the subscription
+                // to the packet unless it is a wildcard subscription
+                if (current.Count >= groupSize && _subscription != "*")
                 {
                     // Add the micro packet to transport.
                     chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
@@ -473,8 +474,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
 
-            //Add whatever is left over here too.
-            if (current.Count > 0)
+            // Add whatever is left over here too
+            // unless it is a wildcard subscription
+            if (current.Count > 0 && _subscription != "*")
             {
                 chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
             }
@@ -483,7 +485,7 @@ namespace QuantConnect.Lean.Engine.Results
             var packets = new[]
             {
                 new LiveResultPacket(_job, new LiveResult {Orders = deltaOrders}),
-                new LiveResultPacket(_job, new LiveResult {Holdings = holdings}),
+                new LiveResultPacket(_job, new LiveResult {Holdings = holdings, Cash = cashbook}),
                 new LiveResultPacket(_job, new LiveResult
                 {
                     Statistics = deltaStatistics,
@@ -492,7 +494,6 @@ namespace QuantConnect.Lean.Engine.Results
                 })
             };
 
-            // combine all the packets to be sent to through pubnub
             return packets.Concat(chartPackets);
         }
 
@@ -772,17 +773,25 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="orders">Collection of orders from the algorithm</param>
         /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
         /// <param name="holdings">Current holdings state for the algorithm</param>
+        /// <param name="cashbook">Cashbook of the current cash of the algorithm</param>
         /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
         /// <param name="runtime">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> runtime)
+        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> runtime)
         {
             try
             {
                 //Convert local dictionary:
-                var charts = new Dictionary<string, Chart>(Charts);
+                var charts = new Dictionary<string, Chart>();
+                lock (_chartLock)
+                {
+                    foreach (var kvp in Charts)
+                    {
+                        charts.Add(kvp.Key, kvp.Value.Clone());
+                    }
+                }
 
                 //Create a packet:
-                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, statisticsResults.Summary, runtime));
+                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime));
 
                 //Save the processing time:
                 result.ProcessingTime = (DateTime.Now - _startTime).TotalSeconds;
@@ -833,63 +842,62 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 Log.Debug("LiveTradingResultHandler.StoreResult(): Begin store result sampling");
-                lock (_chartLock)
+
+                // Make sure this is the right type of packet:
+                if (packet.Type != PacketType.LiveResult) return;
+
+                // Port to packet format:
+                var live = packet as LiveResultPacket;
+
+                if (live != null)
                 {
-                    // Make sure this is the right type of packet:
-                    if (packet.Type != PacketType.LiveResult) return;
+                    // we need to down sample
+                    var start = DateTime.UtcNow.Date;
+                    var stop = start.AddDays(1);
 
-                    // Port to packet format:
-                    var live = packet as LiveResultPacket;
+                    // truncate to just today, we don't need more than this for anyone
+                    Truncate(live.Results, start, stop);
 
-                    if (live != null)
+                    var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
+
+                    // minute resoluton data, save today
+                    var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
+                    var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                    // swap out our charts with the sampeld data
+                    live.Results.Charts = minuteCharts;
+                    SaveResults(CreateKey("minute"), live.Results);
+
+                    // 10 minute resolution data, save today
+                    var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
+                    var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                    live.Results.Charts = tenminuteCharts;
+                    SaveResults(CreateKey("10minute"), live.Results);
+
+                    // high resolution data, we only want to save an hour
+                    live.Results.Charts = highResolutionCharts;
+                    start = DateTime.UtcNow.RoundDown(TimeSpan.FromHours(1));
+                    stop = DateTime.UtcNow.RoundUp(TimeSpan.FromHours(1));
+
+                    Truncate(live.Results, start, stop);
+
+                    foreach (var name in live.Results.Charts.Keys)
                     {
-                        // we need to down sample
-                        var start = DateTime.UtcNow.Date;
-                        var stop = start.AddDays(1);
+                        var result = new LiveResult();
+                        result.Orders = new Dictionary<int, Order>(live.Results.Orders);
+                        result.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
+                        result.Charts = new Dictionary<string, Chart>();
+                        result.Charts.Add(name, live.Results.Charts[name]);
 
-                        // truncate to just today, we don't need more than this for anyone
-                        Truncate(live.Results, start, stop);
-
-                        var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
-
-                        // minute resoluton data, save today
-                        var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
-                        var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
-
-                        // swap out our charts with the sampeld data
-                        live.Results.Charts = minuteCharts;
-                        SaveResults(CreateKey("minute"), live.Results);
-
-                        // 10 minute resolution data, save today
-                        var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
-                        var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
-
-                        live.Results.Charts = tenminuteCharts;
-                        SaveResults(CreateKey("10minute"), live.Results);
-
-                        // high resolution data, we only want to save an hour
-                        live.Results.Charts = highResolutionCharts;
-                        start = DateTime.UtcNow.RoundDown(TimeSpan.FromHours(1));
-                        stop = DateTime.UtcNow.RoundUp(TimeSpan.FromHours(1));
-
-                        Truncate(live.Results, start, stop);
-
-                        foreach (var name in live.Results.Charts.Keys)
-                        {
-                            var result = new LiveResult();
-                            result.Orders = new Dictionary<int, Order>(live.Results.Orders);
-                            result.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
-                            result.Charts = new Dictionary<string, Chart>();
-                            result.Charts.Add(name, live.Results.Charts[name]);
-
-                            SaveResults(CreateKey("second_" + CreateSafeChartName(name), "yyyy-MM-dd-HH"), result);
-                        }
-                    }
-                    else
-                    {
-                        Log.Error("LiveResultHandler.StoreResult(): Result Null.");
+                        SaveResults(CreateKey("second_" + CreateSafeChartName(name), "yyyy-MM-dd-HH"), result);
                     }
                 }
+                else
+                {
+                    Log.Error("LiveResultHandler.StoreResult(): Result Null.");
+                }
+
                 Log.Debug("LiveTradingResultHandler.StoreResult(): End store result sampling");
             }
             catch (Exception err)
@@ -1057,7 +1065,10 @@ namespace QuantConnect.Lean.Engine.Results
                             else
                             {
                                 // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                                security.SetMarketPrice(new Tick(time, subscription.Configuration.Symbol, price, price));
+                                if (price > 0)
+                                {
+                                    security.SetMarketPrice(new Tick(time, subscription.Configuration.Symbol, price, price));
+                                }
                             }
 
                             //Sample Asset Pricing:

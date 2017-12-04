@@ -202,6 +202,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // set up event handlers
             _client.UpdatePortfolio += HandlePortfolioUpdates;
             _client.OrderStatus += HandleOrderStatusUpdates;
+            _client.OpenOrder += HandleOpenOrder;
+            _client.OpenOrderEnd += HandleOpenOrderEnd;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.ExecutionDetails += HandleExecutionDetails;
             _client.CommissionReport += HandleCommissionReport;
@@ -504,6 +506,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var attempt = 1;
             const int maxAttempts = 5;
             var existingSessionDetected = false;
+            var securityDialogDetected = false;
             while (true)
             {
                 try
@@ -551,11 +554,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         // no response, disconnect and retry
                         Disconnect();
 
+                        var ibcLogContent = LoadCurrentIbControllerLogFile();
+
                         // if existing session detected from IBController log file, log error and throw exception
-                        if (ExistingSessionDetected())
+                        if (ExistingSessionDetected(ibcLogContent))
                         {
                             existingSessionDetected = true;
                             throw new Exception("InteractiveBrokersBrokerage.Connect(): An existing session was detected and will not be automatically disconnected. Please close the existing session manually.");
+                        }
+
+                        // if security dialog detected from IBController log file, log error and throw exception
+                        if (SecurityDialogDetected(ibcLogContent))
+                        {
+                            securityDialogDetected = true;
+                            throw new Exception("InteractiveBrokersBrokerage.Connect(): A security dialog was detected for Second Factor/Code Card Authentication. Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
                         }
 
                         // max out at 5 attempts to connect ~1 minute
@@ -614,8 +626,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    // if existing session detected from IBController log file, log error and throw exception
-                    if (existingSessionDetected)
+                    // if existing session or security dialog detected from IBController log file, log error and throw exception
+                    if (existingSessionDetected || securityDialogDetected)
                     {
                         Log.Error(err);
                         throw;
@@ -630,15 +642,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we couldn't connect after several attempts, log the error and throw an exception
                     Log.Error(err);
-
-                    // add a blurb about TWS for connection refused errors
-                    if (err.Message.Contains("Connection refused"))
-                    {
-                        throw new Exception(err.Message + ". Be sure to logout of Trader Workstation. " +
-                            "IB only allows one active log in at a time. " +
-                            "This can also be caused by requiring two-factor authentication. " +
-                            "Be sure to disable this in IB Account Management > Security > SLS Opt out.", err);
-                    }
 
                     throw;
                 }
@@ -1034,11 +1037,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // we also need to check for negative values, IB returns -1 on Saturday
             if (rate <= 0)
             {
+                string errorMessage;
                 bool pacingViolation;
                 const int pacingDelaySeconds = 60;
 
                 do
                 {
+                    errorMessage = string.Empty;
                     pacingViolation = false;
                     manualResetEvent.Reset();
 
@@ -1070,6 +1075,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             // pacing violation happened
                             pacingViolation = true;
                         }
+                        else
+                        {
+                            errorMessage = $"Code: {args.Code} - ErrorMessage: {args.Message}";
+                        }
                     };
 
                     Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting historical data for " + currencyPair);
@@ -1100,7 +1109,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         var mostRecentQuote = ordered.FirstOrDefault();
                         if (mostRecentQuote == null)
                         {
-                            throw new Exception("Unable to get recent quote for " + currencyPair);
+                            throw new Exception("Unable to get recent quote for " + currencyPair + " - " + errorMessage);
                         }
 
                         rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
@@ -1153,12 +1162,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // code 1100 is a connection failure, we'll wait a minute before exploding gracefully
-            if (errorCode == 1100 && !_disconnected1100Fired)
+            if (errorCode == 1100)
             {
-                _disconnected1100Fired = true;
+                if (!_disconnected1100Fired)
+                {
+                    _disconnected1100Fired = true;
 
-                // begin the try wait logic
-                TryWaitForReconnect();
+                    // begin the try wait logic
+                    TryWaitForReconnect();
+                }
+                else
+                {
+                    // The IB API sends many consecutive disconnect messages (1100) during nightly reset periods and weekends,
+                    // so we send the message event only when we transition from connected to disconnected state,
+                    // to avoid flooding the logs with the same message.
+                    return;
+                }
             }
             else if (errorCode == 1102 || errorCode == 1101)
             {
@@ -1186,13 +1205,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(requestId);
-                const int orderFee = 0;
-                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                if (order != null)
                 {
-                    Status = OrderStatus.Invalid,
-                    Message = message
-                };
-                OnOrderEvent(orderEvent);
+                    const int orderFee = 0;
+                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                    {
+                        Status = OrderStatus.Invalid,
+                        Message = message
+                    };
+                    OnOrderEvent(orderEvent);
+                }
+                else
+                {
+                    Log.Error($"InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Unable to locate order with BrokerageID {requestId}");
+                }
             }
 
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
@@ -1377,6 +1403,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + err);
             }
+        }
+
+        /// <summary>
+        /// Handle OpenOrder event from IB
+        /// </summary>
+        private static void HandleOpenOrder(object sender, IB.OpenOrderEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandleOpenOrder(): {e}");
+        }
+
+        /// <summary>
+        /// Handle OpenOrderEnd event from IB
+        /// </summary>
+        private static void HandleOpenOrderEnd(object sender, EventArgs e)
+        {
+            Log.Trace("InteractiveBrokersBrokerage.HandleOpenOrderEnd()");
         }
 
         /// <summary>
@@ -1746,7 +1788,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // Otherwise we convert Market.* markets into IB exchanges if we have them in our map
 
                 contract.Symbol = ibSymbol;
-                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.YearMonth);
+                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.EightCharacter);
 
                 if (symbol.ID.Market == Market.USA)
                 {
@@ -2141,11 +2183,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 yield return tick;
 
-                if (_underlyings.ContainsKey(tick.Symbol))
+                lock (_sync)
                 {
-                    var underlyingTick = tick.Clone();
-                    underlyingTick.Symbol = _underlyings[tick.Symbol];
-                    yield return underlyingTick;
+                    if (_underlyings.ContainsKey(tick.Symbol))
+                    {
+                        var underlyingTick = tick.Clone();
+                        underlyingTick.Symbol = _underlyings[tick.Symbol];
+                        yield return underlyingTick;
+                    }
                 }
             }
         }
@@ -2699,7 +2744,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// For this method to work, the following setting is required in the IBController.ini file:
         /// ExistingSessionDetectedAction=secondary
         /// </remarks>
-        private static bool ExistingSessionDetected()
+        private static bool ExistingSessionDetected(List<string> ibcLogLines)
+        {
+            return IbControllerLogContainsMessage(ibcLogLines, "End this session and let the other session proceed");
+        }
+
+        /// <summary>
+        /// Returns true if an IB security dialog (2FA/code card) was detected by IBController
+        /// </summary>
+        private static bool SecurityDialogDetected(List<string> ibcLogLines)
+        {
+            return IbControllerLogContainsMessage(ibcLogLines, "Second Factor Authentication") ||
+                   IbControllerLogContainsMessage(ibcLogLines, "Security Code Card Authentication");
+        }
+
+        /// <summary>
+        /// Reads the current IBController log file
+        /// </summary>
+        /// <returns>A list containing the lines of the file</returns>
+        private static List<string> LoadCurrentIbControllerLogFile()
         {
             // find the current IBController log file name
             var ibControllerLogPath = Path.Combine(Config.Get("ib-controller-dir"), "Logs");
@@ -2716,17 +2779,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             }
 
-            if (ibControllerLogFileName.IsNullOrEmpty())
-            {
-                return false;
-            }
+            return ibControllerLogFileName.IsNullOrEmpty()
+                ? new List<string>()
+                : File.ReadAllLines(ibControllerLogFileName).ToList();
+        }
 
-            // read the lines and find the message indicating the choice to leave the existing session running
-            var lines = File.ReadAllLines(ibControllerLogFileName).ToList();
+        /// <summary>
+        /// Searches for a message in the IBController log file
+        /// </summary>
+        /// <param name="lines">The lines of text of the IBController log file</param>
+        /// <param name="message">The message text to find</param>
+        /// <returns>true if the message was found</returns>
+        private static bool IbControllerLogContainsMessage(List<string> lines, string message)
+        {
+            // read the lines and find the message
             var separatorLine = new string('-', 60);
             var index = lines.FindLastIndex(x => x.Contains(separatorLine));
 
-            return index >= 0 && lines.Skip(index + 1).Any(line => line.Contains("End this session and let the other session proceed"));
+            return index >= 0 && lines.Skip(index + 1).Any(line => line.Contains(message));
         }
 
         /// <summary>

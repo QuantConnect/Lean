@@ -1,9 +1,21 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.GDAX.Messages
 {
@@ -102,6 +114,12 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public string Side { get; set; }
         public string Stp { get; set; }
         public string Type { get; set; }
+        [JsonProperty("time_in_force")]
+        public string TimeInForce { get; set; }
+        [JsonProperty("post_only")]
+        public bool PostOnly { get; set; }
+        [JsonProperty("reject_reason")]
+        public string RejectReason { get; set; }
         [JsonProperty("fill_fees")]
         public decimal FillFees { get; set; }
         [JsonProperty("filled_size")]
@@ -149,6 +167,17 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public decimal BestAsk { get; set; }
         public decimal Price { get; set; }
         public string Side { get; set; }
+    }
+
+    public class Snapshot : BaseMessage
+    {
+        public List<string[]> Bids { get; set; }
+        public List<string[]> Asks { get; set; }
+    }
+
+    public class L2Update : BaseMessage
+    {
+        public List<string[]> Changes { get; set; }
     }
 
 #pragma warning restore 1591

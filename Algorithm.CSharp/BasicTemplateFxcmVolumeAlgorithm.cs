@@ -45,9 +45,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);                //Set Strategy Cash
 
             // Find more symbols here: https://www.quantconnect.com/data
-            EURUSD = AddForex("EURUSD", Resolution.Minute, Market.FXCM).Symbol;
+            EURUSD = AddForex("EURUSD", Resolution.Minute).Symbol;
 
-            AddData<FxcmVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
+            AddData<FxcmVolume>("EURUSD_Vol", Resolution.Minute, DateTimeZone.Utc);
             var _price = Identity(EURUSD);
             fastVWMA = _price.WeightedBy(volume, period: 15);
             slowVWMA = _price.WeightedBy(volume, period: 300);
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
             volume.Update(new IndicatorDataPoint
             {
                 Time = Time,
-                Value = fxVolume.Value
+                Value = fxVolume.Volume
             });
         }
     }

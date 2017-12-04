@@ -60,6 +60,7 @@
     <Compile Include="FilteredIdentityAlgorithm.py" />
     <Compile Include="FractionalQuantityRegressionAlgorithm.py" />
     <Compile Include="FuturesMomentumAlgorithm.py" />
+    <Compile Include="HistoryAlgorithm.py" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Compile Include="HourReverseSplitRegressionAlgorithm.py" />
     <Compile Include="HourSplitRegressionAlgorithm.py" />
