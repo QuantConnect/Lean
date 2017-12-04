@@ -28,10 +28,11 @@ namespace QuantConnect.Python
     /// </summary>
     public class PandasData
     {
-        private readonly Type _type;
+        private readonly Type _customDataType;
         private readonly Symbol _symbol;
         private readonly List<DateTime> _timeIndex;
         private readonly Dictionary<string, List<object>> _series;
+        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().Select(p => p.Name).ToHashSet();
 
         /// <summary>
         /// Implied levels of a multi index pandas.Series (depends on the security type)
@@ -62,7 +63,6 @@ namespace QuantConnect.Python
             {
                 columns = "Value";
                 var properties = type.GetProperties();
-                var baseDataProperties = typeof(BaseData).GetProperties().Select(p => p.Name).ToHashSet();
 
                 foreach (var property in properties.GroupBy(x => x.Name))
                 {
@@ -70,12 +70,12 @@ namespace QuantConnect.Python
                     {
                         throw new ArgumentException($"More than one \'{property.Key}\' member was found in \'{type.Name}\' class.");
                     }
-                    if (!baseDataProperties.Contains(property.Key))
+                    if (!_baseDataProperties.Contains(property.Key))
                     {
                         columns += $",{property.Key}";
                     }
                 }
-                _type = type;
+                _customDataType = type;
             }
 
             _series = columns.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(k => k, v => new List<object>());
@@ -117,11 +117,11 @@ namespace QuantConnect.Python
         {
             _timeIndex.Add(baseData.EndTime);
 
-            if (_type != null)
+            if (_customDataType != null)
             {
                 foreach (var kvp in _series)
                 {
-                    var value = _type.GetProperty(kvp.Key).GetValue(baseData);
+                    var value = _customDataType.GetProperty(kvp.Key).GetValue(baseData);
                     if (value is decimal) value = Convert.ToDouble(value);
                     kvp.Value.Add(value);
                 }
