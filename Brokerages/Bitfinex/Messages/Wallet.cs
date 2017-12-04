@@ -27,10 +27,10 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
     public class Wallet : BaseMessage
     {
 
-        const int _wlt_name = 0;
-        const int _wlt_currency = 1;
-        const int _wlt_balance = 2;
-        const int _wlt_interest_unsettled = 3;
+        private const int _wlt_name = 0;
+        private const int _wlt_currency = 1;
+        private const int _wlt_balance = 2;
+        private const int _wlt_interest_unsettled = 3;
 
         /// <summary>
         /// Constructor for Wallet Message

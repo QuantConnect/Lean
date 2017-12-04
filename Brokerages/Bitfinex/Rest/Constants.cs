@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace QuantConnect.Brokerages.Bitfinex.Rest
+﻿namespace QuantConnect.Brokerages.Bitfinex.Rest
 {
-
 #pragma warning disable 1591
     public static class Constants
     {
@@ -48,7 +41,6 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
         public const string ActiveMarginSwapsRequestUrl = "/v1/taken_swaps";
         public const string CloseSwapRequestUrl = "/v1/swap/close";
         public const string ClaimPosRequestUrl = "/v1/position/claim";
-
     }
 #pragma warning restore 1591
 }

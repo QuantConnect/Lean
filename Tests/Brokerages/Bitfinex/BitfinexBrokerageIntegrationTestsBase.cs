@@ -12,65 +12,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Brokerages.Bitfinex;
-using NUnit.Framework;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Configuration;
-using QuantConnect.Orders;
-using System.Reflection;
+
 using Moq;
+using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
-    [TestFixture, Ignore("This test requires a configured and active account")]
+    [TestFixture]
+    [Ignore("This test requires a configured and active account")]
     public class BitfinexBrokerageIntegrationTestsBase : BrokerageTests
     {
-
         #region Properties
+
         /// <summary>
         ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Crypto; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Crypto;
 
         /// <summary>
         ///     Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice
-        {
-            get { return 1m; }
-        }
+        protected override decimal HighPrice => 1m;
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice
-        {
-            get { return 0.001m; }
-        }
+        protected override decimal LowPrice => 0.001m;
 
         protected override decimal GetDefaultQuantity()
         {
             return 0.01m;
         }
 
-        protected override Symbol Symbol
-        {
-            get
-            {
-                return Symbol.Create("ETHBTC", this.SecurityType, Market.Bitfinex);
-            }
-        }
+        protected override Symbol Symbol => Symbol.Create("ETHBTC", SecurityType, Market.Bitfinex);
+
         #endregion
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
@@ -87,7 +69,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var tick = ((BitfinexBrokerage)this.Brokerage).GetTick(symbol);
+            var tick = ((BitfinexBrokerage)Brokerage).GetTick(symbol);
             return tick.AskPrice;
         }
 
@@ -97,18 +79,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         //no stop limit support
-        public override TestCaseData[] OrderParameters
+        public override TestCaseData[] OrderParameters => new[]
         {
-            get
-            {
-                return new[]
-                {
-                    new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-                    new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
-                };
-            }
-        }
-
+            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder")
+        };
     }
 }

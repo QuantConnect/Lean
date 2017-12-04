@@ -9,5 +9,4 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
         public string Message { get; set; }
     }
 #pragma warning restore 1591
-
 }

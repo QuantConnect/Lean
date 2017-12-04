@@ -19,8 +19,6 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
 
         [JsonProperty("available")]
         public decimal Available { get; set; }
-
     }
 #pragma warning restore 1591
-
 }

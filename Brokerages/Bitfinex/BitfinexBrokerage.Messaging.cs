@@ -12,25 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WebSocketSharp;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-
         /// <summary>
         /// Wss message handler
         /// </summary>
@@ -42,10 +38,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 var raw = JsonConvert.DeserializeObject<dynamic>(e.Message, settings);
 
-                if (raw.Type == Newtonsoft.Json.Linq.JTokenType.Array)
+                if (raw.Type == JTokenType.Array)
                 {
                     string id = raw[0];
-                    string term = raw[1].Type == Newtonsoft.Json.Linq.JTokenType.String ? raw[1] : "";
+                    string term = raw[1].Type == JTokenType.String ? raw[1] : "";
 
                     if (term == "hb")
                     {
@@ -59,7 +55,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         PopulateTicker(e.Message, ChannelList[id].Symbol);
                         return;
                     }
-                    else if (ChannelList.ContainsKey(id) && ChannelList[id].Name == "trades" && (term == "te"))
+                    else if (ChannelList.ContainsKey(id) && ChannelList[id].Name == "trades" && term == "te")
                     {
                         if (term == "tu")
                         {
@@ -69,7 +65,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         PopulateTradeTicker(e.Message, ChannelList[id].Symbol);
                         return;
                     }
-                    else if (id == "0" && (term == "tu"))
+                    else if (id == "0" && term == "tu")
                     {
                         //expect a "te" and "tu" for each fill. The "tu" will include fees, so we won't act upon a "te"
                         var data = raw[2].ToObject(typeof(string[]));
@@ -84,20 +80,20 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else if ((raw.channel == "ticker" || raw.channel == "trades") && raw.@event == "subscribed")
                 {
-                    string channel = (string)raw.channel;
-                    string currentChannelId = (string)raw.chanId;
-                    string pair = (string)raw.pair;
+                    var channel = (string)raw.channel;
+                    var currentChannelId = (string)raw.chanId;
+                    var pair = (string)raw.pair;
 
-                    var removing = this.ChannelList.Where(c => c.Value.Name == channel && c.Value.Symbol == pair).Select(c => c.Key).ToArray();
+                    var removing = ChannelList.Where(c => c.Value.Name == channel && c.Value.Symbol == pair).Select(c => c.Key).ToArray();
 
                     foreach (var item in removing)
                     {
                         if (item != currentChannelId)
                         {
-                            this.ChannelList.Remove(item);
+                            ChannelList.Remove(item);
                         }
                     }
-                    this.ChannelList[currentChannelId] = new Channel { Name = channel, Symbol = raw.pair };
+                    ChannelList[currentChannelId] = new Channel { Name = channel, Symbol = raw.pair };
                 }
                 else if (raw.chanId == 0)
                 {
@@ -125,7 +121,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void PopulateTicker(string response, string symbol)
         {
-
             var data = JsonConvert.DeserializeObject<string[]>(response, settings);
             var msg = new Messages.Ticker(data);
             lock (Ticks)
@@ -137,7 +132,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     AskSize = msg.AskSize,
                     BidSize = msg.BidSize,
                     Time = DateTime.UtcNow,
-                    Value = ((msg.Ask + msg.Bid) / 2m),
+                    Value = (msg.Ask + msg.Bid) / 2m,
                     TickType = TickType.Quote,
                     Symbol = Symbol.Create(symbol.ToUpper(), SecurityType.Forex, BrokerageMarket),
                     DataType = MarketDataType.Tick
@@ -147,7 +142,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void PopulateTradeTicker(string response, string symbol)
         {
-
             var data = JsonConvert.DeserializeObject<string[]>(response, settings);
 
             var msg = new Messages.Trade(data);
@@ -163,8 +157,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Quantity = msg.Amount
                 });
             }
-
-
         }
 
         private void PopulateWallet(string[][] data)
@@ -172,16 +164,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             foreach (var item in data)
             {
                 var msg = new Messages.Wallet(item);
-                if (msg.Name == this._wallet)
+                if (msg.Name == _wallet)
                 {
-                    this.OnAccountChanged(new Securities.AccountEvent(msg.Currency.ToUpper(), msg.Balance));
+                    OnAccountChanged(new Securities.AccountEvent(msg.Currency.ToUpper(), msg.Balance));
                 }
             }
         }
 
         private void PopulateTrade(string term, string[] data)
         {
-
             var msg = new Messages.Fill(term, data);
 
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(msg.OrdId.ToString()));
@@ -193,8 +184,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     msg.Fee = msg.Fee * msg.PriceExecuted;
                     msg.FeeCurrency = "USD";
                 }
-                var split = this.FillSplit[cached.First().Key];
-                bool added = split.Add(msg);
+                var split = FillSplit[cached.First().Key];
+                var added = split.Add(msg);
                 if (!added)
                 {
                     //ignore fill message duplicate
@@ -209,7 +200,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     0, "Bitfinex Fill Event"
                 );
                 fill.FillPrice = msg.PriceExecuted;
-                fill.FillPriceCurrency = cached.First().Value.Symbol.Value.ToString();
+                fill.FillPriceCurrency = cached.First().Value.Symbol.Value;
 
                 if (split.IsCompleted())
                 {
@@ -217,7 +208,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     fill.OrderFee = Math.Abs(split.TotalFee());
                     fill.FillQuantity = msg.AmountExecuted;
 
-                    Order outOrder = cached.First().Value;
+                    var outOrder = cached.First().Value;
                     CachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
                 }
 
@@ -235,8 +226,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         protected void Authenticate()
         {
-            string key = ApiKey;
-            string payload = "AUTH" + DateTime.UtcNow.Ticks.ToString();
+            var key = ApiKey;
+            var payload = "AUTH" + DateTime.UtcNow.Ticks;
             WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "auth",
@@ -275,9 +266,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="symbols"></param>
         public void Subscribe(Packets.LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            if (!this.IsConnected)
+            if (!IsConnected)
             {
-                this.Connect();
+                Connect();
             }
 
             foreach (var item in symbols)
@@ -296,9 +287,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     pair = item.ToString()
                 }));
 
-                Log.Trace("Subscribe(): Sent subcribe for " + item.ToString());
+                Log.Trace("Subscribe(): Sent subcribe for " + item);
             }
-
         }
 
         /// <summary>
@@ -327,7 +317,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 WebSocket.Send(JsonConvert.SerializeObject(new
                 {
                     @event = "unsubscribe",
-                    channelId = id,
+                    channelId = id
                 }));
             }
             catch (Exception ex)
@@ -344,6 +334,5 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             Subscribe(null, symbols);
         }
-
     }
 }

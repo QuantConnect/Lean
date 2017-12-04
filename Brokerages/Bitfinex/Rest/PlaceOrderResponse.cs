@@ -52,8 +52,6 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
 
         [JsonProperty("order_id")]
         public long OrderId { get; set; }
-
     }
 #pragma warning restore 1591
-
 }

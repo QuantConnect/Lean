@@ -12,28 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages.Bitfinex.Rest;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
-
     public partial class BitfinexBrokerage
     {
-
         #region Declarations
+
         private class OrderTypeMap
         {
             public string BitfinexOrderType { get; set; }
@@ -41,25 +38,26 @@ namespace QuantConnect.Brokerages.Bitfinex
             public OrderType OrderType { get; set; }
         }
 
-        enum WalletType
+        private enum WalletType
         {
             exchange,
             trading
         }
 
         //todo: trailing stop support
-        private static List<OrderTypeMap> _orderTypeMap = new List<OrderTypeMap>
+        private static readonly List<OrderTypeMap> _orderTypeMap = new List<OrderTypeMap>
         {
-            { new OrderTypeMap { BitfinexOrderType = _exchangeMarket, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Market } },
-            { new OrderTypeMap { BitfinexOrderType = _exchangeLimit, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Limit } },
-            { new OrderTypeMap { BitfinexOrderType = _exchangeStop, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.StopMarket } },
+            new OrderTypeMap { BitfinexOrderType = ExchangeMarket, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Market },
+            new OrderTypeMap { BitfinexOrderType = ExchangeLimit, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Limit },
+            new OrderTypeMap { BitfinexOrderType = ExchangeStop, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.StopMarket },
             //{ new OrderTypeMap { BitfinexOrderType = "exchange trailing stop", Wallet = WalletType.exchange.ToString(), OrderType = OrderType.StopLimit } },
 
-            { new OrderTypeMap { BitfinexOrderType = _market, Wallet = WalletType.trading.ToString(), OrderType = OrderType.Market } },
-            { new OrderTypeMap { BitfinexOrderType = _limit, Wallet = WalletType.trading.ToString(), OrderType = OrderType.Limit } },
-            { new OrderTypeMap { BitfinexOrderType = _stop, Wallet = WalletType.trading.ToString(), OrderType = OrderType.StopMarket } },
+            new OrderTypeMap { BitfinexOrderType = Market, Wallet = WalletType.trading.ToString(), OrderType = OrderType.Market },
+            new OrderTypeMap { BitfinexOrderType = Limit, Wallet = WalletType.trading.ToString(), OrderType = OrderType.Limit },
+            new OrderTypeMap { BitfinexOrderType = Stop, Wallet = WalletType.trading.ToString(), OrderType = OrderType.StopMarket }
             //{ new OrderTypeMap { BitfinexOrderType = "trailing stop", Wallet = WalletType.trading.ToString(), OrderType = OrderType.StopLimit } },
         };
+
         #endregion
 
         /// <summary>
@@ -67,7 +65,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        public static OrderStatus MapOrderStatus(Rest.OrderStatusResponse response)
+        public static OrderStatus MapOrderStatus(OrderStatusResponse response)
         {
             decimal remainingAmount;
             decimal executedAmount = 0;
@@ -76,7 +74,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return OrderStatus.Canceled;
             }
             else if (decimal.TryParse(response.RemainingAmount, out remainingAmount) && remainingAmount > 0
-                && decimal.TryParse(response.ExecutedAmount, out executedAmount) && executedAmount > 0)
+                     && decimal.TryParse(response.ExecutedAmount, out executedAmount) && executedAmount > 0)
             {
                 return OrderStatus.PartiallyFilled;
             }
@@ -103,7 +101,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return result.Single().BitfinexOrderType;
             }
 
-            throw new Exception("Order type not supported: " + orderType.ToString());
+            throw new Exception("Order type not supported: " + orderType);
         }
 
 
@@ -121,7 +119,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return result.Single().OrderType;
             }
 
-            throw new Exception("Order type not supported: " + orderType.ToString());
+            throw new Exception("Order type not supported: " + orderType);
         }
 
         /// <summary>
@@ -132,8 +130,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public static string GetHexHashSignature(string payload, string apiSecret)
         {
-            HMACSHA384 hmac = new HMACSHA384(Encoding.UTF8.GetBytes(apiSecret));
-            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            var hmac = new HMACSHA384(Encoding.UTF8.GetBytes(apiSecret));
+            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
             return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
@@ -158,11 +156,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             if (quantity > 0 && order.Quantity < 0)
             {
-                return (quantity + order.Quantity) < 0;
+                return quantity + order.Quantity < 0;
             }
             else if (quantity < 0 && order.Quantity > 0)
             {
-                return (quantity + order.Quantity) > 0;
+                return quantity + order.Quantity > 0;
             }
             return false;
         }
@@ -182,6 +180,5 @@ namespace QuantConnect.Brokerages.Bitfinex
                     break;
             }
         }
-
     }
 }

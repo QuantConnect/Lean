@@ -9,7 +9,6 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
 
     public class OrderStatusResponse
     {
-
         [JsonProperty("id")]
         public long Id { get; set; }
 
@@ -51,8 +50,6 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
 
         [JsonProperty("executed_amount")]
         public string ExecutedAmount { get; set; }
-
     }
 #pragma warning restore 1591
-
 }

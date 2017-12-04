@@ -12,35 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.Linq;
-using QuantConnect.Brokerages.Bitfinex;
-using NUnit.Framework;
-using System.Reflection;
-using Moq;
-using System.Threading;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.IO;
-using RestSharp;
-using QuantConnect.Interfaces;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using Moq;
+using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
-
-    [TestFixture()]
-    public partial class BitfinexBrokerageWebsocketsTests
+    [TestFixture]
+    public class BitfinexBrokerageWebsocketsTests
     {
+        private BitfinexBrokerage _unit;
+        private Mock<IRestClient> _rest = new Mock<IRestClient>();
+        private readonly Mock<IWebSocket> _wss = new Mock<IWebSocket>();
+        private Symbol _symbol;
+        private readonly Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
+        private readonly AccountType _accountType = AccountType.Margin;
 
-        BitfinexBrokerage _unit;
-        Mock<IRestClient> _rest = new Mock<IRestClient>();
-        Mock<IWebSocket> _wss = new Mock<IWebSocket>();
-        Symbol _symbol;
-        Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
-        AccountType _accountType = AccountType.Margin;
-
-        [SetUp()]
+        [SetUp]
         public void Setup()
         {
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
@@ -53,7 +51,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _wss.Setup(m => m.Close()).Verifiable();
         }
 
-        [Test()]
+        [Test]
         public void IsConnectedTest()
         {
             _wss.Setup(w => w.IsOpen).Returns(true);
@@ -62,7 +60,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsFalse(_unit.IsConnected);
         }
 
-        [Test()]
+        [Test]
         public void DisconnectTest()
         {
             _wss.Setup(w => w.IsOpen).Returns(true);
@@ -71,7 +69,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _wss.Verify(w => w.Close(), Times.Once);
         }
 
-        [Test()]
+        [Test]
         public void DisposeTest()
         {
             _wss.Setup(w => w.IsOpen).Returns(false);
@@ -84,14 +82,14 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _wss.Setup(w => w.IsOpen).Returns(true);
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTradeTest()
         {
-            string brokerId = "2";
-            string json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"2\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"6\",\"BTC\"]]";
+            var brokerId = "2";
+            var json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"2\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"6\",\"BTC\"]]";
 
             BitfinexTestsHelpers.AddOrder(_unit, 1, brokerId, 3);
-            ManualResetEvent raised = new ManualResetEvent(false);
+            var raised = new ManualResetEvent(false);
 
             _unit.OrderStatusChanged += (s, e) =>
             {
@@ -107,13 +105,13 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsTrue(raised.WaitOne(1000));
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTradeExponentTest()
         {
-            string brokerId = "2256717409";
-            string json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"0.000006\",\"USD\"]]";
+            var brokerId = "2256717409";
+            var json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"0.000006\",\"USD\"]]";
             BitfinexTestsHelpers.AddOrder(_unit, 1, brokerId, 3);
-            ManualResetEvent raised = new ManualResetEvent(false);
+            var raised = new ManualResetEvent(false);
 
             _unit.OrderStatusChanged += (s, e) =>
             {
@@ -129,14 +127,14 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsTrue(raised.WaitOne(1000));
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTradeNegativeTest()
         {
-            string brokerId = "2";
-            string json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"-0.000004\",\"<ORD_TYPE>\",\"5\",\"6\",\"USD\"]]";
+            var brokerId = "2";
+            var json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"-0.000004\",\"<ORD_TYPE>\",\"5\",\"6\",\"USD\"]]";
             BitfinexTestsHelpers.AddOrder(_unit, 1, brokerId, 3);
 
-            ManualResetEvent raised = new ManualResetEvent(false);
+            var raised = new ManualResetEvent(false);
 
             _unit.OrderStatusChanged += (s, e) =>
             {
@@ -152,11 +150,10 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsTrue(raised.WaitOne(1000));
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTickerTest()
         {
-
-            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"0\",\"pair\":\"btcusd\"}";
+            var json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"0\",\"pair\":\"btcusd\"}";
 
             _unit.OnMessage(_unit, new WebSocketMessage(json));
 
@@ -185,14 +182,12 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             actual = _unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
             Assert.AreEqual(0.01m, actual.Price);
-
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTickerTest2()
         {
-
-            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"2\",\"pair\":\"btcusd\"}";
+            var json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"2\",\"pair\":\"btcusd\"}";
 
             _unit.OnMessage(_unit, new WebSocketMessage(json));
 
@@ -207,11 +202,10 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.AreEqual(0.00009992, ((Tick)actual).AskSize);
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTradeTickerTest()
         {
-
-            string json = "{\"event\":\"subscribed\",\"channel\":\"trades\",\"chanId\":\"5\",\"pair\":\"btcusd\"}";
+            var json = "{\"event\":\"subscribed\",\"channel\":\"trades\",\"chanId\":\"5\",\"pair\":\"btcusd\"}";
             _unit.OnMessage(_unit, new WebSocketMessage(json));
 
             json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"1\",\"pair\":\"btcusd\"}";
@@ -250,7 +244,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _unit.Connect();
 
             //create subs
-            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"1\",\"pair\":\"btcusd\"}";
+            var json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"1\",\"pair\":\"btcusd\"}";
             _unit.OnMessage(_unit, new WebSocketMessage(json));
             json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"2\",\"pair\":\"ethbtc\"}";
             _unit.OnMessage(_unit, new WebSocketMessage(json));
@@ -304,13 +298,13 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _wss.Verify(w => w.Close(), Times.AtLeastOnce);
         }
 
-        [Test()]
+        [Test]
         public void OnMessageTradeSplitFillTest()
         {
-            int expectedQuantity = 2;
+            var expectedQuantity = 2;
             BitfinexTestsHelpers.AddOrder(_unit, 1, "700658426", expectedQuantity);
-            ManualResetEvent raised = new ManualResetEvent(false);
-            decimal expectedFee = 1.72366541m;
+            var raised = new ManualResetEvent(false);
+            var expectedFee = 1.72366541m;
             decimal actualFee = 0;
             decimal actualQuantity = 0;
 
@@ -333,15 +327,14 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 _unit.OnMessage(_unit, new WebSocketMessage(line));
             }
             Assert.IsTrue(raised.WaitOne(1000));
-
         }
 
-        [Test()]
+        [Test]
         public void OnMessageWalletTest()
         {
-            string json = "[0,\"ws\", [[\"trading\",\"btc\",\"123.456789\",\"99.99\"], [\"exchange\",\"btc\",\"123.456789\",\"99.99\"]]]";
+            var json = "[0,\"ws\", [[\"trading\",\"btc\",\"123.456789\",\"99.99\"], [\"exchange\",\"btc\",\"123.456789\",\"99.99\"]]]";
 
-            ManualResetEvent raised = new ManualResetEvent(false);
+            var raised = new ManualResetEvent(false);
 
             _unit.AccountChanged += (s, e) =>
             {
@@ -354,13 +347,9 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsTrue(raised.WaitOne(2000));
         }
 
-        [Test()]
+        [Test]
         public void SubscribeTest()
         {
-
-
-
         }
-
     }
 }

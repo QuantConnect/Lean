@@ -12,57 +12,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Brokerages.Bitfinex;
-using NUnit.Framework;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Configuration;
-using QuantConnect.Orders;
-using System.Reflection;
 using Moq;
-using QuantConnect.Brokerages.Bitfinex.Rest;
-using RestSharp;
+using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Brokerages.Bitfinex.Rest;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
     [TestFixture]
     public class BitfinexBrokerageUtilityTests
     {
-
-        BitfinexBrokerage _unit;
-        Mock<IRestClient> _rest = new Mock<IRestClient>();
-        Mock<IWebSocket> _wss = new Mock<IWebSocket>();
-        Symbol _symbol;
-        Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
-        AccountType _accountType = AccountType.Margin;
+        private BitfinexBrokerage _unit;
+        private Mock<IRestClient> _rest = new Mock<IRestClient>();
+        private readonly Mock<IWebSocket> _wss = new Mock<IWebSocket>();
+        private Symbol _symbol;
+        private Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
+        private readonly AccountType _accountType = AccountType.Margin;
 
         private enum BitfinexOrderType
         {
-            [System.ComponentModel.Description("exchange market")]
-            exchangeMarket,
-            [System.ComponentModel.Description("exchange limit")]
-            exchangeLimit,
-            [System.ComponentModel.Description("exchange stop")]
-            exchangeStop,
-            [System.ComponentModel.Description("exchange trailing stop")]
-            exchangeTrailingStop,
-            [System.ComponentModel.Description("market")]
-            market,
-            [System.ComponentModel.Description("limit")]
-            limit,
-            [System.ComponentModel.Description("stop")]
-            stop,
-            [System.ComponentModel.Description("trailing stop")]
-            trailingStop
+            [System.ComponentModel.Description("exchange market")] exchangeMarket,
+            [System.ComponentModel.Description("exchange limit")] exchangeLimit,
+            [System.ComponentModel.Description("exchange stop")] exchangeStop,
+            [System.ComponentModel.Description("exchange trailing stop")] exchangeTrailingStop,
+            [System.ComponentModel.Description("market")] market,
+            [System.ComponentModel.Description("limit")] limit,
+            [System.ComponentModel.Description("stop")] stop,
+            [System.ComponentModel.Description("trailing stop")] trailingStop
         }
 
-        [SetUp()]
+        [SetUp]
         public void Setup()
         {
             _algo = new Mock<IAlgorithm>();
@@ -72,10 +58,10 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
         }
 
-        [Test()]
+        [Test]
         public void MapOrderStatusTest()
         {
-            OrderStatusResponse response = new OrderStatusResponse
+            var response = new OrderStatusResponse
             {
                 IsCancelled = true,
                 IsLive = true
@@ -130,7 +116,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.AreEqual(expected, actual);
         }
 
-        [Test()]
+        [Test]
         public void MapOrderTypeToBitfinexTest()
         {
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(AccountType.Cash);
@@ -164,13 +150,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             expected = GetDescriptionFromEnumValue(BitfinexOrderType.stop);
             actual = _unit.MapOrderType(OrderType.StopMarket);
             Assert.AreEqual(expected, actual);
-
         }
 
-        [Test()]
+        [Test]
         public void MapOrderTypeFromBitfinexTest()
         {
-
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(AccountType.Cash);
             _unit = new BitfinexBrokerage("http://localhost", _wss.Object, _rest.Object, "abc", "123", _algo.Object);
 
@@ -207,12 +191,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             Assert.Throws<Exception>(() => _unit.MapOrderType(GetDescriptionFromEnumValue(BitfinexOrderType.exchangeMarket)));
             Assert.Throws<Exception>(() => _unit.MapOrderType(GetDescriptionFromEnumValue(BitfinexOrderType.exchangeLimit)));
-
         }
 
         private static string GetDescriptionFromEnumValue(Enum value)
         {
-            System.ComponentModel.DescriptionAttribute attribute = value.GetType()
+            var attribute = value.GetType()
                 .GetField(value.ToString())
                 .GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false)
                 .SingleOrDefault() as System.ComponentModel.DescriptionAttribute;
@@ -224,14 +207,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var type = typeof(T);
             if (!type.IsEnum)
                 throw new ArgumentException();
-            FieldInfo[] fields = type.GetFields();
+            var fields = type.GetFields();
             var field = fields
                 .SelectMany(f => f.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false), (f, a) => new { Field = f, Att = a })
                 .Where(a => ((System.ComponentModel.DescriptionAttribute)a.Att).Description == description).SingleOrDefault();
             return field == null ? default(T) : (T)field.Field.GetRawConstantValue();
         }
-
-
-
     }
 }

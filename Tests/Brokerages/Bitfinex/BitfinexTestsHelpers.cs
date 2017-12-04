@@ -12,24 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using System.Collections.Generic;
 using QuantConnect.Brokerages.Bitfinex;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using WebSocketSharp;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
     public class BitfinexTestsHelpers
     {
-
         public static Security GetSecurity(decimal price = 1m, decimal quantity = 1.23m)
         {
             var fake = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(), new Cash(CashBook.AccountCurrency, 1000, price),
@@ -59,6 +53,5 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             unit.CachedOrderIDs.TryAdd(1, order);
             unit.FillSplit.TryAdd(id, new BitfinexFill(order));
         }
-
     }
 }

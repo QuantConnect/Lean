@@ -12,28 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using QuantConnect.Data.Market;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex.Messages
 {
-
     /// <summary>
     /// Ticker message object
     /// </summary>
     public class Trade : BaseMessage
     {
-
-        const int _channelId = 0;
-        const int _term = 1;
-        const int _seq = 2;
-        const int _timestamp = 3;
-        const int _price = 4;
-        const int _amount = 5;
+        private const int _channelId = 0;
+        private const int _term = 1;
+        private const int _seq = 2;
+        private const int _timestamp = 3;
+        private const int _price = 4;
+        private const int _amount = 5;
 
         /// <summary>
         /// Ticker Message constructor
@@ -54,30 +46,35 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         /// Channel Id
         /// </summary>
         public int ChannelId { get; set; }
+
         /// <summary>
         /// te or tu
         /// </summary>
         public string Term { get; set; }
+
         /// <summary>
         /// sequence number
         /// </summary>
         public string Seq { get; set; }
+
         /// <summary>
         /// Id
         /// </summary>
         public int Id { get; set; }
+
         /// <summary>
         /// Timestamp
         /// </summary>
         public int Timestamp { get; set; }
+
         /// <summary>
         /// Price
         /// </summary>
         public decimal Price { get; set; }
+
         /// <summary>
         /// Amount
         /// </summary>
         public decimal Amount { get; set; }
-
     }
 }

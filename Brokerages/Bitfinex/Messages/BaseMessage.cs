@@ -12,22 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex.Messages
 {
-
-
     /// <summary>
     /// Base class for Bitfinex wss messages
     /// </summary>
     public abstract class BaseMessage
     {
-
         /// <summary>
         /// Stored Keys for message
         /// </summary>
@@ -83,7 +77,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
             decimal parsed;
             try
             {
-                parsed = Decimal.Parse(AllValues[key], System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
+                parsed = decimal.Parse(AllValues[key], System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
             }
             catch (Exception)
             {
@@ -155,7 +149,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
                 return parsed;
             }
 
-            decimal scientific = this.TryGetDecimalFromScientific(key);
+            var scientific = TryGetDecimalFromScientific(key);
             return scientific;
         }
 
@@ -168,7 +162,5 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         {
             return Time.UnixTimeStampToDateTime(double.Parse(AllValues[key]));
         }
-
-
     }
 }

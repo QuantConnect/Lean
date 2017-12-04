@@ -12,33 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using QuantConnect.Data.Market;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex.Messages
 {
-
     /// <summary>
     /// Ticker message object
     /// </summary>
     public class Ticker : BaseMessage
     {
-
-        const int _channel_id = 0;
-        const int _bid = 1;
-        const int _bid_size = 2;
-        const int _ask = 3;
-        const int _ask_size = 4;
-        const int _daily_change = 5;
-        const int _daily_change_perc = 6;
-        const int _last_price = 7;
-        const int _volume = 8;
-        const int _high = 9;
-        const int _low = 10;
+        private const int _channel_id = 0;
+        private const int _bid = 1;
+        private const int _bid_size = 2;
+        private const int _ask = 3;
+        private const int _ask_size = 4;
+        private const int _daily_change = 5;
+        private const int _daily_change_perc = 6;
+        private const int _last_price = 7;
+        private const int _volume = 8;
+        private const int _high = 9;
+        private const int _low = 10;
 
         /// <summary>
         /// Ticker Message constructor
@@ -64,46 +56,55 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         /// Channel Id
         /// </summary>
         public int ChannelId { get; set; }
+
         /// <summary>
         /// Bid
         /// </summary>
         public decimal Bid { get; set; }
+
         /// <summary>
         /// Bid Size
         /// </summary>
         public decimal BidSize { get; set; }
+
         /// <summary>
         /// Ask
         /// </summary>
         public decimal Ask { get; set; }
+
         /// <summary>
         /// Ask Size
         /// </summary>
         public decimal AskSize { get; set; }
+
         /// <summary>
         /// Daily Change
         /// </summary>
         public decimal DailyChange { get; set; }
+
         /// <summary>
         /// Daily Change %
         /// </summary>
         public decimal DailyChangePerc { get; set; }
+
         /// <summary>
         /// Last Price
         /// </summary>
         public decimal LastPrice { get; set; }
+
         /// <summary>
         /// Volume
         /// </summary>
         public decimal Volume { get; set; }
+
         /// <summary>
         /// High
         /// </summary>
         public decimal High { get; set; }
+
         /// <summary>
         /// Low
         /// </summary>
         public decimal Low { get; set; }
-
     }
 }

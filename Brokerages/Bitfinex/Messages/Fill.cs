@@ -12,38 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using QuantConnect.Data.Market;
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex.Messages
 {
-
     /// <summary>
     /// Trade Message
     /// </summary>
     public class Fill : BaseMessage
     {
-
-        const int _trd_seq = 0;
-        int _trd_id;
-        int _trd_pair;
-        int _trd_timestamp;
-        int _trd_ord_id;
-        int _trd_amount_executed;
-        int _trd_price_executed;
-        int _ord_type;
-        int _ord_price;
-        int _fee;
-        int _fee_currency;
+        private const int _trd_seq = 0;
+        private readonly int _trd_id;
+        private readonly int _trd_pair;
+        private readonly int _trd_timestamp;
+        private readonly int _trd_ord_id;
+        private readonly int _trd_amount_executed;
+        private readonly int _trd_price_executed;
+        private readonly int _ord_type;
+        private readonly int _ord_price;
+        private readonly int _fee;
+        private readonly int _fee_currency;
 
         public Fill(string term, string[] values)
             : base(values)
         {
-
             if (AllValues.Length == 11)
             {
                 _trd_id = 1;
@@ -56,7 +49,6 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
                 _ord_price = 8;
                 _fee = 9;
                 _fee_currency = 10;
-
             }
             else
             {
@@ -91,50 +83,60 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         /// Trade sequence
         /// </summary>
         public string Seq { get; set; }
+
         /// <summary>
         /// Trade Id
         /// </summary>
         public long Id { get; set; }
+
         /// <summary>
         /// Currency Pair
         /// </summary>
         public string Pair { get; set; }
+
         /// <summary>
         /// Timestamp
         /// </summary>
         public DateTime Timestamp { get; set; }
+
         /// <summary>
         /// Order Id
         /// </summary>
         public long OrdId { get; set; }
+
         /// <summary>
         /// Amount Executed
         /// </summary>
         public decimal AmountExecuted { get; set; }
+
         /// <summary>
         /// Price Executed
         /// </summary>
         public decimal PriceExecuted { get; set; }
+
         /// <summary>
         /// Order type
         /// </summary>
         public string Type { get; set; }
+
         /// <summary>
         /// Order Price
         /// </summary>
         public decimal Price { get; set; }
+
         /// <summary>
         /// Fee
         /// </summary>
         public decimal Fee { get; set; }
+
         /// <summary>
         /// Fee Currency
         /// </summary>
         public string FeeCurrency { get; set; }
+
         /// <summary>
         /// Execution or update
         /// </summary>
         public bool IsTradeUpdate { get; set; }
-
     }
 }

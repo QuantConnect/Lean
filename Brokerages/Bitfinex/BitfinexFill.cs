@@ -12,35 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
-
     /// <summary>
     /// Tracks fill messages
     /// </summary>
     public class BitfinexFill
     {
-
-        Orders.Order _order;
+        private readonly Orders.Order _order;
 
         /// <summary>
         /// Lean orderId
         /// </summary>
-        public int OrderId
-        {
-            get
-            {
-                return _order.Id;
-            }
-        }
+        public int OrderId => _order.Id;
 
-        Dictionary<long, Messages.Fill> _messages = new Dictionary<long, Messages.Fill>();
+        /// <summary>
+        /// Original order quantity
+        /// </summary>
+        public decimal OrderQuantity => _order.Quantity;
+
+        private readonly Dictionary<long, Messages.Fill> _messages = new Dictionary<long, Messages.Fill>();
 
         /// <summary>
         /// Creates instance of BitfinexFill
@@ -73,7 +68,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public bool IsCompleted()
         {
-            decimal quantity = _messages.Sum(m => m.Value.AmountExecuted);
+            var quantity = _messages.Sum(m => m.Value.AmountExecuted);
             return quantity >= _order.Quantity;
         }
 
@@ -93,14 +88,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         public decimal TotalQuantity()
         {
             return _messages.Sum(m => m.Value.AmountExecuted);
-        }
-
-        /// <summary>
-        /// Original order quantity
-        /// </summary>
-        public decimal OrderQuantity
-        {
-            get { return _order.Quantity; }
         }
 
     }
