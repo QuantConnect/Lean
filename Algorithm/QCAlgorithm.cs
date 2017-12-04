@@ -1832,13 +1832,22 @@ namespace QuantConnect.Algorithm
         /// The resource to download is specified as a <see cref="string"/> containing the URI.
         /// </summary>
         /// <param name="address">A string containing the URI to download</param>
+        /// <param name="headers">Defines header values to add to the request</param>
         /// <param name="userName">The user name associated with the credentials</param>
         /// <param name="password">The password for the user name associated with the credentials</param>
         /// <returns>The requested resource as a <see cref="string"/></returns>
-        public string Fetch(string address, string userName = null, string password = null)
+        public string Fetch(string address, IEnumerable<KeyValuePair<string, string>> headers = null, string userName = null, string password = null)
         {
             using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
             {
+                client.Proxy = WebRequest.GetSystemWebProxy();
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        client.Headers.Add(header.Key, header.Value);
+                    }
+                }
                 return client.DownloadString(address);
             }
         }
