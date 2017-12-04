@@ -34,14 +34,14 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private PandasConverter _converter;
+        public PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
         /// Sets pandas converter
         /// </summary>
-        public void SetPandas()
+        public void SetPandasConverter()
         {
-            _converter = new PandasConverter();
+            PandasConverter = new PandasConverter();
         }
 
         /// <summary>
@@ -509,7 +509,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, periods, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -525,7 +525,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, span, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
         /// <summary>
@@ -541,7 +541,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, start, end, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
         /// <summary>
@@ -568,7 +568,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, config, start, end, resolution);
             });
 
-            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
 
         /// <summary>
@@ -598,7 +598,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
-            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
 
         /// <summary>
@@ -638,7 +638,7 @@ namespace QuantConnect.Algorithm
             }
 
             var request = CreateHistoryRequest(security, config, start, end, resolution);
-            return _converter.GetDataFrame(History(request).Memoize());
+            return PandasConverter.GetDataFrame(History(request).Memoize());
         }
 
         /// <summary>
