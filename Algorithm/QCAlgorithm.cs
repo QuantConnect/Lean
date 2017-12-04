@@ -153,6 +153,7 @@ namespace QuantConnect.Algorithm
             TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
 
             OptionChainProvider = new EmptyOptionChainProvider();
+            FutureChainProvider = new EmptyFutureChainProvider();
         }
 
         /// <summary>
@@ -296,6 +297,11 @@ namespace QuantConnect.Algorithm
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         public IOptionChainProvider OptionChainProvider { get; private set; }
+
+        /// <summary>
+        /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        public IFutureChainProvider FutureChainProvider { get; private set; }
 
         /// <summary>
         /// Gets the default order properties
@@ -604,6 +610,15 @@ namespace QuantConnect.Algorithm
         public void SetOptionChainProvider(IOptionChainProvider optionChainProvider)
         {
             OptionChainProvider = optionChainProvider;
+        }
+
+        /// <summary>
+        /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
+        {
+            FutureChainProvider = futureChainProvider;
         }
 
         /// <summary>
