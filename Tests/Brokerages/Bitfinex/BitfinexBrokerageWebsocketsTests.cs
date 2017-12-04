@@ -25,6 +25,8 @@ using QuantConnect.Brokerages.Bitfinex;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using RestSharp;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -350,6 +352,27 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         [Test]
         public void SubscribeTest()
         {
+            _wss.Setup(w => w.IsOpen).Returns(true);
+            var actualSymbols = new List<string>();
+            var actualChannels = new List<string>();
+
+            _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c =>
+            {
+                var actual = JsonConvert.DeserializeObject<dynamic>(c);
+                actualSymbols.Add((string)actual.pair);
+                actualChannels.Add((string)actual.channel);
+            });
+
+            _unit.Subscribe(new[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("UNIVERSE", SecurityType.Crypto, Market.Bitfinex),
+                Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex)});
+
+            Assert.AreEqual(4, actualSymbols.Count);
+            Assert.AreEqual(4, actualChannels.Count);
+            CollectionAssert.Contains(actualChannels, "ticker");
+            CollectionAssert.Contains(actualChannels, "trades");
+            CollectionAssert.Contains(actualSymbols, "BTCUSD");
+            CollectionAssert.Contains(actualSymbols, "ETHBTC");
         }
+
     }
 }

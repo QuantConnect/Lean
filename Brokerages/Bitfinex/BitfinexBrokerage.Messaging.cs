@@ -272,18 +272,23 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             foreach (var item in symbols)
             {
+                if (item.Value.Contains("UNIVERSE"))
+                {
+                    continue;
+                }
+
                 WebSocket.Send(JsonConvert.SerializeObject(new
                 {
                     @event = "subscribe",
                     channel = "ticker",
-                    pair = item.ToString()
+                    pair = item.Value
                 }));
 
                 WebSocket.Send(JsonConvert.SerializeObject(new
                 {
                     @event = "subscribe",
                     channel = "trades",
-                    pair = item.ToString()
+                    pair = item.Value
                 }));
 
                 Log.Trace("BitfinexBrokerage.Subscribe(): Sent subcribe for " + item.Value);
