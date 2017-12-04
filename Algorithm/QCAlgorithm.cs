@@ -82,6 +82,7 @@ namespace QuantConnect.Algorithm
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
+        private Resolution? _warmupResolution;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
         /// <summary>
