@@ -46,14 +46,14 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         # handle live mode file format
         if self.LiveMode:
             # fetch the file from dropbox
-            str = self.Fetch("https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1")
+            str = self.Download("https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1")
             # if we have a file for today, return symbols, else leave universe unchanged
             self.current_universe = str.split(',') if len(str) > 0 else self.current_universe
             return self.current_universe
 
         # backtest - first cache the entire file
         if len(self.backtestSymbolsPerDay) == 0:
-            str = self.Fetch("https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1")
+            str = self.Download("https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1")
             for line in str.splitlines():
                 data = line.split(',')
                 self.backtestSymbolsPerDay[data[0]] = data[1:]
