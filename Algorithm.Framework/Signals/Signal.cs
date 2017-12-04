@@ -14,6 +14,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Algorithm.Framework.Signals
 {
@@ -40,16 +41,19 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// Gets the predicted percent change in the signal type (price/volatility)
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public double? PercentChange { get; }
 
         /// <summary>
         /// Gets the confidence in this signal
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public double? Confidence { get; }
 
         /// <summary>
         /// Gets the period over which this signal is expected to come to fruition
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public TimeSpan? Period { get; }
 
         /// <summary>
