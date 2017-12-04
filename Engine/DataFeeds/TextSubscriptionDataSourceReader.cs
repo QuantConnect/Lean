@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         OnReaderError(line, err);
                     }
 
-                    if (instance != null)
+                    if (instance != null && instance.EndTime != default(DateTime))
                     {
                         yield return instance;
                     }
