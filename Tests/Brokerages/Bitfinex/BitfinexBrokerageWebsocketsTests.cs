@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         public void OnMessageTradeTest()
         {
             var brokerId = "2";
-            var json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"2\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"6\",\"BTC\"]]";
+            var json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092\",\"2\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"6\",\"BTC\"]]";
 
             BitfinexTestsHelpers.AddOrder(_unit, 1, brokerId, 3);
             var raised = new ManualResetEvent(false);
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             };
 
             _unit.OnMessage(_unit, new WebSocketMessage(json));
-            Assert.IsTrue(raised.WaitOne(1000));
+            Assert.IsTrue(raised.WaitOne(100));
         }
 
         [Test]
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             };
 
             _unit.OnMessage(_unit, new WebSocketMessage(json));
-            Assert.IsTrue(raised.WaitOne(1000));
+            Assert.IsTrue(raised.WaitOne(100));
         }
 
         [Test]
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             };
 
             _unit.OnMessage(_unit, new WebSocketMessage(json));
-            Assert.IsTrue(raised.WaitOne(1000));
+            Assert.IsTrue(raised.WaitOne(100));
         }
 
         [Test]

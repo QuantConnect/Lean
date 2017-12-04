@@ -199,13 +199,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                     cached.First().Value.Direction, msg.PriceExecuted, msg.AmountExecuted,
                     0, "Bitfinex Fill Event"
                 );
-                fill.FillPrice = msg.PriceExecuted;
                 fill.FillPriceCurrency = cached.First().Value.Symbol.Value;
+                fill.OrderFee = Math.Abs(msg.Fee);
 
                 if (split.IsCompleted())
                 {
                     fill.Status = OrderStatus.Filled;
-                    fill.OrderFee = Math.Abs(split.TotalFee());
                     fill.FillQuantity = msg.AmountExecuted;
 
                     var outOrder = cached.First().Value;
@@ -287,7 +286,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     pair = item.ToString()
                 }));
 
-                Log.Trace("Subscribe(): Sent subcribe for " + item);
+                Log.Trace("BitfinexBrokerage.Subscribe(): Sent subcribe for " + item.Value);
             }
         }
 

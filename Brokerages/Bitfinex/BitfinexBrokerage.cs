@@ -64,7 +64,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         protected readonly FixedSizeHashQueue<string> UnknownOrderIDs = new FixedSizeHashQueue<string>(1000);
 
         /// <summary>
-        /// 
+        /// Stores fill messages
         /// </summary>
         public ConcurrentDictionary<int, BitfinexFill> FillSplit { get; set; }
 
@@ -263,7 +263,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             catch (Exception err)
             {
-                Log.Error("CancelOrder(): OrderID: " + order.Id + " - " + err);
+                new BrokerageMessageEvent(BrokerageMessageType.Error, 0, "BitfinexBrokerage.CancelOrder(): OrderID: " + order.Id + " - " + err);
                 return false;
             }
             return true;
@@ -319,7 +319,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else
                 {
-                    Log.Error("BitfinexBrokerage.GetOpenOrders(): Unsupported order type returned from brokerage" + item.Type);
+                    new BrokerageMessageEvent(BrokerageMessageType.Error, 0, "BitfinexBrokerage.GetOpenOrders(): Unsupported order type returned from brokerage" + item.Type);
                     continue;
                 }
 
@@ -391,7 +391,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                new BrokerageMessageEvent(BrokerageMessageType.Error, 0, "BitfinexBrokerage.GetCashBalance(): " + ex.ToString());
                 return null;
             }
         }
@@ -521,7 +521,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                new BrokerageMessageEvent(BrokerageMessageType.Error, 0, "BitfinexBrokerage.ExecuteGet(): " + ex.ToString());
                 return null;
             }
         }
