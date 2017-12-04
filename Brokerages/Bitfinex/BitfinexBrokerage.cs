@@ -53,33 +53,31 @@ namespace QuantConnect.Brokerages.Bitfinex
         const string _limit = "limit";
         const string _stop = "stop";
         const string usd = "usd";
+        private string _wallet;
+        private readonly object _lockerConnectionMonitor = new object();
+        DateTime _lastHeartbeatUtcTime = DateTime.UtcNow;
+        const int _heartbeatTimeout = 300;
+        private IAlgorithm _algorithm;
+        JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            FloatParseHandling = FloatParseHandling.Decimal
+        };
+
         /// <summary>
         /// List of unknown orders
         /// </summary>
         protected readonly FixedSizeHashQueue<string> UnknownOrderIDs = new FixedSizeHashQueue<string>(1000);
-        private string _wallet;
         /// <summary>
         /// 
         /// </summary>
-        public ConcurrentDictionary<long, BitfinexFill> FillSplit { get; set; }
+        public ConcurrentDictionary<int, BitfinexFill> FillSplit { get; set; }
 
         private enum ChannelCode
         {
             pubticker = 0,
             stats = 1,
             trades = 2,
-        }
-
-        private readonly object _lockerConnectionMonitor = new object();
-        DateTime _lastHeartbeatUtcTime = DateTime.UtcNow;
-        const int _heartbeatTimeout = 300;
-        JsonSerializerSettings settings = new JsonSerializerSettings
-        {
-            FloatParseHandling = FloatParseHandling.Decimal
-        };
-        DateTime _previousAuthentication = DateTime.Now.AddSeconds(-10);
-        protected string Url { get; set; }
-        private IAlgorithm _algorithm;
+        }     
         #endregion
 
         /// <summary>
@@ -96,11 +94,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             WebSocket = websocket;
             WebSocket.Initialize(url);
-            Url = url;
             ApiKey = apiKey;
             ApiSecret = apiSecret;
             _algorithm = algorithm;
-            FillSplit = new ConcurrentDictionary<long, BitfinexFill>();
+            FillSplit = new ConcurrentDictionary<int, BitfinexFill>();
             _wallet = _algorithm.BrokerageModel.AccountType == AccountType.Margin ? "trading" : "exchange";
 
             WebSocket.Open += (s, e) => { Authenticate(); };

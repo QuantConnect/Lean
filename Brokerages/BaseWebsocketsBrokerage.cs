@@ -332,7 +332,7 @@ namespace QuantConnect.Brokerages
             {
                 this.Disconnect();
             }
-            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource?.Cancel();
         }
 
         /// <summary>
