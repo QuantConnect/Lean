@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Algorithm.Framework.Signals
 {
@@ -31,11 +32,13 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// Gets the type of signal, for example, price signal or volatility signal
         /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
         public SignalType Type { get; }
 
         /// <summary>
         /// Gets the predicted direction, down, flat or up
         /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
         public SignalDirection Direction { get; }
 
         /// <summary>
