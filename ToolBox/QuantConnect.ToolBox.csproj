@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -36,7 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.GDAXDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.KrakenDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -200,6 +200,8 @@
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
     <Compile Include="KaikoDataConverter\Program.cs" />
+    <Compile Include="KrakenDataDownloader\KrakenDataDownloader.cs" />
+    <Compile Include="KrakenDataDownloader\Program.cs" />
     <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataReader.cs" />
     <Compile Include="LeanDataWriter.cs" />
@@ -283,7 +285,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
