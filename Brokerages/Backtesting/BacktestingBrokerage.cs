@@ -126,7 +126,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            Log.Trace("BacktestingBrokerage.PlaceOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+            Log.Trace("BacktestingBrokerage.PlaceOrder(): Type: " + order.Type + " Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
 
             if (order.Status == OrderStatus.New)
             {
@@ -361,6 +361,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                         if (order.Type == OrderType.OptionExercise)
                         {
+                            fill.Message = order.Tag;
                             OnOptionPositionAssigned(fill);
                         }
                     }

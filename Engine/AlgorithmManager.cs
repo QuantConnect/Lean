@@ -946,7 +946,6 @@ namespace QuantConnect.Lean.Engine
 
                 if (security.Type == SecurityType.Option)
                 {
-                    var underlying = algorithm.Securities[security.Symbol.Underlying];
                     var option = (Option)security;
 
                     if (security.Holdings.Quantity > 0)
@@ -956,8 +955,12 @@ namespace QuantConnect.Lean.Engine
                     }
                     else
                     {
+                        var message = option.GetPayOff(option.Underlying.Price) < 0
+                            ? "Automatic option assignment on expiration"
+                            : "Option expiration";
+
                         request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option assignment on expiration");
+                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, message);
                     }
                 }
                 else
