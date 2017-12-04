@@ -101,7 +101,11 @@ namespace QuantConnect.Algorithm.Framework
         {
             // generate and emit signals
             var signals = Signal.Update(this, slice).ToList();
-            OnSignalsGenerated(signals);
+            if (signals.Count != 0)
+            {
+                // only fire signals generated event if we actually have signals
+                OnSignalsGenerated(signals);
+            }
 
             // construct portfolio targets from signals
             var targets = PortfolioConstruction.CreateTargets(this, signals);
