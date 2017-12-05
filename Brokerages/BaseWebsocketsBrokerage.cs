@@ -83,6 +83,8 @@ namespace QuantConnect.Brokerages
         /// Connection timeout
         /// </summary>
         protected const int ConnectionTimeout = 30000;
+        private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
+        private volatile bool _streamLocked;
         #endregion
 
         /// <summary>
@@ -115,7 +117,33 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public abstract void OnMessage(object sender, WebSocketMessage e);
+        protected abstract void OnMessageImpl(object sender, WebSocketMessage e);
+
+
+        /// <summary>
+        /// Wss message handler. Will queue messages when locked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public virtual void OnMessage(object sender, WebSocketMessage e)
+        {
+            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
+            // stream processing a touch.
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageBuffer.Enqueue(e);
+                    return;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            OnMessageImpl(sender, e);
+        }
 
         /// <summary>
         /// Creates wss connection, monitors for disconnection and re-connects when necessary
@@ -333,6 +361,32 @@ namespace QuantConnect.Brokerages
                 this.Disconnect();
             }
             _cancellationTokenSource?.Cancel();
+        }
+
+        /// <summary>
+        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
+        /// </summary>
+        protected void LockStream()
+        {
+            Log.Trace("BaseWebsocketsBrokerage.LockStream(): Locking Stream");
+            _streamLocked = true;
+        }
+
+        /// <summary>
+        /// Unlock stream and process all backed up messages.
+        /// </summary>
+        public void UnlockStream()
+        {
+            Log.Trace("BaseWebsocketsBrokerage.UnlockStream(): Processing Backlog...");
+            while (_messageBuffer.Any())
+            {
+                WebSocketMessage e;
+                _messageBuffer.TryDequeue(out e);
+                OnMessageImpl(this, e);
+            }
+            Log.Trace("BaseWebsocketsBrokerage.UnlockStream(): Stream Unlocked.");
+            // Once dequeued in order; unlock stream.
+            _streamLocked = false;
         }
 
         /// <summary>

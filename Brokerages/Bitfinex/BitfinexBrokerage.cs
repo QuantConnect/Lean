@@ -110,6 +110,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override bool PlaceOrder(Order order)
         {
+
+            LockStream();
+
             var quantity = order.Quantity;
             FillSplit.TryAdd(order.Id, new BitfinexFill(order));
 
@@ -129,8 +132,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
 
             var result = PlaceOrder(order, crossOrder);
-
             order.Quantity = quantity;
+
+            UnlockStream();
+
             return result;
         }
 

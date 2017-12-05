@@ -32,7 +32,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
+        protected override void OnMessageImpl(object sender, WebSocketMessage e)
         {
             try
             {
