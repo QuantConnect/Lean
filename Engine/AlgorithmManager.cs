@@ -428,6 +428,12 @@ namespace QuantConnect.Lean.Engine
                 // apply dividends
                 foreach (var dividend in timeSlice.Slice.Dividends.Values)
                 {
+                    // check if symbol exists in Securities
+                    if (!algorithm.Portfolio.Securities.ContainsKey(dividend.Symbol))
+                    {
+                        continue;
+                    }
+
                     Log.Trace("AlgorithmManager.Run(): {0}: Applying Dividend for {1}", algorithm.Time, dividend.Symbol.ToString());
                     algorithm.Portfolio.ApplyDividend(dividend);
                 }
@@ -435,6 +441,12 @@ namespace QuantConnect.Lean.Engine
                 // apply splits
                 foreach (var split in timeSlice.Slice.Splits.Values)
                 {
+                    // check if symbol exists in Securities
+                    if (!algorithm.Portfolio.Securities.ContainsKey(split.Symbol))
+                    {
+                        continue;
+                    }
+
                     try
                     {
                         Log.Trace("AlgorithmManager.Run(): {0}: Applying Split for {1}", algorithm.Time, split.Symbol.ToString());
@@ -746,6 +758,12 @@ namespace QuantConnect.Lean.Engine
                         var paired = new List<DataFeedPacket>();
                         foreach (var symbol in slice.Keys)
                         {
+                            // check if symbol exists in Securities
+                            if (!algorithm.Securities.ContainsKey(symbol))
+                            {
+                                continue;
+                            }
+
                             var security = algorithm.Securities[symbol];
                             var data = slice[symbol];
                             var list = new List<BaseData>();

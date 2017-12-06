@@ -928,6 +928,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Order quantity to achieve this percentage</returns>
         public decimal CalculateOrderQuantity(Symbol symbol, decimal target)
         {
+            if (!Securities.ContainsKey(symbol)) return 0; // check if symbol exists in Securities
             var security = Securities[symbol];
             var price = security.Price;
 

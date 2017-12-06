@@ -596,6 +596,11 @@ namespace QuantConnect.Securities
         /// <param name="dividend">The dividend to be applied</param>
         public void ApplyDividend(Dividend dividend)
         {
+            // check if symbol exists in Securities
+            if (!Securities.ContainsKey(dividend.Symbol))
+            {
+                return;
+            }
             var security = Securities[dividend.Symbol];
 
             // only apply dividends when we're in raw mode or split adjusted mode
@@ -626,6 +631,11 @@ namespace QuantConnect.Securities
         /// <param name="split">The split to be applied</param>
         private void ApplySplitToEquities(Split split)
         {
+            // check if symbol exists in Securities
+            if (!Securities.ContainsKey(split.Symbol))
+            {
+                return;
+            }
             var security = Securities[split.Symbol];
 
             // only apply splits to equities
