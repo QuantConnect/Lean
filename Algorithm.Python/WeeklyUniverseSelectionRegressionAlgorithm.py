@@ -32,7 +32,6 @@ class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2013,10,1)
         self.SetEndDate(2013,10,31)
 
-        self.SetBenchmark(lambda x: 1)
         self.UniverseSettings.Resolution = Resolution.Hour
 
         # select IBM once a week, empty universe the other days

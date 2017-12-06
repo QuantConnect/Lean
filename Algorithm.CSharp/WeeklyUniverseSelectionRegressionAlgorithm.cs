@@ -37,7 +37,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 31);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            SetBenchmark(dt => 1m);
             UniverseSettings.Resolution = Resolution.Hour;
 
             // select IBM once a week, empty universe the other days
