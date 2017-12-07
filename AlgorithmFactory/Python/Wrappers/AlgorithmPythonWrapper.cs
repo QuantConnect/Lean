@@ -712,9 +712,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         public void OnEndOfDay()
         {
-            using (Py.GIL())
+            try
             {
-                _algorithm.OnEndOfDay();
+                using (Py.GIL())
+                {
+                    _algorithm.OnEndOfDay();
+                }
+            }
+            // If OnEndOfDay is not defined in the script, but OnEndOfDay(Symbol) is, a python exception occurs
+            // Only throws if there is an error in its implementation body
+            catch (PythonException exception)
+            {
+                if (!exception.Message.Equals("TypeError : OnEndOfDay() takes exactly 2 arguments (1 given)"))
+                {
+                    throw exception;
+                }
             }
         }
 
@@ -728,9 +740,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         public void OnEndOfDay(Symbol symbol)
         {
-            using (Py.GIL())
+            try
             {
-                _algorithm.OnEndOfDay(symbol);
+                using (Py.GIL())
+                {
+                    _algorithm.OnEndOfDay(symbol);
+                }
+            }
+            // If OnEndOfDay(Symbol) is not defined in the script, but OnEndOfDay is, a python exception occurs
+            // Only throws if there is an error in its implementation body
+            catch (PythonException exception)
+            {
+                if (!exception.Message.Equals("TypeError : OnEndOfDay() takes exactly 1 argument (2 given)"))
+                {
+                    throw exception;
+                }
             }
         }
 
