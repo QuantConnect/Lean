@@ -405,6 +405,12 @@ namespace QuantConnect.Brokerages.Backtesting
 
             foreach (var fill in fills)
             {
+                // check if symbol exists in Securities
+                if (!Algorithm.Portfolio.Securities.ContainsKey(fill.Symbol))
+                {
+                    continue;
+                }
+
                 // processing assignment in the portfolio first
                 portfolioModel.ProcessFill(Algorithm.Portfolio, option, fill);
 
