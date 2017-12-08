@@ -61,15 +61,15 @@ namespace QuantConnect.Algorithm.Framework
         public QCAlgorithmFramework()
         {
             var type = GetType();
-            var frameworkOnData = type.GetMethod(nameof(FrameworkOnData), new[] {typeof(Slice)});
+            var frameworkOnData = type.GetMethod(nameof(OnFrameworkData), new[] {typeof(Slice)});
             if (frameworkOnData.DeclaringType != typeof(QCAlgorithmFramework))
             {
-                throw new Exception("Framework algorithms can not override FrameworkOnData(Slice)");
+                throw new Exception("Framework algorithms can not override OnFrameworkData(Slice)");
             }
-            var frameworkOnSecuritiesChanged = type.GetMethod(nameof(FrameworkOnSecuritiesChanged), new[] {typeof(SecurityChanges)});
+            var frameworkOnSecuritiesChanged = type.GetMethod(nameof(OnFrameworkSecuritiesChanged), new[] {typeof(SecurityChanges)});
             if (frameworkOnSecuritiesChanged.DeclaringType != typeof(QCAlgorithmFramework))
             {
-                throw new Exception("Framework algorithms can not override FrameworkOnSecuritiesChanged(SecurityChanges)");
+                throw new Exception("Framework algorithms can not override OnFrameworkSecuritiesChanged(SecurityChanges)");
             }
 
             // set model defaults
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.Framework
         /// Used to send data updates to algorithm framework models
         /// </summary>
         /// <param name="slice">The current data slice</param>
-        public override void FrameworkOnData(Slice slice)
+        public override void OnFrameworkData(Slice slice)
         {
             // generate and emit signals
             var signals = Signal.Update(this, slice).ToList();
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework
         /// Used to send security changes to algorithm framework models
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
-        public override void FrameworkOnSecuritiesChanged(SecurityChanges changes)
+        public override void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
             Signal.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);

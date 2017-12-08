@@ -415,7 +415,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         algorithm.OnSecuritiesChanged(timeSlice.SecurityChanges);
-                        algorithm.FrameworkOnSecuritiesChanged(timeSlice.SecurityChanges);
+                        algorithm.OnFrameworkSecuritiesChanged(timeSlice.SecurityChanges);
                     }
                     catch (Exception err)
                     {
@@ -575,7 +575,7 @@ namespace QuantConnect.Lean.Engine
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
                         algorithm.OnData(timeSlice.Slice);
-                        algorithm.FrameworkOnData(timeSlice.Slice);
+                        algorithm.OnFrameworkData(timeSlice.Slice);
                     }
                 }
                 catch (Exception err)

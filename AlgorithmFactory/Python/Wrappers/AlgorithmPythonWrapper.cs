@@ -709,11 +709,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Used to send data updates to algorithm framework models
         /// </summary>
         /// <param name="slice">The current data slice</param>
-        public void FrameworkOnData(Slice slice)
+        public void OnFrameworkData(Slice slice)
         {
             using (Py.GIL())
             {
-                _algorithm.FrameworkOnData(slice);
+                _algorithm.OnFrameworkData(slice);
             }
         }
 
@@ -884,11 +884,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Used to send security changes to algorithm framework models
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
-        public void FrameworkOnSecuritiesChanged(SecurityChanges changes)
+        public void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
             using (Py.GIL())
             {
-                _algorithm.FrameworkOnSecuritiesChanged(changes);
+                _algorithm.OnFrameworkSecuritiesChanged(changes);
             }
         }
 
