@@ -25,6 +25,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public interface ISignal
     {
         /// <summary>
+        /// Gets the unique identifier for this signal
+        /// </summary>
+        Guid Id { get; }
+
+        /// <summary>
         /// Gets the symbol this signal is for
         /// </summary>
         Symbol Symbol { get; }

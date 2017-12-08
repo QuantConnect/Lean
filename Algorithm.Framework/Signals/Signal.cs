@@ -23,6 +23,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public class Signal : ISignal, IEquatable<Signal>
     {
         /// <summary>
+        /// Gets the unique identifier for this signal
+        /// </summary>
+        public Guid Id { get; }
+
+        /// <summary>
         /// Gets the symbol this signal is for
         /// </summary>
         public Symbol Symbol { get; }
@@ -74,6 +79,8 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="period">The period over which the prediction will come true</param>
         public Signal(Symbol symbol, SignalType type, SignalDirection direction, double? percentChange, double? confidence, TimeSpan? period)
         {
+            Id = Guid.NewGuid();
+
             Symbol = symbol;
             Type = type;
             Direction = direction;
