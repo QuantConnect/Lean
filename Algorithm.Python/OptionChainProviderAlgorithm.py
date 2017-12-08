@@ -45,6 +45,8 @@ class OptionChainProviderAlgorithm(QCAlgorithm):
         self.underlyingsymbol = equity.Symbol
         # use the underlying equity GOOG as the benchmark
         self.SetBenchmark(equity.Symbol)
+        # set the data normalization mode to be raw
+        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
 
     def OnData(self,slice):
 
