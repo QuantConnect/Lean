@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
 
             PortfolioSelection = new CustomFundamentalPortfolioSelectionModel();
-            Signal = new MACDSignalModel(TimeSpan.FromMinutes(10), 0.01m);
+            Signal = new MACDSignalModel(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30), 0.01m);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
         }
 

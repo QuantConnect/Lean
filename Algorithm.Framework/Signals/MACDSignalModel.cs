@@ -32,17 +32,20 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public class MACDSignalModel : ISignalModel
     {
         private readonly TimeSpan _signalPeriod;
+        private readonly TimeSpan _consolidatorPeriod;
         private readonly decimal _bounceThresholdPercent;
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MACDSignalModel"/> class
         /// </summary>
-        /// <param name="signalPeriod">The period of the MACD's input</param>
+        /// <param name="consolidatorPeriod">The period of the MACD's input</param>
+        /// <param name="signalPeriod">The period assigned to generated signals</param>
         /// <param name="bounceThresholdPercent">The percent change required in the signal to warrant an up/down signal</param>
-        public MACDSignalModel(TimeSpan signalPeriod, decimal bounceThresholdPercent)
+        public MACDSignalModel(TimeSpan consolidatorPeriod, TimeSpan signalPeriod, decimal bounceThresholdPercent)
         {
             _signalPeriod = signalPeriod;
+            _consolidatorPeriod = consolidatorPeriod;
             _bounceThresholdPercent = Math.Abs(bounceThresholdPercent);
             _symbolData = new Dictionary<Symbol, SymbolData>();
         }
@@ -73,7 +76,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
                     direction = SignalDirection.Down;
                 }
 
-                var signal = new Signal(sd.Security.Symbol, SignalType.Price, direction);
+                var signal = new Signal(sd.Security.Symbol, SignalType.Price, direction, _signalPeriod);
                 if (signal.Equals(sd.PreviousSignal))
                 {
                     continue;
@@ -94,7 +97,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         {
             foreach (var added in changes.AddedSecurities)
             {
-                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _signalPeriod));
+                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _consolidatorPeriod));
             }
             foreach (var removed in changes.RemovedSecurities)
             {

@@ -43,6 +43,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public SignalDirection Direction { get; }
 
         /// <summary>
+        /// Gets the period over which this signal is expected to come to fruition
+        /// </summary>
+        public TimeSpan Period { get; }
+
+        /// <summary>
         /// Gets the predicted percent change in the signal type (price/volatility)
         /// </summary>
         public double? PercentChange { get; }
@@ -53,18 +58,14 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public double? Confidence { get; }
 
         /// <summary>
-        /// Gets the period over which this signal is expected to come to fruition
-        /// </summary>
-        public TimeSpan? Period { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="Signal"/> class
         /// </summary>
         /// <param name="symbol">The symbol this signal is for</param>
         /// <param name="type">The type of signal, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
-        public Signal(Symbol symbol, SignalType type, SignalDirection direction)
-            : this(symbol, type, direction, null, null, null)
+        /// <param name="period">The period over which the prediction will come true</param>
+        public Signal(Symbol symbol, SignalType type, SignalDirection direction, TimeSpan period)
+            : this(symbol, type, direction, period, null, null)
         {
         }
 
@@ -74,19 +75,21 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="symbol">The symbol this signal is for</param>
         /// <param name="type">The type of signal, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
+        /// <param name="period">The period over which the prediction will come true</param>
         /// <param name="percentChange">The predicted percent change</param>
         /// <param name="confidence">The confidence in this signal</param>
-        /// <param name="period">The period over which the prediction will come true</param>
-        public Signal(Symbol symbol, SignalType type, SignalDirection direction, double? percentChange, double? confidence, TimeSpan? period)
+        public Signal(Symbol symbol, SignalType type, SignalDirection direction, TimeSpan period, double? percentChange, double? confidence)
         {
             Id = Guid.NewGuid();
 
             Symbol = symbol;
             Type = type;
             Direction = direction;
+            Period = period;
+
+            // Optional
             PercentChange = percentChange;
             Confidence = confidence;
-            Period = period;
         }
 
         /// <summary>
@@ -95,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <returns>A new signal with identical values, but new instances</returns>
         public ISignal Clone()
         {
-            return new Signal(Symbol, Type, Direction, PercentChange, Confidence, Period);
+            return new Signal(Symbol, Type, Direction, Period, PercentChange, Confidence);
         }
 
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -29,19 +30,20 @@ namespace QuantConnect.Algorithm.Framework.Signals
     {
         private readonly SignalType _type;
         private readonly SignalDirection _direction;
+        private readonly TimeSpan _period;
         private readonly double? _percentChange;
         private readonly double? _confidence;
-        private readonly TimeSpan? _period;
-        private readonly HashSet<Security> _securities = new HashSet<Security>();
-        private readonly HashSet<Symbol> _signalsSent = new HashSet<Symbol>();
+        private readonly HashSet<Security> _securities;
+        private readonly Dictionary<Symbol, DateTime> _signalTimeBySymbol;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantSignalModel"/> class
         /// </summary>
         /// <param name="type">The type of signal</param>
         /// <param name="direction">The direction of the signal</param>
-        public ConstantSignalModel(SignalType type, SignalDirection direction)
-            : this(type, direction, null, null, null)
+        /// <param name="period">The period over which the signal with come to fruition</param>
+        public ConstantSignalModel(SignalType type, SignalDirection direction, TimeSpan period)
+            : this(type, direction, period, null, null)
         {
         }
 
@@ -50,16 +52,21 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// </summary>
         /// <param name="type">The type of signal</param>
         /// <param name="direction">The direction of the signal</param>
+        /// <param name="period">The period over which the signal with come to fruition</param>
         /// <param name="percentChange">The predicted percent change</param>
         /// <param name="confidence">The confidence in the signal</param>
-        /// <param name="period">The period over which the signal with come to fruition</param>
-        public ConstantSignalModel(SignalType type, SignalDirection direction, double? percentChange, double? confidence, TimeSpan? period)
+        public ConstantSignalModel(SignalType type, SignalDirection direction, TimeSpan period, double? percentChange, double? confidence)
         {
             _type = type;
             _direction = direction;
+            _period = period;
+
+            // Optional
             _percentChange = percentChange;
             _confidence = confidence;
-            _period = period;
+
+            _securities = new HashSet<Security>();
+            _signalTimeBySymbol = new Dictionary<Symbol, DateTime>();
         }
 
         /// <summary>
@@ -70,17 +77,13 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <returns>The new signals generated</returns>
         public IEnumerable<Signal> Update(QCAlgorithmFramework algorithm, Slice data)
         {
-            // we're only trying to send the up signal once per security
-            // we'll send the signal again if they're removed and then re-added
-            return _securities.Where(security => _signalsSent.Add(security.Symbol))
-                .Select(security => new Signal(
-                    security.Symbol,
-                    _type,
-                    _direction,
-                    _percentChange,
-                    _confidence,
-                    _period
-                ));
+            foreach (var security in _securities)
+            {
+                if (ShouldEmitSignal(algorithm.UtcTime, security.Symbol))
+                {
+                    yield return new Signal(security.Symbol, _type, _direction, _period, _percentChange, _confidence);
+                }
+            }
         }
 
         /// <summary>
@@ -95,8 +98,27 @@ namespace QuantConnect.Algorithm.Framework.Signals
             // this will allow the signal to be re-sent when the security re-joins the universe
             foreach (var removed in changes.RemovedSecurities)
             {
-                _signalsSent.Remove(removed.Symbol);
+                _signalTimeBySymbol.Remove(removed.Symbol);
             }
+        }
+
+        private bool ShouldEmitSignal(DateTime utcTime, Symbol symbol)
+        {
+            DateTime generatedTimeUtc;
+            if (_signalTimeBySymbol.TryGetValue(symbol, out generatedTimeUtc))
+            {
+                // we previously emitted a signal for this symbol, check it's period to see
+                // if we should emit another signal
+                if (utcTime - generatedTimeUtc < _period)
+                {
+                    return false;
+                }
+            }
+
+            // we either haven't emitted a signal for this symbol or the previous
+            // signal's period has expired, so emit a new signal now for this symbol
+            _signalTimeBySymbol[symbol] = utcTime;
+            return true;
         }
     }
 }

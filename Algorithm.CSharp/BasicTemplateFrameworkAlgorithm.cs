@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
@@ -52,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set algorithm framework models
             PortfolioSelection = new ManualPortfolioSelectionModel(symbols);
-            Signal = new ConstantSignalModel(SignalType.Price, SignalDirection.Up);
+            Signal = new ConstantSignalModel(SignalType.Price, SignalDirection.Up, EndDate - StartDate);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
 
             // these are the default values for Execution and RiskManagement models

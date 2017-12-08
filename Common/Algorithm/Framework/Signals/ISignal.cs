@@ -47,6 +47,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
         SignalDirection Direction { get; }
 
         /// <summary>
+        /// Gets the period over which this signal is expected to come to fruition
+        /// </summary>
+        TimeSpan Period { get; }
+
+        /// <summary>
         /// Gets the predicted percent change in the signal type (price/volatility)
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -57,12 +62,6 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         double? Confidence { get; }
-
-        /// <summary>
-        /// Gets the period over which this signal is expected to come to fruition
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        TimeSpan? Period { get; }
 
         /// <summary>
         /// Creates a deep clone of this signal instance
