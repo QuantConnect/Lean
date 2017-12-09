@@ -1638,7 +1638,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData, new()
         {
             var key = new SecurityDatabaseKey(Market.USA, symbol, SecurityType.Base);
-            var entry = new MarketHoursDatabase.Entry(timeZone, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            var entry = new MarketHoursDatabase.Entry(timeZone, SecurityExchangeHours.AlwaysOpen(timeZone));
             _marketHoursDatabase.AddEntry(key, entry);
 //            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 

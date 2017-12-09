@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Algorithm
             qcAlgorithm.AddData<Quandl>("USDARS", Resolution.Hour, TimeZones.BuenosAires);
             var subscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Quandl));
             Assert.AreEqual(subscription.DataTimeZone, TimeZones.BuenosAires);
-            Assert.AreEqual(subscription.ExchangeTimeZone, TimeZones.NewYork);
+            Assert.AreEqual(subscription.ExchangeTimeZone, TimeZones.BuenosAires);
         }
 
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
