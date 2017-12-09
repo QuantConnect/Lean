@@ -240,7 +240,7 @@ namespace QuantConnect.Securities
 
         public void AddEntry(SecurityDatabaseKey key, Entry entry)
         {
-            _entries[key] = entry;
+            if (!_entries.ContainsKey(key)) _entries.Add(key, entry);
         }
     }
 }
