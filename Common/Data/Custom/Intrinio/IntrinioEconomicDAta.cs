@@ -113,19 +113,28 @@ namespace QuantConnect.Data.Custom.Intrinio
         /// <returns>
         ///     String URL of source file.
         /// </returns>
+        /// <remarks>
+        ///     Given Intrinio's API limits, we cannot make more than one CSV request per second. That's why in backtesting mode
+        ///     we make sure we make just one call to retrieve all the data needed. Also, to avoid the problem of many sources
+        ///     asking the data at the beginning of the algorithm, a pause of a second is added.
+        /// </remarks>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             SubscriptionDataSource subscription;
+            // We want to make just one call with all the data in backtesting mode.
             if (_firstTime)
             {
                 var order = string.Empty;
                 if (isLiveMode)
                 {
+                    // In Live mode, we only want the last observation.
                     order = "desc";
                 }
                 else
                 {
+                    // In backtesting mode, we need the data in ascending order...
                     order = "asc";
+                    // and avoid making furthers calls for the same data.
                     _firstTime = false;
                 }
 
@@ -141,11 +150,12 @@ namespace QuantConnect.Data.Custom.Intrinio
 
                 subscription = new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
                                                           authorizationHeaders);
+                // Finally, here we force the engine to wait one second in case the we have multiples data sources added.
                 Thread.Sleep(millisecondsTimeout: 1000);
             }
             else
             {
-                subscription = new SubscriptionDataSource("", SubscriptionTransportMedium.RemoteFile);
+                subscription = new SubscriptionDataSource("", SubscriptionTransportMedium.LocalFile);
             }
             return subscription;
         }
