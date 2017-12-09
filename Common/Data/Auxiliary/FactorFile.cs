@@ -1,11 +1,11 @@
 ﻿﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the symbol this factor file represents
         /// </summary>
-        public string Permtick { get; private set; }
+        public string Permtick { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FactorFile"/> class.
@@ -57,7 +57,20 @@ namespace QuantConnect.Data.Auxiliary
         public FactorFile(string permtick, IEnumerable<FactorFileRow> data, DateTime? factorFileMinimumDate = null)
         {
             Permtick = permtick.ToUpper();
-            SortedFactorFileData = new SortedList<DateTime, FactorFileRow>(data.ToDictionary(x => x.Date));
+
+            var dictionary = new Dictionary<DateTime, FactorFileRow>();
+            foreach (var row in data)
+            {
+                if (dictionary.ContainsKey(row.Date))
+                {
+                    Log.Trace($"Skipping duplicate factor file row for symbol: {permtick}, date: {row.Date:yyyyMMdd}");
+                    continue;
+                }
+
+                dictionary.Add(row.Date, row);
+            }
+            SortedFactorFileData = new SortedList<DateTime, FactorFileRow>(dictionary);
+
             FactorFileMinimumDate = factorFileMinimumDate;
         }
 

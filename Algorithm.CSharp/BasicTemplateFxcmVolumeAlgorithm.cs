@@ -40,17 +40,18 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 05, 07);     //Set Start Date
-            SetEndDate(2014, 05, 15);       //Set End Date
+            SetStartDate(2015, 02, 01);     //Set Start Date
+            SetEndDate(2015, 03, 01);       //Set End Date
             SetCash(100000);                //Set Strategy Cash
 
             // Find more symbols here: https://www.quantconnect.com/data
             EURUSD = AddForex("EURUSD", Resolution.Minute).Symbol;
 
-            AddData<FxcmVolume>("EURUSD_Vol", Resolution.Minute, DateTimeZone.Utc);
-            var _price = Identity(EURUSD);
+            AddData<FxcmVolume>("EURUSD_Vol", Resolution.Hour, DateTimeZone.Utc);
+            var _price = Identity(EURUSD, Resolution.Hour);
             fastVWMA = _price.WeightedBy(volume, period: 15);
             slowVWMA = _price.WeightedBy(volume, period: 300);
+            PlotIndicator("VWMA", fastVWMA.Minus(slowVWMA));
         }
 
         /// <summary>

@@ -26,7 +26,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="regression test" />
     public class WeeklyUniverseSelectionRegressionAlgorithm : QCAlgorithm
     {
-        private readonly Symbol _ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
         private SecurityChanges _changes = SecurityChanges.None;
 
         /// <summary>
@@ -34,14 +33,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            UniverseSettings.Resolution = Resolution.Hour;
-
             SetStartDate(2013, 10, 1);  //Set Start Date
             SetEndDate(2013, 10, 31);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
+            UniverseSettings.Resolution = Resolution.Hour;
+
             // select IBM once a week, empty universe the other days
-            AddUniverse(coarse => Time.Day % 7 == 0 ? new List<Symbol> { _ibm } : Enumerable.Empty<Symbol>());
+            AddUniverse("my-custom-universe", dt => dt.Day % 7 == 0 ? new List<string> { "IBM" } : Enumerable.Empty<string>());
         }
 
         /// <summary>

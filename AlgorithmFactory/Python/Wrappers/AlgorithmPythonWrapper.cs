@@ -81,7 +81,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _baseAlgorithm = (QCAlgorithm)_algorithm;
 
                             // Set pandas
-                            _baseAlgorithm.SetPandas();
+                            _baseAlgorithm.SetPandasConverter();
 
                             return;
                         }
@@ -363,6 +363,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        public IFutureChainProvider FutureChainProvider
+        {
+            get
+            {
+                return _baseAlgorithm.FutureChainProvider;
+            }
+        }
+
+        /// <summary>
         /// Algorithm start date for backtesting, set by the SetStartDate methods.
         /// </summary>
         public DateTime StartDate
@@ -414,6 +425,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetOptionChainProvider(IOptionChainProvider optionChainProvider)
         {
             _baseAlgorithm.SetOptionChainProvider(optionChainProvider);
+        }
+
+        /// <summary>
+        /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
+        {
+            _baseAlgorithm.SetFutureChainProvider(futureChainProvider);
         }
 
         /// <summary>
@@ -692,9 +712,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         public void OnEndOfDay()
         {
-            using (Py.GIL())
+            try
             {
-                _algorithm.OnEndOfDay();
+                using (Py.GIL())
+                {
+                    _algorithm.OnEndOfDay();
+                }
+            }
+            // If OnEndOfDay is not defined in the script, but OnEndOfDay(Symbol) is, a python exception occurs
+            // Only throws if there is an error in its implementation body
+            catch (PythonException exception)
+            {
+                if (!exception.Message.Equals("TypeError : OnEndOfDay() takes exactly 2 arguments (1 given)"))
+                {
+                    throw exception;
+                }
             }
         }
 
@@ -708,9 +740,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         public void OnEndOfDay(Symbol symbol)
         {
-            using (Py.GIL())
+            try
             {
-                _algorithm.OnEndOfDay(symbol);
+                using (Py.GIL())
+                {
+                    _algorithm.OnEndOfDay(symbol);
+                }
+            }
+            // If OnEndOfDay(Symbol) is not defined in the script, but OnEndOfDay is, a python exception occurs
+            // Only throws if there is an error in its implementation body
+            catch (PythonException exception)
+            {
+                if (!exception.Message.Equals("TypeError : OnEndOfDay() takes exactly 1 argument (2 given)"))
+                {
+                    throw exception;
+                }
             }
         }
 

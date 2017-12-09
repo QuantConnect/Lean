@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -97,7 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return dictionary.TryGetValue(configuration, out subscription);
         }
-        
+
         /// <summary>
         /// Attempts to retrieve the subscription with the specified configuration
         /// </summary>
@@ -112,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 subscriptions = null;
                 return false;
             }
-            
+
             subscriptions = dictionary.Values;
             return true;
         }
@@ -165,7 +166,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var subscriptionsBySymbol in _subscriptions)
             {
                 var subscriptionsByConfig = subscriptionsBySymbol.Value;
-                foreach (var kvp in subscriptionsByConfig)
+                foreach (var kvp in subscriptionsByConfig.OrderBy(x => x.Key.TickType))
                 {
                     var subscription = kvp.Value;
                     yield return subscription;
