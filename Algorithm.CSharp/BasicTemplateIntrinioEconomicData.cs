@@ -16,6 +16,8 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Intrinio;
+using QuantConnect.Indicators;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,25 +31,32 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateIntrinioEconomicData : QCAlgorithm
     {
-        private Symbol _spy;
+        private Symbol _uso;    // United States Oil Fund LP
+        private Symbol _bno;    // United States Brent Oil Fund LP
+
+        Identity _wti = new Identity("WTI");
+        Identity _brent = new Identity("Brent");
+        private CompositeIndicator<IndicatorDataPoint> _spread;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2016, 01, 01); //Set Start Date
-            SetEndDate(2016, 03, 31); //Set End Date
+            SetStartDate(2010, 01, 01); //Set Start Date
+            SetEndDate(2013, 12, 31); //Set End Date
             SetCash(100000); //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            _spy = AddEquity("SPY", Resolution.Daily).Symbol;
+            _uso = AddEquity("USO", Resolution.Daily).Symbol;
+            _bno = AddEquity("BNO", Resolution.Daily).Symbol;
 
             AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilWTI, Resolution.Daily);
             AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilBrent, Resolution.Daily);
+            _spread = _brent.Minus(_wti);
         }
 
         /// <summary>
@@ -56,11 +65,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
-            {
-                SetHoldings(_spy, 1);
-                Debug("Purchased Stock");
-            }
+            MarketOrder(_bno, 1000 * Math.Sign(_spread));
+            MarketOrder(_uso, -1000 * Math.Sign(_spread));
         }
 
         public void OnData(IntrinioEconomicData economicData)
@@ -69,12 +75,14 @@ namespace QuantConnect.Algorithm.CSharp
             if (economicData.Symbol.Value == EconomicDataSources.Commodities.CrudeOilWTI)
             {
                 oilMarket = "West Texas Intermediate";
+                _wti.Update(economicData.Time, economicData.Price);
             }
             else
             {
                 oilMarket = "Brent";
+                _brent.Update(economicData.Time, economicData.Price);
             }
-            Log(string.Format("Crude Oil {0} price {1:F4}", oilMarket, economicData.Value));
+            // Log(string.Format("Crude Oil {0} price {1:F4}", oilMarket, economicData.Value));
         }
     }
 }
