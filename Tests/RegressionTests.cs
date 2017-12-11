@@ -490,13 +490,13 @@ namespace QuantConnect.Tests
                 {"Loss Rate", "50%"},
                 {"Win Rate", "50%"},
                 {"Profit-Loss Ratio", "0.84"},
-                {"Alpha", "-0.07"},
-                {"Beta", "0.122"},
+                {"Alpha", "-0.239"},
+                {"Beta", "12.675"},
                 {"Annual Standard Deviation", "0.04"},
                 {"Annual Variance", "0.002"},
-                {"Information Ratio", "-5.158"},
-                {"Tracking Error", "0.096"},
-                {"Treynor Ratio", "-0.088"},
+                {"Information Ratio", "-0.723"},
+                {"Tracking Error", "0.04"},
+                {"Treynor Ratio", "-0.001"},
                 {"Total Fees", "$23.23"},
             };
 
