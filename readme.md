@@ -65,9 +65,20 @@ mono QuantConnect.Lean.Launcher.exe
 
 - Install [Mono](http://www.mono-project.com/download/#download-lin):
 ```
-sudo apt-get update && rm -rf /var/lib/apt/lists/*
+sudo apt-get update && sudo rm -rf /var/lib/apt/lists/*
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
 echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > sudo /etc/apt/sources.list.d/mono-xamarin.list
+```
+If you get this error on the last command:
+ 
+**Unable to locate package referenceassemblies-pcl**,
+ 
+run the following command (it works on current version of Ubuntu - 17.10):
+```
+echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-official.list
+```
+
+```
 sudo apt-get update
 sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
 ```
