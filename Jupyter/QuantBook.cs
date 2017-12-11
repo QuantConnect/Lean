@@ -268,7 +268,7 @@ namespace QuantConnect.Jupyter
                                         x,
                                         resolution ?? future.Resolution,
                                         future.Exchange.Hours,
-                                        MarketHoursDatabase.FromDataFolder().GetDataTimeZone(future.Symbol.ID.Market, future.Symbol, future.Type),
+                                        future.Exchange.TimeZone,
                                         Resolution.Minute,
                                         future.IsExtendedMarketHours,
                                         future.IsCustomData(),
