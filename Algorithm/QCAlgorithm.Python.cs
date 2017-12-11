@@ -34,14 +34,14 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private PandasConverter _converter;
+        public PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
         /// Sets pandas converter
         /// </summary>
-        public void SetPandas()
+        public void SetPandasConverter()
         {
-            _converter = new PandasConverter();
+            PandasConverter = new PandasConverter();
         }
 
         /// <summary>
@@ -509,7 +509,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, periods, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -525,7 +525,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, span, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
         /// <summary>
@@ -541,7 +541,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, start, end, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
         /// <summary>
@@ -568,7 +568,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, config, start, end, resolution);
             });
 
-            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
 
         /// <summary>
@@ -598,7 +598,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
-            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
 
         /// <summary>
@@ -638,7 +638,7 @@ namespace QuantConnect.Algorithm
             }
 
             var request = CreateHistoryRequest(security, config, start, end, resolution);
-            return _converter.GetDataFrame(History(request).Memoize());
+            return PandasConverter.GetDataFrame(History(request).Memoize());
         }
 
         /// <summary>
@@ -724,6 +724,43 @@ namespace QuantConnect.Algorithm
             }
 
             SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
+        }
+
+        /// <summary>
+        /// Downloads the requested resource as a <see cref="string"/>.
+        /// The resource to download is specified as a <see cref="string"/> containing the URI.
+        /// </summary>
+        /// <param name="address">A string containing the URI to download</param>
+        /// <param name="headers">Defines header values to add to the request</param>
+        /// <param name="userName">The user name associated with the credentials</param>
+        /// <param name="password">The password for the user name associated with the credentials</param>
+        /// <returns>The requested resource as a <see cref="string"/></returns>
+        public string Download(string address, PyObject headers = null, string userName = null, string password = null)
+        {
+            var dict = new Dictionary<string, string>();
+
+            if (headers != null)
+            {
+                using (Py.GIL())
+                {
+                    // In python algorithms, headers must be a python dictionary
+                    // In order to convert it into a C# Dictionary
+                    if (PyDict.IsDictType(headers))
+                    {
+                        foreach (PyObject pyKey in headers)
+                        {
+                            var key = (string)pyKey.AsManagedObject(typeof(string));
+                            var value = (string)headers.GetItem(pyKey).AsManagedObject(typeof(string));
+                            dict.Add(key, value);
+                        }
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"QCAlgorithm.Fetch(): Invalid argument. {headers.Repr()} is not a dict");
+                    }
+                }
+            }
+            return Download(address, dict, userName, password);
         }
 
         /// <summary>

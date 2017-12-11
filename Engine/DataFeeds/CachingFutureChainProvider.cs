@@ -22,37 +22,37 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// An implementation of <see cref="IOptionChainProvider"/> that will cache by date option contracts returned by another option chain provider.
+    /// An implementation of <see cref="IFutureChainProvider"/> that will cache by date future contracts returned by another future chain provider.
     /// </summary>
-    public class CachingOptionChainProvider : IOptionChainProvider
+    public class CachingFutureChainProvider : IFutureChainProvider
     {
-        private readonly ConcurrentDictionary<Symbol, OptionChainCacheEntry> _cache = new ConcurrentDictionary<Symbol, OptionChainCacheEntry>();
-        private readonly IOptionChainProvider _optionChainProvider;
+        private readonly ConcurrentDictionary<Symbol, FutureChainCacheEntry> _cache = new ConcurrentDictionary<Symbol, FutureChainCacheEntry>();
+        private readonly IFutureChainProvider _futureChainProvider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachingOptionChainProvider"/> class
+        /// Initializes a new instance of the <see cref="CachingFutureChainProvider"/> class
         /// </summary>
-        /// <param name="optionChainProvider"></param>
-        public CachingOptionChainProvider(IOptionChainProvider optionChainProvider)
+        /// <param name="futureChainProvider"></param>
+        public CachingFutureChainProvider(IFutureChainProvider futureChainProvider)
         {
-            _optionChainProvider = optionChainProvider;
+            _futureChainProvider = futureChainProvider;
         }
 
         /// <summary>
-        /// Gets the list of option contracts for a given underlying symbol
+        /// Gets the list of future contracts for a given underlying symbol
         /// </summary>
         /// <param name="symbol">The underlying symbol</param>
-        /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
-        /// <returns>The list of option contracts</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
+        /// <param name="date">The date for which to request the future chain (only used in backtesting)</param>
+        /// <returns>The list of future contracts</returns>
+        public IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
         {
             List<Symbol> symbols;
 
-            OptionChainCacheEntry entry;
+            FutureChainCacheEntry entry;
             if (!_cache.TryGetValue(symbol, out entry) || date.Date != entry.Date)
             {
-                symbols = _optionChainProvider.GetOptionContractList(symbol, date.Date).ToList();
-                _cache[symbol] = new OptionChainCacheEntry(date.Date, symbols);
+                symbols = _futureChainProvider.GetFutureContractList(symbol, date.Date).ToList();
+                _cache[symbol] = new FutureChainCacheEntry(date.Date, symbols);
             }
             else
             {
@@ -62,12 +62,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return symbols;
         }
 
-        private class OptionChainCacheEntry
+        private class FutureChainCacheEntry
         {
             public DateTime Date { get; }
             public List<Symbol> Symbols { get; }
 
-            public OptionChainCacheEntry(DateTime date, List<Symbol> symbols)
+            public FutureChainCacheEntry(DateTime date, List<Symbol> symbols)
             {
                 Date = date;
                 Symbols = symbols;

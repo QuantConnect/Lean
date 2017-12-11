@@ -39,6 +39,7 @@ using QuantConnect.Util;
 using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
+using System.Net;
 
 namespace QuantConnect.Algorithm
 {
@@ -82,6 +83,7 @@ namespace QuantConnect.Algorithm
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
+        private Resolution? _warmupResolution;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
         /// <summary>
@@ -152,6 +154,7 @@ namespace QuantConnect.Algorithm
             TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
 
             OptionChainProvider = new EmptyOptionChainProvider();
+            FutureChainProvider = new EmptyFutureChainProvider();
         }
 
         /// <summary>
@@ -295,6 +298,11 @@ namespace QuantConnect.Algorithm
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         public IOptionChainProvider OptionChainProvider { get; private set; }
+
+        /// <summary>
+        /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        public IFutureChainProvider FutureChainProvider { get; private set; }
 
         /// <summary>
         /// Gets the default order properties
@@ -603,6 +611,15 @@ namespace QuantConnect.Algorithm
         public void SetOptionChainProvider(IOptionChainProvider optionChainProvider)
         {
             OptionChainProvider = optionChainProvider;
+        }
+
+        /// <summary>
+        /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
+        {
+            FutureChainProvider = futureChainProvider;
         }
 
         /// <summary>
@@ -1808,6 +1825,31 @@ namespace QuantConnect.Algorithm
         public void SetStatus(AlgorithmStatus status)
         {
             Status = status;
+        }
+
+        /// <summary>
+        /// Downloads the requested resource as a <see cref="string"/>.
+        /// The resource to download is specified as a <see cref="string"/> containing the URI.
+        /// </summary>
+        /// <param name="address">A string containing the URI to download</param>
+        /// <param name="headers">Defines header values to add to the request</param>
+        /// <param name="userName">The user name associated with the credentials</param>
+        /// <param name="password">The password for the user name associated with the credentials</param>
+        /// <returns>The requested resource as a <see cref="string"/></returns>
+        public string Download(string address, IEnumerable<KeyValuePair<string, string>> headers = null, string userName = null, string password = null)
+        {
+            using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
+            {
+                client.Proxy = WebRequest.GetSystemWebProxy();
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        client.Headers.Add(header.Key, header.Value);
+                    }
+                }
+                return client.DownloadString(address);
+            }
         }
     }
 }

@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmAnalysis.cs" />
+    <Compile Include="FutureHistory.cs" />
     <Compile Include="OptionHistory.cs" />
     <Compile Include="QuantBook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

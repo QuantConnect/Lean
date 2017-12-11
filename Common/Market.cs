@@ -44,7 +44,8 @@ namespace QuantConnect
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
             Tuple.Create(NSE, 11),
-            Tuple.Create(GDAX, 12)
+            Tuple.Create(GDAX, 12),
+            Tuple.Create(Kraken, 13)
         };
 
         static Market()
@@ -118,6 +119,11 @@ namespace QuantConnect
         /// GDAX
         /// </summary>
         public const string GDAX = "gdax";
+
+        /// <summary>
+        /// Kraken
+        /// </summary>
+        public const string Kraken = "kraken";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

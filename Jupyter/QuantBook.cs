@@ -44,13 +44,11 @@ namespace QuantConnect.Jupyter
     /// <summary>
     /// Provides access to data for quantitative analysis
     /// </summary>
-    public class QuantBook 
+    public class QuantBook : QCAlgorithm
     {
         private dynamic _pandas;
-        private QCAlgorithm _algorithm;
         private IDataCacheProvider _dataCacheProvider;
-        private PandasConverter _converter;
-
+        
         /// <summary>
         /// <see cref = "QuantBook" /> constructor.
         /// Provides access to data for quantitative analysis
@@ -64,13 +62,11 @@ namespace QuantConnect.Jupyter
                     _pandas = Py.Import("pandas");
                 }
 
-                _converter = new PandasConverter(_pandas);
-
-                // Create new instance of QCAlgorithm we are going to wrap
-                _algorithm = new QCAlgorithm();
-
                 // By default, set start date to end data which is yesterday
-                SetStartDate(_algorithm.EndDate);
+                SetStartDate(EndDate);
+
+                // Sets PandasConverter
+                SetPandasConverter();
 
                 // Initialize History Provider
                 var composer = new Composer();
@@ -78,8 +74,8 @@ namespace QuantConnect.Jupyter
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
-                _algorithm.HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
-                _algorithm.HistoryProvider.Initialize(null, algorithmHandlers.DataProvider, _dataCacheProvider, mapFileProvider, algorithmHandlers.FactorFileProvider, null);
+                HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
+                HistoryProvider.Initialize(null, algorithmHandlers.DataProvider, _dataCacheProvider, mapFileProvider, algorithmHandlers.FactorFileProvider, null);
             }
             catch (Exception exception)
             {
@@ -88,126 +84,14 @@ namespace QuantConnect.Jupyter
         }
 
         /// <summary>
-        /// Set the start date for the backtest 
-        /// </summary>
-        /// <param name="start">Datetime Start date for backtest</param>
-        /// <remarks>Must be less than end date and within data available</remarks>
-        /// <seealso cref="SetStartDate(DateTime)"/>
-        public void SetStartDate(DateTime start)
-        {
-            _algorithm.SetStartDate(start);
-        }
-
-        /// <summary>
-        /// Set the start date for backtest.
-        /// </summary>
-        /// <param name="day">Int starting date 1-30</param>
-        /// <param name="month">Int month starting date</param>
-        /// <param name="year">Int year starting date</param>
-        /// <remarks> 
-        ///     Wrapper for SetStartDate(DateTime). 
-        ///     Must be less than end date. 
-        ///     Ignored in live trading mode.
-        /// </remarks>
-        public void SetStartDate(int year, int month, int day)
-        {
-            _algorithm.SetStartDate(year, month, day);
-        }
-
-        /// <summary>
-        /// Creates and adds a new <see cref="Crypto"/> security to the algorithm
-        /// </summary>
-        /// <param name="ticker">The currency pair</param>
-        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <returns>The new <see cref="Crypto"/> security</returns>
-        public Crypto AddCrypto(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
-        {
-            return _algorithm.AddCrypto(ticker, resolution, market, fillDataForward, leverage);
-        }
-
-        /// <summary>
-        /// Creates and adds a new <see cref="Equity"/> security to the algorithm
-        /// </summary>
-        /// <param name="ticker">The equity ticker symbol</param>
-        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <param name="extendedMarketHours">True to send data during pre and post market sessions. Default is <value>false</value></param>
-        /// <returns>The new <see cref="Equity"/> security</returns>
-        public Equity AddEquity(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
-        {
-            return _algorithm.AddEquity(ticker, resolution, market, fillDataForward, leverage, extendedMarketHours);
-        }
-
-        /// <summary>
-        /// Creates and adds a new <see cref="Forex"/> security to the algorithm
-        /// </summary>
-        /// <param name="ticker">The currency pair</param>
-        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <returns>The new <see cref="Forex"/> security</returns>
-        public Forex AddForex(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
-        {
-            return _algorithm.AddForex(ticker, resolution, market, fillDataForward, leverage);
-        }
-
-        /// <summary>
-        /// Creates and adds a new <see cref="Cfd"/> security to the algorithm
-        /// </summary>
-        /// <param name="ticker">The currency pair</param>
-        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <returns>The new <see cref="Cfd"/> security</returns>
-        public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
-        {
-            return _algorithm.AddCfd(ticker, resolution, market, fillDataForward, leverage);
-        }
-
-        /// <summary>
-        /// Creates and adds a new <see cref="Future"/> security to the algorithm
-        /// </summary>
-        /// <param name="symbol">The futures contract symbol</param>
-        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <returns>The new <see cref="Future"/> security</returns>
-        public Future AddFuture(string symbol, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
-        {
-            return _algorithm.AddFuture(symbol, resolution, market, fillDataForward, leverage);
-        }
-
-        /// <summary>
-            /// Creates and adds a new equity <see cref="Option"/> security to the algorithm
-            /// </summary>
-            /// <param name="underlying">The underlying equity symbol</param>
-            /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-            /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
-            /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
-            /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-            /// <returns>The new <see cref="Option"/> security</returns>
-        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
-        {
-            return _algorithm.AddOption(underlying, resolution, market, fillDataForward, leverage);
-        }
-
-        /// <summary>
         /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
         /// </summary>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public PyObject History(TimeSpan span, Resolution? resolution = null)
+        public new PyObject History(TimeSpan span, Resolution? resolution = null)
         {
-            return _converter.GetDataFrame(_algorithm.History(_algorithm.Securities.Keys, _algorithm.Time - span, _algorithm.Time, resolution).Memoize());
+            return History(Securities.Keys.ToPython(), span, resolution);
         }
 
         /// <summary>
@@ -218,9 +102,9 @@ namespace QuantConnect.Jupyter
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public PyObject History(int periods, Resolution? resolution = null)
+        public new PyObject History(int periods, Resolution? resolution = null)
         {
-            return _converter.GetDataFrame(_algorithm.History(_algorithm.Securities.Keys, periods, resolution).Memoize());
+            return History(Securities.Keys.ToPython(), periods, resolution);
         }
 
         /// <summary>
@@ -231,10 +115,10 @@ namespace QuantConnect.Jupyter
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public PyObject History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
-            where T : IBaseDataBar
+        public new PyObject History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+            where T : IBaseData
         {
-            return _converter.GetDataFrame<T>(_algorithm.History<T>(symbol, _algorithm.Time - span, _algorithm.Time, resolution).Memoize());
+            return PandasConverter.GetDataFrame(History<T>(symbol, Time - span, Time, resolution).Memoize());
         }
 
         /// <summary>
@@ -245,9 +129,9 @@ namespace QuantConnect.Jupyter
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public PyObject History(Symbol symbol, int periods, Resolution? resolution = null)
+        public new PyObject History(Symbol symbol, int periods, Resolution? resolution = null)
         {
-            return _converter.GetDataFrame(_algorithm.History(symbol, periods, resolution));
+            return History(symbol.ToPython(), periods, resolution);
         }
 
         /// <summary>
@@ -258,16 +142,9 @@ namespace QuantConnect.Jupyter
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public PyObject History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        public new PyObject History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
-            if (symbol.SecurityType == SecurityType.Equity)
-            {
-                return _converter.GetDataFrame(_algorithm.History<TradeBar>(symbol, start, end, resolution));
-            }
-            else
-            {
-                return _converter.GetDataFrame(_algorithm.History<QuoteBar>(symbol, start, end, resolution));
-            }
+            return History(symbol.ToPython(), start, end, resolution);
         }
         
         /// <summary>
@@ -299,7 +176,7 @@ namespace QuantConnect.Jupyter
 
                 foreach (var ticker in tickers)
                 {
-                    var symbol = Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
+                    var symbol = QuantConnect.Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
                     var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
                     if (!dir.Exists) continue;
 
@@ -339,13 +216,13 @@ namespace QuantConnect.Jupyter
         public OptionHistory GetOptionHistory(Symbol symbol, DateTime date, Resolution? resolution = null)
         {
             SetStartDate(date.AddDays(1));
-            var option = _algorithm.Securities[symbol] as Option;
+            var option = Securities[symbol] as Option;
             var underlying = AddEquity(symbol.Underlying.Value, option.Resolution);
 
             var provider = new BacktestingOptionChainProvider();
             var allSymbols = provider.GetOptionContractList(symbol.Underlying, date);
             
-            var requests = _algorithm.History(symbol.Underlying, TimeSpan.FromDays(1), resolution)
+            var requests = History(symbol.Underlying, TimeSpan.FromDays(1), resolution)
                 .SelectMany(x => option.ContractFilter.Filter(new OptionFilterUniverse(allSymbols, x)))
                 .Distinct()
                 .Select(x =>
@@ -365,7 +242,41 @@ namespace QuantConnect.Jupyter
 
             requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });
 
-            return new OptionHistory(_algorithm.HistoryProvider.GetHistory(requests.OrderByDescending(x => x.Symbol.SecurityType), _algorithm.TimeZone).Memoize());
+            return new OptionHistory(HistoryProvider.GetHistory(requests.OrderByDescending(x => x.Symbol.SecurityType), TimeZone).Memoize());
+        }
+
+        /// <summary>
+        /// Gets <see cref="FutureHistory"/> object for a given symbol, date and resolution
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical future data for</param>
+        /// <param name="date">Date of the data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A <see cref="FutureHistory"/> object that contains historical future data.</returns>
+        public FutureHistory GetFutureHistory(Symbol symbol, DateTime date, Resolution? resolution = null)
+        {
+            SetStartDate(date.AddDays(1));
+            var future = Securities[symbol] as Future;
+
+            var provider = new BacktestingFutureChainProvider();
+            var allSymbols = provider.GetFutureContractList(future.Symbol, date);
+
+            var requests = future.ContractFilter.Filter(new FutureFilterUniverse(allSymbols, new Tick { Time = date }))
+                .Select(x =>
+                     new HistoryRequest(date.AddDays(-1),
+                                        date,
+                                        typeof(QuoteBar),
+                                        x,
+                                        resolution ?? future.Resolution,
+                                        future.Exchange.Hours,
+                                        MarketHoursDatabase.FromDataFolder().GetDataTimeZone(future.Symbol.ID.Market, future.Symbol, future.Type),
+                                        Resolution.Minute,
+                                        future.IsExtendedMarketHours,
+                                        future.IsCustomData(),
+                                        DataNormalizationMode.Raw,
+                                        LeanData.GetCommonTickTypeForCommonDataTypes(typeof(QuoteBar), future.Type))
+                    );
+
+            return new FutureHistory(HistoryProvider.GetHistory(requests, TimeZone).Memoize());
         }
 
         /// <summary>
@@ -379,7 +290,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
         public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var history = _algorithm.History<IBaseDataBar>(symbol, period, resolution);
+            var history = History<IBaseData>(symbol, period, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -394,7 +305,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
         public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var history = _algorithm.History<IBaseDataBar>(symbol, period, resolution);
+            var history = History<IBaseDataBar>(symbol, period, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -409,7 +320,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
         public PyObject Indicator(IndicatorBase<TradeBar> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var history = _algorithm.History<TradeBar>(symbol, period, resolution);
+            var history = History<TradeBar>(symbol, period, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -425,7 +336,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
         public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var history = _algorithm.History<IBaseDataBar>(symbol, span, resolution);
+            var history = base.History<IBaseData>(symbol, span, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -441,7 +352,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
         public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var history = _algorithm.History<IBaseDataBar>(symbol, span, resolution);
+            var history = base.History<IBaseDataBar>(symbol, span, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -457,7 +368,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
         public PyObject Indicator(IndicatorBase<TradeBar> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var history = _algorithm.History<TradeBar>(symbol, span, resolution);
+            var history = base.History<TradeBar>(symbol, span, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -474,7 +385,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
         public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var history = _algorithm.History<IBaseDataBar>(symbol, start, end, resolution);
+            var history = History<IBaseData>(symbol, start, end, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -491,7 +402,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
         public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var history = _algorithm.History<IBaseDataBar>(symbol, start, end, resolution);
+            var history = History<IBaseDataBar>(symbol, start, end, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -508,7 +419,7 @@ namespace QuantConnect.Jupyter
         /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
         public PyObject Indicator(IndicatorBase<TradeBar> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var history = _algorithm.History<TradeBar>(symbol, start, end, resolution);
+            var history = History<TradeBar>(symbol, start, end, resolution);
             return Indicator(indicator, history, selector);
         }
 
@@ -625,7 +536,7 @@ namespace QuantConnect.Jupyter
         /// <param name="history">Historical data used to calculate the indicator</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame containing the historical data of <param name="indicator"></returns>
-        private PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<IBaseDataBar> history, Func<IBaseData, decimal> selector = null)
+        private PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<IBaseData> history, Func<IBaseData, decimal> selector = null)
         {
             // Reset the indicator
             indicator.Reset();
@@ -660,7 +571,7 @@ namespace QuantConnect.Jupyter
                 indicator.Update(bar.EndTime, value);
             }
 
-            return _converter.GetIndicatorDataFrame(properties);
+            return PandasConverter.GetIndicatorDataFrame(properties);
         }
 
         /// <summary>
@@ -671,7 +582,7 @@ namespace QuantConnect.Jupyter
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame containing the historical data of <param name="indicator"></returns>
         private PyObject Indicator<T>(IndicatorBase<T> indicator, IEnumerable<T> history, Func<IBaseData, T> selector = null)
-            where T : IBaseDataBar
+            where T : IBaseData
         {
             // Reset the indicator
             indicator.Reset();
@@ -705,7 +616,7 @@ namespace QuantConnect.Jupyter
                 indicator.Update(selector(bar));
             }
 
-            return _converter.GetIndicatorDataFrame(properties);
+            return PandasConverter.GetIndicatorDataFrame(properties);
         }
         
         /// <summary>
@@ -722,7 +633,7 @@ namespace QuantConnect.Jupyter
 
                 var info = baseData.GetType().GetProperty(name);
 
-                baseData = info == null ? null : info.GetValue(baseData, null);
+                baseData = info?.GetValue(baseData, null);
             }
 
             return baseData;

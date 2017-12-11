@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,25 +20,18 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents a simple option margining model. 
+    /// Represents a simple option margining model.
     /// </summary>
     /// <remarks>
-    /// Options are not traded on margin. Margin requirements exist though for those portfolios with short positions. 
+    /// Options are not traded on margin. Margin requirements exist though for those portfolios with short positions.
     /// Current implementation covers only single long/naked short option positions.
     /// </remarks>
     public class OptionMarginModel : ISecurityMarginModel
     {
         // initial margin
-        private decimal _optionMarginRequirement = 1;
-        private decimal _nakedPositionMarginRequirement = 0.1m;
-        private decimal _nakedPositionMarginRequirementOTM = 0.2m;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OptionMarginModel"/>
-        /// </summary>
-        public OptionMarginModel()
-        {
-        }
+        private const decimal OptionMarginRequirement = 1;
+        private const decimal NakedPositionMarginRequirement = 0.1m;
+        private const decimal NakedPositionMarginRequirementOtm = 0.2m;
 
         /// <summary>
         /// Gets the current leverage of the security
@@ -86,7 +79,7 @@ namespace QuantConnect.Securities
         /// <returns>The maintenance margin required for the </returns>
         public virtual decimal GetMaintenanceMargin(Security security)
         {
-            return security.Holdings.AbsoluteHoldingsCost*GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
+            return security.Holdings.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
         }
 
         /// <summary>
@@ -115,7 +108,7 @@ namespace QuantConnect.Securities
                         return portfolio.MarginRemaining;
 
                     case OrderDirection.Sell:
-                        return 
+                        return
                             // portion of margin to close the existing position
                             GetMaintenanceMargin(security) +
                             // portion of margin to open the new position
@@ -177,16 +170,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Private method takes option security and its holding and returns required margin. Method considers all short positions naked. 
+        /// Private method takes option security and its holding and returns required margin. Method considers all short positions naked.
         /// </summary>
         /// <param name="security">Option security</param>
         /// <param name="value">Holding value</param>
         /// <returns></returns>
         private decimal GetMarginRequirement(Security security, decimal value)
         {
-            var option = (Option.Option)security;
+            var option = (Option.Option) security;
 
-            if (option.Close == 0m ||
+            if (value == 0m ||
+                option.Close == 0m ||
                 option.StrikePrice == 0m ||
                 option.Underlying == null ||
                 option.Underlying.Close == 0m)
@@ -196,30 +190,29 @@ namespace QuantConnect.Securities
 
             if (value > 0m)
             {
-                return _optionMarginRequirement;
+                return OptionMarginRequirement;
             }
-            else
-            {
-                var absValue = -value;
-                var optionProperties = (OptionSymbolProperties)option.SymbolProperties;
-                var underlying = option.Underlying;
 
-                // inferring ratios of the option and its underlying to get underlying security value
-                var multiplierRatio = underlying.SymbolProperties.ContractMultiplier / optionProperties.ContractMultiplier;
-                var quantityRatio = optionProperties.ContractUnitOfTrade;
-                var priceRatio = underlying.Close / option.Close;
-                var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
+            var absValue = -value;
+            var optionProperties = (OptionSymbolProperties) option.SymbolProperties;
+            var underlying = option.Underlying;
 
-                // calculating underlying security value less out-of-the-money amount
-                var amountOTM = option.Right == OptionRight.Call ? 
-                                Math.Max(0, option.StrikePrice - underlying.Close):
-                                Math.Max(0, underlying.Close - option.StrikePrice);
-                var priceRatioOTM = amountOTM / option.Close;
-                var underlyingValueRatioOTM = multiplierRatio * quantityRatio * priceRatioOTM;
+            // inferring ratios of the option and its underlying to get underlying security value
+            var multiplierRatio = underlying.SymbolProperties.ContractMultiplier / optionProperties.ContractMultiplier;
+            var quantityRatio = optionProperties.ContractUnitOfTrade;
+            var priceRatio = underlying.Close / (absValue / quantityRatio);
+            var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
 
-                return _optionMarginRequirement + Math.Max(_nakedPositionMarginRequirement * underlyingValueRatio,
-                                                          _nakedPositionMarginRequirementOTM * underlyingValueRatio - underlyingValueRatioOTM);
-            }
+            // calculating underlying security value less out-of-the-money amount
+            var amountOTM = option.Right == OptionRight.Call
+                ? Math.Max(0, option.StrikePrice - underlying.Close)
+                : Math.Max(0, underlying.Close - option.StrikePrice);
+            var priceRatioOTM = amountOTM / (absValue / quantityRatio);
+            var underlyingValueRatioOTM = multiplierRatio * quantityRatio * priceRatioOTM;
+
+            return OptionMarginRequirement +
+                   option.Holdings.AbsoluteQuantity * Math.Max(NakedPositionMarginRequirement * underlyingValueRatio,
+                       NakedPositionMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM);
         }
     }
 }

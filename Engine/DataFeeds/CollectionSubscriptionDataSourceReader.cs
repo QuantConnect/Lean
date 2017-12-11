@@ -118,7 +118,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         foreach (var instance in instances.Data)
                         {
-                            yield return instance;
+                            if (instance != null && instance.EndTime != default(DateTime))
+                            {
+                                yield return instance;
+                            }
                         }
                     }
                 }

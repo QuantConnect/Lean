@@ -18,9 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -32,7 +30,6 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Diagnostics;
-using System.IO;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -493,7 +490,9 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
 
             //Setup the sampling periods:
-            _jobDays = Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish);
+            _jobDays = Algorithm.Securities.Count > 0
+                ? Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish)
+                : Convert.ToInt32((_job.PeriodFinish.Date - _job.PeriodStart.Date).TotalDays) + 1;
 
             //Setup Debug Messaging:
             _debugMessageMax = Convert.ToInt32(10 * _jobDays);

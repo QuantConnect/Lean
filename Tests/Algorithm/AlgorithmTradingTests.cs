@@ -956,6 +956,13 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
             Assert.AreEqual(3000m, actual);
 
+            var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
+            btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
+            // Set Price to $26
+            Update(btcusd, 26);
+            // So 100000/26 = 3846.153846153846, After Rounding off becomes 3846.15384615, since lot size is 0.00000001
+            actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, 1m);
+            Assert.AreEqual(3846.15384615m, actual);
         }
 
         [Test]
@@ -972,6 +979,14 @@ namespace QuantConnect.Tests.Algorithm
             // So -100000/26 = -3846, After Rounding off becomes -3000
             var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, -1m);
             Assert.AreEqual(-3000m, actual);
+
+            var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
+            btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
+            // Set Price to $26
+            Update(btcusd, 26);
+            // So -100000/26 = 3846.153846153846, After Rounding off becomes -3846.15384615, since lot size is 0.00000001
+            actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, -1m);
+            Assert.AreEqual(-3846.15384615m, actual);
         }
 
         [Test]

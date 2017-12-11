@@ -31,12 +31,6 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
-        static AlgorithmRunner()
-        {
-            // delete the regression.log file, since we turned debug output on it can grow pretty quickly
-            try { System.IO.File.Delete("regression.log"); } catch { /*NOP*/ }
-        }
-
         public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics, Language language)
         {
             var statistics = new Dictionary<string, string>();

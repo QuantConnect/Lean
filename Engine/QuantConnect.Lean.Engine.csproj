@@ -143,10 +143,13 @@
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />
+    <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
