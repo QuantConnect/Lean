@@ -79,13 +79,13 @@ namespace QuantConnect.Data.Custom.Intrinio
     /// <seealso cref="QuantConnect.Data.BaseData" />
     public class IntrinioEconomicData : BaseData
     {
-        private static DateTime LastIntrinoAPICall = new DateTime();
+        private static DateTime LastIntrinoAPICall;
+
+        private readonly string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
 
         private readonly IntrinioDataTransformation _dataTransformation;
         private readonly string _password = Config.Get("intrinio-password");
         private readonly string _user = Config.Get("intrinio-username");
-
-        private readonly string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
 
         private bool _firstTime = true;
 
@@ -154,7 +154,11 @@ namespace QuantConnect.Data.Custom.Intrinio
                                                           authorizationHeaders);
                 // Finally, here we force the engine to wait one second in case the we have multiples data sources added.
                 var intrinioApiCallLimit = 1000 - (DateTime.Now - LastIntrinoAPICall).Milliseconds;
-                if (intrinioApiCallLimit > 0) Thread.Sleep(millisecondsTimeout: intrinioApiCallLimit);
+                do
+                {
+                    if (intrinioApiCallLimit > 0) Thread.Sleep(intrinioApiCallLimit);
+                    intrinioApiCallLimit = 1000 - (DateTime.Now - LastIntrinoAPICall).Milliseconds;
+                } while (intrinioApiCallLimit > 0);
                 LastIntrinoAPICall = DateTime.Now;
             }
             else
