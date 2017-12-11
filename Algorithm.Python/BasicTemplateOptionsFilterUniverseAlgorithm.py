@@ -46,6 +46,9 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         # use the underlying equity as the benchmark
         self.SetBenchmark(equity.Symbol)
 
+        # set the data normalization mode to be raw
+        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
+
     def OnData(self,slice):
         if self.Portfolio.Invested: return
 

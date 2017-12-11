@@ -56,6 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
+			// set the data normalization mode to be raw
+			equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
         }
 
         public override void OnData(Slice slice)

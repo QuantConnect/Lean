@@ -49,6 +49,9 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
         self.SetBenchmark(equity.Symbol)
         self.OptionSymbol = option.Symbol
         self.contract = None
+
+        # set the data normalization mode to be raw
+        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
     
 
     def OnData(self, slice):

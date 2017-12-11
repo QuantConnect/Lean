@@ -45,6 +45,9 @@ class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
         self.SetBenchmark(equity.Symbol)
         self.OptionSymbol = option.Symbol
         self._assignedOption = False
+
+        # set the data normalization mode to be raw
+        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
     
 
     def OnData(self, slice):
