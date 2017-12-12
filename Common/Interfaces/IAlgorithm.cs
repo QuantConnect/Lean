@@ -491,6 +491,12 @@ namespace QuantConnect.Interfaces
         bool GetLocked();
 
         /// <summary>
+        /// Add a Chart object to algorithm collection
+        /// </summary>
+        /// <param name="chart">Chart object to add to collection.</param>
+        void AddChart(Chart chart);
+
+        /// <summary>
         /// Get the chart updates since the last request:
         /// </summary>
         /// <param name="clearChartData"></param>

@@ -26,7 +26,10 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
     /// </summary>
     public class SignalManager
     {
-        private static readonly SignalScoreType[] ScoreTypes = Enum.GetValues(typeof(SignalScoreType)).Cast<SignalScoreType>().ToArray();
+        /// <summary>
+        /// Gets all signal score types
+        /// </summary>
+        public static readonly IReadOnlyCollection<SignalScoreType> ScoreTypes = Enum.GetValues(typeof(SignalScoreType)).Cast<SignalScoreType>().ToArray();
 
         private readonly double _extraAnalysisPeriodRatio;
         private readonly ISecurityValuesProvider _securityValuesProvider;

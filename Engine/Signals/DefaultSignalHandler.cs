@@ -35,10 +35,15 @@ namespace QuantConnect.Lean.Engine.Signals
     /// </summary>
     public class DefaultSignalHandler : ISignalHandler
     {
+        private static readonly IReadOnlyCollection<SignalScoreType> ScoreTypes = SignalManager.ScoreTypes;
+
         private DateTime _nextPersistenceUpdate;
+        private DateTime _nextChartUpdateAlgorithmTimeUtc;
+
         private IMessagingHandler _messagingHandler;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
+        private readonly Dictionary<SignalScoreType, Series> _seriesByScoreType = new Dictionary<SignalScoreType, Series>();
 
         /// <inheritdoc />
         public bool IsActive => !_cancellationTokenSource.IsCancellationRequested;
@@ -81,11 +86,29 @@ namespace QuantConnect.Lean.Engine.Signals
             _messagingHandler = messagingHandler;
             SignalManager = CreateSignalManager();
             algorithm.SignalsGenerated += (algo, collection) => OnSignalsGenerated(collection);
+
+            // add charts for average signal scores
+            var chart = new Chart("Alpha");
+            foreach (var scoreType in ScoreTypes)
+            {
+                var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
+                chart.AddSeries(series);
+
+                _seriesByScoreType[scoreType] = series;
+            }
+
+            Algorithm.AddChart(chart);
         }
 
         /// <inheritdoc />
         public virtual void ProcessSynchronousEvents()
         {
+            // before updating scores, emit chart points on day changes
+            if (Algorithm.UtcTime >= _nextChartUpdateAlgorithmTimeUtc)
+            {
+                ChartAverageSignalScores();
+            }
+
             // update scores in line with the algo thread to ensure a consistent read of security data
             // this will manage marking signals as closed as well as performing score updates
             SignalManager.UpdateScores();
@@ -179,6 +202,38 @@ namespace QuantConnect.Lean.Engine.Signals
         public void Exit()
         {
             _cancellationTokenSource.Cancel(false);
+        }
+
+        private void ChartAverageSignalScores()
+        {
+            var start = (Algorithm.UtcTime - Time.OneDay).Date;
+            var end = start + Time.OneDay;
+
+            // compute average score values for all signals with updates over the last day
+            var count = 0;
+            var runningTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
+            foreach (var signal in SignalManager.AllSignals.Where(signal => signal.Score.UpdatedTimeUtc >= start && signal.Score.UpdatedTimeUtc <= end))
+            {
+                count++;
+                foreach (var scoreType in ScoreTypes)
+                {
+                    runningTotals[scoreType] += signal.Score.GetScore(scoreType);
+                }
+            }
+
+            if (count > 0)
+            {
+                foreach (var kvp in runningTotals)
+                {
+                    var scoreType = kvp.Key;
+                    var runningTotal = kvp.Value;
+                    var average = runningTotal / count;
+                    // scale the value from [0,1] to [0,100] for charting
+                    _seriesByScoreType[scoreType].AddPoint(end, 100m*(decimal)average, LiveMode);
+                }
+            }
+
+            _nextChartUpdateAlgorithmTimeUtc = end;
         }
     }
 }

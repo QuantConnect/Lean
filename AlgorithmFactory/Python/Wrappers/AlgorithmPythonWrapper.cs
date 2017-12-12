@@ -585,6 +585,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Add a Chart object to algorithm collection
+        /// </summary>
+        /// <param name="chart">Chart object to add to collection.</param>
+        public void AddChart(Chart chart)
+        {
+            _baseAlgorithm.AddChart(chart);
+        }
+
+        /// <summary>
         /// Get the chart updates since the last request:
         /// </summary>
         /// <param name="clearChartData"></param>
