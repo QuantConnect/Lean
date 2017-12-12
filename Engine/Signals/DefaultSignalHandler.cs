@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.Signals
         /// <summary>
         /// Gets or sets the interval at which the signals are persisted
         /// </summary>
-        protected TimeSpan PersistenceUpdateInterval { get; set; }
+        protected TimeSpan PersistenceUpdateInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// Gets the signal manager instance used to manage the analysis of algorithm signals
@@ -134,6 +134,14 @@ namespace QuantConnect.Lean.Engine.Signals
 
                 Thread.Sleep(50);
             }
+
+            OnExit();
+        }
+
+        /// <inheritdoc />
+        public void Exit()
+        {
+            _cancellationTokenSource.Cancel(false);
         }
 
         /// <summary>
@@ -198,10 +206,14 @@ namespace QuantConnect.Lean.Engine.Signals
             _messages.Enqueue(packet);
         }
 
-        /// <inheritdoc />
-        public void Exit()
+        /// <summary>
+        /// Invoked right before the <see cref="Run"/> method returns.
+        /// This is intended to be used for any final cleanup/persistence
+        /// </summary>
+        protected virtual void OnExit()
         {
-            _cancellationTokenSource.Cancel(false);
+            // final save of data to ensure we didn't drop anything
+            SaveSignals();
         }
 
         private void ChartAverageSignalScores()
@@ -212,7 +224,15 @@ namespace QuantConnect.Lean.Engine.Signals
             // compute average score values for all signals with updates over the last day
             var count = 0;
             var runningTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
-            foreach (var signal in SignalManager.AllSignals.Where(signal => signal.Score.UpdatedTimeUtc >= start && signal.Score.UpdatedTimeUtc <= end))
+            var signals = SignalManager.AllSignals.Where(signal =>
+                // time box to one day
+                signal.Score.UpdatedTimeUtc >= start &&
+                signal.Score.UpdatedTimeUtc <= end &&
+                // ignore signals that haven't received updates yet
+                signal.GeneratedTimeUtc != signal.Score.UpdatedTimeUtc
+            );
+
+            foreach (var signal in signals)
             {
                 count++;
                 foreach (var scoreType in ScoreTypes)

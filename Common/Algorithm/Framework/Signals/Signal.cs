@@ -120,7 +120,10 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <returns>A new signal with identical values, but new instances</returns>
         public Signal Clone()
         {
-            return new Signal(Symbol, Type, Direction, Period, PercentChange, Confidence);
+            return new Signal(Symbol, Type, Direction, Period, PercentChange, Confidence)
+            {
+                GeneratedTimeUtc = GeneratedTimeUtc
+            };
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
