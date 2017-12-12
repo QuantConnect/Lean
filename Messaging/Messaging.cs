@@ -92,6 +92,14 @@ namespace QuantConnect.Messaging
                     Log.Error(handled.Message + hstack);
                     break;
 
+                case PacketType.Signal:
+                    var signals = ((SignalPacket) packet).Signals;
+                    foreach (var signal in signals)
+                    {
+                        Log.Trace("Signal: " + signal);
+                    }
+                    break;
+
                 case PacketType.BacktestResult:
                     var result = (BacktestResultPacket) packet;
 

@@ -6,7 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting",// "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -32,9 +32,10 @@
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
   "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+  "signal-handler": "QuantConnect.Lean.Engine.Signals.DefaultSignalHandler",
 
   // limits on number of symbols to allow
-  "symbol-minute-limit": 10000, 
+  "symbol-minute-limit": 10000,
   "symbol-second-limit": 10000,
   "symbol-tick-limit": 10000,
 
@@ -62,7 +63,7 @@
   "ib-agent-description": "Individual",
   "ib-use-tws": false,
   "ib-tws-dir": "C:\\Jts",
-  "ib-trading-mode": "paper", 
+  "ib-trading-mode": "paper",
   "ib-controller-dir": "C:\\IBController",
 
   // tradier configuration
@@ -156,17 +157,17 @@
 
     // defines the 'live-interactive' environment
     "live-interactive": {
-        "live-mode": true,
+      "live-mode": true,
 
-        // real brokerage implementations require the BrokerageTransactionHandler
-        "live-mode-brokerage": "InteractiveBrokersBrokerage",
-        "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-        "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-        "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
-        "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-        "history-provider": "BrokerageHistoryProvider"
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "InteractiveBrokersBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
     },
 
     // defines the 'live-interactive-iqfeed' environment

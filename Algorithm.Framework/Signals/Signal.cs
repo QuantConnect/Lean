@@ -101,6 +101,24 @@ namespace QuantConnect.Algorithm.Framework.Signals
             return new Signal(Symbol, Type, Direction, Period, PercentChange, Confidence);
         }
 
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            var str = $"{Symbol} {Type} {Direction} within {Period}";
+            if (PercentChange.HasValue)
+            {
+                str += $" by {PercentChange.Value}";
+            }
+            if (Confidence.HasValue)
+            {
+                str += $" with {Math.Round(100 * Confidence.Value, 1)}% confidence";
+            }
+
+            return str;
+        }
+
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
         /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
         /// <param name="other">An object to compare with this object.</param>

@@ -53,7 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set algorithm framework models
             PortfolioSelection = new ManualPortfolioSelectionModel(symbols);
-            Signal = new ConstantSignalModel(SignalType.Price, SignalDirection.Up, EndDate - StartDate);
+            var bactestPeriod = EndDate.Date.AddDays(1) - StartDate;
+            Signal = new ConstantSignalModel(SignalType.Price, SignalDirection.Up, bactestPeriod);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
 
             // these are the default values for Execution and RiskManagement models

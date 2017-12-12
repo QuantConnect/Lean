@@ -158,6 +158,7 @@
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Packets\SignalPacket.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
     <Compile Include="Python\PandasData.cs" />
     <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
