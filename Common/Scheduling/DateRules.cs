@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,7 +92,7 @@ namespace QuantConnect.Scheduling
         public IDateRule EveryDay(Symbol symbol)
         {
             var security = GetSecurity(symbol);
-            return new FuncDateRule(symbol.ToString() + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
+            return new FuncDateRule(symbol.Value + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
         }
 
         /// <summary>
@@ -108,12 +108,75 @@ namespace QuantConnect.Scheduling
         /// Specifies an event should fire on the first tradeable date for the specified
         /// symbol of each month
         /// </summary>
-        /// <param name="symbol">The symbol whose exchange is used to determine the first 
+        /// <param name="symbol">The symbol whose exchange is used to determine the first
         /// tradeable date of the month</param>
         /// <returns>A date rule that fires on the first tradeable date for the specified security each month</returns>
         public IDateRule MonthStart(Symbol symbol)
         {
-            return new FuncDateRule(symbol.ToString() + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
+            return new FuncDateRule(symbol.Value + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last of each month
+        /// </summary>
+        /// <returns>A date rule that fires on the last of each month</returns>
+        public IDateRule MonthEnd()
+        {
+            return new FuncDateRule("MonthEnd", (start, end) => MonthEndIterator(null, start, end));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradeable date for the specified
+        /// symbol of each month
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last
+        /// tradeable date of the month</param>
+        /// <returns>A date rule that fires on the last tradeable date for the specified security each month</returns>
+        public IDateRule MonthEnd(Symbol symbol)
+        {
+            return new FuncDateRule(symbol.Value + ": MonthEnd", (start, end) => MonthEndIterator(GetSecurity(symbol), start, end));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on Monday each week
+        /// </summary>
+        /// <returns>A date rule that fires on Monday each week</returns>
+        public IDateRule WeekStart()
+        {
+            return new FuncDateRule("WeekStart", (start, end) => WeekStartIterator(null, start, end));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradeable date for the specified
+        /// symbol of each week
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first
+        /// tradeable date of the week</param>
+        /// <returns>A date rule that fires on the first tradeable date for the specified security each week</returns>
+        public IDateRule WeekStart(Symbol symbol)
+        {
+            return new FuncDateRule(symbol.Value + ": WeekStart", (start, end) => WeekStartIterator(GetSecurity(symbol), start, end));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on Friday each week
+        /// </summary>
+        /// <returns>A date rule that fires on Friday each week</returns>
+        public IDateRule WeekEnd()
+        {
+            return new FuncDateRule("WeekEnd", (start, end) => WeekEndIterator(null, start, end));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradeable date for the specified
+        /// symbol of each week
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last
+        /// tradeable date of the week</param>
+        /// <returns>A date rule that fires on the last tradeable date for the specified security each week</returns>
+        public IDateRule WeekEnd(Symbol symbol)
+        {
+            return new FuncDateRule(symbol.Value + ": WeekEnd", (start, end) => WeekEndIterator(GetSecurity(symbol), start, end));
         }
 
         /// <summary>
@@ -126,7 +189,7 @@ namespace QuantConnect.Scheduling
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new Exception(symbol.ToString() + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new Exception(symbol.Value + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }
@@ -158,6 +221,89 @@ namespace QuantConnect.Scheduling
                         yield return date;
                     }
                     lastMonth = date.Month;
+                }
+            }
+        }
+
+        private static IEnumerable<DateTime> MonthEndIterator(Security security, DateTime start, DateTime end)
+        {
+            foreach (var date in Time.EachDay(start, end))
+            {
+                if (date.Day == DateTime.DaysInMonth(date.Year, date.Month))
+                {
+                    if (security == null)
+                    {
+                        // fire on the last of each month
+                        yield return date;
+                    }
+                    else
+                    {
+                        // find previous date when market is open
+                        var currentDate = date;
+                        while (!security.Exchange.Hours.IsDateOpen(currentDate))
+                        {
+                            currentDate = currentDate.AddDays(-1);
+                        }
+                        yield return currentDate;
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<DateTime> WeekStartIterator(Security security, DateTime start, DateTime end)
+        {
+            var skippedMarketClosedDay = false;
+
+            foreach (var date in Time.EachDay(start, end))
+            {
+                if (security == null)
+                {
+                    // fire on Monday
+                    if (date.DayOfWeek == DayOfWeek.Monday)
+                    {
+                        yield return date;
+                    }
+                }
+                else
+                {
+                    // skip Mondays and following days when market is closed
+                    if (date.DayOfWeek == DayOfWeek.Monday || skippedMarketClosedDay)
+                    {
+                        if (security.Exchange.Hours.IsDateOpen(date))
+                        {
+                            skippedMarketClosedDay = false;
+                            yield return date;
+                        }
+                        else
+                        {
+                            skippedMarketClosedDay = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<DateTime> WeekEndIterator(Security security, DateTime start, DateTime end)
+        {
+            foreach (var date in Time.EachDay(start, end))
+            {
+                if (date.DayOfWeek == DayOfWeek.Friday)
+                {
+                    if (security == null)
+                    {
+                        // fire on Friday
+                        yield return date;
+                    }
+                    else
+                    {
+                        // find previous date when market is open
+                        var currentDate = date;
+                        while (!security.Exchange.Hours.IsDateOpen(currentDate))
+                        {
+                            currentDate = currentDate.AddDays(-1);
+                        }
+                        yield return currentDate;
+                    }
                 }
             }
         }
