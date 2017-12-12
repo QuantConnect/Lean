@@ -222,6 +222,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         // this is the data used set market prices
+                        // do not add it if it is a Suspicious tick
+                        var tick = baseData as Tick;
+                        if (tick != null && tick.Suspicious) continue;
+
                         securityUpdate.Add(baseData);
                     }
                     // include checks for various aux types so we don't have to construct the dictionaries in Slice
