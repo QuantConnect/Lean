@@ -192,7 +192,7 @@ namespace QuantConnect.Lean.Engine.Signals
         /// <returns>A new instance of <see cref="SignalScore"/> used to track the signal's accuracy</returns>
         protected virtual SignalScore GetSignalScore(Signal signal)
         {
-            return new SignalScore(0, 0);
+            return new SignalScore(0, 0, signal.GeneratedTimeUtc);
         }
 
         /// <summary>

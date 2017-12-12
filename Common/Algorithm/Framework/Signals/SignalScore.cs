@@ -24,6 +24,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public class SignalScore
     {
         /// <summary>
+        /// Gets the time these scores were last updated
+        /// </summary>
+        public DateTime UpdatedTimeUtc { get; private set; }
+
+        /// <summary>
         /// Gets the direction score
         /// </summary>
         public double Direction { get; private set; }
@@ -33,14 +38,36 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// </summary>
         public double Magnitude { get; private set; }
 
-        public SignalScore(double direction, double magnitude)
+        /// <summary>
+        /// Initializes a new, default instance of the <see cref="SignalScore"/> class
+        /// </summary>
+        public SignalScore()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SignalScore"/> class
+        /// </summary>
+        /// <param name="direction">The signal direction score</param>
+        /// <param name="magnitude">The signal magnitude score</param>
+        /// <param name="updatedTimeUtc">The algorithm utc time these scores were computed</param>
+        public SignalScore(double direction, double magnitude, DateTime updatedTimeUtc)
         {
             Direction = direction;
             Magnitude = magnitude;
+            UpdatedTimeUtc = updatedTimeUtc;
         }
 
-        public void SetScore(SignalScoreType type, double value)
+        /// <summary>
+        /// Sets the specified score type with the value
+        /// </summary>
+        /// <param name="type">The score type to be set, Direction/Magnitude</param>
+        /// <param name="value">The new value for the score</param>
+        /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
+        public void SetScore(SignalScoreType type, double value, DateTime algorithmUtcTime)
         {
+            UpdatedTimeUtc = algorithmUtcTime;
+
             switch (type)
             {
                 case SignalScoreType.Direction:
@@ -48,6 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
                     break;
 
                 case SignalScoreType.Magnitude:
+                    Magnitude = value;
                     break;
 
                 default:
@@ -55,6 +83,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
             }
         }
 
+        /// <summary>
+        /// Gets the specified score
+        /// </summary>
+        /// <param name="type">The type of score to get, Direction/Magnitude</param>
+        /// <returns>The requested score</returns>
         public double GetScore(SignalScoreType type)
         {
             switch (type)
@@ -70,6 +103,9 @@ namespace QuantConnect.Algorithm.Framework.Signals
             }
         }
 
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
             return $"Direction: {Math.Round(100 * Direction, 2)} Magnitude: {Math.Round(100 * Magnitude, 2)}";
