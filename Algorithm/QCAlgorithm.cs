@@ -530,6 +530,10 @@ namespace QuantConnect.Algorithm
                 // all based on the raw price of the underlying asset instead of the adjusted price. 
                 // In order to select the accurate contracts, we need to set
                 // the data normalization mode of the underlying asset to be raw
+                else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
+                {
+                    Debug($"Warning: The {underlying.ToString()} equity security was set the raw price normalization mode to work with options.");
+                }
                 equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
 
                 // set the underlying property on the option chain
