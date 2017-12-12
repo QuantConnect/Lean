@@ -24,7 +24,6 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
     public class SignalAnalysisContext
     {
         private DateTime _previousEvaluationTimeUtc;
-        private readonly DateTime _analysisEndTimeUtc;
         private readonly Dictionary<string, object> _contextStorage;
 
         /// <summary>
@@ -48,6 +47,11 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         public TimeSpan AnalysisPeriod { get; }
 
         /// <summary>
+        /// Gets ending time of the analysis period
+        /// </summary>
+        public DateTime AnalysisEndTimeUtc { get; }
+
+        /// <summary>
         /// Gets the initial values. These are values of price/volatility at the time the signal was generated
         /// </summary>
         public SecurityValues InitialValues { get; }
@@ -58,11 +62,6 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         public SecurityValues CurrentValues { get; private set; }
 
         /// <summary>
-        /// Flag indicating if the analysis period for the signal has closed. When this is true the scores will stop updating.
-        /// </summary>
-        public bool AnalysisPeriodIsClosed { get; private set; }
-
-        /// <summary>
         /// Percentage through the analysis period
         /// </summary>
         public double NormalizedTime => Time.NormalizeInstantWithinRange(Signal.GeneratedTimeUtc, CurrentValues.TimeUtc, AnalysisPeriod);
@@ -71,16 +70,6 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         /// Percentage of the current time step w.r.t analysis period
         /// </summary>
         public double NormalizedTimeStep => Time.NormalizeTimeStep(AnalysisPeriod, CurrentValues.TimeUtc - _previousEvaluationTimeUtc);
-
-        /// <summary>
-        /// Gets a result object representing the current state/scores of the signal
-        /// </summary>
-        public SignalAnalysisResult CurrentResult => new SignalAnalysisResult
-        {
-            Signal = Signal,
-            IsAnalysisClosed = AnalysisPeriodIsClosed,
-            Score = new SignalScore(Score.Direction, Score.Magnitude, CurrentValues.TimeUtc)
-        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalAnalysisContext"/> class
@@ -98,20 +87,15 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
             CurrentValues = InitialValues = initialValues;
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
-            _analysisEndTimeUtc = Signal.GeneratedTimeUtc + analysisPeriod;
+            AnalysisEndTimeUtc = Signal.GeneratedTimeUtc + analysisPeriod;
         }
 
         /// <summary>
         /// Sets the <see cref="CurrentValues"/>
         /// </summary>
-        public void SetCurrentValues(SecurityValues values)
+        internal void SetCurrentValues(SecurityValues values)
         {
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
-
-            if (values.TimeUtc >= _analysisEndTimeUtc)
-            {
-                AnalysisPeriodIsClosed = true;
-            }
 
             CurrentValues = values;
         }

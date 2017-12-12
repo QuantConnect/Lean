@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.Signals
 
             if (DateTime.UtcNow > _nextPersistenceUpdate)
             {
-                SaveSignalResults();
+                SaveSignals();
                 _nextPersistenceUpdate = DateTime.UtcNow + PersistenceUpdateInterval;
             }
         }
@@ -134,14 +134,14 @@ namespace QuantConnect.Lean.Engine.Signals
         /// <summary>
         /// Save signal results to persistent storage
         /// </summary>
-        protected virtual void SaveSignalResults()
+        protected virtual void SaveSignals()
         {
             // default save all results to disk and don't remove any from memory
             // this will result in one file with all of the signals/results in it
-            var results = SignalManager.AllSignalContexts.OrderBy(c => c.CurrentValues.TimeUtc).ToList();
+            var signals = SignalManager.AllSignals.OrderBy(signal => signal.Score.UpdatedTimeUtc).ToList();
             var path = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId, "signal-results.json");
             Directory.CreateDirectory(new FileInfo(path).DirectoryName);
-            File.WriteAllText(path, JsonConvert.SerializeObject(results, Formatting.Indented));
+            File.WriteAllText(path, JsonConvert.SerializeObject(signals, Formatting.Indented));
         }
 
         /// <summary>
@@ -150,7 +150,8 @@ namespace QuantConnect.Lean.Engine.Signals
         /// </summary>
         protected virtual void OnSignalsGenerated(SignalCollection collection)
         {
-            Enqueue(new SignalPacket(AlgorithmId, collection));
+            // send message for newly created signals
+            Enqueue(new SignalPacket(AlgorithmId, collection.Signals));
 
             SignalManager.AddSignals(collection);
         }

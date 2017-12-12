@@ -39,6 +39,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public double Magnitude { get; private set; }
 
         /// <summary>
+        /// Gets whether or not this is the signal's final score
+        /// </summary>
+        public bool IsFinalScore { get; internal set; }
+
+        /// <summary>
         /// Initializes a new, default instance of the <see cref="SignalScore"/> class
         /// </summary>
         public SignalScore()

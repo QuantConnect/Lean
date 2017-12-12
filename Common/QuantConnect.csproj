@@ -140,7 +140,6 @@
     <Compile Include="Algorithm\Framework\Signals\Analysis\SecurityValues.cs" />
     <Compile Include="Algorithm\Framework\Signals\Signal.cs" />
     <Compile Include="Algorithm\Framework\Signals\Analysis\SignalAnalysisContext.cs" />
-    <Compile Include="Algorithm\Framework\Signals\Analysis\SignalAnalysisResult.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalCollection.cs" />
     <Compile Include="Algorithm\Framework\Signals\Analysis\SignalManager.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalScore.cs" />

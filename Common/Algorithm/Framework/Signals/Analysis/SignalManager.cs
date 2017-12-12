@@ -37,19 +37,19 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         private readonly ConcurrentDictionary<Guid, SignalAnalysisContext> _updatedSignalContextsBySignalId;
 
         /// <summary>
-        /// Enumerable of signal contexts for open signals
+        /// Enumerable of signals still under analysis
         /// </summary>
-        public IEnumerable<SignalAnalysisContext> OpenSignalContexts => _openSignalContexts.Values;
+        public IEnumerable<Signal> OpenSignals => _openSignalContexts.Values.Select(context => context.Signal);
 
         /// <summary>
-        /// Enumerable of signal contexts for closed signals
+        /// Enumerable of signals who's analysis has been completed
         /// </summary>
-        public IEnumerable<SignalAnalysisContext> ClosedSignalContexts => _closedSignalContexts.Values;
+        public IEnumerable<Signal> ClosedSignals => _closedSignalContexts.Values.Select(context => context.Signal);
 
         /// <summary>
-        /// Enumerable of signal contexts for all signals
+        /// Enumerable of all internally maintained signals
         /// </summary>
-        public IEnumerable<SignalAnalysisContext> AllSignalContexts => OpenSignalContexts.Concat(ClosedSignalContexts);
+        public IEnumerable<Signal> AllSignals => OpenSignals.Concat(ClosedSignals);
 
         /// <summary>
         /// Gets flag indicating that there are open signals being analyzed
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
                 return;
             }
 
-            foreach (var context in OpenSignalContexts)
+            foreach (var context in _openSignalContexts.Values)
             {
                 // update the security values: price/volatility
                 context.SetCurrentValues(_securityValuesProvider.GetValues(context.Symbol));
@@ -130,9 +130,11 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
                     context.Score.SetScore(scoreType, score, context.CurrentValues.TimeUtc);
                 }
 
-                // remove context from the open set
-                if (context.AnalysisPeriodIsClosed)
+                // if we've passed the end time then mark it as finalized
+                if (context.CurrentValues.TimeUtc >= context.AnalysisEndTimeUtc)
                 {
+                    context.Signal.Score.IsFinalScore = true;
+
                     var id = context.Signal.Id;
                     _closedSignalContexts[id] = context;
 
@@ -159,22 +161,6 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
                 _updatedSignalContextsBySignalId.TryRemove(context.Signal.Id, out c);
                 yield return context;
             }
-        }
-
-        /// <summary>
-        /// Gets the analysis context for the signal with the specified id
-        /// </summary>
-        /// <param name="id">The signal's unique identifier</param>
-        /// <returns>The signal analysis context if it exists, otherwise null</returns>
-        public SignalAnalysisContext GetContext(Guid id)
-        {
-            SignalAnalysisContext context;
-            if (!_openSignalContexts.TryGetValue(id, out context))
-            {
-                _closedSignalContexts.TryGetValue(id, out context);
-            }
-
-            return context;
         }
     }
 }
