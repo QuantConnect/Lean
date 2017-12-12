@@ -74,6 +74,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public double? Confidence { get; private set; }
 
         /// <summary>
+        /// Gets the most recent scores for this signal
+        /// </summary>
+        public SignalScore Score { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Signal"/> class
         /// </summary>
         /// <param name="symbol">The symbol this signal is for</param>
@@ -97,6 +102,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public Signal(Symbol symbol, SignalType type, SignalDirection direction, TimeSpan period, double? percentChange, double? confidence)
         {
             Id = Guid.NewGuid();
+            Score = new SignalScore();
 
             Symbol = symbol;
             Type = type;

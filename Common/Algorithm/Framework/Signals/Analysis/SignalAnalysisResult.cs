@@ -16,7 +16,7 @@
 
 using System;
 
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Signals.Analysis
 {
     /// <summary>
     /// Type containing a signal and any results/scoring of the signal

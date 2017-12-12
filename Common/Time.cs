@@ -444,5 +444,43 @@ namespace QuantConnect
             }
             return current;
         }
+
+        /// <summary>
+        /// Normalizes the current time within the specified period
+        /// time = start => 0
+        /// time = start + period => 1
+        /// </summary>
+        /// <param name="start">The start time of the range</param>
+        /// <param name="current">The current time we seek to normalize</param>
+        /// <param name="period">The time span of the range</param>
+        /// <returns>The normalized time</returns>
+        public static double NormalizeInstantWithinRange(DateTime start, DateTime current, TimeSpan period)
+        {
+            // normalization of a point time only has a value at that specific point
+            if (period == TimeSpan.Zero)
+            {
+                return start == current ? 1 : 0;
+            }
+
+            var delta = (current - start).TotalSeconds;
+            return delta / period.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Normalizes the implied time step between <paramref name="last"/> and <paramref name="current"/> within the specified rang
+        /// </summary>
+        /// <param name="period">The period to normalize against</param>
+        /// <param name="stepSize">The step size to be normaized</param>
+        /// <returns>The normalized step size as a percentage of the period</returns>
+        public static double NormalizeTimeStep(TimeSpan period, TimeSpan stepSize)
+        {
+            // normalization of a time step for an instantaneous period will always be zero
+            if (period == TimeSpan.Zero)
+            {
+                return 0;
+            }
+
+            return stepSize.TotalSeconds / period.TotalSeconds;
+        }
     }
 }

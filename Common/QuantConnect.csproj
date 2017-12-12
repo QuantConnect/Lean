@@ -131,9 +131,18 @@
     <Compile Include="AlgorithmSettings.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\Providers\AlgorithmSecurityValuesProvider.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\Functions\BinarySignalScoreFunction.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\ISecurityValuesProvider.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\ISignalScoreFunction.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\ISignalScoreFunctionProvider.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\Providers\DefaultSignalScoreFunctionProvider.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\SecurityValues.cs" />
     <Compile Include="Algorithm\Framework\Signals\Signal.cs" />
-    <Compile Include="Algorithm\Framework\Signals\SignalAnalysisResult.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\SignalAnalysisContext.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\SignalAnalysisResult.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalCollection.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Analysis\SignalManager.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalScore.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalScoreType.cs" />
     <Compile Include="API\AuthenticationResponse.cs" />
@@ -568,6 +577,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.1\build\QuantConnect.pythonnet.targets')" />
