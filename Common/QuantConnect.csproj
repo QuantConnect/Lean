@@ -131,7 +131,10 @@
     <Compile Include="AlgorithmSettings.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
+    <Compile Include="Algorithm\Framework\Signals\SignalAnalysisResult.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalCollection.cs" />
+    <Compile Include="Algorithm\Framework\Signals\SignalScore.cs" />
+    <Compile Include="Algorithm\Framework\Signals\SignalScoreType.cs" />
     <Compile Include="API\AuthenticationResponse.cs" />
     <Compile Include="API\Backtest.cs" />
     <Compile Include="API\Compile.cs" />
