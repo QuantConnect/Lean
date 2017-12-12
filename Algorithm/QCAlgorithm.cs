@@ -494,25 +494,32 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
-                // apply the default benchmark if it hasn't been set
-                if (_benchmarkSymbol == null || _benchmarkSymbol == QuantConnect.Symbol.Empty)
+                if (_benchmarkSymbol != null && _benchmarkSymbol != QuantConnect.Symbol.Empty)
                 {
-                    _benchmarkSymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-                }
+                    // if the requested benchmark symbol wasn't already added, then add it now
+                    // we do a simple compare here for simplicity, also it avoids confusion over
+                    // the desired market.
+                    Security security;
+                    if (!Securities.TryGetValue(_benchmarkSymbol, out security))
+                    {
+                        // add the security as an internal feed so the algorithm doesn't receive the data
+                        security = CreateBenchmarkSecurity();
+                        AddToUserDefinedUniverse(security);
+                    }
 
-                // if the requested benchmark symbol wasn't already added, then add it now
-                // we do a simple compare here for simplicity, also it avoids confusion over
-                // the desired market.
-                Security security;
-                if (!Securities.TryGetValue(_benchmarkSymbol, out security))
+                    // just return the current price
+                    Benchmark = new SecurityBenchmark(security);
+                }
+                else
                 {
-                    // add the security as an internal feed so the algorithm doesn't receive the data
-                    security = CreateBenchmarkSecurity();
-                    AddToUserDefinedUniverse(security);
+                    var start = StartDate;
+                    var startingCapital = Portfolio.TotalPortfolioValue;
+                    Benchmark = new FuncBenchmark(dt =>
+                    {
+                        var years = (dt - start).TotalDays / 365.25;
+                        return startingCapital * (decimal) Math.Exp(0.02 * years);
+                    });
                 }
-
-                // just return the current price
-                Benchmark = new SecurityBenchmark(security);
             }
 
             // add option underlying securities if not present
