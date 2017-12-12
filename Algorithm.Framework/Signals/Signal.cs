@@ -106,10 +106,10 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var str = $"{Symbol} {Type} {Direction} within {Period}";
+            var str = $"{Id}: {Symbol} {Type} {Direction} within {Period}";
             if (PercentChange.HasValue)
             {
-                str += $" by {PercentChange.Value}";
+                str += $" by {PercentChange.Value}%";
             }
             if (Confidence.HasValue)
             {

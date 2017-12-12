@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         TimeSpan Period { get; }
 
         /// <summary>
-        /// Gets the predicted percent change in the signal type (price/volatility)
+        /// Gets the predicted percent change in the signal type (price/volatility). Decimal notation of percent where 100% == 1.
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         double? PercentChange { get; }
