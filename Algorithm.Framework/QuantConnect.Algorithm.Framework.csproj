@@ -71,7 +71,6 @@
     <Compile Include="Signals\ConstantSignalModel.cs" />
     <Compile Include="Signals\MACDSignalModel.cs" />
     <Compile Include="Signals\ISignalModel.cs" />
-    <Compile Include="Signals\Signal.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

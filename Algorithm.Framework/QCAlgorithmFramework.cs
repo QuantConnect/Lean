@@ -99,8 +99,11 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public override void OnFrameworkData(Slice slice)
         {
-            // generate and emit signals
-            var signals = Signal.Update(this, slice).ToList();
+            // generate, timestamp and emit signals
+            var signals = Signal.Update(this, slice)
+                .Select(signal => { signal.GeneratedTimeUtc = UtcTime; return signal; })
+                .ToList();
+
             if (signals.Count != 0)
             {
                 // only fire signals generated event if we actually have signals

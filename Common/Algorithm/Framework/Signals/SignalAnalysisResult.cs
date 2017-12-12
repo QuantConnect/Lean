@@ -24,11 +24,6 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public class SignalAnalysisResult
     {
         /// <summary>
-        /// The algorithm time at which the signal was generated
-        /// </summary>
-        public DateTime GeneratedTimeUtc { get; set; }
-
-        /// <summary>
         /// The algorithm time at which these results were generated
         /// </summary>
         public DateTime TimeUtc { get; set; }
@@ -36,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// The signal
         /// </summary>
-        public ISignal Signal { get; set; }
+        public Signal Signal { get; set; }
 
         /// <summary>
         /// Flag indicating if this signal's analysis period has closed

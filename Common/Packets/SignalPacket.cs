@@ -43,7 +43,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The generated signals
         /// </summary>
-        public List<ISignal> Signals { get; set; }
+        public List<Signal> Signals { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalPacket"/> class

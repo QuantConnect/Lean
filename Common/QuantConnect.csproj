@@ -131,6 +131,7 @@
     <Compile Include="AlgorithmSettings.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
+    <Compile Include="Algorithm\Framework\Signals\Signal.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalAnalysisResult.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalCollection.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalScore.cs" />
@@ -496,7 +497,6 @@
     <Compile Include="Securities\SecurityPortfolioManager.cs" />
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
-    <Compile Include="Algorithm\Framework\Signals\ISignal.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalDirection.cs" />
     <Compile Include="Algorithm\Framework\Signals\SignalType.cs" />
     <Compile Include="Statistics\AlgorithmPerformance.cs" />

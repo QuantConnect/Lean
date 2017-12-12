@@ -88,7 +88,7 @@ namespace QuantConnect.Lean.Engine.Signals
             foreach (var kvp in SignalResults)
             {
                 var result = kvp.Value;
-                var signalAge = algorithmUtcTime - result.GeneratedTimeUtc;
+                var signalAge = algorithmUtcTime - result.Signal.GeneratedTimeUtc;
 
                 // mark signals as closed after the period has elapsed
                 if (result.Signal.Period <= signalAge)
@@ -166,8 +166,7 @@ namespace QuantConnect.Lean.Engine.Signals
                     Signal = signal,
                     IsAnalysisClosed = false,
                     Score = GetSignalScore(signal),
-                    TimeUtc = collection.DateTimeUtc,
-                    GeneratedTimeUtc = collection.DateTimeUtc
+                    TimeUtc = collection.DateTimeUtc
                 };
             }
         }
@@ -191,7 +190,7 @@ namespace QuantConnect.Lean.Engine.Signals
         /// </summary>
         /// <param name="signal">The signal</param>
         /// <returns>A new instance of <see cref="SignalScore"/> used to track the signal's accuracy</returns>
-        protected virtual SignalScore GetSignalScore(ISignal signal)
+        protected virtual SignalScore GetSignalScore(Signal signal)
         {
             return new SignalScore(0, 0);
         }

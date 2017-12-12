@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
 
         class SymbolData
         {
-            public ISignal PreviousSignal;
+            public Signal PreviousSignal;
 
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;

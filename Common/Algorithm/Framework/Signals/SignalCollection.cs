@@ -32,14 +32,14 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// The generated signals
         /// </summary>
-        public List<ISignal> Signals { get; }
+        public List<Signal> Signals { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalCollection"/> class
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
         /// <param name="signals">The generated signals</param>
-        public SignalCollection(DateTime dateTimeUtc, IEnumerable<ISignal> signals)
+        public SignalCollection(DateTime dateTimeUtc, IEnumerable<Signal> signals)
         {
             DateTimeUtc = dateTimeUtc;
 
