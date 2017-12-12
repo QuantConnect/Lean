@@ -714,7 +714,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Set the algorithm of the result handler after its been initialized.
         /// </summary>
         /// <param name="algorithm">Algorithm object matching IAlgorithm interface</param>
-        public virtual void SetAlgorithm(IAlgorithm algorithm)
+        public void SetAlgorithm(IAlgorithm algorithm)
         {
             _algorithm = algorithm;
 
@@ -837,7 +837,7 @@ namespace QuantConnect.Lean.Engine.Results
         ///     Async creates crashes in Mono 3.10 if the thread disappears before the upload is complete so it is disabled for now.
         ///     For live trading we're making assumption its a long running task and safe to async save large files.
         /// </remarks>
-        public virtual void StoreResult(Packet packet, bool async = true)
+        public void StoreResult(Packet packet, bool async = true)
         {
             try
             {
@@ -955,7 +955,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Truncates the chart and order data in the result packet to within the specified time frame
         /// </summary>
-        protected virtual void Truncate(LiveResult result, DateTime start, DateTime stop)
+        private static void Truncate(LiveResult result, DateTime start, DateTime stop)
         {
             var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
             var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);

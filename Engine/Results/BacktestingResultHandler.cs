@@ -392,7 +392,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="packet">Packet to store.</param>
         /// <param name="async">Store the packet asyncronously to speed up the thread.</param>
         /// <remarks>Async creates crashes in Mono 3.10 if the thread disappears before the upload is complete so it is disabled for now.</remarks>
-        public virtual void StoreResult(Packet packet, bool async = false)
+        public void StoreResult(Packet packet, bool async = false)
         {
             try
             {
@@ -479,7 +479,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="algorithm">Algorithm we're working on.</param>
         /// <remarks>While setting the algorithm the backtest result handler.</remarks>
-        public virtual void SetAlgorithm(IAlgorithm algorithm)
+        public void SetAlgorithm(IAlgorithm algorithm)
         {
             _algorithm = algorithm;
 

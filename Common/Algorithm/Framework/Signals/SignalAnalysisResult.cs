@@ -36,10 +36,10 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <summary>
         /// Flag indicating if this signal's analysis period has closed
         /// </summary>
-        public bool IsClosed { get; set; }
+        public bool IsAnalysisClosed { get; set; }
 
         /// <summary>
-        /// The current score of the signal. If <see cref="IsClosed"/> is true, then this is the final score
+        /// The current score of the signal. If <see cref="IsAnalysisClosed"/> is true, then this is the final score
         /// </summary>
         public SignalScore Score { get; set; }
 

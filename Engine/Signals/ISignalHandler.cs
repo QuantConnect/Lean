@@ -38,7 +38,8 @@ namespace QuantConnect.Lean.Engine.Signals
         /// <param name="job">The algorithm job</param>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="messagingHandler">Handler used for sending signals</param>
-        void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler);
+        /// <param name="api">Api instance</param>
+        void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api);
 
         /// <summary>
         /// Performs processing in sync with the algorithm's time loop to provide consisten reading of data
