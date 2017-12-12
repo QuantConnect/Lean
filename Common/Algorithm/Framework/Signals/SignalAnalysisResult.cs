@@ -24,6 +24,11 @@ namespace QuantConnect.Algorithm.Framework.Signals
     public class SignalAnalysisResult
     {
         /// <summary>
+        /// The algorithm time at which the signal was generated
+        /// </summary>
+        public DateTime GeneratedTimeUtc { get; set; }
+
+        /// <summary>
         /// The algorithm time at which these results were generated
         /// </summary>
         public DateTime TimeUtc { get; set; }

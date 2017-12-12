@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -83,6 +84,19 @@ namespace QuantConnect.Lean.Engine.Signals
         /// <inheritdoc />
         public virtual void ProcessSynchronousEvents()
         {
+            var algorithmUtcTime = Algorithm.UtcTime;
+            foreach (var kvp in SignalResults)
+            {
+                var result = kvp.Value;
+                var signalAge = algorithmUtcTime - result.GeneratedTimeUtc;
+
+                // mark signals as closed after the period has elapsed
+                if (result.Signal.Period <= signalAge)
+                {
+                    result.TimeUtc = algorithmUtcTime;
+                    result.IsAnalysisClosed = true;
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -130,10 +144,11 @@ namespace QuantConnect.Lean.Engine.Signals
         /// </summary>
         protected virtual void SaveSignalResults()
         {
-            var results = SignalResults.Select(signal => signal.Value).ToList();
+            // default save all results to disk
+            var results = GetSignalResultsInRange(DateTime.MinValue, DateTime.MaxValue).ToList();
             var path = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId, "signal-results.json");
             Directory.CreateDirectory(new FileInfo(path).DirectoryName);
-            File.WriteAllText(path, JsonConvert.SerializeObject(results));
+            File.WriteAllText(path, JsonConvert.SerializeObject(results, Formatting.Indented));
         }
 
         /// <summary>
@@ -149,11 +164,25 @@ namespace QuantConnect.Lean.Engine.Signals
                 SignalResults[signal.Id] = new SignalAnalysisResult
                 {
                     Signal = signal,
+                    IsAnalysisClosed = false,
                     Score = GetSignalScore(signal),
                     TimeUtc = collection.DateTimeUtc,
-                    IsAnalysisClosed = false
+                    GeneratedTimeUtc = collection.DateTimeUtc
                 };
             }
+        }
+
+        /// <summary>
+        /// Gets the signal results within the specified range ordered by <see cref="SignalAnalysisResult.TimeUtc"/>
+        /// </summary>
+        /// <param name="startUtc">The start of the range</param>
+        /// <param name="endUtc">The end of the range</param>
+        /// <returns>The signal analysis results that were either created or had score updates within the range</returns>
+        protected IEnumerable<SignalAnalysisResult> GetSignalResultsInRange(DateTime startUtc, DateTime endUtc)
+        {
+            return SignalResults.Values
+                .Where(result => result.TimeUtc >= startUtc && result.TimeUtc <= endUtc)
+                .OrderBy(result => result.TimeUtc);
         }
 
         /// <summary>
