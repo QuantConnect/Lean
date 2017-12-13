@@ -26,7 +26,6 @@ namespace QuantConnect.Brokerages.GDAX
 {
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
-
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
@@ -77,16 +76,16 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (raw?.Id == null)
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
                     UnlockStream();
-                    return false;
+                    return true;
                 }
 
                 if (raw.Status == "rejected")
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = "Reject reason: " + raw.RejectReason });
                     UnlockStream();
-                    return false;
+                    return true;
                 }
 
                 var brokerId = raw.Id;
@@ -106,7 +105,7 @@ namespace QuantConnect.Brokerages.GDAX
                 // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
 
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id));
                 UnlockStream();
                 return true;
             }
@@ -114,9 +113,9 @@ namespace QuantConnect.Brokerages.GDAX
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
 
             var message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
             UnlockStream();
-            return false;
+            return true;
         }
 
         /// <summary>
