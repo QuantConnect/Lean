@@ -37,6 +37,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private bool _needsScan;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
+        private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
 
         /// <summary>
         /// This is the algorithm under test
@@ -387,8 +388,7 @@ namespace QuantConnect.Brokerages.Backtesting
         public void SimulateMarket()
         {
             // if simulator is installed, we run it
-            if (MarketSimulation != null)
-                MarketSimulation.SimulateMarketConditions(this, Algorithm);
+            MarketSimulation?.SimulateMarketConditions(this, Algorithm);
         }
 
         /// <summary>
@@ -398,19 +398,29 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <param name="quantity">Quantity to assign</param>
         public virtual void ActivateOptionAssignment(Option option, int quantity)
         {
-            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0.0m, 0.0m, Algorithm.UtcTime, "Simulated option assignment");
-            var order = (OptionExerciseOrder)Order.CreateOrder(request);
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
-            var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
+            // do not process the same assignment more than once
+            if (_pendingOptionAssignments.Contains(option.Symbol)) return;
 
-            foreach (var fill in fills)
+            _pendingOptionAssignments.Add(option.Symbol);
+
+            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
+
+            var ticket = Algorithm.Transactions.ProcessRequest(request);
+            Log.Trace($"BacktestingBrokerage.ActivateOptionAssignment(): OrderId: {ticket.OrderId}");
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected override void OnOrderEvent(OrderEvent e)
+        {
+            if (e.Status == OrderStatus.Filled && _pendingOptionAssignments.Contains(e.Symbol))
             {
-                // processing assignment in the portfolio first
-                portfolioModel.ProcessFill(Algorithm.Portfolio, option, fill);
-
-                // firing event informing interested parties that option position has been assigned
-                OnOptionPositionAssigned(fill);
+                _pendingOptionAssignments.Remove(e.Symbol);
             }
+
+            base.OnOrderEvent(e);
         }
 
         /// <summary>
