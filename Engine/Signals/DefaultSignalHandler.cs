@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Signals
         private readonly Dictionary<SignalScoreType, Series> _seriesByScoreType = new Dictionary<SignalScoreType, Series>();
 
         /// <inheritdoc />
-        public bool IsActive => !_cancellationTokenSource.IsCancellationRequested;
+        public bool IsActive => !_cancellationTokenSource?.IsCancellationRequested ?? false;
 
         /// <summary>
         /// Gets the algorithm's unique identifier
