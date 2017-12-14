@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="signals">The signals to create portoflio targets from</param>
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, IEnumerable<Signal> signals)
+        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Signal> signals)
         {
             if (_securities.Count == 0)
             {
