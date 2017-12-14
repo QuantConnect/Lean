@@ -65,18 +65,6 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         public QCAlgorithmFramework()
         {
-            var type = GetType();
-            var frameworkOnData = type.GetMethod(nameof(OnFrameworkData), new[] {typeof(Slice)});
-            if (frameworkOnData.DeclaringType != typeof(QCAlgorithmFramework))
-            {
-                throw new Exception("Framework algorithms can not override OnFrameworkData(Slice)");
-            }
-            var frameworkOnSecuritiesChanged = type.GetMethod(nameof(OnFrameworkSecuritiesChanged), new[] {typeof(SecurityChanges)});
-            if (frameworkOnSecuritiesChanged.DeclaringType != typeof(QCAlgorithmFramework))
-            {
-                throw new Exception("Framework algorithms can not override OnFrameworkSecuritiesChanged(SecurityChanges)");
-            }
-
             // set model defaults
             Execution = new ImmediateExecutionModel();
             RiskManagement = new NullRiskManagementModel();
@@ -102,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework
         /// Used to send data updates to algorithm framework models
         /// </summary>
         /// <param name="slice">The current data slice</param>
-        public override void OnFrameworkData(Slice slice)
+        public sealed override void OnFrameworkData(Slice slice)
         {
             // generate, timestamp and emit signals
             var signals = Signal.Update(this, slice)
@@ -127,7 +115,7 @@ namespace QuantConnect.Algorithm.Framework
         /// Used to send security changes to algorithm framework models
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
-        public override void OnFrameworkSecuritiesChanged(SecurityChanges changes)
+        public sealed override void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
             Signal.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);
