@@ -38,6 +38,16 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// security initializer and universe settings
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
+        public ManualPortfolioSelectionModel(IEnumerable<Symbol> symbols)
+            : this(symbols.ToArray())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManualPortfolioSelectionModel"/> class using the algorithm's
+        /// security initializer and universe settings
+        /// </summary>
+        /// <param name="symbols">The symbols to subscribe to</param>
         public ManualPortfolioSelectionModel(params Symbol[] symbols)
         {
             if (symbols == null)

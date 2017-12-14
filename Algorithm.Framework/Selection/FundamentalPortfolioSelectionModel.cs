@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
@@ -108,6 +108,27 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             // default impl performs no filtering of fine data
             return fine.Select(f => f.Symbol);
+        }
+
+        /// <summary>
+        /// Convenience method for creating a selection model that uses only coarse data
+        /// </summary>
+        /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
+        /// <returns>A new portfolio selection model that will select US equities according to the selection function specified</returns>
+        public static IPortfolioSelectionModel Coarse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector)
+        {
+            return new CoarseFundamentalPortfolioSelectionModel(coarseSelector);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
+        /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param
+        /// <returns>A new portfolio selection model that will select US equities according to the selection functions specified</returns>
+        public static IPortfolioSelectionModel Fine(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        {
+            return new FineFundamentalPortfolioSelectionModel(coarseSelector, fineSelector);
         }
     }
 }
