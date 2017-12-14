@@ -1895,7 +1895,7 @@ namespace QuantConnect.Algorithm
         /// Event invocator for the <see cref="SignalsGenerated"/> event
         /// </summary>
         /// <param name="signals">The collection of signals generaed at the current time step</param>
-        protected virtual void OnSignalsGenerated(IEnumerable<Signal> signals)
+        protected void OnSignalsGenerated(IEnumerable<Signal> signals)
         {
             SignalsGenerated?.Invoke(this, new SignalCollection(UtcTime, signals));
         }
