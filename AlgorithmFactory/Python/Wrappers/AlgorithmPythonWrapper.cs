@@ -200,6 +200,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Gets a flag indicating whether or not this algorithm uses the QCAlgorithmFramework
+        /// </summary>
+        public bool IsFrameworkAlgorithm
+        {
+            get { return _baseAlgorithm.IsFrameworkAlgorithm; }
+        }
+
+        /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
         public bool IsWarmingUp

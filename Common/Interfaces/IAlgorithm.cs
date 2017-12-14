@@ -149,6 +149,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets a flag indicating whether or not this algorithm uses the QCAlgorithmFramework
+        /// </summary>
+        bool IsFrameworkAlgorithm
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
         bool IsWarmingUp

@@ -240,6 +240,14 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Returns false since algorithms derived from this do not use the framework
+        /// </summary>
+        public virtual bool IsFrameworkAlgorithm
+        {
+            get { return false; }
+        }
+
+        /// <summary>
         /// Gets an instance that is to be used to initialize newly created securities.
         /// </summary>
         public ISecurityInitializer SecurityInitializer

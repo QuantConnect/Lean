@@ -31,6 +31,11 @@ namespace QuantConnect.Algorithm.Framework
     public class QCAlgorithmFramework : QCAlgorithm
     {
         /// <summary>
+        /// Returns true since algorithms derived from this use the framework
+        /// </summary>
+        public override bool IsFrameworkAlgorithm => true;
+
+        /// <summary>
         /// Gets or sets the portfolio selection model.
         /// </summary>
         public IPortfolioSelectionModel PortfolioSelection { get; set; }
