@@ -126,6 +126,20 @@ namespace QuantConnect.Algorithm.Framework.Signals
             };
         }
 
+        /// <summary>
+        /// Creates a new signal for predicting the percent change in price over the specified period
+        /// </summary>
+        /// <param name="symbol">The symbol this signal is for</param>
+        /// <param name="period">The period over which the prediction will come true</param>
+        /// <param name="percentChange">The predicted percent change</param>
+        /// <param name="confidence">The confidence in this signal</param>
+        /// <returns>A new signal object for the specified parameters</returns>
+        public static Signal PricePercentChange(Symbol symbol, double percentChange, TimeSpan period, double? confidence = null)
+        {
+            var direction = (SignalDirection) Math.Sign(percentChange);
+            return new Signal(symbol, SignalType.Price, direction, period, percentChange, confidence);
+        }
+
         /// <summary>Returns a string that represents the current object.</summary>
         /// <returns>A string that represents the current object.</returns>
         /// <filterpriority>2</filterpriority>

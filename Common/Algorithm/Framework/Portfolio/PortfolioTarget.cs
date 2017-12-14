@@ -52,6 +52,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="symbol">The symbol the target is for</param>
         /// <param name="percent">The requested target percent of total portfolio value</param>
         /// <returns>A portfolio target for the specified symbol/percent</returns>
+        public static IPortfolioTarget Percent(IAlgorithm algorithm, Symbol symbol, double percent)
+        {
+            return Percent(algorithm, symbol, (decimal) percent);
+        }
+
+        /// <summary>
+        /// Creates a new target for the specified percent
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance, used for getting total portfolio value and current security price</param>
+        /// <param name="symbol">The symbol the target is for</param>
+        /// <param name="percent">The requested target percent of total portfolio value</param>
+        /// <returns>A portfolio target for the specified symbol/percent</returns>
         public static IPortfolioTarget Percent(IAlgorithm algorithm, Symbol symbol, decimal percent)
         {
             var security = algorithm.Securities[symbol];
