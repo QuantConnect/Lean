@@ -955,7 +955,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     else
                     {
-                        var message = option.GetPayOff(option.Underlying.Price) < 0
+                        var message = option.GetPayOff(option.Underlying.Price) > 0
                             ? "Automatic option assignment on expiration"
                             : "Option expiration";
 
