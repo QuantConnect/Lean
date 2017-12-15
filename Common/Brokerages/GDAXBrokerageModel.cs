@@ -59,6 +59,11 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+
             return 3m;
         }
 
