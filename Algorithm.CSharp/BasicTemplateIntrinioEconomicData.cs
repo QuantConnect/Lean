@@ -65,13 +65,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (_spread > 0 && !Portfolio[_bno].IsLong)
+            if ((_spread > 0 && !Portfolio[_bno].IsLong) || 
+                (_spread < 0 && !Portfolio[_uso].IsShort))
             {
                 SetHoldings(_bno, 0.25 * Math.Sign(_spread));
                 SetHoldings(_uso, -0.25 * Math.Sign(_spread));
-                //MarketOrder(_bno, 1000 * Math.Sign(_spread));
-                //MarketOrder(_uso, -1000 * Math.Sign(_spread));
-            }
+            } 
         }
 
         public void OnData(IntrinioEconomicData economicData)
