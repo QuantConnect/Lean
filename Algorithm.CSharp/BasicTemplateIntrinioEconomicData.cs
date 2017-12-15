@@ -51,8 +51,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            _uso = AddEquity("USO", Resolution.Daily).Symbol;
-            _bno = AddEquity("BNO", Resolution.Daily).Symbol;
+            _uso = AddEquity("USO", Resolution.Daily, leverage: 2m).Symbol;
+            _bno = AddEquity("BNO", Resolution.Daily, leverage: 2m).Symbol;
 
             AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilWTI, Resolution.Daily);
             AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilBrent, Resolution.Daily);
@@ -65,8 +65,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            MarketOrder(_bno, 1000 * Math.Sign(_spread));
-            MarketOrder(_uso, -1000 * Math.Sign(_spread));
+            if (_spread > 0 && !Portfolio[_bno].IsLong)
+            {
+                SetHoldings(_bno, 0.25 * Math.Sign(_spread));
+                SetHoldings(_uso, -0.25 * Math.Sign(_spread));
+                //MarketOrder(_bno, 1000 * Math.Sign(_spread));
+                //MarketOrder(_uso, -1000 * Math.Sign(_spread));
+            }
         }
 
         public void OnData(IntrinioEconomicData economicData)
