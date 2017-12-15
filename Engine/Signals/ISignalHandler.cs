@@ -42,6 +42,13 @@ namespace QuantConnect.Lean.Engine.Signals
         void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api);
 
         /// <summary>
+        /// Invoked after the algorithm's Initialize method was called allowing the signal handler to check
+        /// other things, such as sampling period for backtests
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        void OnAfterAlgorithmInitialized(IAlgorithm algorithm);
+
+        /// <summary>
         /// Performs processing in sync with the algorithm's time loop to provide consisten reading of data
         /// </summary>
         void ProcessSynchronousEvents();

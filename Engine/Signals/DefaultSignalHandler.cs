@@ -35,14 +35,21 @@ namespace QuantConnect.Lean.Engine.Signals
     /// </summary>
     public class DefaultSignalHandler : ISignalHandler
     {
+        private const int BacktestChartSamples = 1000;
         private static readonly IReadOnlyCollection<SignalScoreType> ScoreTypes = SignalManager.ScoreTypes;
 
+        private DateTime _nextMessagingUpdate;
         private DateTime _nextPersistenceUpdate;
-        private DateTime _nextChartUpdateAlgorithmTimeUtc;
+        private DateTime _nextChartSampleAlgorithmTimeUtc;
+        private DateTime _lastChartSampleAlgorithmTimeUtc;
 
         private IMessagingHandler _messagingHandler;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
+
+        private readonly Chart _assetBreakdownChart = new Chart("Alpha Asset Breakdown");
+        private readonly Series _predictionCountSeries = new Series("Count", SeriesType.Line, "#");
+        private readonly ConcurrentDictionary<Symbol, int> _signalCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
         private readonly Dictionary<SignalScoreType, Series> _seriesByScoreType = new Dictionary<SignalScoreType, Series>();
 
         /// <inheritdoc />
@@ -74,6 +81,16 @@ namespace QuantConnect.Lean.Engine.Signals
         protected TimeSpan PersistenceUpdateInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
+        /// Gets or sets the interval at which signal updates are sent to the messaging handler
+        /// </summary>
+        protected TimeSpan MessagingUpdateInterval { get; set; } = TimeSpan.FromSeconds(2);
+
+        /// <summary>
+        /// Gets or sets the interval at which alpha charts are updated. This is in realtion to algorithm time.
+        /// </summary>
+        protected TimeSpan ChartUpdateInterval { get; set; } = TimeSpan.FromMinutes(1);
+
+        /// <summary>
         /// Gets the signal manager instance used to manage the analysis of algorithm signals
         /// </summary>
         protected SignalManager SignalManager { get; private set; }
@@ -87,26 +104,48 @@ namespace QuantConnect.Lean.Engine.Signals
             SignalManager = CreateSignalManager();
             algorithm.SignalsGenerated += (algo, collection) => OnSignalsGenerated(collection);
 
-            // add charts for average signal scores
-            var chart = new Chart("Alpha");
+            // chart for average scores over sample period
+            var scoreChart = new Chart("Alpha");
             foreach (var scoreType in ScoreTypes)
             {
                 var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
-                chart.AddSeries(series);
-
+                scoreChart.AddSeries(series);
                 _seriesByScoreType[scoreType] = series;
             }
 
-            Algorithm.AddChart(chart);
+            // chart for prediction count over sample period
+            var predictionCount = new Chart("Alpha Count");
+            predictionCount.AddSeries(_predictionCountSeries);
+
+            Algorithm.AddChart(scoreChart);
+            Algorithm.AddChart(predictionCount);
+            Algorithm.AddChart(_assetBreakdownChart);
+        }
+
+        /// <inheritdoc />
+        public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
+        {
+            _lastChartSampleAlgorithmTimeUtc = algorithm.UtcTime;
+            if (!LiveMode)
+            {
+                // space out backtesting samples evenly
+                var backtestPeriod = algorithm.EndDate - algorithm.StartDate;
+                ChartUpdateInterval = TimeSpan.FromTicks(backtestPeriod.Ticks / BacktestChartSamples);
+            }
+            else
+            {
+                // live mode we'll sample each minute
+                ChartUpdateInterval = Time.OneMinute;
+            }
         }
 
         /// <inheritdoc />
         public virtual void ProcessSynchronousEvents()
         {
-            // before updating scores, emit chart points on day changes
-            if (Algorithm.UtcTime >= _nextChartUpdateAlgorithmTimeUtc)
+            // before updating scores, emit chart points for the previous sample period
+            if (Algorithm.UtcTime >= _nextChartSampleAlgorithmTimeUtc)
             {
-                ChartAverageSignalScores();
+                UpdateCharts();
             }
 
             // update scores in line with the algo thread to ensure a consistent read of security data
@@ -114,12 +153,48 @@ namespace QuantConnect.Lean.Engine.Signals
             SignalManager.UpdateScores();
         }
 
+        private void UpdateCharts()
+        {
+            var updatedSignals = SignalManager.AllSignals.Where(signal =>
+                signal.Score.UpdatedTimeUtc >= _lastChartSampleAlgorithmTimeUtc &&
+                signal.Score.UpdatedTimeUtc <= _nextChartSampleAlgorithmTimeUtc
+            )
+            .ToList();
+
+            ChartAverageSignalScores(updatedSignals, Algorithm.UtcTime);
+
+            // compute and chart total signal count over sample period
+            var totalSignals = _signalCountPerSymbol.Values.Sum();
+            _predictionCountSeries.AddPoint(Algorithm.UtcTime, totalSignals, LiveMode);
+
+            // chart asset breakdown over sample period
+            foreach (var kvp in _signalCountPerSymbol)
+            {
+                var symbol = kvp.Key;
+                var count = kvp.Value;
+
+                Series series;
+                if (!_assetBreakdownChart.Series.TryGetValue(symbol.Value, out series))
+                {
+                    series = new Series(symbol.Value, SeriesType.StackedArea, "#");
+                    _assetBreakdownChart.Series.Add(series.Name, series);
+                }
+
+                series.AddPoint(Algorithm.UtcTime, count, LiveMode);
+            }
+
+            // reset for next sampling period
+            _signalCountPerSymbol.Clear();
+            _lastChartSampleAlgorithmTimeUtc = _nextChartSampleAlgorithmTimeUtc;
+            _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
+        }
+
         /// <inheritdoc />
         public virtual void Run()
         {
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // run until cancelled AND we're processing messages
+            // run until cancelled AND we're done processing messages
             while (!_cancellationTokenSource.IsCancellationRequested || !_messages.IsEmpty)
             {
                 try
@@ -135,19 +210,27 @@ namespace QuantConnect.Lean.Engine.Signals
                 Thread.Sleep(50);
             }
 
-            OnExit();
+            // persist signals at exit
+            StoreSignals();
         }
 
         /// <inheritdoc />
         public void Exit()
         {
+            // send final signal scoring updates before we exit
+            _messages.Enqueue(new SignalPacket
+            {
+                AlgorithmId = AlgorithmId,
+                Signals = SignalManager.GetUpdatedContexts().Select(context => context.Signal).ToList()
+            });
+
             _cancellationTokenSource.Cancel(false);
         }
 
         /// <summary>
         /// Performs asynchronous processing, including broadcasting of signals to messaging handler
         /// </summary>
-        protected virtual void ProcessAsynchronousEvents()
+        protected void ProcessAsynchronousEvents()
         {
             Packet packet;
             while (_messages.TryDequeue(out packet))
@@ -155,36 +238,62 @@ namespace QuantConnect.Lean.Engine.Signals
                 _messagingHandler.Send(packet);
             }
 
+            // persist generated signals to storage
             if (DateTime.UtcNow > _nextPersistenceUpdate)
             {
-                SaveSignals();
+                StoreSignals();
                 _nextPersistenceUpdate = DateTime.UtcNow + PersistenceUpdateInterval;
+            }
+
+            // push updated signals through messaging handler
+            if (DateTime.UtcNow > _nextMessagingUpdate)
+            {
+                var signals = SignalManager.GetUpdatedContexts().Select(context => context.Signal).ToList();
+                if (signals.Count > 0)
+                {
+                    _messages.Enqueue(new SignalPacket
+                    {
+                        AlgorithmId = AlgorithmId,
+                        Signals = signals
+                    });
+                }
+                _nextMessagingUpdate = DateTime.UtcNow + MessagingUpdateInterval;
             }
         }
 
         /// <summary>
         /// Save signal results to persistent storage
         /// </summary>
-        protected virtual void SaveSignals()
+        protected virtual void StoreSignals()
         {
             // default save all results to disk and don't remove any from memory
             // this will result in one file with all of the signals/results in it
-            var signals = SignalManager.AllSignals.OrderBy(signal => signal.Score.UpdatedTimeUtc).ToList();
-            var path = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId, "signal-results.json");
-            Directory.CreateDirectory(new FileInfo(path).DirectoryName);
-            File.WriteAllText(path, JsonConvert.SerializeObject(signals, Formatting.Indented));
+            var signals = SignalManager.AllSignals.OrderBy(signal => signal.GeneratedTimeUtc).ToList();
+            if (signals.Count > 0)
+            {
+                var path = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId, "signal-results.json");
+                Directory.CreateDirectory(new FileInfo(path).DirectoryName);
+                File.WriteAllText(path, JsonConvert.SerializeObject(signals, Formatting.Indented));
+            }
         }
 
         /// <summary>
         /// Handles the algorithm's <see cref="IAlgorithm.SignalsGenerated"/> event
         /// and broadcasts the new signal using the messaging handler
         /// </summary>
-        protected virtual void OnSignalsGenerated(SignalCollection collection)
+        protected void OnSignalsGenerated(SignalCollection collection)
         {
             // send message for newly created signals
-            Enqueue(new SignalPacket(AlgorithmId, collection.Signals));
+            Packet packet = new SignalPacket(AlgorithmId, collection.Signals);
+            _messages.Enqueue(packet);
 
             SignalManager.AddSignals(collection);
+
+            // aggregate signal counts per symbol
+            foreach (var grouping in collection.Signals.GroupBy(signal => signal.Symbol))
+            {
+                _signalCountPerSymbol.AddOrUpdate(grouping.Key, 1, (sym, cnt) => cnt + grouping.Count());
+            }
         }
 
         /// <summary>
@@ -198,62 +307,39 @@ namespace QuantConnect.Lean.Engine.Signals
         }
 
         /// <summary>
-        /// Enqueues a packet to be processed asynchronously
+        /// Adds chart point for each signal score type with an average value of the specified period
         /// </summary>
-        /// <param name="packet">The packet</param>
-        protected void Enqueue(Packet packet)
+        /// <param name="signals">The signals to chart average scores for</param>
+        /// <param name="end">The analysis end time, used as time for chart points</param>
+        protected void ChartAverageSignalScores(List<Signal> signals, DateTime end)
         {
-            _messages.Enqueue(packet);
-        }
-
-        /// <summary>
-        /// Invoked right before the <see cref="Run"/> method returns.
-        /// This is intended to be used for any final cleanup/persistence
-        /// </summary>
-        protected virtual void OnExit()
-        {
-            // final save of data to ensure we didn't drop anything
-            SaveSignals();
-        }
-
-        private void ChartAverageSignalScores()
-        {
-            var start = (Algorithm.UtcTime - Time.OneDay).Date;
-            var end = start + Time.OneDay;
-
             // compute average score values for all signals with updates over the last day
             var count = 0;
-            var runningTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
-            var signals = SignalManager.AllSignals.Where(signal =>
-                // time box to one day
-                signal.Score.UpdatedTimeUtc >= start &&
-                signal.Score.UpdatedTimeUtc <= end &&
-                // ignore signals that haven't received updates yet
-                signal.GeneratedTimeUtc != signal.Score.UpdatedTimeUtc
-            );
+            var runningScoreTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
 
-            foreach (var signal in signals)
+            // ignore signals that haven't received scoring updates yet
+            foreach (var signal in signals.Where(signal => signal.GeneratedTimeUtc != signal.Score.UpdatedTimeUtc))
             {
                 count++;
                 foreach (var scoreType in ScoreTypes)
                 {
-                    runningTotals[scoreType] += signal.Score.GetScore(scoreType);
+                    runningScoreTotals[scoreType] += signal.Score.GetScore(scoreType);
                 }
             }
 
-            if (count > 0)
+            if (count < 1)
             {
-                foreach (var kvp in runningTotals)
-                {
-                    var scoreType = kvp.Key;
-                    var runningTotal = kvp.Value;
-                    var average = runningTotal / count;
-                    // scale the value from [0,1] to [0,100] for charting
-                    _seriesByScoreType[scoreType].AddPoint(end, 100m*(decimal)average, LiveMode);
-                }
+                return;
             }
 
-            _nextChartUpdateAlgorithmTimeUtc = end;
+            foreach (var kvp in runningScoreTotals)
+            {
+                var scoreType = kvp.Key;
+                var runningTotal = kvp.Value;
+                var average = runningTotal / count;
+                // scale the value from [0,1] to [0,100] for charting
+                _seriesByScoreType[scoreType].AddPoint(end, 100m * (decimal) average, LiveMode);
+            }
         }
     }
 }

@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
                     _openSignalContexts.TryRemove(id, out c);
                 }
 
-                // mark the as having been updated
+                // mark the context as having been updated
                 _updatedSignalContextsBySignalId[context.Signal.Id] = context;
             }
         }

@@ -155,6 +155,8 @@ namespace QuantConnect.Lean.Engine
 
                     // set this again now that we've actually added securities
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);
+                    // signal handler needs start/end dates to determine sample step sizes
+                    _algorithmHandlers.Signals.OnAfterAlgorithmInitialized(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
                     if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)
