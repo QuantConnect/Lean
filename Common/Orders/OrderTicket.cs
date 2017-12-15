@@ -265,6 +265,15 @@ namespace QuantConnect.Orders
         public OrderResponse Cancel(string tag = null)
         {
             var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
+            lock (_cancelRequestLock)
+            {
+                // don't submit duplicate cancel requests
+                if (_cancelRequest != null)
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled, $"Order {OrderId} has already received a cancellation request.");
+                }
+            }
+
             _transactionManager.ProcessRequest(request);
 
             lock (_cancelRequestLock)
