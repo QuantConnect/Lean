@@ -153,11 +153,11 @@ namespace QuantConnect.Data.Custom.Intrinio
                 subscription = new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
                                                           authorizationHeaders);
                 // Finally, here we force the engine to wait one second in case the we have multiples data sources added.
-                var intrinioApiCallLimit = 1000 - (DateTime.Now - LastIntrinoAPICall).Milliseconds;
+                var intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
                 do
                 {
                     if (intrinioApiCallLimit > 0) Thread.Sleep(intrinioApiCallLimit);
-                    intrinioApiCallLimit = 1000 - (DateTime.Now - LastIntrinoAPICall).Milliseconds;
+                    intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
                 } while (intrinioApiCallLimit > 0);
                 LastIntrinoAPICall = DateTime.Now;
             }
