@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -116,6 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var consolidator = new List<UpdateData<SubscriptionDataConfig>>();
             var allDataForAlgorithm = new List<BaseData>(data.Count);
             var cash = new List<UpdateData<Cash>>(cashBook.Count);
+            var optionUnderlyingUpdates = new Dictionary<Symbol, BaseData>();
 
             var cashSecurities = new HashSet<Symbol>();
             foreach (var cashItem in cashBook.Values)
@@ -145,13 +147,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var futuresChains = new FuturesChains(algorithmTime);
             var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
-            foreach (var packet in data)
+            // ensure we read equity data before option data, so we can set the current underlying price
+            foreach (var packet in data.OrderBy(x => x.Configuration.Symbol.SecurityType))
             {
                 var list = packet.Data;
                 var symbol = packet.Security.Symbol;
 
                 if (list.Count == 0) continue;
-                
+
                 // keep count of all data points
                 if (list.Count == 1 && list[0] is BaseDataCollection)
                 {
@@ -197,7 +200,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     optionChains[baseData.Symbol] = (OptionChain) baseData;
                                 }
-                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture))
+                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
                                 {
                                     continue;
                                 }
@@ -216,7 +219,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 }
                             }
 
-
                             // this is data used to update consolidators
                             consolidatorUpdate.Add(baseData);
                         }
@@ -227,6 +229,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (tick != null && tick.Suspicious) continue;
 
                         securityUpdate.Add(baseData);
+
+                        // option underlying security update
+                        if (packet.Security.Symbol.SecurityType == SecurityType.Equity)
+                        {
+                            optionUnderlyingUpdates[packet.Security.Symbol] = baseData;
+                        }
                     }
                     // include checks for various aux types so we don't have to construct the dictionaries in Slice
                     else if ((delisting = baseData as Delisting) != null)
@@ -311,10 +319,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private static bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, Security security, Lazy<Slice> sliceFuture)
+        private static bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, Security security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
         {
             var symbol = baseData.Symbol;
-            
+
             OptionChain chain;
             var canonical = Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
             if (!optionChains.TryGetValue(canonical, out chain))
@@ -323,13 +331,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 optionChains[canonical] = chain;
             }
 
+            // set the underlying current data point in the option chain
+            var option = security as Option;
+            if (option != null)
+            {
+                var underlyingData = option.Underlying.GetLastData();
+
+                BaseData underlyingUpdate;
+                if (optionUnderlyingUpdates.TryGetValue(option.Underlying.Symbol, out underlyingUpdate))
+                {
+                    underlyingData = underlyingUpdate;
+                }
+
+                chain.Underlying = underlyingData;
+            }
+
             var universeData = baseData as OptionChainUniverseDataCollection;
             if (universeData != null)
             {
                 if (universeData.Underlying != null)
                 {
-                    chain.Underlying = universeData.Underlying;
-
                     foreach(var addedContract in chain.Contracts)
                     {
                         addedContract.Value.UnderlyingLastPrice = chain.Underlying.Price;
@@ -355,14 +376,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     AskPrice = security.AskPrice,
                     AskSize = (long)security.AskSize,
                     OpenInterest = security.OpenInterest,
-                    UnderlyingLastPrice = chain.Underlying.Price 
+                    UnderlyingLastPrice = chain.Underlying.Price
                 };
 
                 chain.Contracts[baseData.Symbol] = contract;
-                var option = security as Option;
+
                 if (option != null)
                 {
-
                     contract.SetOptionPriceModel(() => option.PriceModel.Evaluate(option, sliceFuture.Value, contract));
                 }
             }
