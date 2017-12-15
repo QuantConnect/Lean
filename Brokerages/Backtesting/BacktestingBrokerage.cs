@@ -415,7 +415,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <param name="e">The OrderEvent</param>
         protected override void OnOrderEvent(OrderEvent e)
         {
-            if (e.Status == OrderStatus.Filled && _pendingOptionAssignments.Contains(e.Symbol))
+            if (e.Status.IsClosed() && _pendingOptionAssignments.Contains(e.Symbol))
             {
                 _pendingOptionAssignments.Remove(e.Symbol);
             }
