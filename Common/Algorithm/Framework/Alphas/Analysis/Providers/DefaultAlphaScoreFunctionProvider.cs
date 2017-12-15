@@ -13,21 +13,21 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework.Signals
+using QuantConnect.Algorithm.Framework.Alphas.Analysis.Functions;
+
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
 {
     /// <summary>
-    /// Specifies the type of signal
+    /// Default implementation of <see cref="IAlphaScoreFunctionProvider"/> always returns the <see cref="BinaryAlphaScoreFunction"/>
     /// </summary>
-    public enum SignalType
+    public class DefaultAlphaScoreFunctionProvider : IAlphaScoreFunctionProvider
     {
-        /// <summary>
-        /// The signal is for a security's price
-        /// </summary>
-        Price,
+        private static readonly BinaryAlphaScoreFunction Function = new BinaryAlphaScoreFunction();
 
-        /// <summary>
-        /// The signal is for a security's price volatility
-        /// </summary>
-        Volatility
+        /// <inheritdoc />
+        public IAlphaScoreFunction GetScoreFunction(AlphaType alphaType, AlphaScoreType scoreType)
+        {
+            return Function;
+        }
     }
 }

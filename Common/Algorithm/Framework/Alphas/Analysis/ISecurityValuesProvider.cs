@@ -11,24 +11,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Defines a specific type of score for a signal
+    /// Provides a simple abstraction that returns a security's current price and volatility.
+    /// This facilitates testing by removing the dependency of IAlgorithm on the analysis components
     /// </summary>
-    public enum SignalScoreType
+    public interface ISecurityValuesProvider
     {
         /// <summary>
-        /// Directional accuracy
+        /// Gets the current values for the specified symbol (price/volatility)
         /// </summary>
-        Direction,
-
-        /// <summary>
-        /// Magnitude accuracy
-        /// </summary>
-        Magnitude
+        /// <param name="symbol">The symbol to get price/volatility for</param>
+        /// <returns>The alpha target values for the specified symbol</returns>
+        SecurityValues GetValues(Symbol symbol);
     }
 }

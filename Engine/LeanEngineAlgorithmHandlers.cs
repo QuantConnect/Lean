@@ -18,11 +18,11 @@ using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Lean.Engine.Signals;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -75,9 +75,9 @@ namespace QuantConnect.Lean.Engine
         public IDataProvider DataProvider { get; }
 
         /// <summary>
-        /// Gets the signal handler used to process algorithm generated signals
+        /// Gets the alpha handler used to process algorithm generated alphas
         /// </summary>
-        public ISignalHandler Signals { get; }
+        public IAlphaHandler Alphas { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
@@ -90,7 +90,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="mapFileProvider">The map file provider used to retrieve map files for the data feed</param>
         /// <param name="factorFileProvider">Map file provider used as a map file source for the data feed</param>
         /// <param name="dataProvider">file provider used to retrieve security data if it is not on the file system</param>
-        /// <param name="signals">The signal handler used to process generated signals</param>
+        /// <param name="alphas">The alpha handler used to process generated alphas</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
@@ -99,7 +99,7 @@ namespace QuantConnect.Lean.Engine
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
-            ISignalHandler signals
+            IAlphaHandler alphas
             )
         {
             if (results == null)
@@ -134,9 +134,9 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException(nameof(dataProvider));
             }
-            if (signals == null)
+            if (alphas == null)
             {
-                throw new ArgumentNullException(nameof(signals));
+                throw new ArgumentNullException(nameof(alphas));
             }
 
             Results = results;
@@ -147,7 +147,7 @@ namespace QuantConnect.Lean.Engine
             MapFileProvider = mapFileProvider;
             FactorFileProvider = factorFileProvider;
             DataProvider = dataProvider;
-            Signals = signals;
+            Alphas = alphas;
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine
             var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
             var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
             var dataProviderTypeName = Config.Get("data-provider", "DefaultDataProvider");
-            var signalHandlerTypeName = Config.Get("signal-handler", "DefaultSignalHandler");
+            var alphaHandlerTypeName = Config.Get("alpha-handler", "DefaultAlphaHandler");
 
             return new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
@@ -177,7 +177,7 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
-                composer.GetExportedValueByTypeName<ISignalHandler>(signalHandlerTypeName)
+                composer.GetExportedValueByTypeName<IAlphaHandler>(alphaHandlerTypeName)
                 );
         }
 

@@ -16,7 +16,7 @@
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis.Providers
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
 {
     /// <summary>
     /// Provides an implementation of <see cref="ISecurityProvider"/> that uses the <see cref="SecurityManager"/>

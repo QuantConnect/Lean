@@ -13,19 +13,21 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Retrieves the registered scoring function for the specified signal/score type
+    /// Defines a function used to determine how correct a particular alpha is.
+    /// The result of calling <see cref="Evaluate"/> is expected to be within the range [0, 1]
+    /// where 0 is completely wrong and 1 is completely right
     /// </summary>
-    public interface ISignalScoreFunctionProvider
+    public interface IAlphaScoreFunction
     {
         /// <summary>
-        /// Gets the signal scoring function for the specified signal type and score type
+        /// Evaluates the score of the alpha within the context
         /// </summary>
-        /// <param name="signalType">The signal's type</param>
-        /// <param name="scoreType">The scoring type</param>
-        /// <returns>A function to be used to compute signal scores</returns>
-        ISignalScoreFunction GetScoreFunction(SignalType signalType, SignalScoreType scoreType);
+        /// <param name="context">The alpha's analysis context</param>
+        /// <param name="scoreType">The score type to be evaluated</param>
+        /// <returns>The alpha's current score</returns>
+        double Evaluate(AlphaAnalysisContext context, AlphaScoreType scoreType);
     }
 }

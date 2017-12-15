@@ -16,12 +16,12 @@
 
 using System;
 
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines the scores given to a particular signal
+    /// Defines the scores given to a particular alpha
     /// </summary>
-    public class SignalScore
+    public class AlphaScore
     {
         /// <summary>
         /// Gets the time these scores were last updated
@@ -39,24 +39,24 @@ namespace QuantConnect.Algorithm.Framework.Signals
         public double Magnitude { get; private set; }
 
         /// <summary>
-        /// Gets whether or not this is the signal's final score
+        /// Gets whether or not this is the alpha's final score
         /// </summary>
         public bool IsFinalScore { get; internal set; }
 
         /// <summary>
-        /// Initializes a new, default instance of the <see cref="SignalScore"/> class
+        /// Initializes a new, default instance of the <see cref="AlphaScore"/> class
         /// </summary>
-        public SignalScore()
+        public AlphaScore()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SignalScore"/> class
+        /// Initializes a new instance of the <see cref="AlphaScore"/> class
         /// </summary>
-        /// <param name="direction">The signal direction score</param>
-        /// <param name="magnitude">The signal magnitude score</param>
+        /// <param name="direction">The alpha direction score</param>
+        /// <param name="magnitude">The alpha magnitude score</param>
         /// <param name="updatedTimeUtc">The algorithm utc time these scores were computed</param>
-        public SignalScore(double direction, double magnitude, DateTime updatedTimeUtc)
+        public AlphaScore(double direction, double magnitude, DateTime updatedTimeUtc)
         {
             Direction = direction;
             Magnitude = magnitude;
@@ -69,17 +69,17 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// <param name="type">The score type to be set, Direction/Magnitude</param>
         /// <param name="value">The new value for the score</param>
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
-        internal void SetScore(SignalScoreType type, double value, DateTime algorithmUtcTime)
+        internal void SetScore(AlphaScoreType type, double value, DateTime algorithmUtcTime)
         {
             UpdatedTimeUtc = algorithmUtcTime;
 
             switch (type)
             {
-                case SignalScoreType.Direction:
+                case AlphaScoreType.Direction:
                     Direction = value;
                     break;
 
-                case SignalScoreType.Magnitude:
+                case AlphaScoreType.Magnitude:
                     Magnitude = value;
                     break;
 
@@ -93,14 +93,14 @@ namespace QuantConnect.Algorithm.Framework.Signals
         /// </summary>
         /// <param name="type">The type of score to get, Direction/Magnitude</param>
         /// <returns>The requested score</returns>
-        public double GetScore(SignalScoreType type)
+        public double GetScore(AlphaScoreType type)
         {
             switch (type)
             {
-                case SignalScoreType.Direction:
+                case AlphaScoreType.Direction:
                     return Direction;
 
-                case SignalScoreType.Magnitude:
+                case AlphaScoreType.Magnitude:
                     return Magnitude;
 
                 default:

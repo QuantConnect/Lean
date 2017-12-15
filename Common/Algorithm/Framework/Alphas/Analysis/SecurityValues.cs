@@ -15,11 +15,11 @@
 
 using System;
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Contains values to mirror <see cref="SignalType"/>.
-    /// These are the value of the 'metrics' that signals are trying to predict
+    /// Contains values to mirror <see cref="AlphaType"/>.
+    /// These are the value of the 'metrics' that alphas are trying to predict
     /// </summary>
     public class SecurityValues
     {
@@ -53,18 +53,18 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         }
 
         /// <summary>
-        /// Gets the security value corresponding to the specified signal type
+        /// Gets the security value corresponding to the specified alpha type
         /// </summary>
-        /// <param name="type">The signal type</param>
-        /// <returns>The security value for the specified signal type</returns>
-        public decimal Get(SignalType type)
+        /// <param name="type">The alpha type</param>
+        /// <returns>The security value for the specified alpha type</returns>
+        public decimal Get(AlphaType type)
         {
             switch (type)
             {
-                case SignalType.Price:
+                case AlphaType.Price:
                     return Price;
 
-                case SignalType.Volatility:
+                case AlphaType.Volatility:
                     return Volatility;
 
                 default:

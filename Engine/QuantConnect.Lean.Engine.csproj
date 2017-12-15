@@ -230,8 +230,8 @@
     </None>
     <Compile Include="Results\BacktestingResultHandler.cs" />
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
-    <Compile Include="Signals\DefaultSignalHandler.cs" />
-    <Compile Include="Signals\ISignalHandler.cs" />
+    <Compile Include="Alphas\DefaultAlphaHandler.cs" />
+    <Compile Include="Alphas\IAlphaHandler.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />

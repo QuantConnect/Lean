@@ -13,26 +13,23 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework.Signals
+using System.Collections.Generic;
+using QuantConnect.Data;
+
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Specifies the predicted direction for a signal (price/volatility)
+    /// Algorithm framework model that produces alphas
     /// </summary>
-    public enum SignalDirection
+    public interface IAlphaModel : INotifiedSecurityChanges
     {
         /// <summary>
-        /// The value will go down
+        /// Updates this alpha model with the latest data from the algorithm.
+        /// This is called each time the algorithm receives data for subscribed securities
         /// </summary>
-        Down = -1,
-
-        /// <summary>
-        /// The value will stay flat
-        /// </summary>
-        Flat = 0,
-
-        /// <summary>
-        /// The value will go up
-        /// </summary>
-        Up = 1
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="data">The new data available</param>
+        /// <returns>The new alphas generated</returns>
+        IEnumerable<Alpha> Update(QCAlgorithmFramework algorithm, Slice data);
     }
 }

@@ -15,42 +15,42 @@
 
 using System;
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis.Functions
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Functions
 {
     /// <summary>
     /// Defines a scoring function that always returns 1 or 0.
     /// You're either right or you're wrong with this one :)
     /// </summary>
-    public class BinarySignalScoreFunction : ISignalScoreFunction
+    public class BinaryAlphaScoreFunction : IAlphaScoreFunction
     {
         /// <inheritdoc />
-        public double Evaluate(SignalAnalysisContext context, SignalScoreType scoreType)
+        public double Evaluate(AlphaAnalysisContext context, AlphaScoreType scoreType)
         {
-            var signal = context.Signal;
+            var alpha = context.Alpha;
 
-            var startingValue = context.InitialValues.Get(signal.Type);
-            var currentValue = context.CurrentValues.Get(signal.Type);
+            var startingValue = context.InitialValues.Get(alpha.Type);
+            var currentValue = context.CurrentValues.Get(alpha.Type);
 
-            switch (signal.Direction)
+            switch (alpha.Direction)
             {
-                case SignalDirection.Down:
+                case AlphaDirection.Down:
                     return currentValue < startingValue ? 1 : 0;
 
-                case SignalDirection.Flat:
+                case AlphaDirection.Flat:
                     // can't really do percent changes with zero
                     if (startingValue == 0) return currentValue == startingValue ? 1 : 0;
 
-                    // TODO : Re-evaluate flat predictions, potentially adding ISignal.Tolerance to say 'how flat'
+                    // TODO : Re-evaluate flat predictions, potentially adding IAlpha.Tolerance to say 'how flat'
                     var deltaPercent = Math.Abs(currentValue - startingValue)/startingValue;
-                    if (signal.PercentChange.HasValue)
+                    if (alpha.PercentChange.HasValue)
                     {
-                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(signal.PercentChange.Value) ? 1 : 0;
+                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(alpha.PercentChange.Value) ? 1 : 0;
                     }
 
                     // this is pretty much impossible, I suppose unless the ticks are large and/or volumes are small
                     return currentValue == startingValue ? 1 : 0;
 
-                case SignalDirection.Up:
+                case AlphaDirection.Up:
                     return currentValue > startingValue ? 1 : 0;
 
                 default:

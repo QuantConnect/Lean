@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -22,41 +21,41 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines a custom signal model that uses MACD crossovers. The signal line is
-    /// used to generate buy/sell signals if it's stronger than the bounce threshold.
-    /// If the signal is within the bounce threshold then a flat price signal is returned.
+    /// Defines a custom alpha model that uses MACD crossovers. The alpha line is
+    /// used to generate buy/sell alphas if it's stronger than the bounce threshold.
+    /// If the alpha is within the bounce threshold then a flat price alpha is returned.
     /// </summary>
-    public class MACDSignalModel : ISignalModel
+    public class MacdAlphaModel : IAlphaModel
     {
-        private readonly TimeSpan _signalPeriod;
+        private readonly TimeSpan _alphaPeriod;
         private readonly TimeSpan _consolidatorPeriod;
         private readonly decimal _bounceThresholdPercent;
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MACDSignalModel"/> class
+        /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
         /// </summary>
         /// <param name="consolidatorPeriod">The period of the MACD's input</param>
-        /// <param name="signalPeriod">The period assigned to generated signals</param>
-        /// <param name="bounceThresholdPercent">The percent change required in the signal to warrant an up/down signal</param>
-        public MACDSignalModel(TimeSpan consolidatorPeriod, TimeSpan signalPeriod, decimal bounceThresholdPercent)
+        /// <param name="alphaPeriod">The period assigned to generated alphas</param>
+        /// <param name="bounceThresholdPercent">The percent change required in the alpha to warrant an up/down alpha</param>
+        public MacdAlphaModel(TimeSpan consolidatorPeriod, TimeSpan alphaPeriod, decimal bounceThresholdPercent)
         {
-            _signalPeriod = signalPeriod;
+            _alphaPeriod = alphaPeriod;
             _consolidatorPeriod = consolidatorPeriod;
             _bounceThresholdPercent = Math.Abs(bounceThresholdPercent);
             _symbolData = new Dictionary<Symbol, SymbolData>();
         }
 
         /// <summary>
-        /// Determines a signal for each security based on it's current MACD signal
+        /// Determines a alpha for each security based on it's current MACD alpha
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
-        /// <returns>The new signals generated</returns>
-        public IEnumerable<Signal> Update(QCAlgorithmFramework algorithm, Slice data)
+        /// <returns>The new alphas generated</returns>
+        public IEnumerable<Alpha> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var sd in _symbolData.Values)
             {
@@ -65,25 +64,25 @@ namespace QuantConnect.Algorithm.Framework.Signals
                     continue;
                 }
 
-                var direction = SignalDirection.Flat;
-                var normalizedSignal = sd.MACD.Signal / sd.Security.Price;
-                if (normalizedSignal > _bounceThresholdPercent)
+                var direction = AlphaDirection.Flat;
+                var normalizedAlpha = sd.MACD.Signal / sd.Security.Price;
+                if (normalizedAlpha > _bounceThresholdPercent)
                 {
-                    direction = SignalDirection.Up;
+                    direction = AlphaDirection.Up;
                 }
-                else if (normalizedSignal < -_bounceThresholdPercent)
+                else if (normalizedAlpha < -_bounceThresholdPercent)
                 {
-                    direction = SignalDirection.Down;
+                    direction = AlphaDirection.Down;
                 }
 
-                var signal = new Signal(sd.Security.Symbol, SignalType.Price, direction, _signalPeriod);
-                if (signal.Equals(sd.PreviousSignal))
+                var alpha = new Alpha(sd.Security.Symbol, AlphaType.Price, direction, _alphaPeriod);
+                if (alpha.Equals(sd.PreviousAlpha))
                 {
                     continue;
                 }
 
-                sd.PreviousSignal = signal.Clone();
-                yield return signal;
+                sd.PreviousAlpha = alpha.Clone();
+                yield return alpha;
             }
         }
 
@@ -112,7 +111,7 @@ namespace QuantConnect.Algorithm.Framework.Signals
 
         class SymbolData
         {
-            public Signal PreviousSignal;
+            public Alpha PreviousAlpha;
 
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;

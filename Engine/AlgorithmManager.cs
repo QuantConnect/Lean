@@ -25,11 +25,11 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Server;
-using QuantConnect.Lean.Engine.Signals;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -130,10 +130,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
-        /// <param name="signals">Signal handler used to process algorithm generated signals</param>
+        /// <param name="alphas">Alpha handler used to process algorithm generated alphas</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, ISignalHandler signals, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
             //Initialize:
             _dataPointCount = 0;
@@ -334,8 +334,8 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
-                // poke the signal handler to allow processing of events on the algorithm's main thread
-                signals.ProcessSynchronousEvents();
+                // poke the alpha handler to allow processing of events on the algorithm's main thread
+                alphas.ProcessSynchronousEvents();
 
                 // process end of day delistings
                 ProcessDelistedSymbols(algorithm, delistings);

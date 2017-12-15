@@ -13,19 +13,19 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Provides a simple abstraction that returns a security's current price and volatility.
-    /// This facilitates testing by removing the dependency of IAlgorithm on the analysis components
+    /// Retrieves the registered scoring function for the specified alpha/score type
     /// </summary>
-    public interface ISecurityValuesProvider
+    public interface IAlphaScoreFunctionProvider
     {
         /// <summary>
-        /// Gets the current values for the specified symbol (price/volatility)
+        /// Gets the alpha scoring function for the specified alpha type and score type
         /// </summary>
-        /// <param name="symbol">The symbol to get price/volatility for</param>
-        /// <returns>The signal target values for the specified symbol</returns>
-        SecurityValues GetValues(Symbol symbol);
+        /// <param name="alphaType">The alpha's type</param>
+        /// <param name="scoreType">The scoring type</param>
+        /// <returns>A function to be used to compute alpha scores</returns>
+        IAlphaScoreFunction GetScoreFunction(AlphaType alphaType, AlphaScoreType scoreType);
     }
 }

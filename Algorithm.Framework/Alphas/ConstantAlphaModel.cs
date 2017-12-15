@@ -14,48 +14,46 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ISignalModel"/> that always returns the same signal for each security
+    /// Provides an implementation of <see cref="IAlphaModel"/> that always returns the same alpha for each security
     /// </summary>
-    public class ConstantSignalModel : ISignalModel
+    public class ConstantAlphaModel : IAlphaModel
     {
-        private readonly SignalType _type;
-        private readonly SignalDirection _direction;
+        private readonly AlphaType _type;
+        private readonly AlphaDirection _direction;
         private readonly TimeSpan _period;
         private readonly double? _percentChange;
         private readonly double? _confidence;
         private readonly HashSet<Security> _securities;
-        private readonly Dictionary<Symbol, DateTime> _signalTimeBySymbol;
+        private readonly Dictionary<Symbol, DateTime> _alphaTimeBySymbol;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantSignalModel"/> class
+        /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
         /// </summary>
-        /// <param name="type">The type of signal</param>
-        /// <param name="direction">The direction of the signal</param>
-        /// <param name="period">The period over which the signal with come to fruition</param>
-        public ConstantSignalModel(SignalType type, SignalDirection direction, TimeSpan period)
+        /// <param name="type">The type of alpha</param>
+        /// <param name="direction">The direction of the alpha</param>
+        /// <param name="period">The period over which the alpha with come to fruition</param>
+        public ConstantAlphaModel(AlphaType type, AlphaDirection direction, TimeSpan period)
             : this(type, direction, period, null, null)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantSignalModel"/> class
+        /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
         /// </summary>
-        /// <param name="type">The type of signal</param>
-        /// <param name="direction">The direction of the signal</param>
-        /// <param name="period">The period over which the signal with come to fruition</param>
+        /// <param name="type">The type of alpha</param>
+        /// <param name="direction">The direction of the alpha</param>
+        /// <param name="period">The period over which the alpha with come to fruition</param>
         /// <param name="percentChange">The predicted percent change</param>
-        /// <param name="confidence">The confidence in the signal</param>
-        public ConstantSignalModel(SignalType type, SignalDirection direction, TimeSpan period, double? percentChange, double? confidence)
+        /// <param name="confidence">The confidence in the alpha</param>
+        public ConstantAlphaModel(AlphaType type, AlphaDirection direction, TimeSpan period, double? percentChange, double? confidence)
         {
             _type = type;
             _direction = direction;
@@ -66,22 +64,22 @@ namespace QuantConnect.Algorithm.Framework.Signals
             _confidence = confidence;
 
             _securities = new HashSet<Security>();
-            _signalTimeBySymbol = new Dictionary<Symbol, DateTime>();
+            _alphaTimeBySymbol = new Dictionary<Symbol, DateTime>();
         }
 
         /// <summary>
-        /// Creates a constant signal for each security as specified via the constructor
+        /// Creates a constant alpha for each security as specified via the constructor
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
-        /// <returns>The new signals generated</returns>
-        public IEnumerable<Signal> Update(QCAlgorithmFramework algorithm, Slice data)
+        /// <returns>The new alphas generated</returns>
+        public IEnumerable<Alpha> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var security in _securities)
             {
-                if (ShouldEmitSignal(algorithm.UtcTime, security.Symbol))
+                if (ShouldEmitAlpha(algorithm.UtcTime, security.Symbol))
                 {
-                    yield return new Signal(security.Symbol, _type, _direction, _period, _percentChange, _confidence);
+                    yield return new Alpha(security.Symbol, _type, _direction, _period, _percentChange, _confidence);
                 }
             }
         }
@@ -95,29 +93,29 @@ namespace QuantConnect.Algorithm.Framework.Signals
         {
             NotifiedSecurityChanges.UpdateCollection(_securities, changes);
 
-            // this will allow the signal to be re-sent when the security re-joins the universe
+            // this will allow the alpha to be re-sent when the security re-joins the universe
             foreach (var removed in changes.RemovedSecurities)
             {
-                _signalTimeBySymbol.Remove(removed.Symbol);
+                _alphaTimeBySymbol.Remove(removed.Symbol);
             }
         }
 
-        private bool ShouldEmitSignal(DateTime utcTime, Symbol symbol)
+        private bool ShouldEmitAlpha(DateTime utcTime, Symbol symbol)
         {
             DateTime generatedTimeUtc;
-            if (_signalTimeBySymbol.TryGetValue(symbol, out generatedTimeUtc))
+            if (_alphaTimeBySymbol.TryGetValue(symbol, out generatedTimeUtc))
             {
-                // we previously emitted a signal for this symbol, check it's period to see
-                // if we should emit another signal
+                // we previously emitted a alpha for this symbol, check it's period to see
+                // if we should emit another alpha
                 if (utcTime - generatedTimeUtc < _period)
                 {
                     return false;
                 }
             }
 
-            // we either haven't emitted a signal for this symbol or the previous
-            // signal's period has expired, so emit a new signal now for this symbol
-            _signalTimeBySymbol[symbol] = utcTime;
+            // we either haven't emitted a alpha for this symbol or the previous
+            // alpha's period has expired, so emit a new alpha now for this symbol
+            _alphaTimeBySymbol[symbol] = utcTime;
             return true;
         }
     }

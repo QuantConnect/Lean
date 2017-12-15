@@ -14,10 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -46,20 +48,13 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            var symbols = new []
-            {
-                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-            };
 
             // set algorithm framework models
-            PortfolioSelection = new ManualPortfolioSelectionModel(symbols);
-            var bactestPeriod = EndDate.Date.AddDays(1) - StartDate;
-            Signal = new ConstantSignalModel(SignalType.Price, SignalDirection.Up, bactestPeriod);
+            PortfolioSelection = new ManualPortfolioSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA));
+            Alpha = new ConstantAlphaModel(AlphaType.Price, AlphaDirection.Up, TimeSpan.FromMinutes(20), 0.025, null);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
-
-            // these are the default values for Execution and RiskManagement models
-            //Execution = new ImmediateExecutionModel();
-            //RiskManagement = new NullRiskManagementModel();
+            Execution = new ImmediateExecutionModel();
+            RiskManagement = new Algorithm.Framework.Risk.NullRiskManagementModel();
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

@@ -17,34 +17,34 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines a collection of signals that were generated at the same time step
+    /// Defines a collection of alphas that were generated at the same time step
     /// </summary>
-    public class SignalCollection
+    public class AlphaCollection
     {
         /// <summary>
-        /// The utc date time the signals were generated
+        /// The utc date time the alphas were generated
         /// </summary>
         public DateTime DateTimeUtc { get; }
 
         /// <summary>
-        /// The generated signals
+        /// The generated alphas
         /// </summary>
-        public List<Signal> Signals { get; }
+        public List<Alpha> Alphas { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SignalCollection"/> class
+        /// Initializes a new instance of the <see cref="AlphaCollection"/> class
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
-        /// <param name="signals">The generated signals</param>
-        public SignalCollection(DateTime dateTimeUtc, IEnumerable<Signal> signals)
+        /// <param name="alphas">The generated alphas</param>
+        public AlphaCollection(DateTime dateTimeUtc, IEnumerable<Alpha> alphas)
         {
             DateTimeUtc = dateTimeUtc;
 
             // ensure we're keeping copies to avoid reference shenanigans
-            Signals = signals.Select(signal => signal.Clone()).ToList();
+            Alphas = alphas.Select(alpha => alpha.Clone()).ToList();
         }
     }
 }

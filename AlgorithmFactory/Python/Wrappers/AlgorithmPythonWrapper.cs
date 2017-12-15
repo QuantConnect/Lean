@@ -30,7 +30,7 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Signals;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -83,7 +83,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             // write events such that when the base handles an event it
                             // will also invoke event handlers defined on this instance
-                            _baseAlgorithm.SignalsGenerated += SignalsGenerated;
+                            _baseAlgorithm.AlphasGenerated += AlphasGenerated;
 
                             // Set pandas
                             _baseAlgorithm.SetPandasConverter();
@@ -450,9 +450,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Event fired when an algorithm generates a signal
+        /// Event fired when an algorithm generates a alpha
         /// </summary>
-        public event AlgorithmEvent<SignalCollection> SignalsGenerated;
+        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.

@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine
                 Thread threadTransactions = null;
                 Thread threadResults = null;
                 Thread threadRealTime = null;
-                Thread threadSignals = null;
+                Thread threadAlphas = null;
 
                 //-> Initialize messaging system
                 _systemHandlers.Notify.SetAuthentication(job);
@@ -114,8 +114,8 @@ namespace QuantConnect.Lean.Engine
                     // Set algorithm in ILeanManager
                     _systemHandlers.LeanManager.SetAlgorithm(algorithm);
 
-                    // initialize the signals handler with the algorithm instance
-                    _algorithmHandlers.Signals.Initialize(job, algorithm, _systemHandlers.Notify, _systemHandlers.Api);
+                    // initialize the alphas handler with the algorithm instance
+                    _algorithmHandlers.Alphas.Initialize(job, algorithm, _systemHandlers.Notify, _systemHandlers.Api);
 
                     // Initialize the brokerage
                     IBrokerageFactory factory;
@@ -155,8 +155,8 @@ namespace QuantConnect.Lean.Engine
 
                     // set this again now that we've actually added securities
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);
-                    // signal handler needs start/end dates to determine sample step sizes
-                    _algorithmHandlers.Signals.OnAfterAlgorithmInitialized(algorithm);
+                    // alpha handler needs start/end dates to determine sample step sizes
+                    _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
                     if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)
@@ -231,13 +231,13 @@ namespace QuantConnect.Lean.Engine
                     threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) { IsBackground = true, Name = "DataFeed Thread" };
                     threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) { IsBackground = true, Name = "Transaction Thread" };
                     threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) { IsBackground = true, Name = "RealTime Thread" };
-                    threadSignals = new Thread(() => _algorithmHandlers.Signals.Run()) {IsBackground = true, Name = "Signal Thread" };
+                    threadAlphas = new Thread(() => _algorithmHandlers.Alphas.Run()) {IsBackground = true, Name = "Alpha Thread" };
 
                     //Launch the data feed, result sending, and transaction models/handlers in separate threads.
                     threadFeed.Start(); // Data feed pushing data packets into thread bridge;
                     threadTransactions.Start(); // Transaction modeller scanning new order requests
                     threadRealTime.Start(); // RealTime scan time for time based events:
-                    threadSignals.Start(); // Signal thread for processing algorithm signals
+                    threadAlphas.Start(); // Alpha thread for processing algorithm alphas
 
                     // Result manager scanning message queue: (started earlier)
                     _algorithmHandlers.Results.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Globals.Version));
@@ -256,7 +256,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Signals, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Alphas, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {
@@ -366,7 +366,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.Transactions.Exit();
                     _algorithmHandlers.DataFeed.Exit();
                     _algorithmHandlers.RealTime.Exit();
-                    _algorithmHandlers.Signals.Exit();
+                    _algorithmHandlers.Alphas.Exit();
                 }
 
                 //Close result handler:
@@ -378,7 +378,7 @@ namespace QuantConnect.Lean.Engine
                     || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive)
                     || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
                     || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive)
-                    || (_algorithmHandlers.Signals != null && _algorithmHandlers.Signals.IsActive))
+                    || (_algorithmHandlers.Alphas != null && _algorithmHandlers.Alphas.IsActive))
                     && ts.ElapsedMilliseconds < 30*1000)
                 {
                     Thread.Sleep(100);
@@ -389,7 +389,7 @@ namespace QuantConnect.Lean.Engine
                 if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                 if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                 if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                if (threadSignals != null && threadSignals.IsAlive) threadSignals.Abort();
+                if (threadAlphas != null && threadAlphas.IsAlive) threadAlphas.Abort();
 
                 if (brokerage != null)
                 {

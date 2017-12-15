@@ -15,7 +15,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm.Framework.Signals;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -24,20 +24,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Provides an implementation of <see cref="IPortfolioConstructionModel"/> that gives equal weighting to all
     /// securities. The target percent holdings of each security is 1/N where N is the number of securities. For
-    /// signals of direction <see cref="SignalDirection.Up"/>, long targets are returned and for signals of direction
-    /// <see cref="SignalDirection.Down"/>, short targets are returned.
+    /// alphas of direction <see cref="AlphaDirection.Up"/>, long targets are returned and for alphas of direction
+    /// <see cref="AlphaDirection.Down"/>, short targets are returned.
     /// </summary>
     public class SimplePortfolioConstructionModel : IPortfolioConstructionModel
     {
         private readonly HashSet<Security> _securities = new HashSet<Security>();
 
         /// <summary>
-        /// Create portfolio targets from the specified signals
+        /// Create portfolio targets from the specified alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="signals">The signals to create portoflio targets from</param>
+        /// <param name="alphas">The alphas to create portoflio targets from</param>
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Signal> signals)
+        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Alpha> alphas)
         {
             if (_securities.Count == 0)
             {
@@ -46,8 +46,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // give equal weighting to each security
             var percent = 1m / _securities.Count;
-            return signals.Select(signal =>
-                PortfolioTarget.Percent(algorithm, signal.Symbol, (int) signal.Direction * percent)
+            return alphas.Select(alpha =>
+                PortfolioTarget.Percent(algorithm, alpha.Symbol, (int) alpha.Direction * percent)
             );
         }
 

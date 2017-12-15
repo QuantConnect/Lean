@@ -13,21 +13,26 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Signals.Analysis.Functions;
-
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis.Providers
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Default implementation of <see cref="ISignalScoreFunctionProvider"/> always returns the <see cref="BinarySignalScoreFunction"/>
+    /// Specifies the predicted direction for a alpha (price/volatility)
     /// </summary>
-    public class DefaultSignalScoreFunctionProvider : ISignalScoreFunctionProvider
+    public enum AlphaDirection
     {
-        private static readonly BinarySignalScoreFunction Function = new BinarySignalScoreFunction();
+        /// <summary>
+        /// The value will go down
+        /// </summary>
+        Down = -1,
 
-        /// <inheritdoc />
-        public ISignalScoreFunction GetScoreFunction(SignalType signalType, SignalScoreType scoreType)
-        {
-            return Function;
-        }
+        /// <summary>
+        /// The value will stay flat
+        /// </summary>
+        Flat = 0,
+
+        /// <summary>
+        /// The value will go up
+        /// </summary>
+        Up = 1
     }
 }

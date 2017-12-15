@@ -37,10 +37,10 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Collections.Concurrent;
-using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using System.Net;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm
 {
@@ -159,9 +159,9 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Event fired when the algorithm generates signals
+        /// Event fired when the algorithm generates alphas
         /// </summary>
-        public event AlgorithmEvent<SignalCollection> SignalsGenerated;
+        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
 
         /// <summary>
         /// Security collection is an array of the security objects such as Equities and FOREX. Securities data
@@ -1892,12 +1892,12 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="SignalsGenerated"/> event
+        /// Event invocator for the <see cref="AlphasGenerated"/> event
         /// </summary>
-        /// <param name="signals">The collection of signals generaed at the current time step</param>
-        protected void OnSignalsGenerated(IEnumerable<Signal> signals)
+        /// <param name="alphas">The collection of alphas generaed at the current time step</param>
+        protected void OnAlphasGenerated(IEnumerable<Alpha> alphas)
         {
-            SignalsGenerated?.Invoke(this, new SignalCollection(UtcTime, signals));
+            AlphasGenerated?.Invoke(this, new AlphaCollection(UtcTime, alphas));
         }
     }
 }

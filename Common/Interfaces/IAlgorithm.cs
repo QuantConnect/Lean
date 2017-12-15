@@ -25,7 +25,7 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Concurrent;
-using QuantConnect.Algorithm.Framework.Signals;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
@@ -46,9 +46,9 @@ namespace QuantConnect.Interfaces
     public interface IAlgorithm
     {
         /// <summary>
-        /// Event fired when an algorithm generates a signal
+        /// Event fired when an algorithm generates a alpha
         /// </summary>
-        event AlgorithmEvent<SignalCollection> SignalsGenerated;
+        event AlgorithmEvent<AlphaCollection> AlphasGenerated;
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.

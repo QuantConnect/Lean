@@ -13,23 +13,21 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using QuantConnect.Data;
-
-namespace QuantConnect.Algorithm.Framework.Signals
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Algorithm framework model that produces signals
+    /// Specifies the type of alpha
     /// </summary>
-    public interface ISignalModel : INotifiedSecurityChanges
+    public enum AlphaType
     {
         /// <summary>
-        /// Updates this signal model with the latest data from the algorithm.
-        /// This is called each time the algorithm receives data for subscribed securities
+        /// The alpha is for a security's price
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="data">The new data available</param>
-        /// <returns>The new signals generated</returns>
-        IEnumerable<Signal> Update(QCAlgorithmFramework algorithm, Slice data);
+        Price,
+
+        /// <summary>
+        /// The alpha is for a security's price volatility
+        /// </summary>
+        Volatility
     }
 }

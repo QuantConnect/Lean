@@ -70,9 +70,9 @@
     <Compile Include="Selection\IPortfolioSelectionModel.cs" />
     <Compile Include="Selection\ManualPortfolioSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
-    <Compile Include="Signals\ConstantSignalModel.cs" />
-    <Compile Include="Signals\MACDSignalModel.cs" />
-    <Compile Include="Signals\ISignalModel.cs" />
+    <Compile Include="Alphas\ConstantAlphaModel.cs" />
+    <Compile Include="Alphas\MacdAlphaModel.cs" />
+    <Compile Include="Alphas\IAlphaModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

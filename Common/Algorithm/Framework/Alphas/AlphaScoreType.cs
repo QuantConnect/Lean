@@ -11,23 +11,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines a function used to determine how correct a particular signal is.
-    /// The result of calling <see cref="Evaluate"/> is expected to be within the range [0, 1]
-    /// where 0 is completely wrong and 1 is completely right
+    /// Defines a specific type of score for a alpha
     /// </summary>
-    public interface ISignalScoreFunction
+    public enum AlphaScoreType
     {
         /// <summary>
-        /// Evaluates the score of the signal within the context
+        /// Directional accuracy
         /// </summary>
-        /// <param name="context">The signal's analysis context</param>
-        /// <param name="scoreType">The score type to be evaluated</param>
-        /// <returns>The signal's current score</returns>
-        double Evaluate(SignalAnalysisContext context, SignalScoreType scoreType);
+        Direction,
+
+        /// <summary>
+        /// Magnitude accuracy
+        /// </summary>
+        Magnitude
     }
 }

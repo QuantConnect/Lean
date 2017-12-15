@@ -16,33 +16,33 @@
 using System;
 using System.Collections.Generic;
 
-namespace QuantConnect.Algorithm.Framework.Signals.Analysis
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Defines a context for performing analysis on a single signal
+    /// Defines a context for performing analysis on a single alpha
     /// </summary>
-    public class SignalAnalysisContext
+    public class AlphaAnalysisContext
     {
         private DateTime _previousEvaluationTimeUtc;
         private readonly Dictionary<string, object> _contextStorage;
 
         /// <summary>
-        /// Gets the symbol the signal is for
+        /// Gets the symbol the alpha is for
         /// </summary>
-        public Symbol Symbol => Signal.Symbol;
+        public Symbol Symbol => Alpha.Symbol;
 
         /// <summary>
-        /// Gets the signal being analyzed
+        /// Gets the alpha being analyzed
         /// </summary>
-        public Signal Signal { get; }
+        public Alpha Alpha { get; }
 
         /// <summary>
-        /// Gets the signal's current score
+        /// Gets the alpha's current score
         /// </summary>
-        public SignalScore Score => Signal.Score;
+        public AlphaScore Score => Alpha.Score;
 
         /// <summary>
-        /// Gets the period over which the signal will be analyzed
+        /// Gets the period over which the alpha will be analyzed
         /// </summary>
         public TimeSpan AnalysisPeriod { get; }
 
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         public DateTime AnalysisEndTimeUtc { get; }
 
         /// <summary>
-        /// Gets the initial values. These are values of price/volatility at the time the signal was generated
+        /// Gets the initial values. These are values of price/volatility at the time the alpha was generated
         /// </summary>
         public SecurityValues InitialValues { get; }
 
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         /// <summary>
         /// Percentage through the analysis period
         /// </summary>
-        public double NormalizedTime => Time.NormalizeInstantWithinRange(Signal.GeneratedTimeUtc, CurrentValues.TimeUtc, AnalysisPeriod);
+        public double NormalizedTime => Time.NormalizeInstantWithinRange(Alpha.GeneratedTimeUtc, CurrentValues.TimeUtc, AnalysisPeriod);
 
         /// <summary>
         /// Percentage of the current time step w.r.t analysis period
@@ -72,22 +72,22 @@ namespace QuantConnect.Algorithm.Framework.Signals.Analysis
         public double NormalizedTimeStep => Time.NormalizeTimeStep(AnalysisPeriod, CurrentValues.TimeUtc - _previousEvaluationTimeUtc);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SignalAnalysisContext"/> class
+        /// Initializes a new instance of the <see cref="AlphaAnalysisContext"/> class
         /// </summary>
-        /// <param name="signal">The signal to be analyzed</param>
-        /// <param name="initialValues">The initial security values from when the signal was generated</param>
-        /// <param name="analysisPeriod">The period over which to perform analysis of the signal. This should be
-        /// greater than or equal to <see cref="Signals.Signal.Period"/>. Specify null for default, signal.Period</param>
-        public SignalAnalysisContext(Signal signal, SecurityValues initialValues, TimeSpan analysisPeriod)
+        /// <param name="alpha">The alpha to be analyzed</param>
+        /// <param name="initialValues">The initial security values from when the alpha was generated</param>
+        /// <param name="analysisPeriod">The period over which to perform analysis of the alpha. This should be
+        /// greater than or equal to <see cref="Alpha.Period"/>. Specify null for default, alpha.Period</param>
+        public AlphaAnalysisContext(Alpha alpha, SecurityValues initialValues, TimeSpan analysisPeriod)
         {
-            Signal = signal;
+            Alpha = alpha;
             AnalysisPeriod = analysisPeriod;
             _contextStorage = new Dictionary<string, object>();
 
             CurrentValues = InitialValues = initialValues;
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
-            AnalysisEndTimeUtc = Signal.GeneratedTimeUtc + analysisPeriod;
+            AnalysisEndTimeUtc = Alpha.GeneratedTimeUtc + analysisPeriod;
         }
 
         /// <summary>

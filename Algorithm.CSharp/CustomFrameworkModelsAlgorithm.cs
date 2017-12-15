@@ -17,9 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This example algorithm defines its own custom coarse/fine fundamental selection model
-    /// combined with the MACD signal model.
+    /// combined with the MACD alpha model.
     /// </summary>
     public class CustomFrameworkModelsAlgorithm : QCAlgorithmFramework
     {
@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
 
             PortfolioSelection = new CustomFundamentalPortfolioSelectionModel();
-            Signal = new MACDSignalModel(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30), 0.01m);
+            Alpha = new MacdAlphaModel(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30), 0.01m);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
         }
 

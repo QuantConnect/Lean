@@ -15,11 +15,11 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Algorithm.Framework.Signals;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
@@ -41,9 +41,9 @@ namespace QuantConnect.Algorithm.Framework
         public IPortfolioSelectionModel PortfolioSelection { get; set; }
 
         /// <summary>
-        /// Gets or sets the signal model
+        /// Gets or sets the alpha model
         /// </summary>
-        public ISignalModel Signal { get; set; }
+        public IAlphaModel Alpha { get; set; }
 
         /// <summary>
         /// Gets or sets the portoflio construction model
@@ -92,19 +92,19 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public sealed override void OnFrameworkData(Slice slice)
         {
-            // generate, timestamp and emit signals
-            var signals = Signal.Update(this, slice)
-                .Select(signal => { signal.GeneratedTimeUtc = UtcTime; return signal; })
+            // generate, timestamp and emit alphas
+            var alphas = Alpha.Update(this, slice)
+                .Select(alpha => { alpha.GeneratedTimeUtc = UtcTime; return alpha; })
                 .ToList();
 
-            if (signals.Count != 0)
+            if (alphas.Count != 0)
             {
-                // only fire signals generated event if we actually have signals
-                OnSignalsGenerated(signals);
+                // only fire alphas generated event if we actually have alphas
+                OnAlphasGenerated(alphas);
             }
 
-            // construct portfolio targets from signals
-            var targets = PortfolioConstruction.CreateTargets(this, signals);
+            // construct portfolio targets from alphas
+            var targets = PortfolioConstruction.CreateTargets(this, alphas);
 
             // execute on the targets and manage risk
             Execution.Execute(this, targets);
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="changes">Security additions/removals for this time step</param>
         public sealed override void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
-            Signal.OnSecuritiesChanged(this, changes);
+            Alpha.OnSecuritiesChanged(this, changes);
             PortfolioConstruction.OnSecuritiesChanged(this, changes);
             Execution.OnSecuritiesChanged(this, changes);
             RiskManagement.OnSecuritiesChanged(this, changes);
@@ -133,18 +133,18 @@ namespace QuantConnect.Algorithm.Framework
         }
 
         /// <summary>
-        /// Sets the signal model
+        /// Sets the alpha model
         /// </summary>
-        /// <param name="signal">Model defining trading signals</param>
-        public void SetSignal(ISignalModel signal)
+        /// <param name="alpha">Model that generates alpha</param>
+        public void SetAlpha(IAlphaModel alpha)
         {
-            Signal = signal;
+            Alpha = alpha;
         }
 
         /// <summary>
         /// Sets the portfolio construction model
         /// </summary>
-        /// <param name="portfolioConstruction">Model defining how to build a portoflio from signals</param>
+        /// <param name="portfolioConstruction">Model defining how to build a portoflio from alphas</param>
         public void SetPortfolioConstruction(IPortfolioConstructionModel portfolioConstruction)
         {
             PortfolioConstruction = portfolioConstruction;
@@ -174,9 +174,9 @@ namespace QuantConnect.Algorithm.Framework
             {
                 throw new Exception("Framework algorithms must specify a portfolio selection model using the 'PortfolioSelection' property.");
             }
-            if (Signal == null)
+            if (Alpha == null)
             {
-                throw new Exception("Framework algorithms must specify a signal model using the 'Signal' property.");
+                throw new Exception("Framework algorithms must specify a alpha model using the 'Alpha' property.");
             }
             if (PortfolioConstruction == null)
             {

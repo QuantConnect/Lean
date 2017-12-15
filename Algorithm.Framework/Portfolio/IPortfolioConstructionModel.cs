@@ -14,7 +14,7 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Signals;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -24,11 +24,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public interface IPortfolioConstructionModel : INotifiedSecurityChanges
     {
         /// <summary>
-        /// Create portfolio targets from the specified signals
+        /// Create portfolio targets from the specified alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="signals">The signals to create portoflio targets from</param>
+        /// <param name="alphas">The alphas to create portoflio targets from</param>
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Signal> signals);
+        IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Alpha> alphas);
     }
 }
