@@ -153,6 +153,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
+    <Compile Include="GDAXDownloader\Program.cs" />
+    <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
@@ -197,6 +200,8 @@
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
     <Compile Include="KaikoDataConverter\Program.cs" />
+    <Compile Include="KrakenDataDownloader\KrakenDataDownloader.cs" />
+    <Compile Include="KrakenDataDownloader\Program.cs" />
     <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataReader.cs" />
     <Compile Include="LeanDataWriter.cs" />
@@ -280,7 +285,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

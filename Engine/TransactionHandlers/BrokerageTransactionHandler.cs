@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Boolean flag indicating the Run thread method is busy. 
+        /// Boolean flag indicating the Run thread method is busy.
         /// False indicates it is completely finished processing and ready to be terminated.
         /// </summary>
         public bool IsActive { get; private set; }
@@ -186,7 +186,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public OrderTicket AddOrder(SubmitOrderRequest request)
         {
             var response = !_algorithm.IsWarmingUp
-                ? OrderResponse.Success(request) 
+                ? OrderResponse.Success(request)
                 : OrderResponse.WarmingUp(request);
 
             request.SetResponse(response);
@@ -372,7 +372,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // this function can be invoked by brokerages when getting open orders, guard against null ref
             if (_orders == null) return null;
-            
+
             Order order;
             return _orders.TryGetValue(orderId, out order) ? order : null;
         }
@@ -386,7 +386,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // this function can be invoked by brokerages when getting open orders, guard against null ref
             if (_orders == null) return null;
-            
+
             var order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
             return order != null ? order.Clone() : null;
         }
@@ -562,7 +562,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         var delta = cash.Amount - balanceCash.Amount;
                         if (Math.Abs(_algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > 5)
                         {
-                            // log the delta between 
+                            // log the delta between
                             Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Symbol,
                                 delta.ToString("0.00"));
                         }
@@ -588,7 +588,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // we want to make sure this is a good value, so check for any recent fills
                 if (TimeSinceLastFill <= TimeSpan.FromSeconds(20))
                 {
-                    // this will cause us to come back in and reset cash again until we 
+                    // this will cause us to come back in and reset cash again until we
                     // haven't processed a fill for +- 10 seconds of the set cash time
                     _syncedLiveBrokerageCashToday = false;
                     Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Unverified cash sync - resync required.");
@@ -740,7 +740,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to place order"));
                 return response;
             }
-            
+
             order.Status = OrderStatus.Submitted;
             return OrderResponse.Success(request);
         }
@@ -757,7 +757,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error("BrokerageTransactionHandler.HandleUpdateOrderRequest(): Unable to update order with ID " + request.OrderId);
                 return OrderResponse.UnableToFindOrder(request);
             }
-            
+
             if (!CanUpdateOrder(order))
             {
                 return OrderResponse.InvalidStatus(request, order);
@@ -798,7 +798,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error(err);
                 orderUpdated = false;
             }
-            
+
             if (!orderUpdated)
             {
                 // we failed to update the order for some reason
@@ -898,7 +898,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.UtcNow.Ticks);
-                
+
                 // check if the fill currency and the order currency match the symbol currency
                 var security = _algorithm.Securities[fill.Symbol];
                 // Bug in FXCM API flipping the currencies -- disabling for now. 5/17/16 RFB
@@ -988,7 +988,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // informing user algorithm that option position has been assigned
             if (fill.IsAssignment)
             {
-                fill.Message = string.Format("Option Assignment: {0}", fill.Symbol.Value);
                 _algorithm.OnAssignmentOrderEvent(fill);
             }
         }

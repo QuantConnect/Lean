@@ -34,14 +34,14 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private PandasConverter _converter;
+        public PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
         /// Sets pandas converter
         /// </summary>
-        public void SetPandas()
+        public void SetPandasConverter()
         {
-            _converter = new PandasConverter();
+            PandasConverter = new PandasConverter();
         }
 
         /// <summary>
@@ -51,12 +51,11 @@ namespace QuantConnect.Algorithm
         /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
-        /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
         {
-            AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
         }
-
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
@@ -67,9 +66,10 @@ namespace QuantConnect.Algorithm
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -81,7 +81,8 @@ namespace QuantConnect.Algorithm
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
@@ -94,6 +95,7 @@ namespace QuantConnect.Algorithm
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
+            return security;
         }
 
         /// <summary>
@@ -507,7 +509,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, periods, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -523,7 +525,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, span, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
         /// <summary>
@@ -539,7 +541,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, start, end, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
         /// <summary>
@@ -566,7 +568,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, config, start, end, resolution);
             });
 
-            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
 
         /// <summary>
@@ -596,7 +598,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
-            return _converter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
 
         /// <summary>
@@ -636,7 +638,7 @@ namespace QuantConnect.Algorithm
             }
 
             var request = CreateHistoryRequest(security, config, start, end, resolution);
-            return _converter.GetDataFrame(History(request).Memoize());
+            return PandasConverter.GetDataFrame(History(request).Memoize());
         }
 
         /// <summary>
@@ -722,6 +724,43 @@ namespace QuantConnect.Algorithm
             }
 
             SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
+        }
+
+        /// <summary>
+        /// Downloads the requested resource as a <see cref="string"/>.
+        /// The resource to download is specified as a <see cref="string"/> containing the URI.
+        /// </summary>
+        /// <param name="address">A string containing the URI to download</param>
+        /// <param name="headers">Defines header values to add to the request</param>
+        /// <param name="userName">The user name associated with the credentials</param>
+        /// <param name="password">The password for the user name associated with the credentials</param>
+        /// <returns>The requested resource as a <see cref="string"/></returns>
+        public string Download(string address, PyObject headers = null, string userName = null, string password = null)
+        {
+            var dict = new Dictionary<string, string>();
+
+            if (headers != null)
+            {
+                using (Py.GIL())
+                {
+                    // In python algorithms, headers must be a python dictionary
+                    // In order to convert it into a C# Dictionary
+                    if (PyDict.IsDictType(headers))
+                    {
+                        foreach (PyObject pyKey in headers)
+                        {
+                            var key = (string)pyKey.AsManagedObject(typeof(string));
+                            var value = (string)headers.GetItem(pyKey).AsManagedObject(typeof(string));
+                            dict.Add(key, value);
+                        }
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"QCAlgorithm.Fetch(): Invalid argument. {headers.Repr()} is not a dict");
+                    }
+                }
+            }
+            return Download(address, dict, userName, password);
         }
 
         /// <summary>

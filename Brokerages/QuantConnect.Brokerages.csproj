@@ -181,11 +181,14 @@
     <Compile Include="Fxcm\FxcmBrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmSymbolMapper.cs" />
     <Compile Include="GDAX\AuthenticationToken.cs" />
+    <Compile Include="GDAX\BestBidAskUpdatedEventArgs.cs" />
     <Compile Include="GDAX\GDAXBrokerage.Utility.cs" />
     <Compile Include="GDAX\GDAXBrokerage.cs" />
     <Compile Include="GDAX\GDAXBrokerageFactory.cs" />
+    <Compile Include="GDAX\GDAXDataQueueHandler.cs" />
     <Compile Include="GDAX\GDAXFill.cs" />
     <Compile Include="GDAX\GDAXBrokerage.Messaging.cs" />
+    <Compile Include="GDAX\OrderBook.cs" />
     <Compile Include="IWebSocket.cs" />
     <Compile Include="GDAX\Messages.cs" />
     <Compile Include="WebSocketError.cs" />

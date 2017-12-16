@@ -167,6 +167,128 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void HandlesTradeTicks()
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.SPY;
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i => new Tick(symbol, $"1440{i:D2}00,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            dynamic dataFrame = converter.GetDataFrame(rawBars);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                Assert.IsTrue(subDataFrame.get("askprice") == null);
+                Assert.IsTrue(subDataFrame.get("exchange") != null);
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].lastprice.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].LastPrice, value);
+                }
+            }
+
+            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            var history = GetHistory(symbol, Resolution.Tick, rawBars);
+            dataFrame = converter.GetDataFrame(history);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                Assert.IsTrue(subDataFrame.get("askprice") == null);
+                Assert.IsTrue(subDataFrame.get("exchange") != null);
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].lastprice.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].LastPrice, value);
+                }
+            }
+        }
+
+        [Test]
+        public void HandlesQuoteTicks()
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.EURUSD;
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i => new Tick(DateTime.UtcNow.AddMilliseconds(100 * i), symbol, 0.99m, 1.01m))
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            dynamic dataFrame = converter.GetDataFrame(rawBars);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                Assert.IsTrue(subDataFrame.get("askprice") != null);
+                Assert.IsTrue(subDataFrame.get("exchange") == null);
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].lastprice.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].LastPrice, value);
+                }
+            }
+
+            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            var history = GetHistory(symbol, Resolution.Tick, rawBars);
+            dataFrame = converter.GetDataFrame(history);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                Assert.IsTrue(subDataFrame.get("askprice") != null);
+                Assert.IsTrue(subDataFrame.get("exchange") == null);
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].askprice.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].AskPrice, value);
+                }
+            }
+        }
+
+        [Test]
         public void HandlesCustomDataBars()
         {
             var converter = new PandasConverter();

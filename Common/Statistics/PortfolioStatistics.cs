@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -132,9 +132,9 @@ namespace QuantConnect.Statistics
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
-            List<double> listPerformance, 
-            List<double> listBenchmark, 
-            decimal startingCapital, 
+            List<double> listPerformance,
+            List<double> listBenchmark,
+            decimal startingCapital,
             int tradingDaysPerYear = 252)
         {
             if (startingCapital == 0) return;
@@ -166,28 +166,28 @@ namespace QuantConnect.Statistics
             AverageLossRate = totalLosses == 0 ? 0 : totalLoss / totalLosses;
             ProfitLossRatio = AverageLossRate == 0 ? 0 : AverageWinRate / Math.Abs(AverageLossRate);
 
-            WinRate = profitLoss.Count == 0 ? 0 : (decimal)totalWins / profitLoss.Count;
-            LossRate = profitLoss.Count == 0 ? 0 : (decimal)totalLosses / profitLoss.Count;
+            WinRate = profitLoss.Count == 0 ? 0 : (decimal) totalWins / profitLoss.Count;
+            LossRate = profitLoss.Count == 0 ? 0 : (decimal) totalLosses / profitLoss.Count;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
-            if (profitLoss.Count > 0)
+            if (startingCapital != 0)
             {
-                TotalNetProfit = (equity.Values.LastOrDefault() / startingCapital) - 1;
+                TotalNetProfit = equity.Values.LastOrDefault() / startingCapital - 1;
             }
 
-            var fractionOfYears = (decimal)(equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays / 365;
+            var fractionOfYears = (decimal) (equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays / 365;
             CompoundingAnnualReturn = CompoundingAnnualPerformance(startingCapital, equity.Values.LastOrDefault(), fractionOfYears);
 
             Drawdown = DrawdownPercent(equity, 3);
 
             AnnualVariance = GetAnnualVariance(listPerformance, tradingDaysPerYear);
-            AnnualStandardDeviation = (decimal)Math.Sqrt((double)AnnualVariance);
+            AnnualStandardDeviation = (decimal) Math.Sqrt((double) AnnualVariance);
 
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - RiskFreeRate) / AnnualStandardDeviation;
 
             var benchmarkVariance = listBenchmark.Variance();
-            Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal)(listPerformance.Covariance(listBenchmark) / benchmarkVariance);
+            Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
             Alpha = Beta == 0 ? 0 : annualPerformance - (RiskFreeRate + Beta * (GetAnnualPerformance(listBenchmark, tradingDaysPerYear) - RiskFreeRate));
 

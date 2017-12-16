@@ -18,9 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -32,7 +30,7 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Diagnostics;
-using System.IO;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -338,7 +336,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
-                var completeResult = new BacktestResult(Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), runtimeStatistics, new Dictionary<string, AlgorithmPerformance>());
+                var completeResult = new BacktestResult(_algorithm.IsFrameworkAlgorithm, Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), runtimeStatistics, new Dictionary<string, AlgorithmPerformance>());
                 var complete = new BacktestResultPacket(_job, completeResult, progress);
 
                 if (DateTime.Now > _nextS3Update)
@@ -373,17 +371,21 @@ namespace QuantConnect.Lean.Engine.Results
                 //Don't add packet if the series is empty:
                 if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
 
-                splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Charts = new Dictionary<string, Chart>()
+                splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult
                 {
-                    {chart.Name,chart}
-                }  }, progress));
+                    IsFrameworkAlgorthm = _algorithm.IsFrameworkAlgorithm,
+                    Charts = new Dictionary<string, Chart>()
+                    {
+                        {chart.Name, chart}
+                    }
+                }, progress));
             }
 
             // Add the orders into the charting packet:
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, progress));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorthm = _algorithm.IsFrameworkAlgorithm, Orders = deltaOrders }, progress));
 
             //Add any user runtime statistics into the backtest.
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { RuntimeStatistics = runtimeStatistics }, progress));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorthm = _algorithm.IsFrameworkAlgorithm, RuntimeStatistics = runtimeStatistics }, progress));
 
             return splitPackets;
         }
@@ -433,9 +435,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="orders">Collection of orders from the algorithm</param>
         /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
         /// <param name="holdings">Current holdings state for the algorithm</param>
+        /// <param name="cashbook">Cashbook for the holdingss</param>
         /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
         /// <param name="banner">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner)
+        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> banner)
         {
             try
             {
@@ -453,8 +456,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket((BacktestNodePacket) job,
-                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
-                    , 1m)
+                    new BacktestResult(_algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance), 1m)
                 {
                     ProcessingTime = (DateTime.Now - _startTime).TotalSeconds,
                     DateFinished = DateTime.Now,
@@ -491,7 +493,9 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
 
             //Setup the sampling periods:
-            _jobDays = Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish);
+            _jobDays = Algorithm.Securities.Count > 0
+                ? Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish)
+                : Convert.ToInt32((_job.PeriodFinish.Date - _job.PeriodStart.Date).TotalDays) + 1;
 
             //Setup Debug Messaging:
             _debugMessageMax = Convert.ToInt32(10 * _jobDays);

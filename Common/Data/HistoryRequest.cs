@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ namespace QuantConnect.Data
         public DateTime StartTimeUtc { get; set; }
 
         /// <summary>
-        /// Gets the end time of the request. 
+        /// Gets the end time of the request.
         /// </summary>
         public DateTime EndTimeUtc { get; set; }
 
@@ -73,7 +73,7 @@ namespace QuantConnect.Data
         public DateTimeZone DataTimeZone { get; set; }
 
         /// <summary>
-        /// Gets the time zone of the time stamps on the raw input data
+        /// TickType of the history request
         /// </summary>
         public TickType TickType { get; set; }
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Data
         /// <param name="isCustomData">True for custom user data, false for normal QC data</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         /// <param name="tickType">The tick type used to created the <see cref="SubscriptionDataConfig"/> for the retrieval of history data</param>
-        public HistoryRequest(DateTime startTimeUtc, 
+        public HistoryRequest(DateTime startTimeUtc,
             DateTime endTimeUtc,
             Type dataType,
             Symbol symbol,

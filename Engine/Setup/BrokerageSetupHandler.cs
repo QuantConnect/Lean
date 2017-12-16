@@ -195,6 +195,9 @@ namespace QuantConnect.Lean.Engine.Setup
                         // set the option chain provider
                         algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new LiveOptionChainProvider()));
 
+                        // set the future chain provider
+                        algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new LiveFutureChainProvider()));
+
                         // If we're going to receive market data from IB,
                         // set the default subscription limit to 100,
                         // algorithms can override this setting in the Initialize method
