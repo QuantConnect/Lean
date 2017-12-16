@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Algorithm.Framework.Signals import *
+from QuantConnect.Algorithm.Framework.Alphas import *
 import numpy as np
 
 ### <summary>
@@ -54,13 +54,14 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithmFramework):
         symbols = [ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]
 
         # set algorithm framework models
-        self.PortfolioSelection = ManualPortfolioSelectionModel(symbols)
-        self.Signal = ConstantSignalModel(SignalType.Price, Direction.Up)
+        self.PortfolioSelection    = ManualPortfolioSelectionModel(symbols)
+        self.Alpha                 = ConstantAlphaModel(AlphaType.Price, AlphaDirection.Up, TimeSpan.FromMinutes(20), 0.025, None)
         self.PortfolioConstruction = SimplePortfolioConstructionModel()
 
         # these are the default values for Execution and RiskManagement models
         #self.Execution = ImmediateExecutionModel()
         #self.RiskManagement = NullRiskManagementModel()
+        
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
     def OnOrderEvent(self, orderEvent):
