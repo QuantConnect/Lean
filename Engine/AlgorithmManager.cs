@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -128,12 +129,11 @@ namespace QuantConnect.Lean.Engine
         /// <param name="transactions">Transaction manager object</param>
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
-        /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
-        /// <param name="systemHandlersServer"></param>
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
+        /// <param name="alphas">Alpha handler used to process algorithm generated alphas</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
             //Initialize:
             _dataPointCount = 0;
@@ -334,6 +334,9 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
+                // poke the alpha handler to allow processing of events on the algorithm's main thread
+                alphas.ProcessSynchronousEvents();
+
                 // process end of day delistings
                 ProcessDelistedSymbols(algorithm, delistings);
 
@@ -415,6 +418,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         algorithm.OnSecuritiesChanged(timeSlice.SecurityChanges);
+                        algorithm.OnFrameworkSecuritiesChanged(timeSlice.SecurityChanges);
                     }
                     catch (Exception err)
                     {
@@ -574,6 +578,7 @@ namespace QuantConnect.Lean.Engine
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
                         algorithm.OnData(timeSlice.Slice);
+                        algorithm.OnFrameworkData(timeSlice.Slice);
                     }
                 }
                 catch (Exception err)

@@ -40,6 +40,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using System.Net;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm
 {
@@ -158,6 +159,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Event fired when the algorithm generates alphas
+        /// </summary>
+        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+
+        /// <summary>
         /// Security collection is an array of the security objects such as Equities and FOREX. Securities data
         /// manages the properties of tradeable assets such as price, open and close time and holdings information.
         /// </summary>
@@ -231,6 +237,14 @@ namespace QuantConnect.Algorithm
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Returns false since algorithms derived from this do not use the framework
+        /// </summary>
+        public virtual bool IsFrameworkAlgorithm
+        {
+            get { return false; }
         }
 
         /// <summary>
@@ -483,7 +497,7 @@ namespace QuantConnect.Algorithm
         /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
         /// the data gather in the Initialize method
         /// </summary>
-        public void PostInitialize()
+        public virtual void PostInitialize()
         {
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
@@ -683,11 +697,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        public virtual void OnFrameworkData(Slice slice)
+        {
+            // NOP - overriden by QCAlgorithmFramework
+        }
+
+        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
+        }
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public virtual void OnFrameworkSecuritiesChanged(SecurityChanges changes)
+        {
+            // NOP - overriden by QCAlgorithmFramework
         }
 
         // <summary>
@@ -1865,6 +1897,15 @@ namespace QuantConnect.Algorithm
                 }
                 return client.DownloadString(address);
             }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="AlphasGenerated"/> event
+        /// </summary>
+        /// <param name="alphas">The collection of alphas generaed at the current time step</param>
+        protected void OnAlphasGenerated(IEnumerable<Alpha> alphas)
+        {
+            AlphasGenerated?.Invoke(this, new AlphaCollection(UtcTime, alphas));
         }
     }
 }

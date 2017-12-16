@@ -26,6 +26,16 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         private readonly Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
+        private static readonly HashSet<string> ReservedChartNames = new HashSet<string>
+        {
+            "Strategy Equity",
+            "Equity",
+            "Daily Performance",
+            "Meta",
+            "Alpha",
+            "Alpha Count",
+            "Alpha Asset Breakdown"
+        };
 
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
@@ -57,7 +67,6 @@ namespace QuantConnect.Algorithm
             //By default plot to the primary chart:
             Plot("Strategy Equity", series, value);
         }
-
 
         /// <summary>
         /// Plot a chart using string series name, with int value. Alias of Plot();
@@ -152,9 +161,11 @@ namespace QuantConnect.Algorithm
         public void Plot(string chart, string series, decimal value)
         {
             //Ignore the reserved chart names:
-            if ((chart == "Strategy Equity" && series == "Equity") || (chart == "Daily Performance") || (chart == "Meta"))
+            if (ReservedChartNames.Contains(chart))
             {
-                throw new Exception("Algorithm.Plot(): 'Equity', 'Daily Performance' and 'Meta' are reserved chart names created for all charts.");
+                // excluding meta so we can say "and 'Meta'"
+                var reservedCharts = string.Join(",", ReservedChartNames.Where(rcn => rcn != "Meta").Select(rcn => $"'{rcn}'"));
+                throw new Exception($"Algorithm.Plot(): {reservedCharts} and 'Meta' are reserved chart names created for all charts.");
             }
 
             // If we don't have the chart, create it:
@@ -166,8 +177,10 @@ namespace QuantConnect.Algorithm
             var thisChart = _charts[chart];
             if (!thisChart.Series.ContainsKey(series))
             {
-                //Number of series in total.
-                var seriesCount = (from x in _charts.Values select x.Series.Count).Sum();
+                //Number of series in total, excluding reserved charts
+                var seriesCount = _charts.Values
+                    .Where(c => !ReservedChartNames.Contains(c.Name))
+                    .Select(c => c.Series.Count).Sum();
 
                 if (seriesCount > 10)
                 {
@@ -330,7 +343,5 @@ namespace QuantConnect.Algorithm
             }
             return updates;
         }
-
-    } // End Partial Algorithm Template - Plotting.
-
-} // End QC Namespace
+    }
+}

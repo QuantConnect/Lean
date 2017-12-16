@@ -27,6 +27,7 @@
     <Compile Include="BasicTemplateDailyAlgorithm.py" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.py" />
     <Compile Include="BasicTemplateForexAlgorithm.py" />
+    <Compile Include="BasicTemplateFrameworkAlgorithm.py" />
     <Compile Include="BasicTemplateFuturesAlgorithm.py" />
     <Compile Include="BasicTemplateFuturesConsolidationAlgorithm.py" />
     <Compile Include="BasicTemplateFuturesHistoryAlgorithm.py" />
