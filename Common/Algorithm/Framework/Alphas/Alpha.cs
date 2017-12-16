@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Gets the predicted percent change in the alpha type (price/volatility)
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public double? PercentChange { get; private set; }
+        public double? Magnitude { get; private set; }
 
         /// <summary>
         /// Gets the confidence in this alpha
@@ -97,9 +97,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The type of alpha, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
         /// <param name="period">The period over which the prediction will come true</param>
-        /// <param name="percentChange">The predicted percent change</param>
+        /// <param name="magnitude">The predicted magnitude as a percentage change</param>
         /// <param name="confidence">The confidence in this alpha</param>
-        public Alpha(Symbol symbol, AlphaType type, AlphaDirection direction, TimeSpan period, double? percentChange, double? confidence)
+        public Alpha(Symbol symbol, AlphaType type, AlphaDirection direction, TimeSpan period, double? magnitude, double? confidence)
         {
             Id = Guid.NewGuid();
             Score = new AlphaScore();
@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             Period = period;
 
             // Optional
-            PercentChange = percentChange;
+            Magnitude = magnitude;
             Confidence = confidence;
         }
 
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>A new alpha with identical values, but new instances</returns>
         public Alpha Clone()
         {
-            return new Alpha(Symbol, Type, Direction, Period, PercentChange, Confidence)
+            return new Alpha(Symbol, Type, Direction, Period, Magnitude, Confidence)
             {
                 GeneratedTimeUtc = GeneratedTimeUtc
             };
@@ -131,13 +131,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="symbol">The symbol this alpha is for</param>
         /// <param name="period">The period over which the prediction will come true</param>
-        /// <param name="percentChange">The predicted percent change</param>
+        /// <param name="magnitude">The predicted magnitude as a percent change</param>
         /// <param name="confidence">The confidence in this alpha</param>
         /// <returns>A new alpha object for the specified parameters</returns>
-        public static Alpha PricePercentChange(Symbol symbol, double percentChange, TimeSpan period, double? confidence = null)
+        public static Alpha PriceMagnitude(Symbol symbol, double magnitude, TimeSpan period, double? confidence = null)
         {
-            var direction = (AlphaDirection) Math.Sign(percentChange);
-            return new Alpha(symbol, AlphaType.Price, direction, period, percentChange, confidence);
+            var direction = (AlphaDirection) Math.Sign(magnitude);
+            return new Alpha(symbol, AlphaType.Price, direction, period, magnitude, confidence);
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
@@ -146,9 +146,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override string ToString()
         {
             var str = $"{Id}: {Symbol} {Type} {Direction} within {Period}";
-            if (PercentChange.HasValue)
+            if (Magnitude.HasValue)
             {
-                str += $" by {PercentChange.Value}%";
+                str += $" by {Magnitude.Value}%";
             }
             if (Confidence.HasValue)
             {
@@ -172,7 +172,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Direction == other.Direction &&
                 Type == other.Type &&
                 Confidence.Equals(other.Confidence) &&
-                PercentChange.Equals(other.PercentChange) &&
+                Magnitude.Equals(other.Magnitude) &&
                 Period.Equals(other.Period);
         }
 
@@ -198,7 +198,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 var hashCode = (Symbol != null ? Symbol.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int)Type;
                 hashCode = (hashCode * 397) ^ (int)Direction;
-                hashCode = (hashCode * 397) ^ PercentChange.GetHashCode();
+                hashCode = (hashCode * 397) ^ Magnitude.GetHashCode();
                 hashCode = (hashCode * 397) ^ Confidence.GetHashCode();
                 hashCode = (hashCode * 397) ^ Period.GetHashCode();
                 return hashCode;

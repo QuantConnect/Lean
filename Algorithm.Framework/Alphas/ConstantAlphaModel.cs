@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly AlphaType _type;
         private readonly AlphaDirection _direction;
         private readonly TimeSpan _period;
-        private readonly double? _percentChange;
+        private readonly double? _magnitude;
         private readonly double? _confidence;
         private readonly HashSet<Security> _securities;
         private readonly Dictionary<Symbol, DateTime> _alphaTimeBySymbol;
@@ -51,16 +51,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The type of alpha</param>
         /// <param name="direction">The direction of the alpha</param>
         /// <param name="period">The period over which the alpha with come to fruition</param>
-        /// <param name="percentChange">The predicted percent change</param>
+        /// <param name="magnitude">The predicted change in magnitude as a +- percentage</param>
         /// <param name="confidence">The confidence in the alpha</param>
-        public ConstantAlphaModel(AlphaType type, AlphaDirection direction, TimeSpan period, double? percentChange, double? confidence)
+        public ConstantAlphaModel(AlphaType type, AlphaDirection direction, TimeSpan period, double? magnitude, double? confidence)
         {
             _type = type;
             _direction = direction;
             _period = period;
 
             // Optional
-            _percentChange = percentChange;
+            _magnitude = magnitude;
             _confidence = confidence;
 
             _securities = new HashSet<Security>();
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (ShouldEmitAlpha(algorithm.UtcTime, security.Symbol))
                 {
-                    yield return new Alpha(security.Symbol, _type, _direction, _period, _percentChange, _confidence);
+                    yield return new Alpha(security.Symbol, _type, _direction, _period, _magnitude, _confidence);
                 }
             }
         }

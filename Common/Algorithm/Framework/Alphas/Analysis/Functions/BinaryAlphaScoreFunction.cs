@@ -42,9 +42,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Functions
 
                     // TODO : Re-evaluate flat predictions, potentially adding IAlpha.Tolerance to say 'how flat'
                     var deltaPercent = Math.Abs(currentValue - startingValue)/startingValue;
-                    if (alpha.PercentChange.HasValue)
+                    if (alpha.Magnitude.HasValue)
                     {
-                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(alpha.PercentChange.Value) ? 1 : 0;
+                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(alpha.Magnitude.Value) ? 1 : 0;
                     }
 
                     // this is pretty much impossible, I suppose unless the ticks are large and/or volumes are small

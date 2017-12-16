@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public double Direction { get; private set; }
 
         /// <summary>
-        /// Gets the magnitude score
+        /// Gets the percent change score
         /// </summary>
         public double Magnitude { get; private set; }
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Initializes a new instance of the <see cref="AlphaScore"/> class
         /// </summary>
         /// <param name="direction">The alpha direction score</param>
-        /// <param name="magnitude">The alpha magnitude score</param>
+        /// <param name="magnitude">The alpha percent change score</param>
         /// <param name="updatedTimeUtc">The algorithm utc time these scores were computed</param>
         public AlphaScore(double direction, double magnitude, DateTime updatedTimeUtc)
         {
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"Direction: {Math.Round(100 * Direction, 2)} Magnitude: {Math.Round(100 * Magnitude, 2)}";
+            return $"Direction: {Math.Round(100 * Direction, 2)} PercentChange: {Math.Round(100 * Magnitude, 2)}";
         }
     }
 }
