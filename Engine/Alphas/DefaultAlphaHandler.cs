@@ -146,12 +146,28 @@ namespace QuantConnect.Lean.Engine.Alphas
             // before updating scores, emit chart points for the previous sample period
             if (Algorithm.UtcTime >= _nextChartSampleAlgorithmTimeUtc)
             {
-                UpdateCharts();
+                try
+                {
+                    UpdateCharts();
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    throw;
+                }
             }
 
-            // update scores in line with the algo thread to ensure a consistent read of security data
-            // this will manage marking alphas as closed as well as performing score updates
-            AlphaManager.UpdateScores();
+            try
+            {
+                // update scores in line with the algo thread to ensure a consistent read of security data
+                // this will manage marking alphas as closed as well as performing score updates
+                AlphaManager.UpdateScores();
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                throw;
+            }
         }
 
         private void UpdateCharts()
