@@ -339,7 +339,14 @@ namespace QuantConnect.Lean.Engine.Alphas
                 var runningTotal = kvp.Value;
                 var average = runningTotal / count;
                 // scale the value from [0,1] to [0,100] for charting
-                _seriesByScoreType[scoreType].AddPoint(end, 100m * (decimal) average, LiveMode);
+                var scoreToPlot = 100 * average;
+
+                // ensure we're not violating the decimal type's range before plotting
+                if (Math.Abs(scoreToPlot) > (double) Extensions.GetDecimalEpsilon() &&
+                    Math.Abs(scoreToPlot) < (double) decimal.MaxValue)
+                {
+                    _seriesByScoreType[scoreType].AddPoint(end, (decimal) scoreToPlot, LiveMode);
+                }
             }
         }
     }
