@@ -76,11 +76,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             switch (type)
             {
                 case AlphaScoreType.Direction:
-                    Direction = value;
+                    Direction = Math.Max(0, Math.Min(1, value));
                     break;
 
                 case AlphaScoreType.Magnitude:
-                    Magnitude = value;
+                    Magnitude = Math.Max(0, Math.Min(1, value));
                     break;
 
                 default:
