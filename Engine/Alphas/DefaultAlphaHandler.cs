@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
         private DateTime _nextMessagingUpdate;
         private DateTime _nextPersistenceUpdate;
+        private DateTime _nextPredictionCountTimeUtc;
         private DateTime _nextChartSampleAlgorithmTimeUtc;
         private DateTime _lastChartSampleAlgorithmTimeUtc;
 
@@ -50,7 +51,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
 
         private readonly Chart _assetBreakdownChart = new Chart("Alpha Asset Breakdown");
-        private readonly Series _predictionCountSeries = new Series("Count", SeriesType.Line, "#");
+        private readonly Series _predictionCountSeries = new Series("Count", SeriesType.Bar, "#");
         private readonly ConcurrentDictionary<Symbol, int> _alphaCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
         private readonly Dictionary<AlphaScoreType, Series> _seriesByScoreType = new Dictionary<AlphaScoreType, Series>();
 
@@ -113,6 +114,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             AlphaManager = CreateAlphaManager();
             algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
 
+            _nextPredictionCountTimeUtc = algorithm.StartDate.RoundDown(Time.OneDay) + Time.OneDay;
 
             // chart for average scores over sample period
             var scoreChart = new Chart("Alpha");
@@ -162,6 +164,33 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
+            if (Algorithm.UtcTime >= _nextPredictionCountTimeUtc)
+            {
+                // chart asset breakdown over sample period
+                var sumPredictions = 0;
+                foreach (var kvp in _alphaCountPerSymbol)
+                {
+                    var symbol = kvp.Key;
+                    var count = kvp.Value;
+
+                    Series series;
+                    if (!_assetBreakdownChart.Series.TryGetValue(symbol.Value, out series))
+                    {
+                        series = new Series(symbol.Value, SeriesType.StackedArea, "#");
+                        _assetBreakdownChart.Series.Add(series.Name, series);
+                    }
+
+                    sumPredictions += count;
+                    series.AddPoint(Algorithm.UtcTime, count, LiveMode);
+                }
+
+                _predictionCountSeries.AddPoint(Algorithm.UtcTime, sumPredictions, LiveMode);
+
+                // reset for next sampling period
+                _alphaCountPerSymbol.Clear();
+                _nextPredictionCountTimeUtc += Time.OneDay;
+            }
+
             // before updating scores, emit chart points for the previous sample period
             if (Algorithm.UtcTime >= _nextChartSampleAlgorithmTimeUtc)
             {
@@ -197,28 +226,6 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             ChartAverageAlphaScores(updatedAlphas, Algorithm.UtcTime);
 
-            // compute and chart total alpha count over sample period
-            var totalAlphas = _alphaCountPerSymbol.Values.Sum();
-            _predictionCountSeries.AddPoint(Algorithm.UtcTime, totalAlphas, LiveMode);
-
-            // chart asset breakdown over sample period
-            foreach (var kvp in _alphaCountPerSymbol)
-            {
-                var symbol = kvp.Key;
-                var count = kvp.Value;
-
-                Series series;
-                if (!_assetBreakdownChart.Series.TryGetValue(symbol.Value, out series))
-                {
-                    series = new Series(symbol.Value, SeriesType.StackedArea, "#");
-                    _assetBreakdownChart.Series.Add(series.Name, series);
-                }
-
-                series.AddPoint(Algorithm.UtcTime, count, LiveMode);
-            }
-
-            // reset for next sampling period
-            _alphaCountPerSymbol.Clear();
             _lastChartSampleAlgorithmTimeUtc = _nextChartSampleAlgorithmTimeUtc;
             _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
         }
@@ -336,7 +343,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // aggregate alpha counts per symbol
             foreach (var grouping in collection.Alphas.GroupBy(alpha => alpha.Symbol))
             {
-                _alphaCountPerSymbol.AddOrUpdate(grouping.Key, 1, (sym, cnt) => cnt + grouping.Count());
+                _alphaCountPerSymbol.AddOrUpdate(grouping.Key, sym => grouping.Count(), (sym, cnt) => cnt + grouping.Count());
             }
         }
 
