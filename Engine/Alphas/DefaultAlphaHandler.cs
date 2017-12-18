@@ -153,7 +153,6 @@ namespace QuantConnect.Lean.Engine.Alphas
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    throw;
                 }
             }
 
@@ -166,7 +165,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             catch (Exception err)
             {
                 Log.Error(err);
-                throw;
             }
         }
 
