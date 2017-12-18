@@ -29,9 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="options" />
     public class OptionSplitRegressionAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "AAPL";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
@@ -40,10 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 09);
             SetCash(1000000);
 
-            var equity = AddEquity(UnderlyingTicker);
-            var option = AddOption(UnderlyingTicker);
-
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var option = AddOption("AAPL");
+            _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(u => u.IncludeWeeklys()
@@ -51,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
                        .Expiration(TimeSpan.Zero, TimeSpan.FromDays(365 * 2)));
 
             // use the underlying equity as the benchmark
-            SetBenchmark(equity.Symbol);
+            SetBenchmark("AAPL");
         }
 
         /// <summary>
@@ -65,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Time.Hour > 9 && Time.Minute > 0)
                 {
                     OptionChain chain;
-                    if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                    if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                     {
                         var contract =
                             chain.OrderBy(x => x.Expiry)
@@ -94,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time.Day == 6 && holdings != 1)
                 {
-                        throw new Exception(string.Format("Expected position quantity of 1 but was {0}", holdings));
+                    throw new Exception(string.Format("Expected position quantity of 1 but was {0}", holdings));
                 }
                 if (Time.Day == 9 && holdings != 7)
                 {
@@ -114,6 +110,3 @@ namespace QuantConnect.Algorithm.CSharp
         }
     }
 }
-
-
-

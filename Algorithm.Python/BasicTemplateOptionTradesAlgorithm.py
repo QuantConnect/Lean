@@ -21,51 +21,45 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from datetime import timedelta
 
+### <summary>
+### This example demonstrates how to add options for a given underlying equity security.
+### It also shows how you can prefilter contracts easily based on strikes and expirations.
+### It also shows how you can inspect the option chain to pick a specific option contract to trade.
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="options" />
+### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionTradesAlgorithm(QCAlgorithm):
-    ''' This example demonstrates how to add options for a given underlying equity security.
-        It also shows how you can prefilter contracts easily based on strikes and expirations.
-        It also shows how you can inspect the option chain to pick a specific option contract to trade.'''
 
     def Initialize(self):
-        self.SetStartDate(2015, 1, 1)
-        self.SetEndDate(2015, 3, 20)
+        self.SetStartDate(2015, 12, 24)
+        self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
-        equity = self.AddEquity("GOOG", Resolution.Minute)
-        option = self.AddOption("GOOG", Resolution.Minute)
-        self.symbol = option.Symbol
+        option = self.AddOption("GOOG")
 
         # set our strike/expiry filter for this option chain
         option.SetFilter(-2, +2, timedelta(0), timedelta(30))
-        
-        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        
-        # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
 
+        # use the underlying equity as the benchmark
+        self.SetBenchmark("GOOG")
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
             for kvp in slice.OptionChains:
                 chain = kvp.Value
                 # find the second call strike under market price expiring today
-                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)), 
-                                                key = lambda x: x.Expiry, reverse=False)
+                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
+                                                 key = lambda x: x.Expiry, reverse=False)
 
                 if len(contracts) == 0: continue
-                if contracts[0] != None:  
+                if contracts[0] != None:
                     self.MarketOrder(contracts[0].Symbol, 1)
-
         else:
             self.Liquidate()
-        
+
         for kpv in slice.Bars:
             self.Log("---> OnData: {0}, {1}, {2}".format(self.Time, kpv.Key.Value, str(kpv.Value.Close)))
-               
-
 
     def OnOrderEvent(self, orderEvent):
-        ''' Order fill event handler. On an order fill update the resulting information is passed to this method.
-            <param name="orderEvent">Order event details containing details of the events</param> '''
-  
         self.Log(str(orderEvent))

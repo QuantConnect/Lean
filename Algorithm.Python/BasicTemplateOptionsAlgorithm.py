@@ -36,22 +36,20 @@ class BasicTemplateOptionsAlgorithm(QCAlgorithm):
         self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
-        equity = self.AddEquity("GOOG", Resolution.Minute)
-        option = self.AddOption("GOOG", Resolution.Minute)
-        self.symbol = option.Symbol
+        option = self.AddOption("GOOG")
+        self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
         option.SetFilter(-2, +2, timedelta(0), timedelta(180))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
-
+        self.SetBenchmark("GOOG")
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
 
         for kvp in slice.OptionChains:
-            if kvp.Key != self.symbol: continue
+            if kvp.Key != self.option_symbol: continue
             chain = kvp.Value
 
             # we sort the contracts to find at the money (ATM) contract with farthest expiration
@@ -65,7 +63,6 @@ class BasicTemplateOptionsAlgorithm(QCAlgorithm):
             symbol = contracts[0].Symbol
             self.MarketOrder(symbol, 1)
             self.MarketOnCloseOrder(symbol, -1)
-
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

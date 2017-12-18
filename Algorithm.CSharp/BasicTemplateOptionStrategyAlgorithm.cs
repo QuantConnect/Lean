@@ -34,9 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="filter selection" />
     public class BasicTemplateOptionStrategyAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
@@ -44,16 +42,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 12, 24);
             SetCash(1000000);
 
-            var equity = AddEquity(UnderlyingTicker);
-            var option = AddOption(UnderlyingTicker);
-
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var option = AddOption("GOOG");
+            _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // use the underlying equity as the benchmark
-            SetBenchmark(equity.Symbol);
+            SetBenchmark("GOOG");
         }
 
         public override void OnData(Slice slice)
@@ -61,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     var atmStraddle = chain
                         .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
@@ -70,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (atmStraddle != null)
                     {
-                        Sell(OptionStrategies.Straddle(OptionSymbol, atmStraddle.Strike, atmStraddle.Expiry), 2);
+                        Sell(OptionStrategies.Straddle(_optionSymbol, atmStraddle.Strike, atmStraddle.Expiry), 2);
                     }
                 }
             }
@@ -81,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach(var kpv in slice.Bars)
             {
-                Console.WriteLine("---> OnData: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.00"));
+                Log($"---> OnData: {Time}, {kpv.Key.Value}, {kpv.Value.Close:0.00}");
             }
         }
 
