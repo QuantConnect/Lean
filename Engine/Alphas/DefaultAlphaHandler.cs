@@ -332,8 +332,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             var count = 0;
             var runningScoreTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
 
-            // ignore alphas that haven't received scoring updates yet
-            foreach (var alpha in alphas.Where(alpha => alpha.GeneratedTimeUtc != alpha.Score.UpdatedTimeUtc))
+            // only chart averages of final scores
+            foreach (var alpha in alphas.Where(alpha => alpha.Score.IsFinalScore))
             {
                 count++;
                 foreach (var scoreType in ScoreTypes)
