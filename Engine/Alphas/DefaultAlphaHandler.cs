@@ -166,9 +166,8 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             if (Algorithm.UtcTime >= _nextPredictionCountTimeUtc)
             {
-                _predictionCountSeries.AddPoint(Algorithm.UtcTime, _alphaCountPerSymbol.Sum(kvp => kvp.Value), LiveMode);
-
                 // chart asset breakdown over sample period
+                var sumPredictions = 0;
                 foreach (var kvp in _alphaCountPerSymbol)
                 {
                     var symbol = kvp.Key;
@@ -181,8 +180,11 @@ namespace QuantConnect.Lean.Engine.Alphas
                         _assetBreakdownChart.Series.Add(series.Name, series);
                     }
 
+                    sumPredictions += count;
                     series.AddPoint(Algorithm.UtcTime, count, LiveMode);
                 }
+
+                _predictionCountSeries.AddPoint(Algorithm.UtcTime, sumPredictions, LiveMode);
 
                 // reset for next sampling period
                 _alphaCountPerSymbol.Clear();
@@ -341,7 +343,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // aggregate alpha counts per symbol
             foreach (var grouping in collection.Alphas.GroupBy(alpha => alpha.Symbol))
             {
-                _alphaCountPerSymbol.AddOrUpdate(grouping.Key, 1, (sym, cnt) => cnt + grouping.Count());
+                _alphaCountPerSymbol.AddOrUpdate(grouping.Key, sym => grouping.Count(), (sym, cnt) => cnt + grouping.Count());
             }
         }
 
