@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -143,7 +144,11 @@ namespace QuantConnect.Brokerages.GDAX
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
-                success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
+                success.Add(response.StatusCode == HttpStatusCode.OK);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    OnOrderEvent(new OrderEvent(order, LastHeartbeatUtcTime, 0, order.Tag));
+                }
             }
 
             return success.All(a => a);
