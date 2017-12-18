@@ -386,6 +386,11 @@ namespace QuantConnect.Brokerages.GDAX
             if (message.Reason == "canceled" || message.RemainingSize > 0)
             {
                 Log.Trace($"GDAXBrokerage.Messaging.OrderDone(): Order cancelled. Remaining {message.RemainingSize}");
+                var ordr = _algorithm.Transactions.GetOrderByBrokerageId(message.OrderId);
+                if (ordr != null)
+                {
+                    OnOrderEvent(new OrderEvent(ordr, message.Time, 0));
+                }
                 return;
             }
 
