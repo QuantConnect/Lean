@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
 
         private readonly Chart _assetBreakdownChart = new Chart("Alpha Asset Breakdown");
-        private readonly Series _predictionCountSeries = new Series("Count", SeriesType.Line, "#");
+        private readonly Series _predictionCountSeries = new Series("Count", SeriesType.Bar, "#");
         private readonly ConcurrentDictionary<Symbol, int> _alphaCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
         private readonly Dictionary<AlphaScoreType, Series> _seriesByScoreType = new Dictionary<AlphaScoreType, Series>();
 
