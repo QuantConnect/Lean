@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
         private DateTime _nextMessagingUpdate;
         private DateTime _nextPersistenceUpdate;
+        private DateTime _nextPredictionCountTimeUtc;
         private DateTime _nextChartSampleAlgorithmTimeUtc;
         private DateTime _lastChartSampleAlgorithmTimeUtc;
 
@@ -113,6 +114,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             AlphaManager = CreateAlphaManager();
             algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
 
+            _nextPredictionCountTimeUtc = algorithm.StartDate.RoundDown(Time.OneDay) + Time.OneDay;
 
             // chart for average scores over sample period
             var scoreChart = new Chart("Alpha");
@@ -162,6 +164,12 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
+            if (Algorithm.UtcTime >= _nextPredictionCountTimeUtc)
+            {
+                _predictionCountSeries.AddPoint(Algorithm.UtcTime, _alphaCountPerSymbol.Sum(kvp => kvp.Value), LiveMode);
+                _nextPredictionCountTimeUtc += Time.OneDay;
+            }
+
             // before updating scores, emit chart points for the previous sample period
             if (Algorithm.UtcTime >= _nextChartSampleAlgorithmTimeUtc)
             {
@@ -196,10 +204,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             .ToList();
 
             ChartAverageAlphaScores(updatedAlphas, Algorithm.UtcTime);
-
-            // compute and chart total alpha count over sample period
-            var totalAlphas = _alphaCountPerSymbol.Values.Sum();
-            _predictionCountSeries.AddPoint(Algorithm.UtcTime, totalAlphas, LiveMode);
 
             // chart asset breakdown over sample period
             foreach (var kvp in _alphaCountPerSymbol)
