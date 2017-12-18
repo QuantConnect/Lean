@@ -167,6 +167,25 @@ namespace QuantConnect.Lean.Engine.Alphas
             if (Algorithm.UtcTime >= _nextPredictionCountTimeUtc)
             {
                 _predictionCountSeries.AddPoint(Algorithm.UtcTime, _alphaCountPerSymbol.Sum(kvp => kvp.Value), LiveMode);
+
+                // chart asset breakdown over sample period
+                foreach (var kvp in _alphaCountPerSymbol)
+                {
+                    var symbol = kvp.Key;
+                    var count = kvp.Value;
+
+                    Series series;
+                    if (!_assetBreakdownChart.Series.TryGetValue(symbol.Value, out series))
+                    {
+                        series = new Series(symbol.Value, SeriesType.StackedArea, "#");
+                        _assetBreakdownChart.Series.Add(series.Name, series);
+                    }
+
+                    series.AddPoint(Algorithm.UtcTime, count, LiveMode);
+                }
+
+                // reset for next sampling period
+                _alphaCountPerSymbol.Clear();
                 _nextPredictionCountTimeUtc += Time.OneDay;
             }
 
@@ -205,24 +224,6 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             ChartAverageAlphaScores(updatedAlphas, Algorithm.UtcTime);
 
-            // chart asset breakdown over sample period
-            foreach (var kvp in _alphaCountPerSymbol)
-            {
-                var symbol = kvp.Key;
-                var count = kvp.Value;
-
-                Series series;
-                if (!_assetBreakdownChart.Series.TryGetValue(symbol.Value, out series))
-                {
-                    series = new Series(symbol.Value, SeriesType.StackedArea, "#");
-                    _assetBreakdownChart.Series.Add(series.Name, series);
-                }
-
-                series.AddPoint(Algorithm.UtcTime, count, LiveMode);
-            }
-
-            // reset for next sampling period
-            _alphaCountPerSymbol.Clear();
             _lastChartSampleAlgorithmTimeUtc = _nextChartSampleAlgorithmTimeUtc;
             _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
         }
