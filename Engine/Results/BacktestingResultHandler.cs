@@ -373,7 +373,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult
                 {
-                    IsFrameworkAlgorthm = _algorithm.IsFrameworkAlgorithm,
+                    IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm,
                     Charts = new Dictionary<string, Chart>()
                     {
                         {chart.Name, chart}
@@ -382,10 +382,10 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             // Add the orders into the charting packet:
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorthm = _algorithm.IsFrameworkAlgorithm, Orders = deltaOrders }, progress));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Orders = deltaOrders }, progress));
 
             //Add any user runtime statistics into the backtest.
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorthm = _algorithm.IsFrameworkAlgorithm, RuntimeStatistics = runtimeStatistics }, progress));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, RuntimeStatistics = runtimeStatistics }, progress));
 
             return splitPackets;
         }
