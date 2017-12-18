@@ -36,21 +36,20 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
-        equity = self.AddEquity("GOOG", Resolution.Minute)
-        option = self.AddOption("GOOG", Resolution.Minute)
-        self.symbol = option.Symbol
+        option = self.AddOption("GOOG")
+        self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
         option.SetFilter(-10, 10, timedelta(0), timedelta(10))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
+        self.SetBenchmark("GOOG")
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
 
         for kvp in slice.OptionChains:
-            if kvp.Key != self.symbol: continue
+            if kvp.Key != self.option_symbol: continue
             chain = kvp.Value
             # find the call options expiring today
             contracts = [i for i in chain if i.Right ==  OptionRight.Call and i.Expiry.date() == self.Time.date()]
