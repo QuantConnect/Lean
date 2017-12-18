@@ -163,12 +163,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </returns>
         public IEnumerator<Subscription> GetEnumerator()
         {
-            foreach (var subscriptionsBySymbol in _subscriptions)
+            foreach (var subscriptionsByConfig in _subscriptions
+                .Select(x => x.Value))
             {
-                var subscriptionsByConfig = subscriptionsBySymbol.Value;
-                foreach (var kvp in subscriptionsByConfig.OrderBy(x => x.Key.TickType))
+                foreach (var subscription in subscriptionsByConfig
+                    .Select(x => x.Value)
+                    .OrderBy(x => x.Configuration.TickType))
                 {
-                    var subscription = kvp.Value;
                     yield return subscription;
                 }
             }
