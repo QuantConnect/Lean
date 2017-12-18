@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private DateTime _nextChartSampleAlgorithmTimeUtc;
         private DateTime _lastChartSampleAlgorithmTimeUtc;
 
+        private bool _isNotFrameworkAlgorithm;
         private IMessagingHandler _messagingHandler;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
@@ -99,11 +100,19 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <inheritdoc />
         public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api)
         {
+            // initializing these properties just in case, doens't hurt to have them populated
             Job = job;
             Algorithm = algorithm;
             _messagingHandler = messagingHandler;
+            _isNotFrameworkAlgorithm = !algorithm.IsFrameworkAlgorithm;
+            if (_isNotFrameworkAlgorithm)
+            {
+                return;
+            }
+
             AlphaManager = CreateAlphaManager();
             algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
+
 
             // chart for average scores over sample period
             var scoreChart = new Chart("Alpha");
@@ -126,6 +135,11 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <inheritdoc />
         public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
         {
+            if (_isNotFrameworkAlgorithm)
+            {
+                return;
+            }
+
             _lastChartSampleAlgorithmTimeUtc = algorithm.UtcTime;
             if (!LiveMode)
             {
@@ -143,6 +157,11 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <inheritdoc />
         public virtual void ProcessSynchronousEvents()
         {
+            if (_isNotFrameworkAlgorithm)
+            {
+                return;
+            }
+
             // before updating scores, emit chart points for the previous sample period
             if (Algorithm.UtcTime >= _nextChartSampleAlgorithmTimeUtc)
             {
@@ -207,6 +226,11 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <inheritdoc />
         public virtual void Run()
         {
+            if (_isNotFrameworkAlgorithm)
+            {
+                return;
+            }
+
             _cancellationTokenSource = new CancellationTokenSource();
 
             // run until cancelled AND we're done processing messages
@@ -232,6 +256,11 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <inheritdoc />
         public void Exit()
         {
+            if (_isNotFrameworkAlgorithm)
+            {
+                return;
+            }
+
             // send final alpha scoring updates before we exit
             _messages.Enqueue(new AlphaPacket
             {
@@ -332,8 +361,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             var count = 0;
             var runningScoreTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
 
-            // ignore alphas that haven't received scoring updates yet
-            foreach (var alpha in alphas.Where(alpha => alpha.GeneratedTimeUtc != alpha.Score.UpdatedTimeUtc))
+            // only chart averages of final scores
+            foreach (var alpha in alphas.Where(alpha => alpha.Score.IsFinalScore))
             {
                 count++;
                 foreach (var scoreType in ScoreTypes)

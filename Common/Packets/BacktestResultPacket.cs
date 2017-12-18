@@ -212,7 +212,7 @@ namespace QuantConnect.Packets
         public AlgorithmPerformance TotalPerformance = null;
 
         /// Determines if the compiled assembly contains a framework algorithm implementation
-        public bool IsFrameworkAlgorthm;
+        public bool IsFrameworkAlgorithm;
 
         /// <summary>
         /// Default Constructor
@@ -225,9 +225,9 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class using dictionary objects.
         /// </summary>
-        public BacktestResult(bool isFrameworkAlgorthm, IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
+        public BacktestResult(bool isFrameworkAlgorithm, IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
         {
-            IsFrameworkAlgorthm = isFrameworkAlgorthm;
+            IsFrameworkAlgorithm = isFrameworkAlgorithm;
             Charts = charts;
             Orders = orders;
             ProfitLoss = profitLoss;
