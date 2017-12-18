@@ -26,7 +26,6 @@ namespace QuantConnect.Brokerages.GDAX
 {
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
-
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
@@ -77,16 +76,22 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (raw?.Id == null)
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    var errorMessage = $"Error parsing response from place order: {response.Content}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
                     UnlockStream();
-                    return false;
+                    return true;
                 }
 
                 if (raw.Status == "rejected")
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = "Reject reason: " + raw.RejectReason });
+                    var errorMessage = "Reject reason: " + raw.RejectReason;
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
                     UnlockStream();
-                    return false;
+                    return true;
                 }
 
                 var brokerId = raw.Id;
@@ -105,18 +110,18 @@ namespace QuantConnect.Brokerages.GDAX
 
                 // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "Order completed successfully orderid:" + order.Id));
 
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
                 UnlockStream();
                 return true;
             }
 
+            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-            var message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
             UnlockStream();
-            return false;
+            return true;
         }
 
         /// <summary>
