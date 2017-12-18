@@ -27,7 +27,6 @@ namespace QuantConnect.Brokerages.GDAX
 {
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
-
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
@@ -72,7 +71,7 @@ namespace QuantConnect.Brokerages.GDAX
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
-            if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Content != null)
+            if (response.StatusCode == HttpStatusCode.OK && response.Content != null)
             {
                 var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
 
@@ -147,7 +146,7 @@ namespace QuantConnect.Brokerages.GDAX
                 success.Add(response.StatusCode == HttpStatusCode.OK);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    OnOrderEvent(new OrderEvent(order, LastHeartbeatUtcTime, 0, order.Tag));
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Canceled });
                 }
             }
 
@@ -176,7 +175,7 @@ namespace QuantConnect.Brokerages.GDAX
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception($"GDAXBrokerage.GetOpenOrders: request failed: [{(int) response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
@@ -255,7 +254,7 @@ namespace QuantConnect.Brokerages.GDAX
             GetAuthenticationToken(request);
             var response = RestClient.Execute(request);
 
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception($"GDAXBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
@@ -301,7 +300,7 @@ namespace QuantConnect.Brokerages.GDAX
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
 
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                if (response.StatusCode != HttpStatusCode.OK)
                 {
                     throw new Exception($"GDAXBrokerage.GetFee: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
                 }
