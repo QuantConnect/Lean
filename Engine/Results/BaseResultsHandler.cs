@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="result">The results to save</param>
         public virtual void SaveResults(string name, Result result)
         {
-            File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), name), JsonConvert.SerializeObject(result));
+            File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), name), JsonConvert.SerializeObject(result, Formatting.Indented));
         }
     }
 }

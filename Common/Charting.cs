@@ -447,7 +447,9 @@ namespace QuantConnect
         /// Flag indicators
         Flag,
         /// 100% area chart showing relative proportions of series values at each time index
-        StackedArea
+        StackedArea,
+        /// Pie chart
+        Pie
     }
 
     /// <summary>

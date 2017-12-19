@@ -130,14 +130,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                     // resolve and evaluate the scoring function, storing the result in the context
                     var function = _scoreFunctionProvider.GetScoreFunction(context.Alpha.Type, scoreType);
                     var score = function.Evaluate(context, scoreType);
-                    context.Score.SetScore(scoreType, score, context.CurrentValues.TimeUtc);
+                    context.Score.SetScore(scoreType, score, context.CurrentValues.TimeUtc, context.AnalysisEndTimeUtc);
                 }
 
-                // if we've passed the end time then mark it as finalized
-                if (context.CurrentValues.TimeUtc >= context.AnalysisEndTimeUtc)
+                // if this score has been finalized, remove it from the open set
+                if (context.Score.IsFinalScore)
                 {
-                    context.Alpha.Score.IsFinalScore = true;
-
                     var id = context.Alpha.Id;
                     _closedAlphaContexts[id] = context;
 

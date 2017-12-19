@@ -699,16 +699,31 @@ namespace QuantConnect.Lean.Engine.Results
                     foreach (var series in update.Series.Values)
                     {
                         //If we don't already have this record, its the first packet
-                        if (!Charts[update.Name].Series.ContainsKey(series.Name))
+                        var chart = Charts[update.Name];
+                        if (!chart.Series.ContainsKey(series.Name))
                         {
-                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit)
+                            chart.Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit)
                             {
                                 Color = series.Color, ScatterMarkerSymbol = series.ScatterMarkerSymbol
                             });
                         }
 
-                        //We already have this record, so just the new samples to the end:
-                        Charts[update.Name].Series[series.Name].Values.AddRange(series.Values);
+                        var thisSeries = chart.Series[series.Name];
+                        if (series.Values.Count > 0)
+                        {
+                            // only keep last point for pie charts
+                            if (series.SeriesType == SeriesType.Pie)
+                            {
+                                var lastValue = series.Values.Last();
+                                thisSeries.Purge();
+                                thisSeries.Values.Add(lastValue);
+                            }
+                            else
+                            {
+                                //We already have this record, so just the new samples to the end:
+                                chart.Series[series.Name].Values.AddRange(series.Values);
+                            }
+                        }
                     }
                 }
             }
