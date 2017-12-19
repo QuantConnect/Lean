@@ -803,7 +803,7 @@ namespace QuantConnect.Algorithm
                 if (quantity != 0)
                 {
                     // calculate quantity for closing market order
-                    var ticket = Order(symbol, -quantity - marketOrdersQuantity);
+                    var ticket = Order(symbol, -quantity - marketOrdersQuantity, tag: tag);
                     if (ticket.Status == OrderStatus.Filled)
                     {
                         orderIdList.Add(ticket.OrderId);
