@@ -145,18 +145,19 @@ namespace QuantConnect.Lean.Engine.Alphas
             }
 
             _lastChartSampleAlgorithmTimeUtc = algorithm.UtcTime;
+            _nextChartSampleAlgorithmTimeUtc = algorithm.UtcTime + ChartUpdateInterval;
             _nextAlphaCountSampleTimeUtc = (algorithm.Time.RoundDown(Time.OneDay) + Time.OneDay).ConvertToUtc(algorithm.TimeZone);
 
-            if (!LiveMode)
+            if (LiveMode)
+            {
+                // live mode we'll sample each minute
+                ChartUpdateInterval = Time.OneMinute;
+            }
+            else
             {
                 // space out backtesting samples evenly
                 var backtestPeriod = algorithm.EndDate - algorithm.StartDate;
                 ChartUpdateInterval = TimeSpan.FromTicks(backtestPeriod.Ticks / BacktestChartSamples);
-            }
-            else
-            {
-                // live mode we'll sample each minute
-                ChartUpdateInterval = Time.OneMinute;
             }
         }
 
@@ -346,12 +347,11 @@ namespace QuantConnect.Lean.Engine.Alphas
         private void UpdateCharts()
         {
             // get scores that were finalized within this update period
-            var finalizedAlphaScores = AlphaManager.AllAlphas.Where(alpha =>
-                    alpha.Score.IsFinalScore &&
-                    alpha.Score.UpdatedTimeUtc >= _lastChartSampleAlgorithmTimeUtc &&
-                    alpha.Score.UpdatedTimeUtc <= _nextChartSampleAlgorithmTimeUtc
-                )
-                .ToList();
+            var finalizedAlphaScores = AlphaManager.ClosedAlphas.Where(alpha =>
+                alpha.Score.UpdatedTimeUtc >= _lastChartSampleAlgorithmTimeUtc &&
+                alpha.Score.UpdatedTimeUtc <= _nextChartSampleAlgorithmTimeUtc
+            )
+            .ToList();
 
             // compute average score values for all alphas with updates over the last day
             var count = 0;
@@ -367,24 +367,22 @@ namespace QuantConnect.Lean.Engine.Alphas
                 }
             }
 
-            if (count < 1)
+            if (count > 1)
             {
-                return;
-            }
-
-            foreach (var kvp in runningScoreTotals)
-            {
-                var scoreType = kvp.Key;
-                var runningTotal = kvp.Value;
-                var average = runningTotal / count;
-                // scale the value from [0,1] to [0,100] for charting
-                var scoreToPlot = 100 * average;
-
-                // ensure we're not violating the decimal type's range before plotting
-                if (Math.Abs(scoreToPlot) > (double)Extensions.GetDecimalEpsilon() &&
-                    Math.Abs(scoreToPlot) < (double)decimal.MaxValue)
+                foreach (var kvp in runningScoreTotals)
                 {
-                    _seriesByScoreType[scoreType].AddPoint(_nextChartSampleAlgorithmTimeUtc, (decimal)scoreToPlot, LiveMode);
+                    var scoreType = kvp.Key;
+                    var runningTotal = kvp.Value;
+                    var average = runningTotal / count;
+                    // scale the value from [0,1] to [0,100] for charting
+                    var scoreToPlot = 100 * average;
+
+                    // ensure we're not violating the decimal type's range before plotting
+                    if (Math.Abs(scoreToPlot) > (double)Extensions.GetDecimalEpsilon() &&
+                        Math.Abs(scoreToPlot) < (double)decimal.MaxValue)
+                    {
+                        _seriesByScoreType[scoreType].AddPoint(_nextChartSampleAlgorithmTimeUtc, (decimal)scoreToPlot, LiveMode);
+                    }
                 }
             }
 

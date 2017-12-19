@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets whether or not this is the alpha's final score
         /// </summary>
-        public bool IsFinalScore { get; internal set; }
+        public bool IsFinalScore { get; private set; }
 
         /// <summary>
         /// Initializes a new, default instance of the <see cref="AlphaScore"/> class
@@ -69,9 +69,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The score type to be set, Direction/Magnitude</param>
         /// <param name="value">The new value for the score</param>
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
-        internal void SetScore(AlphaScoreType type, double value, DateTime algorithmUtcTime)
+        /// <param name="analysisPeriodEndTimeUtc">The end utc time for analysis period of these sores, used to set <see cref="IsFinalScore"/></param>
+        internal void SetScore(AlphaScoreType type, double value, DateTime algorithmUtcTime, DateTime analysisPeriodEndTimeUtc)
         {
             UpdatedTimeUtc = algorithmUtcTime;
+            if (algorithmUtcTime >= analysisPeriodEndTimeUtc)
+            {
+                IsFinalScore = true;
+            }
 
             switch (type)
             {
