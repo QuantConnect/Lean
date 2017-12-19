@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -350,7 +350,7 @@ namespace QuantConnect
             {
                 return GenerateEquity(DefaultDate, symbol, market);
             }
-            
+
         }
 
         /// <summary>
@@ -461,9 +461,9 @@ namespace QuantConnect
         /// </summary>
         private static ulong DecodeBase36(string symbol)
         {
-            int pos = 0;
-            ulong result = 0;
-            for (int i = symbol.Length - 1; i > -1; i--)
+            var result = 0ul;
+            var baseValue = 1ul;
+            for (var i = symbol.Length - 1; i > -1; i--)
             {
                 var c = symbol[i];
 
@@ -472,8 +472,10 @@ namespace QuantConnect
                     ? c - '0'
                     : c - 'A' + 10);
 
-                result += value * Pow(36, pos++);
+                result += baseValue * value;
+                baseValue *= 36;
             }
+
             return result;
         }
 
@@ -592,6 +594,8 @@ namespace QuantConnect
             return true;
         }
 
+        private static readonly char[] SplitSpace = {' '};
+
         /// <summary>
         /// Parses the string into its component ulong pieces
         /// </summary>
@@ -611,7 +615,7 @@ namespace QuantConnect
                 for (var i = sids.Length - 1; i > -1; i--)
                 {
                     var current = sids[i];
-                    var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    var parts = current.Split(SplitSpace, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length != 2)
                     {
                         exception = new FormatException("The string must be splittable on space into two parts.");
@@ -657,8 +661,8 @@ namespace QuantConnect
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SecurityIdentifier other)
         {
-            return _properties == other._properties 
-                && _symbol == other._symbol 
+            return _properties == other._properties
+                && _symbol == other._symbol
                 && _underlying == other._underlying;
         }
 
@@ -677,7 +681,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Serves as a hash function for a particular type. 
+        /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
         /// A hash code for the current <see cref="T:System.Object"/>.
