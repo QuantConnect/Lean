@@ -27,7 +27,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using System.Diagnostics;
-using System.Linq;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -463,8 +462,10 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleRange(_algorithm.GetChartUpdates());
 
                 //Sample the asset pricing:
-                foreach (var security in _algorithm.Securities.Select(x => x.Value))
+                foreach (var kvp in _algorithm.Securities)
                 {
+                    var security = kvp.Value;
+
                     SampleAssetPrices(security.Symbol, time, security.Price);
                 }
             }

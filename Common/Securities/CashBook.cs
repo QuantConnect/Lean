@@ -42,7 +42,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalValueInAccountCurrency
         {
-            get { return _currencies.Select(x => x.Value).Sum(x => x.ValueInAccountCurrency); }
+            get { return _currencies.Sum(x => x.Value.ValueInAccountCurrency); }
         }
 
         /// <summary>
@@ -79,8 +79,10 @@ namespace QuantConnect.Securities
         public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap)
         {
             var addedSecurities = new List<Security>();
-            foreach (var cash in _currencies.Select(x => x.Value))
+            foreach (var kvp in _currencies)
             {
+                var cash = kvp.Value;
+
                 var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this);
                 if (security != null)
                 {

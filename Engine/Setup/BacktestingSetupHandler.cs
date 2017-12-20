@@ -28,7 +28,6 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 
@@ -278,10 +277,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Sum();
 
             // universe coarse/fine/custom subscriptions
-            var universeSubscriptions = universeManager.Select(x => x.Value)
+            var universeSubscriptions = universeManager
                 // use max limit for universes without explicitly added securities
-                .Select(u => u.Members.Count == 0 ? controls.GetLimit(u.UniverseSettings.Resolution) : u.Members.Count)
-                .Sum();
+                .Sum(u => u.Value.Members.Count == 0 ? controls.GetLimit(u.Value.UniverseSettings.Resolution) : u.Value.Members.Count);
 
             var subscriptionCount = derivativeSubscriptions + universeSubscriptions;
 

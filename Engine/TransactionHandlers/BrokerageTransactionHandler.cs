@@ -552,8 +552,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 // if we were returned our balances, update everything and flip our flag as having performed sync today
-                foreach (var cash in _algorithm.Portfolio.CashBook.Select(x => x.Value))
+                foreach (var kvp in _algorithm.Portfolio.CashBook)
                 {
+                    var cash = kvp.Value;
+
                     var balanceCash = balances.FirstOrDefault(balance => balance.Symbol == cash.Symbol);
                     //update the cash if the entry if found in the balances
                     if (balanceCash != null)

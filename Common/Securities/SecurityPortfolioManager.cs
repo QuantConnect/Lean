@@ -208,8 +208,8 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from asset in Securities.Select(x => x.Value)
-                        select asset.Holdings).ToList();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings).ToList();
             }
         }
 
@@ -283,8 +283,8 @@ namespace QuantConnect.Securities
             get
             {
                 //Sum of unlevered cost of holdings
-                return (from position in Securities.Select(x => x.Value)
-                        select position.Holdings.UnleveredAbsoluteHoldingsCost).Sum();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings.UnleveredAbsoluteHoldingsCost).Sum();
             }
         }
 
@@ -305,8 +305,8 @@ namespace QuantConnect.Securities
             get
             {
                 //Sum sum of holdings
-                return (from position in Securities.Select(x => x.Value)
-                        select position.Holdings.AbsoluteHoldingsValue).Sum();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings.AbsoluteHoldingsValue).Sum();
             }
         }
 
@@ -336,8 +336,8 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Select(x => x.Value)
-                        select position.Holdings.UnrealizedProfit).Sum();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings.UnrealizedProfit).Sum();
             }
         }
 
@@ -385,8 +385,8 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Select(x => x.Value)
-                        select position.Holdings.TotalFees).Sum();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings.TotalFees).Sum();
             }
         }
 
@@ -397,8 +397,8 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Select(x => x.Value)
-                        select position.Holdings.Profit).Sum();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings.Profit).Sum();
             }
         }
 
@@ -409,8 +409,8 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Select(x => x.Value)
-                        select position.Holdings.TotalSaleVolume).Sum();
+                return (from kvp in Securities
+                        select kvp.Value.Holdings.TotalSaleVolume).Sum();
             }
         }
 
@@ -422,8 +422,10 @@ namespace QuantConnect.Securities
             get
             {
                 decimal sum = 0;
-                foreach (var security in Securities.Select(x => x.Value))
+                foreach (var kvp in Securities)
                 {
+                    var security = kvp.Value;
+
                     sum += security.MarginModel.GetMaintenanceMargin(security);
                 }
                 return sum;
@@ -574,13 +576,18 @@ namespace QuantConnect.Securities
             if (marginRemaining <= 0)
             {
                 // skip securities that have no price data or no holdings, we can't liquidate nothingness
-                foreach (var security in Securities.Select(x => x.Value).Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
+                foreach (var kvp in Securities)
                 {
-                    var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
-                    var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
-                    if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                    var security = kvp.Value;
+
+                    if (security.Holdings.Quantity != 0 && security.Price != 0)
                     {
-                        marginCallOrders.Add(marginCallOrder);
+                        var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
+                        var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
+                        if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                        {
+                            marginCallOrders.Add(marginCallOrder);
+                        }
                     }
                 }
                 issueMarginCallWarning = marginCallOrders.Count > 0;

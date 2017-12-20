@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -59,9 +58,14 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
 
             // set up the events for each security to fire every tradeable date before market close
-            foreach (var security in _algorithm.Securities.Select(x => x.Value).Where(x => !x.IsInternalFeed()))
+            foreach (var kvp in _algorithm.Securities)
             {
-                Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
+                var security = kvp.Value;
+
+                if (!security.IsInternalFeed())
+                {
+                    Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
+                }
             }
 
             foreach (var scheduledEvent in _scheduledEvents)

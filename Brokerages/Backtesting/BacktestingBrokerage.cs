@@ -106,9 +106,9 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return (from security in Algorithm.Portfolio.Securities.Select(x => x.Value).OrderBy(x => x.Symbol)
-                    where security.Holdings.AbsoluteQuantity > 0
-                    select new Holding(security)).ToList();
+            return (from kvp in Algorithm.Portfolio.Securities.OrderBy(x => x.Value.Symbol)
+                    where kvp.Value.Holdings.AbsoluteQuantity > 0
+                    select new Holding(kvp.Value)).ToList();
         }
 
         /// <summary>

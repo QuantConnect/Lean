@@ -120,9 +120,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var optionUnderlyingUpdates = new Dictionary<Symbol, BaseData>();
 
             var cashSecurities = new HashSet<Symbol>();
-            foreach (var cashItem in cashBook.Select(x => x.Value))
+            foreach (var kvp in cashBook)
             {
-                cashSecurities.Add(cashItem.SecuritySymbol);
+                cashSecurities.Add(kvp.Value.SecuritySymbol);
             }
 
             Split split;
@@ -264,8 +264,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // patch through calls to conversion rate to compue it on the fly using Security.Price
                     if (cashSecurities.Contains(packet.Security.Symbol))
                     {
-                        foreach (var cashItem in cashBook.Select(x => x.Value))
+                        foreach (var kvp in cashBook)
                         {
+                            var cashItem = kvp.Value;
+
                             if (cashItem.SecuritySymbol == packet.Security.Symbol)
                             {
                                 var cashUpdates = new List<BaseData> {securityUpdate[securityUpdate.Count - 1]};
