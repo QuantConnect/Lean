@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
         private DateTime _nextMessagingUpdate;
         private DateTime _nextPersistenceUpdate;
-        private DateTime _nextAlphaCountSampleTimeUtc;
+        private DateTime _lastAlphaCountSampleDateUtc;
         private DateTime _nextChartSampleAlgorithmTimeUtc;
 
         private bool _isNotFrameworkAlgorithm;
@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private readonly Chart _dailyAlphaCountPerSymbolChart = new Chart("Alpha Asset Breakdown"); // stacked area
         private readonly Series _totalAlphaCountSeries = new Series("Count", SeriesType.Bar, "#");
 
-        private readonly Dictionary<AlphaScoreType, Series> _seriesByScoreType = new Dictionary<AlphaScoreType, Series>();
+        private readonly Dictionary<AlphaScoreType, Series> _alphaScoreSeriesByScoreType = new Dictionary<AlphaScoreType, Series>();
         private readonly ConcurrentDictionary<Symbol, int> _dailyAlphaCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
         private readonly ConcurrentDictionary<Symbol, int> _alphaCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
 
@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
                 scoreChart.AddSeries(series);
-                _seriesByScoreType[scoreType] = series;
+                _alphaScoreSeriesByScoreType[scoreType] = series;
             }
 
             // chart for prediction count over sample period
@@ -162,7 +162,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             }
 
             _nextChartSampleAlgorithmTimeUtc = algorithm.UtcTime + ChartUpdateInterval;
-            _nextAlphaCountSampleTimeUtc = (algorithm.Time.RoundDown(Time.OneDay) + Time.OneDay).ConvertToUtc(algorithm.TimeZone);
+            _lastAlphaCountSampleDateUtc = (algorithm.Time.RoundDown(Time.OneDay) + Time.OneDay).ConvertToUtc(algorithm.TimeZone);
 
             if (LiveMode)
             {
@@ -185,20 +185,19 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
-            if (Algorithm.UtcTime >= _nextAlphaCountSampleTimeUtc)
+            if (Algorithm.UtcTime.Date > _lastAlphaCountSampleDateUtc)
             {
+                _lastAlphaCountSampleDateUtc = Algorithm.UtcTime.Date;
+
                 // populate charts with the daily alpha counts per symbol, resetting our storage
                 var sumPredictions = PopulateChartWithSeriesPerSymbol(_dailyAlphaCountPerSymbol, _dailyAlphaCountPerSymbolChart, SeriesType.StackedArea);
                 _dailyAlphaCountPerSymbol.Clear();
 
                 // add sum of daily alpha counts to the total alpha count series
-                _totalAlphaCountSeries.AddPoint(Algorithm.UtcTime, sumPredictions, LiveMode);
+                _totalAlphaCountSeries.AddPoint(Algorithm.UtcTime.Date, sumPredictions, LiveMode);
 
                 // populate charts with the total alpha counts per symbol, no need to reset
                 PopulateChartWithSeriesPerSymbol(_alphaCountPerSymbol, _totalAlphaCountPerSymbolChart, SeriesType.Pie);
-
-                // reset for next sampling period
-                _nextAlphaCountSampleTimeUtc += Time.OneDay;
             }
 
             // before updating scores, emit chart points for the previous sample period
@@ -210,7 +209,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                     foreach (var scoreType in ScoreTypes)
                     {
                         var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                        _seriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
+                        _alphaScoreSeriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
                     }
 
                     _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
