@@ -195,6 +195,12 @@ namespace QuantConnect.Lean.Engine.Results
         void SetAlgorithm(IAlgorithm algorithm);
 
         /// <summary>
+        /// Sets the current alpha runtime statistics
+        /// </summary>
+        /// <param name="statistics">The current alpha runtime statistics</param>
+        void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics);
+
+        /// <summary>
         /// Save the snapshot of the total results to storage.
         /// </summary>
         /// <param name="packet">Packet to store.</param>

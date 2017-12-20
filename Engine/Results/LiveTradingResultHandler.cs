@@ -351,7 +351,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics));
+                        var complete = new LiveResultPacket(_job, new LiveResult(_algorithm.IsFrameworkAlgorithm, chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics));
                         StoreResult(complete);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
@@ -468,7 +468,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (current.Count >= groupSize && _subscription != "*")
                 {
                     // Add the micro packet to transport.
-                    chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
+                    chartPackets.Add(new LiveResultPacket(_job, new LiveResult { IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Charts = current }));
                     // Reset the carrier variable.
                     current = new Dictionary<string, Chart>();
                 }
@@ -478,19 +478,21 @@ namespace QuantConnect.Lean.Engine.Results
             // unless it is a wildcard subscription
             if (current.Count > 0 && _subscription != "*")
             {
-                chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
+                chartPackets.Add(new LiveResultPacket(_job, new LiveResult {IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Charts = current}));
             }
 
             // these are easier to split up, not as big as the chart objects
             var packets = new[]
             {
-                new LiveResultPacket(_job, new LiveResult {Orders = deltaOrders}),
-                new LiveResultPacket(_job, new LiveResult {Holdings = holdings, Cash = cashbook}),
+                new LiveResultPacket(_job, new LiveResult {IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Orders = deltaOrders}),
+                new LiveResultPacket(_job, new LiveResult {IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Holdings = holdings, Cash = cashbook}),
                 new LiveResultPacket(_job, new LiveResult
                 {
+                    IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm,
                     Statistics = deltaStatistics,
                     RuntimeStatistics = runtimeStatistics,
-                    ServerStatistics = serverStatistics
+                    ServerStatistics = serverStatistics,
+                    AlphaRuntimeStatistics = AlphaRuntimeStatistics
                 })
             };
 
@@ -809,7 +811,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Create a packet:
-                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime));
+                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(_algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime));
 
                 //Save the processing time:
                 result.ProcessingTime = (DateTime.Now - _startTime).TotalSeconds;
@@ -818,7 +820,7 @@ namespace QuantConnect.Lean.Engine.Results
                 StoreResult(result, false);
 
                 //Truncate packet to fit within 32kb:
-                result.Results = new LiveResult();
+                result.Results = new LiveResult{IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm};
 
                 //Send the truncated packet:
                 _messagingHandler.Send(result);
@@ -869,6 +871,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 if (live != null)
                 {
+                    // Set
+
                     // we need to down sample
                     var start = DateTime.UtcNow.Date;
                     var stop = start.AddDays(1);
@@ -902,7 +906,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     foreach (var name in live.Results.Charts.Keys)
                     {
-                        var result = new LiveResult();
+                        var result = new LiveResult{IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm};
                         result.Orders = new Dictionary<int, Order>(live.Results.Orders);
                         result.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
                         result.Charts = new Dictionary<string, Chart>();

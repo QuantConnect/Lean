@@ -334,9 +334,6 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
-                // poke the alpha handler to allow processing of events on the algorithm's main thread
-                alphas.ProcessSynchronousEvents();
-
                 // process end of day delistings
                 ProcessDelistedSymbols(algorithm, delistings);
 
@@ -596,8 +593,15 @@ namespace QuantConnect.Lean.Engine
                 //Save the previous time for the sample calculations
                 _previousTime = time;
 
+                // poke the alpha handler to allow processing of events on the algorithm's main thread
+                alphas.ProcessSynchronousEvents();
+
+                // send the alpha statistics to the result handler for storage/transmit with the result packets
+                results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
+
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
+
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
@@ -616,6 +620,12 @@ namespace QuantConnect.Lean.Engine
                 Log.Error("AlgorithmManager.OnEndOfAlgorithm(): " + err);
                 return;
             }
+
+            // final processing now that the algorithm has completed
+            alphas.ProcessSynchronousEvents();
+
+            // send the final alpha statistics to the result handler for storage/transmit with the result packets
+            results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
 
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
             results.ProcessSynchronousEvents(forceProcess: true);

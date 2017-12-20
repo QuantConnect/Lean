@@ -39,17 +39,31 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public decimal Volatility { get; }
 
         /// <summary>
+        /// Gets the volume traded in the security during this time step
+        /// </summary>
+        public decimal Volume { get; }
+
+        /// <summary>
+        /// Gets the conversion rate for the quote currency of the security
+        /// </summary>
+        public decimal QuoteCurrencyConversionRate { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SecurityValues"/> class
         /// </summary>
         /// <param name="timeUtc">The time these values were sampled</param>
         /// <param name="price">The security price</param>
         /// <param name="volatility">The security's volatility</param>
-        public SecurityValues(DateTime timeUtc, decimal price, decimal volatility)
+        /// <param name="volume">The volume traded at this time step</param>
+        /// <param name="quoteCurrencyConversionRate">The conversion rate for the quote currency of the security</param>
+        public SecurityValues(DateTime timeUtc, decimal price, decimal volatility, decimal volume, decimal quoteCurrencyConversionRate)
         {
             TimeUtc = timeUtc;
 
             Price = price;
             Volatility = volatility;
+            Volume = volume;
+            QuoteCurrencyConversionRate = quoteCurrencyConversionRate;
         }
 
         /// <summary>

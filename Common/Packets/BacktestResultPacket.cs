@@ -211,9 +211,6 @@ namespace QuantConnect.Packets
         /// </summary>
         public AlgorithmPerformance TotalPerformance = null;
 
-        /// Determines if the compiled assembly contains a framework algorithm implementation
-        public bool IsFrameworkAlgorithm;
-
         /// <summary>
         /// Default Constructor
         /// </summary>

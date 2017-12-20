@@ -43,7 +43,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         private DateTime _nextPersistenceUpdate;
         private DateTime _nextAlphaCountSampleTimeUtc;
         private DateTime _nextChartSampleAlgorithmTimeUtc;
-        private DateTime _lastChartSampleAlgorithmTimeUtc;
 
         private bool _isNotFrameworkAlgorithm;
         private IMessagingHandler _messagingHandler;
@@ -60,6 +59,17 @@ namespace QuantConnect.Lean.Engine.Alphas
 
         /// <inheritdoc />
         public bool IsActive => !_cancellationTokenSource?.IsCancellationRequested ?? false;
+
+        /// <summary>
+        /// Gets the current alpha runtime statistics
+        /// </summary>
+        public AlphaRuntimeStatistics RuntimeStatistics { get; } = new AlphaRuntimeStatistics();
+
+        /// <summary>
+        /// Gets or sets the runtime statistics updated. This is responsible for estimating alpha value as
+        /// well as providing other KPIs found in <see cref="AlphaRuntimeStatistics"/>
+        /// </summary>
+        public IAlphaRuntimeStatisticsUpdater StatisticsUpdater { get; set; } = new AlphaRuntimeStatisticsUpdater();
 
         /// <summary>
         /// Gets the algorithm's unique identifier
@@ -115,6 +125,12 @@ namespace QuantConnect.Lean.Engine.Alphas
             }
 
             AlphaManager = CreateAlphaManager();
+
+            // wire events to update runtime statistics at key moments in alpha life cycle (new/period end/analysis end)
+            AlphaManager.AlphaReceived += (sender, context) => StatisticsUpdater.OnAlphaReceived(RuntimeStatistics, context);
+            AlphaManager.AlphaPeriodClosed += (sender, context) => StatisticsUpdater.OnAlphaAnalysisCompleted(RuntimeStatistics, context);
+            AlphaManager.AlphaAnalysisCompleted += (sender, context) => StatisticsUpdater.OnAlphaPeriodClosed(RuntimeStatistics, context);
+
             algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
 
             // chart for average scores over sample period
@@ -133,7 +149,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             Algorithm.AddChart(scoreChart);
             Algorithm.AddChart(predictionCount);
             Algorithm.AddChart(_totalAlphaCountPerSymbolChart);
-            Algorithm.AddChart(_dailyAlphaCountPerSymbolChart);
+            // removing this for now, not sure best way to display this data
+            //Algorithm.AddChart(_dailyAlphaCountPerSymbolChart);
         }
 
         /// <inheritdoc />
@@ -144,7 +161,6 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
-            _lastChartSampleAlgorithmTimeUtc = algorithm.UtcTime;
             _nextChartSampleAlgorithmTimeUtc = algorithm.UtcTime + ChartUpdateInterval;
             _nextAlphaCountSampleTimeUtc = (algorithm.Time.RoundDown(Time.OneDay) + Time.OneDay).ConvertToUtc(algorithm.TimeZone);
 
@@ -190,7 +206,14 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 try
                 {
-                    UpdateCharts();
+                    // sample the rolling averaged population scores
+                    foreach (var scoreType in ScoreTypes)
+                    {
+                        var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
+                        _seriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
+                    }
+
+                    _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
                 }
                 catch (Exception err)
                 {
@@ -342,52 +365,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             var scoreFunctionProvider = new DefaultAlphaScoreFunctionProvider();
             return new AlphaManager(new AlgorithmSecurityValuesProvider(Algorithm), scoreFunctionProvider, 0);
-        }
-
-        private void UpdateCharts()
-        {
-            // get scores that were finalized within this update period
-            var finalizedAlphaScores = AlphaManager.ClosedAlphas.Where(alpha =>
-                alpha.Score.UpdatedTimeUtc >= _lastChartSampleAlgorithmTimeUtc &&
-                alpha.Score.UpdatedTimeUtc <= _nextChartSampleAlgorithmTimeUtc
-            )
-            .ToList();
-
-            // compute average score values for all alphas with updates over the last day
-            var count = 0;
-            var runningScoreTotals = ScoreTypes.ToDictionary(type => type, type => 0d);
-
-            // only chart averages of scores finalized within the sample period
-            foreach (var alpha in finalizedAlphaScores)
-            {
-                count++;
-                foreach (var scoreType in ScoreTypes)
-                {
-                    runningScoreTotals[scoreType] += alpha.Score.GetScore(scoreType);
-                }
-            }
-
-            if (count > 1)
-            {
-                foreach (var kvp in runningScoreTotals)
-                {
-                    var scoreType = kvp.Key;
-                    var runningTotal = kvp.Value;
-                    var average = runningTotal / count;
-                    // scale the value from [0,1] to [0,100] for charting
-                    var scoreToPlot = 100 * average;
-
-                    // ensure we're not violating the decimal type's range before plotting
-                    if (Math.Abs(scoreToPlot) > (double)Extensions.GetDecimalEpsilon() &&
-                        Math.Abs(scoreToPlot) < (double)decimal.MaxValue)
-                    {
-                        _seriesByScoreType[scoreType].AddPoint(_nextChartSampleAlgorithmTimeUtc, (decimal)scoreToPlot, LiveMode);
-                    }
-                }
-            }
-
-            _lastChartSampleAlgorithmTimeUtc = _nextChartSampleAlgorithmTimeUtc;
-            _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
         }
 
         /// <summary>

@@ -52,12 +52,24 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public DateTime AnalysisEndTimeUtc { get; }
 
         /// <summary>
+        /// Gets ending time of the alpha, that is, the time it was generated at + the alpha period
+        /// </summary>
+        public DateTime AlphaPeriodEndTimeUtc { get; }
+
+        /// <summary>
         /// Gets the initial values. These are values of price/volatility at the time the alpha was generated
         /// </summary>
         public SecurityValues InitialValues { get; }
 
         /// <summary>
-        /// Gets the current values. These are values of price/volatility as of the current algorithm time
+        /// Gets whether or not this alpha's period has closed
+        /// </summary>
+        public bool AlphaPeriodClosed { get; private set; }
+
+        /// <summary>
+        /// Gets the current values. These are values of price/volatility as of the current algorithm time.
+        /// NOTE: Once the scoring has been finalized these values will no longer be updated and will be the
+        /// values as of the last scoring which may not be the same as the prediction end time
         /// </summary>
         public SecurityValues CurrentValues { get; private set; }
 
@@ -77,7 +89,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="alpha">The alpha to be analyzed</param>
         /// <param name="initialValues">The initial security values from when the alpha was generated</param>
         /// <param name="analysisPeriod">The period over which to perform analysis of the alpha. This should be
-        /// greater than or equal to <see cref="Alpha.Period"/>. Specify null for default, alpha.Period</param>
+        /// greater than or equal to <see cref="Alphas.Alpha.Period"/>. Specify null for default, alpha.Period</param>
         public AlphaAnalysisContext(Alpha alpha, SecurityValues initialValues, TimeSpan analysisPeriod)
         {
             Alpha = alpha;
@@ -87,7 +99,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             CurrentValues = InitialValues = initialValues;
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
+
             AnalysisEndTimeUtc = Alpha.GeneratedTimeUtc + analysisPeriod;
+            AlphaPeriodEndTimeUtc = alpha.GeneratedTimeUtc + alpha.Period;
         }
 
         /// <summary>
@@ -96,6 +110,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         internal void SetCurrentValues(SecurityValues values)
         {
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
+
+            if (values.TimeUtc >= AlphaPeriodEndTimeUtc)
+            {
+                AlphaPeriodClosed = true;
+            }
 
             CurrentValues = values;
         }

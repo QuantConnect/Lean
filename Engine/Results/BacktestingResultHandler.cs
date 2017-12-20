@@ -381,6 +381,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }, progress));
             }
 
+            // Send alpha run time statistics
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult {IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, AlphaRuntimeStatistics = AlphaRuntimeStatistics}));
+
             // Add the orders into the charting packet:
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Orders = deltaOrders }, progress));
 
@@ -410,10 +413,13 @@ namespace QuantConnect.Lean.Engine.Results
 
                     if (result != null)
                     {
-                        //3. Get Storage Location:
+                        //3. Set Alpha Runtime Statistics
+                        result.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
+
+                        //4. Get Storage Location:
                         var key = _job.BacktestId + ".json";
 
-                        //4. Save results
+                        //5. Save results
                         SaveResults(key, result.Results);
                     }
                     else
