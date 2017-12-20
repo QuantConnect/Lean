@@ -61,6 +61,7 @@ namespace QuantConnect.Securities
             security.FeeModel = _brokerageModel.GetFeeModel(security);
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
+            security.MarginModel = _brokerageModel.GetMarginModel(security, _brokerageModel.AccountType);
 
             _securitySeeder.SeedSecurity(security);
         }
