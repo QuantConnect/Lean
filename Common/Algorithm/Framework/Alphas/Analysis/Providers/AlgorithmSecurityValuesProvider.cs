@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -39,7 +40,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         public SecurityValues GetValues(Symbol symbol)
         {
             var security = _algorithm.Securities[symbol];
-            return new SecurityValues(_algorithm.UtcTime, security.Price, security.VolatilityModel.Volatility);
+            var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
+            return new SecurityValues(_algorithm.UtcTime, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
         }
     }
 }
