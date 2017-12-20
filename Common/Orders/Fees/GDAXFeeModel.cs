@@ -29,12 +29,12 @@ namespace QuantConnect.Orders.Fees
         private static readonly Dictionary<string, decimal> Fees = new Dictionary<string, decimal>
         {
             { "BTCUSD", 0.0025m }, { "BTCEUR", 0.0025m }, { "BTCGBP", 0.0025m },
-            { "ETHBTC", 0.003m }, { "ETHEUR", 0.003m }, { "ETHUSD", 0.003m },
-            { "LTCBTC", 0.003m }, { "LTCEUR", 0.003m }, { "LTCUSD", 0.003m },
+            { "ETHBTC", 0.003m  }, { "ETHEUR", 0.003m  }, { "ETHUSD", 0.003m  },
+            { "LTCBTC", 0.003m  }, { "LTCEUR", 0.003m  }, { "LTCUSD", 0.003m  }
         };
 
         /// <summary>
-        /// Get the fee for this order
+        /// Get the fee for this order in units of the account currency
         /// </summary>
         /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to compute fees for</param>
@@ -52,7 +52,8 @@ namespace QuantConnect.Orders.Fees
             decimal fee;
             Fees.TryGetValue(security.Symbol.Value, out fee);
 
-            return security.Price * order.AbsoluteQuantity * fee;
+            // get order value in account currency, then apply fee factor
+            return order.GetValue(security) * fee;
         }
     }
 }
