@@ -298,6 +298,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public decimal GetFee(Order order)
         {
+            var gdaxOrderProperties = order.Properties as GDAXOrderProperties;
+            if (order.Type == OrderType.Limit && gdaxOrderProperties?.PostOnly == true)
+            {
+                return 0m;
+            }
+
             var totalFee = 0m;
 
             foreach (var item in order.BrokerId)
