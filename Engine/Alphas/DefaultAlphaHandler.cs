@@ -149,7 +149,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             Algorithm.AddChart(scoreChart);
             Algorithm.AddChart(predictionCount);
             Algorithm.AddChart(_totalAlphaCountPerSymbolChart);
-            Algorithm.AddChart(_dailyAlphaCountPerSymbolChart);
+            // removing this for now, not sure best way to display this data
+            //Algorithm.AddChart(_dailyAlphaCountPerSymbolChart);
         }
 
         /// <inheritdoc />
