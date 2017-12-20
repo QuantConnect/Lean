@@ -296,9 +296,14 @@ namespace QuantConnect.Lean.Engine.Results
                     serverStatistics["Total RAM (MB)"] = _job.Controls.RamAllocation.ToString();
 
                     // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var asset in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed() && !x.Symbol.IsCanonical()).OrderBy(x => x.Symbol.Value))
+                    foreach (var kvp in _algorithm.Securities.OrderBy(x => x.Key.Value))
                     {
-                        holdings.Add(asset.Symbol.Value, new Holding(asset));
+                        var security = kvp.Value;
+
+                        if (!security.IsInternalFeed() && !security.Symbol.IsCanonical())
+                        {
+                            holdings.Add(security.Symbol.Value, new Holding(security));
+                        }
                     }
 
                     //Add the algorithm statistics first.
@@ -739,8 +744,10 @@ namespace QuantConnect.Lean.Engine.Results
             _algorithm = algorithm;
 
             var types = new List<SecurityType>();
-            foreach (var security in _algorithm.Securities.Values)
+            foreach (var kvp in _algorithm.Securities)
             {
+                var security = kvp.Value;
+
                 if (!types.Contains(security.Type)) types.Add(security.Type);
             }
             SecurityType(types);
@@ -1075,9 +1082,9 @@ namespace QuantConnect.Lean.Engine.Results
                                 security.SetRealTimePrice(last);
 
                                 // Update CashBook for Forex securities
-                                var cash = (from c in _algorithm.Portfolio.CashBook.Values
-                                    where c.SecuritySymbol == last.Symbol
-                                    select c).SingleOrDefault();
+                                var cash = (from c in _algorithm.Portfolio.CashBook
+                                    where c.Value.SecuritySymbol == last.Symbol
+                                    select c.Value).SingleOrDefault();
 
                                 if (cash != null)
                                 {

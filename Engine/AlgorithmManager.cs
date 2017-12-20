@@ -869,8 +869,10 @@ namespace QuantConnect.Lean.Engine
         {
             Log.Trace("AlgorithmManager.ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
-            foreach (var security in algorithm.Securities.Values)
+            foreach (var kvp in algorithm.Securities)
             {
+                var security = kvp.Value;
+
                 if (security.VolatilityModel != VolatilityModel.Null)
                 {
                     var historyReq = security.VolatilityModel.GetHistoryRequirements(security, algorithm.UtcTime);

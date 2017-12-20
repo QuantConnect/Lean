@@ -116,7 +116,7 @@ namespace QuantConnect
                                 currentDate.DayOfWeek == DayOfWeek.Saturday;
                 var businessDay = !publicHoliday && !weekend;
 
-                yield return 
+                yield return
                     new TradingDay
                     {
                         Date = currentDate,

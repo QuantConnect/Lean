@@ -106,9 +106,9 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol)
-                    where security.Holdings.AbsoluteQuantity > 0
-                    select new Holding(security)).ToList();
+            return (from kvp in Algorithm.Portfolio.Securities.OrderBy(x => x.Value.Symbol)
+                    where kvp.Value.Holdings.AbsoluteQuantity > 0
+                    select new Holding(kvp.Value)).ToList();
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            return Algorithm.Portfolio.CashBook.Values.ToList();
+            return Algorithm.Portfolio.CashBook.Select(x => x.Value).ToList();
         }
 
         /// <summary>
