@@ -58,12 +58,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Enumerable of alphas still under analysis
         /// </summary>
-        public IEnumerable<Alpha> OpenAlphas => _openAlphaContexts.Values.Select(context => context.Alpha);
+        public IEnumerable<Alpha> OpenAlphas => _openAlphaContexts.Select(kvp => kvp.Value.Alpha);
 
         /// <summary>
         /// Enumerable of alphas who's analysis has been completed
         /// </summary>
-        public IEnumerable<Alpha> ClosedAlphas => _closedAlphaContexts.Values.Select(context => context.Alpha);
+        public IEnumerable<Alpha> ClosedAlphas => _closedAlphaContexts.Select(kvp => kvp.Value.Alpha);
 
         /// <summary>
         /// Enumerable of all internally maintained alphas
@@ -142,8 +142,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 return;
             }
 
-            foreach (var context in _openAlphaContexts.Values)
+            foreach (var kvp in _openAlphaContexts)
             {
+                var context = kvp.Value;
+
                 // was this alpha period closed before we update the times?
                 var alphaPeriodClosed = context.AlphaPeriodClosed;
 
@@ -190,8 +192,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <returns></returns>
         public IEnumerable<AlphaAnalysisContext> GetUpdatedContexts()
         {
-            foreach (var context in _updatedAlphaContextsByAlphaId.Values)
+            foreach (var kvp in _updatedAlphaContextsByAlphaId)
             {
+                var context = kvp.Value;
+
                 AlphaAnalysisContext c;
                 _updatedAlphaContextsByAlphaId.TryRemove(context.Alpha.Id, out c);
                 yield return context;
