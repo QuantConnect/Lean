@@ -208,7 +208,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from asset in Securities.Values
+                return (from asset in Securities.Select(x => x.Value)
                         select asset.Holdings).ToList();
             }
         }
@@ -283,7 +283,7 @@ namespace QuantConnect.Securities
             get
             {
                 //Sum of unlevered cost of holdings
-                return (from position in Securities.Values
+                return (from position in Securities.Select(x => x.Value)
                         select position.Holdings.UnleveredAbsoluteHoldingsCost).Sum();
             }
         }
@@ -305,7 +305,7 @@ namespace QuantConnect.Securities
             get
             {
                 //Sum sum of holdings
-                return (from position in Securities.Values
+                return (from position in Securities.Select(x => x.Value)
                         select position.Holdings.AbsoluteHoldingsValue).Sum();
             }
         }
@@ -336,7 +336,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Values
+                return (from position in Securities.Select(x => x.Value)
                         select position.Holdings.UnrealizedProfit).Sum();
             }
         }
@@ -385,7 +385,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Values
+                return (from position in Securities.Select(x => x.Value)
                         select position.Holdings.TotalFees).Sum();
             }
         }
@@ -397,7 +397,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Values
+                return (from position in Securities.Select(x => x.Value)
                         select position.Holdings.Profit).Sum();
             }
         }
@@ -409,7 +409,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from position in Securities.Values
+                return (from position in Securities.Select(x => x.Value)
                         select position.Holdings.TotalSaleVolume).Sum();
             }
         }
@@ -422,9 +422,8 @@ namespace QuantConnect.Securities
             get
             {
                 decimal sum = 0;
-                foreach (var kvp in Securities)
+                foreach (var security in Securities.Select(x => x.Value))
                 {
-                    var security = kvp.Value;
                     sum += security.MarginModel.GetMaintenanceMargin(security);
                 }
                 return sum;
@@ -575,7 +574,7 @@ namespace QuantConnect.Securities
             if (marginRemaining <= 0)
             {
                 // skip securities that have no price data or no holdings, we can't liquidate nothingness
-                foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
+                foreach (var security in Securities.Select(x => x.Value).Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
                 {
                     var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
                     var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);

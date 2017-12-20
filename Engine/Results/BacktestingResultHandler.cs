@@ -506,7 +506,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Set the security / market types.
             var types = new List<SecurityType>();
-            foreach (var security in _algorithm.Securities.Values)
+            foreach (var security in _algorithm.Securities.Select(x => x.Value))
             {
                 if (!types.Contains(security.Type)) types.Add(security.Type);
             }
@@ -832,7 +832,7 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleRange(_algorithm.GetChartUpdates());
 
                 //Sample the asset pricing:
-                foreach (var security in _algorithm.Securities.Values)
+                foreach (var security in _algorithm.Securities.Select(x => x.Value))
                 {
                     SampleAssetPrices(security.Symbol, time, security.Price);
                 }

@@ -859,7 +859,7 @@ namespace QuantConnect.Lean.Engine
         {
             Log.Trace("AlgorithmManager.ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
-            foreach (var security in algorithm.Securities.Values)
+            foreach (var security in algorithm.Securities.Select(x => x.Value))
             {
                 if (security.VolatilityModel != VolatilityModel.Null)
                 {

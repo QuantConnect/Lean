@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Risk
@@ -26,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="algorithm">The algorithm instance</param>
         public void ManageRisk(QCAlgorithmFramework algorithm)
         {
-            foreach (var security in algorithm.Securities.Values)
+            foreach (var security in algorithm.Securities.Select(x => x.Value))
             {
                 if (!security.Invested)
                 {

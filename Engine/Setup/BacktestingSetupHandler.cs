@@ -278,7 +278,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Sum();
 
             // universe coarse/fine/custom subscriptions
-            var universeSubscriptions = universeManager.Values
+            var universeSubscriptions = universeManager.Select(x => x.Value)
                 // use max limit for universes without explicitly added securities
                 .Select(u => u.Members.Count == 0 ? controls.GetLimit(u.UniverseSettings.Resolution) : u.Members.Count)
                 .Sum();

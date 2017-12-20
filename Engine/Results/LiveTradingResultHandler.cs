@@ -296,7 +296,7 @@ namespace QuantConnect.Lean.Engine.Results
                     serverStatistics["Total RAM (MB)"] = _job.Controls.RamAllocation.ToString();
 
                     // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var asset in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed() && !x.Symbol.IsCanonical()).OrderBy(x => x.Symbol.Value))
+                    foreach (var asset in _algorithm.Securities.Select(x => x.Value).Where(x => !x.IsInternalFeed() && !x.Symbol.IsCanonical()).OrderBy(x => x.Symbol.Value))
                     {
                         holdings.Add(asset.Symbol.Value, new Holding(asset));
                     }
@@ -737,7 +737,7 @@ namespace QuantConnect.Lean.Engine.Results
             _algorithm = algorithm;
 
             var types = new List<SecurityType>();
-            foreach (var security in _algorithm.Securities.Values)
+            foreach (var security in _algorithm.Securities.Select(x => x.Value))
             {
                 if (!types.Contains(security.Type)) types.Add(security.Type);
             }
@@ -1071,7 +1071,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 security.SetRealTimePrice(last);
 
                                 // Update CashBook for Forex securities
-                                var cash = (from c in _algorithm.Portfolio.CashBook.Values
+                                var cash = (from c in _algorithm.Portfolio.CashBook.Select(x => x.Value)
                                     where c.SecuritySymbol == last.Symbol
                                     select c).SingleOrDefault();
 

@@ -541,7 +541,7 @@ namespace QuantConnect.Algorithm
                     equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
                 }
                 // In the options trading, the strike price, the options settlement and exercise are
-                // all based on the raw price of the underlying asset instead of the adjusted price. 
+                // all based on the raw price of the underlying asset instead of the adjusted price.
                 // In order to select the accurate contracts, we need to set
                 // the data normalization mode of the underlying asset to be raw
                 else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
@@ -971,7 +971,7 @@ namespace QuantConnect.Algorithm
                 SecurityInitializer = new BrokerageModelSecurityInitializer(model, new FuncSecuritySeeder(GetLastKnownPrice));
 
                 // update models on securities added earlier (before SetBrokerageModel is called)
-                foreach (var security in Securities.Values)
+                foreach (var security in Securities.Select(x => x.Value))
                 {
                     // save the existing leverage specified in AddSecurity,
                     // if Leverage needs to be set in a SecurityInitializer,
@@ -1615,7 +1615,7 @@ namespace QuantConnect.Algorithm
                 // liquidate if invested
                 if (security.Invested) Liquidate(security.Symbol);
 
-                var universe = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
+                var universe = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
                 if (universe != null)
                 {
                     var ret = universe.Remove(symbol);

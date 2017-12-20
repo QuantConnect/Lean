@@ -78,7 +78,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
-            foreach (var security in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()))
+            foreach (var security in _algorithm.Securities.Select(x => x.Value).Where(x => !x.IsInternalFeed()))
             {
                 // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             date = date.Date;
 
             // update market hours for each security
-            foreach (var security in _algorithm.Securities.Values)
+            foreach (var security in _algorithm.Securities.Select(x => x.Value))
             {
                 var marketHours = _api.MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
