@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
@@ -38,6 +39,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         private readonly ConcurrentDictionary<Guid, AlphaAnalysisContext> _openAlphaContexts;
         private readonly ConcurrentDictionary<Guid, AlphaAnalysisContext> _closedAlphaContexts;
         private readonly ConcurrentDictionary<Guid, AlphaAnalysisContext> _updatedAlphaContextsByAlphaId;
+
+        /// <summary>
+        /// Event fired when new alpha is received by this manager
+        /// </summary>
+        public event EventHandler<AlphaAnalysisContext> AlphaReceived;
+
+        /// <summary>
+        /// Event fired when an an alpha's period has expired
+        /// </summary>
+        public event EventHandler<AlphaAnalysisContext> AlphaPeriodClosed;
+
+        /// <summary>
+        /// Event fired when an alpha context is finished scoring
+        /// </summary>
+        public event EventHandler<AlphaAnalysisContext> AlphaAnalysisCompleted;
 
         /// <summary>
         /// Enumerable of alphas still under analysis
@@ -89,9 +105,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         {
             foreach (var alpha in collection.Alphas)
             {
+                // save initial security values and deterine analysis period
                 var initialValues = _securityValuesProvider.GetValues(alpha.Symbol);
                 var analysisPeriod = alpha.Period + TimeSpan.FromTicks((long) (_extraAnalysisPeriodRatio * alpha.Period.Ticks));
-                _openAlphaContexts[alpha.Id] = new AlphaAnalysisContext(alpha, initialValues, analysisPeriod);
+
+                // set this as an open analysis context
+                var context = new AlphaAnalysisContext(alpha, initialValues, analysisPeriod);
+                _openAlphaContexts[alpha.Id] = context;
+
+                // let everyone know we've received alpha
+                OnAlphaReceived(context);
             }
         }
 
@@ -121,6 +144,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 
             foreach (var context in _openAlphaContexts.Values)
             {
+                // was this alpha period closed before we update the times?
+                var alphaPeriodClosed = context.AlphaPeriodClosed;
+
                 // update the security values: price/volatility
                 context.SetCurrentValues(_securityValuesProvider.GetValues(context.Symbol));
 
@@ -133,9 +159,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                     context.Score.SetScore(scoreType, score, context.CurrentValues.TimeUtc, context.AnalysisEndTimeUtc);
                 }
 
+                // it wasn't closed and now it is closed, fire the event.
+                if (!alphaPeriodClosed && context.AlphaPeriodClosed)
+                {
+                    OnAlphaPeriodCompleted(context);
+                }
+
                 // if this score has been finalized, remove it from the open set
                 if (context.Score.IsFinalScore)
                 {
+                    OnAlphaScoringFinalzed(context);
+
                     var id = context.Alpha.Id;
                     _closedAlphaContexts[id] = context;
 
@@ -162,6 +196,33 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 _updatedAlphaContextsByAlphaId.TryRemove(context.Alpha.Id, out c);
                 yield return context;
             }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="AlphaPeriodClosed"/> event
+        /// </summary>
+        /// <param name="context">The context whose alpha period has closed</param>
+        protected virtual void OnAlphaPeriodCompleted(AlphaAnalysisContext context)
+        {
+            AlphaPeriodClosed?.Invoke(this, context);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="AlphaAnalysisCompleted"/> event
+        /// </summary>
+        /// <param name="context">The context whose analysis period and scoring has finalized</param>
+        protected virtual void OnAlphaScoringFinalzed(AlphaAnalysisContext context)
+        {
+            AlphaAnalysisCompleted?.Invoke(this, context);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="AlphaReceived"/> event
+        /// </summary>
+        /// <param name="context">The context whose alpha was generated this time step</param>
+        protected virtual void OnAlphaReceived(AlphaAnalysisContext context)
+        {
+            AlphaReceived?.Invoke(this, context);
         }
     }
 }

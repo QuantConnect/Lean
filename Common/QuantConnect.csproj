@@ -129,6 +129,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmSettings.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\IAlphaRuntimeStatisticsUpdater.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\Providers\AlphaRuntimeStatisticsUpdater.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\Providers\AlgorithmSecurityValuesProvider.cs" />
@@ -144,6 +146,7 @@
     <Compile Include="Algorithm\Framework\Alphas\Analysis\AlphaManager.cs" />
     <Compile Include="Algorithm\Framework\Alphas\AlphaScore.cs" />
     <Compile Include="Algorithm\Framework\Alphas\AlphaScoreType.cs" />
+    <Compile Include="AlphaRuntimeStatistics.cs" />
     <Compile Include="API\AuthenticationResponse.cs" />
     <Compile Include="API\Backtest.cs" />
     <Compile Include="API\Compile.cs" />

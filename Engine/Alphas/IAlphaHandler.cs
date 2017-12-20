@@ -32,6 +32,11 @@ namespace QuantConnect.Lean.Engine.Alpha
         bool IsActive { get; }
 
         /// <summary>
+        /// Gets the current alpha runtime statistics
+        /// </summary>
+        AlphaRuntimeStatistics RuntimeStatistics { get; }
+
+        /// <summary>
         /// Initializes this alpha handler to accept alphas from the specified algorithm
         /// </summary>
         /// <param name="job">The algorithm job</param>

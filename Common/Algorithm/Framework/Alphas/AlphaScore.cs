@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public double Direction { get; private set; }
 
         /// <summary>
-        /// Gets the percent change score
+        /// Gets the magnitude score
         /// </summary>
         public double Magnitude { get; private set; }
 

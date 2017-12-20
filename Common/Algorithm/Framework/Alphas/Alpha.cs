@@ -79,6 +79,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public AlphaScore Score { get; private set; }
 
         /// <summary>
+        /// Gets the estimated value of this alpha in the account currency
+        /// </summary>
+        public decimal EstimatedValue { get; internal set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Alpha"/> class
         /// </summary>
         /// <param name="symbol">The symbol this alpha is for</param>
@@ -112,6 +117,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             // Optional
             Magnitude = magnitude;
             Confidence = confidence;
+        }
+
+        /// <summary>
+        /// Determines whether or not this alpha's period is closed.
+        /// </summary>
+        /// <param name="currentTimeUtc">The time to check</param>
+        /// <returns>True if the the time is on or after the alpha closing time, otherwise false</returns>
+        public bool IsPeriodClosedAt(DateTime currentTimeUtc)
+        {
+            return GeneratedTimeUtc + Period >= currentTimeUtc;
         }
 
         /// <summary>
