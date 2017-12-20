@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
@@ -30,23 +31,29 @@ namespace QuantConnect.Brokerages
     {
         private static BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
 
-        // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
-        private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
-        {
-            { "BTCUSD", 0.0001m },
-            { "BTCEUR", 0.0001m },
-            { "BTCGBP", 0.0001m },
+        /// <summary>
+        /// Gets the GDAX minimum order sizes by the security's tickers
+        /// </summary>
+        /// <remarks>
+        /// https://support.gdax.com/customer/portal/articles/2725970-trading-rules
+        /// </remarks>
+        public static readonly IReadOnlyDictionary<string, decimal> MinimumOrderSizes = new ReadOnlyDictionary<string, decimal>(
+            new Dictionary<string, decimal>
+            {
+                {"BTCUSD", 0.0001m},
+                {"BTCEUR", 0.0001m},
+                {"BTCGBP", 0.0001m},
 
-            { "ETHUSD", 0.001m },
-            { "ETHEUR", 0.001m },
-            { "ETHGBP", 0.001m },
-            { "ETHBTC", 0.001m },
+                {"ETHUSD", 0.001m},
+                {"ETHEUR", 0.001m},
+                {"ETHGBP", 0.001m},
+                {"ETHBTC", 0.001m},
 
-            { "LTCUSD", 0.01m },
-            { "LTCEUR", 0.01m },
-            { "LTCGBP", 0.01m },
-            { "LTCBTC", 0.01m }
-        };
+                {"LTCUSD", 0.01m},
+                {"LTCEUR", 0.01m},
+                {"LTCGBP", 0.01m},
+                {"LTCBTC", 0.01m}
+            });
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
