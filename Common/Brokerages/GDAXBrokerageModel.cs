@@ -28,7 +28,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
-        private static BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+        private readonly CashBook _cashBook;
+        private static readonly BrokerageMessageEvent UpdateNotSupportedErrorMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
 
         // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
         private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
@@ -57,9 +58,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Margin"/></param>
-        public GDAXBrokerageModel(AccountType accountType = AccountType.Margin)
+        public GDAXBrokerageModel(CashBook cashBook, AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
+            _cashBook = cashBook;
             if (accountType == AccountType.Margin)
             {
                 new BrokerageMessageEvent(BrokerageMessageType.Warning, 0,
@@ -102,7 +104,7 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = _message;
+            message = UpdateNotSupportedErrorMessage;
             return false;
         }
 
@@ -117,7 +119,7 @@ namespace QuantConnect.Brokerages
         {
             if (order.BrokerId != null && order.BrokerId.Any())
             {
-                message = _message;
+                message = UpdateNotSupportedErrorMessage;
                 return false;
             }
 
@@ -161,6 +163,23 @@ namespace QuantConnect.Brokerages
         public override IFillModel GetFillModel(Security security)
         {
             return new LatestPriceFillModel();
+        }
+
+        /// <summary>
+        /// Gets a new margin model for the security. For cash accounts the <see cref="NonShortableCashAccountMarginModel"/>
+        /// is returned, while margin accounts will return the default margin model
+        /// </summary>
+        /// <param name="security">The security to get a margin model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The margin model for this brokerage/security</returns>
+        public override ISecurityMarginModel GetMarginModel(Security security, AccountType accountType)
+        {
+            if (accountType == AccountType.Cash)
+            {
+                return new NonShortableCashAccountMarginModel(_cashBook);
+            }
+
+            return base.GetMarginModel(security, accountType);
         }
     }
 }

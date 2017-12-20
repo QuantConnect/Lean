@@ -140,8 +140,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="brokerage">The name of the brokerage</param>
         /// <param name="accountType">The account type</param>
+        /// <param name="cashBook">The portfolio's cashbook</param>
         /// <returns>The model for the specified brokerage</returns>
-        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType)
+        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType, CashBook cashBook)
         {
             switch (brokerage)
             {
@@ -164,7 +165,7 @@ namespace QuantConnect.Brokerages
                     return new DefaultBrokerageModel(accountType);
 
                 case BrokerageName.GDAX:
-                    return new GDAXBrokerageModel(accountType);
+                    return new GDAXBrokerageModel(cashBook, accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);

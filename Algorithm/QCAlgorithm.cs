@@ -964,7 +964,7 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType, Portfolio.CashBook));
         }
 
         /// <summary>

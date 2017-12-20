@@ -62,9 +62,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var webSocketClient = new WebSocketWrapper();
 
             var algorithm = new Mock<IAlgorithm>();
-            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));
+            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(new CashBook(), AccountType.Cash));
 
-            return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.gdax.com"), webSocketClient, restClient, Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), 
+            return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.gdax.com"), webSocketClient, restClient, Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"),
                 Config.Get("gdax-passphrase"), algorithm.Object);
         }
 

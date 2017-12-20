@@ -27,6 +27,8 @@ namespace QuantConnect.Brokerages.GDAX
     /// </summary>
     public class GDAXBrokerageFactory : BrokerageFactory
     {
+        private IAlgorithm _algorithm;
+
         /// <summary>
         /// Factory constructor
         /// </summary>
@@ -53,9 +55,10 @@ namespace QuantConnect.Brokerages.GDAX
         };
 
         /// <summary>
-        /// The brokerage model
+        /// The brokerage model. This uses the alorithm instance passed in <see cref="CreateBrokerage"/>
+        /// in order to properly populate the model with a reference to the algorithm's cashbook
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new GDAXBrokerageModel();
+        public override IBrokerageModel BrokerageModel => new GDAXBrokerageModel(_algorithm?.Portfolio?.CashBook);
 
         /// <summary>
         /// Create the Brokerage instance

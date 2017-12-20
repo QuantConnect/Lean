@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -29,7 +30,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class GDAXBrokerageModelTests
     {
 
-        GDAXBrokerageModel _unit = new GDAXBrokerageModel();
+        GDAXBrokerageModel _unit = new GDAXBrokerageModel(new CashBook());
 
         [Test()]
         public void GetLeverageTest()
