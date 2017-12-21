@@ -146,5 +146,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         {
             _contextStorage[key] = value;
         }
+
+        /// <summary>
+        /// Determines whether or not this context/alpha can be analyzed for the specified score type
+        /// </summary>
+        /// <param name="scoreType">The type of alpha score</param>
+        /// <returns>True to proceed with analyzing this alpha for the specified score type, false to skip analysis of the score type</returns>
+        public bool ShouldAnalyze(AlphaScoreType scoreType)
+        {
+            if (scoreType == AlphaScoreType.Magnitude)
+            {
+                return Alpha.Magnitude.HasValue;
+            }
+
+            return true;
+        }
     }
 }

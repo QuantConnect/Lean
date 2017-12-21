@@ -155,6 +155,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 // update scores for each score type
                 foreach (var scoreType in ScoreTypes)
                 {
+                    if (!context.ShouldAnalyze(scoreType))
+                    {
+                        // not all alphas can receive every score type, for example, alpha.Magnitude==null, not point in doing magnitude scoring
+                        continue;
+                    }
+
                     // resolve and evaluate the scoring function, storing the result in the context
                     var function = _scoreFunctionProvider.GetScoreFunction(context.Alpha.Type, scoreType);
                     var score = function.Evaluate(context, scoreType);
