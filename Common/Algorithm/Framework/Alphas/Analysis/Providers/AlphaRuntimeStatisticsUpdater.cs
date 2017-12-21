@@ -103,8 +103,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
                 var newMean = mean + (score - mean) / _populationMeanSamples;
                 statistics.MeanPopulationScore.SetScore(scoreType, newMean, currentTime, analysisEndTime);
 
-                var ema = statistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                var newEma = score * _smoothingFactor + ema * (1 - _smoothingFactor);
+                var newEma = score;
+                if (_populationMeanSamples > 1)
+                {
+                    var ema = statistics.RollingAveragedPopulationScore.GetScore(scoreType);
+                    newEma = score * _smoothingFactor + ema * (1 - _smoothingFactor);
+                }
                 statistics.RollingAveragedPopulationScore.SetScore(scoreType, newEma, currentTime, analysisEndTime);
             }
 
