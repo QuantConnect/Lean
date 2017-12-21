@@ -32,9 +32,11 @@ namespace QuantConnect
         public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>
         {
             "BTCUSD",
+            "BCHUSD",
             "LTCUSD",
             "ETHUSD",
             "BTCEUR",
+            "BCHEUR",
             "LTCEUR",
             "ETHEUR"
         };
@@ -288,6 +290,7 @@ namespace QuantConnect
             {"ZAR", "R"},
 
             {"BTC", "฿"},
+            {"BCH", "฿"},
             {"LTC", "Ł"},
             {"ETH", "Ether"}
         };

@@ -29,6 +29,7 @@ namespace QuantConnect.Orders.Fees
         private static readonly Dictionary<string, decimal> Fees = new Dictionary<string, decimal>
         {
             { "BTCUSD", 0.0025m }, { "BTCEUR", 0.0025m }, { "BTCGBP", 0.0025m },
+            { "BCHBTC", 0.003m  }, { "BCHEUR", 0.003m  }, { "BCHUSD", 0.003m  },
             { "ETHBTC", 0.003m  }, { "ETHEUR", 0.003m  }, { "ETHUSD", 0.003m  },
             { "LTCBTC", 0.003m  }, { "LTCEUR", 0.003m  }, { "LTCUSD", 0.003m  }
         };
