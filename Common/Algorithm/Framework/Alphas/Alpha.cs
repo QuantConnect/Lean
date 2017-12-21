@@ -40,12 +40,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public DateTime GeneratedTimeUtc { get; internal set; }
 
         /// <summary>
-        /// Gets the alpha's prediction end time. This is the time when this
-        /// alpha prediction is expected to be fulfilled.
-        /// </summary>
-        public DateTime AlphaPeriodEndTimeUtc => GeneratedTimeUtc + Period;
-
-        /// <summary>
         /// Gets the symbol this alpha is for
         /// </summary>
         public Symbol Symbol { get; private set; }
