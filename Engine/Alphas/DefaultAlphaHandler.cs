@@ -205,14 +205,18 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 try
                 {
-                    // sample the rolling averaged population scores
-                    foreach (var scoreType in ScoreTypes)
+                    // verify these scores have been computed before taking the first sample
+                    if (RuntimeStatistics.RollingAveragedPopulationScore.UpdatedTimeUtc != default(DateTime))
                     {
-                        var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                        _alphaScoreSeriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
+                        // sample the rolling averaged population scores
+                        foreach (var scoreType in ScoreTypes)
+                        {
+                            var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
+                            _alphaScoreSeriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
+                        }
+                        _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
                     }
 
-                    _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
                 }
                 catch (Exception err)
                 {
