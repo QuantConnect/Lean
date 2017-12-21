@@ -136,12 +136,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// </summary>
         public void UpdateScores()
         {
-            if (_openAlphaContexts.IsEmpty)
-            {
-                // short circuit to prevent enumeration
-                return;
-            }
-
             foreach (var kvp in _openAlphaContexts)
             {
                 var context = kvp.Value;
