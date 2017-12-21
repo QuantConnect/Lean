@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            subscriptions = dictionary.Values;
+            subscriptions = dictionary.Select(x => x.Value).ToList();
             return true;
         }
 
@@ -133,7 +133,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            return dictionary.TryRemove(configuration, out subscription);
+            if (!dictionary.TryRemove(configuration, out subscription))
+            {
+                subscription = null;
+                return false;
+            }
+
+            return dictionary.Any() || _subscriptions.TryRemove(configuration.Symbol, out dictionary);
         }
 
         /// <summary>
@@ -151,7 +157,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            subscriptions = dictionary.Values;
+            subscriptions = dictionary.Select(x => x.Value).ToList();
             return true;
         }
 
