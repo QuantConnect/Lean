@@ -37,6 +37,10 @@ namespace QuantConnect.Brokerages
             { "BTCEUR", 0.0001m },
             { "BTCGBP", 0.0001m },
 
+            { "BCHUSD", 0.0001m },
+            { "BCHEUR", 0.0001m },
+            { "BCHBTC", 0.0001m },
+
             { "ETHUSD", 0.001m },
             { "ETHEUR", 0.001m },
             { "ETHGBP", 0.001m },
