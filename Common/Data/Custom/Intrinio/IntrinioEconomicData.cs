@@ -192,8 +192,7 @@ namespace QuantConnect.Data.Custom.Intrinio
                 Symbol = config.Symbol,
                 Time = time,
                 EndTime = time + QuantConnect.Time.OneDay,
-                Value = value,
-                DataType = MarketDataType.Auxiliary
+                Value = value
             };
         }
 
