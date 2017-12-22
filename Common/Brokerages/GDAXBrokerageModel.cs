@@ -15,33 +15,48 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Interfaces;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Slippage;
-using QuantConnect.Configuration;
 using System.Linq;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages
 {
-
     /// <summary>
     /// Provides GDAX specific properties
     /// </summary>
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
-
         private static BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+
+        // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
+        private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
+        {
+            { "BTCUSD", 0.0001m },
+            { "BTCEUR", 0.0001m },
+            { "BTCGBP", 0.0001m },
+
+            { "BCHUSD", 0.0001m },
+            { "BCHEUR", 0.0001m },
+            { "BCHBTC", 0.0001m },
+
+            { "ETHUSD", 0.001m },
+            { "ETHEUR", 0.001m },
+            { "ETHGBP", 0.001m },
+            { "ETHBTC", 0.001m },
+
+            { "LTCUSD", 0.01m },
+            { "LTCEUR", 0.01m },
+            { "LTCGBP", 0.01m },
+            { "LTCBTC", 0.01m }
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        /// <see cref="AccountType.Margin"/></param>
         public GDAXBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
@@ -59,6 +74,11 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+
             return 3m;
         }
 
@@ -101,11 +121,14 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (Math.Abs(order.Quantity) < 0.01m)
+            decimal minimumOrderSize;
+            if (MinimumOrderSizes.TryGetValue(security.Symbol.Value, out minimumOrderSize) &&
+                Math.Abs(order.Quantity) < minimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "The minimum order quantity is 0.01"
+                    $"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}"
                 );
+
                 return false;
             }
 

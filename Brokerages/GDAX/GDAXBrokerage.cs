@@ -21,12 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
 
 namespace QuantConnect.Brokerages.GDAX
 {
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
-
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
@@ -71,22 +71,28 @@ namespace QuantConnect.Brokerages.GDAX
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
-            if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Content != null)
+            if (response.StatusCode == HttpStatusCode.OK && response.Content != null)
             {
                 var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
 
                 if (raw?.Id == null)
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    var errorMessage = $"Error parsing response from place order: {response.Content}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
                     UnlockStream();
-                    return false;
+                    return true;
                 }
 
                 if (raw.Status == "rejected")
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = "Reject reason: " + raw.RejectReason });
+                    var errorMessage = "Reject reason: " + raw.RejectReason;
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
                     UnlockStream();
-                    return false;
+                    return true;
                 }
 
                 var brokerId = raw.Id;
@@ -105,18 +111,18 @@ namespace QuantConnect.Brokerages.GDAX
 
                 // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "Order completed successfully orderid:" + order.Id));
 
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
                 UnlockStream();
                 return true;
             }
 
+            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-            var message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
             UnlockStream();
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -143,7 +149,11 @@ namespace QuantConnect.Brokerages.GDAX
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
-                success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
+                success.Add(response.StatusCode == HttpStatusCode.OK);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Canceled });
+                }
             }
 
             return success.All(a => a);
@@ -171,7 +181,7 @@ namespace QuantConnect.Brokerages.GDAX
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception($"GDAXBrokerage.GetOpenOrders: request failed: [{(int) response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
@@ -250,7 +260,7 @@ namespace QuantConnect.Brokerages.GDAX
             GetAuthenticationToken(request);
             var response = RestClient.Execute(request);
 
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception($"GDAXBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
@@ -288,6 +298,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public decimal GetFee(Order order)
         {
+            var gdaxOrderProperties = order.Properties as GDAXOrderProperties;
+            if (order.Type == OrderType.Limit && gdaxOrderProperties?.PostOnly == true)
+            {
+                return 0m;
+            }
+
             var totalFee = 0m;
 
             foreach (var item in order.BrokerId)
@@ -296,7 +312,7 @@ namespace QuantConnect.Brokerages.GDAX
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
 
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                if (response.StatusCode != HttpStatusCode.OK)
                 {
                     throw new Exception($"GDAXBrokerage.GetFee: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
                 }

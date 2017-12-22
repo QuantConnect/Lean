@@ -40,7 +40,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private readonly string _passPhrase;
-        private const string SymbolMatching = "ETH|LTC|BTC";
+        private const string SymbolMatching = "ETH|LTC|BTC|BCH";
         private readonly IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
@@ -80,7 +80,13 @@ namespace QuantConnect.Brokerages.GDAX
 
             WebSocket.Open += (sender, args) =>
             {
-                var tickers = new[] {"LTCUSD", "LTCEUR", "LTCBTC", "BTCUSD", "BTCEUR", "BTCGBP", "ETHBTC", "ETHUSD", "ETHEUR"};
+                var tickers = new[]
+                {
+                    "LTCUSD", "LTCEUR", "LTCBTC",
+                    "BTCUSD", "BTCEUR", "BTCGBP",
+                    "ETHBTC", "ETHUSD", "ETHEUR",
+                    "BCHBTC", "BCHUSD", "BCHEUR"
+                };
                 Subscribe(tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
             };
 

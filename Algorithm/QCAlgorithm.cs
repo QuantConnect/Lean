@@ -40,6 +40,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using System.Net;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm
 {
@@ -158,6 +159,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Event fired when the algorithm generates alphas
+        /// </summary>
+        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+
+        /// <summary>
         /// Security collection is an array of the security objects such as Equities and FOREX. Securities data
         /// manages the properties of tradeable assets such as price, open and close time and holdings information.
         /// </summary>
@@ -231,6 +237,14 @@ namespace QuantConnect.Algorithm
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Returns false since algorithms derived from this do not use the framework
+        /// </summary>
+        public virtual bool IsFrameworkAlgorithm
+        {
+            get { return false; }
         }
 
         /// <summary>
@@ -483,30 +497,37 @@ namespace QuantConnect.Algorithm
         /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
         /// the data gather in the Initialize method
         /// </summary>
-        public void PostInitialize()
+        public virtual void PostInitialize()
         {
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
-                // apply the default benchmark if it hasn't been set
-                if (_benchmarkSymbol == null || _benchmarkSymbol == QuantConnect.Symbol.Empty)
+                if (_benchmarkSymbol != null && _benchmarkSymbol != QuantConnect.Symbol.Empty)
                 {
-                    _benchmarkSymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-                }
+                    // if the requested benchmark symbol wasn't already added, then add it now
+                    // we do a simple compare here for simplicity, also it avoids confusion over
+                    // the desired market.
+                    Security security;
+                    if (!Securities.TryGetValue(_benchmarkSymbol, out security))
+                    {
+                        // add the security as an internal feed so the algorithm doesn't receive the data
+                        security = CreateBenchmarkSecurity();
+                        AddToUserDefinedUniverse(security);
+                    }
 
-                // if the requested benchmark symbol wasn't already added, then add it now
-                // we do a simple compare here for simplicity, also it avoids confusion over
-                // the desired market.
-                Security security;
-                if (!Securities.TryGetValue(_benchmarkSymbol, out security))
+                    // just return the current price
+                    Benchmark = new SecurityBenchmark(security);
+                }
+                else
                 {
-                    // add the security as an internal feed so the algorithm doesn't receive the data
-                    security = CreateBenchmarkSecurity();
-                    AddToUserDefinedUniverse(security);
+                    var start = StartDate;
+                    var startingCapital = Portfolio.TotalPortfolioValue;
+                    Benchmark = new FuncBenchmark(dt =>
+                    {
+                        var years = (dt - start).TotalDays / 365.25;
+                        return startingCapital * (decimal) Math.Exp(0.02 * years);
+                    });
                 }
-
-                // just return the current price
-                Benchmark = new SecurityBenchmark(security);
             }
 
             // add option underlying securities if not present
@@ -519,6 +540,15 @@ namespace QuantConnect.Algorithm
                     // if it wasn't manually added, add a subscription for underlying updates
                     equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
                 }
+                // In the options trading, the strike price, the options settlement and exercise are
+                // all based on the raw price of the underlying asset instead of the adjusted price.
+                // In order to select the accurate contracts, we need to set
+                // the data normalization mode of the underlying asset to be raw
+                else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
+                {
+                    Debug($"Warning: The {underlying.ToString()} equity security was set the raw price normalization mode to work with options.");
+                }
+                equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
 
                 // set the underlying property on the option chain
                 option.Underlying = equity;
@@ -530,7 +560,6 @@ namespace QuantConnect.Algorithm
                     equity.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods);
                 }
             }
-
         }
 
         /// <summary>
@@ -668,11 +697,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        public virtual void OnFrameworkData(Slice slice)
+        {
+            // NOP - overriden by QCAlgorithmFramework
+        }
+
+        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
+        }
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public virtual void OnFrameworkSecuritiesChanged(SecurityChanges changes)
+        {
+            // NOP - overriden by QCAlgorithmFramework
         }
 
         // <summary>
@@ -924,8 +971,10 @@ namespace QuantConnect.Algorithm
                 SecurityInitializer = new BrokerageModelSecurityInitializer(model, new FuncSecuritySeeder(GetLastKnownPrice));
 
                 // update models on securities added earlier (before SetBrokerageModel is called)
-                foreach (var security in Securities.Values)
+                foreach (var kvp in Securities)
                 {
+                    var security = kvp.Value;
+
                     // save the existing leverage specified in AddSecurity,
                     // if Leverage needs to be set in a SecurityInitializer,
                     // SetSecurityInitializer must be called before SetBrokerageModel
@@ -1500,6 +1549,12 @@ namespace QuantConnect.Algorithm
             {
                 equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
             }
+            else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
+            {
+                Debug($"Warning: The {underlying.ToString()} equity security was set the raw price normalization mode to work with options.");
+            }
+            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+
             option.Underlying = equity;
 
             AddToUserDefinedUniverse(option);
@@ -1568,7 +1623,7 @@ namespace QuantConnect.Algorithm
                 // liquidate if invested
                 if (security.Invested) Liquidate(security.Symbol);
 
-                var universe = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
+                var universe = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
                 if (universe != null)
                 {
                     var ret = universe.Remove(symbol);
@@ -1850,6 +1905,15 @@ namespace QuantConnect.Algorithm
                 }
                 return client.DownloadString(address);
             }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="AlphasGenerated"/> event
+        /// </summary>
+        /// <param name="alphas">The collection of alphas generaed at the current time step</param>
+        protected void OnAlphasGenerated(IEnumerable<Alpha> alphas)
+        {
+            AlphasGenerated?.Invoke(this, new AlphaCollection(UtcTime, alphas));
         }
     }
 }

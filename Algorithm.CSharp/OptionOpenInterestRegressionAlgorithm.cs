@@ -27,10 +27,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="regression test" />
     public class OptionOpenInterestRegressionAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "twx";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
-
         public override void Initialize()
         {
             // this test opens position in the first day of trading, lives through stock split (7 for 1), and closes adjusted position on the second day
@@ -38,15 +34,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 06);
             SetCash(1000000);
 
-            var equity = AddEquity(UnderlyingTicker);
-            var option = AddOption(UnderlyingTicker);
-
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var option = AddOption("TWX");
 
             option.SetFilter(-10, +10, TimeSpan.Zero, TimeSpan.FromDays(365 * 2));
 
             // use the underlying equity as the benchmark
-            SetBenchmark(equity.Symbol);
+            SetBenchmark("TWX");
         }
 
         /// <summary>
@@ -91,9 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            Log(orderEvent.ToString());
         }
     }
 }
-
-
-

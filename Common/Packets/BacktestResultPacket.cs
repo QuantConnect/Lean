@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ namespace QuantConnect.Packets
     /// <summary>
     /// Backtest result packet: send backtest information to GUI for user consumption.
     /// </summary>
-    public class BacktestResultPacket : Packet 
+    public class BacktestResultPacket : Packet
     {
         /// <summary>
         /// User Id placing this task
@@ -126,11 +126,11 @@ namespace QuantConnect.Packets
         public BacktestResultPacket()
             : base(PacketType.BacktestResult)
         { }
-        
+
         /// <summary>
         /// Compose the packet from a JSON string:
         /// </summary>
-        public BacktestResultPacket(string json) 
+        public BacktestResultPacket(string json)
             : base (PacketType.BacktestResult)
         {
             try
@@ -139,23 +139,23 @@ namespace QuantConnect.Packets
                 {
                     TypeNameHandling = TypeNameHandling.Auto
                 });
-                CompileId          = packet.CompileId;
-                Channel            = packet.Channel;
-                PeriodFinish       = packet.PeriodFinish;
-                PeriodStart        = packet.PeriodStart;
-                Progress           = packet.Progress;
-                SessionId          = packet.SessionId;
-                BacktestId         = packet.BacktestId;
-                Type               = packet.Type;
-                UserId             = packet.UserId;
-                DateFinished       = packet.DateFinished;
-                DateRequested      = packet.DateRequested;
-                Name               = packet.Name;
-                ProjectId          = packet.ProjectId;
-                Results            = packet.Results;
-                ProcessingTime     = packet.ProcessingTime;
-                TradeableDates     = packet.TradeableDates;
-            } 
+                CompileId           = packet.CompileId;
+                Channel             = packet.Channel;
+                PeriodFinish        = packet.PeriodFinish;
+                PeriodStart         = packet.PeriodStart;
+                Progress            = packet.Progress;
+                SessionId           = packet.SessionId;
+                BacktestId          = packet.BacktestId;
+                Type                = packet.Type;
+                UserId              = packet.UserId;
+                DateFinished        = packet.DateFinished;
+                DateRequested       = packet.DateRequested;
+                Name                = packet.Name;
+                ProjectId           = packet.ProjectId;
+                Results             = packet.Results;
+                ProcessingTime      = packet.ProcessingTime;
+                TradeableDates      = packet.TradeableDates;
+            }
             catch (Exception err)
             {
                 Log.Trace("BacktestResultPacket(): Error converting json: " + err);
@@ -192,7 +192,7 @@ namespace QuantConnect.Packets
                 Log.Error(err);
             }
         }
-            
+
     } // End Queue Packet:
 
 
@@ -222,8 +222,9 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class using dictionary objects.
         /// </summary>
-        public BacktestResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
+        public BacktestResult(bool isFrameworkAlgorithm, IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
         {
+            IsFrameworkAlgorithm = isFrameworkAlgorithm;
             Charts = charts;
             Orders = orders;
             ProfitLoss = profitLoss;

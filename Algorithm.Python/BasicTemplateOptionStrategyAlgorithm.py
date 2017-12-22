@@ -14,16 +14,13 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
+from QuantConnect.Securities.Option import OptionStrategies
 from datetime import datetime, timedelta
-import numpy as np
 
 ### <summary>
 ### This algorithm demonstrate how to use Option Strategies (e.g. OptionStrategies.Straddle) helper classes to batch send orders for common strategies.
@@ -43,35 +40,30 @@ class BasicTemplateOptionStrategyAlgorithm(QCAlgorithm):
         # Start and end dates for the backtest.
         self.SetStartDate(2015,12,24)
         self.SetEndDate(2015,12,24)
-        self.UnderlyingTicker = "GOOG"
 
         # Add assets you'd like to see
-        equity = self.AddEquity(self.UnderlyingTicker)
-        option = self.AddOption(self.UnderlyingTicker)
-        self.OptionSymbol = option.Symbol
-        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
+        option = self.AddOption("GOOG")
+        self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
         option.SetFilter(-2, +2, timedelta(0), timedelta(180))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
+        self.SetBenchmark("GOOG")
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
             for kvp in slice.OptionChains:
                 chain = kvp.Value
                 contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
-                                        key = lambda x: x.Expiry, reverse=False)
+                                                 key = lambda x: x.Expiry, reverse=False)
 
                 if len(contracts) == 0: continue
                 atmStraddle = contracts[0]
                 if atmStraddle != None:
-                    self.Sell(OptionStrategies.Straddle(self.OptionSymbol, atmStraddle.Strike, atmStraddle.Expiry), 2)
+                    self.Sell(OptionStrategies.Straddle(self.option_symbol, atmStraddle.Strike, atmStraddle.Expiry), 2)
         else:
             self.Liquidate()
 
     def OnOrderEvent(self, orderEvent):
-        ''' Order fill event handler. On an order fill update the resulting information is passed to this method.
-            param "orderEvent"Order event details containing details of the evemts '''
         self.Log(str(orderEvent))

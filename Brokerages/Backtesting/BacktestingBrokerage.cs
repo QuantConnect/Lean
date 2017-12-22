@@ -37,6 +37,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private bool _needsScan;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
+        private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
 
         /// <summary>
         /// This is the algorithm under test
@@ -105,9 +106,9 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol)
-                    where security.Holdings.AbsoluteQuantity > 0
-                    select new Holding(security)).ToList();
+            return (from kvp in Algorithm.Portfolio.Securities.OrderBy(x => x.Value.Symbol)
+                    where kvp.Value.Holdings.AbsoluteQuantity > 0
+                    select new Holding(kvp.Value)).ToList();
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            return Algorithm.Portfolio.CashBook.Values.ToList();
+            return Algorithm.Portfolio.CashBook.Select(x => x.Value).ToList();
         }
 
         /// <summary>
@@ -126,7 +127,10 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            Log.Trace("BacktestingBrokerage.PlaceOrder(): Type: " + order.Type + " Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+            if (Algorithm.LiveMode)
+            {
+                Log.Trace("BacktestingBrokerage.PlaceOrder(): Type: " + order.Type + " Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+            }
 
             if (order.Status == OrderStatus.New)
             {
@@ -156,7 +160,10 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            Log.Trace("BacktestingBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+            if (Algorithm.LiveMode)
+            {
+                Log.Trace("BacktestingBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+            }
 
             lock (_needsScanLock)
             {
@@ -189,7 +196,10 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            Log.Trace("BacktestingBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+            if (Algorithm.LiveMode)
+            {
+                Log.Trace("BacktestingBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+            }
 
             lock (_needsScanLock)
             {
@@ -387,8 +397,7 @@ namespace QuantConnect.Brokerages.Backtesting
         public void SimulateMarket()
         {
             // if simulator is installed, we run it
-            if (MarketSimulation != null)
-                MarketSimulation.SimulateMarketConditions(this, Algorithm);
+            MarketSimulation?.SimulateMarketConditions(this, Algorithm);
         }
 
         /// <summary>
@@ -398,19 +407,29 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <param name="quantity">Quantity to assign</param>
         public virtual void ActivateOptionAssignment(Option option, int quantity)
         {
-            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0.0m, 0.0m, Algorithm.UtcTime, "Simulated option assignment");
-            var order = (OptionExerciseOrder)Order.CreateOrder(request);
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
-            var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
+            // do not process the same assignment more than once
+            if (_pendingOptionAssignments.Contains(option.Symbol)) return;
 
-            foreach (var fill in fills)
+            _pendingOptionAssignments.Add(option.Symbol);
+
+            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
+
+            var ticket = Algorithm.Transactions.ProcessRequest(request);
+            Log.Trace($"BacktestingBrokerage.ActivateOptionAssignment(): OrderId: {ticket.OrderId}");
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected override void OnOrderEvent(OrderEvent e)
+        {
+            if (e.Status.IsClosed() && _pendingOptionAssignments.Contains(e.Symbol))
             {
-                // processing assignment in the portfolio first
-                portfolioModel.ProcessFill(Algorithm.Portfolio, option, fill);
-
-                // firing event informing interested parties that option position has been assigned
-                OnOptionPositionAssigned(fill);
+                _pendingOptionAssignments.Remove(e.Symbol);
             }
+
+            base.OnOrderEvent(e);
         }
 
         /// <summary>

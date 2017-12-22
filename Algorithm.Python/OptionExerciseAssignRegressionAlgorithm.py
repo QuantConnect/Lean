@@ -14,13 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
 from datetime import datetime, timedelta
 
 ### <summary>
@@ -32,20 +30,18 @@ from datetime import datetime, timedelta
 class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        
+
         self.SetCash(100000)
         self.SetStartDate(2015,12,24)
         self.SetEndDate(2015,12,24)
-        equity = self.AddEquity("GOOG")
+
         option = self.AddOption("GOOG")
-        
+
         # set our strike/expiry filter for this option chain
         option.SetFilter(self.UniverseFunc)
-        
-        self.SetBenchmark(equity.Symbol)
-        self.OptionSymbol = option.Symbol
+
+        self.SetBenchmark("GOOG")
         self._assignedOption = False
-    
 
     def OnData(self, slice):
         if self.Portfolio.Invested: return
@@ -64,15 +60,12 @@ class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
                 self.MarketOrder(sorted_contracts[0].Symbol, 1)
                 self.MarketOrder(sorted_contracts[1].Symbol, -1)
 
-
     # set our strike/expiry filter for this option chain
     def UniverseFunc(self, universe):
         return universe.IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(10))
 
-
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))
-
 
     def OnAssignmentOrderEvent(self, assignmentEvent):
         self.Log(str(assignmentEvent))

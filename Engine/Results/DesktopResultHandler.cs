@@ -462,8 +462,10 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleRange(_algorithm.GetChartUpdates());
 
                 //Sample the asset pricing:
-                foreach (var security in _algorithm.Securities.Values)
+                foreach (var kvp in _algorithm.Securities)
                 {
+                    var security = kvp.Value;
+
                     SampleAssetPrices(security.Symbol, time, security.Price);
                 }
             }

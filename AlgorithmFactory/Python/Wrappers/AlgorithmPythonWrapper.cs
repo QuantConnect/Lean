@@ -30,6 +30,7 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -79,6 +80,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
                             _baseAlgorithm = (QCAlgorithm)_algorithm;
+
+                            // write events such that when the base handles an event it
+                            // will also invoke event handlers defined on this instance
+                            _baseAlgorithm.AlphasGenerated += AlphasGenerated;
 
                             // Set pandas
                             _baseAlgorithm.SetPandasConverter();
@@ -192,6 +197,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 SetHistoryProvider(value);
             }
+        }
+
+        /// <summary>
+        /// Gets a flag indicating whether or not this algorithm uses the QCAlgorithmFramework
+        /// </summary>
+        public bool IsFrameworkAlgorithm
+        {
+            get { return _baseAlgorithm.IsFrameworkAlgorithm; }
         }
 
         /// <summary>
@@ -437,6 +450,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Event fired when an algorithm generates a alpha
+        /// </summary>
+        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+
+        /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.
         /// </summary>
@@ -575,6 +593,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Add a Chart object to algorithm collection
+        /// </summary>
+        /// <param name="chart">Chart object to add to collection.</param>
+        public void AddChart(Chart chart)
+        {
+            _baseAlgorithm.AddChart(chart);
+        }
+
+        /// <summary>
         /// Get the chart updates since the last request:
         /// </summary>
         /// <param name="clearChartData"></param>
@@ -692,6 +719,18 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 {
                     _algorithm.OnData(slice);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        public void OnFrameworkData(Slice slice)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnFrameworkData(slice);
             }
         }
 
@@ -849,12 +888,24 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         public void OnSecuritiesChanged(SecurityChanges changes)
         {
             using (Py.GIL())
             {
                 _algorithm.OnSecuritiesChanged(changes);
+            }
+        }
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public void OnFrameworkSecuritiesChanged(SecurityChanges changes)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnFrameworkSecuritiesChanged(changes);
             }
         }
 

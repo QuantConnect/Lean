@@ -14,13 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
 from datetime import datetime, timedelta
 
 ### <summary>
@@ -33,19 +31,16 @@ from datetime import datetime, timedelta
 class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        
         self.SetCash(10000)
         self.SetStartDate(2015,12,24)
         self.SetEndDate(2015,12,24)
-        equity = self.AddEquity("GOOG")
+
         option = self.AddOption("GOOG")
-        
+
         # set our strike/expiry filter for this option chain
         option.SetFilter(self.UniverseFunc)
-        
-        self.SetBenchmark(equity.Symbol)
-        self.OptionSymbol = option.Symbol
-        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
+
+        self.SetBenchmark("GOOG")
 
     def OnData(self, slice):
         if self.Portfolio.Invested: return
@@ -53,24 +48,21 @@ class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
             chain = kvp.Value
             for o in chain:
                 if not self.Securities.ContainsKey(o.Symbol):
-                    # inconsistency found: option chains contains contract information that is not available in securities manager and not available for trading
-                    self.Log("inconsistency found: option chains contains contract {0} that is not available in securities manager and not available for trading".format(o.Symbol.Value))           
-            
+                    self.Log("Inconsistency found: option chains contains contract {0} that is not available in securities manager and not available for trading".format(o.Symbol.Value))           
+
             contracts = filter(lambda x: x.Expiry.date() == self.Time.date() and
                                          x.Strike < chain.Underlying.Price and
                                          x.Right ==  OptionRight.Call, chain)
-        
+
             sorted_contracts = sorted(contracts, key = lambda x: x.Strike, reverse = True)
 
             if len(sorted_contracts) > 2:
                 self.MarketOrder(sorted_contracts[2].Symbol, 1)
                 self.MarketOnCloseOrder(sorted_contracts[2].Symbol, -1)
 
-
     # set our strike/expiry filter for this option chain
     def UniverseFunc(self, universe):
         return universe.IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(10))
-
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

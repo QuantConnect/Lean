@@ -159,7 +159,7 @@ namespace QuantConnect.Securities
             // if we've made it here we didn't find a subscription, so we'll need to add one
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
-            var markets = securities.Keys.GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
+            var markets = securities.Select(x => x.Key).GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
             if (markets.ContainsKey(SecurityType.Cfd) && !markets.ContainsKey(SecurityType.Forex))
             {
                 markets.Add(SecurityType.Forex, markets[SecurityType.Cfd]);

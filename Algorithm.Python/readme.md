@@ -32,9 +32,9 @@ QuantConnect Python Algorithm Project:
 
 3.2 Prepare Python.Runtime.dll. This is needed to run Python algorithms in LEAN.
 
-3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.1\lib
+3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.2\lib
 
-3.2.2 Using windows you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.1\build\*Python.Runtime.win* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
+3.2.2 Using windows you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.2\build\*Python.Runtime.win* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
 
 **4 Run LEAN:**
 
@@ -88,9 +88,9 @@ $ sudo easy-install pip
 
 3.2 Prepare Python.Runtime.dll. This is needed to run Python algorithms in LEAN.
 
-3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.1\lib
+3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.2\lib
 
-3.2.2 Using macOS you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.1\build\*Python.Runtime.mac* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
+3.2.2 Using macOS you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.2\build\*Python.Runtime.mac* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
 
 **4 Run LEAN:**
 
