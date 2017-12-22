@@ -139,7 +139,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            return dictionary.Any() || _subscriptions.TryRemove(configuration.Symbol, out dictionary);
+            if (!dictionary.Any())
+            {
+                _subscriptions.TryRemove(configuration.Symbol, out dictionary);
+            }
+
+            return true;
         }
 
         /// <summary>
