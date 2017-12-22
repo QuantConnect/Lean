@@ -43,7 +43,6 @@ class BootCampTask(QCAlgorithm):
         self.SetEndDate(2017, 07, 01)
         self.SetCash(100000)
         self.equity = self.AddEquity("AMZN", Resolution.Minute)
-        self.equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
         
     def OnData(self,data):
         

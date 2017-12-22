@@ -44,7 +44,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2017, 07, 01);
             SetCash(100000);
             var equity = AddEquity("AMZN", Resolution.Minute);
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
             _equitySymbol = equity.Symbol;
         }
 
