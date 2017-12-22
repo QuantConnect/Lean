@@ -83,7 +83,8 @@ namespace QuantConnect.Tests.Common.Securities
                                     new Cash(CashBook.AccountCurrency, 0, 1m),
                                     SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
-            _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
+            _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
+                                                                          new FuncSecuritySeeder(_algo.GetLastKnownPrice));
         }
 
         [Test]
@@ -107,7 +108,7 @@ namespace QuantConnect.Tests.Common.Securities
             _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             // Assert
-            Assert.IsTrue(_tradeBarSecurity.Price == 0);
+            Assert.IsFalse(_tradeBarSecurity.Price == 0);
         }
 
         [Test]
@@ -121,7 +122,7 @@ namespace QuantConnect.Tests.Common.Securities
             _brokerageInitializer.Initialize(_quoteBarSecurity);
 
             // Assert
-            Assert.IsTrue(_quoteBarSecurity.Price == 0);
+            Assert.IsFalse(_quoteBarSecurity.Price == 0);
         }
 
         [Test]
