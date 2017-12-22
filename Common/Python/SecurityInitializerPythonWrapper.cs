@@ -38,12 +38,11 @@ namespace QuantConnect.Python
         /// Initializes the specified security
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        /// <param name="seedSecurity">True to seed the security, false otherwise</param>
-        public void Initialize(Security security, bool seedSecurity)
+        public void Initialize(Security security)
         {
             using (Py.GIL())
             {
-                _model.Initialize(security, seedSecurity);
+                _model.Initialize(security);
             }
         }
     }
