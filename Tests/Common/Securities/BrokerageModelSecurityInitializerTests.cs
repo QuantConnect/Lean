@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Securities
             _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             // Assert
-            Assert.IsFalse(_tradeBarSecurity.Price == 0);
+            Assert.IsTrue(_tradeBarSecurity.Price == 0);
         }
 
         [Test]
@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Common.Securities
             _brokerageInitializer.Initialize(_quoteBarSecurity);
 
             // Assert
-            Assert.IsFalse(_quoteBarSecurity.Price == 0);
+            Assert.IsTrue(_quoteBarSecurity.Price == 0);
         }
 
         [Test]
