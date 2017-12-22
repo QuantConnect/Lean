@@ -310,8 +310,10 @@ namespace QuantConnect.Lean.Engine.Results
                 lock (_chartLock)
                 {
                     //Get the updates since the last chart
-                    foreach (var chart in Charts.Values)
+                    foreach (var kvp in Charts)
                     {
+                        var chart = kvp.Value;
+
                         deltaCharts.Add(chart.Name, chart.GetUpdates());
                     }
                 }
