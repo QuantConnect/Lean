@@ -1614,6 +1614,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 ibOrder.Tif = IB.TimeInForce.MarketOnOpen;
             }
+            else if (order.Type == OrderType.MarketOnClose)
+            {
+                ibOrder.Tif = IB.TimeInForce.Day;
+            }
 
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
