@@ -716,13 +716,6 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
-            var securityInitializer2 = PythonUtil.ToAction<Security, bool>(securityInitializer);
-            if (securityInitializer2 != null)
-            {
-                SetSecurityInitializer(securityInitializer2);
-                return;
-            }
-
             SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
         }
 
