@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages.GDAX
                     "LTCUSD", "LTCEUR", "LTCBTC",
                     "BTCUSD", "BTCEUR", "BTCGBP",
                     "ETHBTC", "ETHUSD", "ETHEUR",
-                    "BCHBTC", "BCHUSD", "BCHEUR"
+                    "BCHUSD"
                 };
                 Subscribe(tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
             };
