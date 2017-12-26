@@ -292,7 +292,7 @@ namespace QuantConnect
             {"BTC", "฿"},
             {"BCH", "฿"},
             {"LTC", "Ł"},
-            {"ETH", "Ether"}
+            {"ETH", "Ξ"}
         };
 
         /// <summary>
