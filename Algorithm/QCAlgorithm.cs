@@ -1691,19 +1691,24 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
+            var key = new SecurityDatabaseKey(Market.USA, symbol, SecurityType.Base);
+            var entry = new MarketHoursDatabase.Entry(timeZone, SecurityExchangeHours.AlwaysOpen(timeZone));
+            _marketHoursDatabase.AddEntry(key, entry);
+//            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security:
-            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
+            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, entry.ExchangeHours, entry.DataTimeZone,
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
             return security;
         }
+
+
 
         /// <summary>
         /// Send a debug message to the web console:

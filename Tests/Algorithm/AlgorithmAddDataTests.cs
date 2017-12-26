@@ -100,6 +100,17 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(quandlSubscription.Type, typeof(Quandl));
         }
 
+        [Test]
+        public void CustomDataTypes_AreAddedToSubscriptionsWithCustomTimeZone_Successfully()
+        {
+            var qcAlgorithm = new QCAlgorithm();
+
+            // Add a quandl subscription
+            qcAlgorithm.AddData<Quandl>("USDARS", Resolution.Hour, TimeZones.BuenosAires);
+            var subscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Quandl));
+            Assert.AreEqual(subscription.DataTimeZone, TimeZones.BuenosAires);
+            Assert.AreEqual(subscription.ExchangeTimeZone, TimeZones.BuenosAires);
+        }
 
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
         {

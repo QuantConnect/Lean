@@ -153,7 +153,8 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
-            Assert.AreEqual(TimeZones.NewYork, marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity));
+            Assert.AreEqual(TimeZones.NewYork,
+                            marketHoursDatabase.GetEntry(Market.USA, Symbol.Empty, SecurityType.Equity).DataTimeZone);
         }
 
         [Test]
@@ -162,7 +163,8 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
-            Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
+            Assert.AreEqual(TimeZones.EasternStandard,
+                            marketHoursDatabase.GetEntry(Market.FXCM, Symbol.Empty, SecurityType.Forex).DataTimeZone);
         }
 
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)

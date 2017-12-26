@@ -34,7 +34,7 @@ namespace QuantConnect.Securities
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, Entry> _entries;
+        private Dictionary<SecurityDatabaseKey, Entry> _entries;
 
         /// <summary>
         /// Gets an instant of <see cref="MarketHoursDatabase"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -96,20 +96,6 @@ namespace QuantConnect.Securities
         public SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             return GetEntry(market, symbol, securityType, overrideTimeZone).ExchangeHours;
-        }
-
-        /// <summary>
-        /// Performs a lookup using the specified information and returns the data's time zone if found,
-        /// if an entry is not found, an exception is thrown
-        /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
-        /// <param name="symbol">The particular symbol being traded</param>
-        /// <param name="securityType">The security type of the symbol</param>
-        /// <returns>The raw data time zone for the specified security</returns>
-        public DateTimeZone GetDataTimeZone(string market, Symbol symbol, SecurityType securityType)
-        {
-            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
-            return GetEntry(market, stringSymbol, securityType).DataTimeZone;
         }
 
         /// <summary>
@@ -250,6 +236,11 @@ namespace QuantConnect.Securities
                 var tz = overrideTimeZone ?? TimeZones.Utc;
                 return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
             }
+        }
+
+        public void AddEntry(SecurityDatabaseKey key, Entry entry)
+        {
+            if (!_entries.ContainsKey(key)) _entries.Add(key, entry);
         }
     }
 }

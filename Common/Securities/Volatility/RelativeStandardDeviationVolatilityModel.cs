@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
                                    security.Symbol,
                                    security.Resolution,
                                    security.Exchange.Hours,
-                                   MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Type),
+                                   security.Exchange.TimeZone,
                                    security.Resolution,
                                    security.IsExtendedMarketHours,
                                    security.IsCustomData(),
