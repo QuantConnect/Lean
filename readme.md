@@ -145,9 +145,9 @@ devenv /log <path-to-log>
 
 Please submit bugs and feature requests as an issue to the [Lean Repository][5]. Before submitting an issue please read others to ensure it is not a duplicate.
 
-## Mailing List ##
+## Mailing List ## 
 
-The mailing list for the project can be found on [Google Groups][6]
+The mailing list for the project can be found on [Google Groups][6]. Please use this to request assistance with your installations and setup questions.
 
 ## Contributors and Pull Requests ##
 
