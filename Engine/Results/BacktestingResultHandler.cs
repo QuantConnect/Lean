@@ -664,7 +664,7 @@ namespace QuantConnect.Lean.Engine.Results
             Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, "$");
 
             //Recalculate the days processed:
-            _daysProcessed = (time - _job.PeriodStart).TotalDays;
+            _daysProcessed = (time - _algorithm.StartDate).TotalDays;
         }
 
         /// <summary>
@@ -748,7 +748,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (!_exitTriggered)
             {
                 ProcessSynchronousEvents(true);
-                var logLocation = SaveLogs(_job.BacktestId, _log);
+                var logLocation = SaveLogs(_algorithm.AlgorithmId, _log);
                 SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
             }
 
@@ -774,7 +774,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Additional optional status message.</param>
         public virtual void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
-            var statusPacket = new AlgorithmStatusPacket(_job.AlgorithmId, _job.ProjectId, status, message);
+            var statusPacket = new AlgorithmStatusPacket(_algorithm.AlgorithmId, _job.ProjectId, status, message);
             _messagingHandler.Send(statusPacket);
         }
 
