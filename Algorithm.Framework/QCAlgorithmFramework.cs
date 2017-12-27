@@ -22,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework
 {
@@ -94,7 +95,7 @@ namespace QuantConnect.Algorithm.Framework
         {
             // generate, timestamp and emit alphas
             var alphas = Alpha.Update(this, slice)
-                .Select(alpha => { alpha.GeneratedTimeUtc = UtcTime; return alpha; })
+                .Select(SetGeneratedAndClosedTimes)
                 .ToList();
 
             if (alphas.Count != 0)
@@ -166,6 +167,33 @@ namespace QuantConnect.Algorithm.Framework
         public void SetRiskManagement(IRiskManagementModel riskManagement)
         {
             RiskManagement = riskManagement;
+        }
+
+        private Alpha SetGeneratedAndClosedTimes(Alpha alpha)
+        {
+            alpha.GeneratedTimeUtc = UtcTime;
+
+            TimeSpan barSize;
+            Security security;
+            SecurityExchangeHours exchangeHours;
+            if (Securities.TryGetValue(alpha.Symbol, out security))
+            {
+                exchangeHours = security.Exchange.Hours;
+                barSize = security.Resolution.ToTimeSpan();
+            }
+            else
+            {
+                barSize = alpha.Period.ToHigherResolutionEquivalent(false).ToTimeSpan();
+                exchangeHours = MarketHoursDatabase.GetExchangeHours(alpha.Symbol.ID.Market, alpha.Symbol, alpha.Symbol.SecurityType);
+            }
+
+            var localStart = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+            barSize = QuantConnect.Time.Max(barSize, QuantConnect.Time.OneMinute);
+            var barCount = (int) (alpha.Period.Ticks / barSize.Ticks);
+
+            alpha.CloseTimeUtc = QuantConnect.Time.GetEndTimeForTradeBars(exchangeHours, localStart, barSize, barCount, false).ConvertToUtc(exchangeHours.TimeZone);
+
+            return alpha;
         }
 
         private void CheckModels()

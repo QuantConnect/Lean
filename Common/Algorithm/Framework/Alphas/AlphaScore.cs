@@ -69,14 +69,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The score type to be set, Direction/Magnitude</param>
         /// <param name="value">The new value for the score</param>
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
-        /// <param name="analysisPeriodEndTimeUtc">The end utc time for analysis period of these sores, used to set <see cref="IsFinalScore"/></param>
-        internal void SetScore(AlphaScoreType type, double value, DateTime algorithmUtcTime, DateTime analysisPeriodEndTimeUtc)
+        internal void SetScore(AlphaScoreType type, double value, DateTime algorithmUtcTime)
         {
+            if (IsFinalScore) return;
+
             UpdatedTimeUtc = algorithmUtcTime;
-            if (algorithmUtcTime >= analysisPeriodEndTimeUtc)
-            {
-                IsFinalScore = true;
-            }
 
             switch (type)
             {
@@ -91,6 +88,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
+        }
+
+        /// <summary>
+        /// Marks the score as finalized, preventing any further updates.
+        /// </summary>
+        /// <param name="algorithmUtcTime">The algorithm's utc time at which time these scores were finalized</param>
+        internal void Finalize(DateTime algorithmUtcTime)
+        {
+            IsFinalScore = true;
+            UpdatedTimeUtc = algorithmUtcTime;
         }
 
         /// <summary>

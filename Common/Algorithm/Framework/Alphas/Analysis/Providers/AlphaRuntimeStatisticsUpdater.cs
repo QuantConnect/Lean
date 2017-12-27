@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         /// </summary>
         /// <param name="statistics">Statistics to be updated</param>
         /// <param name="context">Context whose alpha has just closed</param>
-        public void OnAlphaPeriodClosed(AlphaRuntimeStatistics statistics, AlphaAnalysisContext context)
+        public void OnAlphaClosed(AlphaRuntimeStatistics statistics, AlphaAnalysisContext context)
         {
             // tradable volume (purposefully includes fractional shares)
             var volume =  _tradablePercentOfVolume * context.InitialValues.Volume;
@@ -97,11 +97,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
             {
                 var score = context.Score.GetScore(scoreType);
                 var currentTime = context.CurrentValues.TimeUtc;
-                var analysisEndTime = context.AnalysisEndTimeUtc;
 
                 var mean = statistics.MeanPopulationScore.GetScore(scoreType);
                 var newMean = mean + (score - mean) / _populationMeanSamples;
-                statistics.MeanPopulationScore.SetScore(scoreType, newMean, currentTime, analysisEndTime);
+                statistics.MeanPopulationScore.SetScore(scoreType, newMean, currentTime);
 
                 var newEma = score;
                 if (_populationMeanSamples > 1)
@@ -109,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
                     var ema = statistics.RollingAveragedPopulationScore.GetScore(scoreType);
                     newEma = score * _smoothingFactor + ema * (1 - _smoothingFactor);
                 }
-                statistics.RollingAveragedPopulationScore.SetScore(scoreType, newEma, currentTime, analysisEndTime);
+                statistics.RollingAveragedPopulationScore.SetScore(scoreType, newEma, currentTime);
             }
 
             _populationMeanSamples++;

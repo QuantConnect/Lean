@@ -216,7 +216,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
@@ -236,7 +236,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
@@ -312,7 +312,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<DateTime, IEnumerable<string>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);

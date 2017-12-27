@@ -14,13 +14,16 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Contains values to mirror <see cref="AlphaType"/>.
-    /// These are the value of the 'metrics' that alphas are trying to predict
+    /// Contains security values required by alpha analysis components
     /// </summary>
+    /// <remarks>
+    /// The main purpose here is providing an ACL against the algorithm to remove the dependencies
+    /// </remarks>
     public class SecurityValues
     {
         /// <summary>
@@ -49,20 +52,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public decimal QuoteCurrencyConversionRate { get; }
 
         /// <summary>
+        /// Gets the exchange hours for the security
+        /// </summary>
+        public SecurityExchangeHours ExchangeHours { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SecurityValues"/> class
         /// </summary>
         /// <param name="timeUtc">The time these values were sampled</param>
+        /// <param name="exchangeHours">The security's exchange hours</param>
         /// <param name="price">The security price</param>
         /// <param name="volatility">The security's volatility</param>
         /// <param name="volume">The volume traded at this time step</param>
         /// <param name="quoteCurrencyConversionRate">The conversion rate for the quote currency of the security</param>
-        public SecurityValues(DateTime timeUtc, decimal price, decimal volatility, decimal volume, decimal quoteCurrencyConversionRate)
+        public SecurityValues(DateTime timeUtc, SecurityExchangeHours exchangeHours, decimal price, decimal volatility, decimal volume, decimal quoteCurrencyConversionRate)
         {
-            TimeUtc = timeUtc;
-
             Price = price;
-            Volatility = volatility;
             Volume = volume;
+            TimeUtc = timeUtc;
+            Volatility = volatility;
+            ExchangeHours = exchangeHours;
             QuoteCurrencyConversionRate = quoteCurrencyConversionRate;
         }
 

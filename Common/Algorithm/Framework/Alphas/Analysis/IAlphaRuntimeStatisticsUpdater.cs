@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// </summary>
         /// <param name="statistics">Statistics to be updated</param>
         /// <param name="context">Context whose alpha has just closed</param>
-        void OnAlphaPeriodClosed(AlphaRuntimeStatistics statistics, AlphaAnalysisContext context);
+        void OnAlphaClosed(AlphaRuntimeStatistics statistics, AlphaAnalysisContext context);
 
         /// <summary>
         /// Updates statistics when the alphas's analysis period is closed.

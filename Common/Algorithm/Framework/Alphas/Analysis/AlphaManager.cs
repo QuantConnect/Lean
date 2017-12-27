@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Event fired when an an alpha's period has expired
         /// </summary>
-        public event EventHandler<AlphaAnalysisContext> AlphaPeriodClosed;
+        public event EventHandler<AlphaAnalysisContext> AlphaClosed;
 
         /// <summary>
         /// Event fired when an alpha context is finished scoring
@@ -141,12 +141,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 var context = kvp.Value;
 
                 // was this alpha period closed before we update the times?
-                var alphaPeriodClosed = context.AlphaPeriodClosed;
+                var previouslyClosed = context.AlphaPeriodClosed;
 
                 // update the security values: price/volatility
                 context.SetCurrentValues(_securityValuesProvider.GetValues(context.Symbol));
 
                 // update scores for each score type
+                var currentTimeUtc = context.CurrentValues.TimeUtc;
                 foreach (var scoreType in ScoreTypes)
                 {
                     if (!context.ShouldAnalyze(scoreType))
@@ -158,18 +159,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                     // resolve and evaluate the scoring function, storing the result in the context
                     var function = _scoreFunctionProvider.GetScoreFunction(context.Alpha.Type, scoreType);
                     var score = function.Evaluate(context, scoreType);
-                    context.Score.SetScore(scoreType, score, context.CurrentValues.TimeUtc, context.AnalysisEndTimeUtc);
+                    context.Score.SetScore(scoreType, score, currentTimeUtc);
                 }
 
                 // it wasn't closed and now it is closed, fire the event.
-                if (!alphaPeriodClosed && context.AlphaPeriodClosed)
+                if (!previouslyClosed && context.AlphaPeriodClosed)
                 {
                     OnAlphaPeriodCompleted(context);
                 }
 
                 // if this score has been finalized, remove it from the open set
-                if (context.Score.IsFinalScore)
+                if (currentTimeUtc >= context.AnalysisEndTimeUtc)
                 {
+                    context.Score.Finalize(currentTimeUtc);
+
                     OnAlphaScoringFinalzed(context);
 
                     var id = context.Alpha.Id;
@@ -203,12 +206,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="AlphaPeriodClosed"/> event
+        /// Event invocator for the <see cref="AlphaClosed"/> event
         /// </summary>
         /// <param name="context">The context whose alpha period has closed</param>
         protected virtual void OnAlphaPeriodCompleted(AlphaAnalysisContext context)
         {
-            AlphaPeriodClosed?.Invoke(this, context);
+            AlphaClosed?.Invoke(this, context);
         }
 
         /// <summary>

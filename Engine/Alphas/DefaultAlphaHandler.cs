@@ -32,7 +32,7 @@ using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.Alphas
 {
     /// <summary>
-    /// Base alpha handler that supports sending alphas to the messaging handler
+    /// Default alpha handler that supports sending alphas to the messaging handler, analyzing alphas online
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
@@ -128,8 +128,8 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             // wire events to update runtime statistics at key moments in alpha life cycle (new/period end/analysis end)
             AlphaManager.AlphaReceived += (sender, context) => StatisticsUpdater.OnAlphaReceived(RuntimeStatistics, context);
-            AlphaManager.AlphaPeriodClosed += (sender, context) => StatisticsUpdater.OnAlphaAnalysisCompleted(RuntimeStatistics, context);
-            AlphaManager.AlphaAnalysisCompleted += (sender, context) => StatisticsUpdater.OnAlphaPeriodClosed(RuntimeStatistics, context);
+            AlphaManager.AlphaClosed += (sender, context) => StatisticsUpdater.OnAlphaClosed(RuntimeStatistics, context);
+            AlphaManager.AlphaAnalysisCompleted += (sender, context) => StatisticsUpdater.OnAlphaAnalysisCompleted(RuntimeStatistics, context);
 
             algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
 
@@ -216,7 +216,6 @@ namespace QuantConnect.Lean.Engine.Alphas
                         }
                         _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
                     }
-
                 }
                 catch (Exception err)
                 {

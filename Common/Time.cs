@@ -429,7 +429,7 @@ namespace QuantConnect
         {
             if (barSize <= TimeSpan.Zero)
             {
-                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", "barSize");
+                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
             }
 
             var current = end.RoundDown(barSize);
@@ -438,6 +438,36 @@ namespace QuantConnect
                 var previous = current;
                 current = current - barSize;
                 if (exchange.IsOpen(current, previous, extendedMarketHours))
+                {
+                    i++;
+                }
+            }
+            return current;
+        }
+
+        /// <summary>
+        /// Determines the end time at which the requested number of bars of the given  will have elapsed.
+        /// NOTE: The start time is not discretized by barSize units like is done in <see cref="GetStartTimeForTradeBars"/>
+        /// </summary>
+        /// <param name="exchange">The exchange used to test for market open hours</param>
+        /// <param name="start">The end time of the last bar over the requested period</param>
+        /// <param name="barSize">The length of each bar</param>
+        /// <param name="barCount">The number of bars requested</param>
+        /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
+        /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
+        public static DateTime GetEndTimeForTradeBars(SecurityExchangeHours exchange, DateTime start, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        {
+            if (barSize <= TimeSpan.Zero)
+            {
+                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
+            }
+
+            var current = start;
+            for (int i = 0; i < barCount;)
+            {
+                var previous = current;
+                current = current + barSize;
+                if (exchange.IsOpen(previous, current, extendedMarketHours))
                 {
                     i++;
                 }
@@ -467,7 +497,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Normalizes the implied time step between <paramref name="last"/> and <paramref name="current"/> within the specified rang
+        /// Normalizes the step size as a percentage of the period.
         /// </summary>
         /// <param name="period">The period to normalize against</param>
         /// <param name="stepSize">The step size to be normaized</param>
