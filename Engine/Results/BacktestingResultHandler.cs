@@ -78,6 +78,8 @@ namespace QuantConnect.Lean.Engine.Results
         private IMessagingHandler _messagingHandler;
         private ITransactionHandler _transactionHandler;
         private ISetupHandler _setupHandler;
+        private string _algorithmId;
+        private int _projectId;
 
         private const double _samples = 4000;
         private const double _minimumSamplePeriod = 4;
@@ -204,6 +206,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="transactionHandler"></param>
         public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
+            _algorithmId = job.AlgorithmId;
+            _projectId = job.ProjectId;
             _messagingHandler = messagingHandler;
             _transactionHandler = transactionHandler;
             _setupHandler = setupHandler;
@@ -384,7 +388,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             // Send alpha run time statistics
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult {IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, AlphaRuntimeStatistics = AlphaRuntimeStatistics}));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult {IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, AlphaRuntimeStatistics = AlphaRuntimeStatistics}, progress));
 
             // Add the orders into the charting packet:
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm, Orders = deltaOrders }, progress));
@@ -538,7 +542,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message)
         {
-            Messages.Enqueue(new DebugPacket(_job.ProjectId, _backtestId, _compileId, message));
+            Messages.Enqueue(new DebugPacket(_projectId, _backtestId, _compileId, message));
 
             //Save last message sent:
             if (_algorithm != null)
@@ -554,7 +558,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void SystemDebugMessage(string message)
         {
-            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _backtestId, _compileId, message));
+            Messages.Enqueue(new SystemDebugPacket(_projectId, _backtestId, _compileId, message));
 
             //Save last message sent:
             if (_algorithm != null)
@@ -664,7 +668,7 @@ namespace QuantConnect.Lean.Engine.Results
             Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, "$");
 
             //Recalculate the days processed:
-            _daysProcessed = (time - _job.PeriodStart).TotalDays;
+            _daysProcessed = (time - _algorithm.StartDate).TotalDays;
         }
 
         /// <summary>
@@ -748,7 +752,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (!_exitTriggered)
             {
                 ProcessSynchronousEvents(true);
-                var logLocation = SaveLogs(_job.BacktestId, _log);
+                var logLocation = SaveLogs(_algorithmId, _log);
                 SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
             }
 
@@ -774,7 +778,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Additional optional status message.</param>
         public virtual void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
-            var statusPacket = new AlgorithmStatusPacket(_job.AlgorithmId, _job.ProjectId, status, message);
+            var statusPacket = new AlgorithmStatusPacket(_algorithmId, _projectId, status, message);
             _messagingHandler.Send(statusPacket);
         }
 
