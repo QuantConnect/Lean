@@ -6,7 +6,10 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
     public class PostBase
     {
         [JsonProperty("nonce")]
-        public double Nonce { get; set; }
+        public string Nonce { get; set; }
+        [JsonProperty("request")]
+        public string Request { get; set; }
+
     }
 #pragma warning restore 1591
 }
