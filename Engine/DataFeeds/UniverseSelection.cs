@@ -41,6 +41,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
 
         /// <summary>
+        /// Returns a list of symbols unselected from the universe but kept in it because of open orders or positions
+        /// </summary>
+        public IEnumerable<Symbol> PendingRemovals => _pendingRemovals.Select(x => x.Symbol);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>

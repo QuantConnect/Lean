@@ -16,9 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -162,6 +164,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 changes += newChanges;
             }
             while (newChanges != SecurityChanges.None);
+
+            // do not add data packets for symbols removed from universe
+            var removedSecurities = changes.RemovedSecurities;
+            if (removedSecurities.Count > 0)
+            {
+                var pendingRemovals = _universeSelection.PendingRemovals.ToHashSet();
+                var symbolsToRemove = removedSecurities
+                    .Where(x => !pendingRemovals.Contains(x.Symbol))
+                    .Select(x => x.Symbol)
+                    .ToHashSet();
+
+                foreach (var packet in data.ToList())
+                {
+                    if (symbolsToRemove.Contains(packet.Configuration.Symbol))
+                    {
+                        data.Remove(packet);
+                    }
+                }
+            }
 
             nextFrontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
 
