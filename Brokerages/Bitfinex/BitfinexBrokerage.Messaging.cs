@@ -55,7 +55,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         PopulateTicker(e.Message, ChannelList[id].Symbol);
                         return;
                     }
-                    else if (ChannelList.ContainsKey(id) && ChannelList[id].Name == "trades" && term == "te")
+                    else if (ChannelList.ContainsKey(id) && ChannelList[id].Name == "trades" && (term == "te" || term == "tu"))
                     {
                         if (term == "tu")
                         {
@@ -70,13 +70,19 @@ namespace QuantConnect.Brokerages.Bitfinex
                         //expect a "te" and "tu" for each fill. The "tu" will include fees, so we won't act upon a "te"
                         var data = raw[2].ToObject(typeof(string[]));
                         PopulateTrade(term, data);
+                        return;
                     }
                     else if (term == "ws")
                     {
                         //wallet
                         var data = raw[2].ToObject(typeof(string[][]));
                         PopulateWallet(data);
+                        return;
                     }
+					else if (!ChannelList.ContainsKey(id))
+					{
+						return;
+					}
                 }
                 else if ((raw.channel == "ticker" || raw.channel == "trades") && raw.@event == "subscribed")
                 {
@@ -94,6 +100,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         }
                     }
                     ChannelList[currentChannelId] = new Channel { Name = channel, Symbol = raw.pair };
+                    return;
                 }
                 else if (raw.chanId == 0)
                 {
@@ -102,12 +109,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                         throw new Exception("Failed to authenticate with ws gateway");
                     }
                     Log.Trace("BitfinexBrokerage.OnMessage(): Successful wss auth");
+                    return;
                 }
                 else if (raw.code == "20051" || raw.code == "20061")
                 {
                     //hard reset - only close and allow reconnect timeout to handle
                     Log.Trace("BitfinexBrokerage.OnMessage(): Broker restart sequence is starting.");
                     WebSocket.Close();
+                    return;
                 }
 
                 Log.Trace("BitfinexBrokerage.OnMessage(): " + e.Message);
@@ -269,6 +278,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 Connect();
             }
+
+            //todo: attempt unsubscribe to cleanup existing. Otherwise, dupe sub messages to be taken as sub confirmation
 
             foreach (var item in symbols)
             {
