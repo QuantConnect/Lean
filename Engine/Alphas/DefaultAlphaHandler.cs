@@ -263,6 +263,8 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             // persist alphas at exit
             StoreAlphas();
+
+            Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
         }
 
         /// <inheritdoc />
@@ -272,6 +274,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 return;
             }
+
+            Log.Trace("DefaultAlphaHandler.Run(): Exiting Thread...");
 
             // send final alpha scoring updates before we exit
             _messages.Enqueue(new AlphaPacket
