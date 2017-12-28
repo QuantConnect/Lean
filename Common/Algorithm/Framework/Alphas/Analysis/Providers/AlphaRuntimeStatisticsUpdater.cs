@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
 {
     /// <summary>
@@ -25,8 +27,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         private decimal _longCount;
         private decimal _shortCount;
 
+        private readonly int _rollingAverageIsReadyCount;
         private readonly double _smoothingFactor;
         private readonly decimal _tradablePercentOfVolume;
+
+        /// <summary>
+        /// Gets whether or not the rolling average statistics is ready
+        /// </summary>
+        public bool RollingAverageIsReady => _populationMeanSamples >= _rollingAverageIsReadyCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlphaRuntimeStatisticsUpdater"/> class
@@ -37,6 +45,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         {
             _tradablePercentOfVolume = tradablePercentOfVolume;
             _smoothingFactor = 2.0 / (period + 1.0);
+
+            // require a minimum of 5 samples or 25% of the EMA period before we declare the rolling average as 'ready'
+            _rollingAverageIsReadyCount = Math.Max(5, period / 4);
         }
 
         /// <summary>
@@ -70,6 +81,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         /// <param name="context">Context whose alpha has just closed</param>
         public void OnAlphaClosed(AlphaRuntimeStatistics statistics, AlphaAnalysisContext context)
         {
+            // increment closed alpha counter
+            statistics.TotalAlphasClosed += 1;
+
             // tradable volume (purposefully includes fractional shares)
             var volume =  _tradablePercentOfVolume * context.InitialValues.Volume;
 
@@ -93,6 +107,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         /// <param name="context">Context whose alpha has just completed analysis</param>
         public void OnAlphaAnalysisCompleted(AlphaRuntimeStatistics statistics, AlphaAnalysisContext context)
         {
+            // increment analysis completed counter
+            statistics.TotalAlphasAnalysisCompleted += 1;
+
             foreach (var scoreType in AlphaManager.ScoreTypes)
             {
                 var score = context.Score.GetScore(scoreType);

@@ -206,7 +206,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 try
                 {
                     // verify these scores have been computed before taking the first sample
-                    if (RuntimeStatistics.RollingAveragedPopulationScore.UpdatedTimeUtc != default(DateTime))
+                    if (StatisticsUpdater.RollingAverageIsReady)
                     {
                         // sample the rolling averaged population scores
                         foreach (var scoreType in ScoreTypes)

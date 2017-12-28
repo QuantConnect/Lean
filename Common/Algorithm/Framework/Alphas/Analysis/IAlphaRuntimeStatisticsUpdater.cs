@@ -24,6 +24,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     public interface IAlphaRuntimeStatisticsUpdater
     {
         /// <summary>
+        /// Gets whether or not the rolling average statistics is ready
+        /// </summary>
+        bool RollingAverageIsReady { get; }
+
+        /// <summary>
         /// Updates statistics when a new alpha signal is received by the alpha manager
         /// </summary>
         /// <param name="statistics">Statistics to be updated</param>
