@@ -235,12 +235,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         protected void Authenticate()
         {
             var key = ApiKey;
-            var payload = "AUTH" + DateTime.UtcNow.Ticks;
+            var authNonce = DateTime.UtcNow.Ticks;
+            var payload = "AUTH" + authNonce;
             WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "auth",
                 apiKey = key,
                 authSig = GetHexHashSignature(payload, ApiSecret),
+                authNonce = authNonce,
                 authPayload = payload
             }));
         }
