@@ -32,7 +32,7 @@
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
   "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
-  "signal-handler": "QuantConnect.Lean.Engine.Signals.DefaultSignalHandler",
+  "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
 
   // limits on number of symbols to allow
   "symbol-minute-limit": 10000,

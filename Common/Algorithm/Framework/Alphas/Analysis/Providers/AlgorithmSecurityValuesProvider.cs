@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         {
             var security = _algorithm.Securities[symbol];
             var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
-            return new SecurityValues(_algorithm.UtcTime, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
+            return new SecurityValues(_algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
         }
     }
 }

@@ -40,6 +40,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public DateTime GeneratedTimeUtc { get; internal set; }
 
         /// <summary>
+        /// Gets the alpha's prediction end time. This is the time when this
+        /// alpha prediction is expected to be fulfilled. This time takes into
+        /// account market hours, weekends, as well as the symbol's data resolution
+        /// </summary>
+        public DateTime CloseTimeUtc { get; internal set; }
+
+        /// <summary>
         /// Gets the symbol this alpha is for
         /// </summary>
         public Symbol Symbol { get; private set; }
@@ -120,16 +127,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
-        /// Determines whether or not this alpha's period is closed.
-        /// </summary>
-        /// <param name="currentTimeUtc">The time to check</param>
-        /// <returns>True if the the time is on or after the alpha closing time, otherwise false</returns>
-        public bool IsPeriodClosedAt(DateTime currentTimeUtc)
-        {
-            return GeneratedTimeUtc + Period >= currentTimeUtc;
-        }
-
-        /// <summary>
         /// Creates a deep clone of this alpha instance
         /// </summary>
         /// <returns>A new alpha with identical values, but new instances</returns>
@@ -137,7 +134,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             return new Alpha(Symbol, Type, Direction, Period, Magnitude, Confidence)
             {
-                GeneratedTimeUtc = GeneratedTimeUtc
+                GeneratedTimeUtc = GeneratedTimeUtc,
+                CloseTimeUtc = CloseTimeUtc,
+                Score = Score,
+                Id = Id,
+                EstimatedValue = EstimatedValue
             };
         }
 

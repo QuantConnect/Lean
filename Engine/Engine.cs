@@ -186,6 +186,7 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("         RealTime:     " + _algorithmHandlers.RealTime.GetType().FullName);
                 Log.Trace("         Results:      " + _algorithmHandlers.Results.GetType().FullName);
                 Log.Trace("         Transactions: " + _algorithmHandlers.Transactions.GetType().FullName);
+                Log.Trace("         Alpha:        " + _algorithmHandlers.Alphas.GetType().FullName);
                 if (algorithm != null && algorithm.HistoryProvider != null)
                 {
                     Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);

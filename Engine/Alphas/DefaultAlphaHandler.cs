@@ -32,7 +32,7 @@ using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.Alphas
 {
     /// <summary>
-    /// Base alpha handler that supports sending alphas to the messaging handler
+    /// Default alpha handler that supports sending alphas to the messaging handler, analyzing alphas online
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
@@ -128,8 +128,8 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             // wire events to update runtime statistics at key moments in alpha life cycle (new/period end/analysis end)
             AlphaManager.AlphaReceived += (sender, context) => StatisticsUpdater.OnAlphaReceived(RuntimeStatistics, context);
-            AlphaManager.AlphaPeriodClosed += (sender, context) => StatisticsUpdater.OnAlphaAnalysisCompleted(RuntimeStatistics, context);
-            AlphaManager.AlphaAnalysisCompleted += (sender, context) => StatisticsUpdater.OnAlphaPeriodClosed(RuntimeStatistics, context);
+            AlphaManager.AlphaClosed += (sender, context) => StatisticsUpdater.OnAlphaClosed(RuntimeStatistics, context);
+            AlphaManager.AlphaAnalysisCompleted += (sender, context) => StatisticsUpdater.OnAlphaAnalysisCompleted(RuntimeStatistics, context);
 
             algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
 
@@ -205,14 +205,17 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 try
                 {
-                    // sample the rolling averaged population scores
-                    foreach (var scoreType in ScoreTypes)
+                    // verify these scores have been computed before taking the first sample
+                    if (StatisticsUpdater.RollingAverageIsReady)
                     {
-                        var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                        _alphaScoreSeriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
+                        // sample the rolling averaged population scores
+                        foreach (var scoreType in ScoreTypes)
+                        {
+                            var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
+                            _alphaScoreSeriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
+                        }
+                        _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
                     }
-
-                    _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
                 }
                 catch (Exception err)
                 {
@@ -260,6 +263,8 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             // persist alphas at exit
             StoreAlphas();
+
+            Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
         }
 
         /// <inheritdoc />
@@ -269,6 +274,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 return;
             }
+
+            Log.Trace("DefaultAlphaHandler.Run(): Exiting Thread...");
 
             // send final alpha scoring updates before we exit
             _messages.Enqueue(new AlphaPacket

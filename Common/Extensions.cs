@@ -741,6 +741,35 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts the specified time span into a resolution enum value. If an exact match
+        /// is not found and `requireExactMatch` is false, then the higher resoluion will be
+        /// returned. For example, timeSpan=5min will return Minute resolution.
+        /// </summary>
+        /// <param name="timeSpan">The time span to convert to resolution</param>
+        /// <param name="requireExactMatch">True to throw an exception if an exact match is not found</param>
+        /// <returns>The resolution</returns>
+        public static Resolution ToHigherResolutionEquivalent(this TimeSpan timeSpan, bool requireExactMatch)
+        {
+            if (requireExactMatch)
+            {
+                if (TimeSpan.Zero == timeSpan)  return Resolution.Tick;
+                if (Time.OneSecond == timeSpan) return Resolution.Second;
+                if (Time.OneMinute == timeSpan) return Resolution.Minute;
+                if (Time.OneHour   == timeSpan) return Resolution.Hour;
+                if (Time.OneDay    == timeSpan) return Resolution.Daily;
+                throw new InvalidOperationException($"Unable to exactly convert time span ('{timeSpan}') to resolution.");
+            }
+
+            // for non-perfect matches
+            if (Time.OneSecond > timeSpan) return Resolution.Tick;
+            if (Time.OneMinute > timeSpan) return Resolution.Second;
+            if (Time.OneHour   > timeSpan) return Resolution.Minute;
+            if (Time.OneDay    > timeSpan) return Resolution.Hour;
+
+            return Resolution.Daily;
+        }
+
+        /// <summary>
         /// Converts the specified string value into the specified type
         /// </summary>
         /// <typeparam name="T">The output type</typeparam>

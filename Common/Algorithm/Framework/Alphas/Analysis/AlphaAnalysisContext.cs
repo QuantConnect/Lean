@@ -25,6 +25,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     {
         private DateTime _previousEvaluationTimeUtc;
         private readonly Dictionary<string, object> _contextStorage;
+        private readonly TimeSpan _analysisPeriod;
 
         /// <summary>
         /// Gets the symbol the alpha is for
@@ -40,11 +41,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// Gets the alpha's current score
         /// </summary>
         public AlphaScore Score => Alpha.Score;
-
-        /// <summary>
-        /// Gets the period over which the alpha will be analyzed
-        /// </summary>
-        public TimeSpan AnalysisPeriod { get; }
 
         /// <summary>
         /// Gets ending time of the analysis period
@@ -76,12 +72,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Percentage through the analysis period
         /// </summary>
-        public double NormalizedTime => Time.NormalizeInstantWithinRange(Alpha.GeneratedTimeUtc, CurrentValues.TimeUtc, AnalysisPeriod);
+        public double NormalizedTime => Time.NormalizeInstantWithinRange(Alpha.GeneratedTimeUtc, CurrentValues.TimeUtc, _analysisPeriod);
 
         /// <summary>
         /// Percentage of the current time step w.r.t analysis period
         /// </summary>
-        public double NormalizedTimeStep => Time.NormalizeTimeStep(AnalysisPeriod, CurrentValues.TimeUtc - _previousEvaluationTimeUtc);
+        public double NormalizedTimeStep => Time.NormalizeTimeStep(_analysisPeriod, CurrentValues.TimeUtc - _previousEvaluationTimeUtc);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlphaAnalysisContext"/> class
@@ -93,15 +89,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public AlphaAnalysisContext(Alpha alpha, SecurityValues initialValues, TimeSpan analysisPeriod)
         {
             Alpha = alpha;
-            AnalysisPeriod = analysisPeriod;
             _contextStorage = new Dictionary<string, object>();
 
             CurrentValues = InitialValues = initialValues;
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
 
-            AnalysisEndTimeUtc = Alpha.GeneratedTimeUtc + analysisPeriod;
             AlphaPeriodEndTimeUtc = alpha.GeneratedTimeUtc + alpha.Period;
+
+            var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
+            var barCount = (int)(alpha.Period.Ticks / barSize.Ticks);
+            AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, alpha.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
+            _analysisPeriod = AnalysisEndTimeUtc - initialValues.TimeUtc;
         }
 
         /// <summary>
@@ -145,6 +144,29 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public void Set(string key, object value)
         {
             _contextStorage[key] = value;
+        }
+
+        /// <summary>
+        /// Determines whether or not this context/alpha can be analyzed for the specified score type
+        /// </summary>
+        /// <param name="scoreType">The type of alpha score</param>
+        /// <returns>True to proceed with analyzing this alpha for the specified score type, false to skip analysis of the score type</returns>
+        public bool ShouldAnalyze(AlphaScoreType scoreType)
+        {
+            if (scoreType == AlphaScoreType.Magnitude)
+            {
+                return Alpha.Magnitude.HasValue;
+            }
+
+            return true;
+        }
+
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return $"{Alpha.Id}: {Alpha.GeneratedTimeUtc}/{Alpha.CloseTimeUtc} -- {Alpha.Score}";
         }
     }
 }

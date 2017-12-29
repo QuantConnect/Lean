@@ -328,6 +328,9 @@ namespace QuantConnect.Lean.Engine
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
                 }
 
+                // sample alpha charts now that we've updated time/price information but BEFORE we receive new alphas
+                alphas.ProcessSynchronousEvents();
+
                 // fire real time events after we've updated based on the new data
                 realtime.SetTime(timeSlice.Time);
 
@@ -592,9 +595,6 @@ namespace QuantConnect.Lean.Engine
 
                 //Save the previous time for the sample calculations
                 _previousTime = time;
-
-                // poke the alpha handler to allow processing of events on the algorithm's main thread
-                alphas.ProcessSynchronousEvents();
 
                 // send the alpha statistics to the result handler for storage/transmit with the result packets
                 results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
