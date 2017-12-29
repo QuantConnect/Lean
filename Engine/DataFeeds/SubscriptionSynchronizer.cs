@@ -65,7 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SecurityChanges newChanges;
             do
             {
-
                 universeData.Clear();
                 newChanges = SecurityChanges.None;
                 foreach (var subscription in subscriptions)
@@ -87,7 +86,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
-                    data.Add(packet);
 
                     var configuration = subscription.Configuration;
                     var offsetProvider = subscription.OffsetProvider;
@@ -108,40 +106,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    // we have new universe data to select based on, store the subscription data until the end
-                    if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
+                    if (packet.Count > 0)
                     {
-                        // assume that if the first item is a base data collection then the enumerator handled the aggregation,
-                        // otherwise, load all the the data into a new collection instance
-                        var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
-                        var packetData = packetBaseDataCollection == null
-                            ? packet.Data
-                            : packetBaseDataCollection.Data;
-
-                        BaseDataCollection collection;
-                        if (!universeData.TryGetValue(subscription.Universe, out collection))
+                        // we have new universe data to select based on, store the subscription data until the end
+                        if (!subscription.IsUniverseSelectionSubscription)
                         {
-                            if (packetBaseDataCollection is OptionChainUniverseDataCollection)
-                            {
-                                var current = subscription.Current as OptionChainUniverseDataCollection;
-                                var underlying = current != null ? current.Underlying : null;
-                                collection = new OptionChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData, underlying);
-                            }
-                            else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
-                            {
-                                var current = subscription.Current as FuturesChainUniverseDataCollection;
-                                collection = new FuturesChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
-                            }
-                            else
-                            {
-                                collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
-                            }
-
-                            universeData[subscription.Universe] = collection;
+                            data.Add(packet);
                         }
                         else
                         {
-                            collection.Data.AddRange(packetData);
+                            // assume that if the first item is a base data collection then the enumerator handled the aggregation,
+                            // otherwise, load all the the data into a new collection instance
+                            var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
+                            var packetData = packetBaseDataCollection == null
+                                ? packet.Data
+                                : packetBaseDataCollection.Data;
+
+                            BaseDataCollection collection;
+                            if (universeData.TryGetValue(subscription.Universe, out collection))
+                            {
+                                collection.Data.AddRange(packetData);
+                            }
+                            else
+                            {
+                                if (packetBaseDataCollection is OptionChainUniverseDataCollection)
+                                {
+                                    var current = subscription.Current as OptionChainUniverseDataCollection;
+                                    var underlying = current != null ? current.Underlying : null;
+                                    collection = new OptionChainUniverseDataCollection(frontier,
+                                        subscription.Configuration.Symbol, packetData, underlying);
+                                }
+                                else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
+                                {
+                                    var current = subscription.Current as FuturesChainUniverseDataCollection;
+                                    collection = new FuturesChainUniverseDataCollection(frontier,
+                                        subscription.Configuration.Symbol, packetData);
+                                }
+                                else
+                                {
+                                    collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol,
+                                        packetData);
+                                }
+
+                                universeData[subscription.Universe] = collection;
+                            }
                         }
                     }
 
