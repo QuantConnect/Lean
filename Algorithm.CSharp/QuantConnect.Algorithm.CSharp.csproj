@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
+    <Compile Include="BitfinexAlgorithm.cs" />
     <Compile Include="RollingWindowAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
     <Compile Include="BasicTemplateFxcmVolumeAlgorithm.cs" />
