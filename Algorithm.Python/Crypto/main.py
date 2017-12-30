@@ -81,8 +81,8 @@ class IndicatorAlgo(QCAlgorithm):
         ##########################
         holdings = self.Portfolio[self.target_crypto].Quantity
         last_price = self.Securities[self.target_crypto].Close
-        ask_price = self.Securities[self.target_crypto].AskPrice - .01
-        bid_price = self.Securities[self.target_crypto].BidPrice + .01
+        buy_price = self.Securities[self.target_crypto].BidPrice
+        sell_price = self.Securities[self.target_crypto].AskPrice
         amount = float(self.Portfolio.GetBuyingPower(self.target_crypto, OrderDirection.Buy) / last_price)
 
         ###############################
@@ -93,7 +93,7 @@ class IndicatorAlgo(QCAlgorithm):
             open_order = self.Transactions.GetOpenOrders(self.target_crypto)[0]
             if abs(float(self.pending_limit_price - last_price) / float(self.pending_limit_price)) > self.resubmit_order_threshold:
                 #self.Debug("Open Order Price: %s last_price: %s percent change: %s resubmit_order_threshold: %s order direction:%s" % (self.pending_limit_price, last_price,abs(float(self.pending_limit_price - last_price) / float(self.pending_limit_price)),self.resubmit_order_threshold,open_order.Direction))
-                limit_price = ask_price if open_order.Direction == 0 else bid_price
+                limit_price = buy_price if open_order.Direction == 0 else sell_price
                 #self.Debug("Updating order to limit price of %s, amount of %s, and direction of %s" % (str(limit_price),str(amount),str(open_order.Direction)))
                 self.Transactions.CancelOrder(open_order.Id)
                 self.LimitOrder(self.target_crypto, open_order.Quantity, limit_price)
@@ -107,30 +107,30 @@ class IndicatorAlgo(QCAlgorithm):
             # buy if price closes above upper bollinger band
             # sell if price closes below middle bollinger band
             if holdings == 0 and last_price > self.Bolband.UpperBand.Current.Value:
-                self.LimitOrder(self.target_crypto, amount, ask_price)
-                self.pending_limit_price = ask_price
+                self.LimitOrder(self.target_crypto, amount, buy_price)
+                self.pending_limit_price = buy_price
             elif holdings > 0 and last_price < self.Bolband.MiddleBand.Current.Value:
-                self.LimitOrder(self.target_crypto, -holdings, bid_price)
-                self.pending_limit_price = bid_price
+                self.LimitOrder(self.target_crypto, -holdings, sell_price)
+                self.pending_limit_price = sell_price
         elif self.indicator_name == "momentum":
             mom = self.mom.Current.Value
             if holdings == 0 and mom > self.momentum_buy_threshold:
-                self.LimitOrder(self.target_crypto, amount, ask_price)
-                self.pending_limit_price = ask_price
+                self.LimitOrder(self.target_crypto, amount, buy_price)
+                self.pending_limit_price = buy_price
             elif holdings > 0 and mom < self.momentum_sell_threshold:
-                self.LimitOrder(self.target_crypto, -holdings, bid_price)
-                self.pending_limit_price = bid_price
+                self.LimitOrder(self.target_crypto, -holdings, sell_price)
+                self.pending_limit_price = sell_price
         elif self.indicator_name == "MACD":
             if not self.macd.IsReady:
                 return
             signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
 
             if holdings == 0 and signalDeltaPercent > self.MACD_tolerance:
-                self.LimitOrder(self.target_crypto, amount, ask_price)
-                self.pending_limit_price = ask_price
+                self.LimitOrder(self.target_crypto, amount, buy_price)
+                self.pending_limit_price = buy_price
             elif holdings > 0 and signalDeltaPercent < -self.MACD_tolerance:
-                self.LimitOrder(self.target_crypto, -holdings, bid_price)
-                self.pending_limit_price = bid_price
+                self.LimitOrder(self.target_crypto, -holdings, sell_price)
+                self.pending_limit_price = sell_price
 
     def PlotCryptoIndicator(self):
         # Chart the crypto price
