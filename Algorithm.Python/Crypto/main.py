@@ -36,6 +36,7 @@ class IndicatorAlgo(QCAlgorithm):
         self.MACD_signal_period = 9
         self.MACD_moving_average_type = MovingAverageType.Exponential
         self.MACD_tolerance = 0.0025
+        self.MACD_time_resolution = Resolution.Minute
 
         ############################
         # Indicators and processes #
@@ -61,8 +62,12 @@ class IndicatorAlgo(QCAlgorithm):
             self.mom = self.MOM(self.target_crypto, self.momentum_period)
         elif self.indicator_name == "MACD":
             # Create the MACD
-            self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
-                                  self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
+            self.macd = self.MACD(self.target_crypto, 
+                                self.MACD_fast_period, 
+                                self.MACD_slow_period,
+                                self.MACD_signal_period, 
+                                self.MACD_moving_average_type, 
+                                self.MACD_time_resolution)
 
         # Pump historical data into the indicators before algo start
         self.SetWarmUp(self.warmup_lookback, self.time_resolution)
@@ -121,7 +126,11 @@ class IndicatorAlgo(QCAlgorithm):
                 self.LimitOrder(self.target_crypto, -holdings, bid_price)
                 self.pending_limit_price = bid_price
         elif self.indicator_name == "MACD":
-            #self.Debug(str(self.macd))
+            # self.Debug(str(self.macd))
+            ### initialize MACD -- and wait until IsReady is True/warmup is complete; until then just return
+            if not self.macd.IsReady:
+                return
+
             signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
 
             if holdings == 0 and signalDeltaPercent > self.MACD_tolerance:
