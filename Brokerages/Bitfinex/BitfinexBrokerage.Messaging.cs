@@ -79,10 +79,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                         PopulateWallet(data);
                         return;
                     }
-					else if (!ChannelList.ContainsKey(id))
-					{
-						return;
-					}
+                    else if (!ChannelList.ContainsKey(id))
+                    {
+                        return;
+                    }
                 }
                 else if ((raw.channel == "ticker" || raw.channel == "trades") && raw.@event == "subscribed")
                 {
@@ -143,7 +143,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Time = DateTime.UtcNow,
                     Value = (msg.Ask + msg.Bid) / 2m,
                     TickType = TickType.Quote,
-                    Symbol = Symbol.Create(symbol.ToUpper(), SecurityType.Forex, BrokerageMarket),
+                    Symbol = Symbol.Create(symbol.ToUpper(), SecurityType.Crypto, BrokerageMarket),
                     DataType = MarketDataType.Tick
                 });
             }
