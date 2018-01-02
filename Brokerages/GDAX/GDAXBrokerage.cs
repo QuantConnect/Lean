@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using Newtonsoft.Json;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
@@ -21,27 +21,24 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
 
 namespace QuantConnect.Brokerages.GDAX
 {
-    public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
+    public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
-
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
-        public override bool IsConnected
-        {
-            get { return WebSocket.IsOpen; }
-        }
+        public override bool IsConnected => WebSocket.IsOpen;
 
         /// <summary>
         /// Creates a new order
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
-        public override bool PlaceOrder(Orders.Order order)
+        public override bool PlaceOrder(Order order)
         {
             LockStream();
 
@@ -52,7 +49,7 @@ namespace QuantConnect.Brokerages.GDAX
             payload.size = Math.Abs(order.Quantity);
             payload.side = order.Direction.ToString().ToLower();
             payload.type = ConvertOrderType(order.Type);
-            payload.price = order is LimitOrder ? ((LimitOrder)order).LimitPrice : order is StopMarketOrder ? ((StopMarketOrder)order).StopPrice : 0;
+            payload.price = (order as LimitOrder)?.LimitPrice ?? ((order as StopMarketOrder)?.StopPrice ?? 0);
             payload.product_id = ConvertSymbol(order.Symbol);
 
             if (_algorithm.BrokerageModel.AccountType == AccountType.Margin)
@@ -60,20 +57,42 @@ namespace QuantConnect.Brokerages.GDAX
                 payload.overdraft_enabled = true;
             }
 
+            var orderProperties = order.Properties as GDAXOrderProperties;
+            if (orderProperties != null)
+            {
+                if (order.Type == OrderType.Limit)
+                {
+                    payload.post_only = orderProperties.PostOnly;
+                }
+            }
+
             req.AddJsonBody(payload);
 
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
-            if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Content != null)
+            if (response.StatusCode == HttpStatusCode.OK && response.Content != null)
             {
                 var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
 
-                if (raw == null || raw.Id == null)
+                if (raw?.Id == null)
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    var errorMessage = $"Error parsing response from place order: {response.Content}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
                     UnlockStream();
-                    return false;
+                    return true;
+                }
+
+                if (raw.Status == "rejected")
+                {
+                    var errorMessage = "Reject reason: " + raw.RejectReason;
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
+                    UnlockStream();
+                    return true;
                 }
 
                 var brokerId = raw.Id;
@@ -92,18 +111,18 @@ namespace QuantConnect.Brokerages.GDAX
 
                 // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "Order completed successfully orderid:" + order.Id));
 
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
                 UnlockStream();
                 return true;
             }
 
+            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-            var message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
             UnlockStream();
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -111,7 +130,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
-        public override bool UpdateOrder(Orders.Order order)
+        public override bool UpdateOrder(Order order)
         {
             throw new NotSupportedException("GDAXBrokerage.UpdateOrder: Order update not supported. Please cancel and re-create.");
         }
@@ -121,7 +140,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
-        public override bool CancelOrder(Orders.Order order)
+        public override bool CancelOrder(Order order)
         {
             var success = new List<bool>();
 
@@ -130,7 +149,11 @@ namespace QuantConnect.Brokerages.GDAX
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
-                success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
+                success.Add(response.StatusCode == HttpStatusCode.OK);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Canceled });
+                }
             }
 
             return success.All(a => a);
@@ -141,6 +164,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Disconnect()
         {
+            base.Disconnect();
+
             WebSocket.Close();
         }
 
@@ -148,64 +173,59 @@ namespace QuantConnect.Brokerages.GDAX
         /// Gets all orders not yet closed
         /// </summary>
         /// <returns></returns>
-        public override List<Orders.Order> GetOpenOrders()
+        public override List<Order> GetOpenOrders()
         {
             var list = new List<Order>();
 
-            try
-            {
-                var req = new RestRequest("/orders?status=open&status=pending", Method.GET);
-                GetAuthenticationToken(req);
-                var response = RestClient.Execute(req);
+            var req = new RestRequest("/orders?status=open&status=pending", Method.GET);
+            GetAuthenticationToken(req);
+            var response = RestClient.Execute(req);
 
-                if (response != null)
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"GDAXBrokerage.GetOpenOrders: request failed: [{(int) response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var orders = JsonConvert.DeserializeObject<Messages.Order[]>(response.Content);
+            foreach (var item in orders)
+            {
+                Order order;
+                if (item.Type == "market")
                 {
-                    var orders = JsonConvert.DeserializeObject<Messages.Order[]>(response.Content);
-                    foreach (var item in orders)
-                    {
-                        Order order = null;
-                        if (item.Type == "market")
-                        {
-                            order = new MarketOrder { Price = item.Price };
-                        }
-                        else if (item.Type == "limit")
-                        {
-                            order = new LimitOrder { LimitPrice = item.Price };
-                        }
-                        else if (item.Type == "stop")
-                        {
-                            order = new StopMarketOrder { StopPrice = item.Price };
-                        }
-                        else
-                        {
-                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
-                                "GDAXBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
-                            continue;
-                        }
-
-                        order.Quantity = item.Side == "sell" ? -item.Size : item.Size;
-                        order.BrokerId = new List<string> { item.Id.ToString() };
-                        order.Symbol = ConvertProductId(item.ProductId);
-                        order.Time = DateTime.UtcNow;
-                        order.Status = ConvertOrderStatus(item);
-                        order.Price = item.Price;
-                        list.Add(order);
-                    }
+                    order = new MarketOrder { Price = item.Price };
                 }
-            }
-            catch (Exception)
-            {
-                throw;
+                else if (item.Type == "limit")
+                {
+                    order = new LimitOrder { LimitPrice = item.Price };
+                }
+                else if (item.Type == "stop")
+                {
+                    order = new StopMarketOrder { StopPrice = item.Price };
+                }
+                else
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
+                        "GDAXBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
+                    continue;
+                }
+
+                order.Quantity = item.Side == "sell" ? -item.Size : item.Size;
+                order.BrokerId = new List<string> { item.Id };
+                order.Symbol = ConvertProductId(item.ProductId);
+                order.Time = DateTime.UtcNow;
+                order.Status = ConvertOrderStatus(item);
+                order.Price = item.Price;
+                list.Add(order);
             }
 
-            foreach (Order item in list)
+            foreach (var item in list)
             {
                 if (item.Status.IsOpen())
                 {
-                    var cached = this.CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
+                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
                     if (cached.Any())
                     {
-                        this.CachedOrderIDs[cached.First().Key] = item;
+                        CachedOrderIDs[cached.First().Key] = item;
                     }
                 }
             }
@@ -234,11 +254,16 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override List<Cash> GetCashBalance()
         {
-            var list = new List<Securities.Cash>();
+            var list = new List<Cash>();
 
-            var req = new RestRequest("/accounts", Method.GET);
-            GetAuthenticationToken(req);
-            var response = RestClient.Execute(req);
+            var request = new RestRequest("/accounts", Method.GET);
+            GetAuthenticationToken(request);
+            var response = RestClient.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"GDAXBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
 
             foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))
             {
@@ -246,46 +271,39 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     if (item.Currency == "USD")
                     {
-                        list.Add(new Securities.Cash(item.Currency, item.Balance, 1));
+                        list.Add(new Cash(item.Currency, item.Balance, 1));
                     }
-                    else if (new[] {"GBP", "EUR" }.Contains(item.Currency))
+                    else if (new[] {"GBP", "EUR"}.Contains(item.Currency))
                     {
                         var rate = GetConversionRate(item.Currency);
-                        list.Add(new Securities.Cash(item.Currency.ToUpper(), item.Balance, rate));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
                     }
                     else
                     {
                         var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
 
-                        list.Add(new Securities.Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
                     }
                 }
             }
-            return list;
-        }
 
-        /// <summary>
-        /// Get queued tick data
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<Data.BaseData> GetNextTicks()
-        {
-            lock (Ticks)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
+            return list;
         }
         #endregion
 
         /// <summary>
-        /// Retreives the fee for a given order
+        /// Retrieves the fee for a given order
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
-        public decimal GetFee(Orders.Order order)
+        public decimal GetFee(Order order)
         {
+            var gdaxOrderProperties = order.Properties as GDAXOrderProperties;
+            if (order.Type == OrderType.Limit && gdaxOrderProperties?.PostOnly == true)
+            {
+                return 0m;
+            }
+
             var totalFee = 0m;
 
             foreach (var item in order.BrokerId)
@@ -293,6 +311,12 @@ namespace QuantConnect.Brokerages.GDAX
                 var req = new RestRequest("/orders/" + item, Method.GET);
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    throw new Exception($"GDAXBrokerage.GetFee: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                }
+
                 var fill = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
                 totalFee += (decimal)fill.fill_fees;

@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // set our initializer to our custom type
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
-            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrice), DataNormalizationMode.Raw));
+            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, SecuritySeeder.Null, DataNormalizationMode.Raw));
 
             SetStartDate(2013, 10, 01);
             SetEndDate(2013, 11, 01);
@@ -77,11 +77,10 @@ namespace QuantConnect.Algorithm.CSharp
             /// Initializes the specified security by setting up the models
             /// </summary>
             /// <param name="security">The security to be initialized</param>
-            /// <param name="seedSecurity">True to seed the security, false otherwise</param>
-            public override void Initialize(Security security, bool seedSecurity)
+            public override void Initialize(Security security)
             {
                 // first call the default implementation
-                base.Initialize(security, seedSecurity);
+                base.Initialize(security);
 
                 // now apply our data normalization mode
                 security.SetDataNormalizationMode(_dataNormalizationMode);

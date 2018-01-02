@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Common.Securities
                                     SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
-                                                                             new FuncSecuritySeeder(_algo.GetLastKnownPrice));
+                                                                          new FuncSecuritySeeder(_algo.GetLastKnownPrice));
         }
 
         [Test]
@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.AreEqual(_tradeBarSecurity.Leverage, 1.0);
 
-            _brokerageInitializer.Initialize(_tradeBarSecurity, true);
+            _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             Assert.AreEqual(_tradeBarSecurity.Leverage, 2.0);
         }
@@ -103,9 +103,9 @@ namespace QuantConnect.Tests.Common.Securities
             // Arrange
             var dateForWhichDataExist = new DateTime(2013, 10, 10, 12, 0, 0);
             _algo.SetDateTime(dateForWhichDataExist);
-            
+
             // Act
-            _brokerageInitializer.Initialize(_tradeBarSecurity, true);
+            _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             // Assert
             Assert.IsFalse(_tradeBarSecurity.Price == 0);
@@ -119,7 +119,7 @@ namespace QuantConnect.Tests.Common.Securities
             _algo.SetDateTime(dateForWhichDataExist);
 
             // Act
-            _brokerageInitializer.Initialize(_quoteBarSecurity, true);
+            _brokerageInitializer.Initialize(_quoteBarSecurity);
 
             // Assert
             Assert.IsFalse(_quoteBarSecurity.Price == 0);
@@ -133,7 +133,7 @@ namespace QuantConnect.Tests.Common.Securities
             _algo.SetDateTime(dateForWhichDataDoesNotExist);
 
             // Act
-            _brokerageInitializer.Initialize(_tradeBarSecurity, true);
+            _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             // Assert
             Assert.IsTrue(_tradeBarSecurity.Price == 0);

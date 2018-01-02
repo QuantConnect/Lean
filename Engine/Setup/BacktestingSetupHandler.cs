@@ -28,7 +28,6 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 
@@ -184,6 +183,8 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
+                    resultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
+
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
 
@@ -195,6 +196,9 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     // set the option chain provider
                     algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
+
+                    // set the future chain provider
+                    algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
 
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
@@ -273,10 +277,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Sum();
 
             // universe coarse/fine/custom subscriptions
-            var universeSubscriptions = universeManager.Values
+            var universeSubscriptions = universeManager
                 // use max limit for universes without explicitly added securities
-                .Select(u => u.Members.Count == 0 ? controls.GetLimit(u.UniverseSettings.Resolution) : u.Members.Count)
-                .Sum();
+                .Sum(u => u.Value.Members.Count == 0 ? controls.GetLimit(u.Value.UniverseSettings.Resolution) : u.Value.Members.Count);
 
             var subscriptionCount = derivativeSubscriptions + universeSubscriptions;
 

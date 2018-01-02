@@ -36,7 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.OandaDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.KaikoDataConverter.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -153,6 +153,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
+    <Compile Include="GDAXDownloader\Program.cs" />
+    <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
@@ -196,6 +199,9 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
+    <Compile Include="KaikoDataConverter\Program.cs" />
+    <Compile Include="KrakenDataDownloader\KrakenDataDownloader.cs" />
+    <Compile Include="KrakenDataDownloader\Program.cs" />
     <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataReader.cs" />
     <Compile Include="LeanDataWriter.cs" />
@@ -279,7 +285,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

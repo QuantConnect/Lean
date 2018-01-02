@@ -66,8 +66,8 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
         elif btc_qnty == quantity + 0.11:
             self.Order("BTCUSD", -0.02)
         elif btc_qnty == quantity + 0.09:
-            # should fail
-            self.Order("BTCUSD", 0.001)
+            # should fail (below minimum order quantity)
+            self.Order("BTCUSD", 0.00001)
             self.SetHoldings("BTCUSD", -2.0)
             self.SetHoldings("BTCUSD", 2.0)
             self.Quit()

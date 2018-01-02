@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -128,12 +129,11 @@ namespace QuantConnect.Lean.Engine
         /// <param name="transactions">Transaction manager object</param>
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
-        /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
-        /// <param name="systemHandlersServer"></param>
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
+        /// <param name="alphas">Alpha handler used to process algorithm generated alphas</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
             //Initialize:
             _dataPointCount = 0;
@@ -328,6 +328,9 @@ namespace QuantConnect.Lean.Engine
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
                 }
 
+                // sample alpha charts now that we've updated time/price information but BEFORE we receive new alphas
+                alphas.ProcessSynchronousEvents();
+
                 // fire real time events after we've updated based on the new data
                 realtime.SetTime(timeSlice.Time);
 
@@ -415,6 +418,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         algorithm.OnSecuritiesChanged(timeSlice.SecurityChanges);
+                        algorithm.OnFrameworkSecuritiesChanged(timeSlice.SecurityChanges);
                     }
                     catch (Exception err)
                     {
@@ -428,7 +432,7 @@ namespace QuantConnect.Lean.Engine
                 // apply dividends
                 foreach (var dividend in timeSlice.Slice.Dividends.Values)
                 {
-                    Log.Trace("AlgorithmManager.Run(): {0}: Applying Dividend for {1}", algorithm.Time, dividend.Symbol.ToString());
+                    Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Dividend for {dividend.Symbol}");
                     algorithm.Portfolio.ApplyDividend(dividend);
                 }
 
@@ -437,7 +441,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
-                        Log.Trace("AlgorithmManager.Run(): {0}: Applying Split for {1}", algorithm.Time, split.Symbol.ToString());
+                        Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
                         algorithm.Portfolio.ApplySplit(split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
                         if (_liveMode || algorithm.Securities[split.Symbol].DataNormalizationMode == DataNormalizationMode.Raw)
@@ -574,6 +578,7 @@ namespace QuantConnect.Lean.Engine
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
                         algorithm.OnData(timeSlice.Slice);
+                        algorithm.OnFrameworkData(timeSlice.Slice);
                     }
                 }
                 catch (Exception err)
@@ -591,8 +596,12 @@ namespace QuantConnect.Lean.Engine
                 //Save the previous time for the sample calculations
                 _previousTime = time;
 
+                // send the alpha statistics to the result handler for storage/transmit with the result packets
+                results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
+
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
+
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
@@ -611,6 +620,12 @@ namespace QuantConnect.Lean.Engine
                 Log.Error("AlgorithmManager.OnEndOfAlgorithm(): " + err);
                 return;
             }
+
+            // final processing now that the algorithm has completed
+            alphas.ProcessSynchronousEvents();
+
+            // send the final alpha statistics to the result handler for storage/transmit with the result packets
+            results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
 
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
             results.ProcessSynchronousEvents(forceProcess: true);
@@ -854,8 +869,10 @@ namespace QuantConnect.Lean.Engine
         {
             Log.Trace("AlgorithmManager.ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
-            foreach (var security in algorithm.Securities.Values)
+            foreach (var kvp in algorithm.Securities)
             {
+                var security = kvp.Value;
+
                 if (security.VolatilityModel != VolatilityModel.Null)
                 {
                     var historyReq = security.VolatilityModel.GetHistoryRequirements(security, algorithm.UtcTime);
@@ -946,7 +963,6 @@ namespace QuantConnect.Lean.Engine
 
                 if (security.Type == SecurityType.Option)
                 {
-                    var underlying = algorithm.Securities[security.Symbol.Underlying];
                     var option = (Option)security;
 
                     if (security.Holdings.Quantity > 0)
@@ -956,8 +972,12 @@ namespace QuantConnect.Lean.Engine
                     }
                     else
                     {
+                        var message = option.GetPayOff(option.Underlying.Price) > 0
+                            ? "Automatic option assignment on expiration"
+                            : "Option expiration";
+
                         request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option assignment on expiration");
+                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, message);
                     }
                 }
                 else

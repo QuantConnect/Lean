@@ -21,7 +21,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Python
 {
     /// <summary>
-    /// Wraps a <see cref="PyObject"/> object that represents a model that simulates order fees
+    /// Provides an order fee model that wraps a <see cref="PyObject"/> object that represents a model that simulates order fees
     /// </summary>
     public class FeeModelPythonWrapper : IFeeModel
     {
@@ -37,7 +37,8 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IFeeModel.GetOrderFee(Security, Order)" /> in Python
+        /// Gets the order fee associated with the specified order. This returns the cost
+        /// of the transaction in the account currency
         /// </summary>
         /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to compute fees for</param>

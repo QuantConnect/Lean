@@ -331,7 +331,8 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Wrapper for <see cref="Of{T, TSecond}(TSecond, IndicatorBase{T}, bool)"/> in python
+        /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
+        /// to first.DataConsolidated
         /// </summary>
         /// <param name="second">The indicator that receives data from the first</param>
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
@@ -345,7 +346,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Wrapper for <see cref="WeightedBy{T, TWeight}(IndicatorBase{T}, TWeight, int)"/> in python
+        /// Creates a new CompositeIndicator such that the result will be average of a first indicator weighted by a second one
         /// </summary>
         /// <param name="value">Indicator that will be averaged</param>
         /// <param name="weight">Indicator that provides the average weights</param>
@@ -359,7 +360,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Wrapper for <see cref="EMA{T}(IndicatorBase{T}, int, decimal?, bool)"/> in python
+        /// Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator
         /// </summary>
         /// <param name="left">The ExponentialMovingAverage indicator will be created using the data from left</param>
         /// <param name="period">The period of the ExponentialMovingAverage indicators</param>
@@ -373,7 +374,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Wrapper for <see cref="MAX{T}(IndicatorBase{T}, int, bool)"/> in python
+        /// Creates a new Maximum indicator with the specified period from the left indicator
         /// </summary>
         /// <param name="left">The Maximum indicator will be created using the data from left</param>
         /// <param name="period">The period of the Maximum indicator</param>
@@ -386,7 +387,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Wrapper for <see cref="MIN{T}(IndicatorBase{T}, int, bool)"/> in python
+        /// Creates a new Minimum indicator with the specified period from the left indicator
         /// </summary>
         /// <param name="left">The Minimum indicator will be created using the data from left</param>
         /// <param name="period">The period of the Minimum indicator</param>
@@ -399,7 +400,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Wrapper for <see cref="SMA{T}(IndicatorBase{T}, int, bool)"/> in python
+        /// Initializes a new instance of the SimpleMovingAverage class with the specified name and period from the left indicator
         /// </summary>
         /// <param name="left">The SimpleMovingAverage indicator will be created using the data from left</param>
         /// <param name="period">The period of the SMA</param>

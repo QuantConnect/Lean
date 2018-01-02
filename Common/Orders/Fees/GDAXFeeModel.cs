@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
@@ -21,7 +24,19 @@ namespace QuantConnect.Orders.Fees
     public class GDAXFeeModel : IFeeModel
     {
         /// <summary>
-        /// Get the fee for this order
+        /// Tier 1 maker fees
+        /// https://www.gdax.com/fees/BTC-USD
+        /// </summary>
+        private static readonly Dictionary<string, decimal> Fees = new Dictionary<string, decimal>
+        {
+            { "BTCUSD", 0.0025m }, { "BTCEUR", 0.0025m }, { "BTCGBP", 0.0025m },
+            { "BCHBTC", 0.003m  }, { "BCHEUR", 0.003m  }, { "BCHUSD", 0.003m  },
+            { "ETHBTC", 0.003m  }, { "ETHEUR", 0.003m  }, { "ETHUSD", 0.003m  },
+            { "LTCBTC", 0.003m  }, { "LTCEUR", 0.003m  }, { "LTCUSD", 0.003m  }
+        };
+
+        /// <summary>
+        /// Get the fee for this order in units of the account currency
         /// </summary>
         /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to compute fees for</param>
@@ -34,11 +49,13 @@ namespace QuantConnect.Orders.Fees
                 return 0m;
             }
 
-            //todo: fee scaling with trade size
-            var divisor = 0.0025m;
+            // currently we do not model daily rebates
 
-            decimal fee = security.Price * (order.Quantity < 0 ? (order.Quantity * -1) : order.Quantity) * divisor;
-            return fee;
+            decimal fee;
+            Fees.TryGetValue(security.Symbol.Value, out fee);
+
+            // get order value in account currency, then apply fee factor
+            return Math.Abs(order.GetValue(security)) * fee;
         }
     }
 }

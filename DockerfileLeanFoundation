@@ -1,5 +1,5 @@
 #
-#	LEAN Foundation Docker Container 20171026
+#	LEAN Foundation Docker Container 20171229
 #	Cross platform deployment for multiple brokerages
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
@@ -17,9 +17,10 @@ CMD ["/sbin/my_init"]
 RUN \
   apt-get update && \
   apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 python-pip && \
-  pip install --upgrade pip && pip install pycparser pandas scipy numpy sklearn  && \
+  pip install --upgrade pip && pip install --upgrade cython && \
+  pip install pycparser pandas scipy numpy sklearn  && \
   pip install blaze cvxopt cvxpy pykalman statistics statsmodels arch copulalib && \
-  pip install xgboost theano keras tensorflow
+  pip install xgboost theano keras tensorflow deap
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
@@ -57,8 +58,8 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
 
 # Install Python.NET
 # Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
-RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.1 \
-    && cp QuantConnect.pythonnet.1.0.5.1/lib/Python.Runtime.dll /usr/lib
+RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.4 \
+    && cp QuantConnect.pythonnet.1.0.5.4/lib/Python.Runtime.dll /usr/lib
 
 RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
 

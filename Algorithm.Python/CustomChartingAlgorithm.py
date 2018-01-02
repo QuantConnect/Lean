@@ -54,7 +54,7 @@ class CustomChartingAlgorithm(QCAlgorithm):
         stockPlot.AddSeries(Series("Price", SeriesType.Line, 0))
         self.AddChart(stockPlot)
 
-        avgCross = Chart("Strategy Equity")
+        avgCross = Chart("Average Cross")
         avgCross.AddSeries(Series("FastMA", SeriesType.Line, 1))
         avgCross.AddSeries(Series("SlowMA", SeriesType.Line, 1))
         self.AddChart(avgCross)
@@ -76,8 +76,8 @@ class CustomChartingAlgorithm(QCAlgorithm):
 
         if self.Time > self.resample:
             self.resample = self.Time  + self.resamplePeriod
-            self.Plot("Strategy Equity", "FastMA", self.fastMA);
-            self.Plot("Strategy Equity", "SlowMA", self.slowMA);
+            self.Plot("Average Cross", "FastMA", self.fastMA);
+            self.Plot("Average Cross", "SlowMA", self.slowMA);
 
         # On the 5th days when not invested buy:
         if not self.Portfolio.Invested and self.Time.day % 13 == 0:

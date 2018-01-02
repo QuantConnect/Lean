@@ -1,8 +1,22 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -136,7 +150,26 @@ namespace QuantConnect
         public static string GenerateFutureTicker(string underlying, DateTime expiration, bool doubleDigitsYear = true)
         {
             var year = doubleDigitsYear ? expiration.Year % 100 : expiration.Year % 10;
-            return string.Format("{0}{1}{2}", underlying, _futuresMonthLookup[expiration.Month], year);
+            var month = expiration.Month;
+
+            // These futures expire in the month before the contract month
+            if (underlying == Futures.Energies.CrudeOilWTI ||
+                underlying == Futures.Energies.Gasoline ||
+                underlying == Futures.Energies.HeatingOil ||
+                underlying == Futures.Energies.NaturalGas)
+            {
+                if (month < 12)
+                {
+                    month++;
+                }
+                else
+                {
+                    month = 1;
+                    year++;
+                }
+            }
+
+            return $"{underlying}{_futuresMonthLookup[month]}{year}";
         }
 
         /// <summary>
@@ -162,7 +195,7 @@ namespace QuantConnect
         /// <returns>Results containing 1) underlying name, 2) option right, 3) option strike 4) expiration date</returns>
         public static OptionTickerProperties ParseOptionTickerIQFeed(string ticker)
         {
-            // This table describes IQFeed option symbology  
+            // This table describes IQFeed option symbology
             var symbology = new Dictionary<string, Tuple<int, OptionRight>>
                         {
                             { "A", Tuple.Create(1, OptionRight.Call) }, { "M", Tuple.Create(1, OptionRight.Put) },
@@ -194,7 +227,7 @@ namespace QuantConnect
             var yearString = ticker.Substring(optionTypeDelimiter - 4, 2);
             var underlying = ticker.Substring(0, optionTypeDelimiter - 4);
 
-            // if we cannot parse strike price, we ignore this contract, but log the information. 
+            // if we cannot parse strike price, we ignore this contract, but log the information.
             decimal strikePrice;
             if (!Decimal.TryParse(strikePriceString, out strikePrice))
             {

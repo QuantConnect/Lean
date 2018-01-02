@@ -14,14 +14,12 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from datetime import datetime
+from datetime import datetime, timedelta
 
 ### <summary>
 ### This is an option split regression algorithm
@@ -31,25 +29,20 @@ from datetime import datetime
 class OptionRenameRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        
+
         self.SetCash(1000000)
         self.SetStartDate(2013,06,28)
         self.SetEndDate(2013,07,02)
-        equity = self.AddEquity("FOXA")
         option = self.AddOption("FOXA")
-        Underlying = equity.Symbol
-        self.OptionSymbol = option.Symbol
+
         # set our strike/expiry filter for this option chain
-        option.SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.MaxValue)
+        option.SetFilter(-1, 1, timedelta(0), timedelta(3650))
         # use the underlying equity as the benchmark
-        self.SetBenchmark(Underlying)
-        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
-
-
-    ''' Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
-        <param name="slice">The current slice of data keyed by symbol string</param> '''
+        self.SetBenchmark("FOXA")
 
     def OnData(self, slice):
+        ''' Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        <param name="slice">The current slice of data keyed by symbol string</param> '''
         if not self.Portfolio.Invested: 
             for kvp in slice.OptionChains:
                 chain = kvp.Value
@@ -82,10 +75,6 @@ class OptionRenameRegressionAlgorithm(QCAlgorithm):
                 self.Log("Bid Price" + str(contract.BidPrice))
                 if float(contract.BidPrice) != 0.05:
                     raise ValueError("Regression test failed: current bid price was not loaded from FOXA file and is not $0.05")
-                    
 
-    ''' Order fill event handler. On an order fill update the resulting information is passed to this method.
-        <param name="orderEvent">Order event details containing details of the events</param> '''
-        
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

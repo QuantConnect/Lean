@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : IRealTimeHandler
     {
-        private bool _isActive = true;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
         // so we want to be ready to accept events as soon as possible
@@ -46,10 +45,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Boolean flag indicating thread state.
         /// </summary>
-        public bool IsActive
-        {
-            get { return _isActive; }
-        }
+        public bool IsActive { get; private set; }
 
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
@@ -82,10 +78,15 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
-            foreach (var security in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()))
+            foreach (var kvp in _algorithm.Securities)
             {
-                // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
-                Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
+                var security = kvp.Value;
+
+                if (!security.IsInternalFeed())
+                {
+                    // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
+                    Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
+                }
             }
 
             foreach (var scheduledEvent in _scheduledEvents)
@@ -103,7 +104,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Run()
         {
-            _isActive = true;
+            IsActive = true;
 
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
@@ -138,7 +139,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
             }
 
-            _isActive = false;
+            IsActive = false;
             Log.Trace("LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: " + _cancellationTokenSource.IsCancellationRequested);
         }
 
@@ -150,8 +151,10 @@ namespace QuantConnect.Lean.Engine.RealTime
             date = date.Date;
 
             // update market hours for each security
-            foreach (var security in _algorithm.Securities.Values)
+            foreach (var kvp in _algorithm.Securities)
             {
+                var security = kvp.Value;
+
                 var marketHours = _api.MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];

@@ -25,17 +25,31 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Concurrent;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
+    /// Defines an event fired from within an algorithm instance.
+    /// </summary>
+    /// <typeparam name="T">The event type</typeparam>
+    /// <param name="algorithm">The algorithm that fired the event</param>
+    /// <param name="eventData">The event data</param>
+    public delegate void AlgorithmEvent<in T>(IAlgorithm algorithm, T eventData);
+
+    /// <summary>
     /// Interface for QuantConnect algorithm implementations. All algorithms must implement these
     /// basic members to allow interaction with the Lean Backtesting Engine.
     /// </summary>
     public interface IAlgorithm
     {
+        /// <summary>
+        /// Event fired when an algorithm generates a alpha
+        /// </summary>
+        event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.
@@ -132,6 +146,14 @@ namespace QuantConnect.Interfaces
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets a flag indicating whether or not this algorithm uses the QCAlgorithmFramework
+        /// </summary>
+        bool IsFrameworkAlgorithm
+        {
+            get;
         }
 
         /// <summary>
@@ -299,6 +321,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        IFutureChainProvider FutureChainProvider
+        {
+            get;
+        }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
@@ -356,10 +386,22 @@ namespace QuantConnect.Interfaces
         void OnData(Slice slice);
 
         /// <summary>
+        /// Used to send data updates to algorithm framework models
+        /// </summary>
+        /// <param name="slice">The current data slice</param>
+        void OnFrameworkData(Slice slice);
+
+        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
-        /// <param name="changes"></param>
+        /// <param name="changes">Security additions/removals for this time step</param>
         void OnSecuritiesChanged(SecurityChanges changes);
+
+        /// <summary>
+        /// Used to send security changes to algorithm framework models
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        void OnFrameworkSecuritiesChanged(SecurityChanges changes);
 
         /// <summary>
         /// Send debug message
@@ -455,6 +497,12 @@ namespace QuantConnect.Interfaces
         /// Gets whether or not this algorithm has been locked and fully initialized
         /// </summary>
         bool GetLocked();
+
+        /// <summary>
+        /// Add a Chart object to algorithm collection
+        /// </summary>
+        /// <param name="chart">Chart object to add to collection.</param>
+        void AddChart(Chart chart);
 
         /// <summary>
         /// Get the chart updates since the last request:
@@ -585,5 +633,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="optionChainProvider">The option chain provider</param>
         void SetOptionChainProvider(IOptionChainProvider optionChainProvider);
+
+        /// <summary>
+        /// Sets the future chain provider, used to get the list of future contracts for an underlying symbol
+        /// </summary>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        void SetFutureChainProvider(IFutureChainProvider futureChainProvider);
     }
 }

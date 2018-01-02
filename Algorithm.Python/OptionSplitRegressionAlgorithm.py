@@ -14,13 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
 from datetime import datetime, timedelta
 
 ### <summary>
@@ -32,29 +30,25 @@ from datetime import datetime, timedelta
 class OptionSplitRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        
+
         # this test opens position in the first day of trading, lives through stock split (7 for 1), 
         # and closes adjusted position on the second day
 
         self.SetCash(1000000)
         self.SetStartDate(2014,6,6)
         self.SetEndDate(2014,6,9)
-        equity = self.AddEquity("AAPL", Resolution.Minute)
-        option = self.AddOption("AAPL", Resolution.Minute)
-        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        
+
+        option = self.AddOption("AAPL")
+
         # set our strike/expiry filter for this option chain
         option.SetFilter(self.UniverseFunc)
-        
-        self.SetBenchmark(equity.Symbol)
-        self.OptionSymbol = option.Symbol
+
+        self.SetBenchmark("AAPL")
         self.contract = None
-    
 
     def OnData(self, slice):
-        
-        if not self.Portfolio.Invested:
 
+        if not self.Portfolio.Invested:
             if self.Time.hour > 9 and self.Time.minute > 0:
                 for kvp in slice.OptionChains:
                     chain = kvp.Value
@@ -67,16 +61,15 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
 
         elif self.Time.day > 6 and self.Time.hour > 14 and self.Time.minute > 0:
             self.Liquidate()
-        
-        if self.Portfolio.Invested:
- 
+
+        if self.Portfolio.Invested: 
             options_hold = [x for x in self.Portfolio.Securities if x.Value.Holdings.AbsoluteQuantity != 0]
             holdings = options_hold[0].Value.Holdings.AbsoluteQuantity
             if self.Time.day == 6 and holdings != 1:
                 self.Log("Expected position quantity of 1 but was {0}".format(holdings))
             if self.Time.day == 9 and holdings != 7:
                 self.Log("Expected position quantity of 7 but was {0}".format(holdings))
-                
+
     # set our strike/expiry filter for this option chain
     def UniverseFunc(self, universe):
         return universe.IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(365*2))

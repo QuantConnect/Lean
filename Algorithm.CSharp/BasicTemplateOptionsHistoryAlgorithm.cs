@@ -17,7 +17,6 @@
 using System;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Orders;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.Option;
 
@@ -32,10 +31,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="history" />
     public class BasicTemplateOptionsHistoryAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
-
         public override void Initialize()
         {
             // this test opens position in the first day of trading, lives through stock split (7 for 1), and closes adjusted position on the second day
@@ -43,14 +38,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 12, 24);
             SetCash(1000000);
 
-            var equity = AddEquity(UnderlyingTicker);
-            var option = AddOption(UnderlyingTicker);
+            var option = AddOption("GOOG");
 
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
             option.PriceModel = OptionPriceModels.CrankNicolsonFD();
-            option.SetFilter(-2, +2, TimeSpan.FromDays(00), TimeSpan.FromDays(180));
+            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
-            SetBenchmark(equity.Symbol);
+            SetBenchmark("GOOG");
         }
 
         /// <summary>
@@ -85,16 +78,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        /// <summary>
-        /// Order fill event handler. On an order fill update the resulting information is passed to this method.
-        /// </summary>
-        /// <param name="orderEvent">Order event details containing details of the evemts</param>
-        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            Log(orderEvent.ToString());
-        }
-
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             foreach (var change in changes.AddedSecurities)
@@ -103,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var data in history.OrderByDescending(x => x.Time).Take(3))
                 {
-                    Log("History: " + data.Symbol.Value + ": " + data.Time + " > " + data.Close);
+                    Log($"History: {data.Symbol.Value}: {data.Time} > {data.Close}");
                 }
             }
         }

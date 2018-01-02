@@ -29,9 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="regression test" />
     public class OptionRenameRegressionAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "FOXA";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
@@ -40,16 +38,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 07, 02);
             SetCash(1000000);
 
-            var equity = AddEquity(UnderlyingTicker);
-            var option = AddOption(UnderlyingTicker);
-
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var option = AddOption("FOXA");
+            _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(-1, +1, TimeSpan.Zero, TimeSpan.MaxValue);
 
             // use the underlying equity as the benchmark
-            SetBenchmark(equity.Symbol);
+            SetBenchmark("FOXA");
         }
 
         /// <summary>
@@ -63,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Time.Day == 28 && Time.Hour > 9 && Time.Minute > 0)
                 {
                     OptionChain chain;
-                    if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                    if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                     {
                         var contract =
                             chain.OrderBy(x => x.Expiry)
@@ -97,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     // checks
                     OptionChain chain;
-                    if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                    if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                     {
                         var contract =
                             chain.OrderBy(x => x.Expiry)
@@ -124,6 +120,3 @@ namespace QuantConnect.Algorithm.CSharp
         }
     }
 }
-
-
-

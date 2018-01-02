@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public UniverseDefinitions Universe
         {
-            get; 
+            get;
             private set;
         }
 
@@ -216,7 +216,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
@@ -236,7 +236,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
@@ -312,7 +312,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<DateTime, IEnumerable<string>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
@@ -321,7 +321,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Adds the security to the user defined universe for the specified 
+        /// Adds the security to the user defined universe for the specified
         /// </summary>
         private void AddToUserDefinedUniverse(Security security)
         {
@@ -331,7 +331,7 @@ namespace QuantConnect.Algorithm
             {
                 if (!security.IsInternalFeed() && existingSecurity.Symbol == _benchmarkSymbol)
                 {
-                    var securityUniverse = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(security.Symbol));
+                    var securityUniverse = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(security.Symbol));
                     if (securityUniverse != null)
                     {
                         securityUniverse.Remove(security.Symbol);
@@ -360,7 +360,7 @@ namespace QuantConnect.Algorithm
                     );
                 UniverseManager.Add(universeSymbol, universe);
             }
-            
+
             var userDefinedUniverse = universe as UserDefinedUniverse;
             if (userDefinedUniverse != null)
             {

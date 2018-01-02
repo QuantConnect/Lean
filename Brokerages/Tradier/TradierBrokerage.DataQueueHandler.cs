@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.Tradier
                     pipe.MoveNext();
                     _refresh = false;
                 }
-                
+
                 if (pipe != null && pipe.Current != null)
                 {
                     var tsd = pipe.Current;
@@ -135,7 +135,7 @@ namespace QuantConnect.Brokerages.Tradier
             _refreshDelay.Elapsed += (sender, args) =>
             {
                 _refresh = true;
-                Log.Trace("TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers..." + string.Join(",", _subscriptions.Values));
+                Log.Trace("TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers..." + string.Join(",", _subscriptions.Select(x => x.Value)));
                 CloseStream();
                 _refreshDelay.Stop();
             };
@@ -148,8 +148,9 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>List of string tickers</returns>
         private List<string> GetTickers()
         {
-            Log.Trace("TradierBrokerage.DataQueueHandler.GetTickers(): " + string.Join(",", _subscriptions.Values));
-            return _subscriptions.Values.ToList();
+            var values = _subscriptions.Select(x => x.Value).ToList();
+            Log.Trace("TradierBrokerage.DataQueueHandler.GetTickers(): " + string.Join(",", values));
+            return values;
         }
 
         /// <summary>

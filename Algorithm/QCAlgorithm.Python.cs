@@ -34,14 +34,14 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private PandasConverter _converter;
+        public PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
         /// Sets pandas converter
         /// </summary>
-        public void SetPandas()
+        public void SetPandasConverter()
         {
-            _converter = new PandasConverter();
+            PandasConverter = new PandasConverter();
         }
 
         /// <summary>
@@ -51,12 +51,11 @@ namespace QuantConnect.Algorithm
         /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
-        /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
         {
-            AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
         }
-
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
@@ -67,9 +66,10 @@ namespace QuantConnect.Algorithm
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -81,9 +81,10 @@ namespace QuantConnect.Algorithm
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
@@ -94,6 +95,7 @@ namespace QuantConnect.Algorithm
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
+            return security;
         }
 
         /// <summary>
@@ -265,7 +267,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(Type dataType, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
@@ -507,7 +509,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, periods, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -523,7 +525,7 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, span, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
         /// <summary>
@@ -539,9 +541,139 @@ namespace QuantConnect.Algorithm
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
 
-            return _converter.GetDataFrame(History(symbols, start, end, resolution));
+            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                        .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
+                if (config == null) return null;
+
+                return CreateHistoryRequest(security, config, start, end, resolution);
+            });
+
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                        .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
+                if (config == null) return null;
+                
+                Resolution? res = resolution ?? security.Resolution;
+                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
+                return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
+            });
+
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null)
+        {
+            return History(type, tickers, Time - span, Time, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        {
+            var security = Securities[symbol];
+            // verify the types match
+            var requestedType = CreateType(type);
+            var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
+            if (config == null)
+            {
+                var actualType = security.Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
+                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+            }
+
+            var request = CreateHistoryRequest(security, config, start, end, resolution);
+            return PandasConverter.GetDataFrame(History(request).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null)
+        {
+            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            
+            var start = GetStartTimeAlgoTz(symbol, periods, resolution);
+            var end = Time.RoundDown((resolution ?? Securities[symbol].Resolution).ToTimeSpan());
+            return History(type, symbol, start, end, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        {
+            return History(type, symbol, Time - span, Time, resolution);
+        }
+                
         /// <summary>
         /// Sets the specified function as the benchmark, this function provides the value of
         /// the benchmark at each date/time requested
@@ -584,14 +716,44 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
-            var securityInitializer2 = PythonUtil.ToAction<Security, bool>(securityInitializer);
-            if (securityInitializer2 != null)
-            {
-                SetSecurityInitializer(securityInitializer2);
-                return;
-            }
-
             SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
+        }
+
+        /// <summary>
+        /// Downloads the requested resource as a <see cref="string"/>.
+        /// The resource to download is specified as a <see cref="string"/> containing the URI.
+        /// </summary>
+        /// <param name="address">A string containing the URI to download</param>
+        /// <param name="headers">Defines header values to add to the request</param>
+        /// <param name="userName">The user name associated with the credentials</param>
+        /// <param name="password">The password for the user name associated with the credentials</param>
+        /// <returns>The requested resource as a <see cref="string"/></returns>
+        public string Download(string address, PyObject headers = null, string userName = null, string password = null)
+        {
+            var dict = new Dictionary<string, string>();
+
+            if (headers != null)
+            {
+                using (Py.GIL())
+                {
+                    // In python algorithms, headers must be a python dictionary
+                    // In order to convert it into a C# Dictionary
+                    if (PyDict.IsDictType(headers))
+                    {
+                        foreach (PyObject pyKey in headers)
+                        {
+                            var key = (string)pyKey.AsManagedObject(typeof(string));
+                            var value = (string)headers.GetItem(pyKey).AsManagedObject(typeof(string));
+                            dict.Add(key, value);
+                        }
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"QCAlgorithm.Fetch(): Invalid argument. {headers.Repr()} is not a dict");
+                    }
+                }
+            }
+            return Download(address, dict, userName, password);
         }
 
         /// <summary>

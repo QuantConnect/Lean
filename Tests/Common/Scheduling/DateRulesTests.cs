@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -140,6 +140,113 @@ namespace QuantConnect.Tests.Common.Scheduling
             }
 
             Assert.AreEqual(11, count);
+        }
+
+        [Test]
+        public void EndOfMonthNoSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.MonthEnd();
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreEqual(DateTime.DaysInMonth(date.Year, date.Month), date.Day);
+            }
+
+            Assert.AreEqual(12, count);
+        }
+
+        [Test]
+        public void EndOfMonthWithSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.MonthEnd(Symbols.SPY);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+                Assert.IsTrue(date.Day >= 28);
+                Console.WriteLine(date + " " + date.DayOfWeek);
+            }
+
+            Assert.AreEqual(12, count);
+        }
+
+        [Test]
+        public void StartOfWeekNoSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekStart();
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreEqual(DayOfWeek.Monday, date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
+        public void StartOfWeekWithSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekStart(Symbols.SPY);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Monday || date.DayOfWeek == DayOfWeek.Tuesday);
+                Console.WriteLine(date + " " + date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
+        public void EndOfWeekNoSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekEnd();
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreEqual(DayOfWeek.Friday, date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
+        public void EndOfWeekWithSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekEnd(Symbols.SPY);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Friday || date.DayOfWeek == DayOfWeek.Thursday);
+                Console.WriteLine(date + " " + date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
         }
 
         private static DateRules GetDateRules()
