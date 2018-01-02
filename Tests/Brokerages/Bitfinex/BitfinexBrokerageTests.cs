@@ -69,31 +69,6 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         [Test]
-        public void PlaceOrderSubmittedTest()
-        {
-            var response = new PlaceOrderResponse
-            {
-                OrderId = 1
-            };
-
-            _algo.Setup(a => a.Securities).Returns(BitfinexTestsHelpers.CreateHoldings(0));
-
-            var raised = new ManualResetEvent(false);
-            _unit.OrderStatusChanged += (s, e) =>
-            {
-                Assert.AreEqual("BTCUSD", e.Symbol.Value);
-                Assert.AreEqual(0, e.OrderFee);
-                Assert.AreEqual(Orders.OrderStatus.Submitted, e.Status);
-                Assert.AreEqual(0, e.FillQuantity);
-                raised.Set();
-            };
-            var actual = _unit.PlaceOrder(new Orders.MarketOrder(_symbol, 100, DateTime.UtcNow));
-
-            Assert.IsTrue(actual);
-            Assert.IsTrue(raised.WaitOne(100));
-        }
-
-        [Test]
         public void UpdateOrderTest()
         {
             var brokerId = 123;
@@ -190,19 +165,25 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             var actual = _unit.GetCashBalance();
 
-            Assert.AreEqual(1, actual.Where(e => e.Symbol == "USD").Single().Amount);
-            Assert.AreEqual(1, actual.Where(e => e.Symbol == "USD").Single().ConversionRate);
+            Assert.AreEqual(1, actual.Single(e => e.Symbol == "USD").Amount);
+            Assert.AreEqual(1, actual.Single(e => e.Symbol == "USD").ConversionRate);
 
-            Assert.AreEqual(2, actual.Where(e => e.Symbol == "BTC").Single().Amount);
-            Assert.AreEqual(244.755m, actual.Where(e => e.Symbol == "BTC").Single().ConversionRate);
+            Assert.AreEqual(2, actual.Single(e => e.Symbol == "BTC").Amount);
+            Assert.AreEqual(244.755m, actual.Single(e => e.Symbol == "BTC").ConversionRate);
         }
 
-        [Test]
-        public void PlaceOrderCrossesZeroSubmittedTest()
+        [TestCase(-200, 200, 1)]
+        [TestCase(-201, 200, 2)]
+        [TestCase(-200, 0, 1)]
+        [TestCase(200, -200, 1)]
+        [TestCase(201, -200, 2)]
+        [TestCase(200, 200, 1)]
+        [TestCase(200, 0, 1)]
+        public void PlaceOrderTest(decimal quantity, decimal holdings, int expectedCount)
         {
-            _algo.Setup(a => a.Securities).Returns(BitfinexTestsHelpers.CreateHoldings(200m));
+            const int id = 123;
+            _algo.Setup(a => a.Securities).Returns(BitfinexTestsHelpers.CreateHoldings(holdings));
 
-            var quantity = -200;
             var raised = new ManualResetEvent(false);
 
             _unit.OrderStatusChanged += (s, e) =>
@@ -213,12 +194,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 Assert.AreEqual(0, e.FillQuantity);
                 raised.Set();
             };
-            var actual = _unit.PlaceOrder(new Orders.MarketOrder(_symbol, quantity, DateTime.UtcNow) { Id = 123 });
+            var actual = _unit.PlaceOrder(new Orders.MarketOrder(_symbol, quantity, DateTime.UtcNow) { Id = id });
 
             Assert.IsTrue(actual);
-
             Assert.IsTrue(raised.WaitOne(100));
-            _unit.CachedOrderIDs[123].BrokerId.Count();
+            Assert.AreEqual(expectedCount, _unit.CachedOrderIDs[id].BrokerId.Count());
         }
     }
 }
