@@ -90,9 +90,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             : base(url, websocket, restClient, apiKey, apiSecret, QuantConnect.Market.Bitfinex, "bitfinex")
         {
             WebSocket = websocket;
-            WebSocket.Initialize(url);
-            ApiKey = apiKey;
-            ApiSecret = apiSecret;
+
             _algorithm = algorithm;
             FillSplit = new ConcurrentDictionary<int, BitfinexFill>();
             _wallet = _algorithm.BrokerageModel.AccountType == AccountType.Margin ? "trading" : "exchange";
@@ -497,9 +495,10 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private IRestResponse ExecutePost(string resource, object data)
         {
-            if (data.GetType().BaseType == typeof(PostBase))
+            if (data.GetType().BaseType == typeof(PostBase) || data.GetType() == typeof(PostBase))
             {
-                ((PostBase)data).Nonce = Time.DateTimeToUnixTimeStamp(DateTime.UtcNow);
+                ((PostBase)data).Nonce = Time.DateTimeToUnixTimeStamp(DateTime.UtcNow).ToString();
+                ((PostBase)data).Request = resource;
             }
 
             var json = JsonConvert.SerializeObject(data);

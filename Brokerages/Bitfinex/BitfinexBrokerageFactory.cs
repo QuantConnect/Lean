@@ -59,7 +59,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     {"apiSecret" ,Config.Get("bitfinex-api-secret")},
                     {"apiKey" ,Config.Get("bitfinex-api-key")},
-                    {"wallet" ,Config.Get("bitfinex-wallet")},
                     {"url" , Config.Get("bitfinex-wss", "wss://api2.bitfinex.com:3000/ws")},
                 };
             }
