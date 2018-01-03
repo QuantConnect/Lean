@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -26,24 +28,23 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.RealTime
 {
     /// <summary>
-    /// Psuedo realtime event processing for backtesting to simulate realtime events in fast forward.
+    /// Pseudo realtime event processing for backtesting to simulate realtime events in fast forward.
     /// </summary>
     public class BacktestingRealTimeHandler : IRealTimeHandler
     {
         private IAlgorithm _algorithm;
         private IResultHandler _resultHandler;
-        // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
+        // initialize this immediately since the Initialize method gets called after IAlgorithm.Initialize,
         // so we want to be ready to accept events as soon as possible
         private readonly ConcurrentDictionary<string, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<string, ScheduledEvent>();
 
+        private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
+
         /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
+        /// this doesn't run as its own thread
         /// </summary>
-        public bool IsActive
-        {
-            // this doesn't run as its own thread
-            get { return false; }
-        }
+        public bool IsActive => false;
 
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
@@ -68,12 +69,12 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
             }
 
-            foreach (var scheduledEvent in _scheduledEvents)
+            foreach (var scheduledEvent in _scheduledEventsSortedByTime)
             {
                 // zoom past old events
-                scheduledEvent.Value.SkipEventsUntil(algorithm.UtcTime);
+                scheduledEvent.SkipEventsUntil(algorithm.UtcTime);
                 // set logging accordingly
-                scheduledEvent.Value.IsLoggingEnabled = Log.DebuggingEnabled;
+                scheduledEvent.IsLoggingEnabled = Log.DebuggingEnabled;
             }
         }
 
@@ -101,6 +102,8 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 scheduledEvent.IsLoggingEnabled = true;
             }
+
+            _scheduledEventsSortedByTime = GetScheduledEventsSortedByTime();
         }
 
         /// <summary>
@@ -111,6 +114,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             ScheduledEvent scheduledEvent;
             _scheduledEvents.TryRemove(name, out scheduledEvent);
+
+            _scheduledEventsSortedByTime = GetScheduledEventsSortedByTime();
         }
 
         /// <summary>
@@ -120,9 +125,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         public void SetTime(DateTime time)
         {
             // poke each event to see if it has fired, be sure to invoke these in time order
-            foreach (var scheduledEvent in _scheduledEvents)//.OrderBy(x => x.Value.NextEventUtcTime))
+            foreach (var scheduledEvent in _scheduledEventsSortedByTime)
             {
-                scheduledEvent.Value.Scan(time);
+                scheduledEvent.Scan(time);
             }
         }
 
@@ -132,19 +137,19 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="time">Current time.</param>
         public void ScanPastEvents(DateTime time)
         {
-            foreach (var scheduledEvent in _scheduledEvents)
+            foreach (var scheduledEvent in _scheduledEventsSortedByTime)
             {
-                while (scheduledEvent.Value.NextEventUtcTime < time)
+                while (scheduledEvent.NextEventUtcTime < time)
                 {
-                    _algorithm.SetDateTime(scheduledEvent.Value.NextEventUtcTime);
+                    _algorithm.SetDateTime(scheduledEvent.NextEventUtcTime);
 
                     try
                     {
-                        scheduledEvent.Value.Scan(scheduledEvent.Value.NextEventUtcTime);
+                        scheduledEvent.Scan(scheduledEvent.NextEventUtcTime);
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {
-                        var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.ScheduledEventExceptionMessage}";
+                        var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Name}. The error was {scheduledEventException.ScheduledEventExceptionMessage}";
 
                         Log.Error(errorMessage);
 
@@ -164,6 +169,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         public void Exit()
         {
             // this doesn't run as it's own thread, so nothing to exit
+        }
+
+        private List<ScheduledEvent> GetScheduledEventsSortedByTime()
+        {
+            return _scheduledEvents.Select(x => x.Value).OrderBy(x => x.NextEventUtcTime).ToList();
         }
     }
 }
