@@ -855,8 +855,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            var debugStopWatch = Stopwatch.StartNew();
-            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
+            var endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            while (_algorithm.DebugMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
             {
                 string message;
                 if (_algorithm.DebugMessages.TryDequeue(out message))
@@ -866,8 +866,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the error messages:
-            var errorStopWatch = Stopwatch.StartNew();
-            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
+            endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            while (_algorithm.ErrorMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
             {
                 string message;
                 if (_algorithm.ErrorMessages.TryDequeue(out message))
@@ -877,8 +877,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the log messages:
-            var logStopWatch = Stopwatch.StartNew();
-            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
+            endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            while (_algorithm.LogMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
             {
                 string message;
                 if (_algorithm.LogMessages.TryDequeue(out message))
