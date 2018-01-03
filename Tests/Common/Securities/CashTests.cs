@@ -250,6 +250,16 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(last, cash.ConversionRate);
         }
 
+        [TestCase("USD", "$")]
+        [TestCase("EUR", "€")]
+        [TestCase("GBP", "₤")]
+        [TestCase("BTC", "฿")]
+        public void CashHasCorrectCurrencySymbol(string symbol, string currencySymbol)
+        {
+            var cash = new Cash(symbol, 1, 1);
+            Assert.AreEqual(currencySymbol, cash.CurrencySymbol);
+        }
+
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZone }); }
