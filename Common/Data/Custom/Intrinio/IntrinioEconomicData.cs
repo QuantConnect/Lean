@@ -123,8 +123,11 @@ namespace QuantConnect.Data.Custom.Intrinio
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             SubscriptionDataSource subscription;
+            var intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
+
             // We want to make just one call with all the data in backtesting mode.
-            if (_firstTime)
+            // Also we want to make one call per second becasue of the API limit.
+            if (_firstTime || intrinioApiCallLimit > 0)
             {
                 var order = string.Empty;
                 if (isLiveMode)
@@ -152,13 +155,6 @@ namespace QuantConnect.Data.Custom.Intrinio
 
                 subscription = new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
                                                           authorizationHeaders);
-                // Finally, here we force the engine to wait one second in case the we have multiples data sources added.
-                var intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
-                do
-                {
-                    if (intrinioApiCallLimit > 0) Thread.Sleep(intrinioApiCallLimit);
-                    intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
-                } while (intrinioApiCallLimit > 0);
                 LastIntrinoAPICall = DateTime.Now;
             }
             else
