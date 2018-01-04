@@ -278,11 +278,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             Log.Trace("DefaultAlphaHandler.Run(): Exiting Thread...");
 
             // send final alpha scoring updates before we exit
-            _messages.Enqueue(new AlphaResultPacket
-            {
-                AlgorithmId = AlgorithmId,
-                Alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList()
-            });
+            var alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList();
+            _messages.Enqueue(new AlphaResultPacket(AlgorithmId, Job.UserId, alphas));
 
             _cancellationTokenSource.Cancel(false);
         }
@@ -344,7 +341,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected void OnAlphasGenerated(AlphaCollection collection)
         {
             // send message for newly created alphas
-            Packet packet = new AlphaResultPacket(AlgorithmId, collection.Alphas);
+            Packet packet = new AlphaResultPacket(AlgorithmId, Job.UserId, collection.Alphas);
             _messages.Enqueue(packet);
 
             AlphaManager.AddAlphas(collection);
