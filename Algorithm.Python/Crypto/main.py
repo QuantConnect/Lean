@@ -1,5 +1,6 @@
 # For moving avg types: https://github.com/QuantConnect/Lean/blob/bc9af8784b02715000a2030e9757ef63b484378e/Indicators/MovingAverageType.cs
-from QuantConnect.Indicators import *
+import QuantConnect.Indicators as ind
+import pprint
 
 class IndicatorAlgo(QCAlgorithm):
     def Initialize(self):
@@ -7,7 +8,7 @@ class IndicatorAlgo(QCAlgorithm):
         # Backtest Settings #
         #####################
         self.SetStartDate(2016, 2, 7)  # Set Start Date
-        self.SetEndDate(2016, 8, 28)  # Set End Date
+        self.SetEndDate(2016, 2, 28)  # Set End Date
         self.SetCash(1000)  # Set Strategy Cash
         self.SetBrokerageModel(BrokerageName.GDAX)
 
@@ -15,7 +16,7 @@ class IndicatorAlgo(QCAlgorithm):
         # Configurable parameters #
         ###########################
         self.target_crypto = "BTCUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
-        self.indicator_name = "MACD"  # bollinger, momentum, or MACD
+        self.indicator_name = "ichimoku"  # bollinger, momentum, or MACD
         self.warmup_lookback = 30  # Number of time periods resolution to load
         self.time_resolution = Resolution.Minute # Resolution of periods/data to use
         self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
@@ -63,9 +64,9 @@ class IndicatorAlgo(QCAlgorithm):
             # Create the MACD
             self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
                                   self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
+        elif self.indicator_name == "ichimoku":
+            self.ichimoku = self.ICHIMOKU(self.target_crypto, 9, 26, 26,52, 26, 26, self.time_resolution)
 
-        # Pump historical data into the indicators before algo start
-        self.SetWarmUp(self.warmup_lookback, self.time_resolution)
 
         # Processing variables
         self.pending_limit_price = 0
@@ -129,6 +130,20 @@ class IndicatorAlgo(QCAlgorithm):
                 self.LimitOrder(self.target_crypto, amount, buy_price)
                 self.pending_limit_price = buy_price
             elif holdings > 0 and signalDeltaPercent < -self.MACD_tolerance:
+                self.LimitOrder(self.target_crypto, -holdings, sell_price)
+                self.pending_limit_price = sell_price
+        elif self.indicator_name == "ichimoku":
+            if not self.ichimoku.IsReady:
+                return
+            #self.Debug("TenkanMax: %s Tenkan: %s" % (str(self.ichimoku.TenkanMaximum.Current.Value), str(self.ichimoku.Tenkan.Current.Value)))
+            if holdings == 0 and (self.ichimoku.Tenkan.Current.Value > self.ichimoku.Kijun.Current.Value
+                                and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
+                                and last_price > self.ichimoku.SenkouA.Current.Value):
+                self.LimitOrder(self.target_crypto, amount, buy_price)
+                self.pending_limit_price = buy_price
+            elif holdings > 0 and (self.ichimoku.Tenkan.Current.Value <= self.ichimoku.Kijun.Current.Value
+                                  and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
+                                  and last_price < self.ichimoku.SenkouA.Current.Value):
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
 
