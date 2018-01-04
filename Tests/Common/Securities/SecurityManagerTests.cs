@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -243,7 +243,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SecurityManagerCanCreate_CustomSecurities_WithCorrectSubscriptions()
         {
             var equitySymbol = new Symbol(SecurityIdentifier.GenerateBase("BTC", Market.USA), "BTC");
-            var equityMarketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
+            var equityMarketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
             var equitySymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(equitySymbol.ID.Market, equitySymbol, equitySymbol.ID.SecurityType, CashBook.AccountCurrency);
 
             var equity = SecurityManager.CreateSecurity(typeof(Bitcoin),
@@ -273,7 +273,7 @@ namespace QuantConnect.Tests.Common.Securities
             var underlying = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA);
             var optionIdentifier = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), underlying, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
             var optionSymbol = new Symbol(optionIdentifier, "SPY", Symbol.Empty);
-            var optionMarketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "SPY", SecurityType.Equity, TimeZones.NewYork);
+            var optionMarketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "SPY", SecurityType.Equity, TimeZones.NewYork);
             var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, "SPY", optionSymbol.ID.SecurityType, CashBook.AccountCurrency);
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>
@@ -312,7 +312,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
+            var marketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>

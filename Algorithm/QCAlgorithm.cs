@@ -1694,7 +1694,8 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
+            //Add this custom symbol to our market hours database
+            var marketHoursDbEntry = MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);

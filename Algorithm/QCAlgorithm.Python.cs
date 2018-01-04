@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,13 +84,13 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
+            var marketHoursDbEntry = MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
-            //Add this new generic data as a tradeable security: 
+            //Add this new generic data as a tradeable security:
             var security = SecurityManager.CreateSecurity(dataType, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
@@ -497,7 +497,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned.
         /// The symbol must exist in the Securities collection.
         /// </summary>
         /// <param name="tickers">The symbols to retrieve historical data for</param>
@@ -592,7 +592,7 @@ namespace QuantConnect.Algorithm
                 var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
                         .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
                 if (config == null) return null;
-                
+
                 Resolution? res = resolution ?? security.Resolution;
                 var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
                 return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
@@ -654,7 +654,7 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            
+
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
             var end = Time.RoundDown((resolution ?? Securities[symbol].Resolution).ToTimeSpan());
             return History(type, symbol, start, end, resolution);
@@ -673,7 +673,7 @@ namespace QuantConnect.Algorithm
         {
             return History(type, symbol, Time - span, Time, resolution);
         }
-                
+
         /// <summary>
         /// Sets the specified function as the benchmark, this function provides the value of
         /// the benchmark at each date/time requested
