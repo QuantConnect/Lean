@@ -278,7 +278,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             Log.Trace("DefaultAlphaHandler.Run(): Exiting Thread...");
 
             // send final alpha scoring updates before we exit
-            _messages.Enqueue(new AlphaPacket
+            _messages.Enqueue(new AlphaResultPacket
             {
                 AlgorithmId = AlgorithmId,
                 Alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList()
@@ -311,7 +311,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 var alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList();
                 if (alphas.Count > 0)
                 {
-                    _messages.Enqueue(new AlphaPacket
+                    _messages.Enqueue(new AlphaResultPacket
                     {
                         AlgorithmId = AlgorithmId,
                         Alphas = alphas
@@ -344,7 +344,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected void OnAlphasGenerated(AlphaCollection collection)
         {
             // send message for newly created alphas
-            Packet packet = new AlphaPacket(AlgorithmId, collection.Alphas);
+            Packet packet = new AlphaResultPacket(AlgorithmId, collection.Alphas);
             _messages.Enqueue(packet);
 
             AlphaManager.AddAlphas(collection);
