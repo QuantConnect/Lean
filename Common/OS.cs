@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace QuantConnect 
 {
@@ -168,8 +169,9 @@ namespace QuantConnect
         /// <returns></returns>
         private static DriveInfo GetDrive()
         {
-            var drives = DriveInfo.GetDrives();
-            return drives[0];
+            var assembly = Assembly.GetExecutingAssembly();
+            var drive = Path.GetPathRoot(assembly.Location);
+            return new DriveInfo(drive);
         }
 
         /// <summary>
