@@ -56,7 +56,7 @@ namespace QuantConnect.Packets
         {
             get
             {
-                if (Type == PacketType.LiveNode)
+                if (Type == PacketType.LiveNode || Type == PacketType.AlphaNode)
                 {
                     return ((LiveNodePacket)this).DeployId;
                 }
