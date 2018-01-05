@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the current alpha runtime statistics
         /// </summary>
-        public AlphaRuntimeStatistics RuntimeStatistics { get; } = new AlphaRuntimeStatistics();
+        public AlphaRuntimeStatistics RuntimeStatistics { get; private set; }
 
         /// <summary>
         /// Gets or sets the runtime statistics updated. This is responsible for estimating alpha value as
@@ -133,6 +133,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             }
 
             AlphaManager = CreateAlphaManager();
+            RuntimeStatistics = new AlphaRuntimeStatistics();
 
             // wire events to update runtime statistics at key moments in alpha life cycle (new/period end/analysis end)
             AlphaManager.AlphaReceived += (sender, context) => StatisticsUpdater.OnAlphaReceived(RuntimeStatistics, context);
