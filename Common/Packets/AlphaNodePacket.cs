@@ -14,6 +14,8 @@
  *
 */
 
+using Newtonsoft.Json;
+
 namespace QuantConnect.Packets
 {
     /// <summary>
@@ -21,6 +23,12 @@ namespace QuantConnect.Packets
     /// </summary>
     public class AlphaNodePacket : LiveNodePacket
     {
+        /// <summary>
+        /// Gets or sets the alpha id
+        /// </summary>
+        [JsonProperty(PropertyName = "iAlphaID")]
+        public int AlphaId { get; set; }
+
         /// <summary>
         /// Initializes a new default instance of the <see cref="AlgorithmNodePacket"/> class
         /// </summary>
