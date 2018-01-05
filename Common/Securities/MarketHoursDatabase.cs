@@ -42,6 +42,11 @@ namespace QuantConnect.Securities
         public List<KeyValuePair<SecurityDatabaseKey,Entry>> ExchangeHoursListing => _entries.ToList();
 
         /// <summary>
+        /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
+        /// </summary>
+        public static MarketHoursDatabase AlwaysOpen { get; } = new AlwaysOpenMarketHoursDatabaseImpl();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
         /// </summary>
         /// <param name="exchangeHours">The full listing of exchange hours by key</param>
@@ -261,6 +266,24 @@ namespace QuantConnect.Securities
             {
                 DataTimeZone = dataTimeZone;
                 ExchangeHours = exchangeHours;
+            }
+        }
+
+        class AlwaysOpenMarketHoursDatabaseImpl : MarketHoursDatabase
+        {
+            public override Entry GetEntry(string market, string symbol, SecurityType securityType)
+            {
+                var key = new SecurityDatabaseKey(market, symbol, securityType);
+                var tz = ContainsKey(key)
+                    ? base.GetEntry(market, symbol, securityType).ExchangeHours.TimeZone
+                    : DateTimeZone.Utc;
+
+                return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
+            }
+
+            public AlwaysOpenMarketHoursDatabaseImpl()
+                : base(FromDataFolder().ExchangeHoursListing.ToDictionary())
+            {
             }
         }
     }
