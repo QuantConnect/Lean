@@ -84,8 +84,8 @@ namespace QuantConnect.Data.Custom.Intrinio
         private readonly string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
 
         private readonly IntrinioDataTransformation _dataTransformation;
-        private readonly string _password = Config.Get("intrinio-password");
-        private readonly string _user = Config.Get("intrinio-username");
+        private static string _password = Config.Get("intrinio-password");
+        private static string _user = Config.Get("intrinio-username");
 
         private bool _firstTime = true;
 
@@ -190,6 +190,20 @@ namespace QuantConnect.Data.Custom.Intrinio
                 EndTime = time + QuantConnect.Time.OneDay,
                 Value = value
             };
+        }
+
+        /// <summary>
+        /// Set the Intrinio API user and password.
+        /// </summary>
+        public static void SetUserAndPassword(string user, string password)
+        {
+            _user = user;
+            _password = password;
+
+            if (string.IsNullOrWhiteSpace(_user) || string.IsNullOrWhiteSpace(_password))
+            {
+                throw new NotImplementedException("Please set a valid Intrinio user and password.");
+            }
         }
 
         private static string GetStringForDataTransformation(IntrinioDataTransformation dataTransformation)
