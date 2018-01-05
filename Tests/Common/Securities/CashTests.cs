@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZone);
         private static readonly IReadOnlyDictionary<SecurityType, string> MarketMap = DefaultBrokerageModel.DefaultMarketMap;
         private static readonly AlgorithmSettings AlgorithmSettings = new AlgorithmSettings();
-        private static readonly MarketHoursDatabase AlwaysOpenMarketHoursDatabase = new AlwaysOpenMarketHoursDatabaseImpl();
+        private static readonly MarketHoursDatabase AlwaysOpenMarketHoursDatabase = MarketHoursDatabase.AlwaysOpen;
 
         [Test]
         public void ConstructorCapitalizedSymbol()
@@ -264,24 +264,6 @@ namespace QuantConnect.Tests.Common.Securities
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZone }); }
-        }
-
-        class AlwaysOpenMarketHoursDatabaseImpl : MarketHoursDatabase
-        {
-            public override Entry GetEntry(string market, string symbol, SecurityType securityType)
-            {
-                var key = new SecurityDatabaseKey(market, symbol, securityType);
-                var tz = ContainsKey(key)
-                    ? base.GetEntry(market, symbol, securityType).ExchangeHours.TimeZone
-                    : DateTimeZone.Utc;
-
-                return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
-            }
-
-            public AlwaysOpenMarketHoursDatabaseImpl()
-                : base(FromDataFolder().ExchangeHoursListing.ToDictionary())
-            {
-            }
         }
     }
 }
