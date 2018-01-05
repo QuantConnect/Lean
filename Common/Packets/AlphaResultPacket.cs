@@ -20,6 +20,7 @@
 */
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Packets
@@ -33,6 +34,12 @@ namespace QuantConnect.Packets
         /// The user's id that deployed the alpha stream
         /// </summary>
         public int UserId { get; set; }
+
+        /// <summary>
+        /// The deployer alpha id. If this is a user backtest or live algo then this will not be specified
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int? AlphaId { get; set; }
 
         /// <summary>
         /// The algorithm's unique identifier
