@@ -84,8 +84,6 @@ namespace QuantConnect.Data.Custom.Intrinio
         private readonly string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
 
         private readonly IntrinioDataTransformation _dataTransformation;
-        private static string _password = Config.Get("intrinio-password");
-        private static string _user = Config.Get("intrinio-username");
 
         private bool _firstTime = true;
 
@@ -122,6 +120,20 @@ namespace QuantConnect.Data.Custom.Intrinio
         /// </remarks>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            // If the user and the password is not set then...
+            if (!IntrinioConfig.AreUserAndPasswordSet)
+            {
+                // ... try to get the user and password from the config file.
+                IntrinioConfig.User = Config.Get("intrinio-username");
+                IntrinioConfig.Password = Config.Get("intrinio-password");
+                // If the user and password aren't available in the config file, then throw error.
+                if (!IntrinioConfig.AreUserAndPasswordSet)
+                {
+                    throw new NotImplementedException("Please set a valid Intrinio user and password using the 'IntrinioEconomicData.SetUserAndPassword' static method. " +
+                    "For local backtesting, the user and password can be set in the 'config.json' file.");
+                }
+            }
+
             SubscriptionDataSource subscription;
             var intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
 
@@ -144,13 +156,12 @@ namespace QuantConnect.Data.Custom.Intrinio
                 }
 
                 var item = GetStringForDataTransformation(_dataTransformation);
-                var url = string.Format("{0}identifier={1}&item={2}&sort_order={3}", _baseUrl,
-                                        config.Symbol.Value, item, order);
-                var byteKey = Encoding.ASCII.GetBytes(string.Format("{0}:{1}", _user, _password));
+                var url = $"{_baseUrl}identifier={config.Symbol.Value}&item={item}&sort_order={order}";
+                var byteKey = Encoding.ASCII.GetBytes($"{IntrinioConfig.User}:{IntrinioConfig.Password}");
                 var authorizationHeaders = new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("Authorization",
-                                                     string.Format("Basic ({0})", Convert.ToBase64String(byteKey)))
+                                                     $"Basic ({Convert.ToBase64String(byteKey)})")
                 };
 
                 subscription = new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
@@ -197,10 +208,10 @@ namespace QuantConnect.Data.Custom.Intrinio
         /// </summary>
         public static void SetUserAndPassword(string user, string password)
         {
-            _user = user;
-            _password = password;
+            IntrinioConfig.User = user;
+            IntrinioConfig.Password = password;
 
-            if (string.IsNullOrWhiteSpace(_user) || string.IsNullOrWhiteSpace(_password))
+            if (IntrinioConfig.AreUserAndPasswordSet)
             {
                 throw new NotImplementedException("Please set a valid Intrinio user and password.");
             }

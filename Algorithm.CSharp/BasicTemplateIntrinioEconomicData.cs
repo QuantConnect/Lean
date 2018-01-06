@@ -47,6 +47,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 12, 31); //Set End Date
             SetCash(100000); //Set Strategy Cash
 
+            // Set your Intrinino user and password.
+            IntrinioConfig.User = "";
+            IntrinioConfig.Password = "";
+            // The Intrinio user and password can be also defined in the config.json file for local backtest.
+
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
