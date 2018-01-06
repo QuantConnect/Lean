@@ -39,13 +39,14 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         private Symbol _symbol;
         private readonly Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
         private readonly AccountType _accountType = AccountType.Margin;
+        private const string ApiKey = "abc";
 
         [SetUp]
         public void Setup()
         {
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
 
-            _unit = new BitfinexBrokerage("http://localhost", _wss.Object, _rest.Object, "abc", "123", _algo.Object);
+            _unit = new BitfinexBrokerage("http://localhost", _wss.Object, _rest.Object, ApiKey, "123", _algo.Object);
             _rest = new Mock<IRestClient>();
             _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
 
@@ -374,5 +375,24 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             CollectionAssert.Contains(actualSymbols, "ETHBTC");
         }
 
+        [Test]
+        public void AuthenticateTest()
+        {
+            dynamic actual = null;
+            _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c =>
+            {
+                actual = JsonConvert.DeserializeObject<dynamic>(c);
+            });
+
+            _unit.Authenticate();
+
+            Assert.AreEqual("auth", (string)actual.@event);
+            Assert.AreEqual(ApiKey, (string)actual.apiKey);
+            Assert.That(long.Parse((string)actual.authNonce) < DateTime.UtcNow.Ticks);
+            Assert.AreEqual("AUTH" + (string)actual.authNonce, (string)actual.authPayload);
+
+        }
+
     }
+
 }

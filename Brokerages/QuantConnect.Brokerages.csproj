@@ -178,14 +178,13 @@
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexFill.cs" />
     <Compile Include="Bitfinex\Rest\BalanceResponse.cs" />
-    <Compile Include="Bitfinex\Rest\CancelPost.cs" />
     <Compile Include="Bitfinex\Rest\CancelReplaceResponse.cs" />
     <Compile Include="Bitfinex\Rest\CancelReplacePost.cs" />
     <Compile Include="Bitfinex\Rest\Constants.cs" />
     <Compile Include="Bitfinex\Rest\MarginPositionResponse.cs" />
     <Compile Include="Bitfinex\Rest\PlaceOrderPost.cs" />
     <Compile Include="Bitfinex\Rest\PlaceOrderResponse.cs" />
-    <Compile Include="Bitfinex\Rest\OrderStatusPost.cs" />
+    <Compile Include="Bitfinex\Rest\OrderIdPost.cs" />
     <Compile Include="Bitfinex\Rest\OrderStatusResponse.cs" />
     <Compile Include="Bitfinex\Rest\PostBase.cs" />
     <Compile Include="Bitfinex\Rest\TickerGet.cs" />

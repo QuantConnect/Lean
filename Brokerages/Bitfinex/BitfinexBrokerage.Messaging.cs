@@ -228,11 +228,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-
         /// <summary>
         /// Authenticate with wss
         /// </summary>
-        protected void Authenticate()
+        public void Authenticate()
         {
             var key = ApiKey;
             var authNonce = DateTime.UtcNow.Ticks;

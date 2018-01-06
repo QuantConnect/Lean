@@ -226,7 +226,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 foreach (var id in order.BrokerId)
                 {
-                    var cancelPost = new OrderStatusPost
+                    var cancelPost = new OrderIdPost
                     {
                         OrderId = Convert.ToInt64(id)
                     };

@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         [Test]
         public void CancelOrderTest()
         {
-            var brokerId = 123;
+            string brokerId = "123";
 
             var raised = new ManualResetEvent(false);
             _unit.OrderStatusChanged += (s, e) =>
@@ -121,10 +121,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
                 Assert.AreEqual(0, e.OrderFee);
                 Assert.AreEqual(Orders.OrderStatus.Canceled, e.Status);
+                Assert.IsNotNull(_unit.CachedOrderIDs.Single(o => o.Value.BrokerId.Contains(brokerId)));
                 raised.Set();
             };
 
-            var actual = _unit.CancelOrder(new Orders.MarketOrder(_symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId.ToString() } });
+            var actual = _unit.CancelOrder(new Orders.MarketOrder(_symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId } });
 
             Assert.IsTrue(actual);
         }
