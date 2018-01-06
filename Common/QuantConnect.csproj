@@ -168,6 +168,7 @@
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
+    <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
