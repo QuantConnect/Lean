@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Stores fill messages
         /// </summary>
         public ConcurrentDictionary<int, BitfinexFill> FillSplit { get; set; }
-
+ 
         private enum ChannelCode
         {
             pubticker = 0,
@@ -163,33 +163,16 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else
                 {
-                    Order caching = null;
-                    if (order.Type == OrderType.Market)
+                    if (order.Type == OrderType.Market || order.Type == OrderType.Limit || order.Type == OrderType.StopMarket)
                     {
-                        caching = new MarketOrder();
-                    }
-                    else if (order.Type == OrderType.Limit)
-                    {
-                        caching = new LimitOrder();
-                    }
-                    else if (order.Type == OrderType.StopMarket)
-                    {
-                        caching = new StopMarketOrder();
                     }
                     else
                     {
                         throw new Exception("BitfinexBrokerage.PlaceOrder(): Unsupported order type was encountered: " + order.Type);
                     }
 
-                    caching.Id = order.Id;
-                    caching.BrokerId = new List<string> { placing.OrderId.ToString() };
-                    caching.Price = order.Price;
-                    caching.Quantity = totalQuantity;
-                    caching.Status = OrderStatus.Submitted;
-                    caching.Symbol = order.Symbol;
-                    caching.Time = order.Time;
-
-                    CachedOrderIDs.TryAdd(order.Id, caching);
+                    order.BrokerId = new List<string> { placing.OrderId.ToString() };
+                    CachedOrderIDs.TryAdd(order.Id, order);
                 }
                 if (crossOrder != null && crossOrder.Status != OrderStatus.Submitted)
                 {
@@ -199,7 +182,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
 
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
-                Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id);
+                Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderId:" + order.Id);
             }
             else
             {
@@ -245,7 +228,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     var cancelPost = new OrderStatusPost
                     {
-                        OrderId = order.Id
+                        OrderId = Convert.ToInt64(id)
                     };
 
                     var response = ExecutePost(OrderCancelRequestUrl, cancelPost);
