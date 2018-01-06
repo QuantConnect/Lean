@@ -38,8 +38,8 @@ namespace QuantConnect.Orders.Fees
             //todo: fee scaling with trade size
             decimal divisor = 0.002m;
 
-            if (order.Type == OrderType.Limit && ((((LimitOrder)order).LimitPrice < security.AskPrice && order.Direction == OrderDirection.Sell) ||
-            (((LimitOrder)order).LimitPrice > security.BidPrice && order.Direction == OrderDirection.Buy)))
+            if (order.Type == OrderType.Limit && ((((LimitOrder)order).LimitPrice >= security.AskPrice && order.Direction == OrderDirection.Sell) ||
+            (((LimitOrder)order).LimitPrice <= security.BidPrice && order.Direction == OrderDirection.Buy)))
             {
                 divisor = 0.001m;
             }

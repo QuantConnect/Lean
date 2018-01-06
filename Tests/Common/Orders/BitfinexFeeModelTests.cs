@@ -72,14 +72,14 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var order = new Mock<LimitOrder>();
             order.Setup(o => o.Type).Returns(OrderType.Limit);
             order.Object.Quantity = 10;
-            order.Object.LimitPrice = price + 1;
+            order.Object.LimitPrice = price - 2;
 
             decimal expected = 1m;
             var actual = unit.GetOrderFee(security.Object, order.Object);
 
             Assert.AreEqual(expected, actual);
 
-            order.Object.LimitPrice = price - 1;
+            order.Object.LimitPrice = price + 2;
             order.Object.Quantity = -10;
 
             expected = 1m;
