@@ -18,12 +18,14 @@ using QuantConnect.Data.Market;
 using System;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
 
     public class BitfinexAlgorithm : QCAlgorithm
     {
+        private bool hasTraded;
 
         public override void Initialize()
         {
@@ -32,21 +34,38 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Set the cash for the strategy:
             SetCash(100000);
-            SetBrokerageModel(BrokerageName.Bitfinex, AccountType.Cash);
+            SetBrokerageModel(BrokerageName.Bitfinex, AccountType.Margin);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
             var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Tick, Market.Bitfinex, false, 3.3m, true);
+            AddCrypto("IOTBTC", Resolution.Tick, Market.Bitfinex, false, 3.3m);
             AddCrypto("IOTUSD", Resolution.Tick, Market.Bitfinex, false, 3.3m);
             SetBenchmark(security.Symbol);
 
-            var con = new QuoteBarConsolidator(new TimeSpan(0, 1, 0));
-            SubscriptionManager.AddConsolidator("BTCUSD", con);
-            con.DataConsolidated += DataConsolidated;
+            //var con = new QuoteBarConsolidator(new TimeSpan(0, 1, 0));
+            //SubscriptionManager.AddConsolidator("BTCUSD", con);
+            //con.DataConsolidated += DataConsolidated;
         }
 
         public override void OnData(Slice slice)
         {
+            if (slice.Ticks.ContainsKey("IOTBTC"))
+            {
+                var tick = slice.Ticks["IOTBTC"].ToArray().First();
+                if (!hasTraded)
+                {
+                    LimitOrder("IOTBTC", -6m, tick.AskPrice + 0.000001m);
+                    hasTraded = true;
+                }
+                else
+                {
+                    foreach (var item in Transactions.GetOpenOrders())
+                    {
+                    }
+                }
 
+                // MarketOrder("IOTBTC", 7m);
+            }
         }
 
         private void DataConsolidated(object sender, QuoteBar e)
