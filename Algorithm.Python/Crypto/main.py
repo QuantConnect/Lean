@@ -2,23 +2,24 @@
 import QuantConnect.Indicators as ind
 import pprint
 
+
 class IndicatorAlgo(QCAlgorithm):
     def Initialize(self):
         #####################
         # Backtest Settings #
         #####################
-        self.SetStartDate(2016, 2, 7)  # Set Start Date
-        self.SetEndDate(2016, 2, 28)  # Set End Date
+        self.SetStartDate(2017, 7, 7)  # Set Start Date
+        self.SetEndDate(2018, 1, 2)  # Set End Date
         self.SetCash(1000)  # Set Strategy Cash
         self.SetBrokerageModel(BrokerageName.GDAX)
 
         ###########################
         # Configurable parameters #
         ###########################
-        self.target_crypto = "BTCUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
+        self.target_crypto = "ETHUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
         self.indicator_name = "ichimoku"  # bollinger, momentum, or MACD
         self.warmup_lookback = 30  # Number of time periods resolution to load
-        self.time_resolution = Resolution.Minute # Resolution of periods/data to use
+        self.time_resolution = Resolution.Minute  # Resolution of periods/data to use
         self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
 
         # Bollinger Variables
@@ -38,6 +39,14 @@ class IndicatorAlgo(QCAlgorithm):
         self.MACD_moving_average_type = MovingAverageType.Exponential
         self.MACD_tolerance = 0.0025
 
+        # Ichimoku Variables
+        self.tenkanPeriod = 9
+        self.kijunPeriod = 26
+        self.senkouAPeriod = 26
+        self.senkouBPeriod = 52
+        self.senkouADelayedPeriod = 26
+        self.senkouBDelayedPeriod = 26
+
         ############################
         # Indicators and processes #
         ############################
@@ -56,17 +65,19 @@ class IndicatorAlgo(QCAlgorithm):
         # Create the different indicators
         if self.indicator_name == "bollinger":
             # Create bollinger band
-            self.Bolband = self.BB(self.target_crypto, self.bollinger_period, self.k, self.moving_average_type,self.time_resolution)
+            self.Bolband = self.BB(self.target_crypto, self.bollinger_period, self.k, self.moving_average_type,
+                                   self.time_resolution)
         elif self.indicator_name == "momentum":
             # Create a momentum indicator over 3 days
-            self.mom = self.MOM(self.target_crypto, self.momentum_period)
-        elif self.indicator_name == "MACD":
+            self.mom = self.MOM(self.target_crypto, self.momentum_period, self.time_resolution)
+        elif self.indicator_name == "macd":
             # Create the MACD
             self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
                                   self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
         elif self.indicator_name == "ichimoku":
-            self.ichimoku = self.ICHIMOKU(self.target_crypto, 9, 26, 26,52, 26, 26, self.time_resolution)
-
+            self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
+                                          self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
+                                          self.time_resolution * self.time_resolution)
 
         # Processing variables
         self.pending_limit_price = 0
@@ -74,7 +85,8 @@ class IndicatorAlgo(QCAlgorithm):
         #####################
         # Scheduled Actions #
         #####################
-        self.Schedule.On(self.DateRules.EveryDay(self.target_crypto),self.TimeRules.At(12, 0), Action(self.PlotCryptoIndicator))
+        self.Schedule.On(self.DateRules.EveryDay(self.target_crypto), self.TimeRules.At(12, 0),
+                         Action(self.PlotCryptoIndicator))
 
     def OnData(self, data):
         ##########################
@@ -92,10 +104,11 @@ class IndicatorAlgo(QCAlgorithm):
         # Update limit order if the price moves
         if len(self.Transactions.GetOpenOrders(self.target_crypto)) > 0:
             open_order = self.Transactions.GetOpenOrders(self.target_crypto)[0]
-            if abs(float(self.pending_limit_price - last_price) / float(self.pending_limit_price)) > self.resubmit_order_threshold:
-                #self.Debug("Open Order Price: %s last_price: %s percent change: %s resubmit_order_threshold: %s order direction:%s" % (self.pending_limit_price, last_price,abs(float(self.pending_limit_price - last_price) / float(self.pending_limit_price)),self.resubmit_order_threshold,open_order.Direction))
+            if abs(float(self.pending_limit_price - last_price) / float(
+                    self.pending_limit_price)) > self.resubmit_order_threshold:
+                # self.Debug("Open Order Price: %s last_price: %s percent change: %s resubmit_order_threshold: %s order direction:%s" % (self.pending_limit_price, last_price,abs(float(self.pending_limit_price - last_price) / float(self.pending_limit_price)),self.resubmit_order_threshold,open_order.Direction))
                 limit_price = buy_price if open_order.Direction == 0 else sell_price
-                #self.Debug("Updating order to limit price of %s, amount of %s, and direction of %s" % (str(limit_price),str(amount),str(open_order.Direction)))
+                # self.Debug("Updating order to limit price of %s, amount of %s, and direction of %s" % (str(limit_price),str(amount),str(open_order.Direction)))
                 self.Transactions.CancelOrder(open_order.Id)
                 self.LimitOrder(self.target_crypto, open_order.Quantity, limit_price)
                 self.pending_limit_price = limit_price
@@ -124,7 +137,8 @@ class IndicatorAlgo(QCAlgorithm):
         elif self.indicator_name == "MACD":
             if not self.macd.IsReady:
                 return
-            signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
+            signalDeltaPercent = (
+                                 self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
 
             if holdings == 0 and signalDeltaPercent > self.MACD_tolerance:
                 self.LimitOrder(self.target_crypto, amount, buy_price)
@@ -135,23 +149,24 @@ class IndicatorAlgo(QCAlgorithm):
         elif self.indicator_name == "ichimoku":
             if not self.ichimoku.IsReady:
                 return
-            #self.Debug("TenkanMax: %s Tenkan: %s" % (str(self.ichimoku.TenkanMaximum.Current.Value), str(self.ichimoku.Tenkan.Current.Value)))
+            # self.Debug("TenkanMax: %s Tenkan: %s" % (str(self.ichimoku.TenkanMaximum.Current.Value), str(self.ichimoku.Tenkan.Current.Value)))
             if holdings == 0 and (self.ichimoku.Tenkan.Current.Value > self.ichimoku.Kijun.Current.Value
-                                and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
-                                and last_price > self.ichimoku.SenkouA.Current.Value):
+                                  and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
+                                  and last_price > self.ichimoku.SenkouA.Current.Value):
                 self.LimitOrder(self.target_crypto, amount, buy_price)
                 self.pending_limit_price = buy_price
             elif holdings > 0 and (self.ichimoku.Tenkan.Current.Value <= self.ichimoku.Kijun.Current.Value
-                                  and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
-                                  and last_price < self.ichimoku.SenkouA.Current.Value):
+                                   and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
+                                   and last_price < self.ichimoku.SenkouA.Current.Value):
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
 
     def PlotCryptoIndicator(self):
         # Chart the crypto price
         self.Plot('%s Price Plot' % self.target_crypto, 'Price', self.Securities[self.target_crypto].Close)
-        self.Plot('%s Holdings Plot' % self.target_crypto, 'Holdings', float(self.Portfolio[self.target_crypto].Quantity))
+        self.Plot('%s Holdings Plot' % self.target_crypto, 'Holdings',
+                  float(self.Portfolio[self.target_crypto].Quantity))
 
-    # def OnOrderEvent(self, orderEvent):
-    #    order = self.Transactions.GetOrderById(orderEvent.OrderId)
-    #    self.Debug("{0}: {1}: {2}".format(self.Time, order.Type, orderEvent))
+        # def OnOrderEvent(self, orderEvent):
+        #    order = self.Transactions.GetOrderById(orderEvent.OrderId)
+        #    self.Debug("{0}: {1}: {2}".format(self.Time, order.Type, orderEvent))
