@@ -36,8 +36,8 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// </summary>
     public partial class BitfinexBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler, IGetTick
     {
-        #region Declarations
 
+        #region Declarations
         private readonly object _fillLock = new object();
         private const string Buy = "buy";
         private const string Sell = "sell";
@@ -48,7 +48,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         private const string Limit = "limit";
         private const string Stop = "stop";
         private const string Usd = "usd";
-        private readonly string _wallet;
         private readonly object _lockerConnectionMonitor = new object();
         private DateTime _lastHeartbeatUtcTime = DateTime.UtcNow;
         private readonly IAlgorithm _algorithm;
@@ -93,7 +92,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             _algorithm = algorithm;
             FillSplit = new ConcurrentDictionary<int, BitfinexFill>();
-            _wallet = _algorithm.BrokerageModel.AccountType == AccountType.Margin ? "trading" : "exchange";
 
             WebSocket.Open += (s, e) => { Authenticate(); };
         }
@@ -359,7 +357,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 foreach (var item in getting)
                 {
-                    if (item.Type == _wallet && item.Amount > 0)
+                    if (item.Type == GetWallet() && item.Amount > 0)
                     {
                         if (item.Currency.Equals(Usd, StringComparison.InvariantCultureIgnoreCase))
                         {
@@ -512,5 +510,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return null;
             }
         }
+
+        private string GetWallet()
+        {
+            return _algorithm.BrokerageModel.AccountType == AccountType.Margin ? "trading" : "exchange";
+        }
+
     }
 }

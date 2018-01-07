@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public string MapOrderType(OrderType orderType)
         {
-            var result = _orderTypeMap.Where(o => o.Wallet == _wallet && o.OrderType == orderType);
+            var result = _orderTypeMap.Where(o => o.Wallet == GetWallet() && o.OrderType == orderType);
 
             if (result != null && result.Count() == 1)
             {
@@ -112,7 +112,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public OrderType MapOrderType(string orderType)
         {
-            var result = _orderTypeMap.Where(o => o.Wallet == _wallet && o.BitfinexOrderType == orderType);
+            var result = _orderTypeMap.Where(o => o.Wallet == GetWallet() && o.BitfinexOrderType == orderType);
 
             if (result != null && result.Count() == 1)
             {
