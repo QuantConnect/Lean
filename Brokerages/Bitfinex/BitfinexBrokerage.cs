@@ -66,7 +66,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Stores fill messages
         /// </summary>
         public ConcurrentDictionary<int, BitfinexFill> FillSplit { get; set; }
- 
+
         private enum ChannelCode
         {
             pubticker = 0,
@@ -142,7 +142,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             var newOrder = new PlaceOrderPost
             {
                 Amount = Math.Abs(order.Quantity).ToString(),
-                Price = GetPrice(order).ToString(),
+                Price = GetPrice(order, _algorithm).ToString(),
                 Symbol = order.Symbol.Value,
                 Type = MapOrderType(order.Type),
                 Exchange = BrokerageMarket,
@@ -161,10 +161,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else
                 {
-                    if (order.Type == OrderType.Market || order.Type == OrderType.Limit || order.Type == OrderType.StopMarket)
-                    {
-                    }
-                    else
+                    if (order.Type != OrderType.Market && order.Type != OrderType.Limit && order.Type != OrderType.StopMarket)
                     {
                         throw new Exception("BitfinexBrokerage.PlaceOrder(): Unsupported order type was encountered: " + order.Type);
                     }
@@ -339,7 +336,29 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            return new List<Holding>();
+            var list = new List<Holding>();
+
+            if (GetWallet() != "trading")
+            {
+                return list;
+            }
+
+            var response = ExecutePost(ActivePositionsRequestUrl, new OrderIdPost());
+
+            foreach (var item in JsonConvert.DeserializeObject<IList<MarginPositionResponse>>(response.Content))
+            {
+                var symbol = Symbol.Create(item.Symbol, SecurityType.Crypto, BrokerageMarket);
+                var tick = GetTick(symbol);
+                list.Add(new Holding
+                {
+                    Symbol = symbol,
+                    Quantity = decimal.Parse(item.Amount),
+                    Type = SecurityType.Crypto,
+                    MarketPrice = tick.Value,
+                    AveragePrice = (decimal.Parse(item.Base)),
+                });
+            }
+            return list;
         }
 
         /// <summary>

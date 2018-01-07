@@ -24,6 +24,7 @@ using QuantConnect.Brokerages.Bitfinex.Rest;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -135,7 +136,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
-        private static decimal GetPrice(Order order)
+        private static decimal GetPrice(Order order, IAlgorithm algorithm)
         {
             if (order is StopMarketOrder)
             {
@@ -146,7 +147,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return ((LimitOrder)order).LimitPrice;
             }
 
-            return order.Price;
+            return algorithm.Securities[order.Symbol].Price;
         }
 
         /// <summary>

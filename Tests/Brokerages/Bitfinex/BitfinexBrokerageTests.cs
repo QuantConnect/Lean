@@ -153,13 +153,20 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.AreEqual(1, _unit.CachedOrderIDs.Count());
         }
 
-        [Test]
+        [Test()]
         public void GetAccountHoldingsTest()
         {
             var actual = _unit.GetAccountHoldings();
 
-            Assert.AreEqual(0, actual.Count());
+            Assert.AreEqual(246.94, actual.First().AveragePrice);
+            Assert.AreEqual(1, actual.First().Quantity);
+            Assert.AreEqual("BTCUSD", actual.First().Symbol.Value);
+
+            Assert.AreEqual(346.94, actual.Last().AveragePrice);
+            Assert.AreEqual(2, actual.Last().Quantity);
+            Assert.AreEqual("ETHBTC", actual.Last().Symbol.Value);
         }
+
 
         [Test]
         public void GetCashBalanceTest()
@@ -201,5 +208,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsTrue(raised.WaitOne(100));
             Assert.AreEqual(expectedCount, _unit.CachedOrderIDs[id].BrokerId.Count());
         }
+
+
     }
 }
