@@ -36,12 +36,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
             _algorithm = algorithm;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the current values for the specified symbol (price/volatility)
+        /// </summary>
+        /// <param name="symbol">The symbol to get price/volatility for</param>
+        /// <returns>The alpha target values for the specified symbol</returns>
         public SecurityValues GetValues(Symbol symbol)
         {
             var security = _algorithm.Securities[symbol];
             var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
-            return new SecurityValues(_algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
+            return new SecurityValues(symbol, _algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
         }
     }
 }

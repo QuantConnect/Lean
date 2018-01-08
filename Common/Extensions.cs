@@ -962,5 +962,14 @@ namespace QuantConnect
 
             return new OrderTicket(transactionManager, submitOrderRequest);
         }
+
+        public static void ProcessUntilEmpty<T>(this IProducerConsumerCollection<T> collection, Action<T> handler)
+        {
+            T item;
+            while (collection.TryTake(out item))
+            {
+                handler(item);
+            }
+        }
     }
 }

@@ -14,11 +14,16 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Messaging
 {
@@ -109,26 +114,16 @@ namespace QuantConnect.Messaging
                         // uncomment these code traces to help write regression tests
                         //Console.WriteLine("new Dictionary<string, string>");
                         //Console.WriteLine("\t\t\t{");
+
+                        // inject alpha statistics into backtesting result statistics
+                        // this is primarily so we can easily regression test these values
+                        var alphaStatistics = result.Results.AlphaRuntimeStatistics?.ToDictionary().ToList() ?? new List<KeyValuePair<string, string>>();
+                        alphaStatistics.ForEach(kvp => result.Results.Statistics.Add(kvp));
+
                         foreach (var pair in result.Results.Statistics)
                         {
-                            Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                            Log.Trace($"STATISTICS:: {pair.Key} {pair.Value}");
                             //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
-                        }
-
-                        if (result.Results.IsFrameworkAlgorithm)
-                        {
-                            var stats = result.Results.AlphaRuntimeStatistics;
-                            Log.Trace("ALPHA STATISTICS");
-                            Log.Trace($"\tTotal Alphas Generated           {stats.TotalAlphasGenerated}");
-                            Log.Trace($"\tTotal Alphas Closed              {stats.TotalAlphasClosed}");
-                            Log.Trace($"\tTotal Alphas Analysis Completed  {stats.TotalAlphasAnalysisCompleted}");
-                            Log.Trace($"\tTotal Estimated Value           ${stats.TotalEstimatedAlphaValue:.0000}");
-                            Log.Trace($"\tEstimated Value/Alpha           ${stats.MeanPopulationEstimatedAlphaValue:.0000}");
-                            Log.Trace($"\tMean Population Direction        {100 * stats.MeanPopulationScore.Direction:.0000}%");
-                            Log.Trace($"\tMean Population Magnitude        {100 * stats.MeanPopulationScore.Magnitude:.0000}%");
-                            Log.Trace($"\tRolling Population Direction     {100 * stats.RollingAveragedPopulationScore.Direction:.0000}%");
-                            Log.Trace($"\tRolling Population Magnitude     {100 * stats.RollingAveragedPopulationScore.Magnitude:.0000}%");
-                            Log.Trace($"\tLong/Short Ratio                 {100*stats.LongShortRatio:.0000}%");
                         }
                         //Console.WriteLine("\t\t\t};");
 
