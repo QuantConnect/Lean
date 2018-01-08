@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Custom.Intrinio
 
             if (!IntrinioConfig.IsInitialized)
             {
-                throw new NotImplementedException("Please set a valid Intrinio user and password.");
+                throw new InvalidOperationException("Please set a valid Intrinio user and password.");
             }
         }
     }

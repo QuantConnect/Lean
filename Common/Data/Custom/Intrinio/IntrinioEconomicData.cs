@@ -131,7 +131,7 @@ namespace QuantConnect.Data.Custom.Intrinio
                 // If the user and password aren't available in the config file, then throw error.
                 if (!IntrinioConfig.IsInitialized)
                 {
-                    throw new NotImplementedException("Please set a valid Intrinio user and password using the 'IntrinioEconomicData.SetUserAndPassword' static method. " +
+                    throw new InvalidOperationException("Please set a valid Intrinio user and password using the 'IntrinioEconomicData.SetUserAndPassword' static method. " +
                     "For local backtesting, the user and password can be set in the 'config.json' file.");
                 }
             }
