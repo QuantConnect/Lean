@@ -15,7 +15,7 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
 
 #Install Jupyter and Python.NET
 RUN apt-get update && apt-get install -y git libglib2.0-dev && \
-    pip install jupyter git+https://github.com/QuantConnect/pythonnet
+    pip install --egg jsonschema jupyter git+https://github.com/QuantConnect/pythonnet
 
 # Setting some environment variables
 ENV WORK /root/Lean/Jupyter/bin/Debug
@@ -28,6 +28,7 @@ COPY ./Jupyter/*.ipynb ${WORK}/
 COPY ./Jupyter/config.json ${WORK}
 RUN rm -irf ${LEAN}/*Python*
 
+EXPOSE 8888
 WORKDIR $WORK
 
 ENTRYPOINT [ "/usr/local/bin/tini", "--" ]
