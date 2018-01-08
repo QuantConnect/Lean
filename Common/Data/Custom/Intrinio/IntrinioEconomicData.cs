@@ -121,13 +121,15 @@ namespace QuantConnect.Data.Custom.Intrinio
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // If the user and the password is not set then...
-            if (!IntrinioConfig.AreUserAndPasswordSet)
+            if (!IntrinioConfig.IsInitialized)
             {
                 // ... try to get the user and password from the config file.
-                IntrinioConfig.User = Config.Get("intrinio-username");
-                IntrinioConfig.Password = Config.Get("intrinio-password");
+                var user = Config.Get("intrinio-username");
+                var password = Config.Get("intrinio-password");
+                IntrinioConfig.SetUserAndPassword(user, password);
+
                 // If the user and password aren't available in the config file, then throw error.
-                if (!IntrinioConfig.AreUserAndPasswordSet)
+                if (!IntrinioConfig.IsInitialized)
                 {
                     throw new NotImplementedException("Please set a valid Intrinio user and password using the 'IntrinioEconomicData.SetUserAndPassword' static method. " +
                     "For local backtesting, the user and password can be set in the 'config.json' file.");
@@ -201,20 +203,6 @@ namespace QuantConnect.Data.Custom.Intrinio
                 EndTime = time + QuantConnect.Time.OneDay,
                 Value = value
             };
-        }
-
-        /// <summary>
-        /// Set the Intrinio API user and password.
-        /// </summary>
-        public static void SetUserAndPassword(string user, string password)
-        {
-            IntrinioConfig.User = user;
-            IntrinioConfig.Password = password;
-
-            if (IntrinioConfig.AreUserAndPasswordSet)
-            {
-                throw new NotImplementedException("Please set a valid Intrinio user and password.");
-            }
         }
 
         private static string GetStringForDataTransformation(IntrinioDataTransformation dataTransformation)

@@ -48,8 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000); //Set Strategy Cash
 
             // Set your Intrinino user and password.
-            IntrinioConfig.User = "";
-            IntrinioConfig.Password = "";
+            IntrinioConfig.SetUserAndPassword("<YourUser>", "<YourPassword>");
             // The Intrinio user and password can be also defined in the config.json file for local backtest.
 
             // Find more symbols here: http://quantconnect.com/data
@@ -59,8 +58,8 @@ namespace QuantConnect.Algorithm.CSharp
             _uso = AddEquity("USO", Resolution.Daily, leverage: 2m).Symbol;
             _bno = AddEquity("BNO", Resolution.Daily, leverage: 2m).Symbol;
 
-            AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilWTI, Resolution.Daily);
-            AddData<IntrinioEconomicData>(EconomicDataSources.Commodities.CrudeOilBrent, Resolution.Daily);
+            AddData<IntrinioEconomicData>(IntrinioEconomicDataSources.Commodities.CrudeOilWTI, Resolution.Daily);
+            AddData<IntrinioEconomicData>(IntrinioEconomicDataSources.Commodities.CrudeOilBrent, Resolution.Daily);
             _spread = _brent.Minus(_wti);
         }
 
@@ -81,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(IntrinioEconomicData economicData)
         {
             string oilMarket;
-            if (economicData.Symbol.Value == EconomicDataSources.Commodities.CrudeOilWTI)
+            if (economicData.Symbol.Value == IntrinioEconomicDataSources.Commodities.CrudeOilWTI)
             {
                 oilMarket = "West Texas Intermediate";
                 _wti.Update(economicData.Time, economicData.Price);

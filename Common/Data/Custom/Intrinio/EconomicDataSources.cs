@@ -15,7 +15,7 @@
 
 namespace QuantConnect.Data.Custom.Intrinio
 {
-    public static class EconomicDataSources
+    public static class IntrinioEconomicDataSources
     {
         public static class BofAMerrillLynch
         {
