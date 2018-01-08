@@ -1,9 +1,9 @@
 market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size
-,,,,,,,
-#,,,,,,,
-# Use # signs for comments,,,,,,,
-#,,,,,,,
-,,,,,,,
+
+#
+# Use # signs for comments
+#
+
 fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1
 fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.001,1
 fxcm,XCUUSD,cfd,Copper,USD,100,0.0001,1
@@ -27,7 +27,7 @@ fxcm,XAGUSD,cfd,Silver,USD,1,0.001,50
 fxcm,XAUUSD,cfd,Gold,USD,1,0.001,1
 fxcm,XPDUSD,cfd,Palladium,USD,1,0.01,1
 fxcm,XPTUSD,cfd,Platinum,USD,1,0.01,1
-,,,,,,,
+
 oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,1
 oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.001,1
 oanda,CH20CHF,cfd,Swiss 20,CHF,1,0.1,1
@@ -79,9 +79,9 @@ oanda,XAUXAG,cfd,Gold/Silver,XAG,1,0.001,1
 oanda,XCUUSD,cfd,Copper,USD,1,0.00001,1
 oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1
 oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
-,,,,,,,
+
 usa,[*],option,,USD,100,0.01,1
-,,,,,,,
+
 usa,ZC,future,,USD,50,0.25,1
 usa,ZW,future,,USD,50,0.25,1
 usa,ZS,future,,USD,50,0.25,1
@@ -123,7 +123,7 @@ usa,SB,future,,USD,1120,0.01,1
 usa,CC,future,,USD,10,1,1
 usa,VX,future,,USD,1000,0.05,1
 usa,[*],future,,USD,1,0.01,1
-,,,,,,,
+
 fxcm,AUDCAD,forex,,CAD,1,0.00001,1000
 fxcm,AUDCHF,forex,,CHF,1,0.00001,1000
 fxcm,AUDJPY,forex,,JPY,1,0.001,1000
@@ -163,7 +163,7 @@ fxcm,USDSEK,forex,,SEK,1,0.00001,1000
 fxcm,USDTRY,forex,,TRY,1,0.00001,1000
 fxcm,USDZAR,forex,,ZAR,1,0.00001,1000
 fxcm,ZARJPY,forex,,JPY,1,0.001,1000
-,,,,,,,
+
 oanda,AUDCAD,forex,AUD/CAD,CAD,1,0.00001,1
 oanda,AUDCHF,forex,AUD/CHF,CHF,1,0.00001,1
 oanda,AUDHKD,forex,AUD/HKD,HKD,1,0.00001,1
@@ -235,8 +235,8 @@ oanda,USDTHB,forex,USD/THB,THB,1,0.001,1
 oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
 oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
 oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
-,,,,,,,
-,,,,,,,
+
+
 gdax,BTCUSD,crypto,BTCUSD,USD,1,0.01,0.00000001
 gdax,LTCUSD,crypto,LTCUSD,USD,1,0.01,0.00000001
 gdax,ETHUSD,crypto,ETHUSD,USD,1,0.01,0.00000001
@@ -248,8 +248,8 @@ gdax,ETHGBP,crypto,ETHGBP,GBP,1,0.01,0.00000001
 gdax,BTCEUR,crypto,BTCEUR,EUR,1,0.01,0.00000001
 gdax,LTCEUR,crypto,LTCEUR,EUR,1,0.01,0.00000001
 gdax,ETHEUR,crypto,ETHEUR,EUR,1,0.01,0.00000001
-,,,,,,,
-,,,,,,,
+
+
 bitfinex,AVTBTC,crypto,AVTBTC,BTC,1,0.00001,6
 bitfinex,AVTETH,crypto,AVTETH,ETH,1,0.00001,6
 bitfinex,AVTUSD,crypto,AVTUSD,USD,1,0.00001,6
