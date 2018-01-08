@@ -166,7 +166,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets a new margin model for the security. For cash accounts the <see cref="NonShortableCashAccountMarginModel"/>
+        /// Gets a new margin model for the security. For cash accounts the <see cref="CashAccountMarginModel"/>
         /// is returned, while margin accounts will return the default margin model
         /// </summary>
         /// <param name="security">The security to get a margin model for</param>
@@ -176,7 +176,7 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Cash)
             {
-                return new NonShortableCashAccountMarginModel(_cashBook);
+                return new CashAccountMarginModel(_cashBook);
             }
 
             return base.GetMarginModel(security, accountType);

@@ -23,15 +23,15 @@ namespace QuantConnect.Securities
     /// currency to exist in the portfolio to make trades. This also only applies to securities where shorting
     /// is not an option. IOW, holdings.Quantity >= 0 at all times.
     /// </summary>
-    public class NonShortableCashAccountMarginModel : ISecurityMarginModel
+    public class CashAccountMarginModel : ISecurityMarginModel
     {
         private readonly CashBook _cashBook;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NonShortableCashAccountMarginModel"/> class
+        /// Initializes a new instance of the <see cref="CashAccountMarginModel"/> class
         /// </summary>
         /// <param name="cashBook">The portfolio's cashbook</param>
-        public NonShortableCashAccountMarginModel(CashBook cashBook)
+        public CashAccountMarginModel(CashBook cashBook)
         {
             _cashBook = cashBook;
         }
