@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public bool HasSubscribers
         {
-            get; 
+            get;
             set;
         }
 
@@ -93,11 +93,12 @@ namespace QuantConnect.Messaging
                     break;
 
                 case PacketType.AlphaResult:
-                    var alphas = ((AlphaResultPacket) packet).Alphas;
-                    foreach (var alpha in alphas)
-                    {
-                        Log.Trace("Alpha: " + alpha);
-                    }
+                    // spams the logs
+                    //var alphas = ((AlphaResultPacket) packet).Alphas;
+                    //foreach (var alpha in alphas)
+                    //{
+                    //    Log.Trace("Alpha: " + alpha);
+                    //}
                     break;
 
                 case PacketType.BacktestResult:
@@ -112,6 +113,22 @@ namespace QuantConnect.Messaging
                         {
                             Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
                             //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
+                        }
+
+                        if (result.Results.IsFrameworkAlgorithm)
+                        {
+                            var stats = result.Results.AlphaRuntimeStatistics;
+                            Log.Trace("ALPHA STATISTICS");
+                            Log.Trace($"\tTotal Alphas Generated           {stats.TotalAlphasGenerated}");
+                            Log.Trace($"\tTotal Alphas Closed              {stats.TotalAlphasClosed}");
+                            Log.Trace($"\tTotal Alphas Analysis Completed  {stats.TotalAlphasAnalysisCompleted}");
+                            Log.Trace($"\tTotal Estimated Value           ${stats.TotalEstimatedAlphaValue:.0000}");
+                            Log.Trace($"\tEstimated Value/Alpha           ${stats.MeanPopulationEstimatedAlphaValue:.0000}");
+                            Log.Trace($"\tMean Population Direction        {100 * stats.MeanPopulationScore.Direction:.0000}%");
+                            Log.Trace($"\tMean Population Magnitude        {100 * stats.MeanPopulationScore.Magnitude:.0000}%");
+                            Log.Trace($"\tRolling Population Direction     {100 * stats.RollingAveragedPopulationScore.Direction:.0000}%");
+                            Log.Trace($"\tRolling Population Magnitude     {100 * stats.RollingAveragedPopulationScore.Magnitude:.0000}%");
+                            Log.Trace($"\tLong/Short Ratio                 {100*stats.LongShortRatio:.0000}%");
                         }
                         //Console.WriteLine("\t\t\t};");
 
