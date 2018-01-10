@@ -39,6 +39,8 @@ namespace QuantConnect.Tests
         public static readonly Symbol BTCUSD = CreateCryptoSymbol("BTCUSD");
         public static readonly Symbol LTCUSD = CreateCryptoSymbol("LTCUSD");
         public static readonly Symbol ETHUSD = CreateCryptoSymbol("ETHUSD");
+        public static readonly Symbol BTCEUR = CreateCryptoSymbol("BTCEUR");
+        public static readonly Symbol ETHBTC = CreateCryptoSymbol("ETHBTC");
 
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
         public static readonly Symbol XAGUSD = CreateCfdSymbol("XAGUSD", Market.FXCM);

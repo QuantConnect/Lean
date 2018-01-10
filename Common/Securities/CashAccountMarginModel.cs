@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -82,26 +83,109 @@ namespace QuantConnect.Securities
         /// <returns>The margin available for the trade</returns>
         public decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
+            var baseCurrency = security as IBaseCurrencySymbol;
+            var targetCurrency = string.Empty;
+            var openOrdersTotalValue = 0m;
+            var openOrdersTotalQuantity = 0m;
+            var symbolDirectionPairs = new Dictionary<Symbol, OrderDirection>();
+
+            if (baseCurrency != null)
+            {
+                // find the target currency for the requested direction and the securities potentially involved
+                targetCurrency = direction == OrderDirection.Buy
+                    ? security.QuoteCurrency.Symbol
+                    : baseCurrency.BaseCurrencySymbol;
+
+                foreach (var portfolioSecurity in portfolio.Securities.Values)
+                {
+                    var basePortfolioSecurity = portfolioSecurity as IBaseCurrencySymbol;
+                    if (basePortfolioSecurity == null) continue;
+
+                    if (basePortfolioSecurity.BaseCurrencySymbol == targetCurrency)
+                    {
+                        symbolDirectionPairs.Add(portfolioSecurity.Symbol, OrderDirection.Sell);
+                    }
+                    else if (portfolioSecurity.QuoteCurrency.Symbol == targetCurrency)
+                    {
+                        symbolDirectionPairs.Add(portfolioSecurity.Symbol, OrderDirection.Buy);
+                    }
+                }
+            }
+
+            // fetch open orders with matching symbol/side
+            var openOrders = portfolio.Transactions.GetOpenOrders(x =>
+                {
+                    OrderDirection dir;
+                    return symbolDirectionPairs.Count == 0 ||
+                           symbolDirectionPairs.TryGetValue(x.Symbol, out dir) && dir == x.Direction;
+                }
+            );
+
+            // calculate total value for selected orders
+            foreach (var order in openOrders)
+            {
+                var orderSecurity = portfolio.Securities[order.Symbol];
+                var orderBaseCurrency = orderSecurity as IBaseCurrencySymbol;
+
+                if (baseCurrency != null && orderBaseCurrency != null)
+                {
+                    var orderPrice = 0m;
+                    switch (order.Type)
+                    {
+                        case OrderType.Limit:
+                            orderPrice = ((LimitOrder) order).LimitPrice;
+                            break;
+                        case OrderType.StopMarket:
+                            orderPrice = ((StopMarketOrder) order).StopPrice;
+                            break;
+                        case OrderType.StopLimit:
+                            orderPrice = ((StopLimitOrder) order).LimitPrice;
+                            break;
+                    }
+
+                    // convert order value to target currency
+                    decimal orderValue;
+                    if (orderSecurity.QuoteCurrency.Symbol == targetCurrency)
+                    {
+                        orderValue = orderPrice * order.Quantity;
+                        if (order.Direction == OrderDirection.Buy)
+                        {
+                            orderValue = -orderValue;
+                        }
+                    }
+                    else
+                    {
+                        orderValue = order.GetValue(orderSecurity) / orderPrice;
+                    }
+
+                    openOrdersTotalValue += orderValue;
+                }
+                else
+                {
+                    openOrdersTotalValue += order.GetValue(orderSecurity);
+                    openOrdersTotalQuantity += order.Quantity;
+                }
+            }
+
             switch (direction)
             {
                 case OrderDirection.Hold:
                 case OrderDirection.Buy:
                     // increasing position, purchasing in units of the quote currency
-                    return security.QuoteCurrency.Amount;
+                    return security.QuoteCurrency.Amount - Math.Abs(openOrdersTotalValue);
 
                 case OrderDirection.Sell:
                     // remaining margin in units of the base currency ( can't sell what we don't have )
-                    var baseCurrency = security as IBaseCurrencySymbol;
                     if (baseCurrency != null)
                     {
                         // we have this much 'cash' that can be sold
-                        return _cashBook[baseCurrency.BaseCurrencySymbol].Amount;
+                        return _cashBook[baseCurrency.BaseCurrencySymbol].Amount - Math.Abs(openOrdersTotalValue);
                     }
 
                     // we have this much stock value that can be sold... this is in the account currency,
                     // the assumption being that since the security doesn't implement IBaseCurrencySymbol
                     // that the holdings are either 'units' of stock or similar and not currency swaps/virtual positions
-                    return security.Holdings.AbsoluteHoldingsValue;
+                    return (security.Holdings.AbsoluteQuantity - Math.Abs(openOrdersTotalQuantity)) * security.Holdings.AveragePrice;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
