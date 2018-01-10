@@ -396,8 +396,7 @@ namespace QuantConnect
         /// <returns>True if both symbols are not equal, otherwise false</returns>
         public static bool operator !=(Symbol left, Symbol right)
         {
-            if (ReferenceEquals(left, null)) return ReferenceEquals(right, null);
-            return !left.Equals(right);
+            return !(left == right);
         }
 
         #endregion
