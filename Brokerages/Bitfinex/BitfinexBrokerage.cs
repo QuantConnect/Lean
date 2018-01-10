@@ -28,6 +28,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using RestSharp;
 using static QuantConnect.Brokerages.Bitfinex.Rest.Constants;
+using System.Threading;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -386,6 +387,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                         {
                             var baseSymbol = (item.Currency + Usd).ToLower();
                             var ticker = GetTick(baseSymbol);
+                            //we get rate limited with too many requests
+                            Thread.Sleep(2000);
                             list.Add(new Cash(item.Currency.ToUpper(), item.Amount, ticker.Price));
                         }
                     }
@@ -399,6 +402,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        //Disable due to race condition with fill
+        protected override void OnAccountChanged(AccountEvent e)
+        {
+        }
         #endregion
 
         /// <summary>
