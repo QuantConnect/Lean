@@ -127,6 +127,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Alpha"/> class.
+        /// This constructor is provided mostly for testing purposes. When running inside an algorithm,
+        /// the generated and close times are set based on the algorithm's time.
+        /// </summary>
+        /// <param name="generatedTimeUtc">The time this alpha was generated in utc</param>
+        /// <param name="symbol">The symbol this alpha is for</param>
+        /// <param name="type">The type of alpha, price/volatility</param>
+        /// <param name="direction">The predicted direction</param>
+        /// <param name="period">The period over which the prediction will come true</param>
+        /// <param name="magnitude">The predicted magnitude as a percentage change</param>
+        /// <param name="confidence">The confidence in this alpha</param>
+        public Alpha(DateTime generatedTimeUtc, Symbol symbol, AlphaType type, AlphaDirection direction, TimeSpan period, double? magnitude, double? confidence)
+            : this(symbol,type, direction, period, magnitude, confidence)
+        {
+            GeneratedTimeUtc = generatedTimeUtc;
+            CloseTimeUtc = generatedTimeUtc + period;
+        }
+
+        /// <summary>
         /// Creates a deep clone of this alpha instance
         /// </summary>
         /// <returns>A new alpha with identical values, but new instances</returns>
