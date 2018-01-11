@@ -28,6 +28,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         private readonly TimeSpan _analysisPeriod;
 
         /// <summary>
+        /// Gets the id of this context which is the same as the alpha's id
+        /// </summary>
+        public Guid Id => Alpha.Id;
+
+        /// <summary>
         /// Gets the symbol the alpha is for
         /// </summary>
         public Symbol Symbol => Alpha.Symbol;
@@ -167,6 +172,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public override string ToString()
         {
             return $"{Alpha.Id}: {Alpha.GeneratedTimeUtc}/{Alpha.CloseTimeUtc} -- {Alpha.Score}";
+        }
+
+        /// <summary>Serves as the default hash function. </summary>
+        /// <returns>A hash code for the current object.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Id.Equals(((AlphaAnalysisContext)obj).Id);
         }
     }
 }

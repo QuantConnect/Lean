@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"Direction: {Math.Round(100 * Direction, 2)} PercentChange: {Math.Round(100 * Magnitude, 2)}";
+            return $"Direction: {Math.Round(100 * Direction, 2)} Magnitude: {Math.Round(100 * Magnitude, 2)}";
         }
     }
 }
