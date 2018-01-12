@@ -442,7 +442,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
-                        algorithm.Portfolio.ApplySplit(split);
+                        algorithm.Portfolio.ApplySplit(algorithm, split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
                         if (_liveMode || algorithm.Securities[split.Symbol].DataNormalizationMode == DataNormalizationMode.Raw)
                         {
