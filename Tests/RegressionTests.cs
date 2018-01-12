@@ -391,7 +391,7 @@ namespace QuantConnect.Tests
                 {"Average Win", "0.00%"},
                 {"Average Loss", "0%"},
                 {"Compounding Annual Return", "0.198%"},
-                {"Drawdown", "0.500%"},
+                {"Drawdown", "0.100%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0.002%"},
                 {"Sharpe Ratio", "0.609"},
