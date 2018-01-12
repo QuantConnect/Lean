@@ -17,10 +17,11 @@ class IndicatorAlgo(QCAlgorithm):
         # Configurable parameters #
         ###########################
         self.target_crypto = "ETHUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
-        self.indicator_name = "ichimoku"  # bollinger, momentum, or MACD
+        self.indicator_name = "macd"  # bollinger, momentum, or MACD
         self.warmup_lookback = 30  # Number of time periods resolution to load
         self.time_resolution = Resolution.Minute  # Resolution of periods/data to use
         self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
+        self.bar_size = 5
 
         # Bollinger Variables
         self.moving_average_type = MovingAverageType.Exponential
@@ -53,6 +54,10 @@ class IndicatorAlgo(QCAlgorithm):
         # Add Symbol
         self.AddCrypto(self.target_crypto, self.time_resolution)
 
+        barConsolidator = TradeBarConsolidator(TimeSpan.FromMinutes(self.bar_size))
+        barConsolidator.DataConsolidated += self.barHandler
+        self.SubscriptionManager.AddConsolidator(self.target_crypto, barConsolidator)
+
         # Create charts
         pricePlot = Chart('%s Price Plot' % self.target_crypto)
         pricePlot.AddSeries(Series('Price', SeriesType.Line, 0))
@@ -74,6 +79,7 @@ class IndicatorAlgo(QCAlgorithm):
             # Create the MACD
             self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
                                   self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
+            self.RegisterIndicator(self.target_crypto, self.macd, barConsolidator)
         elif self.indicator_name == "ichimoku":
             self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
                                           self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
@@ -92,11 +98,9 @@ class IndicatorAlgo(QCAlgorithm):
         ##########################
         # OnData Processing Vars #
         ##########################
-        holdings = self.Portfolio[self.target_crypto].Quantity
         last_price = self.Securities[self.target_crypto].Close
         buy_price = self.Securities[self.target_crypto].BidPrice
         sell_price = self.Securities[self.target_crypto].AskPrice
-        amount = float(self.Portfolio.GetBuyingPower(self.target_crypto, OrderDirection.Buy) / last_price)
 
         ###############################
         # OnData Processing Functions #
@@ -112,6 +116,25 @@ class IndicatorAlgo(QCAlgorithm):
                 self.Transactions.CancelOrder(open_order.Id)
                 self.LimitOrder(self.target_crypto, open_order.Quantity, limit_price)
                 self.pending_limit_price = limit_price
+            return
+
+    def PlotCryptoIndicator(self):
+        # Chart the crypto price
+        self.Plot('%s Price Plot' % self.target_crypto, 'Price', self.Securities[self.target_crypto].Close)
+        self.Plot('%s Holdings Plot' % self.target_crypto, 'Holdings',
+                  float(self.Portfolio[self.target_crypto].Quantity))
+
+    def barHandler(self, sender, bar):
+        ##########################
+        # OnData Processing Vars #
+        ##########################
+        holdings = self.Portfolio[self.target_crypto].Quantity
+        last_price = self.Securities[self.target_crypto].Close
+        buy_price = self.Securities[self.target_crypto].BidPrice
+        sell_price = self.Securities[self.target_crypto].AskPrice
+        amount = float(self.Portfolio.GetBuyingPower(self.target_crypto, OrderDirection.Buy) / last_price)
+
+        if len(self.Transactions.GetOpenOrders(self.target_crypto)) > 0:
             return
 
         ###################
@@ -134,11 +157,10 @@ class IndicatorAlgo(QCAlgorithm):
             elif holdings > 0 and mom < self.momentum_sell_threshold:
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
-        elif self.indicator_name == "MACD":
+        elif self.indicator_name == "macd":
             if not self.macd.IsReady:
                 return
-            signalDeltaPercent = (
-                                 self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
+            signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
 
             if holdings == 0 and signalDeltaPercent > self.MACD_tolerance:
                 self.LimitOrder(self.target_crypto, amount, buy_price)
@@ -161,12 +183,6 @@ class IndicatorAlgo(QCAlgorithm):
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
 
-    def PlotCryptoIndicator(self):
-        # Chart the crypto price
-        self.Plot('%s Price Plot' % self.target_crypto, 'Price', self.Securities[self.target_crypto].Close)
-        self.Plot('%s Holdings Plot' % self.target_crypto, 'Holdings',
-                  float(self.Portfolio[self.target_crypto].Quantity))
-
-        # def OnOrderEvent(self, orderEvent):
-        #    order = self.Transactions.GetOrderById(orderEvent.OrderId)
-        #    self.Debug("{0}: {1}: {2}".format(self.Time, order.Type, orderEvent))
+    # def OnOrderEvent(self, orderEvent):
+    #    order = self.Transactions.GetOrderById(orderEvent.OrderId)
+    #    self.Debug("{0}: {1}: {2}".format(self.Time, order.Type, orderEvent))
