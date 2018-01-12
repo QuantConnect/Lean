@@ -619,11 +619,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Applies a split to the portfolio
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="split">The split to be applied</param>
-        public void ApplySplit(Split split)
+        public void ApplySplit(IAlgorithm algorithm, Split split)
         {
             ApplySplitToEquities(split);
-            ApplySplitToOptions(split);
+            ApplySplitToOptions(algorithm, split);
         }
 
         /// <summary>
@@ -692,8 +693,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Applies a split to the portfolio equity options positions
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="split">The split to be applied</param>
-        private void ApplySplitToOptions(Split split)
+        private void ApplySplitToOptions(IAlgorithm algorithm, Split split)
         {
             // only apply to the option positions that have correct underlying symbol
             var optionSecurities = Securities
@@ -713,7 +715,7 @@ namespace QuantConnect.Securities
                 }
 
                 var splitFactor = split.SplitFactor;
-                var newSymbol = GetSplitAdjustedSymbol(symbol, splitFactor);
+                var newSymbol = GetSplitAdjustedSymbol(algorithm, symbol, splitFactor);
 
                 if (newSymbol != null)
                 {
@@ -730,7 +732,7 @@ namespace QuantConnect.Securities
             }
         }
 
-        private Symbol GetSplitAdjustedSymbol(Symbol symbol, decimal splitFactor)
+        private Symbol GetSplitAdjustedSymbol(IAlgorithm algorithm, Symbol symbol, decimal splitFactor)
         {
             var inverseFactor = 1.0m / splitFactor;
 
@@ -771,10 +773,24 @@ namespace QuantConnect.Securities
                 newRootSymbol = symbol.Underlying.Value + "1";
             }
 
-            return Securities
+            // search for the new symbol in algorithm securities
+            var newSymbol = Securities
                     .Select(x => x.Key)
                     .Where(symbolIsFound)
                     .FirstOrDefault();
+
+            if (newSymbol == null)
+            {
+                // if new symbol not found in algorithm securities, add it
+                newSymbol = Symbol.CreateOption(symbol.Underlying.Value, symbol.ID.Market, symbol.ID.OptionStyle, symbol.ID.OptionRight, newStrike, symbol.ID.Date);
+
+                var newOption = algorithm.AddOptionContract(newSymbol);
+
+                var newPrice = Securities[symbol].GetLastData().Price * splitFactor;
+                newOption.SetMarketPrice(new Tick { Value = newPrice });
+            }
+
+            return newSymbol;
         }
 
         /// <summary>
