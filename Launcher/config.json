@@ -97,6 +97,10 @@
   "gdax-api-key": "",
   "gdax-passphrase": "",
 
+  // Intrinio account user and password
+  "intrinio-username": "",
+  "intrinio-password": "",
+
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
