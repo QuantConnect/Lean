@@ -766,12 +766,11 @@ namespace QuantConnect.Algorithm
         public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             var orderIdList = new List<int>();
-            symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
 
             foreach (var symbol in Securities.Keys.OrderBy(x => x.Value))
             {
                 // symbol not matching, do nothing
-                if (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty)
+                if (symbol != symbolToLiquidate && symbolToLiquidate != null)
                     continue;
 
                 // get open orders
