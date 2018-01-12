@@ -270,19 +270,49 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void ComparesAgainstNull()
+        public void ComparesAgainstNullOrEmpty()
         {
             var validSymbol = Symbols.SPY;
             var emptySymbol = Symbol.Empty;
             Symbol nullSymbol = null;
 
+            Assert.IsTrue(nullSymbol == emptySymbol);
+            Assert.IsFalse(nullSymbol != emptySymbol);
+
+            Assert.IsTrue(emptySymbol == nullSymbol);
+            Assert.IsFalse(emptySymbol != nullSymbol);
+
             Assert.IsTrue(validSymbol != null);
-            Assert.IsTrue(emptySymbol != null);
+            Assert.IsTrue(emptySymbol == null);
             Assert.IsTrue(nullSymbol == null);
 
             Assert.IsFalse(validSymbol == null);
-            Assert.IsFalse(emptySymbol == null);
+            Assert.IsFalse(emptySymbol != null);
             Assert.IsFalse(nullSymbol != null);
+
+            Assert.IsTrue(validSymbol != Symbol.Empty);
+            Assert.IsTrue(emptySymbol == Symbol.Empty);
+            Assert.IsTrue(nullSymbol == Symbol.Empty);
+
+            Assert.IsFalse(validSymbol == Symbol.Empty);
+            Assert.IsFalse(emptySymbol != Symbol.Empty);
+            Assert.IsFalse(nullSymbol != Symbol.Empty);
+
+            Assert.IsTrue(null != validSymbol);
+            Assert.IsTrue(null == emptySymbol);
+            Assert.IsTrue(null == nullSymbol);
+
+            Assert.IsFalse(null == validSymbol);
+            Assert.IsFalse(null != emptySymbol);
+            Assert.IsFalse(null != nullSymbol);
+
+            Assert.IsTrue(Symbol.Empty != validSymbol);
+            Assert.IsTrue(Symbol.Empty == emptySymbol);
+            Assert.IsTrue(Symbol.Empty == nullSymbol);
+
+            Assert.IsFalse(Symbol.Empty == validSymbol);
+            Assert.IsFalse(Symbol.Empty != emptySymbol);
+            Assert.IsFalse(Symbol.Empty != nullSymbol);
         }
 
         [Test]

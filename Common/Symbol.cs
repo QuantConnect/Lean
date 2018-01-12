@@ -384,7 +384,7 @@ namespace QuantConnect
         /// <returns>True if both symbols are equal, otherwise false</returns>
         public static bool operator ==(Symbol left, Symbol right)
         {
-            if (ReferenceEquals(left, null)) return ReferenceEquals(right, null);
+            if (ReferenceEquals(left, null) || left.Equals(Empty)) return ReferenceEquals(right, null) || right.Equals(Empty);
             return left.Equals(right);
         }
 
