@@ -152,7 +152,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The FXCM symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            if (symbol == null || symbol == Symbol.Empty || string.IsNullOrWhiteSpace(symbol.Value))
+            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
             if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)

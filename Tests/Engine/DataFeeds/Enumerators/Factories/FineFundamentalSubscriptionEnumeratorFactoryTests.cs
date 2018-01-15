@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
     [TestFixture]
     public class FineFundamentalSubscriptionEnumeratorFactoryTests
     {
-        [Test, TestCaseSource("GetFineFundamentalTestParameters")]
+        [Test, TestCaseSource(nameof(GetFineFundamentalTestParameters))]
         public void ReadsFineFundamental(FineFundamentalTestParameters parameters)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -60,8 +60,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var row = rows[0];
             Assert.AreEqual(parameters.CompanyShortName, row.CompanyReference.ShortName);
             Assert.AreEqual(parameters.Symbol, row.Symbol);
-            Assert.AreEqual(parameters.Symbol != Symbol.Empty ? parameters.Symbol.Value : null, row.CompanyReference.PrimarySymbol);
-            Assert.AreEqual(parameters.Symbol != Symbol.Empty ? parameters.Symbol.Value : null, row.SecurityReference.SecuritySymbol);
+            Assert.IsTrue(row.CompanyReference.PrimarySymbol == parameters.Symbol.Value || row.CompanyReference.PrimarySymbol == null);
+            Assert.IsTrue(row.SecurityReference.SecuritySymbol == parameters.Symbol.Value || row.SecurityReference.SecuritySymbol == null);
             Assert.AreEqual(parameters.Ebitda3M, row.FinancialStatements.IncomeStatement.EBITDA.ThreeMonths);
             Assert.AreEqual(parameters.Ebitda12M, row.FinancialStatements.IncomeStatement.EBITDA.TwelveMonths);
             Assert.AreEqual(parameters.Ebitda12M, row.FinancialStatements.IncomeStatement.EBITDA);
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 },
                 new FineFundamentalTestParameters("AAPL-BeforeFirstDate")
                 {
-                    Symbol = Symbol.Empty,
+                    Symbol = Symbols.AAPL,
                     StartDate = new DateTime(2014, 2, 20),
                     EndDate = new DateTime(2014, 2, 20),
                     RowCount = 1
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
         public class FineFundamentalTestParameters
         {
-            public string Name { get; private set; }
+            public string Name { get; }
             public Symbol Symbol { get; set; }
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }

@@ -504,7 +504,7 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
-                if (_benchmarkSymbol != null && _benchmarkSymbol != QuantConnect.Symbol.Empty)
+                if (_benchmarkSymbol != null)
                 {
                     // if the requested benchmark symbol wasn't already added, then add it now
                     // we do a simple compare here for simplicity, also it avoids confusion over

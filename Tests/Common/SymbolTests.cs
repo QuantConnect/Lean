@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common
@@ -71,7 +70,7 @@ namespace QuantConnect.Tests.Common
 
         [Test]
         public void UsesSidForDictionaryKey()
-        {   
+        {
             var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
             var dictionary = new Dictionary<Symbol, int>
             {
@@ -81,7 +80,7 @@ namespace QuantConnect.Tests.Common
             var key = new Symbol(sid, "other value");
             Assert.IsTrue(dictionary.ContainsKey(key));
         }
-        
+
         [Test]
         public void SurvivesRoundtripSerialization()
         {
@@ -191,7 +190,7 @@ namespace QuantConnect.Tests.Common
                     "'Value':0.72157,'Price':0.72157}," +
 
                     "]}";
-            
+
             var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, Settings);
             Assert.IsFalse(actual.All(x => x.Symbol == new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")));
         }
@@ -268,6 +267,52 @@ namespace QuantConnect.Tests.Common
         {
             var a = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
             Assert.AreEqual(0, a.CompareTo("A"));
+        }
+
+        [Test]
+        public void ComparesAgainstNullOrEmpty()
+        {
+            var validSymbol = Symbols.SPY;
+            var emptySymbol = Symbol.Empty;
+            Symbol nullSymbol = null;
+
+            Assert.IsTrue(nullSymbol == emptySymbol);
+            Assert.IsFalse(nullSymbol != emptySymbol);
+
+            Assert.IsTrue(emptySymbol == nullSymbol);
+            Assert.IsFalse(emptySymbol != nullSymbol);
+
+            Assert.IsTrue(validSymbol != null);
+            Assert.IsTrue(emptySymbol == null);
+            Assert.IsTrue(nullSymbol == null);
+
+            Assert.IsFalse(validSymbol == null);
+            Assert.IsFalse(emptySymbol != null);
+            Assert.IsFalse(nullSymbol != null);
+
+            Assert.IsTrue(validSymbol != Symbol.Empty);
+            Assert.IsTrue(emptySymbol == Symbol.Empty);
+            Assert.IsTrue(nullSymbol == Symbol.Empty);
+
+            Assert.IsFalse(validSymbol == Symbol.Empty);
+            Assert.IsFalse(emptySymbol != Symbol.Empty);
+            Assert.IsFalse(nullSymbol != Symbol.Empty);
+
+            Assert.IsTrue(null != validSymbol);
+            Assert.IsTrue(null == emptySymbol);
+            Assert.IsTrue(null == nullSymbol);
+
+            Assert.IsFalse(null == validSymbol);
+            Assert.IsFalse(null != emptySymbol);
+            Assert.IsFalse(null != nullSymbol);
+
+            Assert.IsTrue(Symbol.Empty != validSymbol);
+            Assert.IsTrue(Symbol.Empty == emptySymbol);
+            Assert.IsTrue(Symbol.Empty == nullSymbol);
+
+            Assert.IsFalse(Symbol.Empty == validSymbol);
+            Assert.IsFalse(Symbol.Empty != emptySymbol);
+            Assert.IsFalse(Symbol.Empty != nullSymbol);
         }
 
         [Test]
