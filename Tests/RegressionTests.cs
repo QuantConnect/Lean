@@ -35,7 +35,7 @@ namespace QuantConnect.Tests
                 QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
             }
 
-            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
+            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
         }
 
         private static TestCaseData[] GetRegressionTestParameters()
@@ -61,6 +61,41 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.193"},
                 {"Treynor Ratio", "0.011"},
                 {"Total Fees", "$3.09"}
+            };
+
+            var basicTemplateFrameworkStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "264.956%"},
+                {"Drawdown", "2.200%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "1.669%"},
+                {"Sharpe Ratio", "4.411"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.007"},
+                {"Beta", "76.375"},
+                {"Annual Standard Deviation", "0.193"},
+                {"Annual Variance", "0.037"},
+                {"Information Ratio", "4.355"},
+                {"Tracking Error", "0.193"},
+                {"Treynor Ratio", "0.011"},
+                {"Total Fees", "$3.09"},
+                {"Total Alphas Generated", "100"},
+                {"Total Alphas Closed", "99"},
+                {"Total Alphas Analysis Completed", "86"},
+                {"Long Alpha Count", "100"},
+                {"Short Alpha Count", "0"},
+                {"Long/Short Ratio", "100%"},
+                {"Total Estimated Alpha Value", "$24404.2897"},
+                {"Mean Population Estimated Alpha Value", "$246.508"},
+                {"Mean Population Direction", "48.8372%"},
+                {"Mean Population Magnitude", "48.8372%"},
+                {"Rolling Averaged Population Direction", "68.2411%"},
+                {"Rolling Averaged Population Magnitude", "68.2411%"}
             };
 
             var basicTemplateOptionsStatistics = new Dictionary<string, string>
@@ -644,7 +679,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
-                new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
@@ -709,6 +744,7 @@ namespace QuantConnect.Tests
         {
             public readonly string Algorithm;
             public readonly Dictionary<string, string> Statistics;
+            public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
 
             public AlgorithmStatisticsTestParameters(string algorithm, Dictionary<string, string> statistics, Language language)

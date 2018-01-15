@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,11 +14,16 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Messaging
 {
@@ -38,7 +43,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public bool HasSubscribers
         {
-            get; 
+            get;
             set;
         }
 
@@ -93,11 +98,12 @@ namespace QuantConnect.Messaging
                     break;
 
                 case PacketType.AlphaResult:
-                    var alphas = ((AlphaResultPacket) packet).Alphas;
-                    foreach (var alpha in alphas)
-                    {
-                        Log.Trace("Alpha: " + alpha);
-                    }
+                    // spams the logs
+                    //var alphas = ((AlphaResultPacket) packet).Alphas;
+                    //foreach (var alpha in alphas)
+                    //{
+                    //    Log.Trace("Alpha: " + alpha);
+                    //}
                     break;
 
                 case PacketType.BacktestResult:
@@ -108,9 +114,15 @@ namespace QuantConnect.Messaging
                         // uncomment these code traces to help write regression tests
                         //Console.WriteLine("new Dictionary<string, string>");
                         //Console.WriteLine("\t\t\t{");
+
+                        // inject alpha statistics into backtesting result statistics
+                        // this is primarily so we can easily regression test these values
+                        var alphaStatistics = result.Results.AlphaRuntimeStatistics?.ToDictionary().ToList() ?? new List<KeyValuePair<string, string>>();
+                        alphaStatistics.ForEach(kvp => result.Results.Statistics.Add(kvp));
+
                         foreach (var pair in result.Results.Statistics)
                         {
-                            Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                            Log.Trace($"STATISTICS:: {pair.Key} {pair.Value}");
                             //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
                         }
                         //Console.WriteLine("\t\t\t};");

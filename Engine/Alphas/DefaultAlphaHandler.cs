@@ -36,26 +36,17 @@ namespace QuantConnect.Lean.Engine.Alphas
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
-        private const int BacktestChartSamples = 1000;
-        private static readonly IReadOnlyCollection<AlphaScoreType> ScoreTypes = AlphaManager.ScoreTypes;
-
         private DateTime _nextMessagingUpdate;
         private DateTime _nextPersistenceUpdate;
-        private DateTime _lastAlphaCountSampleDateUtc;
-        private DateTime _nextChartSampleAlgorithmTimeUtc;
+        private DateTime _lastSecurityValuesSnapshotTime;
 
         private bool _isNotFrameworkAlgorithm;
         private IMessagingHandler _messagingHandler;
+        private ChartingAlphaManagerExtension _charting;
+        private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
-
-        private readonly Chart _totalAlphaCountPerSymbolChart = new Chart("Alpha Assets");          // pie chart
-        private readonly Chart _dailyAlphaCountPerSymbolChart = new Chart("Alpha Asset Breakdown"); // stacked area
-        private readonly Series _totalAlphaCountSeries = new Series("Count", SeriesType.Bar, "#");
-
-        private readonly Dictionary<AlphaScoreType, Series> _alphaScoreSeriesByScoreType = new Dictionary<AlphaScoreType, Series>();
-        private readonly ConcurrentDictionary<Symbol, int> _dailyAlphaCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
-        private readonly ConcurrentDictionary<Symbol, int> _alphaCountPerSymbol = new ConcurrentDictionary<Symbol, int>();
+        private readonly ConcurrentQueue<AlphaQueueItem> _alphaQueue = new ConcurrentQueue<AlphaQueueItem>();
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -66,12 +57,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// Gets the current alpha runtime statistics
         /// </summary>
         public AlphaRuntimeStatistics RuntimeStatistics { get; private set; }
-
-        /// <summary>
-        /// Gets or sets the runtime statistics updated. This is responsible for estimating alpha value as
-        /// well as providing other KPIs found in <see cref="AlphaRuntimeStatistics"/>
-        /// </summary>
-        public IAlphaRuntimeStatisticsUpdater StatisticsUpdater { get; set; } = new AlphaRuntimeStatisticsUpdater();
 
         /// <summary>
         /// Gets the algorithm's unique identifier
@@ -104,14 +89,14 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected TimeSpan MessagingUpdateInterval { get; set; } = TimeSpan.FromSeconds(2);
 
         /// <summary>
-        /// Gets or sets the interval at which alpha charts are updated. This is in realtion to algorithm time.
-        /// </summary>
-        protected TimeSpan ChartUpdateInterval { get; set; } = TimeSpan.FromMinutes(1);
-
-        /// <summary>
         /// Gets the alpha manager instance used to manage the analysis of algorithm alphas
         /// </summary>
         protected AlphaManager AlphaManager { get; private set; }
+
+        /// <summary>
+        /// Gets the collection of managers that events are forwarded to
+        /// </summary>
+        protected List<IAlphaManagerExtension> AlphaManagers { get; } = new List<IAlphaManagerExtension>();
 
         /// <summary>
         /// Initializes this alpha handler to accept alphas from the specified algorithm
@@ -132,34 +117,19 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
+
+            _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
+
             AlphaManager = CreateAlphaManager();
-            RuntimeStatistics = new AlphaRuntimeStatistics();
 
-            // wire events to update runtime statistics at key moments in alpha life cycle (new/period end/analysis end)
-            AlphaManager.AlphaReceived += (sender, context) => StatisticsUpdater.OnAlphaReceived(RuntimeStatistics, context);
-            AlphaManager.AlphaClosed += (sender, context) => StatisticsUpdater.OnAlphaClosed(RuntimeStatistics, context);
-            AlphaManager.AlphaAnalysisCompleted += (sender, context) => StatisticsUpdater.OnAlphaAnalysisCompleted(RuntimeStatistics, context);
+            var statistics = new StatisticsAlphaManagerExtension();
+            RuntimeStatistics = statistics.Statistics;
+            AlphaManager.AddExtension(statistics);
+            _charting = new ChartingAlphaManagerExtension(algorithm, statistics);
+            AlphaManager.AddExtension(_charting);
 
-            algorithm.AlphasGenerated += (algo, collection) => OnAlphasGenerated(collection);
-
-            // chart for average scores over sample period
-            var scoreChart = new Chart("Alpha");
-            foreach (var scoreType in ScoreTypes)
-            {
-                var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
-                scoreChart.AddSeries(series);
-                _alphaScoreSeriesByScoreType[scoreType] = series;
-            }
-
-            // chart for prediction count over sample period
-            var predictionCount = new Chart("Alpha Count");
-            predictionCount.AddSeries(_totalAlphaCountSeries);
-
-            Algorithm.AddChart(scoreChart);
-            Algorithm.AddChart(predictionCount);
-            Algorithm.AddChart(_totalAlphaCountPerSymbolChart);
-            // removing this for now, not sure best way to display this data
-            //Algorithm.AddChart(_dailyAlphaCountPerSymbolChart);
+            // when alpha is generated, take snapshot of securities and place in queue for alpha manager to process on alpha thread
+            algorithm.AlphasGenerated += (algo, collection) => _alphaQueue.Enqueue(new AlphaQueueItem(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection));
         }
 
         /// <summary>
@@ -174,20 +144,9 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
-            _nextChartSampleAlgorithmTimeUtc = algorithm.UtcTime + ChartUpdateInterval;
-            _lastAlphaCountSampleDateUtc = (algorithm.Time.RoundDown(Time.OneDay) + Time.OneDay).ConvertToUtc(algorithm.TimeZone);
-
-            if (LiveMode)
-            {
-                // live mode we'll sample each minute
-                ChartUpdateInterval = Time.OneMinute;
-            }
-            else
-            {
-                // space out backtesting samples evenly
-                var backtestPeriod = algorithm.EndDate - algorithm.StartDate;
-                ChartUpdateInterval = TimeSpan.FromTicks(backtestPeriod.Ticks / BacktestChartSamples);
-            }
+            // send date ranges to extensions for initialization -- this data wasn't available when the handler was
+            // initialzied, so we need to invoke it here
+            AlphaManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
         }
 
         /// <summary>
@@ -200,53 +159,10 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
-            if (Algorithm.UtcTime.Date > _lastAlphaCountSampleDateUtc)
+            // check the last snap shot time, we may have already produced a snapshot via OnAlphasGenerated
+            if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
-                _lastAlphaCountSampleDateUtc = Algorithm.UtcTime.Date;
-
-                // populate charts with the daily alpha counts per symbol, resetting our storage
-                var sumPredictions = PopulateChartWithSeriesPerSymbol(_dailyAlphaCountPerSymbol, _dailyAlphaCountPerSymbolChart, SeriesType.StackedArea);
-                _dailyAlphaCountPerSymbol.Clear();
-
-                // add sum of daily alpha counts to the total alpha count series
-                _totalAlphaCountSeries.AddPoint(Algorithm.UtcTime.Date, sumPredictions, LiveMode);
-
-                // populate charts with the total alpha counts per symbol, no need to reset
-                PopulateChartWithSeriesPerSymbol(_alphaCountPerSymbol, _totalAlphaCountPerSymbolChart, SeriesType.Pie);
-            }
-
-            // before updating scores, emit chart points for the previous sample period
-            if (Algorithm.UtcTime >= _nextChartSampleAlgorithmTimeUtc)
-            {
-                try
-                {
-                    // verify these scores have been computed before taking the first sample
-                    if (StatisticsUpdater.RollingAverageIsReady)
-                    {
-                        // sample the rolling averaged population scores
-                        foreach (var scoreType in ScoreTypes)
-                        {
-                            var score = 100 * RuntimeStatistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                            _alphaScoreSeriesByScoreType[scoreType].AddPoint(Algorithm.UtcTime, (decimal) score, LiveMode);
-                        }
-                        _nextChartSampleAlgorithmTimeUtc = Algorithm.UtcTime + ChartUpdateInterval;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                }
-            }
-
-            try
-            {
-                // update scores in line with the algo thread to ensure a consistent read of security data
-                // this will manage marking alphas as closed as well as performing score updates
-                AlphaManager.UpdateScores();
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
+                _alphaQueue.Enqueue(new AlphaQueueItem(Algorithm.UtcTime, CreateSecurityValuesSnapshot()));
             }
         }
 
@@ -262,8 +178,8 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // run until cancelled AND we're done processing messages
-            while (!_cancellationTokenSource.IsCancellationRequested || !_messages.IsEmpty)
+            // run main loop until canceled, will clean out work queues separately
+            while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 try
                 {
@@ -275,8 +191,18 @@ namespace QuantConnect.Lean.Engine.Alphas
                     throw;
                 }
 
-                Thread.Sleep(50);
+                Thread.Sleep(1);
             }
+
+            // finish alpha scoring analysis
+            _alphaQueue.ProcessUntilEmpty(item => AlphaManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedAlphas));
+
+            // send final alpha scoring updates before we exit
+            var alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList();
+            _messages.Enqueue(new AlphaResultPacket(AlgorithmId, Job.UserId, alphas));
+
+            // finish sending packets
+            _messages.ProcessUntilEmpty(packet => _messagingHandler.Send(packet));
 
             // persist alphas at exit
             StoreAlphas();
@@ -296,10 +222,6 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             Log.Trace("DefaultAlphaHandler.Run(): Exiting Thread...");
 
-            // send final alpha scoring updates before we exit
-            var alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList();
-            _messages.Enqueue(new AlphaResultPacket(AlgorithmId, Job.UserId, alphas));
-
             _cancellationTokenSource.Cancel(false);
         }
 
@@ -308,6 +230,14 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         protected void ProcessAsynchronousEvents()
         {
+            // step the alpha manager forward in time
+            AlphaQueueItem item;
+            while (_alphaQueue.TryDequeue(out item))
+            {
+                AlphaManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedAlphas);
+            }
+
+            // send alpha upate messages
             Packet packet;
             while (_messages.TryDequeue(out packet))
             {
@@ -354,63 +284,33 @@ namespace QuantConnect.Lean.Engine.Alphas
         }
 
         /// <summary>
-        /// Handles the algorithm's <see cref="IAlgorithm.AlphasGenerated"/> event
-        /// and broadcasts the new alpha using the messaging handler
-        /// </summary>
-        protected void OnAlphasGenerated(AlphaCollection collection)
-        {
-            // send message for newly created alphas
-            Packet packet = new AlphaResultPacket(AlgorithmId, Job.UserId, collection.Alphas);
-            _messages.Enqueue(packet);
-
-            AlphaManager.AddAlphas(collection);
-
-            // aggregate alpha counts per symbol
-            foreach (var grouping in collection.Alphas.GroupBy(alpha => alpha.Symbol))
-            {
-                // predictions for this time step
-                var count = grouping.Count();
-
-                // track daily assets
-                _dailyAlphaCountPerSymbol.AddOrUpdate(grouping.Key, sym => count, (sym, cnt) => cnt + count);
-
-                // track total assets for life of backtest
-                _alphaCountPerSymbol.AddOrUpdate(grouping.Key, sym => count, (sym, cnt) => cnt + count);
-            }
-        }
-
-        /// <summary>
         /// Creates the <see cref="AlphaManager"/> to manage the analysis of generated alphas
         /// </summary>
         /// <returns>A new alpha manager instance</returns>
         protected virtual AlphaManager CreateAlphaManager()
         {
             var scoreFunctionProvider = new DefaultAlphaScoreFunctionProvider();
-            return new AlphaManager(new AlgorithmSecurityValuesProvider(Algorithm), scoreFunctionProvider, 0);
+            return new AlphaManager(scoreFunctionProvider, 0);
         }
 
-        /// <summary>
-        /// Creates series for each symbol and adds a value corresponding to the specified data
-        /// </summary>
-        private int PopulateChartWithSeriesPerSymbol(ConcurrentDictionary<Symbol, int> data, Chart chart, SeriesType seriesType)
+        private ReadOnlySecurityValuesCollection CreateSecurityValuesSnapshot()
         {
-            var sum = 0;
-            foreach (var kvp in data)
+            _lastSecurityValuesSnapshotTime = Algorithm.UtcTime;
+            return _securityValuesProvider.GetValues(Algorithm.Securities.Keys);
+        }
+
+        class AlphaQueueItem
+        {
+            public DateTime FrontierTimeUtc;
+            public AlphaCollection GeneratedAlphas;
+            public ReadOnlySecurityValuesCollection SecurityValues;
+
+            public AlphaQueueItem(DateTime frontierTimeUtc, ReadOnlySecurityValuesCollection securityValues, AlphaCollection generatedAlphas = null)
             {
-                var symbol = kvp.Key;
-                var count = kvp.Value;
-
-                Series series;
-                if (!chart.Series.TryGetValue(symbol.Value, out series))
-                {
-                    series = new Series(symbol.Value, seriesType, "#");
-                    chart.Series.Add(series.Name, series);
-                }
-
-                sum += count;
-                series.AddPoint(Algorithm.UtcTime, count, LiveMode);
+                FrontierTimeUtc = frontierTimeUtc;
+                SecurityValues = securityValues;
+                GeneratedAlphas = generatedAlphas ?? new AlphaCollection(frontierTimeUtc, Enumerable.Empty<Algorithm.Framework.Alphas.Alpha>());
             }
-            return sum;
         }
     }
 }

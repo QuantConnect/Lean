@@ -266,6 +266,7 @@
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
+    <Compile Include="ExpectedAlphaStatistics.cs" />
     <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
     <Compile Include="Indicators\AccelerationBandsTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />

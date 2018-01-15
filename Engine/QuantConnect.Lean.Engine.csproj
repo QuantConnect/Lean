@@ -142,6 +142,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="Alphas\ChartingAlphaManagerExtension.cs" />
+    <Compile Include="Alphas\StatisticsAlphaManagerExtension.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />
     <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
