@@ -24,6 +24,15 @@ namespace QuantConnect
     /// <meta name="tag" content="using quantconnect" />
     public class BasicTemplateLibrary
     {
+        /*
+         * To use this library; add its namespace at the top of the page:
+         * using QuantConnect
+         *
+         * Then instantiate the class:
+         * var btl = new BasicTemplateLibrary();
+         * btl.Add(1,2)
+         */
+
         public int Add(int a, int b)
         {
             return a + b;
