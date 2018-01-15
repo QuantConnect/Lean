@@ -642,7 +642,7 @@ namespace QuantConnect.Algorithm
         {
             if (IsWarmingUp)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.NotAllowedDuringWarmup, $"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
+                return OrderResponse.WarmingUp(request);
             }
 
             //Most order methods use security objects; so this isn't really used.

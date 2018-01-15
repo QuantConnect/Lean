@@ -173,11 +173,6 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Cannot submit or update orders with quantity that is less than lot size
         /// </summary>
-        OrderQuantityLessThanLoteSize = -30,
-
-        /// <summary>
-        /// Operation not allowed during initialize/warmup
-        /// </summary>
-        NotAllowedDuringWarmup = -31
+        OrderQuantityLessThanLoteSize = -30
     }
 }

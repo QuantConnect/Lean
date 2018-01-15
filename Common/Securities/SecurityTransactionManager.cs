@@ -135,7 +135,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new Exception(OrderResponse.Error(request, OrderResponseErrorCode.NotAllowedDuringWarmup, $"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.").ToString());
+                throw new Exception(OrderResponse.WarmingUp(request).ToString());
             }
 
             var submit = request as SubmitOrderRequest;
