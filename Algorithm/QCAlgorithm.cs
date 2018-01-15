@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm
             SubscriptionManager = new SubscriptionManager(Settings, _timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
-            Transactions = new SecurityTransactionManager(Securities);
+            Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
@@ -562,6 +562,13 @@ namespace QuantConnect.Algorithm
                     equity.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods);
                 }
             }
+        }
+
+        /// <summary>
+        /// Called when the algorithm has completed initialization and warm up.
+        /// </summary>
+        public virtual void OnWarmupFinished()
+        {
         }
 
         /// <summary>

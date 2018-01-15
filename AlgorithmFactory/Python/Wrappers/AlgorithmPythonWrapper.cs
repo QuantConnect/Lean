@@ -919,6 +919,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Called when the algorithm has completed initialization and warm up.
+        /// </summary>
+        public void OnWarmupFinished()
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnWarmupFinished();
+            }
+        }
+
+        /// <summary>
         /// Removes the security with the specified symbol. This will cancel all
         /// open orders and then liquidate any existing holdings
         /// </summary>
