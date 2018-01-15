@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using static System.Math;
+
 namespace QuantConnect.Securities.Forex 
 {
     /// <summary>
@@ -29,5 +31,18 @@ namespace QuantConnect.Securities.Forex
             : base(security)
         {
         }
+
+        /// <summary>
+        /// Profit in pips if we closed the holdings right now including the approximate fees
+        /// </summary>
+        public decimal TotalCloseProfitPips()
+        {
+            var pipDecimal = Security.SymbolProperties.MinimumPriceVariation * 10;
+            var exchangeRate = Security.QuoteCurrency.ConversionRate;
+
+            var pipCashCurrencyValue = (pipDecimal * AbsoluteQuantity * exchangeRate);
+            return Round((TotalCloseProfit() / pipCashCurrencyValue), 1);
+        }
+        
     }
 }
