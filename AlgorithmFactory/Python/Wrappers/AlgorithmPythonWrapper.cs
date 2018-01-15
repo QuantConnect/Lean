@@ -1015,6 +1015,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetFinishedWarmingUp()
         {
             _baseAlgorithm.SetFinishedWarmingUp();
+
+            // notify the algorithm
+            OnWarmupFinished();
         }
 
         /// <summary>
