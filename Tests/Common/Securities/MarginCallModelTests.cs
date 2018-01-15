@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity(Symbols.AAPL);
             security.MarginModel = new SecurityMarginModel(leverage);
             portfolio.Securities.Add(security);
-            
+
             security.Holdings.SetHoldings(1m, quantity);
             var actual1 = security.MarginModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
             Assert.AreEqual(quantity / leverage, actual1);
@@ -166,7 +166,7 @@ namespace QuantConnect.Tests.Common.Securities
             // now the stock plummets, so we should have negative margin remaining
             time = time.AddDays(1);
             const decimal lowPrice = buyPrice/2;
-            security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice)); 
+            security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
 
             Assert.AreEqual(-quantity/2m, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
-            // Price drops again to previous low, margin call orders will be issued 
+            // Price drops again to previous low, margin call orders will be issued
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
 
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
@@ -208,7 +208,7 @@ namespace QuantConnect.Tests.Common.Securities
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
-            var transactions = new SecurityTransactionManager(securities);
+            var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(orderProcessor);
 
             var portfolio = new SecurityPortfolioManager(securities, transactions);
@@ -225,7 +225,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Cash(CashBook.AccountCurrency, 0, 1m),
                 SymbolProperties.GetDefault(CashBook.AccountCurrency));
         }
-        
+
         public class OrderProcessor : IOrderProcessor
         {
             private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();

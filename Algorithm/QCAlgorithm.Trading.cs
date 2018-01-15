@@ -640,6 +640,11 @@ namespace QuantConnect.Algorithm
         /// <returns>OrderResponse. If no error, order request is submitted.</returns>
         private OrderResponse PreOrderChecksImpl(SubmitOrderRequest request)
         {
+            if (IsWarmingUp)
+            {
+                return OrderResponse.WarmingUp(request);
+            }
+
             //Most order methods use security objects; so this isn't really used.
             // todo: Left here for now but should review
             Security security;

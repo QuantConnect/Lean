@@ -1115,6 +1115,8 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
+            algo.SetFinishedWarmingUp();
+
             //Set price to $25
             Update(msft, 25);
 

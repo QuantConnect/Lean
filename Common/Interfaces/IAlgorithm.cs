@@ -340,6 +340,11 @@ namespace QuantConnect.Interfaces
         void PostInitialize();
 
         /// <summary>
+        /// Called when the algorithm has completed initialization and warm up.
+        /// </summary>
+        void OnWarmupFinished();
+
+        /// <summary>
         /// Gets the parameter with the specified name. If a parameter
         /// with the specified name does not exist, null is returned
         /// </summary>
