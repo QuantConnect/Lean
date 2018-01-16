@@ -565,7 +565,7 @@ namespace QuantConnect.Algorithm
                         .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
                 if (config == null) return null;
 
-                return CreateHistoryRequest(security, config, start, end, resolution);
+                return CreateHistoryRequest(config, start, end, resolution);
             });
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
@@ -595,7 +595,7 @@ namespace QuantConnect.Algorithm
 
                 Resolution? res = resolution ?? security.Resolution;
                 var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
-                return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
+                return CreateHistoryRequest(config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
@@ -637,7 +637,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
-            var request = CreateHistoryRequest(security, config, start, end, resolution);
+            var request = CreateHistoryRequest(config, start, end, resolution);
             return PandasConverter.GetDataFrame(History(request).Memoize());
         }
 
