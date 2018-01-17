@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
@@ -259,6 +260,22 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var cash = new Cash(symbol, 1, 1);
             Assert.AreEqual(currencySymbol, cash.CurrencySymbol);
+        }
+
+        [Test]
+        public void CashBookWithUsdCanBeSerializedAfterEnsureCurrencyDataFeed()
+        {
+            var book = new CashBook
+            {
+                {"USD", new Cash("USD", 100, 1) },
+                {"EUR", new Cash("EUR", 100, 1.2m) }
+            };
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+
+            book.EnsureCurrencyDataFeeds(securities, subscriptions, AlwaysOpenMarketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(), MarketMap);
+
+            Assert.DoesNotThrow(() => JsonConvert.SerializeObject(book, Formatting.Indented));
         }
 
         private static TimeKeeper TimeKeeper
