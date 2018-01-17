@@ -77,10 +77,11 @@ namespace QuantConnect.Algorithm.CSharp
             /// Initializes the specified security by setting up the models
             /// </summary>
             /// <param name="security">The security to be initialized</param>
-            public override void Initialize(Security security)
+            /// <param name="cashBook">The portfolio's cashbook</param>
+            public override void Initialize(Security security, CashBook cashBook)
             {
                 // first call the default implementation
-                base.Initialize(security);
+                base.Initialize(security, cashBook);
 
                 // now apply our data normalization mode
                 security.SetDataNormalizationMode(_dataNormalizationMode);

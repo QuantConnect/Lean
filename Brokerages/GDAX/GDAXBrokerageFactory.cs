@@ -53,7 +53,8 @@ namespace QuantConnect.Brokerages.GDAX
         };
 
         /// <summary>
-        /// The brokerage model
+        /// The brokerage model. This uses the alorithm instance passed in <see cref="CreateBrokerage"/>
+        /// in order to properly populate the model with a reference to the algorithm's cashbook
         /// </summary>
         public override IBrokerageModel BrokerageModel => new GDAXBrokerageModel();
 

@@ -990,7 +990,7 @@ namespace QuantConnect.Algorithm
                     // SetSecurityInitializer must be called before SetBrokerageModel
                     var leverage = security.Leverage;
 
-                    SecurityInitializer.Initialize(security);
+                    SecurityInitializer.Initialize(security, Portfolio.CashBook);
 
                     // restore the saved leverage
                     security.SetLeverage(leverage);

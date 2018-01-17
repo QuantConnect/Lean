@@ -53,7 +53,8 @@ namespace QuantConnect.Securities
         /// Initializes the specified security by setting up the models
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        public virtual void Initialize(Security security)
+        /// <param name="cashBook">The portfolio's cashbook</param>
+        public virtual void Initialize(Security security, CashBook cashBook)
         {
             // set leverage and models
             security.SetLeverage(_brokerageModel.GetLeverage(security));
@@ -61,6 +62,7 @@ namespace QuantConnect.Securities
             security.FeeModel = _brokerageModel.GetFeeModel(security);
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
+            security.MarginModel = _brokerageModel.GetMarginModel(security, cashBook, _brokerageModel.AccountType);
 
             _securitySeeder.SeedSecurity(security);
         }

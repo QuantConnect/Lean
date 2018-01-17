@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
-        private static BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+        private static readonly BrokerageMessageEvent UpdateNotSupportedErrorMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
 
         // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
         private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
@@ -57,13 +57,12 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Margin"/></param>
-        public GDAXBrokerageModel(AccountType accountType = AccountType.Margin)
+        public GDAXBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
         {
             if (accountType == AccountType.Margin)
             {
-                new BrokerageMessageEvent(BrokerageMessageType.Warning, 0,
-                    "It is recommend to use a cash account. Margin trading is currently in pre-Alpha. Use at your own risk and please report any issues encountered.");
+                throw new Exception("The GDAX brokerage does not currently support Margin trading.");
             }
         }
 
@@ -102,7 +101,7 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = _message;
+            message = UpdateNotSupportedErrorMessage;
             return false;
         }
 
@@ -117,7 +116,7 @@ namespace QuantConnect.Brokerages
         {
             if (order.BrokerId != null && order.BrokerId.Any())
             {
-                message = _message;
+                message = UpdateNotSupportedErrorMessage;
                 return false;
             }
 

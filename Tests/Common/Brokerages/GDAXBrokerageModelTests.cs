@@ -28,13 +28,12 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture()]
     public class GDAXBrokerageModelTests
     {
-
-        GDAXBrokerageModel _unit = new GDAXBrokerageModel();
+        private readonly GDAXBrokerageModel _unit = new GDAXBrokerageModel();
 
         [Test()]
         public void GetLeverageTest()
         {
-            Assert.AreEqual(3, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
+            Assert.AreEqual(1, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
         }
 
         [Test()]
