@@ -22,20 +22,18 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
     [TestFixture()]
     public class GDAXBrokerageModelTests
     {
-
-        GDAXBrokerageModel _unit = new GDAXBrokerageModel(new CashBook());
+        private readonly GDAXBrokerageModel _unit = new GDAXBrokerageModel();
 
         [Test()]
         public void GetLeverageTest()
         {
-            Assert.AreEqual(3, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
+            Assert.AreEqual(1, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
         }
 
         [Test()]

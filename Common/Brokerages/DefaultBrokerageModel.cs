@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -50,19 +49,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
-        public virtual AccountType AccountType
-        {
-            get;
-            private set;
-        }
+        public virtual AccountType AccountType { get; }
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets
-        {
-            get { return DefaultMarketMap; }
-        }
+        public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
@@ -263,13 +255,14 @@ namespace QuantConnect.Brokerages
         /// For cash accounts, leverage = 1 is used.
         /// </summary>
         /// <param name="security">The security to get a margin model for</param>
+        /// <param name="cashBook">The portfolio's cashbook</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The margin model for this brokerage/security</returns>
-        public virtual ISecurityMarginModel GetMarginModel(Security security, AccountType accountType)
+        public virtual ISecurityMarginModel GetMarginModel(Security security, CashBook cashBook, AccountType accountType)
         {
             if (accountType == AccountType.Cash)
             {
-                return new SecurityMarginModel(1m);
+                return new CashAccountMarginModel(cashBook);
             }
 
             return new SecurityMarginModel(security.Leverage);

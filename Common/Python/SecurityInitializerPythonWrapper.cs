@@ -38,11 +38,12 @@ namespace QuantConnect.Python
         /// Initializes the specified security
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        public void Initialize(Security security)
+        /// <param name="cashBook">The portfolio's cashbook</param>
+        public void Initialize(Security security, CashBook cashBook)
         {
             using (Py.GIL())
             {
-                _model.Initialize(security);
+                _model.Initialize(security, cashBook);
             }
         }
     }

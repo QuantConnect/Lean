@@ -192,13 +192,14 @@ namespace QuantConnect.Python
         /// Gets a new margin model for the security
         /// </summary>
         /// <param name="security">The security to get a margin model for</param>
+        /// <param name="cashBook">The portfolio's cashbook</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The margin model for this brokerage/security</returns>
-        public ISecurityMarginModel GetMarginModel(Security security, AccountType accountType)
+        public ISecurityMarginModel GetMarginModel(Security security, CashBook cashBook, AccountType accountType)
         {
             using (Py.GIL())
             {
-                return _model.GetMarginModel(security, accountType);
+                return _model.GetMarginModel(security, cashBook, accountType);
             }
         }
 

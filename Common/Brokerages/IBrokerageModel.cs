@@ -125,9 +125,10 @@ namespace QuantConnect.Brokerages
         /// Gets a new margin model for the security
         /// </summary>
         /// <param name="security">The security to get a margin model for</param>
+        /// <param name="cashBook">The portfolio's cashbook</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The margin model for this brokerage/security</returns>
-        ISecurityMarginModel GetMarginModel(Security security, AccountType accountType);
+        ISecurityMarginModel GetMarginModel(Security security, CashBook cashBook, AccountType accountType);
     }
 
     /// <summary>
@@ -140,9 +141,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="brokerage">The name of the brokerage</param>
         /// <param name="accountType">The account type</param>
-        /// <param name="cashBook">The portfolio's cashbook</param>
         /// <returns>The model for the specified brokerage</returns>
-        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType, CashBook cashBook)
+        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType)
         {
             switch (brokerage)
             {
@@ -165,7 +165,7 @@ namespace QuantConnect.Brokerages
                     return new DefaultBrokerageModel(accountType);
 
                 case BrokerageName.GDAX:
-                    return new GDAXBrokerageModel(cashBook, accountType);
+                    return new GDAXBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);

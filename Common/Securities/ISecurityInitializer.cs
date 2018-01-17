@@ -25,7 +25,8 @@ namespace QuantConnect.Securities
         /// Initializes the specified security
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        void Initialize(Security security);
+        /// <param name="cashBook">The portfolio's cashbook</param>
+        void Initialize(Security security, CashBook cashBook);
     }
 
     /// <summary>
@@ -40,7 +41,7 @@ namespace QuantConnect.Securities
 
         private sealed class NullSecurityInitializer : ISecurityInitializer
         {
-            public void Initialize(Security security) { }
+            public void Initialize(Security security, CashBook cashBook) { }
         }
     }
 }

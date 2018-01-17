@@ -408,7 +408,7 @@ namespace QuantConnect.Securities
             security.AddData(configList);
 
             // invoke the security initializer
-            securityInitializer.Initialize(security);
+            securityInitializer.Initialize(security, securityPortfolioManager.CashBook);
 
             // if leverage was specified then apply to security after the initializer has run, parameters of this
             // method take precedence over the intializer

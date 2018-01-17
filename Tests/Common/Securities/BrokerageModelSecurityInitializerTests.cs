@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.AreEqual(_tradeBarSecurity.Leverage, 1.0);
 
-            _brokerageInitializer.Initialize(_tradeBarSecurity);
+            _brokerageInitializer.Initialize(_tradeBarSecurity, _algo.Portfolio.CashBook);
 
             Assert.AreEqual(_tradeBarSecurity.Leverage, 2.0);
         }
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Securities
             _algo.SetDateTime(dateForWhichDataExist);
 
             // Act
-            _brokerageInitializer.Initialize(_tradeBarSecurity);
+            _brokerageInitializer.Initialize(_tradeBarSecurity, _algo.Portfolio.CashBook);
 
             // Assert
             Assert.IsFalse(_tradeBarSecurity.Price == 0);
@@ -119,7 +119,7 @@ namespace QuantConnect.Tests.Common.Securities
             _algo.SetDateTime(dateForWhichDataExist);
 
             // Act
-            _brokerageInitializer.Initialize(_quoteBarSecurity);
+            _brokerageInitializer.Initialize(_quoteBarSecurity, _algo.Portfolio.CashBook);
 
             // Assert
             Assert.IsFalse(_quoteBarSecurity.Price == 0);
@@ -133,7 +133,7 @@ namespace QuantConnect.Tests.Common.Securities
             _algo.SetDateTime(dateForWhichDataDoesNotExist);
 
             // Act
-            _brokerageInitializer.Initialize(_tradeBarSecurity);
+            _brokerageInitializer.Initialize(_tradeBarSecurity, _algo.Portfolio.CashBook);
 
             // Assert
             Assert.IsTrue(_tradeBarSecurity.Price == 0);

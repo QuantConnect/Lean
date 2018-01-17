@@ -964,7 +964,7 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType, Portfolio.CashBook));
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
         }
 
         /// <summary>
@@ -990,7 +990,7 @@ namespace QuantConnect.Algorithm
                     // SetSecurityInitializer must be called before SetBrokerageModel
                     var leverage = security.Leverage;
 
-                    SecurityInitializer.Initialize(security);
+                    SecurityInitializer.Initialize(security, Portfolio.CashBook);
 
                     // restore the saved leverage
                     security.SetLeverage(leverage);
