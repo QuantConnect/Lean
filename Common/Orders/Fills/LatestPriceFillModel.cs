@@ -75,7 +75,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
 
-                if (tradeBar.EndTime > quoteBar.EndTime)
+                if (tradeBar != null && tradeBar.EndTime > quoteBar.EndTime)
                 {
                     // The latest pricing data came from a trade
                     return new Prices(tradeBar);
