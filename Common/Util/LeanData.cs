@@ -656,7 +656,7 @@ namespace QuantConnect.Util
                         var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[3], true);
                         var strike = decimal.Parse(parts[4]) / 10000m;
                         var expiry = DateTime.ParseExact(parts[5], DateFormat.EightCharacter, null);
-                        return Symbol.CreateOption(symbol.Underlying, Market.USA, style, right, strike, expiry);
+                        return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, style, right, strike, expiry);
                     }
                     else
                     {
@@ -664,9 +664,8 @@ namespace QuantConnect.Util
                         var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[5], true);
                         var strike = decimal.Parse(parts[6]) / 10000m;
                         var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, null);
-                        return Symbol.CreateOption(symbol.Underlying, Market.USA, style, right, strike, expiry);
+                        return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, style, right, strike, expiry);
                     }
-                    break;
 
                 case SecurityType.Future:
                     if (isHourlyOrDaily)
@@ -674,18 +673,18 @@ namespace QuantConnect.Util
                         var expiryYearMonth = DateTime.ParseExact(parts[2], DateFormat.YearMonth, null);
                         var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
                         var futureExpiry = futureExpiryFunc(expiryYearMonth);
-                        return Symbol.CreateFuture(parts[0], Market.USA, futureExpiry);
+                        return Symbol.CreateFuture(parts[0], symbol.ID.Market, futureExpiry);
                     }
                     else
                     {
                         var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
                         var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
                         var futureExpiry = futureExpiryFunc(expiryYearMonth);
-                        return Symbol.CreateFuture(parts[1], Market.USA, futureExpiry);
+                        return Symbol.CreateFuture(parts[1], symbol.ID.Market, futureExpiry);
                     }
 
                 default:
-                    throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + symbol.ID.SecurityType + " " + resolution);
+                    throw new NotImplementedException($"ReadSymbolFromZipEntry is not implemented for {symbol.ID.SecurityType} {symbol.ID.Market} {resolution}");
             }
         }
 
