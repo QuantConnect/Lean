@@ -94,13 +94,16 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
-                var info = new ProcessStartInfo
-                {
-                    UseShellExecute = false,
-                    FileName  = Config.Get("desktop-exe"),
-                    Arguments = Config.Get("desktop-http-port")
-                };
-                Process.Start(info);
+                // For the web version of the Lean Desktop Client launch the webpage rather than the application
+                var httpProtocol = Config.Get("desktop-http-protocol", "http");
+                var httpHost = Config.Get("desktop-http-host", "localhost");
+                var httpPort = Config.Get("desktop-http-port", "1234");
+                var url = string.Format("{0}://{1}:{2}", httpProtocol, httpHost, httpPort);
+
+                // Once the webserver is in place launch it here first
+
+                // Open the default webpage for the Lean Desktop website
+                Process.Start(url);
             }
 
             // if the job version doesn't match this instance version then we can't process it
