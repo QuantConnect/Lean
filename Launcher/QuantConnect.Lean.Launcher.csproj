@@ -126,6 +126,10 @@
       <Project>{ac9a142c-b485-44d7-91ff-015c22c43d05}</Project>
       <Name>QuantConnect.ToolBox</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UserInterface\QuantConnect.Views.csproj">
+      <Project>{C68BEEED-B0C0-4002-94D4-1E871133D02A}</Project>
+      <Name>QuantConnect.Views</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

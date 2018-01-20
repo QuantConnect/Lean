@@ -118,6 +118,7 @@
     <Compile Include="WinForms\LeanWinForm.Designer.cs">
       <DependentUpon>LeanWinForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="DesktopLeanManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
