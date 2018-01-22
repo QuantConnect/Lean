@@ -43,6 +43,5 @@ namespace QuantConnect.Securities.Forex
             var pipCashCurrencyValue = (pipDecimal * AbsoluteQuantity * exchangeRate);
             return Round((TotalCloseProfit() / pipCashCurrencyValue), 1);
         }
-        
     }
 }
