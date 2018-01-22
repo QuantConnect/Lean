@@ -172,50 +172,52 @@ namespace QuantConnect.Data.Custom
         /// <returns></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
-            if (_previousContent == content)
+            if (isLiveMode)
             {
-                return null;
+                if (_previousContent == content)
+                {
+                    return null;
+                }
+
+                _previousContent = content;
+
+                // clean old entries from memory
+                var clearingDate = date.Date.AddDays(-2);
+                var oldEntries = _previous.Where(kvp => kvp.Value.DisplayDate.UtcDateTime.Date < clearingDate).ToList();
+                oldEntries.ForEach(oe => _previous.Remove(oe.Key));
             }
-
-            _previousContent = content;
-
-            // clean old entries from memory
-            var clearingDate = date.Date.AddDays(-2);
-            var oldEntries = _previous.Where(kvp => kvp.Value.DisplayDate.UtcDateTime.Date < clearingDate).ToList();
-            oldEntries.ForEach(oe => _previous.Remove(oe.Key));
 
             var dailyfxList = JsonConvert.DeserializeObject<List<DailyFx>>(content, _jsonSerializerSettings);
 
-            var timestamp = DateTime.UtcNow;
             var updated = new List<DailyFx>();
+
             foreach (var dailyfx in dailyfxList)
             {
-                DailyFx previous;
-                var key = MakeKey(dailyfx);
-                if (_previous.TryGetValue(key, out previous))
-                {
-                    // if the event hasn't been updated then don't emit it
-                    if (!dailyfx.HasChangedSince(previous))
-                    {
-                        continue;
-                    }
-                }
-
-                updated.Add(dailyfx);
-                _previous[key] = dailyfx;
-
-                dailyfx.Symbol = config.Symbol;
-
                 if (isLiveMode)
                 {
+                    DailyFx previous;
+                    var key = MakeKey(dailyfx);
+                    if (_previous.TryGetValue(key, out previous))
+                    {
+                        // if the event hasn't been updated then don't emit it
+                        if (!dailyfx.HasChangedSince(previous))
+                        {
+                            continue;
+                        }
+                    }
+
+                    _previous[key] = dailyfx;
                     // Live mode set the time to now, this update just happened
-                    dailyfx.Time = timestamp;
+                    dailyfx.Time = DateTime.UtcNow;
                 }
                 else
                 {
-                    // Custom data format without settings in market hours are assumed UTC.
+                     // Custom data format without settings in market hours are assumed UTC.
                     dailyfx.Time = dailyfx.DisplayDate.Date.AddHours(dailyfx.DisplayTime.TimeOfDay.TotalHours);
                 }
+
+                dailyfx.Symbol = config.Symbol;
+                updated.Add(dailyfx);
 
                 // Assign a value to this event:
                 // Fairly meaningless between unrelated events, but meaningful with the same event over time.
@@ -232,7 +234,7 @@ namespace QuantConnect.Data.Custom
                 }
             }
 
-            return new BaseDataCollection(timestamp, config.Symbol, updated);
+            return new BaseDataCollection(dailyfxList.Last().Time, config.Symbol, updated);
         }
 
         /// <summary>
@@ -250,30 +252,26 @@ namespace QuantConnect.Data.Custom
         /// <returns></returns>
         private string GetQuarter(DateTime date)
         {
-            var start = date.ToString("yyyy", CultureInfo.InvariantCulture);
-            var end = start;
+            var start = $"{date.AddDays(-1):yyyyMMdd}";
+            var end = $"{date:yyyy}";
 
             if (date.Month < 4)
             {
-                start += "0101";
-                end += "03312359";
+                end += "0401";
             }
             else if (date.Month < 7)
             {
-                start += "0401";
-                end += "06302359";
+                end += "0701";
             }
             else if (date.Month < 10)
             {
-                start += "0701";
-                end += "09302359";
+                end += "1001";
             }
             else
             {
-                start += "1001";
-                end += "12312359";
+                end = $"{date.Year + 1}0101";
             }
-            return string.Format("&startdate={0}&enddate={1}", start, end);
+            return $"&startdate={start}&enddate={end}";
         }
 
         /// <summary>
@@ -282,7 +280,7 @@ namespace QuantConnect.Data.Custom
         /// <returns></returns>
         public override string ToString()
         {
-            return $"DailyFx: {EndTime} [{EventDateTime.ToString("u")} {Title} {Currency} {Importance} {Meaning} {Actual}]";
+            return $"DailyFx: [{EventDateTime.ToString("u")} {Title} {Currency} {Importance} {Meaning} {Actual}]";
         }
 
         /// <summary>
