@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine
                 if (CurrentTimeStepElapsed > _timeLoopMaximum)
                 {
                     return ("Algorithm took longer than " +
-                            Config.GetDouble("algorithm-manager-time-loop-maximum", 20) +
+                            _timeLoopMaximum.TotalMinutes.ToString() +
                             " minutes on a single time loop.");
                 }
 
