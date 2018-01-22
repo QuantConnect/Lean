@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -124,7 +124,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                                 if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
                                 {
-                                    // do nothing for now. Later might add continuous contract symbol. 
+                                    // do nothing for now. Later might add continuous contract symbol.
                                     return;
                                 }
 
@@ -420,7 +420,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     _prices.TryGetValue(e.Symbol, out referencePrice);
 
                     var symbol = GetLeanSymbol(e.Symbol);
-                    var split = new Split(symbol, FeedTime, (decimal)referencePrice, (decimal)e.SplitFactor1);
+                    var split = new Split(symbol, FeedTime, (decimal)referencePrice, (decimal)e.SplitFactor1, SplitType.SplitOccurred);
                     _dataQueue.Add(split);
                 }
             }
@@ -551,7 +551,7 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Method returns a collection of Symbols that are available at the data source. 
+        /// Method returns a collection of Symbols that are available at the data source.
         /// </summary>
         /// <param name="lookupName">String representing the name to lookup</param>
         /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
@@ -574,7 +574,7 @@ namespace QuantConnect.ToolBox.IQFeed
             private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
             /// <summary>
-            /// ... 
+            /// ...
             /// </summary>
             public HistoryPort(IQFeedDataQueueUniverseProvider symbolUniverse)
                 : base(80)
@@ -605,7 +605,7 @@ namespace QuantConnect.ToolBox.IQFeed
             /// </summary>
             public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
             {
-                // skipping universe and canonical symbols 
+                // skipping universe and canonical symbols
                 if (!CanHandle(request.Symbol) ||
                     (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
                     (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
@@ -680,7 +680,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 return lookupType + id.ToString("0000000");
             }
 
-            
+
             /// <summary>
             /// Method called when a new Lookup event is fired
             /// </summary>
@@ -728,7 +728,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     current.Add(data);
                 }
             }
-            
+
             /// <summary>
             /// Transform received data into BaseData object
             /// </summary>
