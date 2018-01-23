@@ -238,7 +238,7 @@ namespace QuantConnect.Securities
                     };
 
                     // we continue with this call for underlying
-                    return CanExecuteOrder(portfolio, underlying, newOrder);
+                    return underlying.MarginModel.CanExecuteOrder(portfolio, underlying, newOrder);
                 }
 
                 return true;
@@ -261,6 +261,73 @@ namespace QuantConnect.Securities
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get the maximum market order quantity to obtain a position with a given value in account currency
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The security to be traded</param>
+        /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
+        /// <returns>Returns the maximum allowed order quantity</returns>
+        public decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
+        {
+            // if targeting zero, simply return the negative of the quantity
+            if (targetPortfolioValue == 0) return -security.Holdings.Quantity;
+
+            var currentHoldingsValue = security.Holdings.HoldingsValue;
+
+            // remove directionality, we'll work in the land of absolutes
+            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
+            var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
+
+            // determine the unit price in terms of the account currency
+            var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security);
+            if (unitPrice == 0) return 0;
+
+            // calculate the total margin available
+            var marginRemaining = GetMarginRemaining(portfolio, security, direction);
+            if (marginRemaining <= 0) return 0;
+
+            // continue iterating while we do not have enough margin for the order
+            decimal marginRequired;
+            decimal orderValue;
+            decimal orderFees;
+            var feeToPriceRatio = 0m;
+
+            // compute the initial order quantity
+            var orderQuantity = targetOrderValue / unitPrice;
+
+            // rounding off Order Quantity to the nearest multiple of Lot Size
+            orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
+
+            do
+            {
+                // reduce order quantity by feeToPriceRatio, since it is faster than by lot size
+                // if it becomes nonpositive, return zero
+                orderQuantity -= feeToPriceRatio;
+                if (orderQuantity <= 0) return 0;
+
+                // generate the order
+                var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
+                orderValue = order.GetValue(security);
+                orderFees = security.FeeModel.GetOrderFee(security, order);
+
+                // find an incremental delta value for the next iteration step
+                feeToPriceRatio = orderFees / unitPrice;
+                feeToPriceRatio -= feeToPriceRatio % security.SymbolProperties.LotSize;
+                if (feeToPriceRatio < security.SymbolProperties.LotSize)
+                {
+                    feeToPriceRatio = security.SymbolProperties.LotSize;
+                }
+
+                // calculate the margin required for the order
+                marginRequired = GetInitialMarginRequiredForOrder(security, order);
+
+            } while (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue);
+
+            // add directionality back in
+            return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
         }
     }
 }

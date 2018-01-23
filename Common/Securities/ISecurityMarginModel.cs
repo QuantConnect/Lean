@@ -81,5 +81,14 @@ namespace QuantConnect.Securities
         /// <param name="order">The order to be checked</param>
         /// <returns>Returns true if the order can be executed, false otherwise</returns>
         bool CanExecuteOrder(SecurityPortfolioManager portfolio, Security security, Order order);
+
+        /// <summary>
+        /// Get the maximum market order quantity to obtain a position with a given value in account currency
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The security to be traded</param>
+        /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
+        /// <returns>Returns the maximum allowed market order quantity</returns>
+        decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue);
     }
 }
