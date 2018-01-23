@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -196,6 +197,70 @@ namespace QuantConnect.Securities
         public virtual decimal GetMaintenanceMarginRequirement(Security security)
         {
             return _maintenanceMarginRequirement;
+        }
+
+        /// <summary>
+        /// Check if there is sufficient capital to execute this order.
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The security to be traded</param>
+        /// <param name="order">The order to be checked</param>
+        /// <returns>Returns true if the order can be executed, false otherwise</returns>
+        public bool CanExecuteOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        {
+            // short circuit the div 0 case
+            if (order.Quantity == 0) return true;
+
+            var ticket = portfolio.Transactions.GetOrderTicket(order.Id);
+            if (ticket == null)
+            {
+                Log.Error($"SecurityMarginModel.CanExecuteOrder(): Null order ticket for id: {order.Id}");
+                return false;
+            }
+
+            if (order.Type == OrderType.OptionExercise)
+            {
+                // for option assignment and exercise orders we look into the requirements to process the underlying security transaction
+                var option = (Option.Option)security;
+                var underlying = option.Underlying;
+
+                if (option.IsAutoExercised(underlying.Close))
+                {
+                    var quantity = option.GetExerciseQuantity(order.Quantity);
+
+                    var newOrder = new LimitOrder
+                    {
+                        Id = order.Id,
+                        Time = order.Time,
+                        LimitPrice = option.StrikePrice,
+                        Symbol = underlying.Symbol,
+                        Quantity = option.Symbol.ID.OptionRight == OptionRight.Call ? quantity : -quantity
+                    };
+
+                    // we continue with this call for underlying
+                    return CanExecuteOrder(portfolio, underlying, newOrder);
+                }
+
+                return true;
+            }
+
+            // When order only reduces or closes a security position, capital is always sufficient
+            if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity)) return true;
+
+            var freeMargin = GetMarginRemaining(portfolio, security, order.Direction);
+            var initialMarginRequiredForOrder = GetInitialMarginRequiredForOrder(security, order);
+
+            // pro-rate the initial margin required for order based on how much has already been filled
+            var percentUnfilled = (Math.Abs(order.Quantity) - Math.Abs(ticket.QuantityFilled)) / Math.Abs(order.Quantity);
+            var initialMarginRequiredForRemainderOfOrder = percentUnfilled * initialMarginRequiredForOrder;
+
+            if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
+            {
+                Log.Error($"SecurityMarginModel.CanExecuteOrder(): Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}");
+                return false;
+            }
+
+            return true;
         }
     }
 }

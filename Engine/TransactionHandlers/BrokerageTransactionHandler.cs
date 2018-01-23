@@ -688,7 +688,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             bool sufficientCapitalForOrder;
             try
             {
-                sufficientCapitalForOrder = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+                sufficientCapitalForOrder = security.MarginModel.CanExecuteOrder(_algorithm.Portfolio, security, order);
             }
             catch (Exception err)
             {

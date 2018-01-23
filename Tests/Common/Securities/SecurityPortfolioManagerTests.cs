@@ -266,7 +266,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) {Price = buyPrice};
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            var sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsFalse(sufficientCapital);
 
             // now the stock doubles, so we should have margin remaining
@@ -281,7 +281,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var anotherOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, anotherOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, anotherOrder);
             Assert.IsTrue(sufficientCapital);
 
             // now the stock plummets, so we should have negative margin remaining
@@ -394,11 +394,12 @@ namespace QuantConnect.Tests.Common.Securities
             var request = new SubmitOrderRequest(OrderType.Market, acceptedOrder.SecurityType, acceptedOrder.Symbol, acceptedOrder.Quantity, 0, 0, acceptedOrder.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, acceptedOrder);
+            var security = securities[Symbols.AAPL];
+            var sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, acceptedOrder);
             Assert.IsTrue(sufficientCapital);
 
             var rejectedOrder = new MarketOrder(Symbols.AAPL, 102, DateTime.Now) { Price = 100 };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, rejectedOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, rejectedOrder);
             Assert.IsFalse(sufficientCapital);
         }
 
@@ -651,12 +652,12 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a new buy order
             var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = buyPrice };
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            var sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsFalse(sufficientCapital);
 
             // we should be able to place sell to zero
             newOrder = new MarketOrder(Symbols.AAPL, -quantity, time.AddSeconds(1)) { Price = buyPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsTrue(sufficientCapital);
 
             // now the stock plummets, so we should have negative margin remaining
@@ -666,12 +667,12 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we still should be able to place sell to zero
             newOrder = new MarketOrder(Symbols.AAPL, -quantity, time.AddSeconds(1)) { Price = lowPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsTrue(sufficientCapital);
 
             // we shouldn't be able to place sell to short
             newOrder = new MarketOrder(Symbols.AAPL, -quantity - 1, time.AddSeconds(1)) { Price = lowPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsFalse(sufficientCapital);
         }
 
@@ -708,12 +709,12 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a new short order
             var newOrder = new MarketOrder(Symbols.AAPL, -1, time.AddSeconds(1)) { Price = sellPrice };
-            var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            var sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsFalse(sufficientCapital);
 
             // we should be able to place cover to zero
             newOrder = new MarketOrder(Symbols.AAPL, quantity, time.AddSeconds(1)) { Price = sellPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsTrue(sufficientCapital);
 
             // now the stock doubles, so we should have negative margin remaining
@@ -723,12 +724,12 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we still shouldn be able to place cover to zero
             newOrder = new MarketOrder(Symbols.AAPL, quantity, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsTrue(sufficientCapital);
 
             // we shouldn't be able to place cover to long
             newOrder = new MarketOrder(Symbols.AAPL, quantity + 1, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsFalse(sufficientCapital);
         }
 
@@ -1231,7 +1232,7 @@ namespace QuantConnect.Tests.Common.Securities
             var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
+            bool sufficientCapital = option.MarginModel.CanExecuteOrder(portfolio, option, order);
             Assert.IsFalse(sufficientCapital);
 
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 150 });
@@ -1241,7 +1242,7 @@ namespace QuantConnect.Tests.Common.Securities
             request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
+            sufficientCapital = option.MarginModel.CanExecuteOrder(portfolio, option, order);
             Assert.IsTrue(sufficientCapital);
         }
 
@@ -1273,7 +1274,7 @@ namespace QuantConnect.Tests.Common.Securities
             var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
+            bool sufficientCapital = option.MarginModel.CanExecuteOrder(portfolio, option, order);
             Assert.IsFalse(sufficientCapital);
 
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 150 });
@@ -1283,7 +1284,7 @@ namespace QuantConnect.Tests.Common.Securities
             request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
+            sufficientCapital = option.MarginModel.CanExecuteOrder(portfolio, option, order);
             Assert.IsTrue(sufficientCapital);
         }
 

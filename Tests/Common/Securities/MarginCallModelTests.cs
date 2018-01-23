@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) {Price = buyPrice};
-            bool sufficientCapital = portfolio.Transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
+            bool sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, newOrder);
             Assert.IsFalse(sufficientCapital);
 
             // now the stock doubles, so we should have margin remaining
@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var anotherOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = portfolio.Transactions.GetSufficientCapitalForOrder(portfolio, anotherOrder);
+            sufficientCapital = security.MarginModel.CanExecuteOrder(portfolio, security, anotherOrder);
             Assert.IsTrue(sufficientCapital);
 
             // now the stock plummets, so we should have negative margin remaining
