@@ -26,7 +26,7 @@ namespace QuantConnect.Securities
     /// Options are not traded on margin. Margin requirements exist though for those portfolios with short positions.
     /// Current implementation covers only single long/naked short option positions.
     /// </remarks>
-    public class OptionMarginModel : ISecurityMarginModel
+    public class OptionMarginModel : SecurityMarginModel
     {
         // initial margin
         private const decimal OptionMarginRequirement = 1;
@@ -38,7 +38,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
         /// <returns>The current leverage in the security</returns>
-        public virtual decimal GetLeverage(Security security)
+        public override decimal GetLeverage(Security security)
         {
             // Options are not traded on margin
             return 1;
@@ -49,7 +49,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security"></param>
         /// <param name="leverage">The new leverage</param>
-        public virtual void SetLeverage(Security security, decimal leverage)
+        public override void SetLeverage(Security security, decimal leverage)
         {
             // Options are leveraged products and different leverage cannot be set by user.
             throw new InvalidOperationException("Options are leveraged products and different leverage cannot be set by user");
@@ -61,7 +61,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to compute initial margin for</param>
         /// <param name="order">The order to be executed</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public virtual decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+        public override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
@@ -77,7 +77,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
-        public virtual decimal GetMaintenanceMargin(Security security)
+        public override decimal GetMaintenanceMargin(Security security)
         {
             return security.Holdings.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
         }
@@ -89,7 +89,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The margin available for the trade</returns>
-        public virtual decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        public override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             var holdings = security.Holdings;
 
@@ -140,7 +140,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        public decimal GetInitialMarginRequirement(Security security)
+        public override decimal GetInitialMarginRequirement(Security security)
         {
             return GetInitialMarginRequirement(security, security.Holdings.HoldingsValue);
         }
@@ -148,7 +148,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        public decimal GetMaintenanceMarginRequirement(Security security)
+        public override decimal GetMaintenanceMarginRequirement(Security security)
         {
             return GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsValue);
         }
@@ -156,7 +156,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        protected decimal GetInitialMarginRequirement(Security security, decimal holding)
+        private decimal GetInitialMarginRequirement(Security security, decimal holding)
         {
             return GetMarginRequirement(security, holding);
         }
@@ -164,7 +164,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        protected decimal GetMaintenanceMarginRequirement(Security security, decimal holding)
+        private decimal GetMaintenanceMarginRequirement(Security security, decimal holding)
         {
             return GetMarginRequirement(security, holding);
         }
