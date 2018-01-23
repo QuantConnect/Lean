@@ -180,8 +180,9 @@ namespace QuantConnect.Securities
         /// Cancels all open orders for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol whose orders are to be cancelled</param>
+        /// <param name="tag">Custom order tag</param>
         /// <returns>List containing the cancelled order tickets</returns>
-        public List<OrderTicket> CancelOpenOrders(Symbol symbol)
+        public List<OrderTicket> CancelOpenOrders(Symbol symbol, string tag = null)
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
@@ -191,7 +192,7 @@ namespace QuantConnect.Securities
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOrderTickets(x => x.Symbol == symbol && x.Status.IsOpen()))
             {
-                ticket.Cancel();
+                ticket.Cancel(tag);
                 cancelledOrders.Add(ticket);
             }
             return cancelledOrders;
