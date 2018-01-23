@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -143,7 +143,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned 
+        /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
         /// an exercise notice on one contract, this unit of trade, usually 100 shares of the underlying security, changes hands.
         /// </summary>
         public int ContractUnitOfTrade
@@ -157,7 +157,7 @@ namespace QuantConnect.Securities.Option
                 _symbolProperties.SetContractUnitOfTrade(value);
             }
         }
-        
+
         /// <summary>
         /// The contract multiplier for the option security
         /// </summary>
@@ -174,7 +174,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Aggregate exercise amount or aggregate contract value. It is the total amount of cash one will pay (or receive) for the shares of the 
+        /// Aggregate exercise amount or aggregate contract value. It is the total amount of cash one will pay (or receive) for the shares of the
         /// underlying stock if he/she decides to exercise (or is assigned an exercise notice). This amount is not the premium paid or received for an equity option.
         /// </summary>
         public decimal GetAggregateExerciseAmount()
@@ -183,8 +183,8 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Returns the actual number of the underlying shares that are going to change hands on exercise. For instance, after reverse split 
-        /// we may have 1 option contract with multiplier of 100 with right to buy/sell only 50 shares of underlying stock. 
+        /// Returns the actual number of the underlying shares that are going to change hands on exercise. For instance, after reverse split
+        /// we may have 1 option contract with multiplier of 100 with right to buy/sell only 50 shares of underlying stock.
         /// </summary>
         /// <returns></returns>
         public decimal GetExerciseQuantity(decimal quantity)
@@ -197,7 +197,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public bool IsAutoExercised(decimal underlyingPrice)
         {
-            return GetIntrinsicValue(underlyingPrice) >= 0.01m; 
+            return GetIntrinsicValue(underlyingPrice) >= 0.01m;
         }
 
         /// <summary>
@@ -205,8 +205,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public decimal GetIntrinsicValue(decimal underlyingPrice)
         {
-            return Math.Max(0.0m, GetPayOff(underlyingPrice)); 
-        } 
+            return Math.Max(0.0m, GetPayOff(underlyingPrice));
+        }
         /// <summary>
         /// Option payoff function at expiration time
         /// </summary>
@@ -216,13 +216,13 @@ namespace QuantConnect.Securities.Option
         {
             return Right == OptionRight.Call ? underlyingPrice - StrikePrice : StrikePrice - underlyingPrice;
         }
-        
+
         /// <summary>
         /// Specifies if option contract has physical or cash settlement on exercise
         /// </summary>
         public SettlementType ExerciseSettlement
         {
-            get; set; 
+            get; set;
         }
 
         /// <summary>
