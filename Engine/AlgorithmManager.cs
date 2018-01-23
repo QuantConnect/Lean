@@ -147,6 +147,7 @@ namespace QuantConnect.Lean.Engine
             var nextSettlementScanTime = DateTime.MinValue;
 
             var delistings = new List<Delisting>();
+            var splitWarnings = new List<Split>();
 
             //Initialize Properties:
             _algorithmId = job.AlgorithmId;
@@ -339,6 +340,9 @@ namespace QuantConnect.Lean.Engine
 
                 // process end of day delistings
                 ProcessDelistedSymbols(algorithm, delistings);
+
+                // process split warnings for options
+                ProcessSplitSymbols(algorithm, splitWarnings);
 
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
@@ -545,6 +549,9 @@ namespace QuantConnect.Lean.Engine
 
                 // run the delisting logic after firing delisting events
                 HandleDelistedSymbols(algorithm, timeSlice.Slice.Delistings, delistings);
+
+                // run split logic after firing split events
+                HandleSplitSymbols(timeSlice.Slice.Splits, splitWarnings);
 
                 //After we've fired all other events in this second, fire the pricing events:
                 try
@@ -940,6 +947,7 @@ namespace QuantConnect.Lean.Engine
                 }
             }
         }
+
         /// <summary>
         /// Performs actual delisting of the contracts in delistings collection
         /// </summary>
@@ -989,6 +997,88 @@ namespace QuantConnect.Lean.Engine
                 algorithm.Transactions.ProcessRequest(request);
 
                 delistings.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// Keeps track of split warnings so we can later liquidate option contracts
+        /// </summary>
+        private static void HandleSplitSymbols(Splits newSplits, List<Split> splitWarnings)
+        {
+            foreach (var split in newSplits.Values)
+            {
+                if (split.Type != SplitType.Warning)
+                {
+                    Log.Trace($"AlgorithmManager.Run() Security split occurred: {split}");
+                    continue;
+                }
+
+                Log.Trace($"AlgorithmManager.Run() Security split warning: {split}");
+
+                if (!splitWarnings.Any(x => x.Symbol == split.Symbol && x.Type == SplitType.Warning))
+                {
+                    splitWarnings.Add(split);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Liquidate option contact holdings who's underlying security has split
+        /// </summary>
+        private static void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings)
+        {
+            // NOTE: This method assumes option contracts have the same core trading hours as their underlying contract
+            //       This is a small performance optimization to prevent scanning every contract on every time step,
+            //       instead we scan just the underlyings, thereby reducing the time footprint of this methods by a factor
+            //       of N, the number of derivative subscriptions
+            for (int i = splitWarnings.Count - 1; i >= 0; i--)
+            {
+                var split = splitWarnings[i];
+                var security = algorithm.Securities[split.Symbol];
+
+                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
+
+                // determine the latest possible time we can submit a MOC order
+                var highestResolutionSubscription = security.Subscriptions.OrderBy(sub => sub.Resolution).First();
+                var latestMarketOnCloseTimeRoundedDownByResolution = nextMarketClose.Subtract(MarketOnCloseOrder.DefaultSubmissionTimeBuffer)
+                    .RoundDownInTimeZone(security.Resolution.ToTimeSpan(), security.Exchange.TimeZone, highestResolutionSubscription.DataTimeZone);
+
+                // we don't need to do anyhing until the market closes
+                if (security.LocalTime < latestMarketOnCloseTimeRoundedDownByResolution) continue;
+
+                // fetch all option derivatives of the underlying with holdings (excluding the canonical security)
+                var derivatives = algorithm.Securities.Where(kvp => kvp.Key.HasUnderlying &&
+                    kvp.Key.SecurityType == SecurityType.Option &&
+                    kvp.Key.Underlying == security.Symbol &&
+                    !kvp.Key.Underlying.IsCanonical() &&
+                    kvp.Value.HoldStock
+                );
+
+                foreach (var kvp in derivatives)
+                {
+                    var optionContractSymbol = kvp.Key;
+                    var optionContractSecurity = (Option) kvp.Value;
+
+                    // close any open orders
+                    algorithm.Transactions.CancelOpenOrders(optionContractSymbol, "Canceled due to impending split. Separate MarketOnClose order submitted to liquidate position.");
+
+                    var request = new SubmitOrderRequest(OrderType.MarketOnClose, optionContractSecurity.Type, optionContractSymbol,
+                        -optionContractSecurity.Holdings.Quantity, 0, 0, algorithm.UtcTime,
+                        "Liquidated due to impending split. Option splits are not currently supported."
+                    );
+
+                    // send MOC order to liquidate option contract holdings
+                    algorithm.Transactions.AddOrder(request);
+
+                    // mark option contract as not tradable
+                    optionContractSecurity.IsTradable = false;
+
+                    algorithm.Debug($"MarktetOnClose order submitted for option contract '{optionContractSymbol}' due to impending {split.Symbol.Value} split event. "
+                        + "Option splits are not currently supported.");
+                }
+
+                // remove the warning from out list
+                splitWarnings.RemoveAt(i);
             }
         }
 
