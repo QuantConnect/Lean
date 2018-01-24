@@ -108,7 +108,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to compute initial margin for</param>
         /// <param name="order">The order to be executed</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public virtual decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+        protected virtual decimal GetInitialMarginRequiredForOrder(Security security, Order order)
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
@@ -186,7 +186,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        public virtual decimal GetInitialMarginRequirement(Security security)
+        protected virtual decimal GetInitialMarginRequirement(Security security)
         {
             return _initialMarginRequirement;
         }

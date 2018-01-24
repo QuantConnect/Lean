@@ -28,6 +28,17 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class MarginCallModelTests
     {
+        // Test class to enable calling protected methods
+        public class TestSecurityMarginModel : SecurityMarginModel
+        {
+            public TestSecurityMarginModel(decimal leverage) : base(leverage) {}
+
+            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            {
+                return base.GetInitialMarginRequiredForOrder(security, order);
+            }
+        }
+
         [Test]
         public void InitializationTest()
         {
@@ -60,9 +71,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetInitialMarginRequiredForOrderTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(2);
+            var marginModel = new TestSecurityMarginModel(2);
+            security.MarginModel = marginModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
-            var actual = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+            var actual = marginModel.GetInitialMarginRequiredForOrder(security, order);
 
             Assert.AreEqual(0, actual);
         }

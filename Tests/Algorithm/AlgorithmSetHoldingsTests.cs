@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,6 +28,17 @@ namespace QuantConnect.Tests.Algorithm
     [TestFixture]
     public class AlgorithmSetHoldingsTests
     {
+        // Test class to enable calling protected methods
+        public class TestSecurityMarginModel : SecurityMarginModel
+        {
+            public TestSecurityMarginModel(decimal leverage) : base(leverage) { }
+
+            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            {
+                return base.GetInitialMarginRequiredForOrder(security, order);
+            }
+        }
+
         public enum Position { Zero = 0, Long = 1, Short = -1 }
         public enum FeeType { None, Small, Large, InteractiveBrokers }
         public enum PriceMovement { Static, RisingSmall, FallingSmall, RisingLarge, FallingLarge }
@@ -126,6 +137,9 @@ namespace QuantConnect.Tests.Algorithm
             security.FeeModel = _feeModels[feeType];
             security.SetLeverage(leverage);
 
+            var marginModel = new TestSecurityMarginModel(leverage);
+            security.MarginModel = marginModel;
+
             algorithm.SetCash(Cash);
 
             Update(security, BasePrice);
@@ -145,7 +159,7 @@ namespace QuantConnect.Tests.Algorithm
                 orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
                 order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
                 freeMargin = algorithm.Portfolio.GetMarginRemaining(_symbol, orderDirection);
-                requiredMargin = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+                requiredMargin = marginModel.GetInitialMarginRequiredForOrder(security, order);
 
                 //Console.WriteLine("Current price: " + security.Price);
                 //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -188,7 +202,7 @@ namespace QuantConnect.Tests.Algorithm
             orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
             order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
             freeMargin = algorithm.Portfolio.GetMarginRemaining(_symbol, orderDirection);
-            requiredMargin = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+            requiredMargin = marginModel.GetInitialMarginRequiredForOrder(security, order);
 
             //Console.WriteLine("Current price: " + security.Price);
             //Console.WriteLine("Target percentage: " + targetPercentage);

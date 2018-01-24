@@ -40,14 +40,6 @@ namespace QuantConnect.Securities
         void SetLeverage(Security security, decimal leverage);
 
         /// <summary>
-        /// Gets the total margin required to execute the specified order
-        /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order">The order to be executed</param>
-        /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        decimal GetInitialMarginRequiredForOrder(Security security, Order order);
-
-        /// <summary>
         /// Gets the margin currently alloted to the specified holding
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
@@ -62,11 +54,6 @@ namespace QuantConnect.Securities
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The margin available for the trade</returns>
         decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction);
-
-        /// <summary>
-        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
-        /// </summary>
-        decimal GetInitialMarginRequirement(Security security);
 
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
