@@ -15,9 +15,8 @@
 
 using System;
 using QuantConnect.Orders;
-using QuantConnect.Securities.Option;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Securities.Option
 {
     /// <summary>
     /// Represents a simple option margining model.
@@ -26,7 +25,7 @@ namespace QuantConnect.Securities
     /// Options are not traded on margin. Margin requirements exist though for those portfolios with short positions.
     /// Current implementation covers only single long/naked short option positions.
     /// </remarks>
-    public class OptionMarginModel : SecurityMarginModel
+    public class OptionMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
     {
         // initial margin
         private const decimal OptionMarginRequirement = 1;
@@ -177,7 +176,7 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         private decimal GetMarginRequirement(Security security, decimal value)
         {
-            var option = (Option.Option) security;
+            var option = (Option) security;
 
             if (value == 0m ||
                 option.Close == 0m ||

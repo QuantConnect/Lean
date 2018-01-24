@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.Crypto
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(50m),
+                new SecurityMarginBuyingPowerModel(50m),
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel()
                 )
@@ -79,7 +79,7 @@ namespace QuantConnect.Securities.Crypto
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(50m),
+                new SecurityMarginBuyingPowerModel(50m),
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel()
                 )

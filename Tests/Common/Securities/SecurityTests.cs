@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNotNull(security.SettlementModel);
             Assert.IsInstanceOf<ImmediateSettlementModel>(security.SettlementModel);
             Assert.IsNotNull(security.MarginModel);
-            Assert.IsInstanceOf<SecurityMarginModel>(security.MarginModel);
+            Assert.IsInstanceOf<SecurityMarginBuyingPowerModel>(security.MarginModel);
             Assert.IsNotNull(security.DataFilter);
             Assert.IsInstanceOf<SecurityDataFilter>(security.DataFilter);
         }

@@ -231,7 +231,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the margin model used for this security
         /// </summary>
-        public ISecurityMarginModel MarginModel
+        public IBuyingPowerModel MarginModel
         {
             get;
             set;
@@ -296,7 +296,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(1m),
+                new SecurityMarginBuyingPowerModel(1m),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel())
         {
@@ -317,7 +317,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(1m),
+                new SecurityMarginBuyingPowerModel(1m),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel()
                 )
@@ -338,7 +338,7 @@ namespace QuantConnect.Securities
             ISlippageModel slippageModel,
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
-            ISecurityMarginModel marginModel,
+            IBuyingPowerModel marginModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel
             )
@@ -389,7 +389,7 @@ namespace QuantConnect.Securities
             ISlippageModel slippageModel,
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
-            ISecurityMarginModel marginModel,
+            IBuyingPowerModel marginModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel
             )

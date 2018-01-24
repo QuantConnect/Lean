@@ -29,9 +29,9 @@ namespace QuantConnect.Tests.Common.Securities
     public class MarginCallModelTests
     {
         // Test class to enable calling protected methods
-        public class TestSecurityMarginModel : SecurityMarginModel
+        public class TestSecurityMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
         {
-            public TestSecurityMarginModel(decimal leverage) : base(leverage) {}
+            public TestSecurityMarginBuyingPowerModel(decimal leverage) : base(leverage) {}
 
             public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
             {
@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal actual = 2;
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(actual);
+            security.MarginModel = new SecurityMarginBuyingPowerModel(actual);
             var expected = security.Leverage;
 
             Assert.AreEqual(expected, actual);
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetAndGetLeverageTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(2);
+            security.MarginModel = new SecurityMarginBuyingPowerModel(2);
 
             const decimal actual = 50;
             security.SetLeverage(actual);
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetInitialMarginRequiredForOrderTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            var marginModel = new TestSecurityMarginModel(2);
+            var marginModel = new TestSecurityMarginBuyingPowerModel(2);
             security.MarginModel = marginModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
             var actual = marginModel.GetInitialMarginRequiredForOrder(security, order);
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expected = quantity / leverage;
 
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(leverage);
+            security.MarginModel = new SecurityMarginBuyingPowerModel(leverage);
             security.Holdings.SetHoldings(1m, quantity);
             var actual = security.MarginModel.GetMaintenanceMargin(security);
 
@@ -104,7 +104,8 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.MarginCallModel = MarginCallModel.Null;
 
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(leverage);
+            var marginModel = new TestSecurityMarginBuyingPowerModel(leverage);
+            security.MarginModel = marginModel;
             portfolio.Securities.Add(security);
 
             security.Holdings.SetHoldings(1m, quantity);

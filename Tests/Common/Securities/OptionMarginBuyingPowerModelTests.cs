@@ -18,23 +18,22 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
 
-namespace QuantConnect.Tests.Common.Margin
+namespace QuantConnect.Tests.Common.Securities
 {
     // The tests have been verified using the CBOE Margin Calculator
     // http://www.cboe.com/trading-tools/calculators/margin-calculator
 
     [TestFixture]
-    public class OptionMarginModelTests
+    public class OptionMarginBuyingPowerModelTests
     {
         [Test]
         public void MarginModelInitializationTests()
         {
             var tz = TimeZones.NewYork;
             var option = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // we test that options dont have leverage (100%) and it cannot be changed
             Assert.AreEqual(1m, marginModel.GetLeverage(option));
@@ -49,7 +48,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPrice = 200m;
             var tz = TimeZones.NewYork;
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
             var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
@@ -62,7 +61,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(1.5m, 2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // we expect long positions to be 100% charged.
             Assert.AreEqual(optionPut.Holdings.AbsoluteHoldingsCost, marginModel.GetMaintenanceMargin(optionPut));
@@ -76,7 +75,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPrice = 196m;
             var tz = TimeZones.NewYork;
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
             var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
@@ -84,7 +83,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
@@ -98,7 +97,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPrice = 180m;
             var tz = TimeZones.NewYork;
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
             var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
@@ -106,7 +105,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 180 - (192 - 180)) = 7600
@@ -120,7 +119,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPrice = 182m;
             var tz = TimeZones.NewYork;
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
             var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
@@ -128,7 +127,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(price, -2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 182) = 10080
@@ -142,7 +141,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPrice = 196m;
             var tz = TimeZones.NewYork;
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
             var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
@@ -150,7 +149,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196 - (196 - 192)) = 9840
@@ -164,7 +163,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPrice = 200m;
 
             var tz = TimeZones.NewYork;
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
             var optionPutSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 207m, new DateTime(2015, 02, 27));
@@ -173,7 +172,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(price, -2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (0.18 + 0.2 * 200) = 8036
@@ -189,7 +188,7 @@ namespace QuantConnect.Tests.Common.Margin
             const decimal underlyingPriceEnd = 200m;
 
             var tz = TimeZones.NewYork;
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPriceStart });
 
             var optionPutSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 207m, new DateTime(2015, 02, 27));
@@ -198,7 +197,7 @@ namespace QuantConnect.Tests.Common.Margin
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(optionPriceStart, -2);
 
-            var marginModel = new OptionMarginModel();
+            var marginModel = new OptionMarginBuyingPowerModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (4.68 + 0.2 * 192) = 8616

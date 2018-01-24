@@ -15,17 +15,17 @@
 
 using System;
 using System.Globalization;
-using QuantConnect.Orders;
-using QuantConnect.Logging;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Securities.Future
 {
     /// <summary>
     /// Represents a simple margining model for margining futures. Margin file contains Initial and Maintenance margins
     /// </summary>
-    public class FutureMarginModel : SecurityMarginModel
+    public class FutureMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
     {
         private static readonly object DataFolderSymbolLock = new object();
 

@@ -18,9 +18,9 @@ using QuantConnect.Orders;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents a security's model of margining
+    /// Represents a security's model of buying power
     /// </summary>
-    public interface ISecurityMarginModel
+    public interface IBuyingPowerModel
     {
         /// <summary>
         /// Gets the current leverage of the security

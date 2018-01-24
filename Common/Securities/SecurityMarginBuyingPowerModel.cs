@@ -22,26 +22,26 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents a simple, constant margining model by specifying the percentages of required margin.
     /// </summary>
-    public class SecurityMarginModel : ISecurityMarginModel
+    public class SecurityMarginBuyingPowerModel : IBuyingPowerModel
     {
         private decimal _initialMarginRequirement;
         private decimal _maintenanceMarginRequirement;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityMarginModel"/> with no leverage (1x)
+        /// Initializes a new instance of the <see cref="SecurityMarginBuyingPowerModel"/> with no leverage (1x)
         /// </summary>
-        public SecurityMarginModel() : this(1m)
+        public SecurityMarginBuyingPowerModel() : this(1m)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
+        /// Initializes a new instance of the <see cref="SecurityMarginBuyingPowerModel"/>
         /// </summary>
         /// <param name="initialMarginRequirement">The percentage of an order's absolute cost
         /// that must be held in free cash in order to place the order</param>
         /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute
         /// cost that must be held in free cash in order to avoid a margin call</param>
-        public SecurityMarginModel(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public SecurityMarginBuyingPowerModel(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             if (initialMarginRequirement < 0 || initialMarginRequirement > 1)
             {
@@ -58,10 +58,10 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
+        /// Initializes a new instance of the <see cref="SecurityMarginBuyingPowerModel"/>
         /// </summary>
         /// <param name="leverage">The leverage</param>
-        public SecurityMarginModel(decimal leverage)
+        public SecurityMarginBuyingPowerModel(decimal leverage)
         {
             if (leverage < 1)
             {
@@ -214,7 +214,7 @@ namespace QuantConnect.Securities
             var ticket = portfolio.Transactions.GetOrderTicket(order.Id);
             if (ticket == null)
             {
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): Null order ticket for id: {order.Id}");
+                Log.Error($"SecurityMarginBuyingPowerModel.HasSufficientBuyingPowerForOrder(): Null order ticket for id: {order.Id}");
                 return false;
             }
 
@@ -256,7 +256,7 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}");
+                Log.Error($"SecurityMarginBuyingPowerModel.HasSufficientBuyingPowerForOrder(): Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}");
                 return false;
             }
 
