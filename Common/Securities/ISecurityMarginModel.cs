@@ -74,13 +74,13 @@ namespace QuantConnect.Securities
         decimal GetMaintenanceMarginRequirement(Security security);
 
         /// <summary>
-        /// Check if there is sufficient capital to execute this order.
+        /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if the order can be executed, false otherwise</returns>
-        bool CanExecuteOrder(SecurityPortfolioManager portfolio, Security security, Order order);
+        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
+        bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order);
 
         /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency

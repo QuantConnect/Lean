@@ -200,13 +200,13 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Check if there is sufficient capital to execute this order.
+        /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if the order can be executed, false otherwise</returns>
-        public bool CanExecuteOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
+        public bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             // short circuit the div 0 case
             if (order.Quantity == 0) return true;
@@ -214,7 +214,7 @@ namespace QuantConnect.Securities
             var ticket = portfolio.Transactions.GetOrderTicket(order.Id);
             if (ticket == null)
             {
-                Log.Error($"SecurityMarginModel.CanExecuteOrder(): Null order ticket for id: {order.Id}");
+                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): Null order ticket for id: {order.Id}");
                 return false;
             }
 
@@ -238,7 +238,7 @@ namespace QuantConnect.Securities
                     };
 
                     // we continue with this call for underlying
-                    return underlying.MarginModel.CanExecuteOrder(portfolio, underlying, newOrder);
+                    return underlying.MarginModel.HasSufficientBuyingPowerForOrder(portfolio, underlying, newOrder);
                 }
 
                 return true;
@@ -256,7 +256,7 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                Log.Error($"SecurityMarginModel.CanExecuteOrder(): Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}");
+                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}");
                 return false;
             }
 
