@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Open market
             var security = CreateSecurity(Noon);
 
-            security.MarginModel = new PatternDayTradingMarginBuyingPowerModel();
+            security.BuyingPowerModel = new PatternDayTradingMarginBuyingPowerModel();
 
             model.SetLeverage(security, 10m);
             Assert.AreNotEqual(10m, model.GetLeverage(security));

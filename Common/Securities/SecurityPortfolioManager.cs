@@ -426,7 +426,7 @@ namespace QuantConnect.Securities
                 {
                     var security = kvp.Value;
 
-                    sum += security.MarginModel.GetMaintenanceMargin(security);
+                    sum += security.BuyingPowerModel.GetMaintenanceMargin(security);
                 }
                 return sum;
             }
@@ -582,7 +582,7 @@ namespace QuantConnect.Securities
 
                     if (security.Holdings.Quantity != 0 && security.Price != 0)
                     {
-                        var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
+                        var maintenanceMarginRequirement = security.BuyingPowerModel.GetMaintenanceMarginRequirement(security);
                         var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
                         if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                         {

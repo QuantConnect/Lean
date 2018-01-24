@@ -688,7 +688,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             bool hasSufficientBuyingPower;
             try
             {
-                hasSufficientBuyingPower = security.MarginModel.HasSufficientBuyingPowerForOrder(_algorithm.Portfolio, security, order);
+                hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(_algorithm.Portfolio, security, order);
             }
             catch (Exception err)
             {

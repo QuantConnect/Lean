@@ -134,7 +134,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _security.MarginModel.GetLeverage(_security);
+                return _security.BuyingPowerModel.GetLeverage(_security);
             }
         }
         

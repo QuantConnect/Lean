@@ -946,7 +946,7 @@ namespace QuantConnect.Algorithm
             // this is the value in account currency that we want our holdings to have
             var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
 
-            return security.MarginModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
+            return security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
         }
 
         /// <summary>

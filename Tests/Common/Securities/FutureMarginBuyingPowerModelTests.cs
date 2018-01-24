@@ -42,8 +42,8 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var marginModel = new FutureMarginBuyingPowerModel();
-            Assert.AreEqual(2900m, marginModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = new FutureMarginBuyingPowerModel();
+            Assert.AreEqual(2900m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [Test]
@@ -62,8 +62,8 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var marginModel = new FutureMarginBuyingPowerModel();
-            Assert.AreEqual(0m, marginModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = new FutureMarginBuyingPowerModel();
+            Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [Test]
@@ -82,18 +82,18 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var marginModel = new FutureMarginBuyingPowerModel();
-            Assert.AreEqual(625m, marginModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = new FutureMarginBuyingPowerModel();
+            Assert.AreEqual(625m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we move forward to exact date when margin req changed
             time = new DateTime(2014, 06, 13);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(725m, marginModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(725m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we fly beyond the last line of the history file (currently) to see how margin model resolves future dates
             time = new DateTime(2016, 06, 04);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(585m, marginModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(585m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
     }
 }

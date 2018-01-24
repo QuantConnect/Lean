@@ -229,9 +229,9 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the margin model used for this security
+        /// Gets the buying power model used for this security
         /// </summary>
-        public IBuyingPowerModel MarginModel
+        public IBuyingPowerModel BuyingPowerModel
         {
             get;
             set;
@@ -338,7 +338,7 @@ namespace QuantConnect.Securities
             ISlippageModel slippageModel,
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
-            IBuyingPowerModel marginModel,
+            IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel
             )
@@ -363,7 +363,7 @@ namespace QuantConnect.Securities
             DataFilter = dataFilter;
             PriceVariationModel = priceVariationModel;
             PortfolioModel = portfolioModel;
-            MarginModel = marginModel;
+            BuyingPowerModel = buyingPowerModel;
             FillModel = fillModel;
             FeeModel = feeModel;
             SlippageModel = slippageModel;
@@ -389,7 +389,7 @@ namespace QuantConnect.Securities
             ISlippageModel slippageModel,
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
-            IBuyingPowerModel marginModel,
+            IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel
             )
@@ -404,7 +404,7 @@ namespace QuantConnect.Securities
                 slippageModel,
                 settlementModel,
                 volatilityModel,
-                marginModel,
+                buyingPowerModel,
                 dataFilter,
                 priceVariationModel
                 )
@@ -577,7 +577,7 @@ namespace QuantConnect.Securities
                 Symbol.ID.SecurityType == SecurityType.Option)
                 return;
 
-            MarginModel.SetLeverage(this, leverage);
+            BuyingPowerModel.SetLeverage(this, leverage);
         }
 
         /// <summary>

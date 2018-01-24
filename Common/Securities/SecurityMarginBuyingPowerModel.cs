@@ -238,7 +238,7 @@ namespace QuantConnect.Securities
                     };
 
                     // we continue with this call for underlying
-                    return underlying.MarginModel.HasSufficientBuyingPowerForOrder(portfolio, underlying, newOrder);
+                    return underlying.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, underlying, newOrder);
                 }
 
                 return true;

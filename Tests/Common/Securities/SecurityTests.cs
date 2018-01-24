@@ -64,8 +64,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsInstanceOf<ConstantSlippageModel>(security.SlippageModel);
             Assert.IsNotNull(security.SettlementModel);
             Assert.IsInstanceOf<ImmediateSettlementModel>(security.SettlementModel);
-            Assert.IsNotNull(security.MarginModel);
-            Assert.IsInstanceOf<SecurityMarginBuyingPowerModel>(security.MarginModel);
+            Assert.IsNotNull(security.BuyingPowerModel);
+            Assert.IsInstanceOf<SecurityMarginBuyingPowerModel>(security.BuyingPowerModel);
             Assert.IsNotNull(security.DataFilter);
             Assert.IsInstanceOf<SecurityDataFilter>(security.DataFilter);
         }

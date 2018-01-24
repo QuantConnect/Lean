@@ -289,7 +289,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     bool hasSufficientBuyingPower;
                     try
                     {
-                        hasSufficientBuyingPower = security.MarginModel.HasSufficientBuyingPowerForOrder(Algorithm.Portfolio, security, order);
+                        hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(Algorithm.Portfolio, security, order);
                     }
                     catch (Exception err)
                     {

@@ -137,8 +137,8 @@ namespace QuantConnect.Tests.Algorithm
             security.FeeModel = _feeModels[feeType];
             security.SetLeverage(leverage);
 
-            var marginModel = new TestSecurityMarginBuyingPowerModel(leverage);
-            security.MarginModel = marginModel;
+            var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(leverage);
+            security.BuyingPowerModel = buyingPowerModel;
 
             algorithm.SetCash(Cash);
 
@@ -158,8 +158,8 @@ namespace QuantConnect.Tests.Algorithm
                 orderDirection = initialPosition == Position.Long ? OrderDirection.Buy : OrderDirection.Sell;
                 orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
                 order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
-                freeMargin = algorithm.Portfolio.GetMarginRemaining(_symbol, orderDirection);
-                requiredMargin = marginModel.GetInitialMarginRequiredForOrder(security, order);
+                freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
+                requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
 
                 //Console.WriteLine("Current price: " + security.Price);
                 //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -201,8 +201,8 @@ namespace QuantConnect.Tests.Algorithm
             orderDirection = finalPosition == Position.Long || (finalPosition == Position.Zero && initialPosition == Position.Short) ? OrderDirection.Buy : OrderDirection.Sell;
             orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
             order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
-            freeMargin = algorithm.Portfolio.GetMarginRemaining(_symbol, orderDirection);
-            requiredMargin = marginModel.GetInitialMarginRequiredForOrder(security, order);
+            freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
+            requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
 
             //Console.WriteLine("Current price: " + security.Price);
             //Console.WriteLine("Target percentage: " + targetPercentage);
