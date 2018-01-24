@@ -70,8 +70,16 @@ namespace QuantConnect.Brokerages.Bitfinex
                         //expect a "te" and "tu" for each fill. The "tu" will include fees, so we won't act upon a "te"
                         var data = raw[2].ToObject(typeof(string[]));
                         PopulateTrade(term, data);
+                        //todo: remove test logging
+                        Log.Trace("BitfinexBrokerage.OnMessage(): " + e.Message);
                         return;
                     }
+                    //else if (id == "0")
+                    //{
+                    //    //var data = raw[2].ToObject(typeof(string[]));
+                    //    Log.Trace("BitfinexBrokerage.OnMessage(): " + e.Message);
+                    //    return;
+                    //}
                     else if (term == "ws")
                     {
                         //wallet
