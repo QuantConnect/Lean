@@ -20,9 +20,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class HeikinAshiTests : CommonIndicatorTests<TradeBar>
+    public class HeikinAshiTests : CommonIndicatorTests<IBaseDataBar>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             return new HeikinAshi();
         }
@@ -44,7 +44,6 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.TestIndicator(new HeikinAshi(), TestFileName, "HA_High", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).High.Current.Value, 1e-3));
             TestHelper.TestIndicator(new HeikinAshi(), TestFileName, "HA_Low", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).Low.Current.Value, 1e-3));
             TestHelper.TestIndicator(new HeikinAshi(), TestFileName, "HA_Close", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).Close.Current.Value, 1e-3));
-            TestHelper.TestIndicator(new HeikinAshi(), TestFileName, "Volume", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).Volume.Current.Value, 1e-3));
         }
 
         [Test]
@@ -60,8 +59,6 @@ namespace QuantConnect.Tests.Indicators
                 TestHelper.TestIndicator(indicator, TestFileName, "HA_Low", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).Low.Current.Value, 1e-3));
                 indicator.Reset();
                 TestHelper.TestIndicator(indicator, TestFileName, "HA_Close", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).Close.Current.Value, 1e-3));
-                indicator.Reset();
-                TestHelper.TestIndicator(indicator, TestFileName, "Volume", (ind, expected) => Assert.AreEqual(expected, (double)((HeikinAshi)ind).Volume.Current.Value, 1e-3));
                 indicator.Reset();
             }
         }
