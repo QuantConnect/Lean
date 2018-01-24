@@ -112,7 +112,11 @@ namespace QuantConnect.Indicators
                 High.Update(new IndicatorDataPoint(input.Time, Math.Max(input.High, Math.Max(Open, Close))));
                 Low.Update(new IndicatorDataPoint(input.Time, Math.Min(input.Low, Math.Min(Open, Close))));
             }
-            
+
+            // Sets the volume should the input be of TradeBar type; to allow chaining the indicator.
+            var tradeBar = input as TradeBar;
+            Volume.Update(new IndicatorDataPoint(input.EndTime, tradeBar == null ? 0m : tradeBar.Volume));
+
             return Close;
         }
 
