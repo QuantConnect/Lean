@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,14 @@ namespace QuantConnect.Securities
     public interface IMarginCallModel
     {
         /// <summary>
+        /// Scan the portfolio and the updated data for a potential margin call situation which may get the holdings below zero!
+        /// If there is a margin call, liquidate the portfolio immediately before the portfolio gets sub zero.
+        /// </summary>
+        /// <param name="issueMarginCallWarning">Set to true if a warning should be issued to the algorithm</param>
+        /// <returns>True for a margin call on the holdings.</returns>
+        List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning);
+
+            /// <summary>
         /// Generates a new order for the specified security taking into account the total margin
         /// used by the account. Returns null when no margin call is to be issued.
         /// </summary>
@@ -57,6 +65,12 @@ namespace QuantConnect.Securities
 
         private sealed class NullMarginCallModel : IMarginCallModel
         {
+            public List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning)
+            {
+                issueMarginCallWarning = false;
+                return new List<SubmitOrderRequest>();
+            }
+
             public SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin,
                 decimal maintenanceMarginRequirement)
             {

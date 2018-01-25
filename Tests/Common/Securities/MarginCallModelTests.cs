@@ -106,7 +106,6 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 2;
             var orderProcessor = new OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            portfolio.MarginCallModel = MarginCallModel.Null;
 
             var security = GetSecurity(Symbols.AAPL);
             var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(leverage);
@@ -139,7 +138,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 1m;
             var orderProcessor = new OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            portfolio.MarginCallModel = MarginCallModel.Null;
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
 
             var security = GetSecurity(Symbols.AAPL);
             portfolio.Securities.Add(security);
@@ -192,7 +191,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
-            var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsFalse(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -204,7 +203,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, newPrice, newPrice));
 
             // this would not cause a margin call, only a margin call warning
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -217,10 +216,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0, portfolio.TotalPortfolioValue);
 
-            // Even with TotalPortfolioValue == 0, do not issue warning or orders
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
-            Assert.IsFalse(issueMarginCallWarning);
-            Assert.AreEqual(0, marginCallOrders.Count);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(1, marginCallOrders.Count);
         }
 
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)

@@ -297,7 +297,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
-            var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsFalse(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -309,7 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, newPrice, newPrice, newPrice, newPrice, 1));
 
             // this would not cause a margin call, only a margin call warning
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -323,7 +323,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0, portfolio.TotalPortfolioValue);
 
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreNotEqual(0, marginCallOrders.Count);
             Assert.AreEqual(-security.Holdings.Quantity, marginCallOrders[0].Quantity); // we bought twice
