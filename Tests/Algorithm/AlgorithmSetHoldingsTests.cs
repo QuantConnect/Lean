@@ -37,6 +37,11 @@ namespace QuantConnect.Tests.Algorithm
             {
                 return base.GetInitialMarginRequiredForOrder(security, order);
             }
+
+            public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+            {
+                return base.GetMarginRemaining(portfolio, security, direction);
+            }
         }
 
         public enum Position { Zero = 0, Long = 1, Short = -1 }

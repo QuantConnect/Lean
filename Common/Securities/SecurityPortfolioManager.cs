@@ -506,7 +506,7 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            return security.BuyingPowerModel.GetMarginRemaining(this, security, direction);
+            return security.BuyingPowerModel.GetBuyingPower(this, security, direction);
         }
 
         /// <summary>

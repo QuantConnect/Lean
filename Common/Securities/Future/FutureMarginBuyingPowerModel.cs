@@ -99,7 +99,7 @@ namespace QuantConnect.Securities.Future
         /// <param name="security">The security to be traded</param>
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The margin available for the trade</returns>
-        public override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             var holdings = security.Holdings;
 

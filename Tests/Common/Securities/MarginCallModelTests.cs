@@ -37,6 +37,11 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 return base.GetInitialMarginRequiredForOrder(security, order);
             }
+
+            public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+            {
+                return base.GetMarginRemaining(portfolio, security, direction);
+            }
         }
 
         [Test]

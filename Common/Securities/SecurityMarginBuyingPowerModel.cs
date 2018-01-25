@@ -135,7 +135,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The margin available for the trade</returns>
-        public virtual decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        protected virtual decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             var holdings = security.Holdings;
 
@@ -338,6 +338,18 @@ namespace QuantConnect.Securities
         public decimal GetReservedBuyingPowerForPosition(Security security)
         {
             return GetMaintenanceMargin(security);
+        }
+
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The security to be traded</param>
+        /// <param name="direction">The direction of the trade</param>
+        /// <returns>The buying power available for the trade</returns>
+        public decimal GetBuyingPower(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        {
+            return GetMarginRemaining(portfolio, security, direction);
         }
     }
 }
