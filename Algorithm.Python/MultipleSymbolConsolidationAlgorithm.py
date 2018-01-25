@@ -54,11 +54,11 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
             equity = self.AddEquity(symbol)
             self.Data[symbol] = SymbolData(equity.Symbol, BarPeriod, RollingWindowSize)
         
-        # initialize our forex data
+        # initialize our forex data 
         for symbol in ForexSymbols:
             forex = self.AddForex(symbol)
             self.Data[symbol] = SymbolData(forex.Symbol, BarPeriod, RollingWindowSize)
-        
+
         # loop through all our symbols and request data subscriptions and initialize indicator
         for symbol, symbolData in self.Data.iteritems():
             # define the indicator
@@ -70,13 +70,13 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
             # we need to add this consolidator so it gets auto updates
             self.SubscriptionManager.AddConsolidator(symbolData.Symbol, consolidator)
 
-def OnDataConsolidated(self, sender, bar):
-    
-    self.Data[bar.Symbol.Value].SMA.Update(bar.Time, bar.Close)
-    self.Data[bar.Symbol.Value].Bars.Add(bar)
-    
+    def OnDataConsolidated(self, sender, bar):
+        
+        self.Data[bar.Symbol.Value].SMA.Update(bar.Time, bar.Close)
+        self.Data[bar.Symbol.Value].Bars.Add(bar)
+
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-    # Argument "data": Slice object, dictionary object with your stock data
+    # Argument "data": Slice object, dictionary object with your stock data 
     def OnData(self,data):
         
         # loop through each symbol in our structure
@@ -87,19 +87,19 @@ def OnDataConsolidated(self, sender, bar):
                 if not self.Portfolio[symbol].Invested:
                     self.MarketOrder(symbol, 1)
 
-# End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
-# Method is called 10 minutes before closing to allow user to close out position.
-def OnEndOfDay(self):
+    # End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+    # Method is called 10 minutes before closing to allow user to close out position.
+    def OnEndOfDay(self):
+        
+        i = 0
+        for symbol in sorted(self.Data.keys()):
+            symbolData = self.Data[symbol]
+            # we have too many symbols to plot them all, so plot every other
+            i += 1
+            if symbolData.IsReady() and i%2 == 0:
+                self.Plot(symbol, symbol, symbolData.SMA.Current.Value)
     
-    i = 0
-    for symbol in sorted(self.Data.keys()):
-        symbolData = self.Data[symbol]
-        # we have too many symbols to plot them all, so plot every other
-        i += 1
-        if symbolData.IsReady() and i%2 == 0:
-            self.Plot(symbol, symbol, symbolData.SMA.Current.Value)
-
-
+       
 class SymbolData(object):
     
     def __init__(self, symbol, barPeriod, windowSize):
@@ -112,12 +112,12 @@ class SymbolData(object):
         self.Bars = RollingWindow[IBaseDataBar](windowSize)
         # The simple moving average indicator for our symbol
         self.SMA = None
-    
+  
     # Returns true if all the data in this instance is ready (indicators, rolling windows, ect...)
     def IsReady(self):
         return self.Bars.IsReady and self.SMA.IsReady
-    
+
     # Returns true if the most recent trade bar time matches the current time minus the bar's period, this
     # indicates that update was just called on this instance
     def WasJustUpdated(self, current):
-        return self.Bars.Count > 0 and self.Bars[0].Time == current - self.BarPeriod
+        return self.Bars.Count > 0 and self.Bars[0].Time == current - self.BarPeriod                                               
