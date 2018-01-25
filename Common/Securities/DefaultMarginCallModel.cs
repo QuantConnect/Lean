@@ -99,11 +99,15 @@ namespace QuantConnect.Securities
 
                     if (security.Holdings.Quantity != 0 && security.Price != 0)
                     {
-                        var maintenanceMarginRequirement = security.BuyingPowerModel.GetMaintenanceMarginRequirement(security);
-                        var marginCallOrder = GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
-                        if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                        var buyingPowerModel = security.BuyingPowerModel as SecurityMarginBuyingPowerModel;
+                        if (buyingPowerModel != null)
                         {
-                            marginCallOrders.Add(marginCallOrder);
+                            var maintenanceMarginRequirement = buyingPowerModel.GetMaintenanceMarginRequirement(security);
+                            var marginCallOrder = GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
+                            if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                            {
+                                marginCallOrders.Add(marginCallOrder);
+                            }
                         }
                     }
                 }

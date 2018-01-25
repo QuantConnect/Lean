@@ -40,11 +40,6 @@ namespace QuantConnect.Securities
         void SetLeverage(Security security, decimal leverage);
 
         /// <summary>
-        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
-        /// </summary>
-        decimal GetMaintenanceMarginRequirement(Security security);
-
-        /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
