@@ -92,12 +92,12 @@ def OnDataConsolidated(self, sender, bar):
 def OnEndOfDay(self):
     
     i = 0
-        for symbol in sorted(self.Data.keys()):
-            symbolData = self.Data[symbol]
-            # we have too many symbols to plot them all, so plot every other
-            i += 1
-            if symbolData.IsReady() and i%2 == 0:
-                self.Plot(symbol, symbol, symbolData.SMA.Current.Value)
+    for symbol in sorted(self.Data.keys()):
+        symbolData = self.Data[symbol]
+        # we have too many symbols to plot them all, so plot every other
+        i += 1
+        if symbolData.IsReady() and i%2 == 0:
+            self.Plot(symbol, symbol, symbolData.SMA.Current.Value)
 
 
 class SymbolData(object):
