@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
-        public virtual decimal GetMaintenanceMargin(Security security)
+        protected virtual decimal GetMaintenanceMargin(Security security)
         {
             return security.Holdings.AbsoluteHoldingsCost*GetMaintenanceMarginRequirement(security);
         }
@@ -328,6 +328,16 @@ namespace QuantConnect.Securities
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
+        }
+
+        /// <summary>
+        /// Gets the amount of buying power reserved to maintain the specified position
+        /// </summary>
+        /// <param name="security">The security for the position</param>
+        /// <returns>The reserved buying power in account currency</returns>
+        public decimal GetReservedBuyingPowerForPosition(Security security)
+        {
+            return GetMaintenanceMargin(security);
         }
     }
 }

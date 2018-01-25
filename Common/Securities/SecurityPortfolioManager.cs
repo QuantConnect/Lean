@@ -426,7 +426,7 @@ namespace QuantConnect.Securities
                 {
                     var security = kvp.Value;
 
-                    sum += security.BuyingPowerModel.GetMaintenanceMargin(security);
+                    sum += security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
                 }
                 return sum;
             }
@@ -506,7 +506,7 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            return security.MarginModel.GetMarginRemaining(this, security, direction);
+            return security.BuyingPowerModel.GetMarginRemaining(this, security, direction);
         }
 
         /// <summary>

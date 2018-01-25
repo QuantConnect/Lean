@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity(Symbols.AAPL);
             security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(leverage);
             security.Holdings.SetHoldings(1m, quantity);
-            var actual = security.BuyingPowerModel.GetMaintenanceMargin(security);
+            var actual = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
 
             Assert.AreEqual(expected, actual);
         }

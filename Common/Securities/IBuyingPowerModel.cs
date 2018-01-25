@@ -40,13 +40,6 @@ namespace QuantConnect.Securities
         void SetLeverage(Security security, decimal leverage);
 
         /// <summary>
-        /// Gets the margin currently alloted to the specified holding
-        /// </summary>
-        /// <param name="security">The security to compute maintenance margin for</param>
-        /// <returns>The maintenance margin required for the </returns>
-        decimal GetMaintenanceMargin(Security security);
-
-        /// <summary>
         /// Gets the margin cash available for a trade
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
@@ -77,5 +70,12 @@ namespace QuantConnect.Securities
         /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
         /// <returns>Returns the maximum allowed market order quantity</returns>
         decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue);
+
+        /// <summary>
+        /// Gets the amount of buying power reserved to maintain the specified position
+        /// </summary>
+        /// <param name="security">The security for the position</param>
+        /// <returns>The reserved buying power in account currency</returns>
+        decimal GetReservedBuyingPowerForPosition(Security security);
     }
 }

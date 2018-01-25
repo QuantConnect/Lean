@@ -44,6 +44,11 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 return base.GetInitialMarginRequiredForOrder(security, order);
             }
+
+            public new decimal GetMaintenanceMargin(Security security)
+            {
+                return base.GetMaintenanceMargin(security);
+            }
         }
 
         private static readonly DateTime Noon = new DateTime(2016, 02, 16, 12, 0, 0);
@@ -184,7 +189,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyMaintenaceMargin()
         {
-            var model = new PatternDayTradingMarginBuyingPowerModel();
+            var model = new TestPatternDayTradingMarginBuyingPowerModel();
 
             // Open Market
             var security = CreateSecurity(Noon);

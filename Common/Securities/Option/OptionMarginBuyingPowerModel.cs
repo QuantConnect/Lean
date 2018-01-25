@@ -76,7 +76,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
-        public override decimal GetMaintenanceMargin(Security security)
+        protected override decimal GetMaintenanceMargin(Security security)
         {
             return security.Holdings.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
         }
