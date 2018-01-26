@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                 lock (_zipFileSynchronizer)
                                 {
-                                    stream = CreateStream(newItem.ZipFile, entryName);
+                                    stream = CreateStream(newItem.ZipFile, entryName, filename);
                                 }
 
                                 _zipFileCache.TryAdd(filename, newItem);
@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             lock (_zipFileSynchronizer)
                             {
-                                stream = CreateStream(existingEntry.ZipFile, entryName);
+                                stream = CreateStream(existingEntry.ZipFile, entryName, filename);
                             }
                         }
                         catch (Exception exception)
@@ -194,13 +194,49 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="zipFile">The zipFile containing the zipEntry</param>
         /// <param name="entryName">The name of the entry</param>
+        /// <param name="fileName">The name of the zip file on disk</param>
         /// <returns>A <see cref="Stream"/> of the appropriate zip entry</returns>
-        private Stream CreateStream(ZipFile zipFile, string entryName)
+        private Stream CreateStream(ZipFile zipFile, string entryName, string fileName)
         {
             var entry = zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
             if (entry != null)
             {
                 var stream = new MemoryStream();
+
+                try {
+                    stream.SetLength(entry.UncompressedSize);
+                } catch (ArgumentOutOfRangeException err) {
+                    // The needed size of the MemoryStream is longer than allowed. 
+                    // just read the data directly from the file.
+                    // Note that we cannot use entry.OpenReader() because only one OpenReader
+                    // can be open at a time without causing corruption.
+
+                    // We must use fileName instead of zipFile.Name,
+                    // because zipFile is initialized from a stream and not a file.
+                    var zipStream = new ZipInputStream(fileName);
+
+                    var zipEntry = zipStream.GetNextEntry();
+
+                    // The zip file was empty!
+                    if (zipEntry == null) {
+                        return null;
+                    }
+
+                    // Null entry name, return the first.
+                    if (entryName == null) {
+                        return zipStream;
+                    }
+
+                    // Non-default entry name, return matching one if it exists, otherwise null.
+                    while (zipEntry != null) {
+                        if (string.Compare(zipEntry.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0) {
+                            return zipStream;
+                        }
+
+                        zipEntry = zipStream.GetNextEntry();
+                    }
+                }
+
                 entry.OpenReader().CopyTo(stream);
                 stream.Position = 0;
                 return stream;
