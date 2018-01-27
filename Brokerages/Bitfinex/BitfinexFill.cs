@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,6 +26,7 @@ namespace QuantConnect.Brokerages.Bitfinex
     public class BitfinexFill
     {
         private readonly Orders.Order _order;
+        private readonly IBrokerage _brokerage;
 
         /// <summary>
         /// Lean orderId
@@ -41,9 +44,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Creates instance of BitfinexFill
         /// </summary>
         /// <param name="order"></param>
-        public BitfinexFill(Orders.Order order)
+        public BitfinexFill(Orders.Order order, IBrokerage brokerage)
         {
             _order = order;
+            _brokerage = brokerage;
         }
 
         /// <summary>
@@ -63,13 +67,23 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Compares fill amouns to determine if fill is complete
+        /// Determines if order is complete
         /// </summary>
         /// <returns></returns>
         public bool IsCompleted()
         {
             var quantity = _messages.Sum(m => m.Value.AmountExecuted);
-            return quantity >= _order.Quantity;
+            if (Math.Abs(quantity) >= Math.Abs(_order.Quantity))
+            {
+                return true;
+            }
+
+            //For partial fills, brokerage sometimes has "feelsgood fee": order fill < order quantity
+            //we'll double check if order is still open
+            var open = _brokerage.GetOpenOrders().SelectMany(o => o.BrokerId);
+            //todo: return missing fragements as fee
+
+            return !_order.BrokerId.Intersect(open).Any();
         }
 
         /// <summary>

@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             var order = new Orders.MarketOrder { BrokerId = new List<string> { brokerId }, Quantity = quantity, Id = id, Symbol = GetSecurity().Symbol };
             unit.CachedOrderIDs.TryAdd(1, order);
-            unit.FillSplit.TryAdd(id, new BitfinexFill(order));
+            unit.FillSplit.TryAdd(id, new BitfinexFill(order, unit));
         }
     }
 }

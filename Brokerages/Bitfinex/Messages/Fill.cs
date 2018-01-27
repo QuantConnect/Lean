@@ -34,6 +34,11 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         private readonly int _fee;
         private readonly int _fee_currency;
 
+        /// <summary>
+        /// Creates a new gill message
+        /// </summary>
+        /// <param name="term"></param>
+        /// <param name="values"></param>
         public Fill(string term, string[] values)
             : base(values)
         {
@@ -64,7 +69,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
             Seq = AllValues[_trd_seq];
             Pair = AllValues[_trd_pair];
             Timestamp = GetDateTime(_trd_timestamp);
-            OrdId = GetLong(_trd_ord_id);
+            OrdId = GetString(_trd_ord_id);
             AmountExecuted = GetDecimal(_trd_amount_executed);
             PriceExecuted = GetDecimal(_trd_price_executed);
             Type = AllValues[_ord_type];
@@ -100,9 +105,9 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public DateTime Timestamp { get; set; }
 
         /// <summary>
-        /// Order Id
+        /// Corresponds to Order.BrokerId
         /// </summary>
-        public long OrdId { get; set; }
+        public string OrdId { get; set; }
 
         /// <summary>
         /// Amount Executed

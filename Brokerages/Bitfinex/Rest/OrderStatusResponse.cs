@@ -9,6 +9,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
 
     public class OrderStatusResponse
     {
+        //Corresponds to Order.BrokerId
         [JsonProperty("id")]
         public long Id { get; set; }
 
@@ -19,7 +20,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
         public string Exchange { get; set; }
 
         [JsonProperty("price")]
-        public string Price { get; set; }
+        public decimal Price { get; set; }
 
         [JsonProperty("avg_execution_price")]
         public string AvgExecutionPrice { get; set; }
@@ -43,13 +44,13 @@ namespace QuantConnect.Brokerages.Bitfinex.Rest
         public bool WasForced { get; set; }
 
         [JsonProperty("original_amount")]
-        public string OriginalAmount { get; set; }
+        public decimal? OriginalAmount { get; set; }
 
         [JsonProperty("remaining_amount")]
-        public string RemainingAmount { get; set; }
+        public decimal? RemainingAmount { get; set; }
 
         [JsonProperty("executed_amount")]
-        public string ExecutedAmount { get; set; }
+        public decimal? ExecutedAmount { get; set; }
     }
 #pragma warning restore 1591
 }

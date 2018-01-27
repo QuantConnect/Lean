@@ -68,14 +68,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public static OrderStatus MapOrderStatus(OrderStatusResponse response)
         {
-            decimal remainingAmount;
-            decimal executedAmount = 0;
             if (response.IsCancelled)
             {
                 return OrderStatus.Canceled;
             }
-            else if (decimal.TryParse(response.RemainingAmount, out remainingAmount) && remainingAmount > 0
-                     && decimal.TryParse(response.ExecutedAmount, out executedAmount) && executedAmount > 0)
+            else if (Math.Abs(response.RemainingAmount ?? 0) > 0 && Math.Abs(response.ExecutedAmount ?? 0) > 0)
             {
                 return OrderStatus.PartiallyFilled;
             }

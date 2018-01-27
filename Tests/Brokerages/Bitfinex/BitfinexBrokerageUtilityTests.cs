@@ -58,61 +58,26 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
         }
 
-        [Test]
-        public void MapOrderStatusTest()
+        [TestCase(null, null, true, true, OrderStatus.Canceled)]
+        [TestCase(null, null, false, true, OrderStatus.Submitted)]
+        [TestCase(1, 0, false, true, OrderStatus.Submitted)]
+        [TestCase(1, 1, false, true, OrderStatus.PartiallyFilled)]
+        [TestCase(0, 1, false, true, OrderStatus.Submitted)]
+        [TestCase(0, 0, false, false, OrderStatus.Invalid)]
+        [TestCase(-1, -1, false, true, OrderStatus.PartiallyFilled)]
+        [TestCase(null, null, false, false, OrderStatus.Invalid)]
+        [TestCase(null, 1, false, false, OrderStatus.Invalid)]
+        public void MapOrderStatusTest(int? remaining, int? executed, bool isCancelled, bool isLive, OrderStatus expected)
         {
             var response = new OrderStatusResponse
             {
-                IsCancelled = true,
-                IsLive = true
+                IsCancelled = isCancelled,
+                IsLive = isLive,
+                RemainingAmount = remaining,
+                ExecutedAmount = executed
             };
 
-            var expected = OrderStatus.Canceled;
             var actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.IsCancelled = false;
-            expected = OrderStatus.Submitted;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.RemainingAmount = "1";
-            response.ExecutedAmount = "0";
-            expected = OrderStatus.Submitted;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.RemainingAmount = "1";
-            response.ExecutedAmount = "1";
-            expected = OrderStatus.PartiallyFilled;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.RemainingAmount = "0";
-            response.ExecutedAmount = "1";
-            expected = OrderStatus.Submitted;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.RemainingAmount = "0";
-            response.ExecutedAmount = "0";
-            response.IsLive = false;
-            expected = OrderStatus.Invalid;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.RemainingAmount = "";
-            response.ExecutedAmount = "";
-            response.IsLive = false;
-            expected = OrderStatus.Invalid;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
-            Assert.AreEqual(expected, actual);
-
-            response.RemainingAmount = null;
-            response.ExecutedAmount = null;
-            response.IsLive = false;
-            expected = OrderStatus.Invalid;
-            actual = BitfinexBrokerage.MapOrderStatus(response);
             Assert.AreEqual(expected, actual);
         }
 

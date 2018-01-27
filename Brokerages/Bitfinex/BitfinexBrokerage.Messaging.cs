@@ -69,7 +69,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         //expect a "te" and "tu" for each fill. The "tu" will include fees, so we won't act upon a "te"
                         var data = raw[2].ToObject(typeof(string[]));
-                        PopulateTrade(term, data);
+                        lock (FillLock)
+                        {
+                            PopulateTrade(term, data);
+                        }
                         //todo: remove test logging
                         Log.Trace("BitfinexBrokerage.OnMessage(): " + e.Message);
                         return;
@@ -192,7 +195,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var msg = new Messages.Fill(term, data);
 
-            var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(msg.OrdId.ToString()));
+            var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(msg.OrdId));
 
             if (cached.Any())
             {
@@ -232,7 +235,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             else
             {
-                UnknownOrderIDs.Add(msg.OrdId.ToString());
+                UnknownOrderIDs.Add(msg.OrdId);
+				Log.Trace("BitfinexBrokerage.PopulateTrade:" + "Unknown Fill:" + string.Join(",", data));
             }
         }
 

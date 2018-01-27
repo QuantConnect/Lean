@@ -391,6 +391,9 @@
     <None Include="TestData\bitfinex_cancel.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="TestData\bitfinex_open_fill.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\bitfinex_open.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

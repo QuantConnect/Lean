@@ -68,6 +68,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public ConcurrentDictionary<int, BitfinexFill> FillSplit { get; set; }
 
+        /// <summary>
+        /// Locks processing of fill messages to ensure consistency
+        /// </summary>
+        protected object FillLock = new object();
+
         private enum ChannelCode
         {
             pubticker = 0,
@@ -111,7 +116,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             LockStream();
 
             var quantity = order.Quantity;
-            FillSplit.TryAdd(order.Id, new BitfinexFill(order));
+            FillSplit.TryAdd(order.Id, new BitfinexFill(order, this));
 
             var holdingsQuantity = _algorithm.Securities.ContainsKey(order.Symbol) ? _algorithm.Securities[order.Symbol].Holdings.Quantity : 0;
             order.PriceCurrency = order.Symbol.Value.Substring(3, 3);
@@ -268,7 +273,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var getting = JsonConvert.DeserializeObject<OrderStatusResponse[]>(response.Content);
 
-            foreach (var item in getting.Where(g => !g.IsCancelled))
+            foreach (var item in getting.Where(g => !g.IsCancelled && (g.RemainingAmount ?? 0) > 0))
             {
                 //do not return open orders for inactive wallet
                 if (_algorithm.BrokerageModel.AccountType == AccountType.Cash && !item.Type.StartsWith("exchange"))
@@ -289,14 +294,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     order = new LimitOrder
                     {
-                        LimitPrice = decimal.Parse(item.Price)
+                        LimitPrice = item.Price
                     };
                 }
                 else if (item.Type == ExchangeStop || item.Type == Stop)
                 {
                     order = new StopMarketOrder
                     {
-                        StopPrice = decimal.Parse(item.Price)
+                        StopPrice = item.Price
                     };
                 }
                 else
@@ -305,11 +310,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                     continue;
                 }
 
-                order.Quantity = decimal.Parse(item.RemainingAmount);
+                order.Quantity = item.RemainingAmount ?? 0;
                 order.BrokerId = new List<string> { item.Id.ToString() };
                 order.Symbol = Symbol.Create(item.Symbol.ToUpper(), SecurityType.Crypto, BrokerageMarket);
                 order.Time = Time.UnixTimeStampToDateTime(double.Parse(item.Timestamp));
-                order.Price = decimal.Parse(item.Price);
+                order.Price = item.Price;
                 order.Status = MapOrderStatus(item);
                 list.Add(order);
             }

@@ -27,6 +27,7 @@ using QuantConnect.Interfaces;
 using RestSharp;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Net;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -45,9 +46,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         public void Setup()
         {
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
-
             _unit = new BitfinexBrokerage("http://localhost", _wss.Object, _rest.Object, ApiKey, "123", _algo.Object);
-            _rest = new Mock<IRestClient>();
             _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
 
             _wss.Setup(m => m.Connect()).Verifiable();
@@ -311,6 +310,12 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             decimal actualFee = 0;
             decimal actualQuantity = 0;
 
+            _rest.Setup(m => m.Execute(It.IsAny<IRestRequest>())).Returns<RestRequest>(r => new RestResponse
+            {
+                Content = File.ReadAllText("TestData//bitfinex_open_fill.json"),
+                StatusCode = HttpStatusCode.OK
+            });
+
             _unit.OrderStatusChanged += (s, e) =>
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
@@ -329,7 +334,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             {
                 _unit.OnMessage(_unit, new WebSocketMessage(line));
             }
-            Assert.IsTrue(raised.WaitOne(1000));
+            Assert.IsTrue(raised.WaitOne(100));
         }
 
         [Test]

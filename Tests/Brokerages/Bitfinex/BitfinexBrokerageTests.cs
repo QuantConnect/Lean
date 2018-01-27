@@ -48,7 +48,6 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             _unit = new BitfinexBrokerage("http://localhost", _wss.Object, _rest.Object, "abc", "123", _algo.Object);
             _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
 
-            //todo: test data
             var setupData = new Dictionary<string, string>
             {
                 { Constants.NewOrderRequestUrl, "bitfinex_order.json" },
@@ -207,6 +206,47 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.IsTrue(actual);
             Assert.IsTrue(raised.WaitOne(100));
             Assert.AreEqual(expectedCount, _unit.CachedOrderIDs[id].BrokerId.Count());
+        }
+
+        [TestCase(0.1, true, false, 0.1)]
+        [TestCase(0.1, true, false, -0.1)]
+        [TestCase(0.1, true, false, 0.01, 0.09)]
+        [TestCase(0.1, true, false, 0.03333, 0.03333, 0.03333)]
+        [TestCase(0.1, true, true, 0.03333, 0.03333, 0.03333)]
+        public void FillIsCompletedTest(decimal orderQuantity, bool isCompleted, bool isOpen, params double[] fillQuantity)
+        {
+            var order = new Orders.MarketOrder
+            {
+                BrokerId = { "7596513670" },
+                Quantity = orderQuantity,
+                Id = 1
+            };
+
+            var open = new List<Orders.Order>();
+
+            var brokerage = new Mock<IBrokerage>();
+            brokerage.Setup(b => b.GetOpenOrders()).Returns(open);
+
+            var fill = new BitfinexFill(order, brokerage.Object);
+            _unit.FillSplit.TryAdd(order.Id, fill);
+
+            for (int i = 0; i < fillQuantity.Length; i++)
+            {
+                var added = fill.Add(new QuantConnect.Brokerages.Bitfinex.Messages.Fill("tu", new[] { "16275003-BTCUSD", $"17938020{i}", "BTCUSD", "1517018408", "7596513670",
+                    fillQuantity[i].ToString(), "10937", "MARKET", "10955", "-0.21874", "USD" }));
+                Assert.IsTrue(added);
+                if (i == fillQuantity.Length - 1 && isCompleted && !isOpen)
+                {
+                    Assert.IsTrue(fill.IsCompleted());
+                }
+                else
+                {
+                    open.Add(new Orders.MarketOrder { BrokerId = { "7596513670" } });
+                    Assert.IsFalse(fill.IsCompleted());
+                    open.Clear();
+                }
+            }
+
         }
 
 
