@@ -1,7 +1,7 @@
 # For moving avg types: https://github.com/QuantConnect/Lean/blob/bc9af8784b02715000a2030e9757ef63b484378e/Indicators/MovingAverageType.cs
 import QuantConnect.Indicators as ind
-import pprint
-
+from QuantConnect.Orders import OrderDirection
+from configs import configs
 
 class IndicatorAlgo(QCAlgorithm):
     def Initialize(self):
@@ -16,37 +16,37 @@ class IndicatorAlgo(QCAlgorithm):
         ###########################
         # Configurable parameters #
         ###########################
-        self.target_crypto = "ETHUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
-        self.indicator_name = "macd"  # bollinger, momentum, or MACD
-        self.warmup_lookback = 30  # Number of time periods resolution to load
-        self.time_resolution = Resolution.Minute  # Resolution of periods/data to use
-        self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
-        self.bar_size = 5
+        self.target_crypto = configs["target_crypto"] # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
+        self.indicator_name = configs["indicator_name"]  # bollinger, momentum, or MACD
+        self.warmup_lookback = configs["warmup_lookback"]  # Number of time periods resolution to load
+        self.time_resolution = configs["time_resolution"]  # Resolution of periods/data to use
+        self.resubmit_order_threshold = configs["resubmit_order_threshold"]  # Percent at which we will update the limit order to cause a fill
+        self.bar_size = configs["bar_size"]
 
         # Bollinger Variables
-        self.moving_average_type = MovingAverageType.Exponential
-        self.bollinger_period = 20
-        self.k = 2
+        self.moving_average_type = configs["moving_average_type"]
+        self.bollinger_period = configs["bollinger_period"]
+        self.k = configs["k"]
 
         # Momentum Variables
-        self.momentum_period = 5
-        self.momentum_buy_threshold = 2
-        self.momentum_sell_threshold = 0
+        self.momentum_period = configs["momentum_period"]
+        self.momentum_buy_threshold = configs["momentum_buy_threshold"]
+        self.momentum_sell_threshold = configs["momentum_sell_threshold"]
 
         # MACD Variables
-        self.MACD_fast_period = 12
-        self.MACD_slow_period = 26
-        self.MACD_signal_period = 9
-        self.MACD_moving_average_type = MovingAverageType.Exponential
-        self.MACD_tolerance = 0.0025
+        self.MACD_fast_period = configs["MACD_fast_period"]
+        self.MACD_slow_period = configs["MACD_slow_period"]
+        self.MACD_signal_period = configs["MACD_signal_period"]
+        self.MACD_moving_average_type = configs["MACD_moving_average_type"]
+        self.MACD_tolerance = configs["MACD_tolerance"]
 
         # Ichimoku Variables
-        self.tenkanPeriod = 9
-        self.kijunPeriod = 26
-        self.senkouAPeriod = 26
-        self.senkouBPeriod = 52
-        self.senkouADelayedPeriod = 26
-        self.senkouBDelayedPeriod = 26
+        self.tenkanPeriod = configs["tenkanPeriod"]
+        self.kijunPeriod = configs["kijunPeriod"]
+        self.senkouAPeriod = configs["senkouAPeriod"]
+        self.senkouBPeriod = configs["senkouBPeriod"]
+        self.senkouADelayedPeriod = configs["senkouADelayedPeriod"]
+        self.senkouBDelayedPeriod = configs["senkouBDelayedPeriod"]
 
         ############################
         # Indicators and processes #
@@ -84,6 +84,7 @@ class IndicatorAlgo(QCAlgorithm):
             self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
                                           self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
                                           self.time_resolution * self.time_resolution)
+
 
         # Processing variables
         self.pending_limit_price = 0
