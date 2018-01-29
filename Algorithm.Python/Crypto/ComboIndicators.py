@@ -1,167 +1,52 @@
 # For moving avg types: https://github.com/QuantConnect/Lean/blob/bc9af8784b02715000a2030e9757ef63b484378e/Indicators/MovingAverageType.cs
-
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-import numpy as np
-
 import QuantConnect.Indicators as ind
-from QuantConnect.Brokerages import BrokerageName
-from QuantConnect.Data.Consolidators import TradeBarConsolidator
 from QuantConnect.Orders import OrderDirection
+from configs import configs
 
-import json
-import os
-
-class IndicatorAlgo(QCAlgorithm):
+class ComboIndicators(QCAlgorithm):
     def Initialize(self):
-        self.cwd = os.path.dirname(os.path.realpath(__file__))
-        self.config_file = os.path.join(self.cwd,'configs','config.json')
-        self.runconfig = {}
-
-        try:
-            fp = open(self.config_file, 'r')
-            self.runconfig = json.load(fp)
-        except IOError:
-            print('config file: {} not found. Continuing with pre-configured settings'.format(self.config_file))
-
         #####################
         # Backtest Settings #
         #####################
-        self.SetStartDate(2016, 10, 7)  # Set Start Date
-        self.SetEndDate(2016, 10, 8)  # Set End Date
+        self.SetStartDate(2017, 7, 7)  # Set Start Date
+        self.SetEndDate(2018, 1, 2)  # Set End Date
         self.SetCash(1000)  # Set Strategy Cash
         self.SetBrokerageModel(BrokerageName.GDAX)
 
         ###########################
         # Configurable parameters #
         ###########################
-        # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
-        if '__TARGET_CRYPTOS__' in self.runconfig:
-            self.target_crypto = str(self.runconfig['__TARGET_CRYPTOS__'])
-        else:
-            self.target_crypto = "BTCUSD"
+        self.target_crypto = configs["target_crypto"] # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
+        self.indicator_name = configs["indicator_name"]  # bollinger, momentum, or MACD
+        self.warmup_lookback = configs["warmup_lookback"]  # Number of time periods resolution to load
+        self.time_resolution = configs["time_resolution"]  # Resolution of periods/data to use
+        self.resubmit_order_threshold = configs["resubmit_order_threshold"]  # Percent at which we will update the limit order to cause a fill
+        self.bar_size = configs["bar_size"]
 
-        # bollinger, momentum, or MACD
-        if '__INDICATORS__' in self.runconfig:
-            self.indicator_name = str(self.runconfig['__INDICATORS__'])
-        else:
-            self.indicator_name = "macd"
+        # Bollinger Band Variables
+        self.moving_average_type = configs["moving_average_type"]
+        self.bollinger_period = configs["bollinger_period"]
+        self.k = configs["k"]
 
-        # Number of time periods resolution to load
-        if '__WARMUP_LOOKBACK__' in self.runconfig:
-            self.warmup_lookback = self.runconfig['__WARMUP_LOOKBACK__']
-        else:
-            self.warmup_lookback = 30
-
-        # Resolution of periods/data to use
-        self.time_resolution = Resolution.Minute
-
-        # Percent at which we will update the limit order to cause a fill
-        if '__RESUBMIT_ORDER_THRESHOLD__' in self.runconfig:
-            self.resubmit_order_threshold = self.runconfig['__RESUBMIT_ORDER_THRESHOLD__']
-        else:
-            self.resubmit_order_threshold = 0.01
-
-        # Bar size
-        if '__BAR_SIZE__' in self.runconfig:
-            self.bar_size = self.runconfig['__BAR_SIZE__']
-        else:
-            self.bar_size = 5
-
-        # Bollinger Variables
-        if 'MOVING_AVERAGE_TYPE' in self.runconfig:
-            self.moving_average_type = getattr(ind, str(self.runconfig['MOVING_AVERAGE_TYPE']))
-        else:
-            self.moving_average_type = ind.MovingAverageType.Exponential
-
-        if 'BOLLINGER_PERIOD' in self.runconfig:
-            self.bollinger_period = self.runconfig['BOLLINGER_PERIOD']
-        else:
-            self.bollinger_period = 20
-
-        if 'BOLLINGER_K' in self.runconfig:
-            self.k = self.runconfig['BOLLINGER_K']
-        else:
-            self.k = 2
-
-        # Momentum Variables
-        if 'MOMENTUM_PERIOD' in self.runconfig:
-            self.momentum_period = self.runconfig['MOMENTUM_PERIOD']
-        else:
-            self.momentum_period = 5
-
-        if 'MOMENTUM_BUY_THRESHOLD' in self.runconfig:
-            self.momentum_buy_threshold = self.runconfig['MOMENTUM_BUY_THRESHOLD']
-        else:
-            self.momentum_buy_threshold = 2
-
-        if 'MOMENTUM_SELL_THRESHOLD' in self.runconfig:
-            self.momentum_sell_threshold = self.runconfig['MOMENTUM_SELL_THRESHOLD']
-        else:
-            self.momentum_sell_threshold = 0
+        # Volume
+        self.momentum_period = configs["momentum_period"]
+        self.momentum_buy_threshold = configs["momentum_buy_threshold"]
+        self.momentum_sell_threshold = configs["momentum_sell_threshold"]
 
         # MACD Variables
-        if 'MACD_FAST_PERIOD' in self.runconfig:
-            self.MACD_fast_period = self.runconfig['MACD_FAST_PERIOD']
-        else:
-            self.MACD_fast_period = 12
-
-        if 'MACD_SLOW_PERIOD' in self.runconfig:
-            self.MACD_slow_period = self.runconfig['MACD_SLOW_PERIOD']
-        else:
-            self.MACD_slow_period = 26
-
-        if 'MACD_SIGNAL_PERIOD' in self.runconfig:
-            self.MACD_signal_period = self.runconfig['MACD_SIGNAL_PERIOD']
-        else:
-            self.MACD_signal_period = 9
-
-        if 'MACD_MOVING_AVERAGE_TYPE' in self.runconfig:
-            self.MACD_moving_average_type = getattr(ind, str(self.runconfig['MACD_MOVING_AVERAGE_TYPE']))
-        else:
-            self.MACD_moving_average_type = ind.MovingAverageType.Exponential
-
-        if 'MACD_TOLERANCE' in self.runconfig:
-            self.MACD_tolerance = self.runconfig['MACD_TOLERANCE']
-        else:
-            self.MACD_tolerance = 0.0025
+        self.MACD_fast_period = configs["MACD_fast_period"]
+        self.MACD_slow_period = configs["MACD_slow_period"]
+        self.MACD_signal_period = configs["MACD_signal_period"]
+        self.MACD_moving_average_type = configs["MACD_moving_average_type"]
+        self.MACD_tolerance = configs["MACD_tolerance"]
 
         # Ichimoku Variables
-        if 'TENKAN_PERIOD' in self.runconfig:
-            self.tenkanPeriod = self.runconfig['TENKAN_PERIOD']
-        else:
-            self.tenkanPeriod = 9
-
-        if 'KIJUN_PERIOD' in self.runconfig:
-            self.kijunPeriod = self.runconfig['KIJUN_PERIOD']
-        else:
-            self.kijunPeriod = 26
-
-        if 'SENKOU_A_PERIOD' in self.runconfig:
-            self.senkouAPeriod = self.runconfig['SENKOU_A_PERIOD']
-        else:
-            self.senkouAPeriod = 26
-
-        if 'SENKOU_B_PERIOD' in self.runconfig:
-            self.senkouBPeriod = self.runconfig['SENKOU_B_PERIOD']
-        else:
-            self.senkouBPeriod = 52
-
-        if 'SENKOU_A_DELAYED_PERIOD' in self.runconfig:
-            self.senkouADelayedPeriod = self.runconfig['SENKOU_A_DELAYED_PERIOD']
-        else:
-            self.senkouADelayedPeriod = 26
-
-        if 'SENKOU_B_DELAYED_PERIOD' in self.runconfig:
-            self.senkouBDelayedPeriod = self.runconfig['SENKOU_B_DELAYED_PERIOD']
-        else:
-            self.senkouBDelayedPeriod = 26
+        self.tenkanPeriod = configs["tenkanPeriod"]
+        self.kijunPeriod = configs["kijunPeriod"]
+        self.senkouAPeriod = configs["senkouAPeriod"]
+        self.senkouBPeriod = configs["senkouBPeriod"]
+        self.senkouADelayedPeriod = configs["senkouADelayedPeriod"]
+        self.senkouBDelayedPeriod = configs["senkouBDelayedPeriod"]
 
         ############################
         # Indicators and processes #
@@ -199,7 +84,6 @@ class IndicatorAlgo(QCAlgorithm):
             self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
                                           self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
                                           self.time_resolution * self.time_resolution)
-
         # Processing variables
         self.pending_limit_price = 0
 

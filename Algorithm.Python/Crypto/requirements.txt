@@ -1,3 +1,1 @@
-keras=2.1.2
-pyyaml=3.12
-tensorflow-gpu=1.4.0
+sklearn=0.19.1
