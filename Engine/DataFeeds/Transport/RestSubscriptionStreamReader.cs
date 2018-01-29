@@ -29,6 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private readonly RestClient _client;
         private readonly RestRequest _request;
+        private bool _delivered;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RestSubscriptionStreamReader"/> class.
@@ -37,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="headers">Defines header values to add to the request</param>
         public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers)
         {
+            _delivered = false;
             _client = new RestClient(source);
             _request = new RestRequest(Method.GET);
 
@@ -62,7 +64,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public bool EndOfStream
         {
-            get { return false; }
+            get { return _delivered; }
         }
 
         /// <summary>
@@ -75,6 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 var response = _client.Execute(_request);
                 if (response != null)
                 {
+                    _delivered = true;
                     return response.Content;
                 }
             }
