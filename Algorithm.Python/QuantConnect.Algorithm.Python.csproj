@@ -115,6 +115,7 @@
     <None Include="OptionChainConsistencyRegressionAlgorithm.py" />
     <None Include="HourSplitRegressionAlgorithm.py" />
     <None Include="HourReverseSplitRegressionAlgorithm.py" />
+    <None Include="MultipleSymbolConsolidationAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

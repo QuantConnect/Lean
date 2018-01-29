@@ -144,7 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _openLimitOrders.Add(newTicket);
 
                 // submit another limit order to sell 10 shares at .1% above the bar's close
-                newTicket = LimitOrder(symbol, 10, close * 1.001m);
+                newTicket = LimitOrder(symbol, -10, close * 1.001m);
                 _openLimitOrders.Add(newTicket);
             }
 

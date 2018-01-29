@@ -117,7 +117,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             self.__openLimitOrders.append(newTicket)
 
             # submit another limit order to sell 10 shares at .1% above the bar's close
-            newTicket = self.LimitOrder(self.spy, 10, close * d.Decimal(1.001))
+            newTicket = self.LimitOrder(self.spy, -10, close * d.Decimal(1.001))
             self.__openLimitOrders.append(newTicket)
 
         # when we submitted new limit orders we placed them into this list,
