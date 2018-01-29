@@ -647,6 +647,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the volatility model
+        /// </summary>
+        /// <param name="volatilityModel">Model that represents a volatility model</param>
+        public void SetVolatilityModel(IVolatilityModel volatilityModel)
+        {
+            VolatilityModel = volatilityModel;
+        }
+
+        /// <summary>
+        /// Sets the volatility model
+        /// </summary>
+        /// <param name="volatilityModel">Model that represents a volatility model</param>
+        public void SetVolatilityModel(PyObject volatilityModel)
+        {
+            VolatilityModel = new VolatilityModelPythonWrapper(volatilityModel);
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>
