@@ -149,6 +149,7 @@
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
+    <Compile Include="Common\Securities\CashBuyingPowerModelTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexHoldingTest.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
