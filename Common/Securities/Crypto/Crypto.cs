@@ -43,7 +43,7 @@ namespace QuantConnect.Securities.Crypto
                 new ForexCache(),
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
-                new ConstantFeeModel(0),
+                new GDAXFeeModel(),
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
