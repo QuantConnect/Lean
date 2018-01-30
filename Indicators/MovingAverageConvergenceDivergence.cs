@@ -37,6 +37,13 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Signal { get; private set; }
 
         /// <summary>
+        /// Developed by Thomas Aspray in 1986, the MACD-Histogram measures the distance between MACD and its signal line, 
+        /// is an oscillator that fluctuates above and below the zero line.
+        /// Bullish or bearish divergences in the MACD-Histogram can alert chartists to an imminent signal line crossover in MACD.
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Histogram { get; private set; }
+
+        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady
@@ -70,6 +77,7 @@ namespace QuantConnect.Indicators
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
+            Histogram = this.Minus(Signal);
         }
 
         /// <summary>
