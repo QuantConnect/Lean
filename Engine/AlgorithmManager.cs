@@ -112,7 +112,9 @@ namespace QuantConnect.Lean.Engine
             {
                 if (CurrentTimeStepElapsed > _timeLoopMaximum)
                 {
-                    return "Algorithm took longer than 10 minutes on a single time loop.";
+                    return ("Algorithm took longer than " +
+                            _timeLoopMaximum.TotalMinutes.ToString() +
+                            " minutes on a single time loop.");
                 }
 
                 return null;
