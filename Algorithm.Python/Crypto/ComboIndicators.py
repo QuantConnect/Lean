@@ -1,7 +1,7 @@
 # For moving avg types: https://github.com/QuantConnect/Lean/blob/bc9af8784b02715000a2030e9757ef63b484378e/Indicators/MovingAverageType.cs
 import QuantConnect.Indicators as ind
 from QuantConnect.Orders import OrderDirection
-from configs import configs
+from orig_configs import configs
 
 class ComboIndicators(QCAlgorithm):
     def Initialize(self):
@@ -9,8 +9,8 @@ class ComboIndicators(QCAlgorithm):
         # Backtest Settings #
         #####################
         self.SetStartDate(2017, 7, 7)  # Set Start Date
-        self.SetEndDate(2018, 1, 2)  # Set End Date
-        self.SetCash(1000)  # Set Strategy Cash
+        self.SetEndDate(2017, 9, 2)  # Set End Date
+        self.SetCash(15000)  # Set Strategy Cash
         self.SetBrokerageModel(BrokerageName.GDAX)
 
         ###########################
@@ -48,6 +48,15 @@ class ComboIndicators(QCAlgorithm):
         self.senkouADelayedPeriod = configs["senkouADelayedPeriod"]
         self.senkouBDelayedPeriod = configs["senkouBDelayedPeriod"]
 
+        # RSI Variables
+        self.rsi_period = configs["rsi_period"]
+        self.rsi_moving_average_type = configs["rsi_moving_average_type"]
+        self.rsi_lower = configs["rsi_lower"]
+        self.rsi_upper = configs["rsi_upper"]
+
+        # Volume Variables
+        self.volume_min = configs["volume_min"]
+
         ############################
         # Indicators and processes #
         ############################
@@ -62,28 +71,25 @@ class ComboIndicators(QCAlgorithm):
         pricePlot = Chart('%s Price Plot' % self.target_crypto)
         pricePlot.AddSeries(Series('Price', SeriesType.Line, 0))
         self.AddChart(pricePlot)
-
         holdingsPlot = Chart('%s Holdings Plot' % self.target_crypto)
         holdingsPlot.AddSeries(Series('Holdings', SeriesType.Line, 0))
         self.AddChart(holdingsPlot)
 
         # Create the different indicators
-        if self.indicator_name == "bollinger":
-            # Create bollinger band
-            self.Bolband = self.BB(self.target_crypto, self.bollinger_period, self.k, self.moving_average_type,
-                                   self.time_resolution)
-        elif self.indicator_name == "momentum":
-            # Create a momentum indicator over 3 days
-            self.mom = self.MOM(self.target_crypto, self.momentum_period, self.time_resolution)
-        elif self.indicator_name == "macd":
-            # Create the MACD
-            self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
+        self.bolband = self.BB(self.target_crypto, self.bollinger_period, self.k, self.moving_average_type,
+                               self.time_resolution)
+        self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
                                   self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
-            self.RegisterIndicator(self.target_crypto, self.macd, barConsolidator)
-        elif self.indicator_name == "ichimoku":
-            self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
-                                          self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
-                                          self.time_resolution * self.time_resolution)
+        self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
+                                      self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
+                                      self.time_resolution)
+        self.rsi = self.RSI(self.target_crypto, self.rsi_period, self.rsi_moving_average_type)
+
+        self.RegisterIndicator(self.target_crypto, self.bolband, barConsolidator)
+        self.RegisterIndicator(self.target_crypto, self.macd, barConsolidator)
+        #self.RegisterIndicator(self.target_crypto, self.ichimoku, barConsolidator)
+        #self.RegisterIndicator(self.target_crypto, self.rsi, barConsolidator)
+
         # Processing variables
         self.pending_limit_price = 0
 
@@ -129,6 +135,7 @@ class ComboIndicators(QCAlgorithm):
         ##########################
         holdings = self.Portfolio[self.target_crypto].Quantity
         last_price = self.Securities[self.target_crypto].Close
+        volume = self.Securities[self.target_crypto].Volume
         buy_price = self.Securities[self.target_crypto].BidPrice
         sell_price = self.Securities[self.target_crypto].AskPrice
         amount = float(self.Portfolio.GetBuyingPower(self.target_crypto, OrderDirection.Buy) / last_price)
@@ -139,48 +146,33 @@ class ComboIndicators(QCAlgorithm):
         ###################
         # Indicator Logic #
         ###################
-        if self.indicator_name == "bollinger":
-            # buy if price closes above upper bollinger band
-            # sell if price closes below middle bollinger band
-            if holdings == 0 and last_price > self.Bolband.UpperBand.Current.Value:
-                self.LimitOrder(self.target_crypto, amount, buy_price)
-                self.pending_limit_price = buy_price
-            elif holdings > 0 and last_price < self.Bolband.MiddleBand.Current.Value:
-                self.LimitOrder(self.target_crypto, -holdings, sell_price)
-                self.pending_limit_price = sell_price
-        elif self.indicator_name == "momentum":
-            mom = self.mom.Current.Value
-            if holdings == 0 and mom > self.momentum_buy_threshold:
-                self.LimitOrder(self.target_crypto, amount, buy_price)
-                self.pending_limit_price = buy_price
-            elif holdings > 0 and mom < self.momentum_sell_threshold:
-                self.LimitOrder(self.target_crypto, -holdings, sell_price)
-                self.pending_limit_price = sell_price
-        elif self.indicator_name == "macd":
-            if not self.macd.IsReady:
-                return
-            signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
+        if not self.bolband.IsReady or not self.macd.IsReady or not self.ichimoku.IsReady or not self.rsi.IsReady:
+            return
+        signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
 
-            if holdings == 0 and signalDeltaPercent > self.MACD_tolerance:
-                self.LimitOrder(self.target_crypto, amount, buy_price)
-                self.pending_limit_price = buy_price
-            elif holdings > 0 and signalDeltaPercent < -self.MACD_tolerance:
-                self.LimitOrder(self.target_crypto, -holdings, sell_price)
-                self.pending_limit_price = sell_price
-        elif self.indicator_name == "ichimoku":
-            if not self.ichimoku.IsReady:
-                return
-            # self.Debug("TenkanMax: %s Tenkan: %s" % (str(self.ichimoku.TenkanMaximum.Current.Value), str(self.ichimoku.Tenkan.Current.Value)))
-            if holdings == 0 and (self.ichimoku.Tenkan.Current.Value > self.ichimoku.Kijun.Current.Value
-                                  and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
-                                  and last_price > self.ichimoku.SenkouA.Current.Value):
-                self.LimitOrder(self.target_crypto, amount, buy_price)
-                self.pending_limit_price = buy_price
-            elif holdings > 0 and (self.ichimoku.Tenkan.Current.Value <= self.ichimoku.Kijun.Current.Value
-                                   and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
-                                   and last_price < self.ichimoku.SenkouA.Current.Value):
-                self.LimitOrder(self.target_crypto, -holdings, sell_price)
-                self.pending_limit_price = sell_price
+        if holdings == 0 and (
+            last_price > self.bolband.UpperBand.Current.Value and
+            signalDeltaPercent > self.MACD_tolerance and
+            self.ichimoku.Tenkan.Current.Value > self.ichimoku.Kijun.Current.Value
+            and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
+            and last_price > self.ichimoku.SenkouA.Current.Value and
+            self.rsi.Current.Value < self.rsi_lower and
+            volume > self.volume_min
+            ):
+            self.LimitOrder(self.target_crypto, amount, buy_price)
+            self.pending_limit_price = buy_price
+        elif holdings > 0 and (
+            last_price < self.bolband.MiddleBand.Current.Value and
+            signalDeltaPercent < -self.MACD_tolerance and
+            (self.ichimoku.Tenkan.Current.Value <= self.ichimoku.Kijun.Current.Value
+             and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
+             and last_price < self.ichimoku.SenkouA.Current.Value) and
+            self.rsi.Current.Value > self.rsi_upper and
+            volume > self.volume_min
+        ):
+            self.LimitOrder(self.target_crypto, -holdings, sell_price)
+            self.pending_limit_price = sell_price
+
 
     # def OnOrderEvent(self, orderEvent):
     #    order = self.Transactions.GetOrderById(orderEvent.OrderId)
