@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators
         /// is an oscillator that fluctuates above and below the zero line.
         /// Bullish or bearish divergences in the MACD-Histogram can alert chartists to an imminent signal line crossover in MACD.
         /// </summary>
-        public decimal Histogram { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Histogram { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -79,6 +79,7 @@ namespace QuantConnect.Indicators
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
+            Histogram = new Identity(name + "_Histogram");
         }
 
         /// <summary>
@@ -97,7 +98,7 @@ namespace QuantConnect.Indicators
                 Signal.Update(input.Time, macd);
             }
 
-            Histogram = macd - Signal;
+            Histogram.Update(input.Time, macd - Signal);
             return macd;
         }
 
@@ -109,7 +110,7 @@ namespace QuantConnect.Indicators
             Fast.Reset();
             Slow.Reset();
             Signal.Reset();
-            Histogram = Decimal.Zero;
+            Histogram.Reset();
             base.Reset();
         }
     }
