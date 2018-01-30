@@ -273,6 +273,7 @@
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
+    <Compile Include="Indicators\CoppockCurveTests.cs" />
     <Compile Include="Indicators\DetrendedPriceOscillatorTests.cs" />
     <Compile Include="Indicators\FractalAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\ArnaudLegouxMovingAverageTest.cs" />
@@ -452,6 +453,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_mass_index_25.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_coppock_curve.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestData\spy_dpo.csv">
