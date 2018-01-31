@@ -112,32 +112,33 @@ namespace QuantConnect.Securities
         /// <returns>Returns the maximum allowed market order quantity</returns>
         public decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
         {
-            // TODO: still needs cleanup + fix account currency conversions
-
             var baseCurrency = security as IBaseCurrencySymbol;
             if (baseCurrency == null) return 0;
 
-            var baseCurrencyPosition = portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
-            var quoteCurrencyPosition = portfolio.CashBook[security.QuoteCurrency.Symbol].Amount;
+            // convert base currency cash to account currency
+            var baseCurrencyPosition = portfolio.CashBook.ConvertToAccountCurrency(
+                portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount,
+                baseCurrency.BaseCurrencySymbol);
+
+            // convert quote currency cash to account currency
+            var quoteCurrencyPosition = portfolio.CashBook.ConvertToAccountCurrency(
+                portfolio.CashBook[security.QuoteCurrency.Symbol].Amount,
+                security.QuoteCurrency.Symbol);
 
             // determine the unit price in terms of the account currency
-            var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security) / security.QuoteCurrency.ConversionRate;
+            var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security);
             if (unitPrice == 0) return 0;
 
-            var currentHoldingsValue = baseCurrencyPosition * portfolio.CashBook[baseCurrency.BaseCurrencySymbol].ConversionRate;
-
-
             // remove directionality, we'll work in the land of absolutes
-            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
-            var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
+            var targetOrderValue = Math.Abs(targetPortfolioValue - baseCurrencyPosition);
+            var direction = targetPortfolioValue > baseCurrencyPosition ? OrderDirection.Buy : OrderDirection.Sell;
 
+            // calculate the total cash available
+            var cashRemaining = direction == OrderDirection.Buy ? quoteCurrencyPosition : baseCurrencyPosition;
+            if (cashRemaining <= 0) return 0;
 
-            // calculate the total margin available
-            var marginRemaining = direction == OrderDirection.Buy ? quoteCurrencyPosition : currentHoldingsValue;
-            if (marginRemaining <= 0) return 0;
-
-            // continue iterating while we do not have enough margin for the order
-            decimal marginRequired;
+            // continue iterating while we do not have enough cash for the order
+            decimal cashRequired;
             decimal orderValue;
             decimal orderFees;
             var feeToPriceRatio = 0m;
@@ -168,10 +169,10 @@ namespace QuantConnect.Securities
                     feeToPriceRatio = security.SymbolProperties.LotSize;
                 }
 
-                // calculate the margin required for the order
-                marginRequired = orderValue;
+                // calculate the cash required for the order
+                cashRequired = orderValue;
 
-            } while (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue);
+            } while (cashRequired > cashRemaining || orderValue + orderFees > targetOrderValue);
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
