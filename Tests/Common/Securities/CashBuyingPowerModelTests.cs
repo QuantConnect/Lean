@@ -17,6 +17,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -51,6 +52,8 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook.Add("BTC", 0, 15000m);
             _portfolio.CashBook.Add("ETH", 0, 1000m);
 
+            _algorithm.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+
             _transactionHandler = new BacktestingTransactionHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);
             _transactionHandler.Initialize(_algorithm, _brokerage, new TestResultHandler());
@@ -63,37 +66,25 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook[CashBook.AccountCurrency],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m))
-            {
-                FeeModel = new GDAXFeeModel()
-            };
+                new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m));
 
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook[CashBook.AccountCurrency],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m))
-            {
-                FeeModel = new GDAXFeeModel()
-            };
+                new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m));
 
             _btceur = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook["EUR"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m))
-            {
-                FeeModel = new GDAXFeeModel()
-            };
+                new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m));
 
             _ethbtc = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook["BTC"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHBTC, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETHBTC", "BTC", 1, 0.00001m, 0.00000001m))
-            {
-                FeeModel = new GDAXFeeModel()
-            };
+                new SymbolProperties("ETHBTC", "BTC", 1, 0.00001m, 0.00000001m));
 
             _buyingPowerModel = new CashBuyingPowerModel();
         }
@@ -176,11 +167,9 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(5000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
-            _btcusd.FeeModel = new GDAXFeeModel();
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
-            _ethusd.FeeModel = new GDAXFeeModel();
             _ethusd.SetMarketPrice(new Tick { Value = 1000m });
             _algorithm.SetFinishedWarmingUp();
 
@@ -207,33 +196,33 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook["ETH"].SetAmount(3m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
-            _btcusd.FeeModel = new GDAXFeeModel();
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
-            _ethusd.FeeModel = new GDAXFeeModel();
             _ethusd.SetMarketPrice(new Tick { Value = 1000m });
 
             _ethbtc = _algorithm.AddCrypto("ETHBTC");
-            _ethbtc.FeeModel = new GDAXFeeModel();
             _ethbtc.SetMarketPrice(new Tick { Value = 0.1m });
             _algorithm.SetFinishedWarmingUp();
 
-            // BTCUSD sell order decreases available BTC (1 - 0.1 = 0.9 BTC)
+            // BTCUSD sell limit order decreases available BTC (1 - 0.1 = 0.9 BTC)
             SubmitLimitOrder(_btcusd.Symbol, -0.1m, 15000m);
 
-            // ETHUSD sell order decreases available ETH (3 - 1 = 2 ETH)
+            // ETHUSD sell limit order decreases available ETH (3 - 1 = 2 ETH)
             SubmitLimitOrder(_ethusd.Symbol, -1m, 1000m);
 
-            // ETHBTC buy order decreases available BTC (0.9 - 0.1 = 0.8 BTC)
+            // ETHBTC buy limit order decreases available BTC (0.9 - 0.1 = 0.8 BTC)
             SubmitLimitOrder(_ethbtc.Symbol, 1m, 0.1m);
 
-            // 0.8 BTC available, can sell 0.8 BTC at any price
-            var order = new LimitOrder(_btcusd.Symbol, -0.8m, 10000m, DateTime.UtcNow);
+            // BTCUSD sell stop order decreases available BTC (0.8 - 0.1 = 0.7 BTC)
+            SubmitStopMarketOrder(_btcusd.Symbol, -0.1m, 5000m);
+
+            // 0.7 BTC available, can sell 0.7 BTC at any price
+            var order = new LimitOrder(_btcusd.Symbol, -0.7m, 10000m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
 
-            // 0.8 BTC available, cannot sell 0.9 BTC at any price
-            order = new LimitOrder(_btcusd.Symbol, -0.9m, 10000m, DateTime.UtcNow);
+            // 0.7 BTC available, cannot sell 0.8 BTC at any price
+            order = new LimitOrder(_btcusd.Symbol, -0.8m, 10000m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
 
             // 2 ETH available, can sell 2 ETH at any price
@@ -243,6 +232,14 @@ namespace QuantConnect.Tests.Common.Securities
             // 2 ETH available, cannot sell 2.1 ETH at any price
             order = new LimitOrder(_ethusd.Symbol, -2.1m, 2000m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order));
+
+            // 0.7 BTC available, can sell stop 0.7 BTC at any price
+            var stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.7m, 5000m, DateTime.UtcNow);
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder));
+
+            // 0.7 BTC available, cannot sell stop 0.8 BTC at any price
+            stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.8m, 5000m, DateTime.UtcNow);
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder));
         }
 
         [Test]
@@ -314,11 +311,9 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(5000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
-            _btcusd.FeeModel = new GDAXFeeModel();
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
-            _ethusd.FeeModel = new GDAXFeeModel();
             _ethusd.SetMarketPrice(new Tick { Value = 1000m });
             _algorithm.SetFinishedWarmingUp();
 
@@ -348,15 +343,12 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook["ETH"].SetAmount(3m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
-            _btcusd.FeeModel = new GDAXFeeModel();
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
-            _ethusd.FeeModel = new GDAXFeeModel();
             _ethusd.SetMarketPrice(new Tick { Value = 1000m });
 
             _ethbtc = _algorithm.AddCrypto("ETHBTC");
-            _ethbtc.FeeModel = new GDAXFeeModel();
             _ethbtc.SetMarketPrice(new Tick { Value = 0.1m });
             _algorithm.SetFinishedWarmingUp();
 
@@ -403,19 +395,15 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash("EUR", 10000m, 1.20m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
-            _btcusd.FeeModel = new GDAXFeeModel();
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
-            _ethusd.FeeModel = new GDAXFeeModel();
             _ethusd.SetMarketPrice(new Tick { Value = 1000m });
 
             _ethbtc = _algorithm.AddCrypto("ETHBTC");
-            _ethbtc.FeeModel = new GDAXFeeModel();
             _ethbtc.SetMarketPrice(new Tick { Value = 0.1m });
 
             _btceur = _algorithm.AddCrypto("BTCEUR");
-            _btceur.FeeModel = new GDAXFeeModel();
             _btceur.SetMarketPrice(new Tick { Value = 12000m });
             _algorithm.SetFinishedWarmingUp();
 
@@ -435,13 +423,34 @@ namespace QuantConnect.Tests.Common.Securities
 
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)
         {
-            var resetEvent = new ManualResetEvent(false);
+            using (var resetEvent = new ManualResetEvent(false))
+            {
+                EventHandler<OrderEvent> handler = (s, e) => { resetEvent.Set(); };
 
-            _brokerage.OrderStatusChanged += (s, e) => { resetEvent.Set(); };
+                _brokerage.OrderStatusChanged += handler;
 
-            _algorithm.LimitOrder(symbol, quantity, limitPrice);
+                _algorithm.LimitOrder(symbol, quantity, limitPrice);
 
-            resetEvent.WaitOne();
+                resetEvent.WaitOne();
+
+                _brokerage.OrderStatusChanged -= handler;
+            }
+        }
+
+        private void SubmitStopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice)
+        {
+            using (var resetEvent = new ManualResetEvent(false))
+            {
+                EventHandler<OrderEvent> handler = (s, e) => { resetEvent.Set(); };
+
+                _brokerage.OrderStatusChanged += handler;
+
+                _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
+
+                resetEvent.WaitOne();
+
+                _brokerage.OrderStatusChanged -= handler;
+            }
         }
     }
 }

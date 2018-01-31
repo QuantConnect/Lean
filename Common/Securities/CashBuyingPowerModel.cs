@@ -76,7 +76,7 @@ namespace QuantConnect.Securities
             }
 
             // calculate reserved quantity for open orders (in quote or base currency depending on direction)
-            var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(portfolio, security, order.Direction);
+            var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(portfolio, security, order);
 
             if (order.Type == OrderType.Market)
             {
@@ -93,12 +93,16 @@ namespace QuantConnect.Securities
                 return orderQuantity <= Math.Abs(maximumQuantity);
             }
 
-            // for non market orders, add fees to the order cost
-            var orderFee = security.FeeModel.GetOrderFee(security, order);
-            orderFee = portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency,
-                order.Direction == OrderDirection.Buy
-                    ? security.QuoteCurrency.Symbol
-                    : baseCurrency.BaseCurrencySymbol);
+            // for limit orders, add fees to the order cost
+            var orderFee = 0m;
+            if (order.Type == OrderType.Limit)
+            {
+                orderFee = security.FeeModel.GetOrderFee(security, order);
+                orderFee = portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency,
+                    order.Direction == OrderDirection.Buy
+                        ? security.QuoteCurrency.Symbol
+                        : baseCurrency.BaseCurrencySymbol);
+            }
 
             return orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
         }
@@ -242,13 +246,13 @@ namespace QuantConnect.Securities
             return orderPrice;
         }
 
-        private static decimal GetOpenOrdersReservedQuantity(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        private static decimal GetOpenOrdersReservedQuantity(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             var baseCurrency = security as IBaseCurrencySymbol;
             if (baseCurrency == null) return 0;
 
             // find the target currency for the requested direction and the securities potentially involved
-            var targetCurrency = direction == OrderDirection.Buy
+            var targetCurrency = order.Direction == OrderDirection.Buy
                 ? security.QuoteCurrency.Symbol
                 : baseCurrency.BaseCurrencySymbol;
 
@@ -273,8 +277,12 @@ namespace QuantConnect.Securities
                 {
                     OrderDirection dir;
                     return symbolDirectionPairs.TryGetValue(x.Symbol, out dir) &&
+                           // same direction of our order
                            dir == x.Direction &&
-                           x.Type == OrderType.Limit;
+                           // don't count our current order
+                           x.Id != order.Id &&
+                           // only count working orders
+                           (x.Type == OrderType.Limit || x.Type == OrderType.StopMarket);
                 }
             );
 
