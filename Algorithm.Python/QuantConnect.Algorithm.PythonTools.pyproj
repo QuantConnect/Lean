@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Compile Include="CustomVolatilityModelAlgorithm.py" />
     <Compile Include="BasicTemplateAlgorithm.py" />
     <Compile Include="BasicTemplateDailyAlgorithm.py" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.py" />

@@ -137,6 +137,7 @@
   <ItemGroup>
     <Content Include="BasicTemplateFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateLibrary.py" />
+    <Content Include="CustomVolatilityModelAlgorithm.py" />
     <Content Include="HistoryAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
   </ItemGroup>
