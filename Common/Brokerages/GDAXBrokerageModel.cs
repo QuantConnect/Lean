@@ -57,13 +57,12 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Margin"/></param>
-        public GDAXBrokerageModel(AccountType accountType = AccountType.Margin)
+        public GDAXBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
         {
             if (accountType == AccountType.Margin)
             {
-                new BrokerageMessageEvent(BrokerageMessageType.Warning, 0,
-                    "It is recommend to use a cash account. Margin trading is currently in pre-Alpha. Use at your own risk and please report any issues encountered.");
+                throw new Exception("The GDAX brokerage does not currently support Margin trading.");
             }
         }
 
@@ -74,12 +73,8 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
-            if (AccountType == AccountType.Cash)
-            {
-                return 1m;
-            }
-
-            return 3m;
+            // margin trading is not currently supported by GDAX
+            return 1m;
         }
 
         /// <summary>
@@ -161,6 +156,19 @@ namespace QuantConnect.Brokerages
         public override IFillModel GetFillModel(Security security)
         {
             return new LatestPriceFillModel();
+        }
+
+        /// <summary>
+        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
+        /// For cash accounts, leverage = 1 is used.
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        public override IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        {
+            // margin trading is not currently supported by GDAX
+            return new CashBuyingPowerModel();
         }
     }
 }

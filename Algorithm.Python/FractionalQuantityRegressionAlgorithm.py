@@ -23,6 +23,7 @@ from NodaTime import DateTimeZone
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Brokerages import *
+from QuantConnect.Securities import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 
@@ -48,6 +49,7 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
         self.SetTimeZone(DateTimeZone.Utc)
 
         security = self.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, False, 3.3, True)
+        security.BuyingPowerModel = SecurityMarginBuyingPowerModel(3.3);
         con = QuoteBarConsolidator(timedelta(1))
         self.SubscriptionManager.AddConsolidator("BTCUSD", con)
         con.DataConsolidated += self.DataConsolidated

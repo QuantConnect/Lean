@@ -17,6 +17,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using System;
 using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -39,6 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
             var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 3.3m, true);
+            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(3.3m);
             var con = new QuoteBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
             con.DataConsolidated += DataConsolidated;

@@ -22,33 +22,39 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
-    [TestFixture()]
+    [TestFixture]
     public class GDAXBrokerageModelTests
     {
+        private readonly GDAXBrokerageModel _unit = new GDAXBrokerageModel();
 
-        GDAXBrokerageModel _unit = new GDAXBrokerageModel();
-
-        [Test()]
+        [Test]
         public void GetLeverageTest()
         {
-            Assert.AreEqual(3, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
+            Assert.AreEqual(1, _unit.GetLeverage(GDAXTestsHelpers.GetSecurity()));
         }
 
-        [Test()]
+        [Test]
         public void GetFeeModelTest()
         {
             Assert.IsInstanceOf<GDAXFeeModel>(_unit.GetFeeModel(GDAXTestsHelpers.GetSecurity()));
         }
 
-        [Test()]
+        [Test]
+        public void GetBuyingPowerModelTest()
+        {
+            Assert.IsInstanceOf<CashBuyingPowerModel>(_unit.GetBuyingPowerModel(GDAXTestsHelpers.GetSecurity(), AccountType.Cash));
+        }
+
+        [Test]
         public void CanUpdateOrderTest()
         {
             BrokerageMessageEvent message;
-            Assert.AreEqual(false, _unit.CanUpdateOrder(GDAXTestsHelpers.GetSecurity(), Mock.Of<QuantConnect.Orders.Order>(),
-                new QuantConnect.Orders.UpdateOrderRequest(DateTime.UtcNow, 1, new QuantConnect.Orders.UpdateOrderFields()), out message));
+            Assert.AreEqual(false, _unit.CanUpdateOrder(GDAXTestsHelpers.GetSecurity(), Mock.Of<Order>(),
+                new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields()), out message));
         }
 
         [TestCase(true)]
@@ -56,7 +62,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void CanSubmitOrder_WhenBrokerageIdIsCorrect(bool isUpdate)
         {
             BrokerageMessageEvent message;
-            var order = new Mock<QuantConnect.Orders.Order>();
+            var order = new Mock<Order>();
             order.Object.Quantity = 10.0m;
 
             if (isUpdate)
@@ -72,7 +78,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
             BrokerageMessageEvent message;
-            var order = new Mock<QuantConnect.Orders.Order>();
+            var order = new Mock<Order>();
 
             order.Object.Quantity = orderQuantity;
 
@@ -88,7 +94,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void CanOnlySubmitCryptoOrders(SecurityType securityType, bool isValidSecurityType)
         {
             BrokerageMessageEvent message;
-            var order = new Mock<QuantConnect.Orders.Order>();
+            var order = new Mock<Order>();
             order.Object.Quantity = 10.0m;
 
             Assert.AreEqual(isValidSecurityType, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
