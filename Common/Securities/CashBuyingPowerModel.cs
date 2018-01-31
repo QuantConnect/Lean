@@ -272,7 +272,9 @@ namespace QuantConnect.Securities
             var openOrders = portfolio.Transactions.GetOpenOrders(x =>
                 {
                     OrderDirection dir;
-                    return symbolDirectionPairs.TryGetValue(x.Symbol, out dir) && dir == x.Direction;
+                    return symbolDirectionPairs.TryGetValue(x.Symbol, out dir) &&
+                           dir == x.Direction &&
+                           x.Type == OrderType.Limit;
                 }
             );
 
