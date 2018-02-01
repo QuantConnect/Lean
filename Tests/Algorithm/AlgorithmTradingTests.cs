@@ -984,9 +984,9 @@ namespace QuantConnect.Tests.Algorithm
             btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
             // Set Price to $26
             Update(btcusd, 26);
-            // So -100000/26 = 3846.153846153846, After Rounding off becomes -3846.15384615, since lot size is 0.00000001
+            // Cash model does not allow shorts
             actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, -1m);
-            Assert.AreEqual(-3846.15384615m, actual);
+            Assert.AreEqual(0, actual);
         }
 
         [Test]
