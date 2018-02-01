@@ -25,6 +25,16 @@ namespace QuantConnect.Orders
     public class MarketOnCloseOrder : Order
     {
         /// <summary>
+        /// Gets the default interval before market close that an MOC order may be submitted.
+        /// For example, US equity exchanges typically require MOC orders to be placed no later
+        /// than 15 minutes before market close, which yields a nominal time of 3:45PM.
+        /// This buffer value takes into account the 15 minutes and adds an additional 30 seconds
+        /// to account for other potential delays, such as LEAN order processing and placement of
+        /// the order to the exchange.
+        /// </summary>
+        public static readonly TimeSpan DefaultSubmissionTimeBuffer = TimeSpan.FromMinutes(15.5);
+
+        /// <summary>
         /// MarketOnClose Order Type
         /// </summary>
         public override OrderType Type

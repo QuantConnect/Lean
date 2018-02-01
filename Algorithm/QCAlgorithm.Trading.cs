@@ -747,7 +747,7 @@ namespace QuantConnect.Algorithm
             {
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
                 // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
-                var latestSubmissionTime = nextMarketClose.AddMinutes(-15.50);
+                var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.DefaultSubmissionTimeBuffer);
                 if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
                 {
                     // tell the user we require a 16 minute buffer, on minute data in live a user will receive the 3:44->3:45 bar at 3:45,
