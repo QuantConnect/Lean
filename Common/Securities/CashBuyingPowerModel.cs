@@ -78,18 +78,22 @@ namespace QuantConnect.Securities
             // calculate reserved quantity for open orders (in quote or base currency depending on direction)
             var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(portfolio, security, order);
 
+            if (order.Direction == OrderDirection.Sell)
+            {
+                // can sell available and non-reserved quantities
+                return orderQuantity <= totalQuantity - openOrdersReservedQuantity;
+            }
+
             if (order.Type == OrderType.Market)
             {
-                // find a target value in account currency for market orders
-                var targetValue = order.Direction == OrderDirection.Buy
-                    ? portfolio.CashBook.ConvertToAccountCurrency(totalQuantity - openOrdersReservedQuantity, security.QuoteCurrency.Symbol)
-                    : portfolio.CashBook.ConvertToAccountCurrency(openOrdersReservedQuantity, baseCurrency.BaseCurrencySymbol);
+                // find a target value in account currency for buy market orders
+                var targetValue =
+                    portfolio.CashBook.ConvertToAccountCurrency(totalQuantity - openOrdersReservedQuantity,
+                        security.QuoteCurrency.Symbol);
 
-                var maximumQuantity = GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue);
-                if (order.Direction == OrderDirection.Buy)
-                {
-                    maximumQuantity *= GetOrderPrice(security, order);
-                }
+                var maximumQuantity =
+                    GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue) * GetOrderPrice(security, order);
+
                 return orderQuantity <= Math.Abs(maximumQuantity);
             }
 
@@ -98,10 +102,7 @@ namespace QuantConnect.Securities
             if (order.Type == OrderType.Limit)
             {
                 orderFee = security.FeeModel.GetOrderFee(security, order);
-                orderFee = portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency,
-                    order.Direction == OrderDirection.Buy
-                        ? security.QuoteCurrency.Symbol
-                        : baseCurrency.BaseCurrencySymbol);
+                orderFee = portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency, security.QuoteCurrency.Symbol);
             }
 
             return orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;

@@ -293,13 +293,13 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd.SetMarketPrice(new Tick { Value = 10000m });
             _portfolio.SetCash("BTC", 0.5m, 10000m);
 
-            // 0.5 BTC in portfolio, cannot sell 0.5 BTC (fees are excluded)
+            // 0.5 BTC in portfolio, can sell 0.5 BTC
             var order = new MarketOrder(_btcusd.Symbol, -0.5m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
-
-            // 0.5 BTC in portfolio, can sell 0.45 BTC (plus fees)
-            order = new MarketOrder(_btcusd.Symbol, -0.45m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+
+            // 0.5 BTC in portfolio, cannot sell 0.51 BTC
+            order = new MarketOrder(_btcusd.Symbol, -0.51m, DateTime.UtcNow);
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
 
             // Maximum we can market sell with 0.5 BTC is 0.49875 BTC
             Assert.AreEqual(-0.49875m, _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 0));
@@ -358,16 +358,16 @@ namespace QuantConnect.Tests.Common.Securities
             // ETHBTC buy order decreases available BTC (0.9 - 0.1 = 0.8 BTC)
             SubmitLimitOrder(_ethbtc.Symbol, 1m, 0.1m);
 
-            // Maximum we can market sell with 0.8 BTC is 0.798 BTC
+            // Maximum we can market sell with 0.8 BTC is 0.798 BTC (for a target position of 0.2 BTC)
             // target value = (1 - 0.8) * price
             Assert.AreEqual(-0.798m, _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 0.2m * 15000));
 
-            // 0.8 BTC available, can sell 0.79 BTC at any price
-            var order = new MarketOrder(_btcusd.Symbol, -0.79m, DateTime.UtcNow);
+            // 0.8 BTC available, can sell 0.80 BTC at market
+            var order = new MarketOrder(_btcusd.Symbol, -0.80m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
 
-            // 0.8 BTC available, cannot sell 0.8 BTC at any price
-            order = new MarketOrder(_btcusd.Symbol, -0.8m, DateTime.UtcNow);
+            // 0.8 BTC available, cannot sell 0.81 BTC at market
+            order = new MarketOrder(_btcusd.Symbol, -0.81m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
         }
 
