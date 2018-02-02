@@ -21,6 +21,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
@@ -266,7 +267,24 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public virtual IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
-            return security.BuyingPowerModel;
+            switch (security.Type)
+            {
+                case SecurityType.Crypto:
+                    return new CashBuyingPowerModel();
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return new SecurityMarginBuyingPowerModel(50m);
+
+                case SecurityType.Option:
+                    return new OptionMarginBuyingPowerModel();
+
+                case SecurityType.Future:
+                    return new FutureMarginBuyingPowerModel();
+
+                default:
+                    return new SecurityMarginBuyingPowerModel(2m);
+            }
         }
     }
 }
