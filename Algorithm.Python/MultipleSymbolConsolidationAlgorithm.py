@@ -46,8 +46,8 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
         # Contains all of our forex symbols
         ForexSymbols =["EURUSD", "USDJPY", "EURGBP", "EURCHF", "USDCAD", "USDCHF", "AUDUSD","NZDUSD"]
         
-        self.SetStartDate(2014, 12, 01)
-        self.SetEndDate(2015, 02, 01)
+        self.SetStartDate(2014, 12, 1)
+        self.SetEndDate(2015, 2, 1)
         
         # initialize our equity data
         for symbol in EquitySymbols:

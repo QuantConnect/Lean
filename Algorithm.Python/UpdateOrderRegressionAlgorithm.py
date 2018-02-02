@@ -38,8 +38,8 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,01,01)  #Set Start Date
-        self.SetEndDate(2015,01,01)    #Set End Date
+        self.SetStartDate(2013,1,1)    #Set Start Date
+        self.SetEndDate(2015,1,1)      #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
 

@@ -35,7 +35,7 @@ class BasicTemplateDailyAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,07)  #Set Start Date
+        self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,18)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data

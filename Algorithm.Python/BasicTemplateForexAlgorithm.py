@@ -40,7 +40,7 @@ class BasicTemplateForexAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         # Start and end dates for the backtest.
-        self.SetStartDate(2013, 10, 07)
+        self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 11)
 
         # Add FOREX contract you want to trade

@@ -13,16 +13,13 @@
 
 from clr import AddReference
 AddReference("System.Core")
-AddReference("System.Collections")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 
 from System import *
-from System.Collections.Generic import List
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Data.UniverseSelection import *
-
+from QuantConnect.Data.Custom import DailyFx
 import numpy as np
 
 ### <summary>
@@ -33,18 +30,17 @@ import numpy as np
 ### <meta name="tag" content="forex" />
 ### <meta name="tag" content="dailyfx" />
 class DailyFxAlgorithm(QCAlgorithm):
-
     ''' Add the Daily FX type to our algorithm and use its events. '''
 
     def Initialize(self):
         # Set the cash we'd like to use for our backtest
         self.SetCash(100000)
         # Set the start and the end date
-        self.SetStartDate(2016,05,26)
-        self.SetEndDate(2016,05,27)
+        self.SetStartDate(2016,5,26)
+        self.SetEndDate(2016,5,27)
         self._sliceCount = 0
         self._eventCount = 0
-        self.AddData[DailyFx]("DFX",Resolution.Second)
+        self.AddData[DailyFx]("DFX",Resolution.Second, TimeZones.Utc)
 
     def OnData(self, data):
 
@@ -54,4 +50,3 @@ class DailyFxAlgorithm(QCAlgorithm):
         result = data["DFX"]
         self._sliceCount +=1
         self.Log("SLICE >> {0} : {1}".format(self._sliceCount, result.ToString()))
-
