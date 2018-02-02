@@ -15,20 +15,19 @@ from QuantConnect.Brokerages import BrokerageName
 from QuantConnect.Data.Consolidators import TradeBarConsolidator
 from QuantConnect.Orders import OrderDirection
 
-import json
 import os
+
+MODE = "live" ### 'live' or 'opt'
 
 class IndicatorAlgo(QCAlgorithm):
     def Initialize(self):
-        self.cwd = os.path.dirname(os.path.realpath(__file__))
-        self.config_file = os.path.join(self.cwd,'configs','config.json')
         self.runconfig = {}
-
-        try:
-            fp = open(self.config_file, 'r')
-            self.runconfig = json.load(fp)
-        except IOError:
-            print('config file: {} not found. Continuing with pre-configured settings'.format(self.config_file))
+        if MODE is 'live':
+            from configs import best_configs
+            self.runconfig = best_configs
+        else:
+            from config_inst import inst_configs
+            self.runconfig = inst_configs
 
         #####################
         # Backtest Settings #
@@ -51,7 +50,7 @@ class IndicatorAlgo(QCAlgorithm):
         if '__INDICATORS__' in self.runconfig:
             self.indicator_name = str(self.runconfig['__INDICATORS__'])
         else:
-            self.indicator_name = "macd"
+            self.indicator_name = "__MACD__"
 
         # Number of time periods resolution to load
         if '__WARMUP_LOOKBACK__' in self.runconfig:
@@ -163,6 +162,32 @@ class IndicatorAlgo(QCAlgorithm):
         else:
             self.senkouBDelayedPeriod = 26
 
+        if 'VOLUME_MIN' in self.runconfig:
+            self.volume_min = self.runconfig['VOLUME_MIN']
+        else:
+            self.volume_min = 100
+
+        if 'RSI_PERIOD' in self.runconfig:
+            self.rsi_period = self.runconfig['RSI_PERIOD']
+        else:
+            self.rsi_period = 14
+
+        if 'RSI_MOVING_AVERAGE_TYPE' in self.runconfig:
+            self.rsi_moving_average_type = getattr(ind, str(self.runconfig['RSI_MOVING_AVERAGE_TYPE']))
+        else:
+            self.rsi_moving_average_type = ind.MovingAverageType.Wilders
+
+        if 'RSI_LOWER' in self.runconfig:
+            self.rsi_lower = self.runconfig['RSI_LOWER']
+        else:
+            self.rsi_lower = 30
+
+        if 'RSI_UPPER' in self.runconfig:
+            self.rsi_upper = self.runconfig['RSI_UPPER']
+        else:
+            self.rsi_upper = 70
+
+
         ############################
         # Indicators and processes #
         ############################
@@ -183,22 +208,38 @@ class IndicatorAlgo(QCAlgorithm):
         self.AddChart(holdingsPlot)
 
         # Create the different indicators
-        if self.indicator_name == "bollinger":
+        if self.indicator_name == "__BOLLINGER__":
             # Create bollinger band
             self.Bolband = self.BB(self.target_crypto, self.bollinger_period, self.k, self.moving_average_type,
                                    self.time_resolution)
-        elif self.indicator_name == "momentum":
-            # Create a momentum indicator over 3 days
+        elif self.indicator_name == "__MOMENTUM__":
+            # Create a momentum indicator
             self.mom = self.MOM(self.target_crypto, self.momentum_period, self.time_resolution)
-        elif self.indicator_name == "macd":
+        elif self.indicator_name == "__MACD__":
             # Create the MACD
             self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
                                   self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
             self.RegisterIndicator(self.target_crypto, self.macd, barConsolidator)
-        elif self.indicator_name == "ichimoku":
+        elif self.indicator_name == "__ICHIMOKU__":
             self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
                                           self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
                                           self.time_resolution * self.time_resolution)
+        elif self.indicator_name == "__COMBO__":
+            self.bolband = self.BB(self.target_crypto, self.bollinger_period, self.k, self.moving_average_type,
+                                   self.time_resolution)
+            self.macd = self.MACD(self.target_crypto, self.MACD_fast_period, self.MACD_slow_period,
+                                      self.MACD_signal_period, self.MACD_moving_average_type, self.time_resolution)
+            self.ichimoku = self.ICHIMOKU(self.target_crypto, self.tenkanPeriod, self.kijunPeriod, self.senkouAPeriod,
+                                          self.senkouBPeriod, self.senkouADelayedPeriod, self.senkouBDelayedPeriod,
+                                          self.time_resolution)
+            self.rsi = self.RSI(self.target_crypto, self.rsi_period, self.rsi_moving_average_type)
+
+            self.RegisterIndicator(self.target_crypto, self.bolband, barConsolidator)
+            self.RegisterIndicator(self.target_crypto, self.macd, barConsolidator)
+            #self.RegisterIndicator(self.target_crypto, self.ichimoku, barConsolidator)
+            #self.RegisterIndicator(self.target_crypto, self.rsi, barConsolidator)
+
+
 
         # Processing variables
         self.pending_limit_price = 0
@@ -255,7 +296,7 @@ class IndicatorAlgo(QCAlgorithm):
         ###################
         # Indicator Logic #
         ###################
-        if self.indicator_name == "bollinger":
+        if self.indicator_name == "__BOLLINGER__":
             # buy if price closes above upper bollinger band
             # sell if price closes below middle bollinger band
             if holdings == 0 and last_price > self.Bolband.UpperBand.Current.Value:
@@ -264,7 +305,7 @@ class IndicatorAlgo(QCAlgorithm):
             elif holdings > 0 and last_price < self.Bolband.MiddleBand.Current.Value:
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
-        elif self.indicator_name == "momentum":
+        elif self.indicator_name == "__MOMENTUM__":
             mom = self.mom.Current.Value
             if holdings == 0 and mom > self.momentum_buy_threshold:
                 self.LimitOrder(self.target_crypto, amount, buy_price)
@@ -272,7 +313,7 @@ class IndicatorAlgo(QCAlgorithm):
             elif holdings > 0 and mom < self.momentum_sell_threshold:
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
-        elif self.indicator_name == "macd":
+        elif self.indicator_name == "__MACD__":
             if not self.macd.IsReady:
                 return
             signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
@@ -283,7 +324,7 @@ class IndicatorAlgo(QCAlgorithm):
             elif holdings > 0 and signalDeltaPercent < -self.MACD_tolerance:
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
-        elif self.indicator_name == "ichimoku":
+        elif self.indicator_name == "__ICHIMOKU__":
             if not self.ichimoku.IsReady:
                 return
             # self.Debug("TenkanMax: %s Tenkan: %s" % (str(self.ichimoku.TenkanMaximum.Current.Value), str(self.ichimoku.Tenkan.Current.Value)))
@@ -297,6 +338,38 @@ class IndicatorAlgo(QCAlgorithm):
                                    and last_price < self.ichimoku.SenkouA.Current.Value):
                 self.LimitOrder(self.target_crypto, -holdings, sell_price)
                 self.pending_limit_price = sell_price
+        elif self.indicator_name == "__COMBO__":
+
+            if not self.bolband.IsReady or not self.macd.IsReady or not self.ichimoku.IsReady or not self.rsi.IsReady:
+                return
+            signalDeltaPercent = (self.macd.Current.Value - self.macd.Signal.Current.Value) / self.macd.Fast.Current.Value
+
+            if holdings == 0 and (
+                last_price > self.bolband.UpperBand.Current.Value and
+                signalDeltaPercent > self.MACD_tolerance and
+                self.ichimoku.Tenkan.Current.Value > self.ichimoku.Kijun.Current.Value
+                and self.ichimoku.SenkouA.Current.Value > self.ichimoku.SenkouB.Current.Value
+                and last_price > self.ichimoku.SenkouA.Current.Value and
+                self.rsi.Current.Value < self.rsi_lower and
+                volume > self.volume_min
+                ):
+                self.LimitOrder(self.target_crypto, amount, buy_price)
+                self.pending_limit_price = buy_price
+            elif holdings > 0 and (
+                last_price < self.bolband.MiddleBand.Current.Value and
+                signalDeltaPercent < -self.MACD_tolerance and
+                (self.ichimoku.Tenkan.Current.Value <= self.ichimoku.Kijun.Current.Value
+                 and self.ichimoku.SenkouA.Current.Value < self.ichimoku.SenkouB.Current.Value
+                 and last_price < self.ichimoku.SenkouA.Current.Value) and
+                self.rsi.Current.Value > self.rsi_upper and
+                volume > self.volume_min
+            ):
+                self.LimitOrder(self.target_crypto, -holdings, sell_price)
+                self.pending_limit_price = sell_price
+
+
+
+
 
     # def OnOrderEvent(self, orderEvent):
     #    order = self.Transactions.GetOrderById(orderEvent.OrderId)
