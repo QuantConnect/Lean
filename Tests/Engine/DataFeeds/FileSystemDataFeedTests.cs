@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -41,7 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
             var dataProvider = new DefaultDataProvider();
 
-            var algorithm = new SingleSecurity_Second_BenchmarkTest();
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var feed = new FileSystemDataFeed();
 
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider);
@@ -79,7 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void TestDataFeedEnumeratorStackSpeed()
         {
-            var algorithm = new SingleSecurity_Second_BenchmarkTest();
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             algorithm.Initialize();
 
             var dataProvider = new DefaultDataProvider();
@@ -119,18 +118,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             stopwatch.Stop();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
-        }
-
-        public class SingleSecurity_Second_BenchmarkTest : QCAlgorithm
-        {
-            public override void Initialize()
-            {
-                SetStartDate(2008, 01, 01);
-                SetEndDate(2009, 01, 01);
-                SetCash(100000);
-                SetBenchmark(time => 0m);
-                AddEquity("SPY", Resolution.Second, "usa", true);
-            }
         }
     }
 }
