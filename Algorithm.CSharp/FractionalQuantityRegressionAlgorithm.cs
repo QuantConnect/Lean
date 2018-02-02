@@ -40,7 +40,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
             var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 3.3m, true);
+
+            // The default buying power model for the Crypto security type is now CashBuyingPowerModel.
+            // Since this test algorithm uses leverage we need to set a buying power model with margin.
             security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(3.3m);
+
             var con = new QuoteBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
             con.DataConsolidated += DataConsolidated;

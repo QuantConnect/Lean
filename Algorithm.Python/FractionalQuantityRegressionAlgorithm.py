@@ -49,7 +49,11 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
         self.SetTimeZone(DateTimeZone.Utc)
 
         security = self.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, False, 3.3, True)
+
+        ### The default buying power model for the Crypto security type is now CashBuyingPowerModel.
+        ### Since this test algorithm uses leverage we need to set a buying power model with margin.
         security.BuyingPowerModel = SecurityMarginBuyingPowerModel(3.3);
+
         con = QuoteBarConsolidator(timedelta(1))
         self.SubscriptionManager.AddConsolidator("BTCUSD", con)
         con.DataConsolidated += self.DataConsolidated
