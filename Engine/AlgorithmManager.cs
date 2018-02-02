@@ -364,7 +364,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
-                    var marginCallOrders = algorithm.Portfolio.ScanForMarginCall(out issueMarginCallWarning);
+                    var marginCallOrders = algorithm.Portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
                     if (marginCallOrders.Count != 0)
                     {
                         var executingMarginCall = false;

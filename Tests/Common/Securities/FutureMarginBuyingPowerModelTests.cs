@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,24 +14,27 @@
 */
 
 using System;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
-using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
-namespace QuantConnect.Tests.Common.Margin
+namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class FuturesMarginModelTests
+    public class FutureMarginBuyingPowerModelTests
     {
+        // Test class to enable calling protected methods
+        public class TestFutureMarginBuyingPowerModel : FutureMarginBuyingPowerModel
+        {
+            public new decimal GetMaintenanceMargin(Security security)
+            {
+                return base.GetMaintenanceMargin(security);
+            }
+        }
+
         [Test]
         public void TestMarginForSymbolWithOneLinerHistory()
         {
@@ -41,15 +44,15 @@ namespace QuantConnect.Tests.Common.Margin
             var tz = TimeZones.NewYork;
 
             // For this symbol we dont have any history, but only one date and margins line
-            var ticker = Futures.Softs.Coffee;
+            var ticker = QuantConnect.Securities.Futures.Softs.Coffee;
             var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
 
             var futureSecurity = new Future(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var marginModel = new FutureMarginModel();
-            Assert.AreEqual(2900m, marginModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = new TestFutureMarginBuyingPowerModel();
+            Assert.AreEqual(2900m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [Test]
@@ -68,8 +71,8 @@ namespace QuantConnect.Tests.Common.Margin
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var marginModel = new FutureMarginModel();
-            Assert.AreEqual(0m, marginModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = new TestFutureMarginBuyingPowerModel();
+            Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [Test]
@@ -81,27 +84,25 @@ namespace QuantConnect.Tests.Common.Margin
             var tz = TimeZones.NewYork;
 
             // For this symbol we dont have history
-            var ticker = Futures.Financials.EuroDollar;
+            var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
 
             var futureSecurity = new Future(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var marginModel = new FutureMarginModel();
-            Assert.AreEqual(625m, marginModel.GetMaintenanceMargin(futureSecurity));
+            var buyingPowerModel = new TestFutureMarginBuyingPowerModel();
+            Assert.AreEqual(625m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we move forward to exact date when margin req changed
             time = new DateTime(2014, 06, 13);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(725m, marginModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(725m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we fly beyond the last line of the history file (currently) to see how margin model resolves future dates
             time = new DateTime(2016, 06, 04);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(585m, marginModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(585m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
-
-        
     }
 }

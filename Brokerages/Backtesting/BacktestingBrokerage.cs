@@ -286,10 +286,10 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     // verify sure we have enough cash to perform the fill
-                    bool sufficientBuyingPower;
+                    bool hasSufficientBuyingPower;
                     try
                     {
-                        sufficientBuyingPower = Algorithm.Transactions.GetSufficientCapitalForOrder(Algorithm.Portfolio, order);
+                        hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(Algorithm.Portfolio, security, order);
                     }
                     catch (Exception err)
                     {
@@ -305,7 +305,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     //Before we check this queued order make sure we have buying power:
-                    if (sufficientBuyingPower)
+                    if (hasSufficientBuyingPower)
                     {
                         //Model:
                         var model = security.FillModel;

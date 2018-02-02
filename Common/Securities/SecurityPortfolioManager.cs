@@ -426,7 +426,7 @@ namespace QuantConnect.Securities
                 {
                     var security = kvp.Value;
 
-                    sum += security.MarginModel.GetMaintenanceMargin(security);
+                    sum += security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
                 }
                 return sum;
             }
@@ -506,7 +506,7 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            return security.MarginModel.GetMarginRemaining(this, security, direction);
+            return security.BuyingPowerModel.GetBuyingPower(this, security, direction);
         }
 
         /// <summary>
@@ -533,67 +533,6 @@ namespace QuantConnect.Securities
         {
             var security = Securities[fill.Symbol];
             security.PortfolioModel.ProcessFill(this, security, fill);
-        }
-
-        /// <summary>
-        /// Scan the portfolio and the updated data for a potential margin call situation which may get the holdings below zero!
-        /// If there is a margin call, liquidate the portfolio immediately before the portfolio gets sub zero.
-        /// </summary>
-        /// <param name="issueMarginCallWarning">Set to true if a warning should be issued to the algorithm</param>
-        /// <returns>True for a margin call on the holdings.</returns>
-        public List<SubmitOrderRequest> ScanForMarginCall(out bool issueMarginCallWarning)
-        {
-            issueMarginCallWarning = false;
-
-            var totalMarginUsed = TotalMarginUsed;
-
-            // don't issue a margin call if we're not using margin
-            if (totalMarginUsed <= 0)
-            {
-                return new List<SubmitOrderRequest>();
-            }
-
-            // don't issue a margin call if we're under 1x implied leverage on the whole portfolio's holdings
-            var averageHoldingsLeverage = TotalAbsoluteHoldingsCost/totalMarginUsed;
-            if (averageHoldingsLeverage <= 1.0m)
-            {
-                return new List<SubmitOrderRequest>();
-            }
-
-            var marginRemaining = MarginRemaining;
-
-            // issue a margin warning when we're down to 5% margin remaining
-            var totalPortfolioValue = TotalPortfolioValue;
-            if (marginRemaining <= totalPortfolioValue*0.05m)
-            {
-                issueMarginCallWarning = true;
-            }
-
-            // generate a listing of margin call orders
-            var marginCallOrders = new List<SubmitOrderRequest>();
-
-            // if we still have margin remaining then there's no need for a margin call
-            if (marginRemaining <= 0)
-            {
-                // skip securities that have no price data or no holdings, we can't liquidate nothingness
-                foreach (var kvp in Securities)
-                {
-                    var security = kvp.Value;
-
-                    if (security.Holdings.Quantity != 0 && security.Price != 0)
-                    {
-                        var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
-                        var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
-                        if (marginCallOrder != null && marginCallOrder.Quantity != 0)
-                        {
-                            marginCallOrders.Add(marginCallOrder);
-                        }
-                    }
-                }
-                issueMarginCallWarning = marginCallOrders.Count > 0;
-            }
-
-            return marginCallOrders;
         }
 
         /// <summary>

@@ -402,7 +402,7 @@
     <Compile Include="Securities\Future\FutureExchange.cs" />
     <Compile Include="Securities\Future\FutureHolding.cs" />
     <Compile Include="Securities\Future\Futures.cs" />
-    <Compile Include="Securities\Future\FutureMarginModel.cs" />
+    <Compile Include="Securities\Future\FutureMarginBuyingPowerModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
     <Compile Include="Securities\Volatility\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />
@@ -431,9 +431,9 @@
     <Compile Include="Securities\Option\OptionStrategies.cs" />
     <Compile Include="Securities\Option\OptionStrategy.cs" />
     <Compile Include="Securities\Option\OptionSymbolProperties.cs" />
-    <Compile Include="Securities\Option\OptionMarginModel.cs" />
+    <Compile Include="Securities\Option\OptionMarginBuyingPowerModel.cs" />
     <Compile Include="Securities\Option\QLOptionPriceModel.cs" />
-    <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
+    <Compile Include="Securities\PatternDayTradingMarginBuyingPowerModel.cs" />
     <Compile Include="Securities\Volatility\StandardDeviationOfReturnsVolatilityModel.cs" />
     <Compile Include="Securities\Volatility\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
@@ -441,12 +441,12 @@
     <Compile Include="Securities\MarketHoursDatabase.cs" />
     <Compile Include="Securities\ISecurityProvider.cs" />
     <Compile Include="Securities\IOrderProcessor.cs" />
-    <Compile Include="Securities\ISecurityMarginModel.cs" />
+    <Compile Include="Securities\IBuyingPowerModel.cs" />
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\DefaultMarginCallModel.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
-    <Compile Include="Securities\SecurityMarginModel.cs" />
+    <Compile Include="Securities\SecurityMarginBuyingPowerModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
     <Compile Include="Securities\SymbolProperties.cs" />
     <Compile Include="Securities\SymbolPropertiesDatabase.cs" />

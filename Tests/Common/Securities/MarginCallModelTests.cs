@@ -28,12 +28,28 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class MarginCallModelTests
     {
+        // Test class to enable calling protected methods
+        public class TestSecurityMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
+        {
+            public TestSecurityMarginBuyingPowerModel(decimal leverage) : base(leverage) {}
+
+            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            {
+                return base.GetInitialMarginRequiredForOrder(security, order);
+            }
+
+            public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+            {
+                return base.GetMarginRemaining(portfolio, security, direction);
+            }
+        }
+
         [Test]
         public void InitializationTest()
         {
             const decimal actual = 2;
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(actual);
+            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(actual);
             var expected = security.Leverage;
 
             Assert.AreEqual(expected, actual);
@@ -43,7 +59,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetAndGetLeverageTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(2);
+            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(2);
 
             const decimal actual = 50;
             security.SetLeverage(actual);
@@ -51,7 +67,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(expected, actual);
 
-            expected = security.MarginModel.GetLeverage(security);
+            expected = security.BuyingPowerModel.GetLeverage(security);
 
             Assert.AreEqual(expected, actual);
         }
@@ -60,9 +76,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetInitialMarginRequiredForOrderTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(2);
+            var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(2);
+            security.BuyingPowerModel = buyingPowerModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
-            var actual = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+            var actual = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
 
             Assert.AreEqual(0, actual);
         }
@@ -75,9 +92,9 @@ namespace QuantConnect.Tests.Common.Securities
             var expected = quantity / leverage;
 
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(leverage);
+            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(leverage);
             security.Holdings.SetHoldings(1m, quantity);
-            var actual = security.MarginModel.GetMaintenanceMargin(security);
+            var actual = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
 
             Assert.AreEqual(expected, actual);
         }
@@ -89,24 +106,24 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 2;
             var orderProcessor = new OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            portfolio.MarginCallModel = MarginCallModel.Null;
 
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new SecurityMarginModel(leverage);
+            var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(leverage);
+            security.BuyingPowerModel = buyingPowerModel;
             portfolio.Securities.Add(security);
 
             security.Holdings.SetHoldings(1m, quantity);
-            var actual1 = security.MarginModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
+            var actual1 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
             Assert.AreEqual(quantity / leverage, actual1);
 
-            var actual2 = security.MarginModel.GetMarginRemaining(portfolio, security, OrderDirection.Sell);
+            var actual2 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Sell);
             Assert.AreEqual(quantity, actual2);
 
             security.Holdings.SetHoldings(1m, -quantity);
-            var actual3 = security.MarginModel.GetMarginRemaining(portfolio, security, OrderDirection.Sell);
+            var actual3 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Sell);
             Assert.AreEqual(quantity / leverage, actual3);
 
-            var actual4 = security.MarginModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
+            var actual4 = buyingPowerModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
             Assert.AreEqual(quantity, actual4);
         }
 
@@ -121,7 +138,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 1m;
             var orderProcessor = new OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            portfolio.MarginCallModel = MarginCallModel.Null;
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
 
             var security = GetSecurity(Symbols.AAPL);
             portfolio.Securities.Add(security);
@@ -146,8 +163,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) {Price = buyPrice};
-            bool sufficientCapital = portfolio.Transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsFalse(sufficientCapital);
+            var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
 
             // now the stock doubles, so we should have margin remaining
             time = time.AddDays(1);
@@ -160,8 +177,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var anotherOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = portfolio.Transactions.GetSufficientCapitalForOrder(portfolio, anotherOrder);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, anotherOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             // now the stock plummets, so we should have negative margin remaining
             time = time.AddDays(1);
@@ -174,7 +191,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
-            var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsFalse(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -186,7 +203,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, newPrice, newPrice));
 
             // this would not cause a margin call, only a margin call warning
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -199,10 +216,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0, portfolio.TotalPortfolioValue);
 
-            // Even with TotalPortfolioValue == 0, do not issue warning or orders
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
-            Assert.IsFalse(issueMarginCallWarning);
-            Assert.AreEqual(0, marginCallOrders.Count);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(1, marginCallOrders.Count);
         }
 
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)

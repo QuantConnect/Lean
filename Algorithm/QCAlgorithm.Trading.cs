@@ -903,7 +903,8 @@ namespace QuantConnect.Algorithm
                     if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -holdings.Quantity, false, tag);
+                        var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
+                        Order(holdingSymbol, liquidationQuantity, false, tag);
                     }
                 }
             }
@@ -938,69 +939,14 @@ namespace QuantConnect.Algorithm
         public decimal CalculateOrderQuantity(Symbol symbol, decimal target)
         {
             var security = Securities[symbol];
-            var price = security.Price;
 
             // can't order it if we don't have data
-            if (price == 0) return 0;
+            if (security.Price == 0) return 0;
 
-            // if targeting zero, simply return the negative of the quantity
-            if (target == 0) return -security.Holdings.Quantity;
-
-            // this is the value in dollars that we want our holdings to have
+            // this is the value in account currency that we want our holdings to have
             var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
-            var currentHoldingsValue = security.Holdings.HoldingsValue;
 
-            // remove directionality, we'll work in the land of absolutes
-            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
-            var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
-
-            // determine the unit price in terms of the account currency
-            var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
-            if (unitPrice == 0) return 0;
-
-            // calculate the total margin available
-            var marginRemaining = Portfolio.GetMarginRemaining(symbol, direction);
-            if (marginRemaining <= 0) return 0;
-
-            // continue iterating while we do not have enough margin for the order
-            decimal marginRequired;
-            decimal orderValue;
-            decimal orderFees;
-            var feeToPriceRatio = 0m;
-
-            // compute the initial order quantity
-            var orderQuantity = targetOrderValue / unitPrice;
-
-            // rounding off Order Quantity to the nearest multiple of Lot Size
-            orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
-
-            do
-            {
-                // reduce order quantity by feeToPriceRatio, since it is faster than by lot size
-                // if it becomes nonpositive, return zero
-                orderQuantity -= feeToPriceRatio;
-                if (orderQuantity <= 0) return 0;
-
-                // generate the order
-                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
-                orderValue = order.GetValue(security);
-                orderFees = security.FeeModel.GetOrderFee(security, order);
-
-                // find an incremental delta value for the next iteration step
-                feeToPriceRatio = orderFees / unitPrice;
-                feeToPriceRatio -= feeToPriceRatio % security.SymbolProperties.LotSize;
-                if (feeToPriceRatio < security.SymbolProperties.LotSize)
-                {
-                    feeToPriceRatio = security.SymbolProperties.LotSize;
-                }
-
-                // calculate the margin required for the order
-                marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
-
-            } while (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue);
-
-            // add directionality back in
-            return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
+            return security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
         }
 
         /// <summary>

@@ -266,8 +266,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) {Price = buyPrice};
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsFalse(sufficientCapital);
+            var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
 
             // now the stock doubles, so we should have margin remaining
 
@@ -281,8 +281,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a trader
             var anotherOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, anotherOrder);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, anotherOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             // now the stock plummets, so we should have negative margin remaining
 
@@ -297,7 +297,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
-            var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsFalse(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -309,7 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, newPrice, newPrice, newPrice, newPrice, 1));
 
             // this would not cause a margin call, only a margin call warning
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
@@ -323,7 +323,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0, portfolio.TotalPortfolioValue);
 
-            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreNotEqual(0, marginCallOrders.Count);
             Assert.AreEqual(-security.Holdings.Quantity, marginCallOrders[0].Quantity); // we bought twice
@@ -352,54 +352,31 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.AAPL].SetLeverage(2m);
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
             securities[Symbols.AAPL].SetMarketPrice(new TradeBar{Time = time, Value = 100});
-            //Console.WriteLine("AAPL TMU: " + securities[Symbols.AAPL].MarginModel.GetMaintenanceMargin(securities[Symbols.AAPL]));
-            //Console.WriteLine("AAPL Value: " + securities[Symbols.AAPL].Holdings.HoldingsValue);
-
-            //Console.WriteLine();
 
             var config2 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD);
             securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2, SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities[Symbols.EURUSD].SetLeverage(100m);
             securities[Symbols.EURUSD].Holdings.SetHoldings(1.1m, 1000);
             securities[Symbols.EURUSD].SetMarketPrice(new TradeBar { Time = time, Value = 1.1m });
-            //Console.WriteLine("EURUSD TMU: " + securities[Symbols.EURUSD].MarginModel.GetMaintenanceMargin(securities[Symbols.EURUSD]));
-            //Console.WriteLine("EURUSD Value: " + securities[Symbols.EURUSD].Holdings.HoldingsValue);
-
-            //Console.WriteLine();
 
             var config3 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURGBP);
             securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, SymbolProperties.GetDefault(gbpCash.Symbol)));
             securities[Symbols.EURGBP].SetLeverage(100m);
             securities[Symbols.EURGBP].Holdings.SetHoldings(1m, 1000);
             securities[Symbols.EURGBP].SetMarketPrice(new TradeBar { Time = time, Value = 1m });
-            //Console.WriteLine("EURGBP TMU: " + securities[Symbols.EURGBP].MarginModel.GetMaintenanceMargin(securities[Symbols.EURGBP]));
-            //Console.WriteLine("EURGBP Value: " + securities[Symbols.EURGBP].Holdings.HoldingsValue);
-
-            //Console.WriteLine();
-
-            //Console.WriteLine(portfolio.CashBook["USD"]);
-            //Console.WriteLine(portfolio.CashBook["EUR"]);
-            //Console.WriteLine(portfolio.CashBook["GBP"]);
-            //Console.WriteLine("CashBook: " + portfolio.CashBook.TotalValueInAccountCurrency);
-
-            //Console.WriteLine();
-
-            //Console.WriteLine("Total Margin Used: " + portfolio.TotalMarginUsed);
-            //Console.WriteLine("Total Free Margin: " + portfolio.MarginRemaining);
-            //Console.WriteLine("Total Portfolio Value: " + portfolio.TotalPortfolioValue);
-
 
             var acceptedOrder = new MarketOrder(Symbols.AAPL, 101, DateTime.Now) { Price = 100 };
             orderProcessor.AddOrder(acceptedOrder);
             var request = new SubmitOrderRequest(OrderType.Market, acceptedOrder.SecurityType, acceptedOrder.Symbol, acceptedOrder.Quantity, 0, 0, acceptedOrder.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, acceptedOrder);
-            Assert.IsTrue(sufficientCapital);
+            var security = securities[Symbols.AAPL];
+            var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, acceptedOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             var rejectedOrder = new MarketOrder(Symbols.AAPL, 102, DateTime.Now) { Price = 100 };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, rejectedOrder);
-            Assert.IsFalse(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, rejectedOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
         }
 
         [Test]
@@ -651,13 +628,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a new buy order
             var newOrder = new MarketOrder(Symbols.AAPL, 1, time.AddSeconds(1)) { Price = buyPrice };
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsFalse(sufficientCapital);
+            var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
 
             // we should be able to place sell to zero
             newOrder = new MarketOrder(Symbols.AAPL, -quantity, time.AddSeconds(1)) { Price = buyPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             // now the stock plummets, so we should have negative margin remaining
             time = time.AddDays(1);
@@ -666,13 +643,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we still should be able to place sell to zero
             newOrder = new MarketOrder(Symbols.AAPL, -quantity, time.AddSeconds(1)) { Price = lowPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             // we shouldn't be able to place sell to short
             newOrder = new MarketOrder(Symbols.AAPL, -quantity - 1, time.AddSeconds(1)) { Price = lowPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsFalse(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
         }
 
         [Test]
@@ -708,13 +685,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we shouldn't be able to place a new short order
             var newOrder = new MarketOrder(Symbols.AAPL, -1, time.AddSeconds(1)) { Price = sellPrice };
-            var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsFalse(sufficientCapital);
+            var hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
 
             // we should be able to place cover to zero
             newOrder = new MarketOrder(Symbols.AAPL, quantity, time.AddSeconds(1)) { Price = sellPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             // now the stock doubles, so we should have negative margin remaining
             time = time.AddDays(1);
@@ -723,13 +700,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we still shouldn be able to place cover to zero
             newOrder = new MarketOrder(Symbols.AAPL, quantity, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsTrue(hasSufficientBuyingPower);
 
             // we shouldn't be able to place cover to long
             newOrder = new MarketOrder(Symbols.AAPL, quantity + 1, time.AddSeconds(1)) { Price = highPrice };
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, newOrder);
-            Assert.IsFalse(sufficientCapital);
+            hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, security, newOrder);
+            Assert.IsFalse(hasSufficientBuyingPower);
         }
 
         [Test]
@@ -1231,8 +1208,8 @@ namespace QuantConnect.Tests.Common.Securities
             var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
-            Assert.IsFalse(sufficientCapital);
+            var hasSufficientBuyingPower = option.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, option, order);
+            Assert.IsFalse(hasSufficientBuyingPower);
 
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 150 });
 
@@ -1241,8 +1218,8 @@ namespace QuantConnect.Tests.Common.Securities
             request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = option.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, option, order);
+            Assert.IsTrue(hasSufficientBuyingPower);
         }
 
         [Test]
@@ -1273,8 +1250,8 @@ namespace QuantConnect.Tests.Common.Securities
             var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            bool sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
-            Assert.IsFalse(sufficientCapital);
+            var hasSufficientBuyingPower = option.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, option, order);
+            Assert.IsFalse(hasSufficientBuyingPower);
 
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 150 });
 
@@ -1283,8 +1260,8 @@ namespace QuantConnect.Tests.Common.Securities
             request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
-            sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, order);
-            Assert.IsTrue(sufficientCapital);
+            hasSufficientBuyingPower = option.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, option, order);
+            Assert.IsTrue(hasSufficientBuyingPower);
         }
 
         [Test]
