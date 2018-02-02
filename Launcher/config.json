@@ -9,13 +9,14 @@
   "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm"
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
-  "algorithm-language": "CSharp",
+  "algorithm-language": "Python",
 
   //Physical DLL location
-  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+  //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+  "algorithm-location": "../../../Algorithm.Python/Crypto/main.py",
   //"algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
   //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
   //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",

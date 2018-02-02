@@ -111,7 +111,6 @@ namespace QuantConnect.Indicators
             DelayedMaximumSenkouB = new Delay(name + "DelayedMax", senkouBDelayPeriod);
             DelayedMinimumSenkouB = new Delay(name + "DelayedMin", senkouBDelayPeriod);
 
-
             SenkouA = new FunctionalIndicator<IBaseDataBar>(
                 name + "_SenkouA",
                 input => computeSenkouA(senkouAPeriod, input),
@@ -184,7 +183,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override bool IsReady
         {
-
             get { return Tenkan.IsReady && Kijun.IsReady && SenkouA.IsReady && SenkouB.IsReady; }
         }
 
@@ -194,8 +192,6 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-
-
             TenkanMaximum.Update(input.Time, input.High);
             TenkanMinimum.Update(input.Time, input.Low);
             Tenkan.Update(input);

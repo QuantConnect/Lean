@@ -1,3 +1,7 @@
+# Project files
+.idea/*
+.vs/*
+
 # Object files
 *.o
 *.ko

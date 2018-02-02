@@ -25,7 +25,7 @@ from QuantConnect.Python import PythonData
 from datetime import date, timedelta, datetime
 import decimal
 import numpy as np
-import json
+import json6
 
 ### <summary>
 ### Demonstration of using an external custom datasource. LEAN Engine is incredibly flexible and allows you to define your own data source.
