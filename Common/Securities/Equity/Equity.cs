@@ -52,7 +52,7 @@ namespace QuantConnect.Securities.Equity
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(2m),
+                new SecurityMarginModel(2m),
                 new EquityDataFilter(),
                 new AdjustedPriceVariationModel()
                 )
@@ -76,7 +76,7 @@ namespace QuantConnect.Securities.Equity
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(2m),
+                new SecurityMarginModel(2m),
                 new EquityDataFilter(),
                 new AdjustedPriceVariationModel()
                 )

@@ -29,9 +29,9 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmSetHoldingsTests
     {
         // Test class to enable calling protected methods
-        public class TestSecurityMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
+        public class TestSecurityMarginModel : SecurityMarginModel
         {
-            public TestSecurityMarginBuyingPowerModel(decimal leverage) : base(leverage) { }
+            public TestSecurityMarginModel(decimal leverage) : base(leverage) { }
 
             public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
             {
@@ -142,7 +142,7 @@ namespace QuantConnect.Tests.Algorithm
             security.FeeModel = _feeModels[feeType];
             security.SetLeverage(leverage);
 
-            var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(leverage);
+            var buyingPowerModel = new TestSecurityMarginModel(leverage);
             security.BuyingPowerModel = buyingPowerModel;
 
             algorithm.SetCash(Cash);

@@ -19,24 +19,24 @@ namespace QuantConnect.Securities
     /// Represents a simple margining model where margin/leverage depends on market state (open or close).
     /// During regular market hours, leverage is 4x, otherwise 2x
     /// </summary>
-    public class PatternDayTradingMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
+    public class PatternDayTradingMarginModel : SecurityMarginModel
     {
         private readonly decimal _closedMarginCorrectionFactor;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PatternDayTradingMarginBuyingPowerModel" />
+        /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
         /// </summary>
-        public PatternDayTradingMarginBuyingPowerModel()
+        public PatternDayTradingMarginModel()
             : this(2.0m, 4.0m)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PatternDayTradingMarginBuyingPowerModel" />
+        /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
         /// </summary>
         /// <param name="closedMarketLeverage">Leverage used outside regular market hours</param>
         /// <param name="openMarketLeverage">Leverage used during regular market hours</param>
-        public PatternDayTradingMarginBuyingPowerModel(decimal closedMarketLeverage, decimal openMarketLeverage)
+        public PatternDayTradingMarginModel(decimal closedMarketLeverage, decimal openMarketLeverage)
             : base(openMarketLeverage)
         {
             _closedMarginCorrectionFactor = openMarketLeverage/closedMarketLeverage;
