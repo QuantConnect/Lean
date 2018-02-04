@@ -25,7 +25,7 @@ namespace QuantConnect.Securities.Future
     /// <summary>
     /// Represents a simple margining model for margining futures. Margin file contains Initial and Maintenance margins
     /// </summary>
-    public class FutureMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
+    public class FutureMarginModel : SecurityMarginModel
     {
         private static readonly object DataFolderSymbolLock = new object();
 

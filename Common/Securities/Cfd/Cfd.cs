@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Cfd
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(50m),
+                new SecurityMarginModel(50m),
                 new CfdDataFilter(),
                 new SecurityPriceVariationModel()
                 )
@@ -73,7 +73,7 @@ namespace QuantConnect.Securities.Cfd
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(50m),
+                new SecurityMarginModel(50m),
                 new CfdDataFilter(),
                 new SecurityPriceVariationModel()
                 )

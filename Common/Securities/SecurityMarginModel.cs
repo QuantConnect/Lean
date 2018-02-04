@@ -22,26 +22,26 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents a simple, constant margining model by specifying the percentages of required margin.
     /// </summary>
-    public class SecurityMarginBuyingPowerModel : IBuyingPowerModel
+    public class SecurityMarginModel : IBuyingPowerModel
     {
         private decimal _initialMarginRequirement;
         private decimal _maintenanceMarginRequirement;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityMarginBuyingPowerModel"/> with no leverage (1x)
+        /// Initializes a new instance of the <see cref="SecurityMarginModel"/> with no leverage (1x)
         /// </summary>
-        public SecurityMarginBuyingPowerModel() : this(1m)
+        public SecurityMarginModel() : this(1m)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityMarginBuyingPowerModel"/>
+        /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
         /// </summary>
         /// <param name="initialMarginRequirement">The percentage of an order's absolute cost
         /// that must be held in free cash in order to place the order</param>
         /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute
         /// cost that must be held in free cash in order to avoid a margin call</param>
-        public SecurityMarginBuyingPowerModel(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        public SecurityMarginModel(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             if (initialMarginRequirement < 0 || initialMarginRequirement > 1)
             {
@@ -58,10 +58,10 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityMarginBuyingPowerModel"/>
+        /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
         /// </summary>
         /// <param name="leverage">The leverage</param>
-        public SecurityMarginBuyingPowerModel(decimal leverage)
+        public SecurityMarginModel(decimal leverage)
         {
             if (leverage < 1)
             {

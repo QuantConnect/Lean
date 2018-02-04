@@ -296,7 +296,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(1m),
+                new SecurityMarginModel(1m),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel())
         {
@@ -317,7 +317,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(1m),
+                new SecurityMarginModel(1m),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel()
                 )
