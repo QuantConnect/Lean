@@ -264,7 +264,6 @@
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
-    <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="ExpectedAlphaStatistics.cs" />
