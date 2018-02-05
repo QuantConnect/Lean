@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, adxr, resolution, selector);
             return adxr;
         }
-        
+
         /// <summary>
         /// Creates a new ArnaudLegouxMovingAverage indicator.
         /// </summary>
@@ -129,7 +129,7 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, alma, resolution, selector);
             return alma;
         }
-        
+
         /// <summary>
         /// Creates a new AbsolutePriceOscillator indicator.
         /// </summary>
@@ -228,6 +228,25 @@ namespace QuantConnect.Algorithm
             var bop = new BalanceOfPower(name);
             RegisterIndicator(symbol, bop, resolution, selector);
             return bop;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CoppockCurve"/> indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose Coppock Curve we want</param>
+        /// <param name="shortRocPeriod">The period for the short ROC</param>
+        /// <param name="longRocPeriod">The period for the long ROC</param>
+        /// <param name="lwmaPeriod">The period for the LWMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Coppock Curve indicator for the requested symbol over the specified period</returns>
+        public CoppockCurve CC(Symbol symbol, int shortRocPeriod = 11, int longRocPeriod = 14, int lwmaPeriod = 10, Resolution? resolution = null,
+                               Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "CC", resolution);
+            var cc = new CoppockCurve(name, shortRocPeriod, longRocPeriod, lwmaPeriod);
+            RegisterIndicator(symbol, cc, resolution, selector);
+            return cc;
         }
 
         /// <summary>
