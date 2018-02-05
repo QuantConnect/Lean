@@ -274,16 +274,16 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    return new SecurityMarginBuyingPowerModel(50m);
+                    return new SecurityMarginModel(50m);
 
                 case SecurityType.Option:
-                    return new OptionMarginBuyingPowerModel();
+                    return new OptionMarginModel();
 
                 case SecurityType.Future:
-                    return new FutureMarginBuyingPowerModel();
+                    return new FutureMarginModel();
 
                 default:
-                    return new SecurityMarginBuyingPowerModel(2m);
+                    return new SecurityMarginModel(2m);
             }
         }
     }
