@@ -447,6 +447,12 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
+                        // only process split occurred events (ignore warnings)
+                        if (split.Type != SplitType.SplitOccurred)
+                        {
+                            continue;
+                        }
+
                         Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
                         algorithm.Portfolio.ApplySplit(split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
