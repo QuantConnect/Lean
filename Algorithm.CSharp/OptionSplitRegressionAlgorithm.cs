@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             // this test opens position in the first day of trading, lives through stock split (7 for 1), and closes adjusted position on the second day
-            SetStartDate(2014, 06, 06);
+            SetStartDate(2014, 06, 05);
             SetEndDate(2014, 06, 09);
             SetCash(1000000);
 
