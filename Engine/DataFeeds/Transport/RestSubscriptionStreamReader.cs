@@ -29,16 +29,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private readonly RestClient _client;
         private readonly RestRequest _request;
+        private bool _isLiveMode;
+        private bool _delivered;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RestSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="source">The source url to poll with a GET</param>
         /// <param name="headers">Defines header values to add to the request</param>
-        public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers)
+        public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers, bool isLiveMode)
         {
             _client = new RestClient(source);
             _request = new RestRequest(Method.GET);
+            _isLiveMode = isLiveMode;
+            _delivered = false;
 
             if (headers != null)
             {
@@ -62,7 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public bool EndOfStream
         {
-            get { return false; }
+            get { return !_isLiveMode && _delivered; }
         }
 
         /// <summary>
@@ -75,6 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 var response = _client.Execute(_request);
                 if (response != null)
                 {
+                    _delivered = true;
                     return response.Content;
                 }
             }
