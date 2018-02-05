@@ -238,6 +238,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the buying power model used for this security, an alias for <see cref="BuyingPowerModel"/>
+        /// </summary>
+        public IBuyingPowerModel MarginModel
+        {
+            get { return BuyingPowerModel; }
+            set { BuyingPowerModel = value; }
+        }
+
+        /// <summary>
         /// Gets the settlement model used for this security
         /// </summary>
         public ISettlementModel SettlementModel
