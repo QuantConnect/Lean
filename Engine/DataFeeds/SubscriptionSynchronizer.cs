@@ -25,11 +25,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Provides the ability to synchronize subscriptions into time slices
     /// </summary>
-    public class SubscriptionSynchronizer
+    public class SubscriptionSynchronizer : ISubscriptionSynchronizer
     {
         private static readonly long MaxDateTimeTicks = DateTime.MaxValue.Ticks;
 
         private DateTime _frontier;
+        private readonly CashBook _cashBook;
+        private readonly DateTimeZone _sliceTimeZone;
         private readonly UniverseSelection _universeSelection;
 
         /// <summary>
@@ -42,21 +44,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
-        /// <param name="frontierUtc">The initial UTC frontier time to syncronize at</param>
-        public SubscriptionSynchronizer(UniverseSelection universeSelection, DateTime frontierUtc)
-        {
-            _frontier = frontierUtc;
-            _universeSelection = universeSelection;
-        }
-
-        /// <summary>
-        /// Syncs the specifies subscriptions at the frontier time
-        /// </summary>
-        /// <param name="subscriptions">The subscriptions to sync</param>
         /// <param name="sliceTimeZone">The time zone of the created slice object</param>
         /// <param name="cashBook">The cash book, used for creating the cash book updates</param>
         /// <returns>A time slice for the specified frontier time</returns>
-        public TimeSlice Sync(IEnumerable<Subscription> subscriptions, DateTimeZone sliceTimeZone, CashBook cashBook)
+        /// <param name="frontierUtc">The initial UTC frontier time to syncronize at</param>
+        public SubscriptionSynchronizer(UniverseSelection universeSelection, DateTimeZone sliceTimeZone, CashBook cashBook, DateTime frontierUtc)
+        {
+            _frontier = frontierUtc;
+            _universeSelection = universeSelection;
+            _sliceTimeZone = sliceTimeZone;
+            _cashBook = cashBook;
+        }
+
+        /// <summary>
+        /// Syncs the specified subscriptions. The frontier time used for synchronization is
+        /// managed internally and dependent upon previous synchronization operations.
+        /// </summary>
+        /// <param name="subscriptions">The subscriptions to sync</param>
+        public TimeSlice Sync(IEnumerable<Subscription> subscriptions)
         {
             long earlyBirdTicks;
             var changes = SecurityChanges.None;
@@ -180,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             while (newChanges != SecurityChanges.None);
 
-            var timeSlice = TimeSlice.Create(_frontier, sliceTimeZone, cashBook, data, changes);
+            var timeSlice = TimeSlice.Create(_frontier, _sliceTimeZone, _cashBook, data, changes);
 
             // next frontier time
             _frontier = new DateTime(Math.Max(earlyBirdTicks, _frontier.Ticks), DateTimeKind.Utc);

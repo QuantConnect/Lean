@@ -452,7 +452,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontierUtc = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontierUtc));
 
-            var syncer = new SubscriptionSynchronizer(_universeSelection, frontierUtc);
+            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, frontierUtc);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 RemoveSubscription(subscription.Configuration);
@@ -465,7 +465,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 try
                 {
-                    timeSlice = syncer.Sync(Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook);
+                    timeSlice = syncer.Sync(Subscriptions);
                 }
                 catch (Exception err)
                 {
