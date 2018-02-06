@@ -452,21 +452,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontierUtc = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontierUtc));
 
-            var syncer = new SubscriptionSynchronizer(_universeSelection);
+            var syncer = new SubscriptionSynchronizer(_universeSelection, frontierUtc);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 RemoveSubscription(subscription.Configuration);
-                Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Configuration, frontierUtc));
+                Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Configuration, _algorithm.UtcTime));
             };
 
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 TimeSlice timeSlice;
-                DateTime nextFrontier;
 
                 try
                 {
-                    timeSlice = syncer.Sync(frontierUtc, Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
+                    timeSlice = syncer.Sync(Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook);
                 }
                 catch (Exception err)
                 {
@@ -483,11 +482,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (timeSlice.Time != DateTime.MaxValue)
                 {
                     yield return timeSlice;
-
-                    // end of data signal
-                    if (nextFrontier == DateTime.MaxValue) break;
-
-                    frontierUtc = nextFrontier;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {
@@ -505,7 +499,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_subscriptionfactory != null)
                 _subscriptionfactory.Dispose();
 
-            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", frontierUtc));
+            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _algorithm.UtcTime));
         }
 
         /// <summary>
