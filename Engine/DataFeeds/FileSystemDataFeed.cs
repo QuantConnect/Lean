@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         foreach (var universe in args.NewItems.OfType<Universe>())
                         {
                             var config = universe.Configuration;
-                            var start = _frontierUtc != DateTime.MinValue ? _frontierUtc : _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+                            var start = _algorithm.UtcTime;
 
                             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
                             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);

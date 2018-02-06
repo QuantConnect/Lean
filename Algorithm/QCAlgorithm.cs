@@ -941,6 +941,9 @@ namespace QuantConnect.Algorithm
 
             // the time rules need to know the default time zone as well
             TimeRules.SetDefaultTimeZone(timeZone);
+
+            // reset the current time according to the time zone
+            SetDateTime(_startDate.ConvertToUtc(TimeZone));
         }
 
         /// <summary>
