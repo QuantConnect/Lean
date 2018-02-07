@@ -34,7 +34,7 @@ from numpy import sum
 class CustomIndicatorAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013,10,7)
-        self.SetEndDate(self.StartDate)
+        self.SetEndDate(2013,10,11)
         self.AddEquity("SPY", Resolution.Second)
 
         # Create a QuantConnect indicator and a python custom indicator for comparison
@@ -49,6 +49,11 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         if self.Time.second == 0:
             self.Log("   sma -> IsReady: {0}. Time: {1}. Value: {2}".format(self.sma.IsReady, self.sma.Current.Time, self.sma.Current.Value))
             self.Log(str(self.custom))
+
+        # Regression test: test fails with an early quit
+        diff = abs(self.custom.Value - self.sma.Current.Value)
+        if diff > 1e-25:
+            self.Quit("Quit: indicators difference is {0}".format(diff))
 
 
 # Python implementation of SimpleMovingAverage.
