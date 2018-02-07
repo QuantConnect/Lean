@@ -26,6 +26,7 @@ namespace QuantConnect.Tests
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
             QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
+            QuantConnect.Configuration.Config.Set("forward-console-messages", "false");
 
             if (parameters.Algorithm == "OptionChainConsistencyRegressionAlgorithm")
             {
@@ -365,12 +366,12 @@ namespace QuantConnect.Tests
                 {"Win Rate", "20%"},
                 {"Profit-Loss Ratio", "2.44"},
                 {"Alpha", "-0.008"},
-                {"Beta", "0.025"},
+                {"Beta", "0.028"},
                 {"Annual Standard Deviation", "0.026"},
                 {"Annual Variance", "0.001"},
-                {"Information Ratio", "-1.01"},
+                {"Information Ratio", "-1.012"},
                 {"Tracking Error", "0.026"},
-                {"Treynor Ratio", "-0.284"},
+                {"Treynor Ratio", "-0.249"},
                 {"Total Fees", "$10.61"},
             };
 

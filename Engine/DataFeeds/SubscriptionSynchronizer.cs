@@ -25,8 +25,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Provides the ability to synchronize subscriptions into time slices
     /// </summary>
-    public class SubscriptionSynchronizer
+    public class SubscriptionSynchronizer : ISubscriptionSynchronizer
     {
+        private static readonly long MaxDateTimeTicks = DateTime.MaxValue.Ticks;
+
+        private DateTime _frontier;
+        private readonly CashBook _cashBook;
+        private readonly DateTimeZone _sliceTimeZone;
         private readonly UniverseSelection _universeSelection;
 
         /// <summary>
@@ -39,32 +44,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
-        public SubscriptionSynchronizer(UniverseSelection universeSelection)
+        /// <param name="sliceTimeZone">The time zone of the created slice object</param>
+        /// <param name="cashBook">The cash book, used for creating the cash book updates</param>
+        /// <returns>A time slice for the specified frontier time</returns>
+        /// <param name="frontierUtc">The initial UTC frontier time to syncronize at</param>
+        public SubscriptionSynchronizer(UniverseSelection universeSelection, DateTimeZone sliceTimeZone, CashBook cashBook, DateTime frontierUtc)
         {
+            _frontier = frontierUtc;
             _universeSelection = universeSelection;
+            _sliceTimeZone = sliceTimeZone;
+            _cashBook = cashBook;
         }
 
         /// <summary>
-        /// Syncs the specifies subscriptions at the frontier time
+        /// Syncs the specified subscriptions. The frontier time used for synchronization is
+        /// managed internally and dependent upon previous synchronization operations.
         /// </summary>
-        /// <param name="frontier">The time used for syncing, data in the future won't be included in this time slice</param>
         /// <param name="subscriptions">The subscriptions to sync</param>
-        /// <param name="sliceTimeZone">The time zone of the created slice object</param>
-        /// <param name="cashBook">The cash book, used for creating the cash book updates</param>
-        /// <param name="nextFrontier">The next frontier time as determined by the first piece of data in the future ahead of the frontier.
-        /// This value will equal DateTime.MaxValue when the subscriptions are all finished</param>
-        /// <returns>A time slice for the specified frontier time</returns>
-        public TimeSlice Sync(DateTime frontier, IEnumerable<Subscription> subscriptions, DateTimeZone sliceTimeZone, CashBook cashBook, out DateTime nextFrontier)
+        public TimeSlice Sync(IEnumerable<Subscription> subscriptions)
         {
+            long earlyBirdTicks;
             var changes = SecurityChanges.None;
-            nextFrontier = DateTime.MaxValue;
-            var earlyBirdTicks = nextFrontier.Ticks;
             var data = new List<DataFeedPacket>();
             var universeData = new Dictionary<Universe, BaseDataCollection>();
 
             SecurityChanges newChanges;
             do
             {
+                earlyBirdTicks = MaxDateTimeTicks;
                 universeData.Clear();
                 newChanges = SecurityChanges.None;
                 foreach (var subscription in subscriptions)
@@ -89,8 +96,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var configuration = subscription.Configuration;
                     var offsetProvider = subscription.OffsetProvider;
-                    var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
-                    while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
+                    var currentOffsetTicks = offsetProvider.GetOffsetTicks(_frontier);
+                    while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= _frontier.Ticks)
                     {
                         // we want bars rounded using their subscription times, we make a clone
                         // so we don't interfere with the enumerator's internal logic
@@ -133,18 +140,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     var current = subscription.Current as OptionChainUniverseDataCollection;
                                     var underlying = current != null ? current.Underlying : null;
-                                    collection = new OptionChainUniverseDataCollection(frontier,
+                                    collection = new OptionChainUniverseDataCollection(_frontier,
                                         subscription.Configuration.Symbol, packetData, underlying);
                                 }
                                 else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
                                 {
                                     var current = subscription.Current as FuturesChainUniverseDataCollection;
-                                    collection = new FuturesChainUniverseDataCollection(frontier,
+                                    collection = new FuturesChainUniverseDataCollection(_frontier,
                                         subscription.Configuration.Symbol, packetData);
                                 }
                                 else
                                 {
-                                    collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol,
+                                    collection = new BaseDataCollection(_frontier, subscription.Configuration.Symbol,
                                         packetData);
                                 }
 
@@ -155,8 +162,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (subscription.Current != null)
                     {
-                        // take the earliest between the next piece of data or the next tz discontinuity
-                        earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
+                        if (earlyBirdTicks == MaxDateTimeTicks)
+                        {
+                            earlyBirdTicks = subscription.Current.EndTime.ConvertToUtc(subscription.TimeZone).Ticks;
+                        }
+                        else
+                        {
+                            // take the earliest between the next piece of data or the next tz discontinuity
+                            earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
+                        }
                     }
                 }
 
@@ -164,16 +178,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var universe = kvp.Key;
                     var baseDataCollection = kvp.Value;
-                    newChanges += _universeSelection.ApplyUniverseSelection(universe, frontier, baseDataCollection);
+                    newChanges += _universeSelection.ApplyUniverseSelection(universe, _frontier, baseDataCollection);
                 }
 
                 changes += newChanges;
             }
             while (newChanges != SecurityChanges.None);
 
-            nextFrontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
+            var timeSlice = TimeSlice.Create(_frontier, _sliceTimeZone, _cashBook, data, changes);
 
-            return TimeSlice.Create(frontier, sliceTimeZone, cashBook, data, changes);
+            // next frontier time
+            _frontier = new DateTime(Math.Max(earlyBirdTicks, _frontier.Ticks), DateTimeKind.Utc);
+
+            return timeSlice;
         }
 
         /// <summary>

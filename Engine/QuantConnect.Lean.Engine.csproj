@@ -151,6 +151,7 @@
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
     <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />

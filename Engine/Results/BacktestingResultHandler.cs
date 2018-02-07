@@ -534,6 +534,14 @@ namespace QuantConnect.Lean.Engine.Results
                 Console.SetOut(debug);
                 Console.SetError(error);
             }
+            else
+            {
+                // we need to forward Console.Write messages to the standard Log functions
+                var debug = new FuncTextWriter(msg => Log.Trace(msg));
+                var error = new FuncTextWriter(msg => Log.Error(msg));
+                Console.SetOut(debug);
+                Console.SetError(error);
+            }
         }
 
         /// <summary>
