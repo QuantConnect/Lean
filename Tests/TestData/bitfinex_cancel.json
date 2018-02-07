@@ -1,0 +1,17 @@
+{
+  "id": 446915287,
+  "symbol": "btcusd",
+  "exchange": null,
+  "price": "239.0",
+  "avg_execution_price": "0.0",
+  "side": "sell",
+  "type": "trailing stop",
+  "timestamp": "1444141982.0",
+  "is_live": true,
+  "is_cancelled": false,
+  "is_hidden": false,
+  "was_forced": false,
+  "original_amount": "1.0",
+  "remaining_amount": "1.0",
+  "executed_amount": "0.0"
+}

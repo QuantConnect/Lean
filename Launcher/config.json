@@ -105,6 +105,10 @@
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
 
+  // bitfinex configuration
+  "bitfinex-api-secret": "",
+  "bitfinex-api-key": "",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     "ema-fast": 10,
@@ -261,6 +265,18 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "GDAXBrokerage",
       "data-queue-handler": "GDAXDataQueueHandler",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
+    },
+
+    "live-bitfinex": {
+      "live-mode": true,
+      "live-mode-brokerage": "BitfinexBrokerage",
+      "data-queue-handler": "BitfinexBrokerage",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

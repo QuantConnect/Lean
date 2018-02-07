@@ -1,0 +1,22 @@
+[
+  {
+    "id": 943715,
+    "symbol": "btcusd",
+    "status": "ACTIVE",
+    "base": "246.94",
+    "amount": "1.0",
+    "timestamp": "1444141857.0",
+    "swap": "0.0",
+    "pl": "-2.22042"
+  },
+  {
+    "id": 943715,
+    "symbol": "ethbtc",
+    "status": "ACTIVE",
+    "base": "346.94",
+    "amount": "2.0",
+    "timestamp": "1444141857.0",
+    "swap": "0.0",
+    "pl": "-2.22042"
+  }
+]

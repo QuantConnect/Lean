@@ -22,6 +22,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,7 +30,7 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Provides shared brokerage websockets implementation
     /// </summary>
-    public abstract class BaseWebsocketsBrokerage : Brokerage
+    public abstract class BaseWebsocketsBrokerage : Brokerage, IDisposable
     {
 
         #region Declarations
@@ -57,7 +58,10 @@ namespace QuantConnect.Brokerages
         /// A list of currently subscribed channels
         /// </summary>
         protected Dictionary<string, Channel> ChannelList = new Dictionary<string, Channel>();
-        private string _market { get; set; }
+        /// <summary>
+        /// The market of brokerage
+        /// </summary>
+        protected string BrokerageMarket { get; set; }
         /// <summary>
         /// The api secret
         /// </summary>
@@ -75,7 +79,12 @@ namespace QuantConnect.Brokerages
         private CancellationTokenSource _cancellationTokenSource;
         private readonly object _lockerConnectionMonitor = new object();
         private volatile bool _connectionLost;
-        private const int _connectionTimeout = 30000;
+        /// <summary>
+        /// Connection timeout
+        /// </summary>
+        protected const int ConnectionTimeout = 30000;
+        private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
+        private volatile bool _streamLocked;
         #endregion
 
         /// <summary>
@@ -86,9 +95,9 @@ namespace QuantConnect.Brokerages
         /// <param name="restClient">Rest client instance</param>
         /// <param name="apiKey">Brokerage api auth key</param>
         /// <param name="apiSecret">Brokerage api auth secret</param>
-        /// <param name="market">Name of market</param>
+        /// <param name="brokerageMarket">Name of market</param>
         /// <param name="name">Name of brokerage</param>
-        public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) : base(name)
+        public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string brokerageMarket, string name) : base(name)
         {
             WebSocket = websocket;
 
@@ -98,7 +107,7 @@ namespace QuantConnect.Brokerages
             WebSocket.Error += OnError;
 
             RestClient = restClient;
-            _market = market;
+            BrokerageMarket = brokerageMarket;
             ApiSecret = apiSecret;
             ApiKey = apiKey;
         }
@@ -108,7 +117,33 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public abstract void OnMessage(object sender, WebSocketMessage e);
+        protected abstract void OnMessageImpl(object sender, WebSocketMessage e);
+
+
+        /// <summary>
+        /// Wss message handler. Will queue messages when locked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public virtual void OnMessage(object sender, WebSocketMessage e)
+        {
+            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
+            // stream processing a touch.
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageBuffer.Enqueue(e);
+                    return;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            OnMessageImpl(sender, e);
+        }
 
         /// <summary>
         /// Creates wss connection, monitors for disconnection and re-connects when necessary
@@ -120,7 +155,7 @@ namespace QuantConnect.Brokerages
 
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
             WebSocket.Connect();
-            Wait(_connectionTimeout, () => WebSocket.IsOpen);
+            Wait(ConnectionTimeout, () => WebSocket.IsOpen);
 
             _cancellationTokenSource = new CancellationTokenSource();
             _connectionMonitorThread = new Thread(() =>
@@ -256,12 +291,12 @@ namespace QuantConnect.Brokerages
                 if (IsConnected)
                 {
                     WebSocket.Close();
-                    Wait(_connectionTimeout, () => !WebSocket.IsOpen);
+                    Wait(ConnectionTimeout, () => !WebSocket.IsOpen);
                 }
                 if (!IsConnected)
                 {
                     WebSocket.Connect();
-                    Wait(_connectionTimeout, () => WebSocket.IsOpen);
+                    Wait(ConnectionTimeout, () => WebSocket.IsOpen);
                 }
             }
             finally
@@ -271,7 +306,12 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        private void Wait(int timeout, Func<bool> state)
+        /// <summary>
+        /// Wait for connection state to change then raise exception
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="state"></param>
+        protected void Wait(int timeout, Func<bool> state)
         {
             var StartTime = Environment.TickCount;
             do
@@ -295,17 +335,58 @@ namespace QuantConnect.Brokerages
         /// Gets a list of current subscriptions
         /// </summary>
         /// <returns></returns>
-        protected virtual IList<Symbol> GetSubscribed()
+        protected virtual IEnumerable<Symbol> GetSubscribed()
         {
-            IList<Symbol> list = new List<Symbol>();
             lock (ChannelList)
             {
-                foreach (var item in ChannelList)
-                {
-                    list.Add(Symbol.Create(item.Value.Symbol, SecurityType.Forex, _market));
-                }
+                return ChannelList.Values.Select(c => Symbol.Create(c.Symbol, SecurityType.Crypto, BrokerageMarket));
             }
-            return list;
+        }
+
+        /// <summary>
+        /// Checks if the websocket connection is connected or in the process of connecting
+        /// </summary>
+        public override bool IsConnected
+        {
+            get { return WebSocket.IsOpen; }
+        }
+
+        /// <summary>
+        /// Ensures any wss connection or authentication is closed
+        /// </summary>
+        public override void Dispose()
+        {
+            if (WebSocket.IsOpen)
+            {
+                this.Disconnect();
+            }
+            _cancellationTokenSource?.Cancel();
+        }
+
+        /// <summary>
+        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
+        /// </summary>
+        protected void LockStream()
+        {
+            Log.Trace("BaseWebsocketsBrokerage.LockStream(): Locking Stream");
+            _streamLocked = true;
+        }
+
+        /// <summary>
+        /// Unlock stream and process all backed up messages.
+        /// </summary>
+        public void UnlockStream()
+        {
+            Log.Trace("BaseWebsocketsBrokerage.UnlockStream(): Processing Backlog...");
+            while (_messageBuffer.Any())
+            {
+                WebSocketMessage e;
+                _messageBuffer.TryDequeue(out e);
+                OnMessageImpl(this, e);
+            }
+            Log.Trace("BaseWebsocketsBrokerage.UnlockStream(): Stream Unlocked.");
+            // Once dequeued in order; unlock stream.
+            _streamLocked = false;
         }
 
         /// <summary>

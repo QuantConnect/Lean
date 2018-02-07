@@ -94,62 +94,11 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
-        /// </summary>
-        public void LockStream()
-        {
-            Log.Trace("GDAXBrokerage.Messaging.LockStream(): Locking Stream");
-            _streamLocked = true;
-        }
-
-        /// <summary>
-        /// Unlock stream and process all backed up messages.
-        /// </summary>
-        public void UnlockStream()
-        {
-            Log.Trace("GDAXBrokerage.Messaging.UnlockStream(): Processing Backlog...");
-            while (_messageBuffer.Any())
-            {
-                WebSocketMessage e;
-                _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(this, e);
-            }
-            Log.Trace("GDAXBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
-            // Once dequeued in order; unlock stream.
-            _streamLocked = false;
-        }
-
-        /// <summary>
-        /// Wss message handler
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public override void OnMessage(object sender, WebSocketMessage e)
-        {
-            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
-            // stream processing a touch.
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(sender, e);
-        }
-
-        /// <summary>
         /// Implementation of the OnMessage event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnMessageImpl(object sender, WebSocketMessage e)
+        protected override void OnMessageImpl(object sender, WebSocketMessage e)
         {
             try
             {
