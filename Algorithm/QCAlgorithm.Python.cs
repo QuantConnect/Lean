@@ -286,21 +286,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<IBaseDataBar> indicator, Resolution? resolution = null)
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        public void RegisterIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
         {
-            RegisterIndicator<IBaseDataBar>(symbol, indicator, resolution);
-        }
-
-        /// <summary>
-        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator.
-        /// </summary>
-        /// <param name="symbol">The symbol to register against</param>
-        /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<TradeBar> indicator, Resolution? resolution = null)
-        {
-            RegisterIndicator<TradeBar>(symbol, indicator, resolution);
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
         }
 
         /// <summary>
@@ -311,48 +300,9 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<IBaseDataBar> indicator, Resolution? resolution, Func<IBaseData, IBaseDataBar> selector)
+        public void RegisterIndicator(Symbol symbol, PyObject indicator, TimeSpan? resolution = null, PyObject selector = null)
         {
-            RegisterIndicator<IBaseDataBar>(symbol, indicator, resolution, selector);
-        }
-
-        /// <summary>
-        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator.
-        /// </summary>
-        /// <param name="symbol">The symbol to register against</param>
-        /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
-        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<TradeBar> indicator, Resolution? resolution, Func<IBaseData, TradeBar> selector)
-        {
-            RegisterIndicator<TradeBar>(symbol, indicator, resolution, selector);
-        }
-
-        /// <summary>
-        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator.
-        /// </summary>
-        /// <param name="symbol">The symbol to register against</param>
-        /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
-        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<IBaseDataBar> indicator, TimeSpan? resolution, Func<IBaseData, IBaseDataBar> selector)
-        {
-            RegisterIndicator<IBaseDataBar>(symbol, indicator, resolution, selector);
-        }
-
-        /// <summary>
-        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator.
-        /// </summary>
-        /// <param name="symbol">The symbol to register against</param>
-        /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
-        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<TradeBar> indicator, TimeSpan? resolution, Func<IBaseData, TradeBar> selector)
-        {
-            RegisterIndicator<TradeBar>(symbol, indicator, resolution, selector);
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
         }
 
         /// <summary>
@@ -363,22 +313,61 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<IBaseDataBar> indicator, IDataConsolidator consolidator, Func<IBaseData, IBaseDataBar> selector)
+        public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
-            RegisterIndicator<IBaseDataBar>(symbol, indicator, consolidator, selector);
-        }
+            object managedObject = null;
 
-        /// <summary>
-        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
-        /// from the consolidator.
-        /// </summary>
-        /// <param name="symbol">The symbol to register against</param>
-        /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="consolidator">The consolidator to receive raw subscription data</param>
-        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<TradeBar> indicator, IDataConsolidator consolidator, Func<IBaseData, TradeBar> selector)
-        {
-            RegisterIndicator<TradeBar>(symbol, indicator, consolidator, selector);
+            using (Py.GIL())
+            {
+                var pythonType = indicator.GetPythonType();
+                if (pythonType.Repr().Contains("QuantConnect"))
+                {
+                    managedObject = indicator.AsManagedObject(pythonType.As<Type>());
+                }
+                else if (!indicator.HasAttr("Update"))
+                {
+                    throw new ArgumentException($"Update method must be defined. Please checkout {indicator}");
+                }
+            }
+
+            // Lean indicators are directed to other RegisterIndicator overloads
+            if (managedObject != null)
+            {
+                var indicatorDataPoint = managedObject as Indicator;
+                if (indicatorDataPoint != null)
+                {
+                    var managedSelector = (Func<IBaseData, decimal>)selector?.AsManagedObject(typeof(Func<IBaseData, decimal>));
+                    RegisterIndicator(symbol, indicatorDataPoint, consolidator, managedSelector);
+                }
+
+                var indicatorDataBar = managedObject as BarIndicator;
+                if (indicatorDataBar != null)
+                {
+                    var managedSelector = (Func<IBaseData, IBaseDataBar>)selector?.AsManagedObject(typeof(Func<IBaseData, IBaseDataBar>));
+                    RegisterIndicator(symbol, indicatorDataBar, consolidator, managedSelector);
+                }
+
+                var indicatorTradeBar = managedObject as TradeBarIndicator;
+                if (indicatorTradeBar != null)
+                {
+                    var managedSelector = (Func<IBaseData, TradeBar>)selector?.AsManagedObject(typeof(Func<IBaseData, TradeBar>));
+                    RegisterIndicator(symbol, indicatorTradeBar, consolidator, managedSelector);
+                }
+
+                return;
+            }
+
+            // register the consolidator for automatic updates via SubscriptionManager
+            SubscriptionManager.AddConsolidator(symbol, consolidator);
+
+            // attach to the DataConsolidated event so it updates our indicator
+            consolidator.DataConsolidated += (sender, consolidated) =>
+            {
+                using (Py.GIL())
+                {
+                    indicator.InvokeMethod("Update", new[] { consolidated.ToPython() });
+                }
+            };
         }
 
         /// <summary>
