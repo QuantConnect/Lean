@@ -229,6 +229,7 @@
     <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
+    <Compile Include="Engine\AlgorithmManagerTests.cs" />
     <Compile Include="Engine\BasicOptionAssignmentSimulationTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BrokerageTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataCacheProviders\SingleEntryDataCacheProviderTests.cs" />
@@ -263,6 +264,7 @@
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
