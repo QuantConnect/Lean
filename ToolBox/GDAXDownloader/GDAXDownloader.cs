@@ -116,32 +116,41 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// <returns>web response as string</returns>
         List<BaseData> ParseCandleData(Symbol symbol, double granularity, string data)
         {
-            List<BaseData> returnData = new List<BaseData>();
-            if (data.Length > 0)
+            int i = 0;
+            try
             {
-                var parsedData = JsonConvert.DeserializeObject<string[][]>(data);
-
-                foreach (var datapoint in parsedData)
+                List<BaseData> returnData = new List<BaseData>();
+                if (data.Length > 0)
                 {
-                    var epochs = double.Parse(datapoint[0].ToString());
-                    var tradeBar = new TradeBar()
+                    var parsedData = JsonConvert.DeserializeObject<string[][]>(data);
+
+                    foreach (var datapoint in parsedData)
                     {
-                        Time = Time.UnixTimeStampToDateTime(epochs),
-                        Symbol = symbol,
-                        Low = decimal.Parse(datapoint[1].ToString()),
-                        High = decimal.Parse(datapoint[2].ToString()),
-                        Open = decimal.Parse(datapoint[3].ToString()),
-                        Close = decimal.Parse(datapoint[4].ToString()),
-                        Volume = decimal.Parse(datapoint[5].ToString()),
-                        Value = decimal.Parse(datapoint[4].ToString()),
-                        DataType = MarketDataType.TradeBar,
-                        Period = new TimeSpan(0, 0, (int)granularity),
-                        EndTime = Time.UnixTimeStampToDateTime(epochs).AddSeconds(granularity)
-                    };
-                    returnData.Add(tradeBar);
+                        var epochs = double.Parse(datapoint[0].ToString());
+                        var tradeBar = new TradeBar()
+                        {
+                            Time = Time.UnixTimeStampToDateTime(epochs),
+                            Symbol = symbol,
+                            Low = decimal.Parse(datapoint[1].ToString()),
+                            High = decimal.Parse(datapoint[2].ToString()),
+                            Open = decimal.Parse(datapoint[3].ToString()),
+                            Close = decimal.Parse(datapoint[4].ToString()),
+                            Volume = decimal.Parse(datapoint[5].ToString(), System.Globalization.NumberStyles.Float),
+                            Value = decimal.Parse(datapoint[4].ToString()),
+                            DataType = MarketDataType.TradeBar,
+                            Period = new TimeSpan(0, 0, (int)granularity),
+                            EndTime = Time.UnixTimeStampToDateTime(epochs).AddSeconds(granularity)
+                        };
+                        i++;
+                        returnData.Add(tradeBar);
+                    }
                 }
+                return returnData.OrderBy(datapoint => datapoint.Time).ToList();
             }
-            return returnData.OrderBy(datapoint => datapoint.Time).ToList();
+            catch(Exception e)
+            {
+                return null;
+            }
         }
     }
 }
