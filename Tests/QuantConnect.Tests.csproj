@@ -468,6 +468,7 @@
     <None Include="TestData\spy_with_keltner.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="API\ApiTests.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
