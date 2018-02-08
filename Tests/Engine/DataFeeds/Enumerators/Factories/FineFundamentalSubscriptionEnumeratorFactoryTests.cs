@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -25,6 +26,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Securities;
+using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
@@ -71,6 +73,39 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth.OneYear);
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth);
             Assert.AreEqual(parameters.PeRatio, row.ValuationRatios.PERatio);
+        }
+
+        [Test]
+        public void DoesNotLeakMemory()
+        {
+            var symbol = Symbols.AAPL;
+            var startDate = new DateTime(2014, 4, 30);
+            var endDate = new DateTime(2014, 4, 30);
+
+            var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash(CashBook.AccountCurrency, 0, 1), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);
+            var fileProvider = new DefaultDataProvider();
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
+
+            GC.Collect();
+            var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;
+
+            const int iterations = 1000;
+            for (var i = 0; i < iterations; i++)
+            {
+                using (var enumerator = factory.CreateEnumerator(request, fileProvider))
+                {
+                    enumerator.MoveNext();
+                }
+            }
+
+            GC.Collect();
+            var ramUsageAfterLoop = OS.TotalPhysicalMemoryUsed;
+
+            Log.Trace($"RAM usage - before: {ramUsageBeforeLoop} MB, after: {ramUsageAfterLoop} MB");
+
+            Assert.IsTrue(ramUsageAfterLoop - ramUsageBeforeLoop < 10);
         }
 
         private static TestCaseData[] GetFineFundamentalTestParameters()
