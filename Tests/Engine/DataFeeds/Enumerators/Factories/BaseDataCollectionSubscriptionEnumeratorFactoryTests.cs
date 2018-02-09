@@ -30,7 +30,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
     [TestFixture]
     public class BaseDataCollectionSubscriptionEnumeratorFactoryTests
     {
-        [Test]
+        // This test reports higher memory usage when ran with Travis, so we exclude it for now
+        [Test, Category("TravisExclude")]
         public void DoesNotLeakMemory()
         {
             var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
