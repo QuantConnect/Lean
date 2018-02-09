@@ -51,7 +51,7 @@ class QCUWeatherBasedRebalancing(QCAlgorithm):
 
     # When we have a new event trigger, buy some stock:
     def OnData(self, data):
-        if self.weather not in data: return
+        if not data.ContainsKey(self.weather): return
 
         # Scale from -5C to +25C :: -5C == 100%, +25C = 0% invested
         fraction = -(data[self.weather].MinC + 5) / 30 if self.weather in data else 0

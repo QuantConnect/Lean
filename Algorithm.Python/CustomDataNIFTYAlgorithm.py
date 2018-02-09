@@ -51,11 +51,11 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
 
 
     def OnData(self, data):
-        if "USDINR" in data:
+        if data.ContainsKey("USDINR"):
             self.today = CorrelationPair(self.Time)
             self.today.CurrencyPrice = data["USDINR"].Close
 
-        if "NIFTY" not in data: return
+        if not data.ContainsKey("NIFTY"): return
 
         self.today.NiftyPrice = data["NIFTY"].Close
 
