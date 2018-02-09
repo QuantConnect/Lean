@@ -31,6 +31,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Python;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -39,7 +40,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     /// </summary>
     public class AlgorithmPythonWrapper : IAlgorithm
     {
-        private readonly PyObject _util;
         private readonly dynamic _algorithm;
         private readonly QCAlgorithm _baseAlgorithm;
 
@@ -63,8 +63,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                     var baseClass = module.GetAttr("QCAlgorithm");
 
-                    // Load module with util methods
-                    _util = ImportUtil();
+                    // Set PythonSlice converter
+                    PythonSlice.SetConverter();
 
                     var moduleName = module.Repr().Split('\'')[1];
 
@@ -74,8 +74,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                         if (attr.IsSubclass(baseClass) && attr.Repr().Contains(moduleName))
                         {
-                            attr.SetAttr("OnPythonData", _util.GetAttr("OnPythonData"));
-
                             _algorithm = attr.Invoke();
 
                             // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
@@ -711,14 +709,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             using (Py.GIL())
             {
-                if (SubscriptionManager.HasCustomData)
-                {
-                    _algorithm.OnPythonData(slice);
-                }
-                else
-                {
-                    _algorithm.OnData(slice);
-                }
+                _algorithm.OnData(SubscriptionManager.HasCustomData ? new PythonSlice(slice) : slice);
             }
         }
 
@@ -1062,49 +1053,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetParameters(Dictionary<string, string> parameters)
         {
             _baseAlgorithm.SetParameters(parameters);
-        }
-
-        /// <summary>
-        /// Creates Util module
-        /// </summary>
-        /// <returns>PyObject with utils</returns>
-        private PyObject ImportUtil()
-        {
-            var code =
-                "from clr import AddReference\n" +
-                "AddReference(\"System\")\n" +
-                "AddReference(\"QuantConnect.Common\")\n" +
-                "import decimal\n" +
-
-                // OnPythonData call OnData after converting the Slice object
-                "def OnPythonData(self, data):\n" +
-                "    self.OnData(PythonSlice(data))\n" +
-
-                // PythonSlice class
-                "class PythonSlice(dict):\n" +
-                "    def __init__(self, slice):\n" +
-                "        for data in slice:\n" +
-                "            self[data.Key] = Data(data.Value)\n" +
-                "            self[data.Key.Value] = Data(data.Value)\n" +
-
-                // Python Data class: Converts custom data (PythonData) into a python object'''
-                "class Data(object):\n" +
-                "    def __init__(self, data):\n" +
-                "        members = [attr for attr in dir(data) if not callable(attr) and not attr.startswith(\"__\")]\n" +
-                "        for member in members:\n" +
-                "            setattr(self, member, getattr(data, member))\n" +
-
-                "        if not hasattr(data, 'GetStorageDictionary'): return\n" +
-
-                "        for kvp in data.GetStorageDictionary():\n" +
-                "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n" +
-                "           value = decimal.Decimal(kvp.Value) if isinstance(kvp.Value, float) else kvp.Value\n" +
-                "           setattr(self, name, value)";
-
-            using (Py.GIL())
-            {
-                return PythonEngine.ModuleFromString("AlgorithmPythonUtil", code);
-            }
         }
 
         /// <summary>
