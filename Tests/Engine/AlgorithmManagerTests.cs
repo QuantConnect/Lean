@@ -111,13 +111,12 @@ namespace QuantConnect.Tests.Engine
                 var delistings = new Delistings();
                 var symbolChanges = new SymbolChangedEvents();
                 var dataFeedPackets = new List<DataFeedPacket>();
-                var cashUpdateData = new List<UpdateData<Cash>>();
                 var customData = new List<UpdateData<Security>>();
                 var changes = SecurityChanges.None;
                 do
                 {
                     var slice = new Slice(default(DateTime), _data, bars, quotes, ticks, options, futures, splits, dividends, delistings, symbolChanges);
-                    var timeSlice = new TimeSlice(_frontierUtc, _data.Count, slice, dataFeedPackets, cashUpdateData, securitiesUpdateData, _consolidatorUpdateData, customData, changes);
+                    var timeSlice = new TimeSlice(_frontierUtc, _data.Count, slice, dataFeedPackets, securitiesUpdateData, _consolidatorUpdateData, customData, changes);
                     yield return timeSlice;
                     _frontierUtc += FrontierStepSize;
                 }

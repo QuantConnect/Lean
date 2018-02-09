@@ -308,16 +308,6 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
-                //On each time step push the real time prices to the cashbook so we can have updated conversion rates
-                foreach (var update in timeSlice.CashBookUpdateData)
-                {
-                    var cash = update.Target;
-                    foreach (var data in update.Data)
-                    {
-                        cash.Update(data);
-                    }
-                }
-
                 //Update the securities properties: first before calling user code to avoid issues with data
                 foreach (var update in timeSlice.SecuritiesUpdateData)
                 {
@@ -329,6 +319,17 @@ namespace QuantConnect.Lean.Engine
 
                     // Send market price updates to the TradeBuilder
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
+                }
+
+                // poke each cash object to update from the recent security data
+                foreach (var kvp in algorithm.Portfolio.CashBook)
+                {
+                    var cash = kvp.Value;
+                    var updateData = cash.ConversionRateSecurity?.GetLastData();
+                    if (updateData != null)
+                    {
+                        cash.Update(updateData);
+                    }
                 }
 
                 // sample alpha charts now that we've updated time/price information but BEFORE we receive new alphas
