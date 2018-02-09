@@ -1,7 +1,24 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -18,7 +35,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void TestsSubscriptionSynchronizerSpeed_SingleSubscription()
         {
-            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            TestSubscriptionSynchronizerSpeed(PerformanceBenchmarkAlgorithms.SingleSecurity_Second);
+        }
+
+        [Test]
+        public void TestsSubscriptionSynchronizerSpeed_500Subscription()
+        {
+            TestSubscriptionSynchronizerSpeed(PerformanceBenchmarkAlgorithms.FiveHundredSecurity_Second);
+        }
+
+        private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
+        {
             algorithm.Initialize();
 
             // set exchanges to be always open
@@ -28,35 +55,44 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(security.Exchange.TimeZone));
             }
 
-            var startTimeUtc = algorithm.StartDate.ConvertToUtc(TimeZones.NewYork);
             var endTimeUtc = algorithm.EndDate.ConvertToUtc(TimeZones.NewYork);
+            var startTimeUtc = algorithm.StartDate.ConvertToUtc(TimeZones.NewYork);
 
             var feed = new AlgorithmManagerTests.MockDataFeed();
             var universeSelection = new UniverseSelection(feed, algorithm);
             var synchronizer = new SubscriptionSynchronizer(universeSelection, algorithm.TimeZone, algorithm.Portfolio.CashBook, startTimeUtc);
 
-            var subscriptions = new List<Subscription>
+            var subscriptions = new List<Subscription>();
+            foreach (var kvp in algorithm.Securities)
             {
-                CreateSubscription(algorithm, algorithm.Securities.Single().Value, startTimeUtc, endTimeUtc)
-            };
+                subscriptions.Add(CreateSubscription(algorithm, kvp.Value, startTimeUtc, endTimeUtc));
+            }
 
             var count = 0;
-            TimeSlice slice;
-            var stopwatch = Stopwatch.StartNew();
+            double kps = 0;
+            var currentTime = default(DateTime);
+            var stopwatch = new Stopwatch();
+            var timer = new Timer(_ =>
+            {
+                kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
+                Console.WriteLine($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
+            });
+            timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+
+            stopwatch.Start();
             do
             {
-                slice = synchronizer.Sync(subscriptions);
-                count++;
-                if (slice.Time == DateTime.MaxValue)
-                {
-                    break;
-                }
+                var timeSlice = synchronizer.Sync(subscriptions);
+                currentTime = timeSlice.Time;
+                count += timeSlice.DataPointCount;
             }
-            while (slice.Time < endTimeUtc);
-            stopwatch.Stop();
+            while (currentTime < endTimeUtc);
 
-            var kps = count/1000d/ stopwatch.Elapsed.TotalSeconds;
-            Console.WriteLine($"Current Time: {slice.Time}:: Elapsed time: {stopwatch.Elapsed}  COUNT: {count}    KPS: {kps:.00}");
+            stopwatch.Stop();
+            timer.Dispose();
+
+            kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
+            Console.WriteLine($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
         }
 
         private Subscription CreateSubscription(QCAlgorithm algorithm, Security security, DateTime startTimeUtc, DateTime endTimeUtc)
