@@ -19,8 +19,9 @@ import os
 class TestApi(unittest.TestCase):
 
     def setUp(self):
-        self.userId = "1"
-        self.testToken = "ec87b337ac970da4cbea648f24f1c851"
+        # Please add your credentials. Found at https://www.quantconnect.com/account 
+        self.userId = ""
+        self.testToken = ""
         self.api = Api(self.userId, self.testToken)
 
     def test_Projects_CanBeCreatedAndDeleted_Successfully(self):
@@ -65,8 +66,8 @@ class TestApi(unittest.TestCase):
     def test_CRUD_ProjectFiles_Successfully(self):
         """Test updating the files associated with a project"""
 
-        real_file_code = get_content('/../../Algorithm.Python/BasicTemplateAlgorithm.py')
-        second_real_file_code = get_content('/../../Algorithm.Python/BasicTemplateForexAlgorithm.py')
+        real_file_code = get_content('BasicTemplateAlgorithm.py')
+        second_real_file_code = get_content('BasicTemplateForexAlgorithm.py')
 
         fakeFile = {"name":"Hello.py", "code": "Hello World!"}
         realFile = {"name":"main.py", "code": real_file_code}
@@ -123,8 +124,8 @@ class TestApi(unittest.TestCase):
         self.assertTrue(deleteProject['success'])
 
 def get_content(file):
-    with open(os.getcwd() + file, 'r') as myfile:
-        return myfile.read()#.decode("utf-8-sig").encode("utf-8")
+    with open("../Algorithm.Python/" + file, 'r') as f:
+        return f.read()
 
 if __name__ == '__main__':
     unittest.main(argv=['first-arg-is-ignored'], exit=False)

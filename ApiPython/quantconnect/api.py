@@ -12,29 +12,17 @@
 # limitations under the License.
 
 from datetime import datetime
-from hashlib import sha256
 from json import dumps
-from logging import exception
-from requests import Session, Request
-from time import time, mktime
-
-def create_secure_hash(timestamp, token):
-    """Generate a secure hash for the authorization headers.
-    Returns:
-        Time based hash of user token and timestamp."""
-    hash_data = sha256()
-    hash_data.update("{0}:{1}".format(token, timestamp).encode('utf-8'))
-    return hash_data.hexdigest()
+from requests import Request
+from time import mktime
+from quantconnect import ApiConnection
 
 class Api:
     """QuantConnect.com Interaction Via API.
     Attributes:
-        userId(int): User Id number from QuantConnect.com account. Found at www.quantconnect.com/account.
+        userId(int/str): User Id number from QuantConnect.com account. Found at www.quantconnect.com/account.
         token(str): Access token for the QuantConnect account. Found at www.quantconnect.com/account.
-        timestamp(int): UTC timestamp. Timestamps older than 1800 seconds will not work.
-        client(str): Authorized client to use for requests.
     """
-
     def __init__(self, userId, token):
         self.api_connection = ApiConnection(userId, token)
 
@@ -468,37 +456,3 @@ class Api:
                 code.write(request.content)
 
         return link['success']
-
-
-class ApiConnection:
-    client = "https://www.quantconnect.com/api/v2/"
-
-    def __init__(self, userId, token):
-        self.userId = userId
-        self.token = token
-
-    def connected(self):
-        """Return true if connected successfully."""
-        request = Request('GET', "authenticate")
-        result = self.try_request(request)
-        return result['success']
-
-    def try_request(self, request):
-        """Place a secure request and get back an object of type T.
-        Args:
-            request: Result object of the request
-        Returns:
-            result: request response
-        """
-        timestamp = int(time())
-        hash = create_secure_hash(timestamp, self.token)
-        request.auth = (self.userId, hash)
-        request.headers.update({"Timestamp": str(timestamp)})
-        request.url = self.client + request.url
-
-        try:
-            response = Session().send(request.prepare())
-            return response.json()
-        except:
-            exception("Failed to make REST request to {0}".format(request.url))
-            return { 'success': False }
