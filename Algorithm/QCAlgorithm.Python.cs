@@ -779,6 +779,48 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a debug message to the web console:
+        /// </summary>
+        /// <param name="message">Message to send to debug console</param>
+        /// <seealso cref="Log(PyObject)"/>
+        /// <seealso cref="Error(PyObject)"/>
+        public void Debug(PyObject message)
+        {
+            Debug(message.ToSafeString());
+        }
+
+        /// <summary>
+        /// Send a string error message to the Console.
+        /// </summary>
+        /// <param name="message">Message to display in errors grid</param>
+        /// <seealso cref="Debug(PyObject)"/>
+        /// <seealso cref="Log(PyObject)"/>
+        public void Error(PyObject message)
+        {
+            Error(message.ToSafeString());
+        }
+
+        /// <summary>
+        /// Added another method for logging if user guessed.
+        /// </summary>
+        /// <param name="message">String message to log.</param>
+        /// <seealso cref="Debug(PyObject)"/>
+        /// <seealso cref="Error(PyObject)"/>
+        public void Log(PyObject message)
+        {
+            Log(message.ToSafeString());
+        }
+
+        /// <summary>
+        /// Terminate the algorithm after processing the current event handler.
+        /// </summary>
+        /// <param name="message">Exit message to display on quitting</param>
+        public void Quit(PyObject message)
+        {
+            Quit(message.ToSafeString());
+        }
+
+        /// <summary>
         /// Gets indicator base type
         /// </summary>
         /// <param name="type">Indicator type</param>

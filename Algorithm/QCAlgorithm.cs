@@ -1723,7 +1723,7 @@ namespace QuantConnect.Algorithm
         /// Send a debug message to the web console:
         /// </summary>
         /// <param name="message">Message to send to debug console</param>
-        /// <seealso cref="Log"/>
+        /// <seealso cref="Log(string)"/>
         /// <seealso cref="Error(string)"/>
         public void Debug(string message)
         {
@@ -1736,7 +1736,7 @@ namespace QuantConnect.Algorithm
         /// Added another method for logging if user guessed.
         /// </summary>
         /// <param name="message">String message to log.</param>
-        /// <seealso cref="Debug"/>
+        /// <seealso cref="Debug(string)"/>
         /// <seealso cref="Error(string)"/>
         public void Log(string message)
         {
@@ -1748,8 +1748,8 @@ namespace QuantConnect.Algorithm
         /// Send a string error message to the Console.
         /// </summary>
         /// <param name="message">Message to display in errors grid</param>
-        /// <seealso cref="Debug"/>
-        /// <seealso cref="Log"/>
+        /// <seealso cref="Debug(string)"/>
+        /// <seealso cref="Log(string)"/>
         public void Error(string message)
         {
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
@@ -1761,8 +1761,8 @@ namespace QuantConnect.Algorithm
         /// Send a string error message to the Console.
         /// </summary>
         /// <param name="error">Exception object captured from a try catch loop</param>
-        /// <seealso cref="Debug"/>
-        /// <seealso cref="Log"/>
+        /// <seealso cref="Debug(string)"/>
+        /// <seealso cref="Log(string)"/>
         public void Error(Exception error)
         {
             var message = error.Message;
