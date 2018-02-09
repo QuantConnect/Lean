@@ -259,6 +259,7 @@
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionCollectionTests.cs" />
+    <Compile Include="Engine\DataFeeds\SubscriptionSynchronizerTests.cs" />
     <Compile Include="Engine\DataFeeds\TimeSliceTests.cs" />
     <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
