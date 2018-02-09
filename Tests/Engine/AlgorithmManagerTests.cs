@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Engine
             Log.Trace("COUNT: " + feed.Count + "  KPS: " + thousands/seconds);
         }
 
-        class MockDataFeed : IDataFeed
+        public class MockDataFeed : IDataFeed
         {
             private DateTime _frontierUtc;
             private DateTime _endTimeUtc;
