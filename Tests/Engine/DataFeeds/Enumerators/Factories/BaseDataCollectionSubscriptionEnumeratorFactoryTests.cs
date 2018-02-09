@@ -1,0 +1,72 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
+using System.Collections.Generic;
+using NUnit.Framework;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
+
+namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
+{
+    [TestFixture]
+    public class BaseDataCollectionSubscriptionEnumeratorFactoryTests
+    {
+        [Test]
+        public void DoesNotLeakMemory()
+        {
+            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash(CashBook.AccountCurrency, 0, 1), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            var universeSettings = new UniverseSettings(Resolution.Daily, 2m, true, false, TimeSpan.FromDays(1));
+            var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
+            var universe = new CoarseFundamentalUniverse(universeSettings, securityInitializer, x => new List<Symbol>{ Symbols.AAPL });
+
+            var fileProvider = new DefaultDataProvider();
+
+            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
+
+            GC.Collect();
+            var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;
+
+            var date = new DateTime(2014, 3, 25);
+
+            const int iterations = 1000;
+            for (var i = 0; i < iterations; i++)
+            {
+                var request = new SubscriptionRequest(true, universe, security, config, date, date);
+                using (var enumerator = factory.CreateEnumerator(request, fileProvider))
+                {
+                    enumerator.MoveNext();
+                }
+            }
+
+            GC.Collect();
+            var ramUsageAfterLoop = OS.TotalPhysicalMemoryUsed;
+
+            Log.Trace($"RAM usage - before: {ramUsageBeforeLoop} MB, after: {ramUsageAfterLoop} MB");
+
+            Assert.IsTrue(ramUsageAfterLoop - ramUsageBeforeLoop < 10);
+        }
+
+    }
+}
