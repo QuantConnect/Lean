@@ -67,7 +67,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 returnData.AddRange(ParseCandleData(symbol, granularity, data));
             }
             while (windowStartTime != windowEndTime);
-            
+
             return returnData;
         }
 
@@ -132,7 +132,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                         High = decimal.Parse(datapoint[2].ToString()),
                         Open = decimal.Parse(datapoint[3].ToString()),
                         Close = decimal.Parse(datapoint[4].ToString()),
-                        Volume = decimal.Parse(datapoint[5].ToString()),
+                        Volume = decimal.Parse(datapoint[5].ToString(), System.Globalization.NumberStyles.Float),
                         Value = decimal.Parse(datapoint[4].ToString()),
                         DataType = MarketDataType.TradeBar,
                         Period = new TimeSpan(0, 0, (int)granularity),

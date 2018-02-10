@@ -110,7 +110,9 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">Delegate to be called each time an event passes</param>
         public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
         {
-            _name = name;
+            // make the event name unique
+            _name = name + "-" + Guid.NewGuid().ToString("N");
+
             _callback = callback;
             _orderedEventUtcTimes = orderedEventUtcTimes;
 

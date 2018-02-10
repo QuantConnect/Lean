@@ -84,7 +84,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="BasicTemplateIntrinioEconomicData.cs" />
     <Compile Include="BasicTemplateFrameworkAlgorithm.cs" />
+    <Compile Include="BasicTemplateLibrary.cs" />
     <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
     <Compile Include="RollingWindowAlgorithm.cs" />

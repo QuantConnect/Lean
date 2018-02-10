@@ -141,7 +141,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Cashbook for the algorithm's live results.
         /// </summary>
-        public CashBook Cash = new CashBook();
+        public CashBook Cash;
 
         /// <summary>
         /// Server status information, including CPU/RAM usage, ect...

@@ -640,6 +640,11 @@ namespace QuantConnect.Algorithm
         /// <returns>OrderResponse. If no error, order request is submitted.</returns>
         private OrderResponse PreOrderChecksImpl(SubmitOrderRequest request)
         {
+            if (IsWarmingUp)
+            {
+                return OrderResponse.WarmingUp(request);
+            }
+
             //Most order methods use security objects; so this isn't really used.
             // todo: Left here for now but should review
             Security security;
@@ -649,9 +654,14 @@ namespace QuantConnect.Algorithm
             }
 
             //Ordering 0 is useless.
-            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty || Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
+            if (request.Quantity == 0)
             {
                 return OrderResponse.ZeroQuantity(request);
+            }
+
+            if (Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLoteSize, $"Unable to {request.OrderRequestType.ToString().ToLower()} order with id {request.OrderId} which quantity ({Math.Abs(request.Quantity)}) is less than lot size ({security.SymbolProperties.LotSize}).");
             }
 
             if (!security.IsTradable)
@@ -737,7 +747,7 @@ namespace QuantConnect.Algorithm
             {
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
                 // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
-                var latestSubmissionTime = nextMarketClose.AddMinutes(-15.50);
+                var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.DefaultSubmissionTimeBuffer);
                 if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
                 {
                     // tell the user we require a 16 minute buffer, on minute data in live a user will receive the 3:44->3:45 bar at 3:45,
@@ -761,12 +771,11 @@ namespace QuantConnect.Algorithm
         public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             var orderIdList = new List<int>();
-            symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
 
             foreach (var symbol in Securities.Keys.OrderBy(x => x.Value))
             {
                 // symbol not matching, do nothing
-                if (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty)
+                if (symbol != symbolToLiquidate && symbolToLiquidate != null)
                     continue;
 
                 // get open orders
@@ -894,7 +903,8 @@ namespace QuantConnect.Algorithm
                     if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -holdings.Quantity, false, tag);
+                        var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
+                        Order(holdingSymbol, liquidationQuantity, false, tag);
                     }
                 }
             }
@@ -929,69 +939,14 @@ namespace QuantConnect.Algorithm
         public decimal CalculateOrderQuantity(Symbol symbol, decimal target)
         {
             var security = Securities[symbol];
-            var price = security.Price;
 
             // can't order it if we don't have data
-            if (price == 0) return 0;
+            if (security.Price == 0) return 0;
 
-            // if targeting zero, simply return the negative of the quantity
-            if (target == 0) return -security.Holdings.Quantity;
-
-            // this is the value in dollars that we want our holdings to have
+            // this is the value in account currency that we want our holdings to have
             var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
-            var currentHoldingsValue = security.Holdings.HoldingsValue;
 
-            // remove directionality, we'll work in the land of absolutes
-            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
-            var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
-
-            // determine the unit price in terms of the account currency
-            var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
-            if (unitPrice == 0) return 0;
-
-            // calculate the total margin available
-            var marginRemaining = Portfolio.GetMarginRemaining(symbol, direction);
-            if (marginRemaining <= 0) return 0;
-
-            // continue iterating while we do not have enough margin for the order
-            decimal marginRequired;
-            decimal orderValue;
-            decimal orderFees;
-            var feeToPriceRatio = 0m;
-
-            // compute the initial order quantity
-            var orderQuantity = targetOrderValue / unitPrice;
-
-            // rounding off Order Quantity to the nearest multiple of Lot Size
-            orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
-
-            do
-            {
-                // reduce order quantity by feeToPriceRatio, since it is faster than by lot size
-                // if it becomes nonpositive, return zero
-                orderQuantity -= feeToPriceRatio;
-                if (orderQuantity <= 0) return 0;
-
-                // generate the order
-                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
-                orderValue = order.GetValue(security);
-                orderFees = security.FeeModel.GetOrderFee(security, order);
-
-                // find an incremental delta value for the next iteration step
-                feeToPriceRatio = orderFees / unitPrice;
-                feeToPriceRatio -= feeToPriceRatio % security.SymbolProperties.LotSize;
-                if (feeToPriceRatio < security.SymbolProperties.LotSize)
-                {
-                    feeToPriceRatio = security.SymbolProperties.LotSize;
-                }
-
-                // calculate the margin required for the order
-                marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
-
-            } while (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue);
-
-            // add directionality back in
-            return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
+            return security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
         }
 
         /// <summary>

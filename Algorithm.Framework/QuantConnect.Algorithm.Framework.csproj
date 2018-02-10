@@ -55,9 +55,11 @@
     </Compile>
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
+    <Compile Include="Execution\NullExecutionModel.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\SimplePortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />

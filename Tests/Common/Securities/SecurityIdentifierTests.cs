@@ -272,7 +272,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(sid.ToString(), value);
         }
 
-        [Test]
+        [Test, Category("TravisExclude")]
         public void ParsesFromStringFastEnough()
         {
             const string value = "SPY R735QTJ8XC9X";

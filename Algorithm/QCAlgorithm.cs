@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm
             SubscriptionManager = new SubscriptionManager(Settings, _timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
-            Transactions = new SecurityTransactionManager(Securities);
+            Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
@@ -504,7 +504,7 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
-                if (_benchmarkSymbol != null && _benchmarkSymbol != QuantConnect.Symbol.Empty)
+                if (_benchmarkSymbol != null)
                 {
                     // if the requested benchmark symbol wasn't already added, then add it now
                     // we do a simple compare here for simplicity, also it avoids confusion over
@@ -562,6 +562,13 @@ namespace QuantConnect.Algorithm
                     equity.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods);
                 }
             }
+        }
+
+        /// <summary>
+        /// Called when the algorithm has completed initialization and warm up.
+        /// </summary>
+        public virtual void OnWarmupFinished()
+        {
         }
 
         /// <summary>
@@ -934,6 +941,9 @@ namespace QuantConnect.Algorithm
 
             // the time rules need to know the default time zone as well
             TimeRules.SetDefaultTimeZone(timeZone);
+
+            // reset the current time according to the time zone
+            SetDateTime(_startDate.ConvertToUtc(TimeZone));
         }
 
         /// <summary>
@@ -1694,7 +1704,8 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
+            //Add this custom symbol to our market hours database
+            var marketHoursDbEntry = MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
@@ -1712,7 +1723,7 @@ namespace QuantConnect.Algorithm
         /// Send a debug message to the web console:
         /// </summary>
         /// <param name="message">Message to send to debug console</param>
-        /// <seealso cref="Log"/>
+        /// <seealso cref="Log(string)"/>
         /// <seealso cref="Error(string)"/>
         public void Debug(string message)
         {
@@ -1725,7 +1736,7 @@ namespace QuantConnect.Algorithm
         /// Added another method for logging if user guessed.
         /// </summary>
         /// <param name="message">String message to log.</param>
-        /// <seealso cref="Debug"/>
+        /// <seealso cref="Debug(string)"/>
         /// <seealso cref="Error(string)"/>
         public void Log(string message)
         {
@@ -1737,8 +1748,8 @@ namespace QuantConnect.Algorithm
         /// Send a string error message to the Console.
         /// </summary>
         /// <param name="message">Message to display in errors grid</param>
-        /// <seealso cref="Debug"/>
-        /// <seealso cref="Log"/>
+        /// <seealso cref="Debug(string)"/>
+        /// <seealso cref="Log(string)"/>
         public void Error(string message)
         {
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
@@ -1750,8 +1761,8 @@ namespace QuantConnect.Algorithm
         /// Send a string error message to the Console.
         /// </summary>
         /// <param name="error">Exception object captured from a try catch loop</param>
-        /// <seealso cref="Debug"/>
-        /// <seealso cref="Log"/>
+        /// <seealso cref="Debug(string)"/>
+        /// <seealso cref="Log(string)"/>
         public void Error(Exception error)
         {
             var message = error.Message;

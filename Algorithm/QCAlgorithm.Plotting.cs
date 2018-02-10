@@ -26,15 +26,15 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         private readonly Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
-        private static readonly HashSet<string> ReservedChartNames = new HashSet<string>
+
+        private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames = new Dictionary<string, List<string>>
         {
-            "Strategy Equity",
-            "Equity",
-            "Daily Performance",
-            "Meta",
-            "Alpha",
-            "Alpha Count",
-            "Alpha Asset Breakdown"
+            { "Strategy Equity", new List<string> { "Equity", "Daily Performance" } },
+            { "Meta", new List<string>() },
+            { "Alpha", new List<string> { "Direction Score", "Magnitude Score" } },
+            { "Alpha Count", new List<string> { "Count" } },
+            { "Alpha Assets", new List<string>() },
+            { "Alpha Asset Breakdown", new List<string>() }
         };
 
         /// <summary>
@@ -160,12 +160,18 @@ namespace QuantConnect.Algorithm
         /// <param name="value">Value of the point</param>
         public void Plot(string chart, string series, decimal value)
         {
-            //Ignore the reserved chart names:
-            if (ReservedChartNames.Contains(chart))
+            // Check if chart/series names are reserved
+            List<string> reservedSeriesNames;
+            if (ReservedChartSeriesNames.TryGetValue(chart, out reservedSeriesNames))
             {
-                // excluding meta so we can say "and 'Meta'"
-                var reservedCharts = string.Join(",", ReservedChartNames.Where(rcn => rcn != "Meta").Select(rcn => $"'{rcn}'"));
-                throw new Exception($"Algorithm.Plot(): {reservedCharts} and 'Meta' are reserved chart names created for all charts.");
+                if (reservedSeriesNames.Count == 0)
+                {
+                    throw new Exception($"Algorithm.Plot(): '{chart}' is a reserved chart name.");
+                }
+                if (reservedSeriesNames.Contains(series))
+                {
+                    throw new Exception($"Algorithm.Plot(): '{series}' is a reserved series name for chart '{chart}'.");
+                }
             }
 
             // If we don't have the chart, create it:
@@ -178,9 +184,9 @@ namespace QuantConnect.Algorithm
             if (!thisChart.Series.ContainsKey(series))
             {
                 //Number of series in total, excluding reserved charts
-                var seriesCount = _charts.Values
-                    .Where(c => !ReservedChartNames.Contains(c.Name))
-                    .Select(c => c.Series.Count).Sum();
+                var seriesCount = _charts.Values.Sum(c => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
+                    ? c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
+                    : c.Series.Count);
 
                 if (seriesCount > 10)
                 {

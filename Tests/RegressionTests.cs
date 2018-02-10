@@ -26,6 +26,7 @@ namespace QuantConnect.Tests
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
             QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
+            QuantConnect.Configuration.Config.Set("forward-console-messages", "false");
 
             if (parameters.Algorithm == "OptionChainConsistencyRegressionAlgorithm")
             {
@@ -35,7 +36,7 @@ namespace QuantConnect.Tests
                 QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
             }
 
-            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
+            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
         }
 
         private static TestCaseData[] GetRegressionTestParameters()
@@ -61,6 +62,41 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.193"},
                 {"Treynor Ratio", "0.011"},
                 {"Total Fees", "$3.09"}
+            };
+
+            var basicTemplateFrameworkStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "264.956%"},
+                {"Drawdown", "2.200%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "1.669%"},
+                {"Sharpe Ratio", "4.411"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.007"},
+                {"Beta", "76.375"},
+                {"Annual Standard Deviation", "0.193"},
+                {"Annual Variance", "0.037"},
+                {"Information Ratio", "4.355"},
+                {"Tracking Error", "0.193"},
+                {"Treynor Ratio", "0.011"},
+                {"Total Fees", "$3.09"},
+                {"Total Alphas Generated", "100"},
+                {"Total Alphas Closed", "99"},
+                {"Total Alphas Analysis Completed", "86"},
+                {"Long Alpha Count", "100"},
+                {"Short Alpha Count", "0"},
+                {"Long/Short Ratio", "100%"},
+                {"Total Estimated Alpha Value", "$24404.2897"},
+                {"Mean Population Estimated Alpha Value", "$246.508"},
+                {"Mean Population Direction", "48.8372%"},
+                {"Mean Population Magnitude", "48.8372%"},
+                {"Rolling Averaged Population Direction", "68.2411%"},
+                {"Rolling Averaged Population Magnitude", "68.2411%"}
             };
 
             var basicTemplateOptionsStatistics = new Dictionary<string, string>
@@ -330,12 +366,12 @@ namespace QuantConnect.Tests
                 {"Win Rate", "20%"},
                 {"Profit-Loss Ratio", "2.44"},
                 {"Alpha", "-0.008"},
-                {"Beta", "0.025"},
+                {"Beta", "0.028"},
                 {"Annual Standard Deviation", "0.026"},
                 {"Annual Variance", "0.001"},
-                {"Information Ratio", "-1.01"},
+                {"Information Ratio", "-1.012"},
                 {"Tracking Error", "0.026"},
-                {"Treynor Ratio", "-0.284"},
+                {"Treynor Ratio", "-0.249"},
                 {"Total Fees", "$10.61"},
             };
 
@@ -387,25 +423,25 @@ namespace QuantConnect.Tests
 
             var optionSplitRegressionAlgorithmStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "2"},
-                {"Average Win", "0.00%"},
-                {"Average Loss", "0%"},
-                {"Compounding Annual Return", "0.198%"},
-                {"Drawdown", "0.500%"},
-                {"Expectancy", "0"},
-                {"Net Profit", "0.002%"},
-                {"Sharpe Ratio", "0.609"},
-                {"Loss Rate", "0%"},
-                {"Win Rate", "100%"},
-                {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-0.013"},
-                {"Beta", "0"},
-                {"Annual Standard Deviation", "0.002"},
-                {"Annual Variance", "0"},
-                {"Information Ratio", "7.935"},
-                {"Tracking Error", "6.787"},
-                {"Treynor Ratio", "-4.913"},
-                {"Total Fees", "$1.25"},
+                {"Total Trades","2"},
+                {"Average Win","0%"},
+                {"Average Loss","-0.02%"},
+                {"Compounding Annual Return","-1.242%"},
+                {"Drawdown","0.000%"},
+                {"Expectancy","-1"},
+                {"Net Profit","-0.017%"},
+                {"Sharpe Ratio","-7.099"},
+                {"Loss Rate","100%"},
+                {"Win Rate","0%"},
+                {"Profit-Loss Ratio","0"},
+                {"Alpha","-0.01"},
+                {"Beta","0"},
+                {"Annual Standard Deviation","0.001"},
+                {"Annual Variance","0"},
+                {"Information Ratio","7.126"},
+                {"Tracking Error","6.064"},
+                {"Treynor Ratio","174.306"},
+                {"Total Fees","$0.50"},
             };
 
             var optionRenameRegressionAlgorithmStatistics = new Dictionary<string, string>
@@ -644,7 +680,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
-                new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
@@ -696,6 +732,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HourSplitRegressionAlgorithm", hourSplitStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("CustomIndicatorAlgorithm", basicTemplateStatistics, Language.Python),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
@@ -709,6 +746,7 @@ namespace QuantConnect.Tests
         {
             public readonly string Algorithm;
             public readonly Dictionary<string, string> Statistics;
+            public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
 
             public AlgorithmStatisticsTestParameters(string algorithm, Dictionary<string, string> statistics, Language language)

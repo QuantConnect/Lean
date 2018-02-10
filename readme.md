@@ -112,9 +112,10 @@ If after all you still receive connection refuse error, try changing the `ib-por
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
+- Build the solution by clicking Build Menu -> Build Solution (this should trigger the Nuget package restore)
 - Press `F5` to run
 
-By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again.
+Nuget packages not being restored is the most common build issue. By default Visual Studio includes NuGet, if your installation of Visual Studio (or your IDE) cannot find DLL references, install [Nuget](https://www.nuget.org/), run nuget on the solution and re-build the Solution again. 
 
 ### Python Support
 

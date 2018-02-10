@@ -53,7 +53,12 @@ namespace QuantConnect.Securities
         public decimal ConversionRate { get; internal set; }
 
         /// <summary>
-        /// Gets the value of this cash in the accout currency
+        /// The symbol of the currency, such as $
+        /// </summary>
+        public string CurrencySymbol { get; }
+
+        /// <summary>
+        /// Gets the value of this cash in the account currency
         /// </summary>
         public decimal ValueInAccountCurrency => Amount * ConversionRate;
 
@@ -72,6 +77,7 @@ namespace QuantConnect.Securities
             Amount = amount;
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
+            CurrencySymbol = Currencies.GetCurrencySymbol(Symbol);
         }
 
         /// <summary>
@@ -225,7 +231,7 @@ namespace QuantConnect.Securities
             // round the conversion rate for output
             var rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return $"{Symbol}: {Currencies.GetCurrencySymbol(Symbol)}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}";
+            return $"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}";
         }
 
         private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)

@@ -30,6 +30,7 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Diagnostics;
+using System.IO;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -39,6 +40,10 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
+        // used for resetting out/error upon completion
+        private static readonly TextWriter StandardOut = Console.Out;
+        private static readonly TextWriter StandardError = Console.Error;
+
         private bool _exitTriggered = false;
         private BacktestNodePacket _job;
         private int _jobDays = 0;
@@ -139,8 +144,6 @@ namespace QuantConnect.Lean.Engine.Results
                 return _isActive;
             }
         }
-
-
 
         /// <summary>
         /// Sampling period for timespans between resamples of the charting equity.
@@ -264,6 +267,10 @@ namespace QuantConnect.Lean.Engine.Results
 
             Log.Trace("BacktestingResultHandler.Run(): Ending Thread...");
             _isActive = false;
+
+            // reset standard out/error
+            Console.SetOut(StandardOut);
+            Console.SetError(StandardError);
         } // End Run();
 
         /// <summary>
@@ -529,10 +536,14 @@ namespace QuantConnect.Lean.Engine.Results
             if (Config.GetBool("forward-console-messages", true))
             {
                 // we need to forward Console.Write messages to the algorithm's Debug function
-                var debug = new FuncTextWriter(algorithm.Debug);
-                var error = new FuncTextWriter(algorithm.Error);
-                Console.SetOut(debug);
-                Console.SetError(error);
+                Console.SetOut(new FuncTextWriter(algorithm.Debug));
+                Console.SetError(new FuncTextWriter(algorithm.Error));
+            }
+            else
+            {
+                // we need to forward Console.Write messages to the standard Log functions
+                Console.SetOut(new FuncTextWriter(msg => Log.Trace(msg)));
+                Console.SetError(new FuncTextWriter(msg => Log.Error(msg)));
             }
         }
 
@@ -855,8 +866,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            var debugStopWatch = Stopwatch.StartNew();
-            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
+            var endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            while (_algorithm.DebugMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
             {
                 string message;
                 if (_algorithm.DebugMessages.TryDequeue(out message))
@@ -866,8 +877,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the error messages:
-            var errorStopWatch = Stopwatch.StartNew();
-            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
+            endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            while (_algorithm.ErrorMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
             {
                 string message;
                 if (_algorithm.ErrorMessages.TryDequeue(out message))
@@ -877,8 +888,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the log messages:
-            var logStopWatch = Stopwatch.StartNew();
-            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
+            endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            while (_algorithm.LogMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
             {
                 string message;
                 if (_algorithm.LogMessages.TryDequeue(out message))

@@ -1115,6 +1115,8 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
+            algo.SetFinishedWarmingUp();
+
             //Set price to $25
             Update(msft, 25);
 
@@ -1195,7 +1197,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetCash(100000);
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
             msft = algo.Securities[Symbols.MSFT];
-            msft.MarginModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement);
+            msft.BuyingPowerModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement);
             return algo;
         }
 

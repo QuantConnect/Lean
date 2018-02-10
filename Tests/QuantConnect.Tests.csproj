@@ -149,6 +149,7 @@
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
+    <Compile Include="Common\Securities\Forex\ForexHoldingTest.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
@@ -183,10 +184,10 @@
     <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
     <Compile Include="Common\Securities\MarketHoursDatabaseTests.cs" />
-    <Compile Include="Common\Securities\FuturesMarginModelTests.cs" />
-    <Compile Include="Common\Securities\OptionMarginModelTests.cs" />
+    <Compile Include="Common\Securities\FutureMarginBuyingPowerModelTests.cs" />
+    <Compile Include="Common\Securities\OptionMarginBuyingPowerModelTests.cs" />
     <Compile Include="Common\Securities\OptionPriceModelTests.cs" />
-    <Compile Include="Common\Securities\PatternDayTradingMarginModelTests.cs" />
+    <Compile Include="Common\Securities\PatternDayTradingMarginBuyingPowerModelTests.cs" />
     <Compile Include="Common\Securities\RelativeStandardDeviationVolatilityModelTests.cs" />
     <Compile Include="Common\Securities\SecurityDatabaseKeyTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
@@ -228,6 +229,7 @@
     <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
+    <Compile Include="Engine\AlgorithmManagerTests.cs" />
     <Compile Include="Engine\BasicOptionAssignmentSimulationTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BrokerageTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataCacheProviders\SingleEntryDataCacheProviderTests.cs" />
@@ -257,20 +259,23 @@
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionCollectionTests.cs" />
+    <Compile Include="Engine\DataFeeds\SubscriptionSynchronizerTests.cs" />
     <Compile Include="Engine\DataFeeds\TimeSliceTests.cs" />
     <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
-    <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
+    <Compile Include="ExpectedAlphaStatistics.cs" />
     <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
     <Compile Include="Indicators\AccelerationBandsTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
+    <Compile Include="Indicators\CoppockCurveTests.cs" />
     <Compile Include="Indicators\DetrendedPriceOscillatorTests.cs" />
     <Compile Include="Indicators\FractalAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\ArnaudLegouxMovingAverageTest.cs" />
@@ -450,6 +455,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_mass_index_25.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_coppock_curve.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestData\spy_dpo.csv">

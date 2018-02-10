@@ -16,10 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
+using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -31,9 +34,10 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
-        public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics, Language language)
+        public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics, AlphaRuntimeStatistics expectedAlphaStatistics, Language language)
         {
             var statistics = new Dictionary<string, string>();
+            var alphaStatistics = new AlphaRuntimeStatistics();
 
             Composer.Instance.Reset();
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";
@@ -82,8 +86,11 @@ namespace QuantConnect.Tests
                         engine.Run(job, algorithmManager, algorithmPath);
                     }).Wait();
 
-                    var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
+                    var backtestingResultHandler = (BacktestingResultHandler) algorithmHandlers.Results;
                     statistics = backtestingResultHandler.FinalStatistics;
+
+                    var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
+                    alphaStatistics = defaultAlphaHandler.RuntimeStatistics;
 
                     Log.DebuggingEnabled = debugEnabled;
                 }
@@ -99,12 +106,44 @@ namespace QuantConnect.Tests
                 Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
             }
 
+            if (expectedAlphaStatistics != null)
+            {
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.MeanPopulationScore.Direction);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.MeanPopulationScore.Magnitude);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.RollingAveragedPopulationScore.Direction);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.RollingAveragedPopulationScore.Magnitude);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.LongShortRatio);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalAlphasClosed);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalAlphasGenerated);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalEstimatedAlphaValue);
+                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalAlphasAnalysisCompleted);
+            }
+
             // we successfully passed the regression test, copy the log file so we don't have to continually
             // re-run master in order to compare against a passing run
             var passedFile = logFile.Replace("./regression/", "./passed/");
             Directory.CreateDirectory(Path.GetDirectoryName(passedFile));
             File.Delete(passedFile);
             File.Copy(logFile, passedFile);
+        }
+
+        private static void AssertAlphaStatistics(AlphaRuntimeStatistics expected, AlphaRuntimeStatistics actual, Expression<Func<AlphaRuntimeStatistics, object>> selector)
+        {
+            // extract field name from expression
+            var field = selector.AsEnumerable().OfType<MemberExpression>().First().ToString();
+            field = field.Substring(field.IndexOf('.') + 1);
+
+            var func = selector.Compile();
+            var expectedValue = func(expected);
+            var actualValue = func(actual);
+            if (expectedValue is double)
+            {
+                Assert.AreEqual((double)expectedValue, (double)actualValue, 1e-4, "Failed on alpha statistics " + field);
+            }
+            else
+            {
+                Assert.AreEqual(expectedValue, actualValue, "Failed on alpha statistics " + field);
+            }
         }
     }
 }

@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -35,6 +37,13 @@ namespace QuantConnect.Indicators
         /// Gets the signal of the MACD
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Signal { get; private set; }
+
+        /// <summary>
+        /// Developed by Thomas Aspray in 1986, the MACD-Histogram measures the distance between MACD and its signal line, 
+        /// is an oscillator that fluctuates above and below the zero line.
+        /// Bullish or bearish divergences in the MACD-Histogram can alert chartists to an imminent signal line crossover in MACD.
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Histogram { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -64,12 +73,14 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
+        [Obsolete("MACD Default MovingAverageType will change 2018-03-01 from MovingAverageType.Simple to MovingAverageType.Exponential")]
         public MovingAverageConvergenceDivergence(string name, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
+            Histogram = new Identity(name + "_Histogram");
         }
 
         /// <summary>
@@ -88,6 +99,7 @@ namespace QuantConnect.Indicators
                 Signal.Update(input.Time, macd);
             }
 
+            Histogram.Update(input.Time, macd - Signal);
             return macd;
         }
 
@@ -99,7 +111,7 @@ namespace QuantConnect.Indicators
             Fast.Reset();
             Slow.Reset();
             Signal.Reset();
-
+            Histogram.Reset();
             base.Reset();
         }
     }

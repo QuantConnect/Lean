@@ -115,6 +115,7 @@
     <None Include="OptionChainConsistencyRegressionAlgorithm.py" />
     <None Include="HourSplitRegressionAlgorithm.py" />
     <None Include="HourReverseSplitRegressionAlgorithm.py" />
+    <None Include="MultipleSymbolConsolidationAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
@@ -135,6 +136,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BasicTemplateFrameworkAlgorithm.py" />
+    <Content Include="BasicTemplateLibrary.py" />
+    <Content Include="CustomIndicatorAlgorithm.py" />
+    <Content Include="CustomVolatilityModelAlgorithm.py" />
     <Content Include="HistoryAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
   </ItemGroup>

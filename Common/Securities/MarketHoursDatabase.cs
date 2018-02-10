@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,24 +34,17 @@ namespace QuantConnect.Securities
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, Entry> _entries;
-
-        /// <summary>
-        /// Gets an instant of <see cref="MarketHoursDatabase"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
-        /// for each call to <see cref="GetExchangeHours(string, Symbol, SecurityType,DateTimeZone)"/>
-        /// </summary>
-        public static MarketHoursDatabase AlwaysOpen
-        {
-            get { return new AlwaysOpenMarketHoursDatabase(); }
-        }
+        private readonly Dictionary<SecurityDatabaseKey, Entry> _entries;
 
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<KeyValuePair<SecurityDatabaseKey,Entry>> ExchangeHoursListing
-        {
-            get { return _entries.ToList(); }
-        }
+        public List<KeyValuePair<SecurityDatabaseKey,Entry>> ExchangeHoursListing => _entries.ToList();
+
+        /// <summary>
+        /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
+        /// </summary>
+        public static MarketHoursDatabase AlwaysOpen { get; } = new AlwaysOpenMarketHoursDatabaseImpl();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
@@ -62,40 +55,26 @@ namespace QuantConnect.Securities
             _entries = exchangeHours.ToDictionary();
         }
 
-        private MarketHoursDatabase()
-        {
-            // used for the always open implementation
-        }
-
         /// <summary>
-        /// Performs a lookup using the specified information and returns the exchange hours if found,
-        /// if exchange hours are not found, an exception is thrown
+        /// Convenience method for retrieving exchange hours from market hours database using a subscription config
         /// </summary>
         /// <param name="configuration">The subscription data config to get exchange hours for</param>
-        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
-        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
-        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
-        public SecurityExchangeHours GetExchangeHours(SubscriptionDataConfig configuration, DateTimeZone overrideTimeZone = null)
+        /// <returns>The configure exchange hours for the specified configuration</returns>
+        public SecurityExchangeHours GetExchangeHours(SubscriptionDataConfig configuration)
         {
-            // we don't expect base security types to be in the market-hours-database, so set overrideTimeZone
-            if (configuration.SecurityType == SecurityType.Base && overrideTimeZone == null) overrideTimeZone = configuration.ExchangeTimeZone;
-            return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType, overrideTimeZone);
+            return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType);
         }
 
         /// <summary>
-        /// Performs a lookup using the specified information and returns the exchange hours if found,
-        /// if exchange hours are not found, an exception is thrown
+        /// Convenience method for retrieving exchange hours from market hours database using a subscription config
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
-        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
-        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
-        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The exchange hours for the specified security</returns>
-        public SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        public SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType)
         {
-            return GetEntry(market, symbol, securityType, overrideTimeZone).ExchangeHours;
+            return GetEntry(market, symbol, securityType).ExchangeHours;
         }
 
         /// <summary>
@@ -152,16 +131,49 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the entry for the specified market/symbol/security-type.
+        /// This is intended to be used by custom data and other data sources that don't have explicit
+        /// entries in market-hours-database.csv. At run time, the algorithm can update the market hours
+        /// database via calls to AddData.
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="exchangeHours">The exchange hours for the specified symbol</param>
+        /// <param name="dataTimeZone">The time zone of the symbol's raw data. Optional, defaults to the exchange time zone</param>
+        /// <returns>The entry matching the specified market/symbol/security-type</returns>
+        public virtual Entry SetEntry(string market, string symbol, SecurityType securityType, SecurityExchangeHours exchangeHours, DateTimeZone dataTimeZone = null)
+        {
+            dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            var entry = new Entry(dataTimeZone, exchangeHours);
+            _entries[key] = entry;
+            return entry;
+        }
+
+        /// <summary>
+        /// Convenience method for the common custom data case.
+        /// Sets the entry for the specified symbol using SecurityExchangeHours.AlwaysOpen(timeZone)
+        /// This sets the data time zone equal to the exchange time zone as well.
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="timeZone">The time zone of the symbol's exchange and raw data</param>
+        /// <returns>The entry matching the specified market/symbol/security-type</returns>
+        public virtual Entry SetEntryAlwaysOpen(string market, string symbol, SecurityType securityType, DateTimeZone timeZone)
+        {
+            return SetEntry(market, symbol, securityType, SecurityExchangeHours.AlwaysOpen(timeZone));
+        }
+
+        /// <summary>
         /// Gets the entry for the specified market/symbol/security-type
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
-        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
-        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
-        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
-        public virtual Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        public virtual Entry GetEntry(string market, string symbol, SecurityType securityType)
         {
             Entry entry;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
@@ -170,28 +182,11 @@ namespace QuantConnect.Securities
                 // now check with null symbol key
                 if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry))
                 {
-                    if (securityType == SecurityType.Base)
-                    {
-                        if (overrideTimeZone == null)
-                        {
-                            overrideTimeZone = TimeZones.Utc;
-                            Log.Error("MarketHoursDatabase.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + key);
-                        }
-                        // base securities are always open by default and have equal data time zone and exchange time zones
-                        return new Entry(overrideTimeZone, SecurityExchangeHours.AlwaysOpen(overrideTimeZone));
-                    }
-
-                    Log.Error(string.Format("MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {0}." + "Available keys: {1}", key, string.Join(", ", _entries.Keys)));
+                    var keys = string.Join(", ", _entries.Keys);
+                    Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
 
                     // there was nothing that really matched exactly... what should we do here?
                     throw new ArgumentException("Unable to locate exchange hours for " + key);
-                }
-
-                // perform time zone override if requested, we'll use the same exact local hours
-                // and holidays, but we'll express them in a different time zone
-                if (overrideTimeZone != null && !entry.ExchangeHours.TimeZone.Equals(overrideTimeZone))
-                {
-                    return new Entry(overrideTimeZone, new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours, entry.ExchangeHours.EarlyCloses));
                 }
             }
 
@@ -204,18 +199,49 @@ namespace QuantConnect.Securities
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
-        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
-        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
-        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
-        public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType)
         {
-            var stringSymbol = symbol == null ? string.Empty : 
-                (symbol.ID.SecurityType == SecurityType.Option ? (symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty) :
-                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol : 
-                symbol.Value));
+            return GetEntry(market, GetDatabaseSymbolKey(symbol), securityType);
+        }
 
-            return GetEntry(market, stringSymbol, securityType, overrideTimeZone);
+        /// <summary>
+        /// Gets the correct string symbol to use as a database key
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>The symbol string used in the database ke</returns>
+        public static string GetDatabaseSymbolKey(Symbol symbol)
+        {
+            string stringSymbol;
+            if (symbol == null)
+            {
+                stringSymbol = string.Empty;
+            }
+            else
+            {
+                switch (symbol.ID.SecurityType)
+                {
+                    case SecurityType.Option:
+                        stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                        break;
+
+                    default:
+                        stringSymbol = symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol : symbol.Value;
+                        break;
+                }
+            }
+
+            return stringSymbol;
+        }
+
+        /// <summary>
+        /// Determines if the database contains the specified key
+        /// </summary>
+        /// <param name="key">The key to search for</param>
+        /// <returns>True if an entry is found, otherwise false</returns>
+        protected bool ContainsKey(SecurityDatabaseKey key)
+        {
+            return _entries.ContainsKey(key);
         }
 
         /// <summary>
@@ -243,12 +269,21 @@ namespace QuantConnect.Securities
             }
         }
 
-        class AlwaysOpenMarketHoursDatabase : MarketHoursDatabase
+        class AlwaysOpenMarketHoursDatabaseImpl : MarketHoursDatabase
         {
-            public override Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+            public override Entry GetEntry(string market, string symbol, SecurityType securityType)
             {
-                var tz = overrideTimeZone ?? TimeZones.Utc;
+                var key = new SecurityDatabaseKey(market, symbol, securityType);
+                var tz = ContainsKey(key)
+                    ? base.GetEntry(market, symbol, securityType).ExchangeHours.TimeZone
+                    : DateTimeZone.Utc;
+
                 return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
+            }
+
+            public AlwaysOpenMarketHoursDatabaseImpl()
+                : base(FromDataFolder().ExchangeHoursListing.ToDictionary())
+            {
             }
         }
     }

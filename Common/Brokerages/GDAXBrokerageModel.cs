@@ -33,23 +33,23 @@ namespace QuantConnect.Brokerages
         // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
         private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
         {
-            { "BTCUSD", 0.0001m },
-            { "BTCEUR", 0.0001m },
-            { "BTCGBP", 0.0001m },
+            { "BTCUSD", 0.001m },
+            { "BTCEUR", 0.001m },
+            { "BTCGBP", 0.001m },
 
-            { "BCHUSD", 0.0001m },
-            { "BCHEUR", 0.0001m },
-            { "BCHBTC", 0.0001m },
+            { "BCHUSD", 0.01m },
+            { "BCHEUR", 0.01m },
+            { "BCHBTC", 0.01m },
 
-            { "ETHUSD", 0.001m },
-            { "ETHEUR", 0.001m },
-            { "ETHGBP", 0.001m },
-            { "ETHBTC", 0.001m },
+            { "ETHUSD", 0.01m },
+            { "ETHEUR", 0.01m },
+            { "ETHGBP", 0.01m },
+            { "ETHBTC", 0.01m },
 
-            { "LTCUSD", 0.01m },
-            { "LTCEUR", 0.01m },
-            { "LTCGBP", 0.01m },
-            { "LTCBTC", 0.01m }
+            { "LTCUSD", 0.1m },
+            { "LTCEUR", 0.1m },
+            { "LTCGBP", 0.1m },
+            { "LTCBTC", 0.1m }
         };
 
         /// <summary>

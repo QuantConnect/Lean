@@ -129,8 +129,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmSettings.cs" />
-    <Compile Include="Algorithm\Framework\Alphas\Analysis\IAlphaRuntimeStatisticsUpdater.cs" />
-    <Compile Include="Algorithm\Framework\Alphas\Analysis\Providers\AlphaRuntimeStatisticsUpdater.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\ReadOnlySecurityValuesCollection.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\IAlphaManagerExtension.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\Providers\AlgorithmSecurityValuesProvider.cs" />
@@ -168,13 +168,18 @@
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
+    <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
+    <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
+    <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
     <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
-    <Compile Include="Packets\AlphaPacket.cs" />
+    <Compile Include="Packets\AlphaNodePacket.cs" />
+    <Compile Include="Packets\AlphaResultPacket.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
+    <Compile Include="Python\VolatilityModelPythonWrapper.cs" />
     <Compile Include="Python\PandasData.cs" />
     <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
     <Compile Include="Python\SlippageModelPythonWrapper.cs" />
@@ -436,7 +441,7 @@
     <Compile Include="Securities\MarketHoursDatabase.cs" />
     <Compile Include="Securities\ISecurityProvider.cs" />
     <Compile Include="Securities\IOrderProcessor.cs" />
-    <Compile Include="Securities\ISecurityMarginModel.cs" />
+    <Compile Include="Securities\IBuyingPowerModel.cs" />
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\DefaultMarginCallModel.cs" />

@@ -426,7 +426,7 @@ namespace QuantConnect.Securities
                 {
                     var security = kvp.Value;
 
-                    sum += security.MarginModel.GetMaintenanceMargin(security);
+                    sum += security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
                 }
                 return sum;
             }
@@ -506,7 +506,7 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            return security.MarginModel.GetMarginRemaining(this, security, direction);
+            return security.BuyingPowerModel.GetBuyingPower(this, security, direction);
         }
 
         /// <summary>
@@ -536,67 +536,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Scan the portfolio and the updated data for a potential margin call situation which may get the holdings below zero!
-        /// If there is a margin call, liquidate the portfolio immediately before the portfolio gets sub zero.
-        /// </summary>
-        /// <param name="issueMarginCallWarning">Set to true if a warning should be issued to the algorithm</param>
-        /// <returns>True for a margin call on the holdings.</returns>
-        public List<SubmitOrderRequest> ScanForMarginCall(out bool issueMarginCallWarning)
-        {
-            issueMarginCallWarning = false;
-
-            var totalMarginUsed = TotalMarginUsed;
-
-            // don't issue a margin call if we're not using margin
-            if (totalMarginUsed <= 0)
-            {
-                return new List<SubmitOrderRequest>();
-            }
-
-            // don't issue a margin call if we're under 1x implied leverage on the whole portfolio's holdings
-            var averageHoldingsLeverage = TotalAbsoluteHoldingsCost/totalMarginUsed;
-            if (averageHoldingsLeverage <= 1.0m)
-            {
-                return new List<SubmitOrderRequest>();
-            }
-
-            var marginRemaining = MarginRemaining;
-
-            // issue a margin warning when we're down to 5% margin remaining
-            var totalPortfolioValue = TotalPortfolioValue;
-            if (marginRemaining <= totalPortfolioValue*0.05m)
-            {
-                issueMarginCallWarning = true;
-            }
-
-            // generate a listing of margin call orders
-            var marginCallOrders = new List<SubmitOrderRequest>();
-
-            // if we still have margin remaining then there's no need for a margin call
-            if (marginRemaining <= 0)
-            {
-                // skip securities that have no price data or no holdings, we can't liquidate nothingness
-                foreach (var kvp in Securities)
-                {
-                    var security = kvp.Value;
-
-                    if (security.Holdings.Quantity != 0 && security.Price != 0)
-                    {
-                        var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
-                        var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
-                        if (marginCallOrder != null && marginCallOrder.Quantity != 0)
-                        {
-                            marginCallOrders.Add(marginCallOrder);
-                        }
-                    }
-                }
-                issueMarginCallWarning = marginCallOrders.Count > 0;
-            }
-
-            return marginCallOrders;
-        }
-
-        /// <summary>
         /// Applies a dividend to the portfolio
         /// </summary>
         /// <param name="dividend">The dividend to be applied</param>
@@ -621,16 +560,6 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="split">The split to be applied</param>
         public void ApplySplit(Split split)
-        {
-            ApplySplitToEquities(split);
-            ApplySplitToOptions(split);
-        }
-
-        /// <summary>
-        /// Applies a split to the portfolio equity positions
-        /// </summary>
-        /// <param name="split">The split to be applied</param>
-        private void ApplySplitToEquities(Split split)
         {
             var security = Securities[split.Symbol];
 
@@ -688,93 +617,6 @@ namespace QuantConnect.Securities
             }
 
             security.SetMarketPrice(next);
-        }
-        /// <summary>
-        /// Applies a split to the portfolio equity options positions
-        /// </summary>
-        /// <param name="split">The split to be applied</param>
-        private void ApplySplitToOptions(Split split)
-        {
-            // only apply to the option positions that have correct underlying symbol
-            var optionSecurities = Securities
-                                   .Where(x => x.Value.Type == SecurityType.Option && split.Symbol == x.Key.Underlying && x.Value.Holdings.Invested)
-                                   .ToList();
-
-            foreach (var securityKV in optionSecurities)
-            {
-                var symbol = securityKV.Key;
-                var security = securityKV.Value;
-
-                // only apply splits in raw data mode,
-                var mode = security.DataNormalizationMode;
-                if (mode != DataNormalizationMode.Raw)
-                {
-                    continue;
-                }
-
-                var splitFactor = split.SplitFactor;
-                var newSymbol = GetSplitAdjustedSymbol(symbol, splitFactor);
-
-                if (newSymbol != null)
-                {
-                    Securities.Remove(symbol);
-                    var optionHoldings = new Option.OptionHolding(Securities[newSymbol], (Option.OptionHolding)security.Holdings);
-                    optionHoldings.SplitUnderlying(splitFactor);
-                    Securities[newSymbol].Holdings = optionHoldings;
-                }
-                else
-                {
-                    var optionHoldings = (Option.OptionHolding)security.Holdings;
-                    optionHoldings.SplitUnderlying(splitFactor);
-                }
-            }
-        }
-
-        private Symbol GetSplitAdjustedSymbol(Symbol symbol, decimal splitFactor)
-        {
-            var inverseFactor = 1.0m / splitFactor;
-
-            decimal newStrike = 0.0m;
-            string newRootSymbol = null;
-
-            Func<Symbol, bool> symbolIsFound = x =>
-            {
-                var rootSymbol = newRootSymbol ?? symbol.Underlying.Value;
-                var strike = newStrike != 0.0m ? newStrike : symbol.ID.StrikePrice;
-
-                return x.HasUnderlying == true &&
-                        x.Underlying.Value == rootSymbol &&
-                        x.ID.Date == symbol.ID.Date &&
-                        x.ID.OptionRight == symbol.ID.OptionRight &&
-                        x.ID.Market == symbol.ID.Market &&
-                        x.ID.OptionStyle == symbol.ID.OptionStyle &&
-                        x.ID.StrikePrice == strike;
-            };
-
-            // detect forward (even and odd) and reverse splits
-            if (splitFactor > 1.0m)
-            {
-                // reverse split
-                newRootSymbol = symbol.Underlying.Value + "1";
-            }
-
-            // check if the split is even or odd
-            if (inverseFactor.RoundToSignificantDigits(5) % 1 == 0)
-            {
-                // even split (e.g. 2 for 1)
-                newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
-            }
-            else
-            {
-                // odd split (e.g. 3 for 2)
-                newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
-                newRootSymbol = symbol.Underlying.Value + "1";
-            }
-
-            return Securities
-                    .Select(x => x.Key)
-                    .Where(symbolIsFound)
-                    .FirstOrDefault();
         }
 
         /// <summary>

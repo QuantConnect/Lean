@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,31 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class PatternDayTradingMarginModelTests
+    public class PatternDayTradingMarginBuyingPowerModelTests
     {
+        // Test class to enable calling protected methods
+        public class TestPatternDayTradingMarginModel : PatternDayTradingMarginModel
+        {
+            public TestPatternDayTradingMarginModel()
+            {
+            }
+
+            public TestPatternDayTradingMarginModel(decimal closedMarketLeverage, decimal openMarketLeverage)
+                : base(closedMarketLeverage, openMarketLeverage)
+            {
+            }
+
+            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            {
+                return base.GetInitialMarginRequiredForOrder(security, order);
+            }
+
+            public new decimal GetMaintenanceMargin(Security security)
+            {
+                return base.GetMaintenanceMargin(security);
+            }
+        }
+
         private static readonly DateTime Noon = new DateTime(2016, 02, 16, 12, 0, 0);
         private static readonly DateTime Midnight = new DateTime(2016, 02, 16, 0, 0, 0);
         private static readonly DateTime NoonWeekend = new DateTime(2016, 02, 14, 12, 0, 0);
@@ -57,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Open market
             var security = CreateSecurity(Noon);
 
-            security.MarginModel = new PatternDayTradingMarginModel();
+            security.BuyingPowerModel = new PatternDayTradingMarginModel();
 
             model.SetLeverage(security, 10m);
             Assert.AreNotEqual(10m, model.GetLeverage(security));
@@ -79,7 +102,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 4m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel();
+            var model = new TestPatternDayTradingMarginModel();
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
@@ -95,7 +118,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 5m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel(2m, leverage);
+            var model = new TestPatternDayTradingMarginModel(2m, leverage);
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
@@ -109,7 +132,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 2m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel();
+            var model = new TestPatternDayTradingMarginModel();
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
             var security = CreateSecurity(Midnight);
@@ -139,7 +162,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 3m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel(leverage, 4m);
+            var model = new TestPatternDayTradingMarginModel(leverage, 4m);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
             var security = CreateSecurity(Midnight);
@@ -166,7 +189,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyMaintenaceMargin()
         {
-            var model = new PatternDayTradingMarginModel();
+            var model = new TestPatternDayTradingMarginModel();
 
             // Open Market
             var security = CreateSecurity(Noon);
@@ -246,7 +269,7 @@ namespace QuantConnect.Tests.Common.Securities
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
-            var transactions = new SecurityTransactionManager(securities);
+            var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(orderProcessor);
 
             var portfolio = new SecurityPortfolioManager(securities, transactions);
