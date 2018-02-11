@@ -257,3 +257,5 @@ Charts/
 # QuantConnect plugin files
 QuantConnectProjects.xml
 Launcher/Plugins/*
+/ApiPython/dist
+/ApiPython/quantconnect.egg-info
