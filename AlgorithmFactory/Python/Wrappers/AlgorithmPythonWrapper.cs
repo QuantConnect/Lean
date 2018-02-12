@@ -63,9 +63,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                     var baseClass = module.GetAttr("QCAlgorithm");
 
-                    // Set PythonSlice converter
-                    PythonSlice.SetConverter();
-
                     var moduleName = module.Repr().Split('\'')[1];
 
                     foreach (var name in module.Dir())
