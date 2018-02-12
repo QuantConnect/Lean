@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="BasicTemplateCryptoAlgorithm.cs" />
     <Compile Include="BasicTemplateIntrinioEconomicData.cs" />
     <Compile Include="BasicTemplateFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateLibrary.cs" />

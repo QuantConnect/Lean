@@ -30,11 +30,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class BaseDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private SingleEntryDataCacheProvider _dataCacheProvider;
-
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly MapFileResolver _mapFileResolver;
-        private readonly IFactorFileProvider _factorFileProvider;
         private readonly bool _isLiveMode;
 
         /// <summary>
@@ -50,7 +47,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _isLiveMode = isLiveMode;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _mapFileResolver = mapFileResolver;
-            _factorFileProvider = factorFileProvider;
         }
 
         /// <summary>
@@ -75,19 +71,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             var sourceFactory = (BaseData)ObjectActivator.GetActivator(request.Configuration.Type).Invoke(new object[] { request.Configuration.Type });
 
-            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
-
-            foreach (var date in _tradableDaysProvider(request))
+            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {
-                var currentSymbol = request.Configuration.MappedSymbol;
-                request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
-                var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
-                request.Configuration.MappedSymbol = currentSymbol;
-                var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, request.Configuration, date, _isLiveMode);
-                var entriesForDate = factory.Read(source);
-                foreach(var entry in entriesForDate)
+                foreach (var date in _tradableDaysProvider(request))
                 {
-                    yield return entry;
+                    var currentSymbol = request.Configuration.MappedSymbol;
+                    request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
+                    var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
+                    request.Configuration.MappedSymbol = currentSymbol;
+                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode);
+                    var entriesForDate = factory.Read(source);
+                    foreach (var entry in entriesForDate)
+                    {
+                        yield return entry;
+                    }
                 }
             }
         }

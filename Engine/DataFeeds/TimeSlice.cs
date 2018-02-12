@@ -52,11 +52,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public Slice Slice { get; private set; }
 
         /// <summary>
-        /// Gets the data used to update the cash book
-        /// </summary>
-        public List<UpdateData<Cash>> CashBookUpdateData { get; private set; }
-
-        /// <summary>
         /// Gets the data used to update securities
         /// </summary>
         public List<UpdateData<Security>> SecuritiesUpdateData { get; private set; }
@@ -83,7 +78,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             int dataPointCount,
             Slice slice,
             List<DataFeedPacket> data,
-            List<UpdateData<Cash>> cashBookUpdateData,
             List<UpdateData<Security>> securitiesUpdateData,
             List<UpdateData<SubscriptionDataConfig>> consolidatorUpdateData,
             List<UpdateData<Security>> customData,
@@ -94,7 +88,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Slice = slice;
             CustomData = customData;
             DataPointCount = dataPointCount;
-            CashBookUpdateData = cashBookUpdateData;
             SecuritiesUpdateData = securitiesUpdateData;
             ConsolidatorUpdateData = consolidatorUpdateData;
             SecurityChanges = securityChanges;
@@ -116,14 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var custom = new List<UpdateData<Security>>();
             var consolidator = new List<UpdateData<SubscriptionDataConfig>>();
             var allDataForAlgorithm = new List<BaseData>(data.Count);
-            var cash = new List<UpdateData<Cash>>(cashBook.Count);
             var optionUnderlyingUpdates = new Dictionary<Symbol, BaseData>();
-
-            var cashSecurities = new HashSet<Symbol>();
-            foreach (var kvp in cashBook)
-            {
-                cashSecurities.Add(kvp.Value.SecuritySymbol);
-            }
 
             Split split;
             Dividend dividend;
@@ -148,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
             // ensure we read equity data before option data, so we can set the current underlying price
-            foreach (var packet in data.OrderBy(x => x.Configuration.Symbol.SecurityType))
+            foreach (var packet in data)
             {
                 var list = packet.Data;
                 var symbol = packet.Security.Symbol;
@@ -258,24 +244,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (securityUpdate.Count > 0)
                 {
-                    // check for 'cash securities' if we found valid update data for this symbol
-                    // and we need this data to update cash conversion rates, long term we should
-                    // have Cash hold onto it's security, then he can update himself, or rather, just
-                    // patch through calls to conversion rate to compue it on the fly using Security.Price
-                    if (cashSecurities.Contains(packet.Security.Symbol))
-                    {
-                        foreach (var kvp in cashBook)
-                        {
-                            var cashItem = kvp.Value;
-
-                            if (cashItem.SecuritySymbol == packet.Security.Symbol)
-                            {
-                                var cashUpdates = new List<BaseData> {securityUpdate[securityUpdate.Count - 1]};
-                                cash.Add(new UpdateData<Cash>(cashItem, packet.Configuration.Type, cashUpdates));
-                            }
-                        }
-                    }
-
                     security.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, securityUpdate));
                 }
                 if (consolidatorUpdate.Count > 0)
@@ -286,7 +254,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, quoteBars, ticks, optionChains, futuresChains, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
-            return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
+            return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom, changes);
         }
 
         /// <summary>

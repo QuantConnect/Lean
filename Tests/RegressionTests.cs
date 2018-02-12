@@ -674,6 +674,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$14.80"}
             };
 
+            var basicTemplateCryptoAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "25"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.46%"},
+                {"Compounding Annual Return", "-100.000%"},
+                {"Drawdown", "5.400%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-5.656%"},
+                {"Sharpe Ratio", "-20.375"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-11.165"},
+                {"Beta", "574.802"},
+                {"Annual Standard Deviation", "0.353"},
+                {"Annual Variance", "0.125"},
+                {"Information Ratio", "-20.43"},
+                {"Tracking Error", "0.353"},
+                {"Treynor Ratio", "-0.013"},
+                {"Total Fees", "$6076.32"}
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -704,6 +727,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HourSplitRegressionAlgorithm", hourSplitStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
@@ -733,6 +757,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CustomIndicatorAlgorithm", basicTemplateStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.Python)
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

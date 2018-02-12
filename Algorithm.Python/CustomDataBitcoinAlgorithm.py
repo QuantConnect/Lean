@@ -46,7 +46,7 @@ class CustomDataBitcoinAlgorithm(QCAlgorithm):
 
 
     def OnData(self, data):
-        if "BTC" not in data: return
+        if not data.ContainsKey("BTC"): return
 
         close = data["BTC"].Close
 
