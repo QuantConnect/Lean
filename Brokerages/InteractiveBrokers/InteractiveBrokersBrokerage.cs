@@ -437,7 +437,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key), AccountCurrency)).ToList();
         }
 
         /// <summary>

@@ -50,11 +50,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="accountCurrency">Account currency</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
+        public Security AddData(PyObject type, string symbol, string accountCurrency, Resolution resolution = Resolution.Minute)
         {
-            return AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, symbol, resolution, accountCurrency, TimeZones.NewYork, false, 1m);
         }
 
         /// <summary>
@@ -63,13 +64,14 @@ namespace QuantConnect.Algorithm
         /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="accountCurrency">Account currency</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string symbol, Resolution resolution, string accountCurrency, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            return AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddData(CreateType(type), symbol, resolution, accountCurrency, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -78,21 +80,22 @@ namespace QuantConnect.Algorithm
         /// <param name="dataType">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="accountCurrency">Account currency</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, string symbol, Resolution resolution, string accountCurrency, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var marketHoursDbEntry = MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, Portfolio.CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security:
             var security = SecurityManager.CreateSecurity(dataType, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
-                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
+                symbolProperties, SecurityInitializer, symbolObject, resolution, accountCurrency, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
             return security;

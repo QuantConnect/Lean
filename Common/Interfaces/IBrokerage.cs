@@ -60,6 +60,11 @@ namespace QuantConnect.Interfaces
         bool IsConnected { get; }
 
         /// <summary>
+        /// Account Currency
+        /// </summary>
+        string AccountCurrency { get; }
+
+        /// <summary>
         /// Gets all open orders on the account
         /// </summary>
         /// <returns>The open orders returned from IB</returns>

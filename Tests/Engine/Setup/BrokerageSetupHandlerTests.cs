@@ -126,6 +126,8 @@ namespace QuantConnect.Tests.Engine.Setup
             };
         }
 
+        public string AccountCurrency { get; set; }
+
         #region UnusedMethods
         public void Dispose()
         {

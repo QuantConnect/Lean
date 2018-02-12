@@ -26,6 +26,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
     [TestFixture]
     public class ForexHoldingTests
     {
+        private const string accountCurrency = "USD";
+
         [TestCase("EURUSD", 1, 0.00001, 1000, 1.23456, 50, 10000)]
         [TestCase("USDJPY", 0.9, 0.001, 1000, 100.30, -40, 10000)]
         [TestCase("EURGBP", 1.1, 0.00001, 1000, 0.89012, 100, 10000)]
@@ -38,7 +40,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
 
             var symbol = Symbol.Create(ticker, SecurityType.Forex, Market.FXCM);
             var pairQuoteCurrency = symbol.Value.Substring(startIndex: 3);
-            var cash = new Cash(pairQuoteCurrency, amount: 100000, conversionRate: conversionRate);
+            var cash = new Cash(pairQuoteCurrency, amount: 100000, conversionRate: conversionRate, accountCurrency:accountCurrency);
             var subscription = new SubscriptionDataConfig(typeof(QuoteBar), symbol, Resolution.Daily,
                                                           TimeZones.NewYork, TimeZones.NewYork, fillForward: true,
                                                           extendedHours: true, isInternalFeed: true);

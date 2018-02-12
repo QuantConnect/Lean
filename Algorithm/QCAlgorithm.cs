@@ -161,6 +161,14 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Set base account currency
+        /// </summary>
+        protected void SetAccountCurrency(string accountCurrency)
+        {
+            Portfolio.CashBook.AccountCurrency = accountCurrency;
+        }
+
+        /// <summary>
         /// Event fired when the algorithm generates alphas
         /// </summary>
         public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
@@ -1458,9 +1466,9 @@ namespace QuantConnect.Algorithm
             }
 
             var marketHoursEntry = MarketHoursDatabase.GetEntry(market, underlying, SecurityType.Option);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, Portfolio.CashBook.AccountCurrency);
             var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
-                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
+                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution, Portfolio.CashBook.AccountCurrency,
                 fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;
             Securities.Add(canonicalSecurity);
@@ -1504,9 +1512,9 @@ namespace QuantConnect.Algorithm
             }
 
             var marketHoursEntry = MarketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, Portfolio.CashBook.AccountCurrency);
             var canonicalSecurity = (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
-                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
+                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution, Portfolio.CashBook.AccountCurrency,
                 fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;
             Securities.Add(canonicalSecurity);
@@ -1709,11 +1717,11 @@ namespace QuantConnect.Algorithm
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, Portfolio.CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security:
             var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
-                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
+                symbolProperties, SecurityInitializer, symbolObject, resolution, Portfolio.CashBook.AccountCurrency, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
             return security;

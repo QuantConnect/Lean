@@ -30,6 +30,8 @@ namespace QuantConnect.Tests.Brokerages.Oanda
     [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
     public class OandaBrokerageHistoryProviderTests
     {
+        private const string accountCurrency = "USD";
+
         public TestCaseData[] TestParameters
         {
             get
@@ -83,6 +85,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                         typeof(QuoteBar),
                         symbol,
                         resolution,
+                        accountCurrency,
                         SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
                         DateTimeZone.Utc,
                         Resolution.Minute,

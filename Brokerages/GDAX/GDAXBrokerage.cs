@@ -271,18 +271,18 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     if (item.Currency == "USD")
                     {
-                        list.Add(new Cash(item.Currency, item.Balance, 1));
+                        list.Add(new Cash(item.Currency, item.Balance, 1, _algorithm.Portfolio.CashBook.AccountCurrency));
                     }
                     else if (new[] {"GBP", "EUR"}.Contains(item.Currency))
                     {
                         var rate = GetConversionRate(item.Currency);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate, _algorithm.Portfolio.CashBook.AccountCurrency));
                     }
                     else
                     {
                         var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
 
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price, _algorithm.Portfolio.CashBook.AccountCurrency));
                     }
                 }
             }

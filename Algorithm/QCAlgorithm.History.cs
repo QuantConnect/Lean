@@ -532,6 +532,7 @@ namespace QuantConnect.Algorithm
                 subscriptionDataConfig == null ? typeof(TradeBar) : subscriptionDataConfig.Type,
                 security.Symbol,
                 resolution,
+                Portfolio.CashBook.AccountCurrency,
                 security.Exchange.Hours,
                 MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType),
                 resolution,
@@ -640,7 +641,7 @@ namespace QuantConnect.Algorithm
             // find the correct data type for the history request
             var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
 
-            var request = new HistoryRequest(subscription, GetExchangeHours(subscription.Symbol), startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
+            var request = new HistoryRequest(subscription, GetExchangeHours(subscription.Symbol), startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone), Portfolio.CashBook.AccountCurrency)
             {
                 DataType = dataType,
                 Resolution = resolution.Value,

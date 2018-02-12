@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var config = FineFundamentalUniverse.CreateConfiguration(symbol);
 
                     var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, CashBook.AccountCurrency);
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, _algorithm.Portfolio.CashBook.AccountCurrency);
                     var quoteCash = _algorithm.Portfolio.CashBook[symbolProperties.QuoteCurrency];
 
                     var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);

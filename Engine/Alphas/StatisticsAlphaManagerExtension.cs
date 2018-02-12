@@ -44,11 +44,12 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Initializes a new instance of the <see cref="StatisticsAlphaManagerExtension"/> class
         /// </summary>
+        /// <param name="accountCurrency">Account currency</param>
         /// <param name="tradablePercentOfVolume">Percent of volume of first bar used to estimate the maximum number of tradable shares. Defaults to 1%</param>
         /// <param name="period">The period used for exponential smoothing of scores - this is a number of alphas. Defaults to 100 alpha predictions</param>
-        public StatisticsAlphaManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100)
+        public StatisticsAlphaManagerExtension(string accountCurrency, decimal tradablePercentOfVolume = 0.01m, int period = 100)
         {
-            Statistics = new AlphaRuntimeStatistics();
+            Statistics = new AlphaRuntimeStatistics() { AccountCurrency = accountCurrency };
             _tradablePercentOfVolume = tradablePercentOfVolume;
             _smoothingFactor = 2.0 / (period + 1.0);
 

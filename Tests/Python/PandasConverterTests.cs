@@ -32,6 +32,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture, Ignore]
     public class PandasConverterTests
     {
+        const string accountCurrency = "USD";
+
         [Test]
         public void HandlesEmptyEnumerable()
         {
@@ -387,8 +389,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
         }
     }
 }

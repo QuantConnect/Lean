@@ -372,12 +372,12 @@ namespace QuantConnect.Securities
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
                     configList.SetDataNormalizationMode(DataNormalizationMode.Raw);
-                    security = new Option.Option(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
+                    security = new Option.Option(symbol, exchangeHours, securityPortfolioManager.CashBook[securityPortfolioManager.CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
                     break;
 
                 case SecurityType.Future:
                     configList.SetDataNormalizationMode(DataNormalizationMode.Raw);
-                    security = new Future.Future(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    security = new Future.Future(symbol, exchangeHours, securityPortfolioManager.CashBook[securityPortfolioManager.CashBook.AccountCurrency], symbolProperties);
                     break;
 
                 case SecurityType.Forex:
@@ -440,6 +440,7 @@ namespace QuantConnect.Securities
             ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
+            string accountCurrency,
             bool fillDataForward,
             decimal leverage,
             bool extendedMarketHours,
@@ -496,7 +497,7 @@ namespace QuantConnect.Securities
             var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
-            var defaultQuoteCurrency = CashBook.AccountCurrency;
+            var defaultQuoteCurrency = securityPortfolioManager.CashBook.AccountCurrency;
             if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto) defaultQuoteCurrency = symbol.Value.Substring(3);
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 

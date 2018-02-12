@@ -62,6 +62,7 @@ namespace QuantConnect.Tests.Common.Securities
         [SetUp]
         public void Setup()
         {
+            string accountCurrency = _algo.Portfolio.CashBook.AccountCurrency;
             _algo =  new QCAlgorithm();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             historyProvider.Initialize(null,
@@ -75,13 +76,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             _tradeBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                                         _tradeBarConfig,
-                                        new Cash(CashBook.AccountCurrency, 0, 1m),
-                                        SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                                        new Cash(accountCurrency, 0, 1m, accountCurrency),
+                                        SymbolProperties.GetDefault(accountCurrency));
 
             _quoteBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                                     _quoteBarConfig,
-                                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                                    SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                                    new Cash(accountCurrency, 0, 1m, accountCurrency),
+                                    SymbolProperties.GetDefault(accountCurrency));
 
             _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
                                                                           new FuncSecuritySeeder(_algo.GetLastKnownPrice));

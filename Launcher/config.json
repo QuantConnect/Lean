@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "backtesting-desktop", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "BasicTemplateAlgorithmSB",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
@@ -20,6 +20,8 @@
   //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
   //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
   //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
+
+  "base-account-currency": "USD",
 
   // engine
   "data-folder": "../../../Data/",
@@ -47,7 +49,7 @@
   "transaction-log": "",
 
   // To get your api access token go to quantconnect.com/account
-  "job-user-id": "0",
+  "job-user-id": "11728",
   "api-access-token": "",
 
   // live data configuration
@@ -93,9 +95,9 @@
   "iqfeed-version": "1.0",
 
   // gdax configuration
-  "gdax-api-secret": "",
-  "gdax-api-key": "",
-  "gdax-passphrase": "",
+  "gdax-api-secret": "46bh4YROFH5lz1kBxi56oyW6Rrpjoa4mHK1tcsKTQObjXUElqvqWGLPsDDSJcb83KNATHzX+K3FnaubM/SjpQg==",
+  "gdax-api-key": "cfc8e896170b1d13ab1bd1d2265619ff",
+  "gdax-passphrase": "8xdzwfujl44",
 
   // Intrinio account user and password
   "intrinio-username": "",
@@ -232,7 +234,7 @@
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
       "log-handler": "QuantConnect.Logging.QueueLogHandler",
       "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
+      "desktop-exe": "../../../UserInterface/bin/release/QuantConnect.Views.exe"
     },
 
     // defines the 'live-desktop' environment
