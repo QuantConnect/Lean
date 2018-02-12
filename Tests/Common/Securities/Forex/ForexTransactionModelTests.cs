@@ -26,6 +26,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
 {
     public class ForexTransactionModelTests
     {
+        private const string accountCurrency = "USD";
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type)
         {
             if (type == SecurityType.Equity)
@@ -245,7 +247,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         private Security CreateSecurity()
         {
             var config = CreateTradeBarDataConfig(SecurityType.Forex);
-            var security = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), new Cash("abc", 0, 0), config, SymbolProperties.GetDefault("abc"));
+            var security = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), new Cash("abc", 0, 0,accountCurrency), config, SymbolProperties.GetDefault("abc"));
             return security;
         }
     }

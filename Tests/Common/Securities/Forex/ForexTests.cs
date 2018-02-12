@@ -24,6 +24,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
     [TestFixture]
     public class ForexTests
     {
+        private const string accountCurrency = "USD";
         [Test]
         [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
         public void DecomposeThrowsOnSymbolTooShort()
@@ -57,7 +58,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void ConstructorDecomposesBaseAndQuoteCurrencies()
         {
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
-            var forex = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("usd", 0, 0), config, SymbolProperties.GetDefault("usd"));
+            var forex = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("usd", 0, 0, accountCurrency), config, SymbolProperties.GetDefault("usd"));
             Assert.AreEqual("EUR", forex.BaseCurrencySymbol);
             Assert.AreEqual("USD", forex.QuoteCurrency.Symbol);
         }

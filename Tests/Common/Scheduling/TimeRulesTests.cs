@@ -28,6 +28,8 @@ namespace QuantConnect.Tests.Common.Scheduling
     [TestFixture]
     public class TimeRulesTests
     {
+        private const string accountCurrency = "USD";
+
         [Test]
         public void AtSpecificTimeFromUtc()
         {
@@ -195,7 +197,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, (string)null, SecurityType.Equity);
             var securityExchangeHours = marketHourDbEntry.ExchangeHours;
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, marketHourDbEntry.DataTimeZone, securityExchangeHours.TimeZone, true, false, false);
-            manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency)));
             var rules = new TimeRules(manager, dateTimeZone);
             return rules;
         }

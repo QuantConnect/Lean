@@ -9,11 +9,12 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 {
     public class GDAXTestsHelpers
     {
+        private const string accountCurrency = "USD";
 
         public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto)
         {
-              return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(securityType), new Cash(CashBook.AccountCurrency, 1000, price),
-              new SymbolProperties("BTCUSD", CashBook.AccountCurrency, 1, 1, 0.01m));
+              return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(securityType), new Cash(accountCurrency, 1000, price, accountCurrency),
+              new SymbolProperties("BTCUSD", accountCurrency, 1, 1, 0.01m));
         }
 
         private static SubscriptionDataConfig CreateConfig(SecurityType securityType = SecurityType.Crypto)

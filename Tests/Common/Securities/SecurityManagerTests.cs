@@ -36,6 +36,7 @@ namespace QuantConnect.Tests.Common.Securities
         private MarketHoursDatabase _marketHoursDatabase;
         private SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private ISecurityInitializer _securityInitializer;
+        private const string accountCurrency = "USD";
 
         [TestFixtureSetUp]
         public void Setup()
@@ -56,7 +57,7 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
             var manager = new SecurityManager(timeKeeper);
 
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
             manager.CollectionChanged += (sender, args) =>
             {
                 if (args.NewItems.OfType<object>().Single() != security)
@@ -79,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
             var manager = new SecurityManager(timeKeeper);
 
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
             manager.CollectionChanged += (sender, args) =>
             {
                 if (args.NewItems.OfType<object>().Single() != security)
@@ -102,7 +103,7 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
             var manager = new SecurityManager(timeKeeper);
 
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
             manager.Add(security.Symbol, security);
             manager.CollectionChanged += (sender, args) =>
             {
@@ -140,6 +141,7 @@ namespace QuantConnect.Tests.Common.Securities
                 _securityInitializer,
                 symbol,
                 Resolution.Second,
+                accountCurrency,
                 false,
                 1.0m,
                 false,
@@ -156,7 +158,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var optionSymbol = Symbol.Create("GOOG", SecurityType.Option, Market.USA);
             var optionMarketHoursDbEntry = _marketHoursDatabase.GetEntry(optionSymbol.ID.Market, optionSymbol, SecurityType.Option);
-            var optionDefaultQuoteCurrency = CashBook.AccountCurrency;
+            var optionDefaultQuoteCurrency = accountCurrency;
             var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, optionSymbol, optionSymbol.ID.SecurityType, optionDefaultQuoteCurrency);
 
             var option = SecurityManager.CreateSecurity(typeof(ZipEntryName),
@@ -168,6 +170,7 @@ namespace QuantConnect.Tests.Common.Securities
                 _securityInitializer,
                 optionSymbol,
                 Resolution.Second,
+                accountCurrency,
                 false,
                 1.0m,
                 false,
@@ -186,7 +189,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var equitySymbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var equityMarketHoursDbEntry = _marketHoursDatabase.GetEntry(equitySymbol.ID.Market, equitySymbol, SecurityType.Equity);
-            var equityDefaultQuoteCurrency = CashBook.AccountCurrency;
+            var equityDefaultQuoteCurrency = accountCurrency;
             var equitySymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(equitySymbol.ID.Market, equitySymbol, equitySymbol.ID.SecurityType, equityDefaultQuoteCurrency);
 
             var equity = SecurityManager.CreateSecurity(typeof(TradeBar),
@@ -198,6 +201,7 @@ namespace QuantConnect.Tests.Common.Securities
                 _securityInitializer,
                 equitySymbol,
                 Resolution.Second,
+                accountCurrency,
                 false,
                 1.0m,
                 false,
@@ -215,7 +219,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var symbol = Symbol.Create("abc", SecurityType.Cfd, Market.USA);
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, SecurityType.Equity);
-            var defaultQuoteCurrency = CashBook.AccountCurrency;
+            var defaultQuoteCurrency = accountCurrency;
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var subscriptions = SecurityManager.CreateSecurity(typeof(QuoteBar),
@@ -227,6 +231,7 @@ namespace QuantConnect.Tests.Common.Securities
                 _securityInitializer,
                 symbol,
                 Resolution.Second,
+                accountCurrency,
                 false,
                 1.0m,
                 false,
@@ -244,7 +249,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var equitySymbol = new Symbol(SecurityIdentifier.GenerateBase("BTC", Market.USA), "BTC");
             var equityMarketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
-            var equitySymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(equitySymbol.ID.Market, equitySymbol, equitySymbol.ID.SecurityType, CashBook.AccountCurrency);
+            var equitySymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(equitySymbol.ID.Market, equitySymbol, equitySymbol.ID.SecurityType, accountCurrency);
 
             var equity = SecurityManager.CreateSecurity(typeof(Bitcoin),
                 _securityPortfolioManager,
@@ -255,6 +260,7 @@ namespace QuantConnect.Tests.Common.Securities
                 _securityInitializer,
                 equitySymbol,
                 Resolution.Second,
+                accountCurrency,
                 false,
                 1.0m,
                 false,
@@ -274,7 +280,7 @@ namespace QuantConnect.Tests.Common.Securities
             var optionIdentifier = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), underlying, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
             var optionSymbol = new Symbol(optionIdentifier, "SPY", Symbol.Empty);
             var optionMarketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "SPY", SecurityType.Equity, TimeZones.NewYork);
-            var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, "SPY", optionSymbol.ID.SecurityType, CashBook.AccountCurrency);
+            var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, "SPY", optionSymbol.ID.SecurityType, accountCurrency);
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>
             {
@@ -313,7 +319,7 @@ namespace QuantConnect.Tests.Common.Securities
             var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
             var marketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, accountCurrency);
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>
             {

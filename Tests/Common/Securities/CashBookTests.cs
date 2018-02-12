@@ -22,13 +22,15 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class CashBookTests
     {
+        private const string accountCurrency = "USD";
+
         [Test]
         public void InitializesWithAccountCurrencyAdded()
         {
             var book = new CashBook();
             Assert.AreEqual(1, book.Count);
             var cash = book.Single().Value;
-            Assert.AreEqual(CashBook.AccountCurrency, cash.Symbol);
+            Assert.AreEqual(accountCurrency, cash.Symbol);
             Assert.AreEqual(0, cash.Amount);
             Assert.AreEqual(1m, cash.ConversionRate);
         }

@@ -31,6 +31,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class TimeSliceTests
     {
+        public const string accountCurrency = "USD";
+
         [Test]
         public void HandlesTicks_ExpectInOrderWithNoDuplicates()
         {
@@ -47,8 +49,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), 
                 subscriptionDataConfig, 
-                new Cash(CashBook.AccountCurrency, 0, 1m), 
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency), 
+                SymbolProperties.GetDefault(accountCurrency));
 
             DateTime refTime = DateTime.UtcNow;
 
@@ -95,14 +97,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security1 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig1,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
 
             var security2 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig1,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
 
             var timeSlice = TimeSlice.Create(DateTime.UtcNow, TimeZones.Utc, new CashBook(),
                 new List<DataFeedPacket>
@@ -136,8 +138,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
 
             var refTime = DateTime.UtcNow;
 

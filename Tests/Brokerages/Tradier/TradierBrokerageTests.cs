@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     [TestFixture, Ignore("This test requires a configured and active Tradier account")]
     public class TradierBrokerageTests : BrokerageTests
     {
+        private const string accountCurrency = "USD";
         /// <summary>
         /// Creates the brokerage under test
         /// </summary>
@@ -37,7 +38,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderProvider, securityProvider, accountID);
+            var tradier = new TradierBrokerage(orderProvider, securityProvider, accountID, accountCurrency);
 
             var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
             var tokens = TradierBrokerageFactory.GetTokens();

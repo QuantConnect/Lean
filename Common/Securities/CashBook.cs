@@ -31,10 +31,10 @@ namespace QuantConnect.Securities
     public class CashBook : IDictionary<string, Cash>
     {
         /// <summary>
-        /// Gets the base currency used
+        /// Base currency used
         /// </summary>
-        public static string AccountCurrency { get; set; } = "USD";
-
+        public string AccountCurrency { get; set; } = "USD";
+        
         private readonly ConcurrentDictionary<string, Cash> _currencies;
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace QuantConnect.Securities
         public CashBook()
         {
             _currencies = new ConcurrentDictionary<string, Cash>();
-            _currencies.AddOrUpdate(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
+            _currencies.AddOrUpdate(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m, AccountCurrency));
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace QuantConnect.Securities
         /// portfolio value/starting capital impact caused by this currency position.</param>
         public void Add(string symbol, decimal quantity, decimal conversionRate)
         {
-            var cash = new Cash(symbol, quantity, conversionRate);
+            var cash = new Cash(symbol, quantity, conversionRate, AccountCurrency);
             _currencies.AddOrUpdate(symbol, cash);
         }
 

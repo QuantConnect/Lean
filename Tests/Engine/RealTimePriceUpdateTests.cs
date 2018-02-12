@@ -17,6 +17,7 @@ namespace QuantConnect.Tests.Engine
     {
         private TestableLiveTradingDataFeed _liveTradingDataFeed;
         private SecurityExchangeHours _exchangeHours;
+        const string accountCurrency = "USD";
 
         [TestFixtureSetUp]
         public void Setup()
@@ -74,7 +75,7 @@ namespace QuantConnect.Tests.Engine
         [Test]
         public void ClosedExchanges_DoNotIndicateRealTimePriceUpdates()
         {
-            var security = new Security(Symbol.Empty, _exchangeHours, new Cash("USA", 100m, 1m), SymbolProperties.GetDefault("USA"));
+            var security = new Security(Symbol.Empty, _exchangeHours, new Cash("USA", 100m, 1m, accountCurrency), SymbolProperties.GetDefault("USA"));
             var subscription = new Subscription(null, security, null, null, new TimeZoneOffsetProviderNeverOpen(), DateTime.MinValue, DateTime.MaxValue, false);
             Assert.IsFalse(_liveTradingDataFeed.UpdateRealTimePrice(subscription, new TimeZoneOffsetProviderNeverOpen()));
         }
@@ -82,7 +83,7 @@ namespace QuantConnect.Tests.Engine
         [Test]
         public void OpenExchanges_DoIndicateRealTimePriceUpdates()
         {
-            var security = new Security(Symbol.Empty, _exchangeHours, new Cash("USA", 100m, 1m), SymbolProperties.GetDefault("USA"));
+            var security = new Security(Symbol.Empty, _exchangeHours, new Cash("USA", 100m, 1m,accountCurrency), SymbolProperties.GetDefault("USA"));
             var subscription = new Subscription(null, security, null, null, new TimeZoneOffsetProviderAlwaysOpen(), DateTime.MinValue, DateTime.MaxValue, false);
             Assert.IsTrue(_liveTradingDataFeed.UpdateRealTimePrice(subscription, new TimeZoneOffsetProviderAlwaysOpen()));
         }

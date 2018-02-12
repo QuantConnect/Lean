@@ -28,6 +28,8 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     [TestFixture, Ignore("This test requires a configured and active Tradier account")]
     public class TradierBrokerageHistoryProviderTests
     {
+        private const string accountCurrency = "USD";
+
         public TestCaseData[] TestParameters
         {
             get
@@ -57,7 +59,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             {
                 var accessToken = Config.Get("tradier-access-token");
 
-                var brokerage = new TradierBrokerage(null, null, "");
+                var brokerage = new TradierBrokerage(null, null, "", accountCurrency);
                 brokerage.SetTokens(0, accessToken, "", DateTime.Now, Time.OneDay);
 
                 var now = DateTime.UtcNow;
@@ -69,6 +71,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
                         typeof(QuoteBar),
                         symbol,
                         resolution,
+                        accountCurrency,
                         SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
                         TimeZones.EasternStandard,
                         Resolution.Minute,

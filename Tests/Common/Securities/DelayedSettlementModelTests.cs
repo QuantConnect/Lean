@@ -26,6 +26,7 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private static readonly DateTime Noon = new DateTime(2015, 11, 2, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+        private const string accountCurrency = "USD";
 
         [Test]
         public void SellOnMondaySettleOnThursday()
@@ -36,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
 
             portfolio.SetCash(3000);
             Assert.AreEqual(3000, portfolio.Cash);
@@ -83,7 +84,7 @@ namespace QuantConnect.Tests.Common.Securities
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
 
             portfolio.SetCash(3000);
             Assert.AreEqual(3000, portfolio.Cash);

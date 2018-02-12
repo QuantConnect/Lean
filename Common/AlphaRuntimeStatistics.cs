@@ -61,11 +61,16 @@ namespace QuantConnect
         public decimal MeanPopulationEstimatedAlphaValue => TotalAlphasClosed > 0 ? TotalEstimatedAlphaValue / TotalAlphasClosed : 0;
 
         /// <summary>
+        /// Base account currency
+        /// </summary>
+        public string AccountCurrency { get; internal set; }
+
+        /// <summary>
         /// Creates a dictionary containing the statistics
         /// </summary>
         public Dictionary<string, string> ToDictionary()
         {
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(CashBook.AccountCurrency);
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(AccountCurrency);
             return new Dictionary<string, string>
             {
                 {"Total Alphas Generated", $"{TotalAlphasGenerated}"},

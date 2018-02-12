@@ -28,6 +28,7 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class MarginCallModelTests
     {
+        private const string accountCurrency = "USD";
         // Test class to enable calling protected methods
         public class TestSecurityMarginModel : SecurityMarginModel
         {
@@ -238,8 +239,8 @@ namespace QuantConnect.Tests.Common.Securities
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
         }
 
         public class OrderProcessor : IOrderProcessor

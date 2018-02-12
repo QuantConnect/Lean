@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             AlphaManager = CreateAlphaManager();
 
-            var statistics = new StatisticsAlphaManagerExtension();
+            var statistics = new StatisticsAlphaManagerExtension(Algorithm.Portfolio.CashBook.AccountCurrency);
             RuntimeStatistics = statistics.Statistics;
             AlphaManager.AddExtension(statistics);
             _charting = new ChartingAlphaManagerExtension(algorithm, statistics);

@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.Oanda
             return new List<Cash>
             {
                 new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(),
-                    GetUsdConversion(accountResponse.accountCurrency))
+                    GetUsdConversion(accountResponse.accountCurrency), accountResponse.accountCurrency)
             };
         }
 
