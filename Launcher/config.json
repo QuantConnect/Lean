@@ -230,9 +230,7 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler",
-      "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
+      "log-handler": "QuantConnect.Logging.QueueLogHandler"
     },
 
     // defines the 'live-desktop' environment

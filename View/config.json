@@ -1,0 +1,6 @@
+﻿{
+  "view-plugin": "LeanView",
+  "view-http-port": 8080,
+  "view-http-hostname": "localhost",
+  "view-http-protocol": "http"
+}
