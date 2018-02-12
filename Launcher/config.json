@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting-desktop", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateAlgorithmSB",
+  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
@@ -20,8 +20,6 @@
   //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
   //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
   //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
-
-  "base-account-currency": "USD",
 
   // engine
   "data-folder": "../../../Data/",
@@ -49,7 +47,7 @@
   "transaction-log": "",
 
   // To get your api access token go to quantconnect.com/account
-  "job-user-id": "",
+  "job-user-id": "0",
   "api-access-token": "",
 
   // live data configuration
@@ -234,7 +232,7 @@
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
       "log-handler": "QuantConnect.Logging.QueueLogHandler",
       "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/release/QuantConnect.Views.exe"
+      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     },
 
     // defines the 'live-desktop' environment
