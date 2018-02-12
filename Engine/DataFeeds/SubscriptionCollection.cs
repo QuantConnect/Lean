@@ -119,9 +119,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void SortSubscriptions()
         {
+            // it's important that we enumerate underlying securities before derivatives to this end,
+            // we order by security type so that equity subscriptions are enumerated before option
+            // securities to ensure the underlying data is available when we process the options data
             _subscriptionsByTickType = _subscriptions
                 .Select(x => x.Value)
-                .OrderBy(x => x.Configuration.TickType)
+                .OrderBy(x => x.Configuration.SecurityType)
+                .ThenBy(x => x.Configuration.TickType)
                 .ToList();
         }
     }

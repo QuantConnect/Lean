@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,7 +68,7 @@ namespace QuantConnect.Brokerages
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
-        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// market prices are sufficient for the fill to take place. This is used to emulate the
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
         /// executions during extended market hours. This is not intended to be checking whether or not
         /// the exchange is open, that is handled in the Security.Exchange property.
@@ -121,6 +121,13 @@ namespace QuantConnect.Brokerages
         /// <returns>The settlement model for this brokerage</returns>
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
 
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType);
     }
 
     /// <summary>
@@ -146,10 +153,10 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.TradierBrokerage:
                     return new TradierBrokerageModel(accountType);
-                    
+
                 case BrokerageName.OandaBrokerage:
                     return new OandaBrokerageModel(accountType);
-                    
+
                 case BrokerageName.FxcmBrokerage:
                     return new FxcmBrokerageModel(accountType);
 
@@ -160,7 +167,7 @@ namespace QuantConnect.Brokerages
                     return new GDAXBrokerageModel(accountType);
 
                 default:
-                    throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
+                    throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
         }
     }

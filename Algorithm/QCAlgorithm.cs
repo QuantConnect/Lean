@@ -159,6 +159,14 @@ namespace QuantConnect.Algorithm
             OptionChainProvider = new EmptyOptionChainProvider();
             FutureChainProvider = new EmptyFutureChainProvider();
         }
+        
+        /// <summary>
+        /// Set base account currency
+        /// </summary>
+        protected void SetAccountCurrency(string accountCurrency)
+        {
+            CashBook.AccountCurrency = accountCurrency;
+        }
 
         /// <summary>
         /// Set base account currency

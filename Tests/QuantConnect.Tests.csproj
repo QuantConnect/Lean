@@ -149,6 +149,7 @@
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
+    <Compile Include="Common\Securities\CashBuyingPowerModelTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexHoldingTest.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
@@ -239,6 +240,8 @@
     <Compile Include="Engine\DataFeeds\BaseDataExchangeTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\EnqueableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactoryTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />

@@ -34,7 +34,7 @@ namespace QuantConnect.Securities
         /// Base currency used
         /// </summary>
         public string AccountCurrency { get; set; } = "USD";
-
+        
         private readonly ConcurrentDictionary<string, Cash> _currencies;
 
         /// <summary>
