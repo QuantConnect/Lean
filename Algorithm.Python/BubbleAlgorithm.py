@@ -14,11 +14,13 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Indicators import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from datetime import date, timedelta, datetime
@@ -83,7 +85,6 @@ class BubbleAlgorithm(QCAlgorithm):
             try:
                 # Bubble territory
                 if self._currCape > 20 and self._newLow == False:
-                    self.Log(" Time " + str(self.Time))
                     for stock in self._symbols:
                     # Order stock based on MACD
                     # During market hours, stock is trading, and sufficient cash
@@ -120,7 +121,7 @@ class BubbleAlgorithm(QCAlgorithm):
                 # Do nothing
                 return None       
 
-        if "CAPE" not in data: return
+        if not data.ContainsKey("CAPE"): return
         self._newLow = False
         # Adds first four Cape Ratios to array c
         self._currCape = data["CAPE"].Cape
