@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -22,6 +21,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public virtual AccountType AccountType
         {
-            get; 
+            get;
             private set;
         }
 
@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public DefaultBrokerageModel(AccountType accountType = AccountType.Margin)
         {
@@ -107,7 +107,7 @@ namespace QuantConnect.Brokerages
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
-        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// market prices are sufficient for the fill to take place. This is used to emulate the
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
         /// executions during extended market hours. This is not intended to be checking whether or not
         /// the exchange is open, that is handled in the Security.Exchange property.
@@ -151,7 +151,7 @@ namespace QuantConnect.Brokerages
             {
                 return 1m;
             }
-                    
+
             switch (security.Type)
             {
                 case SecurityType.Equity:
@@ -258,5 +258,33 @@ namespace QuantConnect.Brokerages
             return new ImmediateSettlementModel();
         }
 
+        /// <summary>
+        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
+        /// For cash accounts, leverage = 1 is used.
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        public virtual IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        {
+            switch (security.Type)
+            {
+                case SecurityType.Crypto:
+                    return new CashBuyingPowerModel();
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return new SecurityMarginModel(50m);
+
+                case SecurityType.Option:
+                    return new OptionMarginModel();
+
+                case SecurityType.Future:
+                    return new FutureMarginModel();
+
+                default:
+                    return new SecurityMarginModel(2m);
+            }
+        }
     }
 }

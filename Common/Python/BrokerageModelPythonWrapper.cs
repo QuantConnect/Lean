@@ -84,7 +84,7 @@ namespace QuantConnect.Python
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
-        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// market prices are sufficient for the fill to take place. This is used to emulate the
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
         /// executions during extended market hours. This is not intended to be checking whether or not
         /// the exchange is open, that is handled in the Security.Exchange property.
@@ -198,6 +198,21 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 return _model.GetSlippageModel(security);
+            }
+        }
+
+        /// <summary>
+        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
+        /// For cash accounts, leverage = 1 is used.
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        {
+            using (Py.GIL())
+            {
+                return _model.GetBuyingPowerModel(security, accountType);
             }
         }
     }

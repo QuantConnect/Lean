@@ -186,6 +186,7 @@
     <Compile Include="Python\FillModelPythonWrapper.cs" />
     <Compile Include="Python\PandasConverter.cs" />
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
+    <Compile Include="Securities\CashBuyingPowerModel.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />
     <Compile Include="Securities\Option\EmptyOptionChainProvider.cs" />
