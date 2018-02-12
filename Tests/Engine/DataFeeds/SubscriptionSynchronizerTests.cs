@@ -26,6 +26,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -33,15 +34,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class SubscriptionSynchronizerTests
     {
         [Test]
-        public void TestsSubscriptionSynchronizerSpeed_SingleSubscription()
+        [TestCase(1, Resolution.Second)]
+        [TestCase(20, Resolution.Minute)]
+        [TestCase(50, Resolution.Minute)]
+        [TestCase(100, Resolution.Minute)]
+        [TestCase(250, Resolution.Minute)]
+        [TestCase(500, Resolution.Hour)]
+        [TestCase(1000, Resolution.Hour)]
+        public void SubscriptionSynchronizerPerformance(int securityCount, Resolution resolution)
         {
-            TestSubscriptionSynchronizerSpeed(PerformanceBenchmarkAlgorithms.SingleSecurity_Second);
-        }
+            // since data is pre-generated, it's important to use the larger resolutions with large security counts
 
-        [Test]
-        public void TestsSubscriptionSynchronizerSpeed_500Subscription()
-        {
-            TestSubscriptionSynchronizerSpeed(PerformanceBenchmarkAlgorithms.FiveHundredSecurity_Second);
+            var algorithm = PerformanceBenchmarkAlgorithms.CreateBenchmarkAlgorithm(securityCount, resolution);
+            TestSubscriptionSynchronizerSpeed(algorithm);
         }
 
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
@@ -62,67 +67,60 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var universeSelection = new UniverseSelection(feed, algorithm);
             var synchronizer = new SubscriptionSynchronizer(universeSelection, algorithm.TimeZone, algorithm.Portfolio.CashBook, startTimeUtc);
 
+            var totalDataPoints = 0;
             var subscriptions = new List<Subscription>();
             foreach (var kvp in algorithm.Securities)
             {
-                subscriptions.Add(CreateSubscription(algorithm, kvp.Value, startTimeUtc, endTimeUtc));
+                int dataPointCount;
+                subscriptions.Add(CreateSubscription(algorithm, kvp.Value, startTimeUtc, endTimeUtc, out dataPointCount));
+                totalDataPoints += dataPointCount;
             }
 
-            var count = 0;
-            double kps = 0;
-            var currentTime = default(DateTime);
-            var stopwatch = new Stopwatch();
-            var timer = new Timer(_ =>
-            {
-                kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
-                Console.WriteLine($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
-            });
-            timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+            // force JIT
+            synchronizer.Sync(subscriptions);
 
-            stopwatch.Start();
+            // log what we're doing
+            Console.WriteLine($"Running {subscriptions.Count} subscriptions with a total of {totalDataPoints} data points. Start: {algorithm.StartDate:yyyy-MM-dd} End: {algorithm.EndDate:yyyy-MM-dd}");
+
+            var count = 0;
+            DateTime currentTime;
+            var dateTimeMaxValue = DateTime.MaxValue;
+            var stopwatch = Stopwatch.StartNew();
             do
             {
                 var timeSlice = synchronizer.Sync(subscriptions);
                 currentTime = timeSlice.Time;
                 count += timeSlice.DataPointCount;
             }
-            while (currentTime < endTimeUtc);
+            while (currentTime != dateTimeMaxValue);
 
             stopwatch.Stop();
-            timer.Dispose();
 
-            kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
+            var kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
             Console.WriteLine($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
         }
 
-        private Subscription CreateSubscription(QCAlgorithm algorithm, Security security, DateTime startTimeUtc, DateTime endTimeUtc)
+        private Subscription CreateSubscription(QCAlgorithm algorithm, Security security, DateTime startTimeUtc, DateTime endTimeUtc, out int dataPointCount)
         {
             var universe = algorithm.UniverseManager.Values.OfType<UserDefinedUniverse>()
                 .Single(u => u.SelectSymbols(default(DateTime), null).Contains(security.Symbol));
 
             var config = security.Subscriptions.First();
-            var enumerator = DataTradeBarEnumerator(algorithm.StartDate, algorithm.EndDate, Time.OneSecond);
+            var data = LinqExtensions.Range(algorithm.StartDate, algorithm.EndDate, c => c + config.Increment).Select(time => new DataPoint
+            {
+                Time = time,
+                EndTime = time + config.Increment
+            })
+                .ToList();
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.NewYork, startTimeUtc, endTimeUtc);
-            return new Subscription(universe, security, config, enumerator, offsetProvider, endTimeUtc, endTimeUtc, false);
+
+            dataPointCount = data.Count;
+            return new Subscription(universe, security, config, data.GetEnumerator(), offsetProvider, endTimeUtc, endTimeUtc, false);
         }
 
-        private IEnumerator<BaseData> DataTradeBarEnumerator(DateTime startTimeLocal, DateTime endTimeLocal, TimeSpan increment)
+        private class DataPoint : BaseData
         {
-            var currentDataStartTime = startTimeLocal - increment;
-            var currentDataEndTime = startTimeLocal;
-            while (currentDataEndTime <= endTimeLocal)
-            {
-                var data = new TradeBar
-                {
-                    Time = currentDataStartTime,
-                    EndTime = currentDataEndTime
-                };
-
-                yield return data;
-
-                currentDataStartTime = currentDataEndTime;
-                currentDataEndTime = currentDataEndTime + increment;
-            }
+            // bare bones base data to minimize memory footprint
         }
     }
 }
