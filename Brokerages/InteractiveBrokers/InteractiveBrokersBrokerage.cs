@@ -415,7 +415,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
 
                 // this will allow us to do this in parallel
-                return Task.Factory.StartNew(() => local.ConversionRate = GetUsdConversion(currency));
+                return Task.Factory.StartNew(() => local.ConversionRate = GetCurrencyConversion(currency));
             }).Where(x => x != null).ToArray();
 
             Task.WaitAll(tasks, 5000);
@@ -437,7 +437,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key), AccountCurrency)).ToList();
+            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetCurrencyConversion(x.Key), AccountCurrency)).ToList();
         }
 
         /// <summary>
@@ -957,6 +957,169 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ContractDetails -= clientOnContractDetails;
 
             return contractDetails;
+        }
+
+        /// <summary>
+        /// Gets the current conversion rate into Account currency
+        /// </summary>
+        /// <remarks>Synchronous, blocking</remarks>
+        private decimal GetCurrencyConversion(string currency)
+        {
+            Log.Trace("InteractiveBrokersBrokerage.GetCurrencyConversion(): Getting " + AccountCurrency + " conversion for " + currency);
+
+            // determine the correct symbol to choose
+            var invertedSymbol = AccountCurrency + currency;
+            var normalSymbol = currency + AccountCurrency;
+            var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            if (currencyPair == null)
+            {
+                throw new Exception("Unable to resolve currency conversion pair for currency: " + currency);
+            }
+
+            // is it XXXUSD or USDXXX
+            bool inverted = invertedSymbol == currencyPair;
+            var symbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.FXCM);
+            var contract = CreateContract(symbol);
+
+            ContractDetails details;
+            if (!_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
+            {
+                details = GetContractDetails(contract);
+            }
+
+            if (details == null)
+            {
+                throw new Exception("Unable to resolve conversion for currency: " + currency);
+            }
+
+            // if this stays zero then we haven't received the conversion rate
+            var rate = 0m;
+            var manualResetEvent = new ManualResetEvent(false);
+
+            // we're going to request ticks first and if not present,
+            // we'll make a history request and use the latest value returned.
+
+            const int requestTimeout = 60;
+
+            // define and add our tick handler for the ticks
+            var marketDataTicker = GetNextTickerId();
+
+            _requestInformation[marketDataTicker] = "GetCurrencyConversion.MarketData: " + contract;
+
+            EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
+            {
+                if (args.TickerId == marketDataTicker && args.Field == IBApi.TickType.ASK)
+                {
+                    rate = Convert.ToDecimal(args.Price);
+                    Log.Trace("InteractiveBrokersBrokerage.GetConversionConversion(): Market price rate is " + args.Price + " for currency " + currency);
+                    manualResetEvent.Set();
+                }
+            };
+
+            Log.Trace("InteractiveBrokersBrokerage.GetCurrencyConversion(): Requesting market data for " + currencyPair);
+            _client.TickPrice += clientOnTickPrice;
+
+            _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
+
+            if (!manualResetEvent.WaitOne(requestTimeout * 1000))
+            {
+                Log.Error("InteractiveBrokersBrokerage.GetAccountConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+            }
+
+            _client.TickPrice -= clientOnTickPrice;
+
+            // check to see if ticks returned something
+            // we also need to check for negative values, IB returns -1 on Saturday
+            if (rate <= 0)
+            {
+                string errorMessage;
+                bool pacingViolation;
+                const int pacingDelaySeconds = 60;
+
+                do
+                {
+                    errorMessage = string.Empty;
+                    pacingViolation = false;
+                    manualResetEvent.Reset();
+
+                    var data = new List<IB.HistoricalDataEventArgs>();
+                    var historicalTicker = GetNextTickerId();
+
+                    _requestInformation[historicalTicker] = "GetCurrencyConversion.Historical: " + contract;
+
+                    EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
+                    {
+                        if (args.RequestId == historicalTicker)
+                        {
+                            data.Add(args);
+                        }
+                    };
+
+                    EventHandler<IB.HistoricalDataEndEventArgs> clientOnHistoricalDataEnd = (sender, args) =>
+                    {
+                        if (args.RequestId == historicalTicker)
+                        {
+                            manualResetEvent.Set();
+                        }
+                    };
+
+                    EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
+                    {
+                        if (args.Code == 162 && args.Message.Contains("pacing violation"))
+                        {
+                            // pacing violation happened
+                            pacingViolation = true;
+                        }
+                        else
+                        {
+                            errorMessage = $"Code: {args.Code} - ErrorMessage: {args.Message}";
+                        }
+                    };
+
+                    Log.Trace("InteractiveBrokersBrokerage.GetCurrencyConversion(): Requesting historical data for " + currencyPair);
+                    _client.HistoricalData += clientOnHistoricalData;
+                    _client.HistoricalDataEnd += clientOnHistoricalDataEnd;
+                    _client.Error += clientOnError;
+
+                    // request some historical data, IB's api takes into account weekends/market opening hours
+                    const string requestSpan = "100 S";
+                    _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"),
+                        requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, false, new List<TagValue>());
+
+                    if (!manualResetEvent.WaitOne(requestTimeout * 1000))
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.GetCurrencyConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+                    }
+
+                    if (pacingViolation)
+                    {
+                        // we received 'pacing violation' error from IB, so we have to wait
+                        Log.Trace("InteractiveBrokersBrokerage.GetCurrencyConversion() Pacing violation, pausing for {0} secs.", pacingDelaySeconds);
+                        Thread.Sleep(pacingDelaySeconds * 1000);
+                    }
+                    else
+                    {
+                        // check for history
+                        var ordered = data.OrderByDescending(x => x.Bar.Time);
+                        var mostRecentQuote = ordered.FirstOrDefault();
+                        if (mostRecentQuote == null)
+                        {
+                            throw new Exception("Unable to get recent quote for " + currencyPair + " - " + errorMessage);
+                        }
+
+                        rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
+                        Log.Trace("InteractiveBrokersBrokerage.GetCurrencyConversion(): Last historical price rate is " + rate + " for currency " + currency);
+                    }
+
+                    // be sure to unwire our history handler as well
+                    _client.HistoricalData -= clientOnHistoricalData;
+                    _client.HistoricalDataEnd -= clientOnHistoricalDataEnd;
+                    _client.Error -= clientOnError;
+
+                } while (pacingViolation);
+            }
+
+            return inverted ? 1 / rate : rate;
         }
 
         /// <summary>

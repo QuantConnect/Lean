@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Paper
             {
                 // remove the key, we really only want to return the cached value on the first request
                 _job.BrokerageData.Remove("project-paper-equity");
-                return new List<Cash>{new Cash("USD", decimal.Parse(value), 1, Algorithm.Portfolio.CashBook.AccountCurrency)};
+                return new List<Cash>{new Cash(Algorithm.Portfolio.CashBook.AccountCurrency, decimal.Parse(value), 1, Algorithm.Portfolio.CashBook.AccountCurrency)};
             }
 
             // if we've already begun running, just return the current state

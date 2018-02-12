@@ -49,7 +49,7 @@
   "transaction-log": "",
 
   // To get your api access token go to quantconnect.com/account
-  "job-user-id": "11728",
+  "job-user-id": "",
   "api-access-token": "",
 
   // live data configuration
@@ -95,9 +95,9 @@
   "iqfeed-version": "1.0",
 
   // gdax configuration
-  "gdax-api-secret": "46bh4YROFH5lz1kBxi56oyW6Rrpjoa4mHK1tcsKTQObjXUElqvqWGLPsDDSJcb83KNATHzX+K3FnaubM/SjpQg==",
-  "gdax-api-key": "cfc8e896170b1d13ab1bd1d2265619ff",
-  "gdax-passphrase": "8xdzwfujl44",
+  "gdax-api-secret": "",
+  "gdax-api-key": "",
+  "gdax-passphrase": "",
 
   // Intrinio account user and password
   "intrinio-username": "",
