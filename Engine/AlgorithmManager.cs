@@ -783,7 +783,15 @@ namespace QuantConnect.Lean.Engine
                             var ticks = data as List<Tick>;
                             if (ticks != null) list.AddRange(ticks);
                             else               list.Add(data);
-                            paired.Add(new DataFeedPacket(security, security.Subscriptions.First(), list));
+
+                            Type dataType = data.GetType();
+                            var config = security.Subscriptions.FirstOrDefault(subscription => subscription.Type == dataType);
+                            if (config == null)
+                            {
+                                throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
+                            }
+
+                            paired.Add(new DataFeedPacket(security, config, list));
                         }
                         timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None);
                     }
