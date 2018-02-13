@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Ionic.Zip;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -82,6 +81,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield return instance;
                 }
             }
+
+            zip.DisposeSafely();
         }
 
         /// <summary>
@@ -91,8 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="exception">The exception if one was raised, otherwise null</param>
         private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
         {
-            var handler = InvalidSource;
-            if (handler != null) handler(this, new InvalidSourceEventArgs(source, exception));
+            InvalidSource?.Invoke(this, new InvalidSourceEventArgs(source, exception));
         }
     }
 }
