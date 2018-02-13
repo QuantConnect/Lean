@@ -141,19 +141,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
-            var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-
-            // add this enumerator to our exchange
-            ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(request.Configuration.Resolution), GetUpperThreshold(request.Configuration.Resolution));
-
+            var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request.Universe, request.Security, request.Configuration, enqueueable, timeZoneOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, false);
+
+            // add this enumerator to our exchange
+            ScheduleEnumerator(subscription, enumerator, enqueueable, GetLowerThreshold(request.Configuration.Resolution), GetUpperThreshold(request.Configuration.Resolution));
+
             return subscription;
         }
 
-        private void ScheduleEnumerator(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable, int lowerThreshold, int upperThreshold, int firstLoopCount = 5)
+        private void ScheduleEnumerator(Subscription subscription, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<SubscriptionData> enqueueable,
+            int lowerThreshold, int upperThreshold, int firstLoopCount = 5)
         {
             // schedule the work on the controller
+            var security = subscription.Security;
+            var configuration = subscription.Configuration;
+
             var firstLoop = true;
             FuncParallelRunnerWorkItem workItem = null;
             workItem = new FuncParallelRunnerWorkItem(() => enqueueable.Count < lowerThreshold, () =>
@@ -168,8 +172,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return;
                     }
 
+                    var subscriptionData = SubscriptionData.Create(configuration, security.Exchange.Hours, subscription.OffsetProvider, enumerator.Current);
+
                     // drop the data into the back of the enqueueable
-                    enqueueable.Enqueue(enumerator.Current);
+                    enqueueable.Enqueue(subscriptionData);
 
                     count++;
 
@@ -303,11 +309,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // OffsetProvider exists to give forward marching mapping
 
                 // compute the initial frontier time
-                var currentEndTimeUtc = current.EndTime.ConvertToUtc(subscription.TimeZone);
-                var endTime = current.EndTime.Ticks - subscription.OffsetProvider.GetOffsetTicks(currentEndTimeUtc);
-                if (endTime < frontier.Ticks)
+                if (current.EmitTimeUtc < frontier)
                 {
-                    frontier = new DateTime(endTime);
+                    frontier = current.EmitTimeUtc;
                 }
             }
 
@@ -340,13 +344,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 upperThreshold = 100000;
             }
 
-            var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-            ScheduleEnumerator(enumerator, enqueueable, lowerThreshold, upperThreshold, firstLoopCount);
-            enumerator = enqueueable;
-
-            // create the subscription
+            var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            return new Subscription(request.Universe, request.Security, config, enumerator, timeZoneOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
+            var subscription = new Subscription(request.Universe, request.Security, config, enqueueable, timeZoneOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
+
+            // add this enumerator to our exchange
+            ScheduleEnumerator(subscription, enumerator, enqueueable, lowerThreshold, upperThreshold, firstLoopCount);
+
+            return subscription;
         }
 
         /// <summary>

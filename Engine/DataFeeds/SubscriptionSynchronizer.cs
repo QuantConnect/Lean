@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -94,17 +95,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
-                    var configuration = subscription.Configuration;
-                    var offsetProvider = subscription.OffsetProvider;
-                    var currentOffsetTicks = offsetProvider.GetOffsetTicks(_frontier);
-                    while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= _frontier.Ticks)
+                    while (subscription.Current.EmitTimeUtc <= _frontier)
                     {
-                        // we want bars rounded using their subscription times, we make a clone
-                        // so we don't interfere with the enumerator's internal logic
-                        var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                        clone.Time = clone.Time.ExchangeRoundDownInTimeZone(configuration.Increment, subscription.Security.Exchange.Hours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
-
-                        packet.Add(clone);
+                        packet.Add(subscription.Current.Data);
 
                         if (!subscription.MoveNext())
                         {
@@ -143,14 +136,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 }
                                 else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
                                 {
-                                    var current = subscription.Current as FuturesChainUniverseDataCollection;
-                                    collection = new FuturesChainUniverseDataCollection(_frontier,
-                                        subscription.Configuration.Symbol, packetData);
+                                    collection = new FuturesChainUniverseDataCollection(_frontier, subscription.Configuration.Symbol, packetData);
                                 }
                                 else
                                 {
-                                    collection = new BaseDataCollection(_frontier, subscription.Configuration.Symbol,
-                                        packetData);
+                                    collection = new BaseDataCollection(_frontier, subscription.Configuration.Symbol, packetData);
                                 }
 
                                 universeData[subscription.Universe] = collection;
@@ -162,12 +152,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         if (earlyBirdTicks == MaxDateTimeTicks)
                         {
-                            earlyBirdTicks = subscription.Current.EndTime.ConvertToUtc(subscription.TimeZone).Ticks;
+                            earlyBirdTicks = subscription.Current.EmitTimeUtc.Ticks;
                         }
                         else
                         {
-                            // take the earliest between the next piece of data or the next tz discontinuity
-                            earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
+                            // take the earliest between the next piece of data or the current earliest bird
+                            earlyBirdTicks = Math.Min(earlyBirdTicks, subscription.Current.EmitTimeUtc.Ticks);
                         }
                     }
                 }

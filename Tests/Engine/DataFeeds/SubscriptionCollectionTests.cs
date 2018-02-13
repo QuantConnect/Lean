@@ -42,7 +42,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Equity(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
-            var subscription = new Subscription(null, security, config, enumerator, timeZoneOffsetProvider, start, end, false);
+            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);
+            var subscription = new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
 
             var addTask = new TaskFactory().StartNew(() =>
             {

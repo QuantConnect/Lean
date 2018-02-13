@@ -153,7 +153,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
-            return new Subscription(null, security, config, reader, timeZoneOffsetProvider, start, end, false);
+            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, reader);
+            return new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
         }
 
         // this implementation is provided solely for the data reader's dependency,
