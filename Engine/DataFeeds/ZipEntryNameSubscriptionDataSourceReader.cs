@@ -58,10 +58,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            ZipFile zip;
+            ICollection<string> entryNames;
             try
             {
-                zip = new ZipFile(source.Source);
+                using (var zip = new ZipFile(source.Source))
+                {
+                    entryNames = zip.EntryFileNames;
+                }
             }
             catch (ZipException err)
             {
@@ -69,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 yield break;
             }
 
-            foreach (var entryFileName in zip.EntryFileNames)
+            foreach (var entryFileName in entryNames)
             {
                 var instance = _factory.Reader(_config, entryFileName, _date, _isLiveMode);
                 if (instance != null && instance.EndTime != default(DateTime))
@@ -77,8 +80,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield return instance;
                 }
             }
-
-            zip.DisposeSafely();
         }
 
         /// <summary>
