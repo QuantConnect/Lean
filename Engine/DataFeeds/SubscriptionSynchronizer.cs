@@ -138,10 +138,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 if (packetBaseDataCollection is OptionChainUniverseDataCollection)
                                 {
-                                    var current = subscription.Current as OptionChainUniverseDataCollection;
-                                    var underlying = current != null ? current.Underlying : null;
-                                    collection = new OptionChainUniverseDataCollection(_frontier,
-                                        subscription.Configuration.Symbol, packetData, underlying);
+                                    var current = packetBaseDataCollection as OptionChainUniverseDataCollection;
+                                    collection = new OptionChainUniverseDataCollection(_frontier, subscription.Configuration.Symbol, packetData, current?.Underlying);
                                 }
                                 else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
                                 {
