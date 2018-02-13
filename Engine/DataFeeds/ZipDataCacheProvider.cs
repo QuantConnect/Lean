@@ -29,10 +29,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipDataCacheProvider : IDataCacheProvider
     {
+        private const int MaxFilesToCache = 10;
         private const int CacheSeconds = 10;
 
-        // ZipArchive cache used by the class
+        // ZipArchive cache used by the class.  Store the last time a file was accessed
+        // so that we can expire ones that haven't been used in a while.
         private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
+
         private DateTime _lastCacheScan = DateTime.MinValue;
         private readonly IDataProvider _dataProvider;
 
@@ -66,16 +69,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Stream stream = null;
 
-                // scan the cache once every 3 seconds
-                if (_lastCacheScan == DateTime.MinValue || _lastCacheScan < DateTime.Now.AddSeconds(-3))
-                {
-                    CleanCache();
-                }
-
                 try
                 {
                     CachedZipFile existingEntry;
-                    if (!_zipFileCache.TryGetValue(filename, out existingEntry))
+                    if (!GetFromCache(filename, out existingEntry))
                     {
                         var dataStream = _dataProvider.Fetch(filename);
 
@@ -90,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     stream = CreateStream(newItem.ZipFile, entryName, filename);
                                 }
 
-                                _zipFileCache.TryAdd(filename, newItem);
+                                AddToCache(filename, newItem);
                             }
                             catch (Exception exception)
                             {
@@ -162,6 +159,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             _zipFileCache.Clear();
+        }
+
+        /// <summary>
+        /// Add a file from the cache, bumping the least frequently accessed
+        /// file if necessary.
+        /// </summary>
+        private void AddToCache(string filename, CachedZipFile zipFile) {
+            // If the cache is full, we clean the cache.
+            if (_zipFileCache.Count == MaxFilesToCache) {
+                CleanCache();
+            }
+
+            // If the cache is still full, we remove the oldest value to make room.
+            if (_zipFileCache.Count == MaxFilesToCache) {
+               // Determine the oldest key.
+               var smallest = _zipFileCache.Min(e => e.Value.DateCached);
+               var key = _zipFileCache.Where(e => e.Value.DateCached == smallest).First().Key;
+
+               // Remove it.
+               CachedZipFile removed;
+
+               if (_zipFileCache.TryRemove(key, out removed)) {
+                   // disposing zip archive
+                   removed.Dispose();
+               }
+            }
+
+            // Actually add the new value to the cache.
+            _zipFileCache.TryAdd(filename, zipFile);
+        }
+
+        /// <summary>
+        /// Fetch a file from the cache, updating the time last accessed.
+        /// </summary>
+        private bool GetFromCache(string filename, out CachedZipFile zipFile) {
+            bool result = _zipFileCache.TryGetValue(filename, out zipFile);
+            if (zipFile != null) {
+                zipFile.Refresh();
+            }
+            return result;
         }
 
         /// <summary>
@@ -253,7 +290,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class CachedZipFile : IDisposable
     {
         private string _key;
-        private DateTime _dateCached;
+        public DateTime DateCached { get; private set; }
         private ZipFile _data;
 
         /// <summary>
@@ -265,7 +302,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _data = data;
             _key = key;
-            _dateCached = DateTime.Now;
+            DateCached = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Method used to update the last time this file was accessed.
+        /// </summary>
+        public void Refresh()
+        {
+            DateCached = DateTime.Now;
         }
 
         /// <summary>
@@ -275,7 +320,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>Bool indicating whether this object is older than the specified time</returns>
         public bool Uncache(DateTime date)
         {
-            return _dateCached < date;
+            return DateCached < date;
         }
 
         /// <summary>
