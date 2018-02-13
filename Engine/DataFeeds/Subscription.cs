@@ -27,9 +27,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Represents the data required for a data feed to process a single subsciption
     /// </summary>
-    public class Subscription : IEnumerator<BaseData>
+    public class Subscription : IEnumerator<SubscriptionData>
     {
-        private readonly IEnumerator<BaseData> _enumerator;
+        private readonly IEnumerator<SubscriptionData> _enumerator;
 
         /// <summary>
         /// Gets the universe for this subscription
@@ -104,7 +104,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public Subscription(Universe universe,
             Security security,
             SubscriptionDataConfig configuration,
-            IEnumerator<BaseData> enumerator,
+            IEnumerator<SubscriptionData> enumerator,
             TimeZoneOffsetProvider timeZoneOffsetProvider,
             DateTime utcStartTime,
             DateTime utcEndTime,
@@ -156,7 +156,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseData Current { get; private set; }
+        public SubscriptionData Current { get; private set; }
 
         /// <summary>
         /// Gets the current element in the collection.

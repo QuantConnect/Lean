@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,7 +59,7 @@ namespace QuantConnect
             var start = DateTimeZone.Utc.AtLeniently(LocalDateTime.FromDateTime(utcStartTime));
             var end = DateTimeZone.Utc.AtLeniently(LocalDateTime.FromDateTime(utcEndTime));
             var zoneIntervals = _timeZone.GetZoneIntervals(start.ToInstant(), end.ToInstant()).ToList();
-            
+
             // short circuit time zones with no discontinuities
             if (zoneIntervals.Count == 1 && zoneIntervals[0].Start == Instant.MinValue && zoneIntervals[0].End == Instant.MaxValue)
             {
@@ -88,7 +88,7 @@ namespace QuantConnect
             while (utcTime.Ticks >= _nextDiscontinuity && _nextDiscontinuity != DateTimeMaxValueTicks)
             {
                 // grab the next discontinuity
-                _nextDiscontinuity = _discontinuities.Count == 0 
+                _nextDiscontinuity = _discontinuities.Count == 0
                     ? DateTime.MaxValue.Ticks
                     : _discontinuities.Dequeue();
 
@@ -98,6 +98,31 @@ namespace QuantConnect
             }
 
             return _currentOffsetTicks;
+        }
+
+        /// <summary>
+        /// Converts the specified local time to UTC. This function will advance this offset provider
+        /// </summary>
+        /// <param name="localTime">The local time to be converted to UTC</param>
+        /// <returns>The specified time in UTC</returns>
+        public DateTime ConvertToUtc(DateTime localTime)
+        {
+            // it's important to walk forward to the next time zone discontinuity
+            // to ensure a deterministic read. We continue reading with the current
+            // offset until the converted value is beyond the next discontinuity, at
+            // which time we advance the offset again.
+            var currentEndTimeTicks = localTime.Ticks;
+            var currentEndTimeUtc = new DateTime(currentEndTimeTicks - _currentOffsetTicks);
+            var offsetTicks = GetOffsetTicks(currentEndTimeUtc);
+            var emitTimeUtcTicks = currentEndTimeTicks - offsetTicks;
+            while (emitTimeUtcTicks > _nextDiscontinuity)
+            {
+                // advance to the next discontinuity to get the new offset
+                offsetTicks = GetOffsetTicks(new DateTime(_nextDiscontinuity));
+                emitTimeUtcTicks = currentEndTimeTicks - offsetTicks;
+            }
+
+            return new DateTime(emitTimeUtcTicks);
         }
 
         /// <summary>

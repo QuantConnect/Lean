@@ -18,11 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
@@ -106,13 +104,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Single(u => u.SelectSymbols(default(DateTime), null).Contains(security.Symbol));
 
             var config = security.Subscriptions.First();
+            var offsetProvider = new TimeZoneOffsetProvider(TimeZones.NewYork, startTimeUtc, endTimeUtc);
             var data = LinqExtensions.Range(algorithm.StartDate, algorithm.EndDate, c => c + config.Increment).Select(time => new DataPoint
             {
                 Time = time,
                 EndTime = time + config.Increment
             })
-                .ToList();
-            var offsetProvider = new TimeZoneOffsetProvider(TimeZones.NewYork, startTimeUtc, endTimeUtc);
+            .Select(d => SubscriptionData.Create(config, security.Exchange.Hours, offsetProvider, d))
+            .ToList();
 
             dataPointCount = data.Count;
             return new Subscription(universe, security, config, data.GetEnumerator(), offsetProvider, endTimeUtc, endTimeUtc, false);
