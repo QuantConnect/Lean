@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using Ionic.Zip;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
-        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -42,13 +40,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataCacheProvider">Used to cache data</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataCacheProvider = dataCacheProvider;
             _config = config;
             _date = date;
             _isLiveMode = isLiveMode;

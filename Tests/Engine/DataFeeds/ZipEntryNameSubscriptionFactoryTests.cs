@@ -33,9 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var source = Path.Combine("TestData", "20151224_quote_american.zip");
             var config = new SubscriptionDataConfig(typeof (ZipEntryName), Symbol.Create("XLRE", SecurityType.Option, Market.USA), Resolution.Tick,
                 TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-            var dataProvider = new DefaultDataProvider();
-            var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
-            var factory = new ZipEntryNameSubscriptionDataSourceReader(dataCacheProvider, config, time, false);
+            var factory = new ZipEntryNameSubscriptionDataSourceReader(config, time, false);
             var expected = new[]
             {
                 Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19)),
