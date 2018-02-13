@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ using System.Linq;
 using Ionic.Zip;
 using Ionic.Zlib;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -83,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             try
                             {
-                                var newItem = new CachedZipFile(ZipFile.Read(dataStream), filename);
+                                var newItem = new CachedZipFile(dataStream, filename);
 
                                 lock (_zipFileSynchronizer)
                                 {
@@ -126,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 catch (Exception err)
                 {
                     Log.Error(err, "Inner try/catch");
-                    if (stream != null) stream.Dispose();
+                    stream?.DisposeSafely();
                     return null;
                 }
             }
@@ -157,7 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 foreach (var zip in _zipFileCache)
                 {
-                    zip.Value.ZipFile.Dispose();
+                    zip.Value.Dispose();
                 }
             }
 
@@ -203,10 +204,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var stream = new MemoryStream();
 
-                try {
+                try
+                {
                     stream.SetLength(entry.UncompressedSize);
-                } catch (ArgumentOutOfRangeException err) {
-                    // The needed size of the MemoryStream is longer than allowed. 
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // The needed size of the MemoryStream is longer than allowed.
                     // just read the data directly from the file.
                     // Note that we cannot use entry.OpenReader() because only one OpenReader
                     // can be open at a time without causing corruption.
@@ -218,18 +222,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var zipEntry = zipStream.GetNextEntry();
 
                     // The zip file was empty!
-                    if (zipEntry == null) {
+                    if (zipEntry == null)
+                    {
                         return null;
                     }
 
                     // Null entry name, return the first.
-                    if (entryName == null) {
+                    if (entryName == null)
+                    {
                         return zipStream;
                     }
 
                     // Non-default entry name, return matching one if it exists, otherwise null.
-                    while (zipEntry != null) {
-                        if (string.Compare(zipEntry.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0) {
+                    while (zipEntry != null)
+                    {
+                        if (string.Compare(zipEntry.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0)
+                        {
                             return zipStream;
                         }
 
@@ -252,19 +260,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class CachedZipFile : IDisposable
     {
-        private string _key;
-        private DateTime _dateCached;
-        private ZipFile _data;
+        private readonly DateTime _dateCached;
+        private readonly Stream _dataStream;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachedZipFile"/> 
+        /// The ZipFile this object represents
         /// </summary>
-        /// <param name="data">ZipFile to be store</param>
+        public ZipFile ZipFile { get; }
+
+        /// <summary>
+        /// Path to the ZipFile
+        /// </summary>
+        public string Key { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CachedZipFile"/>
+        /// </summary>
+        /// <param name="dataStream">Stream containing the zip file</param>
         /// <param name="key">Key that represents the path to the data</param>
-        public CachedZipFile(ZipFile data, string key)
+        public CachedZipFile(Stream dataStream, string key)
         {
-            _data = data;
-            _key = key;
+            _dataStream = dataStream;
+            ZipFile = ZipFile.Read(dataStream);
+            Key = key;
             _dateCached = DateTime.Now;
         }
 
@@ -279,32 +297,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// The ZipFile this object represents
-        /// </summary>
-        public ZipFile ZipFile
-        {
-            get { return _data; }
-        }
-
-        /// <summary>
-        /// Path to the ZipFile
-        /// </summary>
-        public string Key
-        {
-            get { return _key; }
-        }
-
-        /// <summary>
         /// Dispose of the ZipFile
         /// </summary>
         public void Dispose()
         {
-            if (_data != null)
-            {
-                _data.Dispose();
-            }
+            ZipFile?.DisposeSafely();
+            _dataStream?.DisposeSafely();
 
-            _key = null;
+            Key = null;
         }
     }
 }
