@@ -264,7 +264,7 @@
     <Compile Include="Engine\DataFeeds\SubscriptionCollectionTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionSynchronizerTests.cs" />
     <Compile Include="Engine\DataFeeds\TimeSliceTests.cs" />
-    <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
+    <Compile Include="Engine\DataFeeds\ZipEntryNameSubscriptionFactoryTests.cs" />
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
