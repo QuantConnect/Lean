@@ -56,6 +56,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A new <see cref="SubscriptionData"/> containing the specified data</returns>
         public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data)
         {
+            if (data == null)
+            {
+                return null;
+            }
+
             data = data.Clone(data.IsFillForward);
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
             data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
