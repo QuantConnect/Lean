@@ -31,8 +31,8 @@ class OptionRenameRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         self.SetCash(1000000)
-        self.SetStartDate(2013,6,28)
-        self.SetEndDate(2013,7,2)
+        self.SetStartDate(2013,06,28)
+        self.SetEndDate(2013,07,02)
         option = self.AddOption("FOXA")
 
         # set our strike/expiry filter for this option chain

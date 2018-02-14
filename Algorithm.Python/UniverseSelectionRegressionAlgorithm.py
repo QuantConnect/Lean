@@ -31,8 +31,8 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
     
     def Initialize(self):
         
-        self.SetStartDate(2014,3,22)   #Set Start Date
-        self.SetEndDate(2014,4,7)      #Set End Date
+        self.SetStartDate(2014,03,22)  #Set Start Date
+        self.SetEndDate(2014,04,07)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         # security that exists with no mappings

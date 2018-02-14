@@ -13,11 +13,13 @@
 
 from clr import AddReference
 AddReference("System")
+AddReference("System.Collections")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
+from System.Collections.Generic import List
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *

@@ -43,9 +43,7 @@ class FuturesMomentumAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         fastPeriod = 20
         slowPeriod = 60
-        self._tolerance = d.Decimal(1 + 0.001)
-        self.IsUpTrend = False
-        self.IsDownTrend = False
+        self._tolerance = 0.001
         self.SetWarmUp(max(fastPeriod, slowPeriod))
 
         # Adds SPY to be used in our EMA indicators
@@ -57,11 +55,10 @@ class FuturesMomentumAlgorithm(QCAlgorithm):
         future = self.AddFuture(Futures.Indices.SP500EMini)
         future.SetFilter(timedelta(0), timedelta(182))
 
-
     def OnData(self, slice):
         if self._slow.IsReady and self._fast.IsReady:
-            self.IsUpTrend = self._fast.Current.Value > self._slow.Current.Value * self._tolerance
-            self.IsDownTrend = self._fast.Current.Value < self._slow.Current.Value * self._tolerance
+            self.IsUpTrend = self._fast.Current.Value > self._slow.Current.Value * d.Decimal(1 + self._tolerance)
+            self.IsDownTrend = self._fast.Current.Value < self._slow.Current.Value * d.Decimal(1 + self._tolerance)
             if (not self.Portfolio.Invested) and self.IsUpTrend:
                 for chain in slice.FuturesChains:
                     # find the front contract expiring no earlier than in 90 days
@@ -79,7 +76,7 @@ class FuturesMomentumAlgorithm(QCAlgorithm):
             self.Plot("Indicator Signal", "EOD",1)
         elif self.IsDownTrend:
             self.Plot("Indicator Signal", "EOD",-1)
-        elif self._slow.IsReady and self._fast.IsReady:
+        else:
             self.Plot("Indicator Signal", "EOD",0)
 
 
