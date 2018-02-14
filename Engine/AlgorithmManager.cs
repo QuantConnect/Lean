@@ -785,7 +785,7 @@ namespace QuantConnect.Lean.Engine
                             else               list.Add(data);
 
                             Type dataType = data.GetType();
-                            var config = security.Subscriptions.FirstOrDefault(subscription => subscription.Type == dataType);
+                            var config = security.Subscriptions.FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
                             if (config == null)
                             {
                                 throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
