@@ -69,7 +69,7 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
                     contract.ImpliedVolatility))
 
     def OnSecuritiesChanged(self, changes):
-        if changes == None: return
+        if changes == SecurityChanges.None: return
         for change in changes.AddedSecurities:
             history = self.History(change.Symbol, 10, Resolution.Hour).sort_index(level='time', ascending=False)[:3]
 

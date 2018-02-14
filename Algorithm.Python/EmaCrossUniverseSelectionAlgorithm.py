@@ -38,8 +38,8 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2010,1,1)  #Set Start Date
-        self.SetEndDate(2015,1,1)    #Set End Date
+        self.SetStartDate(2010,01,01)  #Set Start Date
+        self.SetEndDate(2015,01,01)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
         self.UniverseSettings.Resolution = Resolution.Daily
@@ -66,7 +66,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
             avg.update(cf.EndTime, cf.Price)
 
         # Filter the values of the dict: we only want up-trending securities
-        values = list(filter(lambda x: x.is_uptrend, self.averages.values()))
+        values = filter(lambda x: x.is_uptrend, self.averages.values())
 
         # Sorts the values of the dict: we want those with greater difference between the moving averages
         values.sort(key=lambda x: x.scale, reverse=True)

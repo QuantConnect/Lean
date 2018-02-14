@@ -59,7 +59,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
     def OnData(self, slice):
 
         if slice.Bars.Count == 0: return
-        if self._changes == None: return
+        if self._changes == SecurityChanges.None: return
         
         # start fresh
         self.Liquidate()
@@ -69,7 +69,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             self.SetHoldings(tradeBar.Symbol, percentage)
         
         # reset changes
-        self._changes = None
+        self._changes = SecurityChanges.None
     
     def OnSecuritiesChanged(self, changes):
         self._changes = changes

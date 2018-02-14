@@ -35,8 +35,8 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2014,1,1)  #Set Start Date
-        self.SetEndDate(2015,1,1)    #Set End Date
+        self.SetStartDate(2014,01,01)  #Set Start Date
+        self.SetEndDate(2015,01,01)    #Set End Date
         self.SetCash(50000)            #Set Strategy Cash
 
         # what resolution should the data *added* to the universe be?
@@ -49,7 +49,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
 
         self.__numberOfSymbols = 5
         self.__numberOfSymbolsFine = 2
-        self._changes = None
+        self._changes = SecurityChanges.None
 
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
@@ -70,7 +70,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         # if we have no changes, do nothing
-        if self._changes == None: return
+        if self._changes == SecurityChanges.None: return
 
         # liquidate removed securities
         for security in self._changes.RemovedSecurities:
@@ -81,7 +81,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         for security in self._changes.AddedSecurities:
             self.SetHoldings(security.Symbol, 0.2)
 
-        self._changes = None;
+        self._changes = SecurityChanges.None;
 
 
     # this event fires whenever we have changes to our universe
