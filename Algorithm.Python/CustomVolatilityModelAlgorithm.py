@@ -32,8 +32,8 @@ import numpy as np
 class CustomVolatilityModelAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2015,7,15)     #Set End Date
+        self.SetStartDate(2013,10,07)  #Set Start Date
+        self.SetEndDate(2015,07,15)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         self.equity = self.AddEquity("SPY", Resolution.Daily)
