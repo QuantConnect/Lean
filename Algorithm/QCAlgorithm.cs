@@ -1916,6 +1916,9 @@ namespace QuantConnect.Algorithm
                         client.Headers.Add(header.Key, header.Value);
                     }
                 }
+                // Add a user agent header in case the requested URI contains a query.
+                client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
+
                 return client.DownloadString(address);
             }
         }
