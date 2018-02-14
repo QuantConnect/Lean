@@ -79,6 +79,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar2.Value, newTradeBar.High);
             Assert.AreEqual(bar3.Value, newTradeBar.Low);
             Assert.AreEqual(bar4.Value, newTradeBar.Close);
+            Assert.AreEqual(bar4.EndTime, newTradeBar.EndTime);
 
             // base data can't aggregate volume
             Assert.AreEqual(0, newTradeBar.Volume);

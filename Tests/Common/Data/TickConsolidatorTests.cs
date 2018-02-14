@@ -78,6 +78,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar2.Value, newTradeBar.High);
             Assert.AreEqual(bar3.Value, newTradeBar.Low);
             Assert.AreEqual(bar4.Value, newTradeBar.Close);
+            Assert.AreEqual(bar4.EndTime, newTradeBar.EndTime);
             Assert.AreEqual(bar1.Quantity + bar2.Quantity + bar3.Quantity + bar4.Quantity, newTradeBar.Volume);
         }
 

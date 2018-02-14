@@ -94,6 +94,7 @@ namespace QuantConnect.Tests.Common.Data
 
             Assert.AreEqual(Symbols.SPY, quoteBar.Symbol);
             Assert.AreEqual(tick1.Time, quoteBar.Time);
+            Assert.AreEqual(tick4.EndTime, quoteBar.EndTime);
             Assert.AreEqual(tick1.BidPrice, quoteBar.Bid.Open);
             Assert.AreEqual(tick1.BidPrice, quoteBar.Bid.Low);
             Assert.AreEqual(tick3.BidPrice, quoteBar.Bid.High);
