@@ -1,5 +1,5 @@
 #
-#	LEAN Foundation Docker Container 20171229
+#	LEAN Foundation Docker Container 20180202
 #	Cross platform deployment for multiple brokerages
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
@@ -14,35 +14,39 @@ CMD ["/sbin/my_init"]
 
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
-RUN \
-  apt-get update && \
-  apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 python-pip && \
-  pip install --upgrade pip && pip install --upgrade cython && \
-  pip install pycparser pandas scipy numpy sklearn  && \
-  pip install blaze cvxopt cvxpy pykalman statistics statsmodels arch copulalib && \
-  pip install xgboost theano keras tensorflow deap
+RUN apt-get update && apt-get install -y wget bzip2 python3-pip python-opengl && \
+    apt-get install -y xvfb unzip curl libxrender1 libxtst6 libxi6
+
+# Install miniconda and supported third party python packages
+ENV PATH="/root/miniconda3/bin:${PATH}"
+RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b && \
+    rm -rf Miniconda3-latest-Linux-x86_64.sh && \
+    ln -s /root/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6.so && \
+    conda update -y python conda pip && \
+    conda install -y cython pandas && \
+    conda install -y blaze cvxopt keras nltk tensorflow theano && \
+    conda install -y pytorch torchvision -c pytorch && \
+    pip install arch copulalib cvxpy deap gym pykalman pyro-ppl  && \
+    pip install sklearn statistics tensorforce xgboost && \
+    conda clean -y --all
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
-RUN \
-  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
-  add-apt-repository -y ppa:webupd8team/java && \
-  apt-get update && \
-  apt-get install -y oracle-java8-installer && \
-  rm -rf /var/lib/apt/lists/* && \
-  rm -rf /var/cache/oracle-jdk8-installer
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+    add-apt-repository -y ppa:webupd8team/java && \
+    apt-get update && apt-get install -y oracle-java8-installer && \
+    rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/oracle-jdk8-installer
 
 # Install IB Gateway: Installs to ~/Jts
-RUN \
-    wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
+RUN wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
     chmod 777 ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
     ./ibgateway-latest-standalone-linux-x64-v968.2d.sh -q && \
     wget -O ~/Jts/jts.ini http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.jts.ini && \
     rm ibgateway-latest-standalone-linux-x64-v968.2d.sh
 
 # Install IB Controller: Installs to ~/IBController
-RUN \
-    wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.2.zip && \
+RUN wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.2.zip && \
     unzip IBController-QuantConnect-3.2.0.2.zip -d ~/IBController && \
     chmod -R 777 ~/IBController && \
     rm IBController-QuantConnect-3.2.0.2.zip
@@ -51,30 +55,23 @@ RUN \
 # From https://github.com/mono/docker/blob/master/
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > /etc/apt/sources.list.d/mono-xamarin.list \
-  && apt-get update \
-  && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl \
-  && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
+RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
+    apt-get update && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
+    apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install Python.NET
 # Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
-RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.4 \
-    && cp QuantConnect.pythonnet.1.0.5.4/lib/Python.Runtime.dll /usr/lib
-
-RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
+RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.5 && \
+    cp QuantConnect.pythonnet.1.0.5.5/lib/Python.Runtime.dll /usr/lib
 
 # Install TA-lib for python
-RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
-    && tar -zxvf ta-lib-0.4.0-src.tar.gz \
-    && cd ta-lib \
-    && ./configure --prefix=/usr \
-    && make \
-    && make install \
-    && pip install TA-lib \
-    && cd ..
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+    tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
+    ./configure --prefix=/usr && make && make install && \
+    pip install TA-lib
 
 # Install R
-RUN apt-get update \
-    && apt-get install -y r-base \
-    && apt-get install -y pandoc \
-    && apt-get install -y libcurl4-openssl-dev
+RUN apt-get update && \
+    apt-get install -y r-base && \
+    apt-get install -y pandoc && \
+    apt-get install -y libcurl4-openssl-dev

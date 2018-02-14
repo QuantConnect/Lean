@@ -14,7 +14,6 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -22,7 +21,8 @@ from QuantConnect import *
 from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-
+from QuantConnect.Securities import *
+from QuantConnect.Data.Consolidators import *
 from datetime import timedelta
 
 ### <summary>
@@ -35,7 +35,7 @@ from datetime import timedelta
 class BasicTemplateFuturesConsolidationAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013, 10, 07)
+        self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 11)
         self.SetCash(1000000)
 

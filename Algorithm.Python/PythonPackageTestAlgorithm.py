@@ -31,7 +31,6 @@ import itertools
 import math
 import operator
 import pytz
-import Queue
 import re
 import time
 import zlib
@@ -69,19 +68,19 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Daily)
 
         # numpy test
-        print "numpy test >>> print numpy.pi: " , numpy.pi
+        print ("numpy test >>> print numpy.pi: " , numpy.pi)
 
         # scipy test:
-        print "scipy test >>> print mean of 1 2 3 4 5:", scipy.mean(numpy.array([1, 2, 3, 4, 5]))
+        print ("scipy test >>> print mean of 1 2 3 4 5:", scipy.mean(numpy.array([1, 2, 3, 4, 5])))
 
         #sklearn test
-        print "sklearn test >>> default RandomForestClassifier:", RandomForestClassifier()
+        print ("sklearn test >>> default RandomForestClassifier:", RandomForestClassifier())
 
         # cvxopt matrix test
-        print "cvxopt >>>", cvxopt.matrix([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (2,3))
+        print ("cvxopt >>>", cvxopt.matrix([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (2,3)))
 
         # talib test
-        print "talib test >>>", talib.SMA(numpy.random.random(100))
+        print ("talib test >>>", talib.SMA(numpy.random.random(100)))
 
         # blaze test
         blaze_test()
@@ -116,7 +115,6 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
         # deap test
         deap_test()
 
-
     def OnData(self, data): pass
 
 def blaze_test():
@@ -127,7 +125,7 @@ def blaze_test():
          [3, 'Charlie', 300],
          [4, 'Denis',   400],
          [5, 'Edith',  -500]]
-    print "blaze test >>>", list(blaze.compute(deadbeats, L))
+    print ("blaze test >>>", list(blaze.compute(deadbeats, L)))
 
 def grade(score, breakpoints=[60, 70, 80, 90], grades='FDCBA'):
     i = bisect(breakpoints, score)
@@ -144,9 +142,9 @@ def cvxpy_test():
     gamma = cvxpy.Parameter(sign='positive')
     ret = mu.T*w
     risk = cvxpy.quad_form(w, Sigma)
-    print "csvpy test >>> ", cvxpy.Problem(cvxpy.Maximize(ret - gamma*risk),
+    print ("csvpy test >>> ", cvxpy.Problem(cvxpy.Maximize(ret - gamma*risk),
                [cvxpy.sum_entries(w) == 1,
-                w >= 0])
+                w >= 0]))
 
 def statsmodels_test():
     nsample = 100
@@ -160,31 +158,31 @@ def statsmodels_test():
 
     model = sm.OLS(y, X)
     results = model.fit()
-    print "statsmodels tests >>>", results.summary()
+    print ("statsmodels tests >>>", results.summary())
 
 def pykalman_test():
     kf = KalmanFilter(transition_matrices = [[1, 1], [0, 1]], observation_matrices = [[0.1, 0.5], [-0.3, 0.0]])
     measurements = numpy.asarray([[1,0], [0,0], [0,1]])  # 3 observations
     kf = kf.em(measurements, n_iter=5)
-    print "pykalman test >>>", kf.filter(measurements)
+    print ("pykalman test >>>", kf.filter(measurements))
 
 def copulalib_test():
     x = numpy.random.normal(size=100)
     y = 2.5 * x + numpy.random.normal(size=100)
 
     #Make the instance of Copula class with x, y and clayton family::
-    print "copulalib test >>>", Copula(x, y, family='clayton')
+    print ("copulalib test >>>", Copula(x, y, family='clayton'))
 
 def theano_test():
     a = theano.tensor.vector() # declare variable
     out = a + a ** 10               # build symbolic expression
     f = theano.function([a], out)   # compile function
-    print "theano test >>>", f([0, 1, 2])
+    print ("theano test >>>", f([0, 1, 2])) 
 
 def xgboost_test():
     data = numpy.random.rand(5,10) # 5 entities, each contains 10 features
     label = numpy.random.randint(2, size=5) # binary target
-    print "xgboost test >>>", xgboost.DMatrix( data, label=label)
+    print ("xgboost test >>>", xgboost.DMatrix( data, label=label))
 
 def arch_test():
     r = numpy.array([0.945532630498276,
@@ -205,7 +203,7 @@ def arch_test():
 
     garch11 = arch_model(r, p=1, q=1)
     res = garch11.fit(update_freq=10)
-    print "arch test >>>", res.summary()
+    print ("arch test >>>", res.summary())
 
 def keras_test():
     # Initialize the constructor
@@ -220,14 +218,14 @@ def keras_test():
     # Add an output layer
     model.add(Dense(1, activation='sigmoid'))
 
-    print "keras test >>>", model
+    print ("keras test >>>", model)
 
 def tensorflow_test():
     node1 = tf.constant(3.0, tf.float32)
     node2 = tf.constant(4.0) # also tf.float32 implicitly
     sess = tf.Session()
     node3 = tf.add(node1, node2)
-    print "tensorflow test >>>", "sess.run(node3): ", sess.run(node3)
+    print ("tensorflow test >>>", "sess.run(node3): ", sess.run(node3))
 
 def deap_test():
     # onemax example evolves to print list of ones: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -257,4 +255,4 @@ def deap_test():
 
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=30, 
                                    stats=stats, halloffame=hof, verbose=False) # change to verbose=True to see evolution table
-    print "deap test >>>", hof[0]
+    print ("deap test >>>", hof[0])

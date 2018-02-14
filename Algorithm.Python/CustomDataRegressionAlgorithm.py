@@ -13,7 +13,6 @@
 
 from clr import AddReference
 AddReference("System.Core")
-AddReference("System.Collections")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 
