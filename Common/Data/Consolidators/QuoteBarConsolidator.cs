@@ -69,7 +69,8 @@ namespace QuantConnect.Data.Consolidators
                     Symbol = data.Symbol,
                     Time = GetRoundedBarTime(data.Time),
                     Bid = bid == null ? null : bid.Clone(),
-                    Ask = ask == null ? null : ask.Clone()
+                    Ask = ask == null ? null : ask.Clone(),
+                    EndTime = data.EndTime
                 };
             }
 
@@ -104,6 +105,7 @@ namespace QuantConnect.Data.Consolidators
             }
 
             workingBar.Value = data.Value;
+            if (workingBar.EndTime < data.EndTime) workingBar.EndTime = data.EndTime;
         }
     }
 }
