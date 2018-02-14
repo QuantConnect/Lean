@@ -43,8 +43,8 @@ class CustomSecurityInitializerAlgorithm(QCAlgorithm):
         func_security_seeder = FuncSecuritySeeder(Func[Security, BaseData](self.GetLastKnownPrice))
         self.SetSecurityInitializer(CustomSecurityInitializer(self.BrokerageModel, func_security_seeder, DataNormalizationMode.Raw))
         
-        self.SetStartDate(2013,10,1)
-        self.SetEndDate(2013,11,1)
+        self.SetStartDate(2013,10,01)
+        self.SetEndDate(2013,11,01)
 
         self.AddEquity("SPY", Resolution.Hour)
 
@@ -66,12 +66,12 @@ class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
         self.base = BrokerageModelSecurityInitializer(brokerageModel, securitySeeder)
         self.dataNormalizationMode = dataNormalizationMode
 
-    def Initialize(self, security):
+    def Initialize(self, security, seedSecurity):
         '''Initializes the specified security by setting up the models
         security -- The security to be initialized
         seedSecurity -- True to seed the security, false otherwise'''
         # first call the default implementation
-        self.base.Initialize(security)
+        self.base.Initialize(security, seedSecurity)
 
         # now apply our data normalization mode
         security.SetDataNormalizationMode(self.dataNormalizationMode)

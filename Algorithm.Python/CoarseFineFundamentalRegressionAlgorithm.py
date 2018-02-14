@@ -32,8 +32,8 @@ from datetime import datetime
 class CoarseFineFundamentalRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2014,4,1)    #Set Start Date
-        self.SetEndDate(2014,4,30)     #Set End Date
+        self.SetStartDate(2014,04,01)  #Set Start Date
+        self.SetEndDate(2014,04,30)    #Set End Date
         self.SetCash(50000)            #Set Strategy Cash
 
         self.UniverseSettings.Resolution = Resolution.Daily
