@@ -127,7 +127,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns>gdax product id</returns>
         protected static string ConvertSymbol(Symbol symbol)
         {
-            return symbol.Value.Substring(0, 3).ToLower() + "-" + symbol.Value.Substring(3, 3).ToLower();
+            return symbol.Value.Substring(0, 3).ToUpper() + "-" + symbol.Value.Substring(3, 3).ToUpper();
         }
 
         private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)
