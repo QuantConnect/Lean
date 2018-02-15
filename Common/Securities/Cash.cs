@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -43,6 +44,7 @@ namespace QuantConnect.Securities
         /// Gets the security used to apply conversion rates.
         /// If this cash represents the account currency, then null is returned.
         /// </summary>
+        [JsonIgnore]
         public Security ConversionRateSecurity { get; private set; }
 
         /// <summary>
