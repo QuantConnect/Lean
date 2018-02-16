@@ -36,6 +36,17 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ShortingIsAllowed()
+        {
+            var tz = TimeZones.NewYork;
+            var symbol = Symbol.CreateFuture(QuantConnect.Securities.Futures.Softs.Coffee, Market.USA, new DateTime(2017, 1, 1));
+            var future = new Future(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+
+            var buyingPowerModel = new TestFutureMarginModel();
+            Assert.IsTrue(buyingPowerModel.IsShortSellingAllowed(future));
+        }
+
+        [Test]
         public void TestMarginForSymbolWithOneLinerHistory()
         {
             const decimal price = 1.2345m;

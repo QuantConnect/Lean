@@ -222,6 +222,15 @@ namespace QuantConnect.Securities
             return 0;
         }
 
+        /// <summary>
+        /// Returns true if short selling is allowed for a security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        public bool IsShortSellingAllowed(Security security)
+        {
+            return false;
+        }
+
         private static decimal GetOrderPrice(Security security, Order order)
         {
             var orderPrice = 0m;

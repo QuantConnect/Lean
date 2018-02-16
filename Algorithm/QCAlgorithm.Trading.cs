@@ -893,6 +893,13 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
+            // check if shorting allowed
+            if (percentage < 0 && !security.BuyingPowerModel.IsShortSellingAllowed(security))
+            {
+                Error($"The {security.BuyingPowerModel.GetType().Name} does not allow short positions.");
+                return;
+            }
+
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {

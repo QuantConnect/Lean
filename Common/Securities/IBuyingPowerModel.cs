@@ -72,5 +72,11 @@ namespace QuantConnect.Securities
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The buying power available for the trade</returns>
         decimal GetBuyingPower(SecurityPortfolioManager portfolio, Security security, OrderDirection direction);
+
+        /// <summary>
+        /// Returns true if short selling is allowed for a security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        bool IsShortSellingAllowed(Security security);
     }
 }

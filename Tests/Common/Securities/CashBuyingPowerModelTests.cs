@@ -111,6 +111,12 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ShortingIsNotAllowed()
+        {
+            Assert.IsFalse(_buyingPowerModel.IsShortSellingAllowed(_btcusd));
+        }
+
+        [Test]
         public void LimitBuyBtcWithUsdRequiresUsdInPortfolio()
         {
             _portfolio.SetCash(20000);

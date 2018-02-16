@@ -38,6 +38,16 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ShortingIsAllowed()
+        {
+            var tz = TimeZones.NewYork;
+            var option = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
+
+            var buyingPowerModel = new OptionMarginModel();
+            Assert.IsTrue(buyingPowerModel.IsShortSellingAllowed(option));
+        }
+
+        [Test]
         public void OptionMarginBuyingPowerModelInitializationTests()
         {
             var tz = TimeZones.NewYork;
