@@ -301,8 +301,8 @@ namespace QuantConnect.Tests.Common.Securities
             order = new MarketOrder(_btcusd.Symbol, -0.51m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
 
-            // Maximum we can market sell with 0.5 BTC is 0.49875 BTC
-            Assert.AreEqual(-0.49875m, _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 0));
+            // Maximum we can market sell with 0.5 BTC is 0.5 BTC
+            Assert.AreEqual(-0.5m, _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 0));
         }
 
         [Test]
