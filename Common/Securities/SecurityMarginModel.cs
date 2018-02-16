@@ -351,5 +351,14 @@ namespace QuantConnect.Securities
         {
             return GetMarginRemaining(portfolio, security, direction);
         }
+
+        /// <summary>
+        /// Returns true if short selling is allowed for a security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        public bool IsShortSellingAllowed(Security security)
+        {
+            return true;
+        }
     }
 }

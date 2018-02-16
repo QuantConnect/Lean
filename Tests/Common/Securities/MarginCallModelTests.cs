@@ -45,6 +45,14 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ShortingIsAllowed()
+        {
+            var security = GetSecurity(Symbols.AAPL);
+
+            Assert.IsTrue(security.BuyingPowerModel.IsShortSellingAllowed(security));
+        }
+
+        [Test]
         public void InitializationTest()
         {
             const decimal actual = 2;
