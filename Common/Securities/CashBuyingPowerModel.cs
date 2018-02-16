@@ -94,7 +94,12 @@ namespace QuantConnect.Securities
                 var maximumQuantity =
                     GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue) * GetOrderPrice(security, order);
 
-                return orderQuantity <= Math.Abs(maximumQuantity);
+                // include existing holdings
+                var holdingsValue =
+                    portfolio.CashBook.ConvertToAccountCurrency(
+                        portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount, baseCurrency.BaseCurrencySymbol);
+
+                return orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
             }
 
             // for limit orders, add fees to the order cost
