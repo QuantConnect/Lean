@@ -336,60 +336,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(0, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToZero()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToZero_SmallConstantFeeStructure()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToZero_HighConstantFeeStructure()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToShorter()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToShorter_SmallConstantFeeStructure()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToShorter_HighConstantFeeStructure()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToLong()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToLong_SmallConstantFeeStructure()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToLong_HighConstantFeeStructure()
-        {
-            // no initial short position with cash model
-        }
-
         /*****************************************************/
         //  Rising market conditions tests.
         /*****************************************************/
@@ -577,35 +523,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(0, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToShorter_PriceRise()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToLong_PriceRise_ZeroValue()
-        {
-            // no initial short position with cash model
-        }
-
-        [Test]
-        public void SetHoldings_ShortToLong_PriceRise()
-        {
-            // no initial short position with cash model
-        }
-
-
-        /*****************************************************/
-        //  Falling market conditions tests.
-        /*****************************************************/
-
-        [Test]
-        public void SetHoldings_ShortFixed_PriceFall()
-        {
-            // no initial short position with cash model
-        }
-
 
         [Test]
         public void OrderQuantityConversionTest()
@@ -669,16 +586,14 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
-        private QCAlgorithm GetAlgorithm(out Security security, decimal fee)
+        private static QCAlgorithm GetAlgorithm(out Security security, decimal fee)
         {
             // Initialize algorithm
             var algo = new QCAlgorithm();
-            algo.AddSecurity(SecurityType.Crypto, "BTCUSD");
             algo.SetCash(100000);
             algo.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
-            algo.Securities[_symbol].TransactionModel = new ConstantFeeTransactionModel(fee);
-            security = algo.Securities[_symbol];
-            //security.BuyingPowerModel = new CashBuyingPowerModel();
+            security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD");
+            security.TransactionModel = new ConstantFeeTransactionModel(fee);
             return algo;
         }
 
