@@ -113,6 +113,16 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(quandlSubscription.Type, typeof(Quandl));
         }
 
+        [Test]
+        public void DuplicateSecuritiesAreNotAllowed()
+        {
+            var algorithm = new QCAlgorithm();
+
+            algorithm.AddForex("EURUSD");
+
+            Assert.Throws<Exception>(() => algorithm.AddForex("EURUSD"));
+        }
+
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
         {
             // find a subscription matchin the requested type with a higher resolution than requested

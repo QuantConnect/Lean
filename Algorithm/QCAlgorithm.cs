@@ -1830,7 +1830,7 @@ namespace QuantConnect.Algorithm
             Security existingSecurity;
             if (Securities.TryGetValue(symbol, out existingSecurity))
             {
-                throw new Exception($"The security '{symbol.Value}' has already been added.");
+                throw new Exception($"The security '{ticker}' '{securityType}' has already been added.");
             }
 
             var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
