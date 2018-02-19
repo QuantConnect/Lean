@@ -1827,6 +1827,12 @@ namespace QuantConnect.Algorithm
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
 
+            Security existingSecurity;
+            if (Securities.TryGetValue(symbol, out existingSecurity))
+            {
+                throw new Exception($"The security '{ticker}' '{securityType}' has already been added.");
+            }
+
             var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                 symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
             AddToUserDefinedUniverse(security);
