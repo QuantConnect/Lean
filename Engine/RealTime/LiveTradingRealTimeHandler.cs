@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {
-                        var errorMessage = $"LiveTradingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.ScheduledEventExceptionMessage}";
+                        var errorMessage = $"LiveTradingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.Message}";
 
                         Log.Error(errorMessage);
 
