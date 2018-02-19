@@ -757,7 +757,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Terminate the result thread and apply any required exit procedures.
         /// </summary>
-        public void Exit()
+        public virtual void Exit()
         {
             // Only process the logs once
             if (!_exitTriggered)
@@ -776,11 +776,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>In backtesting the order events are not sent because it would generate a high load of messaging.</remarks>
         /// <param name="newEvent">New order event details</param>
-        public void OrderEvent(OrderEvent newEvent)
+        public virtual void OrderEvent(OrderEvent newEvent)
         {
             // NOP. Don't do any order event processing for results in backtest mode.
         }
-
 
         /// <summary>
         /// Send an algorithm status update to the browser.
