@@ -40,6 +40,7 @@ namespace QuantConnect.Tests
             var alphaStatistics = new AlphaRuntimeStatistics();
 
             Composer.Instance.Reset();
+            var ordersLogFile = string.Empty;
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";
             Directory.CreateDirectory(Path.GetDirectoryName(logFile));
             File.Delete(logFile);
@@ -53,7 +54,7 @@ namespace QuantConnect.Tests
                 Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
                 Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
                 Config.Set("api-handler", "QuantConnect.Api.Api");
-                Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler");
+                Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
                 Config.Set("algorithm-language", language.ToString());
                 Config.Set("algorithm-location",
                     language == Language.Python
@@ -84,6 +85,7 @@ namespace QuantConnect.Tests
                         var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
                         var algorithmManager = new AlgorithmManager(false);
                         engine.Run(job, algorithmManager, algorithmPath);
+                        ordersLogFile = ((RegressionResultHandler) algorithmHandlers.Results).OrdersLogFilePath;
                     }).Wait();
 
                     var backtestingResultHandler = (BacktestingResultHandler) algorithmHandlers.Results;
@@ -125,6 +127,11 @@ namespace QuantConnect.Tests
             Directory.CreateDirectory(Path.GetDirectoryName(passedFile));
             File.Delete(passedFile);
             File.Copy(logFile, passedFile);
+
+            var passedOrderLogFile = ordersLogFile.Replace("./regression/", "./passed/");
+            Directory.CreateDirectory(Path.GetDirectoryName(passedFile));
+            File.Delete(passedOrderLogFile);
+            File.Copy(ordersLogFile, passedOrderLogFile);
         }
 
         private static void AssertAlphaStatistics(AlphaRuntimeStatistics expected, AlphaRuntimeStatistics actual, Expression<Func<AlphaRuntimeStatistics, object>> selector)
