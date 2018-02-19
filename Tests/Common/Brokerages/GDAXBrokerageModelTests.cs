@@ -145,5 +145,12 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new GDAXBrokerageModel(AccountType.Margin);
             }, "The GDAX brokerage does not currently support Margin trading.");
         }
+
+        [Test]
+        public void ShortingIsNotAllowed()
+        {
+            var cashModel = new GDAXBrokerageModel();
+            Assert.IsFalse(cashModel.IsShortSellingAllowed(GDAXTestsHelpers.GetSecurity()));
+        }
     }
 }

@@ -215,5 +215,17 @@ namespace QuantConnect.Python
                 return _model.GetBuyingPowerModel(security, accountType);
             }
         }
+
+        /// <summary>
+        /// Returns true if short selling is allowed for the security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        public bool IsShortSellingAllowed(Security security)
+        {
+            using (Py.GIL())
+            {
+                return _model.IsShortSellingAllowed(security);
+            }
+        }
     }
 }

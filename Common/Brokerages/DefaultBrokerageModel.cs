@@ -286,5 +286,14 @@ namespace QuantConnect.Brokerages
                     return new SecurityMarginModel(2m);
             }
         }
+
+        /// <summary>
+        /// Returns true if short selling is allowed for the security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        public virtual bool IsShortSellingAllowed(Security security)
+        {
+            return true;
+        }
     }
 }

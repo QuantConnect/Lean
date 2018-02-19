@@ -170,5 +170,15 @@ namespace QuantConnect.Brokerages
             // margin trading is not currently supported by GDAX
             return new CashBuyingPowerModel();
         }
+
+        /// <summary>
+        /// Returns true if short selling is allowed for the security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        public override bool IsShortSellingAllowed(Security security)
+        {
+            // shorting is not currently supported by GDAX
+            return false;
+        }
     }
 }

@@ -634,6 +634,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Returns true if the ordered quantity would make the order a short sell
+        /// </summary>
+        private bool IsShortSellingOrder(Security security, decimal orderQuantity)
+        {
+            if (orderQuantity >= 0) return false;
+
+            decimal holdingQuantity;
+            if (security.Symbol.SecurityType == SecurityType.Forex || security.Symbol.SecurityType == SecurityType.Crypto)
+            {
+                var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
+                holdingQuantity = Portfolio.CashBook[baseCurrency].Amount;
+            }
+            else
+            {
+                holdingQuantity = Portfolio[security.Symbol].Quantity;
+            }
+
+            return holdingQuantity + orderQuantity < 0;
+        }
+
+        /// <summary>
         /// Perform preorder checks to ensure we have sufficient capital,
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
@@ -755,6 +776,12 @@ namespace QuantConnect.Algorithm
                     // to the brokerage before 3:45.
                     return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate, "MarketOnClose orders must be placed with at least a 16 minute buffer before market close.");
                 }
+            }
+
+            // check if short allowed
+            if (IsShortSellingOrder(security, request.Quantity) && !BrokerageModel.IsShortSellingAllowed(security))
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ShortSellingNotAllowed, $"Short selling is not allowed for {security.Symbol.Value}.");
             }
 
             // passes all initial order checks
