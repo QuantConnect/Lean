@@ -1529,7 +1529,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Crypto"/> security</returns>
         public Crypto AddCrypto(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
-            return AddSecurity<Crypto>(SecurityType.Crypto, ticker, resolution, market, fillDataForward, leverage, false);
+            return AddSecurity<Crypto>(SecurityType.Crypto, ticker, resolution, market, fillDataForward, leverage, true);
         }
 
         /// <summary>
