@@ -88,7 +88,7 @@ namespace QuantConnect.Securities
                 // can sell available and non-reserved quantities
                 isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity;
                 reason = isSufficient ? string.Empty
-                    : $"Order quantity: {orderQuantity} {baseCurrency.BaseCurrencySymbol}, Total quantity: {totalQuantity} {baseCurrency.BaseCurrencySymbol}, Quantity reserved for open orders: {openOrdersReservedQuantity} {baseCurrency.BaseCurrencySymbol}";
+                    : $"Order quantity: {orderQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, Total quantity: {totalQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, Quantity reserved for open orders: {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}";
                 return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
             }
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Securities
 
                 isSufficient = orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
                 reason = isSufficient ? string.Empty
-                    : $"Order quantity: {orderQuantity} {CashBook.AccountCurrency}, Maximum quantity: {Math.Abs(maximumQuantity)} {CashBook.AccountCurrency}, Value of holdings: {openOrdersReservedQuantity} {CashBook.AccountCurrency}";
+                    : $"Order quantity: {orderQuantity.Normalize()} {CashBook.AccountCurrency}, Maximum quantity: {Math.Abs(maximumQuantity).Normalize()} {CashBook.AccountCurrency}, Value of holdings: {holdingsValue.Normalize()} {CashBook.AccountCurrency}";
                 return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
             }
 
@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
 
             isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
             reason = isSufficient ? string.Empty
-                : $"Order quantity: {orderQuantity} {security.QuoteCurrency.Symbol}, Total quantity: {totalQuantity} {security.QuoteCurrency.Symbol}, Quantity reserved for open orders: {openOrdersReservedQuantity} {security.QuoteCurrency.Symbol}, Order fee: {orderFee} {security.QuoteCurrency.Symbol}";
+                : $"Order quantity: {orderQuantity.Normalize()} {security.QuoteCurrency.Symbol}, Total quantity: {totalQuantity.Normalize()} {security.QuoteCurrency.Symbol}, Quantity reserved for open orders: {openOrdersReservedQuantity.Normalize()} {security.QuoteCurrency.Symbol}, Order fee: {orderFee.Normalize()} {security.QuoteCurrency.Symbol}";
             return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
         }
 

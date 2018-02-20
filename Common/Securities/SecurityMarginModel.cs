@@ -260,7 +260,7 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                var reason = $"Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}";
+                var reason = $"Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, Free Margin: {freeMargin.Normalize()}";
                 Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
