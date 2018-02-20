@@ -102,7 +102,6 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar3.LastBidSize, quoteBar.LastBidSize);
             Assert.AreEqual(bar4.LastAskSize, quoteBar.LastAskSize);
             Assert.AreEqual(bar1.Value, quoteBar.Value);
-            Assert.AreEqual(bar4.EndTime, quoteBar.EndTime);
         }
 
         [Test]

@@ -70,7 +70,7 @@ namespace QuantConnect.Data.Consolidators
                     Time = GetRoundedBarTime(data.Time),
                     Bid = bid == null ? null : bid.Clone(),
                     Ask = ask == null ? null : ask.Clone(),
-                    EndTime = data.EndTime
+                    Period = IsTimeBased && Period.HasValue ? (TimeSpan)Period : data.Period
                 };
             }
 
@@ -105,7 +105,7 @@ namespace QuantConnect.Data.Consolidators
             }
 
             workingBar.Value = data.Value;
-            if (workingBar.EndTime < data.EndTime) workingBar.EndTime = data.EndTime;
+            if (!IsTimeBased) workingBar.Period += data.Period;
         }
     }
 }
