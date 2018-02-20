@@ -60,7 +60,7 @@ namespace QuantConnect.Securities
             var baseCurrency = security as IBaseCurrencySymbol;
             if (baseCurrency == null)
             {
-                return new HasSufficientBuyingPowerForOrderResult(false, "The security is not a currency swap.");
+                return new HasSufficientBuyingPowerForOrderResult(false, $"The '{security.Symbol.Value}' security is not a currency swap.");
             }
 
             decimal totalQuantity;
