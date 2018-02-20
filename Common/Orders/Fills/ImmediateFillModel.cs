@@ -42,8 +42,8 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open before filling
-            if (!IsExchangeOpen(asset)) return fill;
+            // make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             //Order [fill]price for a market order model is the current security price
             fill.FillPrice = GetPrices(asset, order.Direction).Current;
@@ -87,11 +87,11 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, 0);
 
-            // make sure the exchange is open before filling
-            if (!IsExchangeOpen(asset)) return fill;
-
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             //Get the range of prices in the last bar:
             var prices = GetPrices(asset, order.Direction);
@@ -156,6 +156,9 @@ namespace QuantConnect.Orders.Fills
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open before filling -- allow pre/post market fills to occur
+            if (!IsExchangeOpen(asset, true)) return fill;
 
             //Get the range of prices in the last bar:
             var prices = GetPrices(asset, order.Direction);
@@ -222,6 +225,9 @@ namespace QuantConnect.Orders.Fills
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open before filling -- allow pre/post market fills to occur
+            if (!IsExchangeOpen(asset, true)) return fill;
 
             //Get the range of prices in the last bar:
             var prices = GetPrices(asset, order.Direction);
@@ -292,8 +298,8 @@ namespace QuantConnect.Orders.Fills
             }
 
             // wait until market open
-            // make sure the exchange is open before filling
-            if (!IsExchangeOpen(asset)) return fill;
+            // make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             fill.FillPrice = GetPrices(asset, order.Direction).Open;
             fill.Status = OrderStatus.Filled;
@@ -343,6 +349,8 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
+            // make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             fill.FillPrice = GetPrices(asset, order.Direction).Close;
             fill.Status = OrderStatus.Filled;
@@ -434,13 +442,14 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        private static bool IsExchangeOpen(Security asset)
+        private static bool IsExchangeOpen(Security asset, bool allowExtendedMarketHoursFills)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();
-                if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false))
+                var isExtendedMarketHours = allowExtendedMarketHoursFills && asset.IsExtendedMarketHours;
+                if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
                 {
                     return false;
                 }
