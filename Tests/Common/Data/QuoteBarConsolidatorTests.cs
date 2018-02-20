@@ -142,6 +142,7 @@ namespace QuantConnect.Tests.Common.Data
                 Period = period
             };
             creator.Update(bar2);
+            Assert.IsNull(quoteBar);
 
             // pushing another bar to force the fire
             var bar3 = new QuoteBar
