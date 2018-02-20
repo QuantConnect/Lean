@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     {
                         var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Name}. The error was {scheduledEventException.Message}";
 
-                        Log.Error(errorMessage);
+                        Log.Error(scheduledEventException, errorMessage);
 
                         _resultHandler.RuntimeError(errorMessage);
 

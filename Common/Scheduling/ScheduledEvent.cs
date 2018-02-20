@@ -248,7 +248,7 @@ namespace QuantConnect.Scheduling
 
                 // This scheduled event failed, so don't repeat the same event
                 _needsMoveNext = true;
-                throw new ScheduledEventException(ex.ToString(), ex);
+                throw new ScheduledEventException(ex.Message, ex);
             }
         }
     }
