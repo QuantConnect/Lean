@@ -630,25 +630,25 @@ namespace QuantConnect.Tests
 
             var fractionalQuantityRegressionStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "6"},
-                {"Average Win", "0.95%"},
-                {"Average Loss", "-2.02%"},
-                {"Compounding Annual Return", "254.081%"},
-                {"Drawdown", "6.600%"},
-                {"Expectancy", "-0.018"},
-                {"Net Profit", "1.395%"},
-                {"Sharpe Ratio", "1.176"},
-                {"Loss Rate", "33%"},
-                {"Win Rate", "67%"},
-                {"Profit-Loss Ratio", "0.47"},
-                {"Alpha", "-1.18"},
-                {"Beta", "1.249"},
-                {"Annual Standard Deviation", "0.813"},
-                {"Annual Variance", "0.66"},
-                {"Information Ratio", "-4.245"},
-                {"Tracking Error", "0.178"},
-                {"Treynor Ratio", "0.765"},
-                {"Total Fees", "$2045.20"}
+                {"Total Trades", "5"},
+                {"Average Win", "0.00%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "1309.939%"},
+                {"Drawdown", "5.200%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "2.942%"},
+                {"Sharpe Ratio", "2.229"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-0.294"},
+                {"Beta", "1.158"},
+                {"Annual Standard Deviation", "0.756"},
+                {"Annual Variance", "0.572"},
+                {"Information Ratio", "-0.171"},
+                {"Tracking Error", "0.14"},
+                {"Treynor Ratio", "1.456"},
+                {"Total Fees", "$507.64"}
             };
 
             var basicTemplateFuturesAlgorithmDailyStatistics = new Dictionary<string, string>

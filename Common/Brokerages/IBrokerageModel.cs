@@ -128,6 +128,12 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The account type</param>
         /// <returns>The buying power model for this brokerage/security</returns>
         IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType);
+
+        /// <summary>
+        /// Returns true if short selling is allowed for the security
+        /// </summary>
+        /// <returns>true if shorting allowed, false otherwise</returns>
+        bool IsShortSellingAllowed(Security security);
     }
 
     /// <summary>

@@ -546,6 +546,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Buy(_symbol, 1.0m);
             algo.Buy(_symbol, 1.0f);
 
+            // shorts not allowed
             algo.Sell(_symbol, 1);
             algo.Sell(_symbol, 1.0);
             algo.Sell(_symbol, 1.0m);
@@ -582,7 +583,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetHoldings(_symbol, 1.0m);
             algo.SetHoldings(_symbol, 1.0f);
 
-            const int expected = 32;
+            const int expected = 28;
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 

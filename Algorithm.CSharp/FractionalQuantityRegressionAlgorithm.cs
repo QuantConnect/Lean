@@ -75,7 +75,9 @@ namespace QuantConnect.Algorithm.CSharp
                 //should fail (below minimum order quantity)
                 Order("BTCUSD", 0.00001);
 
+                // should fail (short selling not allowed)
                 SetHoldings("BTCUSD", -2.0m);
+
                 SetHoldings("BTCUSD", 2.0m);
                 Quit();
             }
