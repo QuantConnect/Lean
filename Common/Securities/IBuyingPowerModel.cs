@@ -45,8 +45,8 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
-        bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order);
+        /// <returns>Returns buying power information for an order</returns>
+        HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order);
 
         /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency

@@ -205,17 +205,18 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
-        public bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        /// <returns>Returns buying power information for an order</returns>
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             // short circuit the div 0 case
-            if (order.Quantity == 0) return true;
+            if (order.Quantity == 0) return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
 
             var ticket = portfolio.Transactions.GetOrderTicket(order.Id);
             if (ticket == null)
             {
-                Log.Error($"SecurityMarginBuyingPowerModel.HasSufficientBuyingPowerForOrder(): Null order ticket for id: {order.Id}");
-                return false;
+                var reason = $"Null order ticket for id: {order.Id}";
+                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
+                return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
             if (order.Type == OrderType.OptionExercise)
@@ -241,11 +242,14 @@ namespace QuantConnect.Securities
                     return underlying.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, underlying, newOrder);
                 }
 
-                return true;
+                return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
             }
 
             // When order only reduces or closes a security position, capital is always sufficient
-            if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity)) return true;
+            if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity))
+            {
+                return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
+            }
 
             var freeMargin = GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = GetInitialMarginRequiredForOrder(security, order);
@@ -256,11 +260,12 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                Log.Error($"SecurityMarginBuyingPowerModel.HasSufficientBuyingPowerForOrder(): Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}");
-                return false;
+                var reason = $"Id: {order.Id}, Initial Margin: {initialMarginRequiredForRemainderOfOrder}, Free Margin: {freeMargin}";
+                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
+                return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
-            return true;
+            return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
         }
 
         /// <summary>

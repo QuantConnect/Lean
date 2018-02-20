@@ -286,10 +286,10 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     // verify sure we have enough cash to perform the fill
-                    bool hasSufficientBuyingPower;
+                    HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
                     try
                     {
-                        hasSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(Algorithm.Portfolio, security, order);
+                        hasSufficientBuyingPowerResult = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(Algorithm.Portfolio, security, order);
                     }
                     catch (Exception err)
                     {
@@ -297,7 +297,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
                         order.Status = OrderStatus.Invalid;
-                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0, "Error in GetSufficientCapitalForOrder"));
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0, "Error in HasSufficientBuyingPowerForOrder"));
 
                         Log.Error(err);
                         Algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
@@ -305,7 +305,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     //Before we check this queued order make sure we have buying power:
-                    if (hasSufficientBuyingPower)
+                    if (hasSufficientBuyingPowerResult.IsSufficient)
                     {
                         //Model:
                         var model = security.FillModel;
@@ -356,8 +356,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         //Flag order as invalid and push off queue:
                         order.Status = OrderStatus.Invalid;
-                        Algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id,
-                            order.GetValue(security).SmartRounding()));
+                        Algorithm.Error($"Order Error: id: {order.Id}, Insufficient buying power to complete order (Value:{order.GetValue(security).SmartRounding()}), Reason: {hasSufficientBuyingPowerResult.Reason}.");
                     }
 
                     foreach (var fill in fills)

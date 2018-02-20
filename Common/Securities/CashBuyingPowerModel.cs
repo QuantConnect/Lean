@@ -54,11 +54,14 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
-        public bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        /// <returns>Returns buying power information for an order</returns>
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             var baseCurrency = security as IBaseCurrencySymbol;
-            if (baseCurrency == null) return false;
+            if (baseCurrency == null)
+            {
+                return new HasSufficientBuyingPowerForOrderResult(false, "The security is not a currency swap.");
+            }
 
             decimal totalQuantity;
             decimal orderQuantity;
@@ -78,10 +81,15 @@ namespace QuantConnect.Securities
             // calculate reserved quantity for open orders (in quote or base currency depending on direction)
             var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(portfolio, security, order);
 
+            bool isSufficient;
+            string reason;
             if (order.Direction == OrderDirection.Sell)
             {
                 // can sell available and non-reserved quantities
-                return orderQuantity <= totalQuantity - openOrdersReservedQuantity;
+                isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity;
+                reason = isSufficient ? string.Empty
+                    : $"Order quantity: {orderQuantity} {baseCurrency.BaseCurrencySymbol}, Total quantity: {totalQuantity} {baseCurrency.BaseCurrencySymbol}, Quantity reserved for open orders: {openOrdersReservedQuantity} {baseCurrency.BaseCurrencySymbol}";
+                return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
             }
 
             if (order.Type == OrderType.Market)
@@ -99,7 +107,10 @@ namespace QuantConnect.Securities
                     portfolio.CashBook.ConvertToAccountCurrency(
                         portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount, baseCurrency.BaseCurrencySymbol);
 
-                return orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
+                isSufficient = orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
+                reason = isSufficient ? string.Empty
+                    : $"Order quantity: {orderQuantity} {CashBook.AccountCurrency}, Maximum quantity: {Math.Abs(maximumQuantity)} {CashBook.AccountCurrency}, Value of holdings: {openOrdersReservedQuantity} {CashBook.AccountCurrency}";
+                return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
             }
 
             // for limit orders, add fees to the order cost
@@ -110,7 +121,10 @@ namespace QuantConnect.Securities
                 orderFee = portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency, security.QuoteCurrency.Symbol);
             }
 
-            return orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
+            isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
+            reason = isSufficient ? string.Empty
+                : $"Order quantity: {orderQuantity} {security.QuoteCurrency.Symbol}, Total quantity: {totalQuantity} {security.QuoteCurrency.Symbol}, Quantity reserved for open orders: {openOrdersReservedQuantity} {security.QuoteCurrency.Symbol}, Order fee: {orderFee} {security.QuoteCurrency.Symbol}";
+            return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
         }
 
         /// <summary>

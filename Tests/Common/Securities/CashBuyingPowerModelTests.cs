@@ -117,15 +117,15 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000 USD, can buy 2 BTC at 10000
             var order = new LimitOrder(_btcusd.Symbol, 2m, 10000m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // Available cash = 20000 USD, cannot buy 2.1 BTC at 10000, need 21000
             order = new LimitOrder(_btcusd.Symbol, 2.1m, 10000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // Available cash = 20000 USD, cannot buy 2 BTC at 11000, need 22000
             order = new LimitOrder(_btcusd.Symbol, 2m, 11000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -135,15 +135,15 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000 EUR, can buy 2 BTC at 10000
             var order = new LimitOrder(_btceur.Symbol, 2m, 10000m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
 
             // Available cash = 20000 EUR, cannot buy 2.1 BTC at 10000, need 21000
             order = new LimitOrder(_btceur.Symbol, 2.1m, 10000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
 
             // Available cash = 20000 EUR, cannot buy 2 BTC at 11000, need 22000
             order = new LimitOrder(_btceur.Symbol, 2m, 11000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
         }
 
         [Test]
@@ -154,11 +154,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 0.5 BTC in portfolio, can sell 0.5 BTC at any price
             var order = new LimitOrder(_btcusd.Symbol, -0.5m, 10000m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 0.5 BTC in portfolio, cannot sell 0.6 BTC at any price
             order = new LimitOrder(_btcusd.Symbol, -0.6m, 10000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -181,11 +181,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 500 USD available, can buy 0.05 BTC at 10000
             var order = new LimitOrder(_btcusd.Symbol, 0.05m, 10000m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 500 USD available, cannot buy 0.06 BTC at 10000
             order = new LimitOrder(_btcusd.Symbol, 0.06m, 10000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -219,27 +219,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 0.7 BTC available, can sell 0.7 BTC at any price
             var order = new LimitOrder(_btcusd.Symbol, -0.7m, 10000m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 0.7 BTC available, cannot sell 0.8 BTC at any price
             order = new LimitOrder(_btcusd.Symbol, -0.8m, 10000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 2 ETH available, can sell 2 ETH at any price
             order = new LimitOrder(_ethusd.Symbol, -2m, 1200m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order).IsSufficient);
 
             // 2 ETH available, cannot sell 2.1 ETH at any price
             order = new LimitOrder(_ethusd.Symbol, -2.1m, 2000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order).IsSufficient);
 
             // 0.7 BTC available, can sell stop 0.7 BTC at any price
             var stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.7m, 5000m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder).IsSufficient);
 
             // 0.7 BTC available, cannot sell stop 0.8 BTC at any price
             stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.8m, 5000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder).IsSufficient);
         }
 
         [Test]
@@ -251,7 +251,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000 USD, cannot buy 2 BTC at 10000 (fees are excluded)
             var order = new MarketOrder(_btcusd.Symbol, 2m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // Maximum we can market buy with 20000 USD is 1.995 BTC
             Assert.AreEqual(1.995m, _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 20000));
@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000 USD, can buy 2 BTC at 9900 (plus fees)
             order = new MarketOrder(_btcusd.Symbol, 2m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -272,7 +272,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000 EUR, cannot buy 2 BTC at 10000 (fees are excluded)
             var order = new MarketOrder(_btceur.Symbol, 2m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
 
             // Maximum we can market buy with 20000 EUR is 1.995 BTC
             var targetValue = 20000m * _portfolio.CashBook["EUR"].ConversionRate;
@@ -282,7 +282,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000 EUR, can buy 2 BTC at 9900 (plus fees)
             order = new MarketOrder(_btceur.Symbol, 2m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
         }
 
         [Test]
@@ -295,11 +295,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 0.5 BTC in portfolio, can sell 0.5 BTC
             var order = new MarketOrder(_btcusd.Symbol, -0.5m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 0.5 BTC in portfolio, cannot sell 0.51 BTC
             order = new MarketOrder(_btcusd.Symbol, -0.51m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // Maximum we can market sell with 0.5 BTC is 0.5 BTC
             Assert.AreEqual(-0.5m, _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 0));
@@ -328,11 +328,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 500 USD available, can buy 0.03 BTC at 15000
             var order = new MarketOrder(_btcusd.Symbol, 0.03m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 500 USD available, cannot buy 0.04 BTC at 15000
             order = new MarketOrder(_btcusd.Symbol, 0.04m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -364,11 +364,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 0.8 BTC available, can sell 0.80 BTC at market
             var order = new MarketOrder(_btcusd.Symbol, -0.80m, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 0.8 BTC available, cannot sell 0.81 BTC at market
             order = new MarketOrder(_btcusd.Symbol, -0.81m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -379,13 +379,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Available cash = 20000, cannot buy 2 BTC at 10000 because of order fee
             var order = new LimitOrder(_btcusd.Symbol, 2m, 10000m, DateTime.UtcNow);
-            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // deposit another 50 USD
             _portfolio.CashBook["USD"].AddAmount(50);
 
             // now the order is allowed
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         [Test]
@@ -439,7 +439,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // the maximum order quantity can be executed
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
-            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order));
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)

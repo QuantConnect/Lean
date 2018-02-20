@@ -915,6 +915,10 @@ namespace QuantConnect.Algorithm
             {
                 MarketOrder(symbol, quantity, false, tag);
             }
+            else
+            {
+                Error($"Unable to SetHoldings('{symbol.Value}', {percentage}) because CalculateOrderQuantity returned zero quantity.");
+            }
         }
 
         /// <summary>
