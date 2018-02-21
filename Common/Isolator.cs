@@ -106,7 +106,7 @@ namespace QuantConnect
                     {
                         Log.Error("Execution Security Error: Memory usage over 80% capacity. Sampled at {0}", sample);
                     }
-                    Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2}", DateTime.Now.ToString("u"), PrettyFormatRam(memoryUsed), PrettyFormatRam((long)sample));
+                    //Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2}", DateTime.Now.ToString("u"), PrettyFormatRam(memoryUsed), PrettyFormatRam((long)sample));
                     memoryLogger = DateTime.Now.AddMinutes(1);
                 }
 
@@ -124,7 +124,7 @@ namespace QuantConnect
             if (task.IsCompleted == false && message == "")
             {
                 message = "Execution Security Error: Operation timed out - " + timeSpan.TotalMinutes + " minutes max. Check for recursive loops.";
-                Log.Trace("Isolator.ExecuteWithTimeLimit(): " + message);
+                //Log.Trace("Isolator.ExecuteWithTimeLimit(): " + message);
             }
 
             if (message != "")
