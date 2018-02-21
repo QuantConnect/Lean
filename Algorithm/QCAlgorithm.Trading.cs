@@ -917,7 +917,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                Error($"Unable to SetHoldings('{symbol.Value}', {percentage}) because CalculateOrderQuantity returned zero quantity.");
+                Error($"Unable to SetHoldings('{symbol.Value}', {percentage.Normalize()}) because CalculateOrderQuantity returned zero quantity.");
             }
         }
 
