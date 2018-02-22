@@ -697,6 +697,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$6076.32"}
             };
 
+            var forexDailyDataPointsRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "61.020%"},
+                {"Drawdown", "0%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0.261%"},
+                {"Sharpe Ratio", "10.128"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-0.002"},
+                {"Beta", "24.058"},
+                {"Annual Standard Deviation", "0.022"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "9.829"},
+                {"Tracking Error", "0.021"},
+                {"Treynor Ratio", "0.009"},
+                {"Total Fees", "$0.00"}
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -728,6 +751,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("ForexDailyDataPointsRegressionAlgorithm", forexDailyDataPointsRegressionAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
