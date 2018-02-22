@@ -85,6 +85,7 @@ namespace QuantConnect.Data.Consolidators
 
             // update the bid and ask
             workingBar.Update(0, data.BidPrice, data.AskPrice, 0, data.BidSize, data.AskSize);
+            if (!Period.HasValue) workingBar.EndTime = GetRoundedBarTime(data.EndTime);
         }
     }
 }
