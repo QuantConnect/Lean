@@ -45,7 +45,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(DateTime(2013, 10, 07, 9, 30, 0))  #Set Start Date
+        self.SetStartDate(DateTime(2013, 10, 7, 9, 30, 0))  #Set Start Date
         self.SetEndDate(self.StartDate + timedelta(1))           #Set End Date
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY")

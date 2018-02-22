@@ -30,8 +30,8 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetCash(1000000)
-        self.SetStartDate(2014,06,05)
-        self.SetEndDate(2014,06,06)
+        self.SetStartDate(2014,6,5)
+        self.SetEndDate(2014,6,6)
 
         option = self.AddOption("TWX")
 
@@ -47,12 +47,12 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
                 for contract in chain.Value:
                     if float(contract.Symbol.ID.StrikePrice) == 72.5 and \
                        contract.Symbol.ID.OptionRight == OptionRight.Call and \
-                       contract.Symbol.ID.Date == datetime(2016, 01, 15):
-                        if slice.Time.date() == datetime(2014, 06, 5).date() and contract.OpenInterest != 50:
+                       contract.Symbol.ID.Date == datetime(2016, 1, 15):
+                        if slice.Time.date() == datetime(2014, 6, 5).date() and contract.OpenInterest != 50:
                             raise ValueError("Regression test failed: current open interest was not correctly loaded and is not equal to 50")  
-                        if slice.Time.date() == datetime(2014, 06, 6).date() and contract.OpenInterest != 70:
+                        if slice.Time.date() == datetime(2014, 6, 6).date() and contract.OpenInterest != 70:
                             raise ValueError("Regression test failed: current open interest was not correctly loaded and is not equal to 70")  
-                        if slice.Time.date() == datetime(2014, 06, 6).date():
+                        if slice.Time.date() == datetime(2014, 6, 6).date():
                             self.MarketOrder(contract.Symbol, 1)
                             self.MarketOnCloseOrder(contract.Symbol, -1)
 

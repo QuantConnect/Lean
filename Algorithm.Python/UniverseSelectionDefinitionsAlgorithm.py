@@ -37,7 +37,7 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
         # force securities to remain in the universe for a minimm of 30 minutes
         self.UniverseSettings.MinimumTimeInUniverse = timedelta(minutes=30)
 
-        self.SetStartDate(2013,10,07)   # Set Start Date
+        self.SetStartDate(2013,10,7)    # Set Start Date
         self.SetEndDate(2013,10,11)     # Set End Date
         self.SetCash(100000)            # Set Strategy Cash
 
@@ -53,10 +53,10 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
         # add universe for stocks between the 70th and 80th dollar volume percentile
         self.AddUniverse(self.Universe.DollarVolume.Percentile(70.0, 80.0))
 
-        self.changes = SecurityChanges.None
+        self.changes = None
 
     def OnData(self, data):
-        if self.changes == SecurityChanges.None: return
+        if self.changes == None: return
 
         # liquidate securities that fell out of our universe
         for security in self.changes.RemovedSecurities:
@@ -68,7 +68,7 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
             if not security.Invested:
                 self.MarketOrder(security.Symbol, 10)
 
-        self.changes = SecurityChanges.None;
+        self.changes = None;
 
 
     # this event fires whenever we have changes to our universe

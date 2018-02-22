@@ -42,7 +42,7 @@ class QuandlImporterAlgorithm(QCAlgorithm):
         self.SetStartDate(2013,1,1)                                 #Set Start Date
         self.SetEndDate(datetime.today() - timedelta(1))            #Set End Date
         self.SetCash(25000)                                         #Set Strategy Cash
-        self.AddData[Quandl](self.quandlCode, Resolution.Daily)
+        self.AddData[Quandl](self.quandlCode, Resolution.Daily, TimeZones.NewYork)
         self.sma = self.SMA(self.quandlCode, 14)
 
     def OnData(self, data):

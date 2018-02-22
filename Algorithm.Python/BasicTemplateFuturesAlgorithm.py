@@ -33,7 +33,7 @@ from datetime import timedelta
 class BasicTemplateFuturesAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013, 10, 07)
+        self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 11)
         self.SetCash(1000000)
 
@@ -49,7 +49,7 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:
                  # Get contracts expiring no earlier than in 90 days
-                contracts = filter(lambda x: x.Expiry > self.Time + timedelta(90), chain.Value)
+                contracts = list(filter(lambda x: x.Expiry > self.Time + timedelta(90), chain.Value))
 
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue
