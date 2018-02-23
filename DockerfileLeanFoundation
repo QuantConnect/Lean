@@ -39,14 +39,14 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/oracle-jdk8-installer
 
 # Install IB Gateway: Installs to ~/Jts
-RUN wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
+RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
     chmod 777 ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
     ./ibgateway-latest-standalone-linux-x64-v968.2d.sh -q && \
-    wget -O ~/Jts/jts.ini http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.jts.ini && \
+    wget -O ~/Jts/jts.ini http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.jts.ini && \
     rm ibgateway-latest-standalone-linux-x64-v968.2d.sh
 
 # Install IB Controller: Installs to ~/IBController
-RUN wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.2.zip && \
+RUN wget http://cdn.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.2.zip && \
     unzip IBController-QuantConnect-3.2.0.2.zip -d ~/IBController && \
     chmod -R 777 ~/IBController && \
     rm IBController-QuantConnect-3.2.0.2.zip
