@@ -33,7 +33,7 @@ class BrokerageModelAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         self.SetCash(100000)            # Set Strategy Cash
-        self.SetStartDate(2013,10,07)   # Set Start Date
+        self.SetStartDate(2013,10,7)    # Set Start Date
         self.SetEndDate(2013,10,11)     # Set End Date
         self.AddEquity("SPY", Resolution.Second)
         
