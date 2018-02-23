@@ -28,6 +28,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Exceptions;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -61,6 +62,8 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public int MaxOrders { get; private set; }
 
+        public IExceptionParser ExceptionParser { get; }
+
         /// <summary>
         /// Setup the algorithm data, cash, job start end date etc:
         /// </summary>
@@ -71,6 +74,7 @@ namespace QuantConnect.Lean.Engine.Setup
             StartingDate = new DateTime(1998, 01, 01);
             MaximumRuntime = TimeSpan.FromDays(10 * 365);
             Errors = new List<string>();
+            ExceptionParser = new ExceptionParser();
         }
 
         /// <summary>
@@ -171,6 +175,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             catch (Exception err)
             {
+                err = ExceptionParser.Parse(err);
                 Log.Error(err);
                 Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
             }

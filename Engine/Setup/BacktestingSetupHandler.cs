@@ -30,6 +30,7 @@ using QuantConnect.Packets;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Exceptions;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -101,12 +102,15 @@ namespace QuantConnect.Lean.Engine.Setup
             }
         }
 
+        public IExceptionParser ExceptionParser { get; }
+
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
         public BacktestingSetupHandler()
         {
             Errors = new List<string>();
+            ExceptionParser = new ExceptionParser();
         }
 
         /// <summary>
@@ -205,6 +209,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
+                    err = ExceptionParser.Parse(err);
                     Log.Error(err);
                     Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
                 }

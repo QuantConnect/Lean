@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -45,6 +46,7 @@ namespace QuantConnect.Lean.Engine
         private readonly bool _liveMode;
         private readonly LeanEngineSystemHandlers _systemHandlers;
         private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
+        private readonly ExceptionParser _exceptionParser;
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -73,6 +75,7 @@ namespace QuantConnect.Lean.Engine
             _liveMode = liveMode;
             _systemHandlers = systemHandlers;
             _algorithmHandlers = algorithmHandlers;
+            _exceptionParser = new ExceptionParser();
         }
 
         /// <summary>
@@ -429,6 +432,8 @@ namespace QuantConnect.Lean.Engine
         /// <param name="err">Error from algorithm stack</param>
         private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
         {
+            err = _exceptionParser.Parse(err);
+
             Log.Error(err, "Breaking out of parent try catch:");
             if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
             if (_algorithmHandlers.Results != null)

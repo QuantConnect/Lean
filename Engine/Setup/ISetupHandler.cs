@@ -72,6 +72,11 @@ namespace QuantConnect.Lean.Engine.Setup
             get;
         }
 
+        IExceptionParser ExceptionParser
+        {
+            get;
+        }
+
         /// <summary>
         /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>

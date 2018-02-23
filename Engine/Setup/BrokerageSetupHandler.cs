@@ -22,6 +22,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
+using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -64,6 +65,8 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public int MaxOrders { get; private set; }
 
+        public IExceptionParser ExceptionParser { get; }
+
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
 
@@ -75,6 +78,7 @@ namespace QuantConnect.Lean.Engine.Setup
             Errors = new List<string>();
             MaximumRuntime = TimeSpan.FromDays(10*365);
             MaxOrders = int.MaxValue;
+            ExceptionParser = new ExceptionParser();
         }
 
         /// <summary>
