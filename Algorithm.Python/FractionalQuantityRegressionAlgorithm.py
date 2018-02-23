@@ -42,7 +42,7 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         self.SetStartDate(2015, 11, 12)
-        self.SetEndDate(2016, 04, 01)
+        self.SetEndDate(2016, 4, 1)
         self.SetCash(100000)
         self.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash)
 
