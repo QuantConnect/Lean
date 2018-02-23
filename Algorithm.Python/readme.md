@@ -116,7 +116,7 @@ $ sudo easy-install pip
 **2. Install Python 3.6 with Miniconda:**
 ```
 export PATH="/opt/miniconda3/bin:$PATH"
-wget https://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
+wget http://cdn.quantconnect.com.s3.amazonaws.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
 bash Miniconda3-4.3.31-Linux-x86_64.sh -b
 rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
 ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6.so
