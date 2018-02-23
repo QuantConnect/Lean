@@ -180,7 +180,6 @@ namespace QuantConnect.AlgorithmFactory
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Creating IAlgorithm instance.");
 
                     algorithmInstance = new AlgorithmPythonWrapper(module);
-                    ObjectActivator.SetPythonModule(module);
                 }
             }
             catch (Exception e)

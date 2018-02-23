@@ -182,6 +182,7 @@
     <Compile Include="Packets\AlphaNodePacket.cs" />
     <Compile Include="Packets\AlphaResultPacket.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
+    <Compile Include="Python\PythonActivator.cs" />
     <Compile Include="Python\PythonSlice.cs" />
     <Compile Include="Python\VolatilityModelPythonWrapper.cs" />
     <Compile Include="Python\PandasData.cs" />

@@ -19,8 +19,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using CloneExtensions;
 using Fasterflect;
-using Python.Runtime;
-using QuantConnect.Python;
 
 namespace QuantConnect.Util
 {
@@ -52,18 +50,6 @@ namespace QuantConnect.Util
         {
             lock (_lock)
             {
-                // Special case: if base type is PythonData, we will the special factory with a PyObject
-                if (dataType.BaseType == typeof(PythonData))
-                {
-                    dataType = typeof(PythonData);
-                }
-
-                // Special case: if base type is PythonQuandl, we will the special factory with a PyObject
-                if (dataType.BaseType == typeof(PythonQuandl))
-                {
-                    dataType = typeof(PythonQuandl);
-                }
-
                 // if we already have it, just use it
                 Func<object[], object> factory;
                 if (_activatorsByType.TryGetValue(dataType, out factory))
@@ -138,28 +124,16 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates an activator for PythonData type
+        /// Adds method to return an instance of object
         /// </summary>
-        /// <param name="module">The algorithm python module</param>
-        public static void SetPythonModule(PyObject module)
+        /// <param name="key">The key of the method to add</param>
+        /// <param name="value">The value of the method to add</param>
+        public static void AddActivator(Type key, Func<object[], object> value)
         {
-            _activatorsByType[typeof(PythonData)] = type =>
+            if (!_activatorsByType.ContainsKey(key))
             {
-                using (Py.GIL())
-                {
-                    var instance = module.GetAttr(((Type)type[0]).Name).Invoke();
-                    return new PythonData(instance);
-                }
-            };
-
-            _activatorsByType[typeof(PythonQuandl)] = type =>
-            {
-                using (Py.GIL())
-                {
-                    var instance = module.GetAttr(((Type)type[0]).Name).Invoke();
-                    return new PythonQuandl(instance.GetAttr("ValueColumnName").ToString());
-                }
-            };
+                _activatorsByType.Add(key, value);
+            }
         }
 
         /// <summary>
