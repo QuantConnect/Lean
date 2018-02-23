@@ -65,7 +65,7 @@ RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.5 && \
     cp QuantConnect.pythonnet.1.0.5.5/lib/Python.Runtime.dll /usr/lib
 
 # Install TA-lib for python
-RUN wget http://data.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
     pip install TA-lib
