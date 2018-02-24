@@ -33,7 +33,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             if (args.Length < 3)
             {
                 Console.WriteLine("Usage: GDAX Downloader SYMBOL RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOL   = ETH-USD, ETH-BTC, BTC-USD etc.");
+                Console.WriteLine("SYMBOL   = ETHUSD, ETHBTC, BTCUSD etc.");
                 Console.WriteLine("RESOLUTION   = Second/Minute/Hour/Daily");
                 Console.WriteLine("FROMDATE = yyyyMMdd HH:mm:ss");
                 Console.WriteLine("TODATE = yyyyMMdd HH:mm:ss");

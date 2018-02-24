@@ -59,7 +59,8 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
                 Log.Trace(String.Format("Getting data for timeperiod from {0} to {1}..", windowStartTime, windowEndTime));
 
-                var requestURL = string.Format(HistoricCandlesUrl, symbol.Value, windowStartTime.ToString(), windowEndTime.ToString(), granularity);
+                var requestURL = string.Format(HistoricCandlesUrl, symbol.Value.Substring(0, 3) + "-" + symbol.Value.Substring(3, 3), windowStartTime.ToString(),
+                    windowEndTime.ToString(), granularity);
                 var request = (HttpWebRequest)WebRequest.Create(requestURL);
                 request.UserAgent = ".NET Framework Test Client";
 
@@ -67,7 +68,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 returnData.AddRange(ParseCandleData(symbol, granularity, data));
             }
             while (windowStartTime != windowEndTime);
-            
+
             return returnData;
         }
 
