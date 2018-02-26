@@ -17,11 +17,14 @@ using System.Collections.Generic;
 using System.IO;
 using Ionic.BZip2;
 using Ionic.Zlib;
+using Quobject.Collections.Immutable;
 
 namespace QuantConnect.ToolBox
 {
     public class GzipStreamProvider : IStreamProvider
     {
+        private readonly Dictionary<string, Stream> _openedStreams = new Dictionary<string, Stream>(2);
+        
         /// <summary>
         /// Opens the specified source as read to be consumed stream
         /// </summary>
@@ -29,7 +32,9 @@ namespace QuantConnect.ToolBox
         /// <returns>The stream representing the specified source</returns>
         public IEnumerable<Stream> Open(string source)
         {
-            yield return new GZipStream(File.OpenRead(source), CompressionMode.Decompress);
+            var stream = new GZipStream(File.OpenRead(source), CompressionMode.Decompress);
+            _openedStreams.Add(source, stream);
+            yield return stream;
         }
 
         /// <summary>
@@ -38,6 +43,12 @@ namespace QuantConnect.ToolBox
         /// <param name="source">The source file to be closed</param>
         public void Close(string source)
         {
+            Stream stream;
+            if (_openedStreams.TryGetValue(source, out stream))
+            {
+                stream.Close();
+            }
+            
         }
 
         /// <summary>
@@ -45,6 +56,10 @@ namespace QuantConnect.ToolBox
         /// </summary>
         public void Dispose()
         {
+            foreach (var keyValuePair in _openedStreams)
+            {
+                keyValuePair.Value.Close();
+            }
         }
     }
 }
