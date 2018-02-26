@@ -1827,8 +1827,13 @@ namespace QuantConnect.Algorithm
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
 
-            var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
+            Security security;
+            if (!Securities.TryGetValue(symbol, out security))
+            {
+                security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
+                    symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
+            }
+
             AddToUserDefinedUniverse(security);
             return (T)security;
         }
