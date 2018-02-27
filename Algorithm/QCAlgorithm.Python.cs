@@ -381,7 +381,7 @@ namespace QuantConnect.Algorithm
             using (Py.GIL())
             {
                 var value = ((dynamic)pyObject).Current.Value;
-                Plot(series, value);
+                Plot(series, (decimal)value);
             }
         }
 
