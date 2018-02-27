@@ -371,6 +371,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Plot a chart using string series name, with value.
+        /// </summary>
+        /// <param name="series">Name of the plot series</param>
+        /// <param name="pyObject">PyObject with the value to plot</param>
+        /// <seealso cref="Plot(string,decimal)"/>
+        public void Plot(string series, PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                var value = ((dynamic)pyObject).Current.Value;
+                Plot(series, value);
+            }
+        }
+
+        /// <summary>
         /// Plots the value of each indicator on the chart
         /// </summary>
         /// <param name="chart">The chart's name</param>
