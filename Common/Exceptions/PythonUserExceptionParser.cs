@@ -85,6 +85,17 @@ namespace QuantConnect.Exceptions
                     }
                     message = $"{_commonErrors[type]} Key: {key}.";
                     break;
+                case "SyntaxError":
+                    if (input.Contains("invalid token"))
+                    {
+                        message = _commonErrors["InvalidTokenError"];
+                        var errorLine = GetStringBetweenChar(input, '(', ')');
+                        var parts = errorLine.Split(' ');
+                        var line = int.Parse(parts[2]) + _offset;
+                        errorLine = errorLine.Replace(parts[2], line.ToString());
+                        message = $"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}";
+                    }
+                    break;
                 case "TypeError":
                     if (input.Contains("unsupported operand"))
                     {

@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using Python.Runtime;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Util;
+using QuantConnect.Exceptions;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -185,8 +186,10 @@ namespace QuantConnect.AlgorithmFactory
             }
             catch (Exception e)
             {
+                var exceptionParser = new PythonUserExceptionParser();
+                e = exceptionParser.Parse(e);
                 Log.Error(e);
-                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. {e.Message}";
+                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}.{Environment.NewLine}{e.Message}";
             }
 
             //Successful load.
