@@ -173,6 +173,7 @@
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Exceptions\ExceptionParser.cs" />
     <Compile Include="Exceptions\CSharpUserExceptionParser.cs" />
+    <Compile Include="Exceptions\InitializeException.cs" />
     <Compile Include="Exceptions\PythonUserExceptionParser.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
     <Compile Include="Interfaces\IExceptionParser.cs" />

@@ -54,7 +54,12 @@ namespace QuantConnect.Exceptions
 
             message = exception.Message;
 
-            if (original.GetType() == typeof(ScheduledEventException))
+            if (original.GetType() == typeof(InitializeException))
+            {
+                message = $"In the Initialize method, {message.Substring(0, 1).ToLower()}{message.Substring(1)}";
+                return new InitializeException(message, original);
+            }
+            else if (original.GetType() == typeof(ScheduledEventException))
             {
                 message = $"In one of your Schedule Events, {message.Substring(0, 1).ToLower()}{message.Substring(1)}";
                 return new ScheduledEventException(message, original);

@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Internal errors list from running the setup proceedures.
         /// </summary>
-        public List<string> Errors
+        public List<Exception> Errors
         {
             get;
             set;
@@ -102,15 +102,12 @@ namespace QuantConnect.Lean.Engine.Setup
             }
         }
 
-        public IExceptionParser ExceptionParser { get; }
-
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
         public BacktestingSetupHandler()
         {
-            Errors = new List<string>();
-            ExceptionParser = new ExceptionParser();
+            Errors = new List<Exception>();
         }
 
         /// <summary>
@@ -168,7 +165,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             if (algorithm == null)
             {
-                Errors.Add("Could not create instance of algorithm");
+                Errors.Add(new Exception("Could not create instance of algorithm"));
                 return false;
             }
 
@@ -177,7 +174,7 @@ namespace QuantConnect.Lean.Engine.Setup
             //Make sure the algorithm start date ok.
             if (job.PeriodStart == default(DateTime))
             {
-                Errors.Add("Algorithm start date was never set");
+                Errors.Add(new ArgumentNullException("Algorithm start date was never set"));
                 return false;
             }
 
@@ -209,9 +206,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    err = ExceptionParser.Parse(err);
                     Log.Error(err);
-                    Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
+                    Errors.Add(new InitializeException(err.Message, err));
                 }
             }, controls.RamAllocation);
 

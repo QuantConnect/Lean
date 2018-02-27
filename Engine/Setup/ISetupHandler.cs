@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Any errors from the initialization stored here:
         /// </summary>
-        List<string> Errors 
+        List<Exception> Errors 
         { 
             get; 
             set; 
@@ -68,11 +68,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Maximum number of orders for the algorithm run -- applicable for backtests only.
         /// </summary>
         int MaxOrders
-        {
-            get;
-        }
-
-        IExceptionParser ExceptionParser
         {
             get;
         }
