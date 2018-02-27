@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the unique identifier for this alpha
         /// </summary>
+        [JsonProperty]
         public Guid Id { get; private set; }
 
         /// <summary>
@@ -37,6 +38,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// If providing custom <see cref="Alpha"/> implementation, be sure
         /// to set this value to algorithm.UtcTime when the alpha is generated.
         /// </remarks>
+        [JsonProperty]
         public DateTime GeneratedTimeUtc { get; internal set; }
 
         /// <summary>
@@ -44,28 +46,31 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// alpha prediction is expected to be fulfilled. This time takes into
         /// account market hours, weekends, as well as the symbol's data resolution
         /// </summary>
+        [JsonProperty]
         public DateTime CloseTimeUtc { get; internal set; }
 
         /// <summary>
         /// Gets the symbol this alpha is for
         /// </summary>
+        [JsonProperty]
         public Symbol Symbol { get; private set; }
 
         /// <summary>
         /// Gets the type of alpha, for example, price alpha or volatility alpha
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty, JsonConverter(typeof(StringEnumConverter))]
         public AlphaType Type { get; private set; }
 
         /// <summary>
         /// Gets the predicted direction, down, flat or up
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty, JsonConverter(typeof(StringEnumConverter))]
         public AlphaDirection Direction { get; private set; }
 
         /// <summary>
         /// Gets the period over which this alpha is expected to come to fruition
         /// </summary>
+        [JsonProperty]
         public TimeSpan Period { get; private set; }
 
         /// <summary>
@@ -83,12 +88,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the most recent scores for this alpha
         /// </summary>
+        [JsonProperty]
         public AlphaScore Score { get; private set; }
 
         /// <summary>
         /// Gets the estimated value of this alpha in the account currency
         /// </summary>
+        [JsonProperty]
         public decimal EstimatedValue { get; internal set; }
+
+        [JsonConstructor]
+        private Alpha()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Alpha"/> class
