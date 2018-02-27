@@ -17,7 +17,6 @@ using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Exceptions
 {
@@ -26,17 +25,6 @@ namespace QuantConnect.Exceptions
     /// </summary>
     public class PythonUserExceptionParser : IExceptionParser
     {
-        private const int _offset = 37;
-
-        private static readonly Dictionary<string, string> _commonErrors = new Dictionary<string, string>
-        {
-            { "InvalidTokenError", "Trying to include an invalid token/character in any statement throws a SyntaxError exception. To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero)." },
-            { "KeyError", "Trying to retrieve an element from a collection using a key that does not exist in that collection throws a KeyError exception. To prevent the exception, ensure that the key exist in the collection and/or that collection is not empty."},
-            { "NoMethodMatchError", "Trying to give parameters of the wrong type throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by this method:" },
-            { "UnsupportedOperandError", "Trying to perform a summation, subtraction, multiplication or division between a decimal.Decimal and a float throws a TypeError exception. To prevent the exception, ensure that both values share the same type, either decimal.Decimal or float."},
-            { "ZeroDivisionError", "Trying to divide an integer or Decimal number by zero throws a ZeroDivisionError exception. To prevent the exception, ensure that the denominator in a division operation with integer or Decimal values is non-zero." },
-        };
-
         /// <summary>
         /// Parses an <see cref="Exception"/> object into an new <see cref="Exception"/> with a legible message.
         /// </summary>
@@ -78,48 +66,22 @@ namespace QuantConnect.Exceptions
 
             var type = value.Substring(0, colon).Trim();
             var input = value.Substring(1 + colon).Trim();
-            var message = value;
 
             switch (type)
             {
                 case "KeyError":
-                    var key = GetStringBetweenChar(input, '[', ']');
-                    if (key == null)
-                    {
-                        key = GetStringBetweenChar(input, '\'', '\'');
-                    }
-                    message = $"{_commonErrors[type]} Key: {key}.";
-                    break;
+                    return CreateKeyErrorMessage(input);
                 case "SyntaxError":
-                    if (input.Contains("invalid token"))
-                    {
-                        message = _commonErrors["InvalidTokenError"];
-                        var errorLine = GetStringBetweenChar(input, '(', ')');
-                        var parts = errorLine.Split(' ');
-                        var line = int.Parse(parts[2]) + _offset;
-                        errorLine = errorLine.Replace(parts[2], line.ToString());
-                        message = $"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}";
-                    }
-                    break;
+                    return CreateSyntaxErrorMessage(input);
+                case "ValueError":
+                    return CreateValueErrorMessage(input);
                 case "TypeError":
-                    if (input.Contains("unsupported operand"))
-                    {
-                        message = _commonErrors["UnsupportedOperandError"];
-                    }
-                    if (input.Contains("No method matches"))
-                    {
-                        var startIndex = input.LastIndexOf(" ");
-                        message = _commonErrors["NoMethodMatchError"] + input.Substring(startIndex);
-                    }
-                    break;
+                    return CreateTypeErrorMessage(input);
                 case "ZeroDivisionError":
-                    message = _commonErrors[type];
-                    break;
+                    return "Trying to divide an integer or Decimal number by zero throws a ZeroDivisionError exception. To prevent the exception, ensure that the denominator in a division operation with integer or Decimal values is non-zero.";        
                 default:
-                    break;
+                    return value;
             }
-
-            return message;
         }
 
         private string CreateErrorLine(string value)
@@ -149,15 +111,61 @@ namespace QuantConnect.Exceptions
                     var method = info[2].Replace("in", "at");
                     var statement = stack[i + 1].Trim();
 
-                    // Adds offset to account headers
-                    // Yields wrong error line if running Lean locally 
-                    line += script == baseScript ? _offset : 0;
-
                     errorLine = $"{Environment.NewLine}  {method} in {script}:line {line} :: {statement}{Environment.NewLine}";
                 }
             }
 
             return errorLine;
+        }
+
+        private string CreateKeyErrorMessage(string value)
+        {
+            var message = "Trying to retrieve an element from a collection using a key that does not exist in that collection throws a KeyError exception. To prevent the exception, ensure that the key exist in the collection and/or that collection is not empty.";
+
+            var key = string.Empty;
+
+            if (value.Contains("["))
+            {
+                key = GetStringBetweenChar(value, '[', ']');
+            }
+            else if (value.Contains("\'"))
+            {
+                key = GetStringBetweenChar(value, '\'', '\'');
+            }
+
+            return $"{message} Key: {key}.";
+        }
+
+        private string CreateSyntaxErrorMessage(string value)
+        {
+            if (value.Contains("invalid token"))
+            {
+                var message = "Trying to include an invalid token/character in any statement throws a SyntaxError exception. To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero).";
+                var errorLine = GetStringBetweenChar(value, '(', ')');
+
+                return $"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}";
+            }
+            throw new NotImplementedException($"{value} exception translation has not been implemented yet");
+        }
+
+        private string CreateValueErrorMessage(string input)
+        {
+            return input;
+        }
+
+        private string CreateTypeErrorMessage(string value)
+        {
+            if (value.Contains("unsupported operand"))
+            {
+                return "Trying to perform a summation, subtraction, multiplication or division between a decimal.Decimal and a float throws a TypeError exception. To prevent the exception, ensure that both values share the same type, either decimal.Decimal or float.";
+            }
+            if (value.Contains("No method matches"))
+            {
+                var startIndex = value.LastIndexOf(" ");
+                return "Trying to give parameters of the wrong type throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by this method:" +
+                    value.Substring(startIndex);
+            }
+            throw new NotImplementedException($"{value} exception translation has not been implemented yet");
         }
 
         private string GetStringBetweenChar(string value, char left, char right)

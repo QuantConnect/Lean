@@ -43,13 +43,20 @@ namespace QuantConnect.Exceptions
         /// <returns>Parsed exception</returns>
         public Exception Parse(Exception exception)
         {
-            if (exception is PythonException || exception.InnerException is PythonException)
+            try
             {
-                return _pythonUserExceptionParser.Parse(exception);
+                if (exception is PythonException || exception.InnerException is PythonException)
+                {
+                    return _pythonUserExceptionParser.Parse(exception);
+                }
+                else
+                {
+                    return _cSharpUserExceptionParser.Parse(exception);
+                }
             }
-            else
+            catch
             {
-                return _cSharpUserExceptionParser.Parse(exception);
+                return exception;
             }
         }
     }
