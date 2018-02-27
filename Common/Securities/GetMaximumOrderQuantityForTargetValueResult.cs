@@ -16,28 +16,28 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Contains the information returned by <see cref="IBuyingPowerModel.HasSufficientBuyingPowerForOrder"/>
+    /// Contains the information returned by <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetValue"/>
     /// </summary>
-    public class HasSufficientBuyingPowerForOrderResult
+    public class GetMaximumOrderQuantityForTargetValueResult
     {
         /// <summary>
-        /// Returns true if there is sufficient buying power to execute an order
+        /// Returns the maximum quantity for the order
         /// </summary>
-        public bool IsSufficient { get; }
+        public decimal Quantity { get; }
 
         /// <summary>
-        /// Returns the reason for insufficient buying power to execute an order
+        /// Returns the reason for which the maximum order quantity is zero
         /// </summary>
         public string Reason { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HasSufficientBuyingPowerForOrderResult"/> class
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueResult"/> class
         /// </summary>
-        /// <param name="isSufficient">True if the order can be executed</param>
-        /// <param name="reason">The reason for insufficient buying power</param>
-        public HasSufficientBuyingPowerForOrderResult(bool isSufficient, string reason = null)
+        /// <param name="quantity">Returns the maximum quantity for the order</param>
+        /// <param name="reason">The reason for which the maximum order quantity is zero</param>
+        public GetMaximumOrderQuantityForTargetValueResult(decimal quantity, string reason = null)
         {
-            IsSufficient = isSufficient;
+            Quantity = quantity;
             Reason = reason ?? string.Empty;
         }
     }

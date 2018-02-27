@@ -209,7 +209,10 @@ namespace QuantConnect.Securities
         public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             // short circuit the div 0 case
-            if (order.Quantity == 0) return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
+            if (order.Quantity == 0)
+            {
+                return new HasSufficientBuyingPowerForOrderResult(true);
+            }
 
             var ticket = portfolio.Transactions.GetOrderTicket(order.Id);
             if (ticket == null)
@@ -242,13 +245,13 @@ namespace QuantConnect.Securities
                     return underlying.BuyingPowerModel.HasSufficientBuyingPowerForOrder(portfolio, underlying, newOrder);
                 }
 
-                return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
+                return new HasSufficientBuyingPowerForOrderResult(true);
             }
 
             // When order only reduces or closes a security position, capital is always sufficient
             if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity))
             {
-                return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
+                return new HasSufficientBuyingPowerForOrderResult(true);
             }
 
             var freeMargin = GetMarginRemaining(portfolio, security, order.Direction);
@@ -265,7 +268,7 @@ namespace QuantConnect.Securities
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
-            return new HasSufficientBuyingPowerForOrderResult(true, string.Empty);
+            return new HasSufficientBuyingPowerForOrderResult(true);
         }
 
         /// <summary>
@@ -274,11 +277,14 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
-        /// <returns>Returns the maximum allowed order quantity</returns>
-        public decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
         {
             // if targeting zero, simply return the negative of the quantity
-            if (targetPortfolioValue == 0) return -security.Holdings.Quantity;
+            if (targetPortfolioValue == 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(-security.Holdings.Quantity);
+            }
 
             var currentHoldingsValue = security.Holdings.HoldingsValue;
 
@@ -288,11 +294,17 @@ namespace QuantConnect.Securities
 
             // determine the unit price in terms of the account currency
             var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security);
-            if (unitPrice == 0) return 0;
+            if (unitPrice == 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, "The price of the security is zero.");
+            }
 
             // calculate the total margin available
             var marginRemaining = GetMarginRemaining(portfolio, security, direction);
-            if (marginRemaining <= 0) return 0;
+            if (marginRemaining <= 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The portfolio does not have enough margin available.");
+            }
 
             // continue iterating while we do not have enough margin for the order
             decimal marginRequired;
@@ -305,13 +317,20 @@ namespace QuantConnect.Securities
 
             // rounding off Order Quantity to the nearest multiple of Lot Size
             orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
+            if (orderQuantity == 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The order quantity is less than the lot size of {security.SymbolProperties.LotSize} and has been rounded to zero.");
+            }
 
             do
             {
                 // reduce order quantity by feeToPriceRatio, since it is faster than by lot size
                 // if it becomes nonpositive, return zero
                 orderQuantity -= feeToPriceRatio;
-                if (orderQuantity <= 0) return 0;
+                if (orderQuantity <= 0)
+                {
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The portfolio does not hold enough cash including the order fees.");
+                }
 
                 // generate the order
                 var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
@@ -332,7 +351,7 @@ namespace QuantConnect.Securities
             } while (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue);
 
             // add directionality back in
-            return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
+            return new GetMaximumOrderQuantityForTargetValueResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
         }
 
         /// <summary>
