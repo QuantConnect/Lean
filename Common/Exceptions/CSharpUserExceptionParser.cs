@@ -16,46 +16,56 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Exceptions
 {
     /// <summary>
-    /// Parser that converts a regular exception throw by a C# algorithm into an <see cref="UserException"/>.
+    /// Parser that converts a regular exception thrown by a C# algorithm into an <see cref="Exception"/>.
     /// </summary>
     public class CSharpUserExceptionParser : IExceptionParser
     {
         private static readonly Dictionary<string, string> _commonErrors = new Dictionary<string, string>
         {
             { "KeyNotFoundException", "Trying to retrieve an element from a collection using a key that does not exist in that collection throws a KeyNotFoundException exception. To prevent the exception, ensure that the key exist in the collection and/or that collection is not empty."},
-            { "ZeroDivisionError", "Trying to divide an integer or Decimal number by zero throws a DivideByZeroException exception. To prevent the exception, ensure that the denominator in a division operation with integer or Decimal values is non-zero." },
+            { "DivideByZeroException", "Trying to divide an integer or Decimal number by zero throws a DivideByZeroException exception. To prevent the exception, ensure that the denominator in a division operation with integer or Decimal values is non-zero." },
         };
 
         /// <summary>
-        /// Parses an <see cref="Exception"/> object into an <see cref="UserException"/>
+        /// Parses an <see cref="Exception"/> object into an new <see cref="Exception"/> with a legible message.
         /// </summary>
-        /// <param name="exception"><see cref="Exception"/> object to parse into an <see cref="UserException"/>.</param>
+        /// <param name="exception"><see cref="Exception"/> object to parse.</param>
         /// <returns>Parsed exception</returns>
         public Exception Parse(Exception exception)
         {
-            var error = exception.GetType().Name;
-            var message = exception.Message;
-            var stacktrace = exception.StackTrace;
-
-            var csharpException = exception;
+            var original = exception;
             if (exception.InnerException != null)
             {
-                csharpException = exception.InnerException;
-
-                stacktrace = $"{csharpException.StackTrace}{Environment.NewLine}{exception.StackTrace}";
+                exception = Parse(exception.InnerException);
             }
 
-            var key = exception.InnerException?.GetType().Name;
-            if (!_commonErrors.TryGetValue(key, out message))
+            var key = exception.GetType().Name;
+
+            string message;
+            if (_commonErrors.TryGetValue(key, out message))
             {
-                message = csharpException.Message;
+                return new Exception($"{message}{Environment.NewLine}", original);
             }
 
-            return new UserException(message, stacktrace);
+            message = exception.Message;
+
+            if (original.GetType() == typeof(InitializeException))
+            {
+                message = $"In the Initialize method, {message.Substring(0, 1).ToLower()}{message.Substring(1)}";
+                return new InitializeException(message, original);
+            }
+            else if (original.GetType() == typeof(ScheduledEventException))
+            {
+                message = $"In one of your Schedule Events, {message.Substring(0, 1).ToLower()}{message.Substring(1)}";
+                return new ScheduledEventException(message, original);
+            }
+
+            return original;
         }
     }
 }

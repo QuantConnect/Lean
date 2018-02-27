@@ -13,58 +13,91 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
+using System;
 
 namespace QuantConnect.Exceptions
 {
     /// <summary>
-    /// Parser that converts a regular exception throw by a python algorithm into a <see cref="UserException"/>.
+    /// Parser that converts a <see cref="PythonException"/> thrown by a python algorithm into an <see cref="Exception"/>
     /// </summary>
     public class PythonUserExceptionParser : IExceptionParser
     {
-        private static readonly Dictionary<string, string> _commonErrors = new Dictionary<string, string>
-        {
-            { "KeyError", "Trying to retrieve an element from a collection using a key that does not exist in that collection throws a KeyError exception. To prevent the exception, ensure that the key exist in the collection and/or that collection is not empty."},
-            { "UnsupportedOperandError", "Trying to perform a summation, subtraction, multiplication or division between a decimal.Decimal and a float throws a TypeError exception. To prevent the exception, ensure that both values share the same type, either decimal.Decimal or float."},
-            { "ZeroDivisionError", "Trying to divide an integer or Decimal number by zero throws a DivideByZeroException exception. To prevent the exception, ensure that the denominator in a division operation with integer or Decimal values is non-zero." },
-        };
-
         /// <summary>
-        /// Parses an <see cref="PythonException"/> object into an <see cref="UserException"/> one
+        /// Parses an <see cref="Exception"/> object into an new <see cref="Exception"/> with a legible message.
         /// </summary>
-        /// <param name="exception"><see cref="PythonException"/> object to parse into an <see cref="UserException"/> one.</param>
+        /// <param name="exception"><see cref="Exception"/> object to parse.</param>
         /// <returns>Parsed exception</returns>
         public Exception Parse(Exception exception)
         {
-            var pythonException = exception as PythonException;
-            if (pythonException == null)
+            var original = exception;
+            if (exception.InnerException != null)
             {
-                pythonException = exception.InnerException as PythonException;
-                if (pythonException == null)
-                {
-                    throw new ArgumentException("The given exception is not valid since it is of type PythonException nor its InnerException is");
-                }
+                exception = Parse(exception.InnerException);
             }
 
-            var message = CreateLegibleMessage(pythonException.Message);
+            var message = CreateLegibleMessage(exception.Message);
+            var errorLine = CreateErrorLine(exception.StackTrace);
+            message = $"{message}{errorLine}";
 
-            if (exception.GetType() == typeof(ScheduledEventException))
+            if (original.GetType() == typeof(InitializeException))
             {
-                message = $"In one of your Schedule Events, {message}";
+                message = $"In the Initialize method, {message.Substring(0, 1).ToLower()}{message.Substring(1)}";
+                return new InitializeException(message, original);
+            }
+            else if (original.GetType() == typeof(ScheduledEventException))
+            {
+                message = $"In one of your Schedule Events, {message.Substring(0, 1).ToLower()}{message.Substring(1)} ";
+                return new ScheduledEventException(message, original);
+            }
+
+            return new Exception(message, original);
+        }
+
+        private string CreateLegibleMessage(string value)
+        {
+            var colon = value.IndexOf(':');
+            if (colon < 0)
+            {
+                return value;
+            }
+
+            var type = value.Substring(0, colon).Trim();
+            var input = value.Substring(1 + colon).Trim();
+
+            switch (type)
+            {
+                case "KeyError":
+                    return CreateKeyErrorMessage(input);
+                case "SyntaxError":
+                    return CreateSyntaxErrorMessage(input);
+                case "ValueError":
+                    return CreateValueErrorMessage(input);
+                case "TypeError":
+                    return CreateTypeErrorMessage(input);
+                case "ZeroDivisionError":
+                    return "Trying to divide an integer or Decimal number by zero throws a ZeroDivisionError exception. To prevent the exception, ensure that the denominator in a division operation with integer or Decimal values is non-zero.";        
+                default:
+                    return value;
+            }
+        }
+
+        private string CreateErrorLine(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
             }
 
             // Get the place where the error occurred in the PythonException.StackTrace
-            var stack = pythonException.StackTrace.Replace("\\\\", "/").Split(new[] { @"\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var stack = value.Replace("\\\\", "/").Split(new[] { @"\n" }, StringSplitOptions.RemoveEmptyEntries);
             var baseScript = stack[0].Substring(1 + stack[0].IndexOf('\"')).Split('\"')[0];
             var directory = baseScript.Substring(0, baseScript.LastIndexOf('/'));
             baseScript = baseScript.Substring(1 + directory.Length);
 
-            var stacktrace = string.Empty;
+            var errorLine = string.Empty;
 
             for (var i = 0; i < stack.Length; i += 2)
             {
@@ -78,54 +111,61 @@ namespace QuantConnect.Exceptions
                     var method = info[2].Replace("in", "at");
                     var statement = stack[i + 1].Trim();
 
-                    // Adds offset to account headers
-                    // Yields wrong error line if running Lean locally 
-                    line += script == baseScript ? 37 : 0;
-
-                    stacktrace = $"  {method} in {script}:line {line} :: {statement}";
+                    errorLine = $"{Environment.NewLine}  {method} in {script}:line {line} :: {statement}{Environment.NewLine}";
                 }
             }
 
-            var lines = exception.ToString()
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Where(x => x.Contains("QuantConnect")).Skip(1);
-
-            stacktrace = $"{stacktrace}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}";
-
-            return new UserException(message, stacktrace);
+            return errorLine;
         }
 
-        private string CreateLegibleMessage(string value)
+        private string CreateKeyErrorMessage(string value)
         {
-            var colon = value.IndexOf(':');
-            var type = value.Substring(0, colon).Trim();
-            var input = value.Substring(1 + colon).Trim();
-            var message = value;
+            var message = "Trying to retrieve an element from a collection using a key that does not exist in that collection throws a KeyError exception. To prevent the exception, ensure that the key exist in the collection and/or that collection is not empty.";
 
-            switch (type)
+            var key = string.Empty;
+
+            if (value.Contains("["))
             {
-                case "KeyError":
-                    var key = GetStringBetweenChar(input, '[', ']');
-                    if (key == null)
-                    {
-                        key = GetStringBetweenChar(input, '\'', '\'');
-                    }
-                    message = $"{_commonErrors[type]} Key: {key}.";
-                    break;
-                case "TypeError":
-                    if (input.Contains("unsupported operand"))
-                    {
-                        message = _commonErrors["UnsupportedOperandError"];
-                    }
-                    break;
-                case "ZeroDivisionError":
-                    message = _commonErrors[type];
-                    break;
-                default:
-                    break;
+                key = GetStringBetweenChar(value, '[', ']');
+            }
+            else if (value.Contains("\'"))
+            {
+                key = GetStringBetweenChar(value, '\'', '\'');
             }
 
-            return message;
+            return $"{message} Key: {key}.";
+        }
+
+        private string CreateSyntaxErrorMessage(string value)
+        {
+            if (value.Contains("invalid token"))
+            {
+                var message = "Trying to include an invalid token/character in any statement throws a SyntaxError exception. To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero).";
+                var errorLine = GetStringBetweenChar(value, '(', ')');
+
+                return $"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}";
+            }
+            throw new NotImplementedException($"{value} exception translation has not been implemented yet");
+        }
+
+        private string CreateValueErrorMessage(string input)
+        {
+            return input;
+        }
+
+        private string CreateTypeErrorMessage(string value)
+        {
+            if (value.Contains("unsupported operand"))
+            {
+                return "Trying to perform a summation, subtraction, multiplication or division between a decimal.Decimal and a float throws a TypeError exception. To prevent the exception, ensure that both values share the same type, either decimal.Decimal or float.";
+            }
+            if (value.Contains("No method matches"))
+            {
+                var startIndex = value.LastIndexOf(" ");
+                return "Trying to give parameters of the wrong type throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by this method:" +
+                    value.Substring(startIndex);
+            }
+            throw new NotImplementedException($"{value} exception translation has not been implemented yet");
         }
 
         private string GetStringBetweenChar(string value, char left, char right)

@@ -43,7 +43,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Any errors from the initialization stored here:
         /// </summary>
-        public List<string> Errors { get; set; }
+        public List<Exception> Errors { get; set; }
 
         /// <summary>
         /// Get the maximum runtime for this algorithm job.
@@ -65,8 +65,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public int MaxOrders { get; private set; }
 
-        public IExceptionParser ExceptionParser { get; }
-
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
 
@@ -75,10 +73,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public BrokerageSetupHandler()
         {
-            Errors = new List<string>();
+            Errors = new List<Exception>();
             MaximumRuntime = TimeSpan.FromDays(10*365);
             MaxOrders = int.MaxValue;
-            ExceptionParser = new ExceptionParser();
         }
 
         /// <summary>
@@ -424,7 +421,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="message">The error message to be added</param>
         private void AddInitializationError(string message)
         {
-            Errors.Add("Failed to initialize algorithm: " + message);
+            Errors.Add(new InitializeException($"Failed to initialize algorithm: {message}"));
         }
 
         /// <summary>

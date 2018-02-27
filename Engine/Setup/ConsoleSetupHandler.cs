@@ -40,7 +40,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Error which occured during setup may appear here.
         /// </summary>
-        public List<string> Errors { get; set; }
+        public List<Exception> Errors { get; set; }
 
         /// <summary>
         /// Maximum runtime of the strategy. (Set to 10 years for local backtesting).
@@ -62,8 +62,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public int MaxOrders { get; private set; }
 
-        public IExceptionParser ExceptionParser { get; }
-
         /// <summary>
         /// Setup the algorithm data, cash, job start end date etc:
         /// </summary>
@@ -73,8 +71,7 @@ namespace QuantConnect.Lean.Engine.Setup
             StartingPortfolioValue = 0;
             StartingDate = new DateTime(1998, 01, 01);
             MaximumRuntime = TimeSpan.FromDays(10 * 365);
-            Errors = new List<string>();
-            ExceptionParser = new ExceptionParser();
+            Errors = new List<Exception>();
         }
 
         /// <summary>
@@ -175,9 +172,8 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             catch (Exception err)
             {
-                err = ExceptionParser.Parse(err);
                 Log.Error(err);
-                Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
+                Errors.Add(new InitializeException(err.Message, err));
             }
 
             if (Errors.Count == 0)
