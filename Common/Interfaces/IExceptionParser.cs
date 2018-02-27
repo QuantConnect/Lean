@@ -13,20 +13,19 @@
  * limitations under the License.
 */
 
-using QuantConnect.Exceptions;
 using System;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// <see cref="IExceptionParser"/> interface. Parser that creates an <see cref="LegibleException"/> from an <see cref="Exception"/>.
+    /// <see cref="IExceptionParser"/> interface. Parser that translates a specific type of <see cref="Exception"/> object into another <see cref="Exception"/> object. If it is unable to translate it, return the original exception unchanged.
     /// </summary>
     public interface IExceptionParser
     {
         /// <summary>
-        /// Parses an <see cref="Exception"/> object into an <see cref="LegibleException"/> one
+        /// Parses an <see cref="Exception"/> object into a new one 
         /// </summary>
-        /// <param name="exception"><see cref="Exception"/> object to parse into an <see cref="LegibleException"/> one.</param>
+        /// <param name="exception"><see cref="Exception"/> object to parse.</param>
         /// <returns>Parsed exception</returns>
         Exception Parse(Exception exception);
     }
