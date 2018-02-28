@@ -31,6 +31,11 @@ namespace QuantConnect.Securities
         public string Reason { get; }
 
         /// <summary>
+        /// Returns true if the zero order quantity is an error condition and will be shown to the user.
+        /// </summary>
+        public bool IsError { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueResult"/> class
         /// </summary>
         /// <param name="quantity">Returns the maximum quantity for the order</param>
@@ -39,6 +44,20 @@ namespace QuantConnect.Securities
         {
             Quantity = quantity;
             Reason = reason ?? string.Empty;
+            IsError = reason != string.Empty;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueResult"/> class
+        /// </summary>
+        /// <param name="quantity">Returns the maximum quantity for the order</param>
+        /// <param name="reason">The reason for which the maximum order quantity is zero</param>
+        /// <param name="isError">True if the zero order quantity is an error condition</param>
+        public GetMaximumOrderQuantityForTargetValueResult(decimal quantity, string reason, bool isError = true)
+        {
+            Quantity = quantity;
+            Reason = reason ?? string.Empty;
+            IsError = isError;
         }
     }
 }

@@ -951,7 +951,7 @@ namespace QuantConnect.Algorithm
             var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
 
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
-            if (result.Quantity == 0)
+            if (result.Quantity == 0 && result.IsError)
             {
                 Error($"The order quantity for {symbol.Value} cannot be calculated: Reason: {result.Reason}.");
             }

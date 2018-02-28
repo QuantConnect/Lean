@@ -177,7 +177,7 @@ namespace QuantConnect.Securities
             var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security);
             if (unitPrice == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, "The price of the security is zero.");
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
             }
 
             // remove directionality, we'll work in the land of absolutes
@@ -205,7 +205,7 @@ namespace QuantConnect.Securities
             orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
             if (orderQuantity == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The order quantity is less than the lot size of {security.SymbolProperties.LotSize} and has been rounded to zero.");
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The order quantity is less than the lot size of {security.SymbolProperties.LotSize} and has been rounded to zero.", false);
             }
 
             do
