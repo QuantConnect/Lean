@@ -44,9 +44,25 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void CallPlotStdTest()
+        public void CallPlotTests()
         {
+            // self.Plot('NUMBER', 0.1)
+            Assert.DoesNotThrow(() => _algorithm.call_plot_number_test());
+
+            // self.Plot('STD', self.std), where self.sma = self.SMA('SPY', 20)
+            Assert.DoesNotThrow(() => _algorithm.call_plot_sma_test());
+
+            // self.Plot('SMA', self.sma), where self.std = self.STD('SPY', 20)
             Assert.DoesNotThrow(() => _algorithm.call_plot_std_test());
+
+            // self.Plot("ERROR", self.Name), where self.Name is IAlgorithm.Name: string
+            Assert.Throws<PythonException>(() => _algorithm.call_plot_throw_test());
+
+            // self.Plot("ERROR", self.Portfolio), where self.Portfolio is IAlgorithm.Portfolio: instance of SecurityPortfolioManager
+            Assert.Throws<PythonException>(() => _algorithm.call_plot_throw_managed_test());
+
+            // self.Plot("ERROR", self.a), where self.a is an instance of a python object
+            Assert.Throws<PythonException>(() => _algorithm.call_plot_throw_pyobject_test());
         }
     }
 }

@@ -24,10 +24,32 @@ from QuantConnect.Algorithm import *
 class Test_MethodOverload(QCAlgorithm):
     def Initialize(self):
         self.AddEquity("SPY", Resolution.Second)
+        self.sma = self.SMA('SPY', 20)
         self.std = self.STD('SPY', 20)
+        self.a = A()
 
     def OnData(self, data):
         pass
 
     def call_plot_std_test(self):
         self.Plot('STD', self.std)
+
+    def call_plot_sma_test(self):
+        self.Plot('SMA', self.sma)
+
+    def call_plot_number_test(self):
+        self.Plot('NUMBER', 0.1)
+
+    def call_plot_throw_test(self):
+        self.Plot("ERROR", self.Name)
+
+    def call_plot_throw_managed_test(self):
+        self.Plot("ERROR", self.Portfolio)
+
+    def call_plot_throw_pyobject_test(self):
+        self.Plot("ERROR", self.a)
+
+
+class A(object):
+   def __init__(self):
+       pass
