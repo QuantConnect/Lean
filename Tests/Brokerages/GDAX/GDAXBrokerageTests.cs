@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -19,7 +20,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -30,11 +30,9 @@ using System.Threading;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-
-    [TestFixture, Ignore("These tests are ignored while gdax is under maintenance. REMOVE [Ignore] WHEN GDAX IS READY FOR PRODUCTION")]
+    [TestFixture]
     public class GDAXBrokerageTests
     {
-
         #region Declarations
         GDAXBrokerage _unit;
         Mock<IWebSocket> _wss = new Mock<IWebSocket>();
@@ -53,7 +51,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         AccountType _accountType = AccountType.Margin;
         #endregion
 
-        [SetUp()]
+        [SetUp]
         public void Setup()
         {
             _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object);
@@ -101,7 +99,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             });
         }
 
-        [Test()]
+        [Test]
         public void IsConnectedTest()
         {
             _wss.Setup(w => w.IsOpen).Returns(true);
@@ -110,22 +108,20 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.IsFalse(_unit.IsConnected);
         }
 
-        [Test()]
+        [Test]
         public void ConnectTest()
         {
-            _wss.Setup(m => m.Connect()).Verifiable();
-            _wss.Setup(m => m.IsOpen).Returns(true);
-
+            _wss.Setup(m => m.Connect()).Callback(() => { _wss.Setup(m => m.IsOpen).Returns(true); }).Verifiable();
+            _wss.Setup(m => m.IsOpen).Returns(false);
             _unit.Connect();
             _wss.Verify();
         }
 
-        [Test()]
+        [Test]
         public void DisconnectTest()
         {
             _wss.Setup(m => m.Close()).Verifiable();
             _wss.Setup(m => m.IsOpen).Returns(true);
-            _unit.Connect();
             _unit.Disconnect();
             _wss.Verify();
         }
@@ -157,7 +153,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
                 Assert.AreEqual(actualQuantity != orderQuantity ? Orders.OrderStatus.PartiallyFilled : Orders.OrderStatus.Filled, e.Status);
                 Assert.AreEqual(expectedQuantity, e.FillQuantity);
-                Assert.AreEqual(0.01m, Math.Round(actualFee, 8));
+                // order fees are pro-rated for partial fills
+                // total order fee = 0.01
+                // partial order fee = (0.01 * 5.23512 / 6.1) = 0.0085821639344262295081967213
+                Assert.AreEqual(0.00858216m, Math.Round(actualFee, 8));
                 raised.Set();
             };
 
@@ -226,7 +225,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.IsTrue(actual || (orderId == null && !actual));
         }
 
-        [Test()]
+        [Test]
         public void GetOpenOrdersTest()
         {
             SetupResponse(_openOrderData);
@@ -246,7 +245,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         }
 
-        [Test()]
+        [Test]
         public void GetTickTest()
         {
             var actual = _unit.GetTick(_symbol);
@@ -255,7 +254,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(5957.11914015, actual.Quantity);
         }
 
-        [Test()]
+        [Test]
         public void GetCashBalanceTest()
         {
             SetupResponse(_accountsData);
@@ -273,7 +272,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(333.985m, btc.ConversionRate);
         }
 
-        [Test(), Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
+        [Test, Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
         public void GetAccountHoldingsTest()
         {
             SetupResponse(_holdingData);
@@ -304,7 +303,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(expected, actual);
         }
 
-
         [Test]
         public void UpdateOrderTest()
         {
@@ -325,25 +323,24 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             StringAssert.Contains(expected, actual);
 
-            Assert.AreEqual(3, _unit.Ticks.Count());
-            Assert.AreEqual(333.98, _unit.Ticks.First().BidPrice);
-            Assert.AreEqual(333.99, _unit.Ticks.First().AskPrice);
-            Assert.AreEqual(333.985, _unit.Ticks.First().Price);
+            // only rate conversion ticks are received during subscribe
+            Assert.AreEqual(1, _unit.Ticks.Count);
+            Assert.AreEqual("GBPUSD", _unit.Ticks[0].Symbol.Value);
         }
 
         [Test]
         public void UnsubscribeTest()
         {
             string actual = null;
+            _wss.Setup(w => w.IsOpen).Returns(true);
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
             _unit.Unsubscribe(new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX) });
             StringAssert.Contains("user", actual);
             StringAssert.Contains("heartbeat", actual);
-            StringAssert.Contains("ticker", actual);
             StringAssert.Contains("matches", actual);
         }
 
-        [Test]
+        [Test, Ignore("This test is obsolete, the 'ticker' channel is no longer used.")]
         public void OnMessageTickerTest()
         {
             string json = _tickerData;
@@ -369,8 +366,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX));
             Thread.Sleep(1000);
-            Assert.AreEqual(1.234m, _unit.Ticks.First().Price);
-        }
 
+            // conversion rates are inverted: value = 1 / 1.234
+            Assert.AreEqual(0.8103727714748784440842787682m, _unit.Ticks.First().Price);
+        }
     }
 }
