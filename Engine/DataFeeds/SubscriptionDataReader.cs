@@ -326,7 +326,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    if (instance.Time > _periodFinish)
+                    if (instance.EndTime > _periodFinish)
                     {
                         // stop reading when we get a value after the end
                         _endOfStream = true;
