@@ -37,6 +37,7 @@ namespace QuantConnect.Tests.Brokerages
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;
         private SecurityProvider _securityProvider;
+        private const string AccountCurrency = "USD";
 
         /// <summary>
         /// Provides the data required to test each order type in various cases
@@ -185,7 +186,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(AccountCurrency, 0, 1m, AccountCurrency), SymbolProperties.GetDefault(AccountCurrency));
         }
 
         public OrderProvider OrderProvider

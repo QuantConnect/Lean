@@ -407,7 +407,7 @@ namespace QuantConnect.Brokerages.Fxcm
             //Adds the account currency USD to the cashbook.
             cashBook.Add(new Cash(_fxcmAccountCurrency,
                         Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
-                        GetUsdConversion(_fxcmAccountCurrency)));
+                        GetUsdConversion(_fxcmAccountCurrency),_fxcmAccountCurrency));
 
             foreach (var trade in _openPositions.Values)
             {
@@ -436,7 +436,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else
                 {
                     //add the base currency if not present
-                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
+                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency), _fxcmAccountCurrency));
                 }
 
                 var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
@@ -448,7 +448,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else
                 {
                     //add the quote currency if not present
-                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
+                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency),_fxcmAccountCurrency));
                 }
             }
             return cashBook;

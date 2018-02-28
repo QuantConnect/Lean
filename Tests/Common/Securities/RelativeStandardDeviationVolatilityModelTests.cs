@@ -25,6 +25,7 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class RelativeStandardDeviationVolatilityModelTests
     {
+        private const string accountCurrency = "USD";
         [Test]
         public void UpdatesAfterCorrectPeriodElapses()
         {
@@ -34,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             var config = new SubscriptionDataConfig(typeof (TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash("USD", 0, 0), SymbolProperties.GetDefault("USD"));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash("USD", 0, 0, accountCurrency), SymbolProperties.GetDefault("USD"));
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
@@ -69,7 +70,7 @@ namespace QuantConnect.Tests.Common.Securities
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash("USD", 0, 0), SymbolProperties.GetDefault("USD"));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash("USD", 0, 0, accountCurrency), SymbolProperties.GetDefault("USD"));
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);

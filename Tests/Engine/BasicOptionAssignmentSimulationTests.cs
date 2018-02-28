@@ -34,6 +34,7 @@ namespace QuantConnect.Tests.Engine
     public class BasicOptionAssignmentSimulationTests
     {
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+        const string accountCurrency = "USD";
 
         [Test]
         public void GenerateSimulationDatesFromOptionExpirations()
@@ -48,17 +49,17 @@ namespace QuantConnect.Tests.Engine
 
             algorithm.Securities = securities;
 
-            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
 
             var option1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2016, 02, 16));
-            securities.Add(option1, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, option1), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(option1, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, option1), new Cash(accountCurrency, 0, 1m, accountCurrency), new OptionSymbolProperties(SymbolProperties.GetDefault(accountCurrency))));
 
             var option2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 193m, new DateTime(2016, 02, 19));
-            securities.Add(option2, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, option2), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(option2, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, option2), new Cash(accountCurrency, 0, 1m, accountCurrency), new OptionSymbolProperties(SymbolProperties.GetDefault(accountCurrency))));
 
             var option3 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 190m, new DateTime(2016, 03, 18));
-            securities.Add(option3, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, option3), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(option3, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, option3), new Cash(accountCurrency, 0, 1m, accountCurrency), new OptionSymbolProperties(SymbolProperties.GetDefault(accountCurrency))));
 
             securities[option1].Holdings.SetHoldings(1, -100);
             securities[option2].Holdings.SetHoldings(1, -100);
@@ -122,7 +123,7 @@ namespace QuantConnect.Tests.Engine
                 {
                     var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, strikePrice, expiration);
                     var option = new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Option, symbol),
-                        new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+                        new Cash(accountCurrency, 0, 1m, accountCurrency), new OptionSymbolProperties(SymbolProperties.GetDefault(accountCurrency)));
                     securities.Add(symbol, option);
 
                     securities[symbol].Holdings.SetHoldings(1, -1000);
@@ -131,7 +132,7 @@ namespace QuantConnect.Tests.Engine
                 };
 
             // setting up the underlying instrument
-            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency)));
             securities[Symbols.SPY].SetMarketPrice(new Tick { Symbol = Symbols.SPY, AskPrice = 217.94m, BidPrice = 217.86m, Value = 217.90m, Time = securities.UtcTime });
 
             foreach (var def in optionChain)

@@ -170,6 +170,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="marketHoursDatabase">The market hours database</param>
         /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
+        /// <param name="accountCurrency">Base account currency</param>
         /// <returns>The newly initialized security object</returns>
         public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {

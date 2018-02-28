@@ -57,6 +57,8 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly DateTime NoonHoliday = new DateTime(2016, 02, 15, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
 
+        private const string accountCurrency = "USD";
+
         [Test]
         public void InitializationTests()
         {
@@ -280,7 +282,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static Security CreateSecurity(DateTime newLocalTime)
         {
-            var security = new Security(CreateUsEquitySecurityExchangeHours(), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(CreateUsEquitySecurityExchangeHours(), CreateTradeBarConfig(), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
             TimeKeeper.SetUtcDateTime(newLocalTime.ConvertToUtc(security.Exchange.TimeZone));
             security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));

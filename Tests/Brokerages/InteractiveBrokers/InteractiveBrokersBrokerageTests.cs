@@ -38,6 +38,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
         private const int buyQuantity = 100;
         private const SecurityType Type = SecurityType.Forex;
+        private const string accountCurrency = "USD";
 
         [SetUp]
         public void InitializeBrokerage()
@@ -54,7 +55,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var securityProvider = new SecurityProvider();
             securityProvider[Symbols.USDJPY] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
 
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(_orders), securityProvider);
             _interactiveBrokersBrokerage.Connect();

@@ -31,6 +31,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         private Equity _equity;
         private Order _forexBuyOrder;
         private Forex _forex;
+        private const string accountCurrency = "USD";
 
         [SetUp]
         public void Initialize()
@@ -38,8 +39,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _equity = new Equity(
                 Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
 
             _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1));
 
@@ -49,8 +50,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _forex = new Forex(
                 Symbols.EURUSD,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                new Cash(accountCurrency, 0, 1m, accountCurrency),
+                SymbolProperties.GetDefault(accountCurrency));
 
             _forex.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.EURUSD, 100m, 100m, 100m, 100m, 0));
 

@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.DataNormalizationMode
                 );
 
-            var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(request.ExchangeHours, config, new Cash(request.AccountCurrency, 0, 1m, request.AccountCurrency), SymbolProperties.GetDefault(request.AccountCurrency));
 
             IEnumerator<BaseData> reader = new SubscriptionDataReader(config,
                 start,

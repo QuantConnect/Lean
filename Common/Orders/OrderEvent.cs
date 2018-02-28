@@ -100,6 +100,11 @@ namespace QuantConnect.Orders
         public bool IsAssignment { get; set; }
 
         /// <summary>
+        /// Account currency
+        /// </summary>
+        public string AccountCurrency { get; internal set; }
+
+        /// <summary>
         /// Order Event Constructor.
         /// </summary>
         /// <param name="orderId">Id of the parent order</param>
@@ -110,6 +115,7 @@ namespace QuantConnect.Orders
         /// <param name="fillPrice">Fill price information if applicable.</param>
         /// <param name="fillQuantity">Fill quantity</param>
         /// <param name="orderFee">The order fee</param>
+        /// <param name="accountCurrency">Base account currency</param>
         /// <param name="message">Message from the exchange</param>
         public OrderEvent(int orderId,
             Symbol symbol,
@@ -119,6 +125,7 @@ namespace QuantConnect.Orders
             decimal fillPrice,
             decimal fillQuantity,
             decimal orderFee,
+            string accountCurrency,
             string message = ""
             )
         {
@@ -131,6 +138,7 @@ namespace QuantConnect.Orders
             FillPriceCurrency = string.Empty;
             FillQuantity = fillQuantity;
             OrderFee = Math.Abs(orderFee);
+            AccountCurrency = accountCurrency;
             Message = message;
             IsAssignment = false;
         }
@@ -174,7 +182,7 @@ namespace QuantConnect.Orders
                 : string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3} Quantity: {4} FillPrice: {5} {6}", UtcTime, OrderId, Symbol.Value, Status, FillQuantity, FillPrice.SmartRounding(), FillPriceCurrency);
 
             // attach the order fee so it ends up in logs properly
-            if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);
+            if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, AccountCurrency);
 
             // add message from brokerage
             if (!string.IsNullOrEmpty(Message))

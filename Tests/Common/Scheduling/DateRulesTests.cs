@@ -28,6 +28,7 @@ namespace QuantConnect.Tests.Common.Scheduling
     [TestFixture]
     public class DateRulesTests
     {
+        private const string accountCurrency = "USD";
         [Test]
         public void EveryDayDateRuleEmitsEveryDay()
         {
@@ -255,7 +256,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var manager = new SecurityManager(timeKeeper);
             var securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency)));
             var rules = new DateRules(manager);
             return rules;
         }

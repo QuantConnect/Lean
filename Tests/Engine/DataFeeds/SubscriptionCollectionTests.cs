@@ -31,6 +31,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class SubscriptionCollectionTests
     {
+        const string accountCurrency = "USD";
+
         [Test]
         public void EnumerationWhileUpdatingDoesNotThrow()
         {
@@ -39,7 +41,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(10);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false, false);
-            var security = new Equity(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
+            var security = new Equity(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1, accountCurrency), SymbolProperties.GetDefault("USD"));
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
             var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);

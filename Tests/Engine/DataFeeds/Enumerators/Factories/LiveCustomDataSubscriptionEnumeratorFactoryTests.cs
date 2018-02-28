@@ -42,6 +42,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             private IEnumerator<BaseData> _enumerator;
             private Mock<ISubscriptionDataSourceReader> _dataSourceReader;
 
+            const string accountCurrency = "USD";
+
             [SetUp]
             public void Given()
             {
@@ -60,10 +62,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         }))
                         .Verifiable();
 
-                var quoteCurrency = new Cash(CashBook.AccountCurrency, 0, 1);
+                var quoteCurrency = new Cash(accountCurrency, 0, 1, accountCurrency);
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RestData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(accountCurrency));
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
@@ -110,6 +112,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             private ManualTimeProvider _timeProvider;
             private IEnumerator<BaseData> _enumerator;
             private Mock<ISubscriptionDataSourceReader> _dataSourceReader;
+            const string accountCurrency = "USD";
 
             [SetUp]
             public void Given()
@@ -128,10 +131,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     )
                     .Verifiable();
 
-                var quoteCurrency = new Cash(CashBook.AccountCurrency, 0, 1);
+                var quoteCurrency = new Cash(accountCurrency, 0, 1,accountCurrency);
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RestCollectionData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(accountCurrency));
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
@@ -183,6 +186,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             private ManualTimeProvider _timeProvider;
             private IEnumerator<BaseData> _enumerator;
             private Mock<ISubscriptionDataSourceReader> _dataSourceReader;
+            const string accountCurrency = "USD";
 
             [SetUp]
             public void Given()
@@ -203,10 +207,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         }))
                     .Verifiable();
 
-                var quoteCurrency = new Cash(CashBook.AccountCurrency, 0, 1);
+                var quoteCurrency = new Cash(accountCurrency, 0, 1,accountCurrency);
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RemoteFileData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(accountCurrency));
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
@@ -261,6 +265,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             private ManualTimeProvider _timeProvider;
             private IEnumerator<BaseData> _enumerator;
             private Mock<ISubscriptionDataSourceReader> _dataSourceReader;
+            const string accountCurrency = "USD";
 
             [SetUp]
             public void Given()
@@ -281,10 +286,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         }))
                     .Verifiable();
 
-                var quoteCurrency = new Cash(CashBook.AccountCurrency, 0, 1);
+                var quoteCurrency = new Cash(accountCurrency, 0, 1,accountCurrency);
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RemoteFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(accountCurrency));
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);

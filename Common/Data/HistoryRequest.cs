@@ -58,6 +58,11 @@ namespace QuantConnect.Data
         public Resolution? FillForwardResolution { get; set; }
 
         /// <summary>
+        /// Base account currency
+        /// </summary>
+        public string AccountCurrency { get; set; }
+
+        /// <summary>
         /// Gets whether or not to include extended market hours data, set to false for only normal market hours
         /// </summary>
         public bool IncludeExtendedMarketHours { get; set; }
@@ -108,6 +113,7 @@ namespace QuantConnect.Data
             Type dataType,
             Symbol symbol,
             Resolution resolution,
+            string accountCurrency,
             SecurityExchangeHours exchangeHours,
             DateTimeZone dataTimeZone,
             Resolution? fillForwardResolution,
@@ -119,6 +125,7 @@ namespace QuantConnect.Data
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
             Symbol = symbol;
+            AccountCurrency = accountCurrency;
             ExchangeHours = exchangeHours;
             DataTimeZone = dataTimeZone;
             Resolution = resolution;
@@ -137,13 +144,16 @@ namespace QuantConnect.Data
         /// <param name="hours">The exchange hours used for fill forward processing</param>
         /// <param name="startTimeUtc">The start time for this request,</param>
         /// <param name="endTimeUtc">The start time for this request</param>
-        public HistoryRequest(SubscriptionDataConfig config, SecurityExchangeHours hours, DateTime startTimeUtc, DateTime endTimeUtc)
+        /// <param name="accountCurrency">The base account currency
+        public HistoryRequest(SubscriptionDataConfig config, SecurityExchangeHours hours, DateTime startTimeUtc, DateTime endTimeUtc, string accountCurrency)
         {
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
             Symbol = config.Symbol;
             ExchangeHours = hours;
             Resolution = config.Resolution;
+            AccountCurrency = accountCurrency;
+
             FillForwardResolution = config.FillDataForward ? config.Resolution : (Resolution?) null;
             IncludeExtendedMarketHours = config.ExtendedMarketHours;
             DataType = config.Type;

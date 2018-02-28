@@ -25,6 +25,8 @@ namespace QuantConnect.Tests.Common.Securities.Equity
     [TestFixture]
     public class PriceVariationModelsTests
     {
+        private const string accountCurrency = "USD";
+
         [TestCase("SPY", SecurityType.Equity, Market.USA, DataNormalizationMode.Adjusted)]
         [TestCase("SPY", SecurityType.Equity, Market.USA, DataNormalizationMode.SplitAdjusted)]
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, DataNormalizationMode.Adjusted)]
@@ -55,7 +57,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         private Security GetSecurity(Symbol symbol, DataNormalizationMode mode)
         {
             var symbolProperties = SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, CashBook.AccountCurrency);
+                .GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, accountCurrency);
 
             Security security;
             if (symbol.ID.SecurityType == SecurityType.Equity)
@@ -63,14 +65,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
                 security = new QuantConnect.Securities.Equity.Equity(
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash(accountCurrency, 0, 1m, accountCurrency),
                     symbolProperties);
             }
             else
             {
                 security = new QuantConnect.Securities.Forex.Forex(
                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                   new Cash(CashBook.AccountCurrency, 0, 1m),
+                   new Cash(accountCurrency, 0, 1m, accountCurrency),
                    new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false),
                    symbolProperties);
             }

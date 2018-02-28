@@ -122,6 +122,7 @@ namespace QuantConnect.Securities
                                    typeof(TradeBar),
                                    security.Symbol,
                                    security.Resolution,
+                                   security.QuoteCurrency.AccountCurrency,
                                    security.Exchange.Hours,
                                    MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Type),
                                    security.Resolution,

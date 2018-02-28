@@ -25,6 +25,8 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityPortfolioModelTests
     {
+        private const string accountCurrency = "USD";
+
         [Test]
         public void LastTradeProfit_FlatToLong()
         {
@@ -36,7 +38,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             // zero since we're from flat
@@ -54,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -100;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             // zero since we're from flat
@@ -74,7 +76,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = 100;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             // zero since we're from flat
@@ -94,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -security.Holdings.Quantity;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             // bought @50 and sold @100 = (-50*100)+(100*100 - 1) = 4999
@@ -115,7 +117,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -2*security.Holdings.Quantity;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             // we can only take 'profit' on the closing part of the position, so we closed 100
@@ -138,7 +140,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -100;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
@@ -157,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -security.Holdings.Quantity;
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
 
@@ -179,7 +181,7 @@ namespace QuantConnect.Tests.Common.Securities
             var fillQuantity = -2*security.Holdings.Quantity; // flip from -100 to +100
             var orderFee = 1m;
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee, accountCurrency);
             portfolio.ProcessFill(fill);
 
             // we can only take 'profit' on the closing part of the position, so we closed 100
@@ -191,7 +193,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
         {
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(accountCurrency, 0, 1m, accountCurrency), SymbolProperties.GetDefault(accountCurrency));
             security.SetMarketPrice(new Tick { Value = 100 });
             var timeKeeper = new TimeKeeper(reference);
             var securityManager = new SecurityManager(timeKeeper);
@@ -200,7 +202,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
             portfolio.SetCash("USD", 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100*1000m, portfolio.CashBook[CashBook.AccountCurrency].Amount);
+            Assert.AreEqual(100*1000m, portfolio.CashBook[accountCurrency].Amount);
             return security;
         }
 

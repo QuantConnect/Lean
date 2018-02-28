@@ -230,7 +230,8 @@ namespace QuantConnect.Jupyter
                                         date, 
                                         typeof(QuoteBar), 
                                         x, 
-                                        resolution ?? option.Resolution, 
+                                        resolution ?? option.Resolution,
+                                        Portfolio.CashBook.AccountCurrency,
                                         underlying.Exchange.Hours,
                                         MarketHoursDatabase.FromDataFolder().GetDataTimeZone(underlying.Symbol.ID.Market, underlying.Symbol, underlying.Type),
                                         Resolution.Minute, 
@@ -240,7 +241,7 @@ namespace QuantConnect.Jupyter
                                         LeanData.GetCommonTickTypeForCommonDataTypes(typeof(QuoteBar), underlying.Type))
                     );
 
-            requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });
+            requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date, Portfolio.CashBook.AccountCurrency) });
 
             return new OptionHistory(HistoryProvider.GetHistory(requests.OrderByDescending(x => x.Symbol.SecurityType), TimeZone).Memoize());
         }
@@ -267,6 +268,7 @@ namespace QuantConnect.Jupyter
                                         typeof(QuoteBar),
                                         x,
                                         resolution ?? future.Resolution,
+                                        Portfolio.CashBook.AccountCurrency,
                                         future.Exchange.Hours,
                                         MarketHoursDatabase.FromDataFolder().GetDataTimeZone(future.Symbol.ID.Market, future.Symbol, future.Type),
                                         Resolution.Minute,

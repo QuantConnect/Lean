@@ -55,6 +55,11 @@ namespace QuantConnect.Brokerages
         public string Name { get; private set; }
 
         /// <summary>
+        /// Base account currency
+        /// </summary>
+        public string AccountCurrency { get; set; } 
+        
+        /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
         public abstract bool IsConnected { get; }
@@ -63,9 +68,11 @@ namespace QuantConnect.Brokerages
         /// Creates a new Brokerage instance with the specified name
         /// </summary>
         /// <param name="name">The name of the brokerage</param>
-        protected Brokerage(string name)
+        /// <param name="accountCurrency">Account currency</param>
+        protected Brokerage(string name, string accountCurrency = "USD")
         {
             Name = name;
+            AccountCurrency = accountCurrency;
         }
 
         /// <summary>
@@ -216,6 +223,7 @@ namespace QuantConnect.Brokerages
         {
             get { return false; }
         }
+        
 
         /// <summary>
         /// Gets the history for the requested security

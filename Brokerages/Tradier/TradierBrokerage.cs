@@ -122,8 +122,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID)
-            : base("Tradier Brokerage")
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID, string accountCurrency)
+            : base("Tradier Brokerage", accountCurrency)
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
@@ -801,7 +801,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             return new List<Cash>
             {
-                new Cash("USD", GetBalanceDetails(_accountID).TotalCash, 1.0m)
+                new Cash("USD", GetBalanceDetails(_accountID).TotalCash, 1.0m, AccountCurrency)
             };
         }
 
