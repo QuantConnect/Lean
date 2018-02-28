@@ -278,9 +278,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)
                         {
-                            var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                            clone.Time = clone.Time.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
-                            packet.Add(clone);
+                            packet.Add(subscription.Current.Data);
                         }
 
                         // if we have data, add it to be added to the bridge
@@ -513,7 +511,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
-                subscription = new Subscription(request.Universe, request.Security, request.Configuration, enumerator, timeZoneOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, false);
+                var subscriptionDataEnumerator = SubscriptionData.Enumerator(request.Configuration, request.Security, timeZoneOffsetProvider, enumerator);
+                subscription = new Subscription(request.Universe, request.Security, request.Configuration, subscriptionDataEnumerator, timeZoneOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, false);
             }
             catch (Exception err)
             {
@@ -649,7 +648,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscription = new Subscription(request.Universe, request.Security, config, enumerator, tzOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
+            var subscriptionDataEnumerator = SubscriptionData.Enumerator(request.Configuration, request.Security, tzOffsetProvider, enumerator);
+            var subscription = new Subscription(request.Universe, request.Security, config, subscriptionDataEnumerator, tzOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
 
             return subscription;
         }

@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
+using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
@@ -969,6 +970,40 @@ namespace QuantConnect
             while (collection.TryTake(out item))
             {
                 handler(item);
+            }
+        }
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the current <see cref="PyObject"/>
+        /// </summary>
+        /// <param name="pyObject">The <see cref="PyObject"/> being converted</param>
+        /// <returns>string that represents the current PyObject</returns>
+        public static string ToSafeString(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                // PyObject objects that have the to_string method, like some pandas objects,
+                // can use this method to convert them into string objects
+                if (pyObject.HasAttr("to_string"))
+                {
+                    return Environment.NewLine + pyObject.InvokeMethod("to_string").ToString();
+                }
+
+                var value = pyObject.ToString();
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    var pythonType = pyObject.GetPythonType();
+                    if (pythonType.GetType() == typeof(PyObject))
+                    {
+                        value = pythonType.ToString();
+                    }
+                    else
+                    {
+                        var type = pythonType.As<Type>();
+                        value = pyObject.AsManagedObject(type).ToString();
+                    }
+                }
+                return value;
             }
         }
     }

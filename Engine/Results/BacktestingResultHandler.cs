@@ -30,6 +30,7 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Diagnostics;
+using System.IO;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -39,6 +40,10 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
+        // used for resetting out/error upon completion
+        private static readonly TextWriter StandardOut = Console.Out;
+        private static readonly TextWriter StandardError = Console.Error;
+
         private bool _exitTriggered = false;
         private BacktestNodePacket _job;
         private int _jobDays = 0;
@@ -139,8 +144,6 @@ namespace QuantConnect.Lean.Engine.Results
                 return _isActive;
             }
         }
-
-
 
         /// <summary>
         /// Sampling period for timespans between resamples of the charting equity.
@@ -264,6 +267,10 @@ namespace QuantConnect.Lean.Engine.Results
 
             Log.Trace("BacktestingResultHandler.Run(): Ending Thread...");
             _isActive = false;
+
+            // reset standard out/error
+            Console.SetOut(StandardOut);
+            Console.SetError(StandardError);
         } // End Run();
 
         /// <summary>
@@ -529,10 +536,14 @@ namespace QuantConnect.Lean.Engine.Results
             if (Config.GetBool("forward-console-messages", true))
             {
                 // we need to forward Console.Write messages to the algorithm's Debug function
-                var debug = new FuncTextWriter(algorithm.Debug);
-                var error = new FuncTextWriter(algorithm.Error);
-                Console.SetOut(debug);
-                Console.SetError(error);
+                Console.SetOut(new FuncTextWriter(algorithm.Debug));
+                Console.SetError(new FuncTextWriter(algorithm.Error));
+            }
+            else
+            {
+                // we need to forward Console.Write messages to the standard Log functions
+                Console.SetOut(new FuncTextWriter(msg => Log.Trace(msg)));
+                Console.SetError(new FuncTextWriter(msg => Log.Error(msg)));
             }
         }
 
@@ -746,7 +757,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Terminate the result thread and apply any required exit procedures.
         /// </summary>
-        public void Exit()
+        public virtual void Exit()
         {
             // Only process the logs once
             if (!_exitTriggered)
@@ -765,11 +776,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>In backtesting the order events are not sent because it would generate a high load of messaging.</remarks>
         /// <param name="newEvent">New order event details</param>
-        public void OrderEvent(OrderEvent newEvent)
+        public virtual void OrderEvent(OrderEvent newEvent)
         {
             // NOP. Don't do any order event processing for results in backtest mode.
         }
-
 
         /// <summary>
         /// Send an algorithm status update to the browser.

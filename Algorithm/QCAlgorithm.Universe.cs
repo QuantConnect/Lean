@@ -363,7 +363,7 @@ namespace QuantConnect.Algorithm
                 universe = new UserDefinedUniverse(uconfig,
                     new UniverseSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours, TimeSpan.Zero),
                     SecurityInitializer,
-                    QuantConnect.Time.OneDay,
+                    QuantConnect.Time.MaxTimeSpan,
                     new List<Symbol> { security.Symbol }
                     );
                 UniverseManager.Add(universeSymbol, universe);

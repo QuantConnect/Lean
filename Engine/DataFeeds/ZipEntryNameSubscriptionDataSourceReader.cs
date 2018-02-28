@@ -15,10 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Ionic.Zip;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -32,7 +30,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
-        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -43,13 +40,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataCacheProvider">Used to cache data</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataCacheProvider = dataCacheProvider;
             _config = config;
             _date = date;
             _isLiveMode = isLiveMode;
@@ -63,10 +58,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            ZipFile zip;
+            ICollection<string> entryNames;
             try
             {
-                zip = new ZipFile(source.Source);
+                using (var zip = new ZipFile(source.Source))
+                {
+                    entryNames = zip.EntryFileNames;
+                }
             }
             catch (ZipException err)
             {
@@ -74,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 yield break;
             }
 
-            foreach (var entryFileName in zip.EntryFileNames)
+            foreach (var entryFileName in entryNames)
             {
                 var instance = _factory.Reader(_config, entryFileName, _date, _isLiveMode);
                 if (instance != null && instance.EndTime != default(DateTime))
@@ -91,8 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="exception">The exception if one was raised, otherwise null</param>
         private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
         {
-            var handler = InvalidSource;
-            if (handler != null) handler(this, new InvalidSourceEventArgs(source, exception));
+            InvalidSource?.Invoke(this, new InvalidSourceEventArgs(source, exception));
         }
     }
 }

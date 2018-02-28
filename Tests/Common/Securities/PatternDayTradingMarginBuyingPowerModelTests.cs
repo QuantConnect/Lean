@@ -29,13 +29,13 @@ namespace QuantConnect.Tests.Common.Securities
     public class PatternDayTradingMarginBuyingPowerModelTests
     {
         // Test class to enable calling protected methods
-        public class TestPatternDayTradingMarginBuyingPowerModel : PatternDayTradingMarginBuyingPowerModel
+        public class TestPatternDayTradingMarginModel : PatternDayTradingMarginModel
         {
-            public TestPatternDayTradingMarginBuyingPowerModel()
+            public TestPatternDayTradingMarginModel()
             {
             }
 
-            public TestPatternDayTradingMarginBuyingPowerModel(decimal closedMarketLeverage, decimal openMarketLeverage)
+            public TestPatternDayTradingMarginModel(decimal closedMarketLeverage, decimal openMarketLeverage)
                 : base(closedMarketLeverage, openMarketLeverage)
             {
             }
@@ -61,12 +61,12 @@ namespace QuantConnect.Tests.Common.Securities
         public void InitializationTests()
         {
             // No parameters initialization, used default PDT 4x leverage open market and 2x leverage otherwise
-            var model = new PatternDayTradingMarginBuyingPowerModel();
+            var model = new PatternDayTradingMarginModel();
             var leverage = model.GetLeverage(CreateSecurity(Noon));
 
             Assert.AreEqual(4.0m, leverage);
 
-            model = new PatternDayTradingMarginBuyingPowerModel(2.0m, 5.0m);
+            model = new PatternDayTradingMarginModel(2.0m, 5.0m);
             leverage = model.GetLeverage(CreateSecurity(Noon));
 
             Assert.AreEqual(5.0m, leverage);
@@ -75,12 +75,12 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void SetLeverageTest()
         {
-            var model = new PatternDayTradingMarginBuyingPowerModel();
+            var model = new PatternDayTradingMarginModel();
 
             // Open market
             var security = CreateSecurity(Noon);
 
-            security.BuyingPowerModel = new PatternDayTradingMarginBuyingPowerModel();
+            security.BuyingPowerModel = new PatternDayTradingMarginModel();
 
             model.SetLeverage(security, 10m);
             Assert.AreNotEqual(10m, model.GetLeverage(security));
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 4m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginBuyingPowerModel();
+            var model = new TestPatternDayTradingMarginModel();
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 5m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginBuyingPowerModel(2m, leverage);
+            var model = new TestPatternDayTradingMarginModel(2m, leverage);
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
@@ -132,7 +132,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 2m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginBuyingPowerModel();
+            var model = new TestPatternDayTradingMarginModel();
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
             var security = CreateSecurity(Midnight);
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 3m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginBuyingPowerModel(leverage, 4m);
+            var model = new TestPatternDayTradingMarginModel(leverage, 4m);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
             var security = CreateSecurity(Midnight);
@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyMaintenaceMargin()
         {
-            var model = new TestPatternDayTradingMarginBuyingPowerModel();
+            var model = new TestPatternDayTradingMarginModel();
 
             // Open Market
             var security = CreateSecurity(Noon);
@@ -214,7 +214,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new MarginCallModelTests.OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            var model = new PatternDayTradingMarginBuyingPowerModel();
+            var model = new PatternDayTradingMarginModel();
 
             // Open Market
             var security = CreateSecurity(Noon);
@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new MarginCallModelTests.OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            var model = new PatternDayTradingMarginBuyingPowerModel();
+            var model = new PatternDayTradingMarginModel();
 
             // Open Market
             var security = CreateSecurity(Noon);

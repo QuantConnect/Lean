@@ -15,6 +15,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -26,21 +27,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the time these scores were last updated
         /// </summary>
+        [JsonProperty]
         public DateTime UpdatedTimeUtc { get; private set; }
 
         /// <summary>
         /// Gets the direction score
         /// </summary>
+        [JsonProperty]
         public double Direction { get; private set; }
 
         /// <summary>
         /// Gets the magnitude score
         /// </summary>
+        [JsonProperty]
         public double Magnitude { get; private set; }
 
         /// <summary>
         /// Gets whether or not this is the alpha's final score
         /// </summary>
+        [JsonProperty]
         public bool IsFinalScore { get; private set; }
 
         /// <summary>

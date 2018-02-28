@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private SingleEntryDataCacheProvider _dataCacheProvider;
-
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private string _lastUsedFileName;
@@ -59,38 +57,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
+            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
+            {
+                var tradableDays = _tradableDaysProvider(request);
 
-            var tradableDays = _tradableDaysProvider(request);
+                var fineFundamental = new FineFundamental();
+                var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
 
-            var fineFundamental = new FineFundamental();
-            var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
-
-            return (
-                from date in tradableDays
-
-                let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
-                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, _dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode)
-                let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
-
-                select new FineFundamental
+                foreach (var date in tradableDays)
                 {
-                    DataType = MarketDataType.Auxiliary,
-                    Symbol = request.Configuration.Symbol,
-                    Time = date,
-                    CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : new CompanyReference(),
-                    SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : new SecurityReference(),
-                    FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : new FinancialStatements(),
-                    EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : new EarningReports(),
-                    OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : new OperationRatios(),
-                    EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : new EarningRatios(),
-                    ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios()
+                    var fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date);
+                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode);
+                    var fineFundamentalForDate = (FineFundamental) fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
+
+                    yield return new FineFundamental
+                    {
+                        DataType = MarketDataType.Auxiliary,
+                        Symbol = request.Configuration.Symbol,
+                        Time = date,
+                        CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : new CompanyReference(),
+                        SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : new SecurityReference(),
+                        FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : new FinancialStatements(),
+                        EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : new EarningReports(),
+                        OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : new OperationRatios(),
+                        EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : new EarningRatios(),
+                        ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios()
+                    };
                 }
-                ).GetEnumerator();
+            }
         }
 
         /// <summary>
-        /// Returns a SubscriptionDataSource for the FineFundamental class, 
+        /// Returns a SubscriptionDataSource for the FineFundamental class,
         /// returning data from a previous date if not available for the requested date
         /// </summary>
         private SubscriptionDataSource GetSource(FineFundamental fine, SubscriptionDataConfig config, DateTime date)

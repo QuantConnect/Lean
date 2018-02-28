@@ -29,9 +29,9 @@ namespace QuantConnect.Tests.Common.Securities
     public class MarginCallModelTests
     {
         // Test class to enable calling protected methods
-        public class TestSecurityMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
+        public class TestSecurityMarginModel : SecurityMarginModel
         {
-            public TestSecurityMarginBuyingPowerModel(decimal leverage) : base(leverage) {}
+            public TestSecurityMarginModel(decimal leverage) : base(leverage) {}
 
             public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
             {
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal actual = 2;
             var security = GetSecurity(Symbols.AAPL);
-            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(actual);
+            security.BuyingPowerModel = new SecurityMarginModel(actual);
             var expected = security.Leverage;
 
             Assert.AreEqual(expected, actual);
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetAndGetLeverageTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(2);
+            security.BuyingPowerModel = new SecurityMarginModel(2);
 
             const decimal actual = 50;
             security.SetLeverage(actual);
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetInitialMarginRequiredForOrderTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(2);
+            var buyingPowerModel = new TestSecurityMarginModel(2);
             security.BuyingPowerModel = buyingPowerModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
             var actual = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expected = quantity / leverage;
 
             var security = GetSecurity(Symbols.AAPL);
-            security.BuyingPowerModel = new SecurityMarginBuyingPowerModel(leverage);
+            security.BuyingPowerModel = new SecurityMarginModel(leverage);
             security.Holdings.SetHoldings(1m, quantity);
             var actual = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
 
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = GetPortfolio(orderProcessor, quantity);
 
             var security = GetSecurity(Symbols.AAPL);
-            var buyingPowerModel = new TestSecurityMarginBuyingPowerModel(leverage);
+            var buyingPowerModel = new TestSecurityMarginModel(leverage);
             security.BuyingPowerModel = buyingPowerModel;
             portfolio.Securities.Add(security);
 

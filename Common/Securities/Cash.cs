@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -34,8 +35,17 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the symbol of the security required to provide conversion rates.
+        /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
+        /// is returned
         /// </summary>
-        public Symbol SecuritySymbol { get; private set; }
+        public Symbol SecuritySymbol => ConversionRateSecurity?.Symbol ?? QuantConnect.Symbol.Empty;
+
+        /// <summary>
+        /// Gets the security used to apply conversion rates.
+        /// If this cash represents the account currency, then null is returned.
+        /// </summary>
+        [JsonIgnore]
+        public Security ConversionRateSecurity { get; private set; }
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -138,7 +148,7 @@ namespace QuantConnect.Securities
         {
             if (Symbol == CashBook.AccountCurrency)
             {
-                SecuritySymbol = QuantConnect.Symbol.Empty;
+                ConversionRateSecurity = null;
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
                 return null;
@@ -152,12 +162,12 @@ namespace QuantConnect.Securities
             {
                 if (config.Symbol.Value == normal)
                 {
-                    SecuritySymbol = config.Symbol;
+                    ConversionRateSecurity = securities[config.Symbol];
                     return null;
                 }
                 if (config.Symbol.Value == invert)
                 {
-                    SecuritySymbol = config.Symbol;
+                    ConversionRateSecurity = securities[config.Symbol];
                     _invertRealTimePrice = true;
                     return null;
                 }
@@ -197,7 +207,6 @@ namespace QuantConnect.Securities
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, TickType.Quote, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
-                    SecuritySymbol = config.Symbol;
 
                     Security security;
                     if (securityType == SecurityType.Cfd)
@@ -212,6 +221,8 @@ namespace QuantConnect.Securities
                     {
                         security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
                     }
+
+                    ConversionRateSecurity = security;
                     securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
                     return security;

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,10 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Scheduling;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
@@ -68,6 +70,86 @@ namespace QuantConnect.Tests.Common.Scheduling
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
             Assert.AreEqual(time, sevent.NextEventUtcTime);
+        }
+
+        [Test]
+        public void FiresEventWhenTimeEquals()
+        {
+            var triggered = false;
+            var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
+            {
+                triggered = true;
+            });
+            se.IsLoggingEnabled = true;
+
+            se.Scan(new DateTime(2015, 08, 06));
+            Assert.IsFalse(triggered);
+
+            se.Scan(new DateTime(2015, 08, 07));
+            Assert.IsTrue(triggered);
+        }
+
+        [Test]
+        public void FiresEventWhenTimePasses()
+        {
+            var triggered = false;
+            var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
+            {
+                triggered = true;
+            });
+            se.IsLoggingEnabled = true;
+
+            se.Scan(new DateTime(2015, 08, 06));
+            Assert.IsFalse(triggered);
+
+            se.Scan(new DateTime(2015, 08, 08));
+            Assert.IsTrue(triggered);
+        }
+
+        [Test]
+        public void SchedulesNextEvent()
+        {
+            var first = new DateTime(2015, 08, 07);
+            var second = new DateTime(2015, 08, 08);
+            var dates = new[] { first, second }.ToHashSet();
+            var se = new ScheduledEvent("test", dates.ToList(), (name, triggerTime) =>
+            {
+                dates.Remove(triggerTime);
+            });
+
+            se.Scan(first);
+            Assert.IsFalse(dates.Contains(first));
+
+            se.Scan(second);
+            Assert.IsFalse(dates.Contains(second));
+        }
+
+        [Test]
+        public void DoesNothingAfterEventsEnd()
+        {
+            var triggered = false;
+            var first = new DateTime(2015, 08, 07);
+            var se = new ScheduledEvent("test", first, (name, triggerTime) =>
+            {
+                triggered = true;
+            });
+
+            se.Scan(first);
+            Assert.IsTrue(triggered);
+
+            triggered = false;
+            se.Scan(first.AddYears(100));
+            Assert.IsFalse(triggered);
+        }
+
+        [Test]
+        public void ScheduledEventsHaveUniqueName()
+        {
+            var first = DateTime.UtcNow;
+            var se1 = new ScheduledEvent("test", first);
+            var se2 = new ScheduledEvent("test", first);
+
+            Assert.IsTrue(se1.Name != se2.Name);
         }
     }
 }

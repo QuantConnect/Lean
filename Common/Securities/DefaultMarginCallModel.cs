@@ -99,7 +99,7 @@ namespace QuantConnect.Securities
 
                     if (security.Holdings.Quantity != 0 && security.Price != 0)
                     {
-                        var buyingPowerModel = security.BuyingPowerModel as SecurityMarginBuyingPowerModel;
+                        var buyingPowerModel = security.BuyingPowerModel as SecurityMarginModel;
                         if (buyingPowerModel != null)
                         {
                             var maintenanceMarginRequirement = buyingPowerModel.GetMaintenanceMarginRequirement(security);

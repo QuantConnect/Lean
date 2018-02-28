@@ -238,6 +238,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the buying power model used for this security, an alias for <see cref="BuyingPowerModel"/>
+        /// </summary>
+        public IBuyingPowerModel MarginModel
+        {
+            get { return BuyingPowerModel; }
+            set { BuyingPowerModel = value; }
+        }
+
+        /// <summary>
         /// Gets the settlement model used for this security
         /// </summary>
         public ISettlementModel SettlementModel
@@ -296,7 +305,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(1m),
+                new SecurityMarginModel(1m),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel())
         {
@@ -317,7 +326,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginBuyingPowerModel(1m),
+                new SecurityMarginModel(1m),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel()
                 )

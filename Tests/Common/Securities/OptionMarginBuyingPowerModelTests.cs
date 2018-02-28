@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Securities
     public class OptionMarginBuyingPowerModelTests
     {
         // Test class to enable calling protected methods
-        public class TestOptionMarginBuyingPowerModel : OptionMarginBuyingPowerModel
+        public class TestOptionMarginModel : OptionMarginModel
         {
             public new decimal GetMaintenanceMargin(Security security)
             {
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var tz = TimeZones.NewYork;
             var option = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties("", CashBook.AccountCurrency.ToUpper(), 100, 0.01m, 1));
-            var buyingPowerModel = new OptionMarginBuyingPowerModel();
+            var buyingPowerModel = new OptionMarginModel();
 
             // we test that options dont have leverage (100%) and it cannot be changed
             Assert.AreEqual(1m, buyingPowerModel.GetLeverage(option));
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(1.5m, 2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // we expect long positions to be 100% charged.
             Assert.AreEqual(optionPut.Holdings.AbsoluteHoldingsCost, buyingPowerModel.GetMaintenanceMargin(optionPut));
@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 180 - (192 - 180)) = 7600
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(price, -2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 182) = 10080
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196 - (196 - 192)) = 9840
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(price, -2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (0.18 + 0.2 * 200) = 8036
@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(optionPriceStart, -2);
 
-            var buyingPowerModel = new TestOptionMarginBuyingPowerModel();
+            var buyingPowerModel = new TestOptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (4.68 + 0.2 * 192) = 8616

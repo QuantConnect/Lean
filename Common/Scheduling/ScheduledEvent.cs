@@ -110,7 +110,9 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">Delegate to be called each time an event passes</param>
         public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
         {
-            _name = name;
+            // make the event name unique
+            _name = name + "-" + Guid.NewGuid().ToString("N");
+
             _callback = callback;
             _orderedEventUtcTimes = orderedEventUtcTimes;
 
@@ -246,7 +248,7 @@ namespace QuantConnect.Scheduling
 
                 // This scheduled event failed, so don't repeat the same event
                 _needsMoveNext = true;
-                throw new ScheduledEventException(ex.ToString());
+                throw new ScheduledEventException(ex.Message, ex);
             }
         }
     }
@@ -257,17 +259,13 @@ namespace QuantConnect.Scheduling
     public class ScheduledEventException : Exception
     {
         /// <summary>
-        /// Exception message
-        /// </summary>
-        public string ScheduledEventExceptionMessage { get; }
-
-        /// <summary>
         /// ScheduledEventException constructor
         /// </summary>
-        /// <param name="exceptionMessage">The exception as a string</param>
-        public ScheduledEventException(string exceptionMessage) : base(exceptionMessage)
+        /// <param name="message">The exception as a string</param>
+        /// <param name="innerException">The exception that is the cause of the current exception</param>
+        public ScheduledEventException(string message, Exception innerException) : base(message, innerException)
         {
-            ScheduledEventExceptionMessage = exceptionMessage;
+
         }
     }
 }

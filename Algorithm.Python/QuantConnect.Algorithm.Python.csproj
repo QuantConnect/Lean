@@ -135,15 +135,17 @@
     <None Include="CustomSecurityInitializerAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BasicTemplateCryptoAlgorithm.py" />
     <Content Include="BasicTemplateFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateLibrary.py" />
+    <Content Include="CustomIndicatorAlgorithm.py" />
     <Content Include="CustomVolatilityModelAlgorithm.py" />
     <Content Include="HistoryAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.4\lib\Python.Runtime.dll</HintPath>
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.5\lib\Python.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -155,12 +157,12 @@
       ./build.sh
     </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.4\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.4\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.4\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.4\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

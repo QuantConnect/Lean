@@ -273,6 +273,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Get a list of open orders satisfying the filter.
+        /// </summary>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOpenOrders(Func<Order, bool> filter)
+        {
+            filter = filter ?? (x => true);
+            return _orderProcessor.GetOrders(x => x.Status.IsOpen() && filter(x)).ToList();
+        }
+
+        /// <summary>
         /// Gets the current number of orders that have been processed
         /// </summary>
         public int OrdersCount

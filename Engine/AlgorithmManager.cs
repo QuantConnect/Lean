@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            foreach (var timeSlice in Stream(job, algorithm, feed, results, token))
+            foreach (var timeSlice in Stream(algorithm, feed, results, token))
             {
                 // reset our timer on each loop
                 _currentTimeStepTime = DateTime.UtcNow;
@@ -308,16 +308,6 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
-                //On each time step push the real time prices to the cashbook so we can have updated conversion rates
-                foreach (var update in timeSlice.CashBookUpdateData)
-                {
-                    var cash = update.Target;
-                    foreach (var data in update.Data)
-                    {
-                        cash.Update(data);
-                    }
-                }
-
                 //Update the securities properties: first before calling user code to avoid issues with data
                 foreach (var update in timeSlice.SecuritiesUpdateData)
                 {
@@ -329,6 +319,17 @@ namespace QuantConnect.Lean.Engine
 
                     // Send market price updates to the TradeBuilder
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
+                }
+
+                // poke each cash object to update from the recent security data
+                foreach (var kvp in algorithm.Portfolio.CashBook)
+                {
+                    var cash = kvp.Value;
+                    var updateData = cash.ConversionRateSecurity?.GetLastData();
+                    if (updateData != null)
+                    {
+                        cash.Update(updateData);
+                    }
                 }
 
                 // sample alpha charts now that we've updated time/price information but BEFORE we receive new alphas
@@ -447,6 +448,12 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
+                        // only process split occurred events (ignore warnings)
+                        if (split.Type != SplitType.SplitOccurred)
+                        {
+                            continue;
+                        }
+
                         Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
                         algorithm.Portfolio.ApplySplit(split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
@@ -700,7 +707,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private IEnumerable<TimeSlice> Stream(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, IResultHandler results, CancellationToken cancellationToken)
+        private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, IDataFeed feed, IResultHandler results, CancellationToken cancellationToken)
         {
             bool setStartTime = false;
             var timeZone = algorithm.TimeZone;
@@ -776,7 +783,15 @@ namespace QuantConnect.Lean.Engine
                             var ticks = data as List<Tick>;
                             if (ticks != null) list.AddRange(ticks);
                             else               list.Add(data);
-                            paired.Add(new DataFeedPacket(security, security.Subscriptions.First(), list));
+
+                            Type dataType = data.GetType();
+                            var config = security.Subscriptions.FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
+                            if (config == null)
+                            {
+                                throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
+                            }
+
+                            paired.Add(new DataFeedPacket(security, config, list));
                         }
                         timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None);
                     }

@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Securities
     public class FutureMarginBuyingPowerModelTests
     {
         // Test class to enable calling protected methods
-        public class TestFutureMarginBuyingPowerModel : FutureMarginBuyingPowerModel
+        public class TestFutureMarginModel : FutureMarginModel
         {
             public new decimal GetMaintenanceMargin(Security security)
             {
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new TestFutureMarginBuyingPowerModel();
+            var buyingPowerModel = new TestFutureMarginModel();
             Assert.AreEqual(2900m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new TestFutureMarginBuyingPowerModel();
+            var buyingPowerModel = new TestFutureMarginModel();
             Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new TestFutureMarginBuyingPowerModel();
+            var buyingPowerModel = new TestFutureMarginModel();
             Assert.AreEqual(625m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we move forward to exact date when margin req changed

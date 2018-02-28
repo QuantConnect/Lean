@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -64,6 +66,8 @@ namespace QuantConnect.Algorithm.CSharp
         //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
         public void OnData(TradeBars data)
         {
+            Console.WriteLine($"OnData({UtcTime:o}): Keys: {string.Join(", ", data.Keys.OrderBy(x => x))}");
+
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None) return;
 
@@ -89,6 +93,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             _changes = changes;
+        }
+
+        public override void OnOrderEvent(OrderEvent fill)
+        {
+            Console.WriteLine($"OnOrderEvent({UtcTime:o}):: {fill}");
         }
     }
 }

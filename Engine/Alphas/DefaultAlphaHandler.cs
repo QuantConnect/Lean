@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
         /// </summary>
-        public bool IsActive => !_cancellationTokenSource?.IsCancellationRequested ?? false;
+        public bool IsActive { get; private set; }
 
         /// <summary>
         /// Gets the current alpha runtime statistics
@@ -176,6 +176,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
+            IsActive = true;
             _cancellationTokenSource = new CancellationTokenSource();
 
             // run main loop until canceled, will clean out work queues separately
@@ -208,6 +209,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             StoreAlphas();
 
             Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
+            IsActive = false;
         }
 
         /// <summary>

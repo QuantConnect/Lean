@@ -25,7 +25,7 @@ namespace QuantConnect.Securities.Option
     /// Options are not traded on margin. Margin requirements exist though for those portfolios with short positions.
     /// Current implementation covers only single long/naked short option positions.
     /// </remarks>
-    public class OptionMarginBuyingPowerModel : SecurityMarginBuyingPowerModel
+    public class OptionMarginModel : SecurityMarginModel
     {
         // initial margin
         private const decimal OptionMarginRequirement = 1;

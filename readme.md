@@ -82,9 +82,9 @@ echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /
 sudo apt-get update
 sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
 ```
-- Install Nuget and Python
+- Install Nuget
 ```
-sudo apt-get update && sudo apt-get install -y nuget python-pip
+sudo apt-get update && sudo apt-get install -y nuget
 ```
 - Restore NuGet packages then compile:
 ```

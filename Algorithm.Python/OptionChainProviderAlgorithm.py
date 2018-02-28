@@ -15,14 +15,12 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
 import numpy as np
 from datetime import timedelta
 
@@ -36,11 +34,11 @@ from datetime import timedelta
 ### <meta name="tag" content="selecting options" />
 ### <meta name="tag" content="manual selection" />
 
-class BootCampTask(QCAlgorithm):
+class OptionChainProviderAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2017, 06, 01)
-        self.SetEndDate(2017, 07, 01)
+        self.SetStartDate(2017, 6, 1)
+        self.SetEndDate(2017, 7, 1)
         self.SetCash(100000)
         self.equity = self.AddEquity("AMZN", Resolution.Minute)
         
