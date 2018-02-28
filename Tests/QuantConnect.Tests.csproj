@@ -148,7 +148,7 @@
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
     <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
-    <Compile Include="Common\Exceptions\FakeExceptionProjection.cs" />
+    <Compile Include="Common\Exceptions\FakeExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\ScheduledEventExceptionProjectionTests.cs" />
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />

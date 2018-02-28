@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         public bool CanProjectReturnsTrueForOnlyScheduledEventExceptionType(Type exceptionType)
         {
             var exception = CreateExceptionFromType(exceptionType);
-            return new ScheduledEventExceptionProjection().CanProject(exception);
+            return new ScheduledEventExceptionInterpreter().CanInterpret(exception);
         }
 
         [Test]
@@ -48,9 +48,9 @@ namespace QuantConnect.Tests.Common.Exceptions
         public void ProjectThrowsForNonScheduledEventExceptionTypes(Type exceptionType, bool expectThrow)
         {
             var exception = CreateExceptionFromType(exceptionType);
-            var projection = new ScheduledEventExceptionProjection();
+            var projection = new ScheduledEventExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => projection.Project(exception, null), constraint);
+            Assert.That(() => projection.Interpret(exception, null), constraint);
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var name = id.ToString("D");
             var message = id.ToString("N");
             var exception = new ScheduledEventException(name, message, null);
-            var projected = new ScheduledEventExceptionProjection().Project(exception, null);
+            var projected = new ScheduledEventExceptionInterpreter().Interpret(exception, null);
 
             var expectedProjectedMessage = $"In Scheduled Event '{name}', {message}";
             Assert.AreEqual(expectedProjectedMessage, projected.Message);
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var inner = new Exception();
             var exception = new ScheduledEventException("name", "message", inner);
-            var projected = new ScheduledEventExceptionProjection().Project(exception, null);
+            var projected = new ScheduledEventExceptionInterpreter().Interpret(exception, null);
             Assert.AreEqual(inner, projected.InnerException);
         }
 
@@ -80,16 +80,16 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var inner = new Exception("inner");
             var exception = new ScheduledEventException("name", "message", inner);
-            var mockInnerProjection = new Mock<IExceptionProjection>();
-            mockInnerProjection.Setup(iep => iep.Project(inner, mockInnerProjection.Object))
+            var mockInnerProjection = new Mock<IExceptionInterpreter>();
+            mockInnerProjection.Setup(iep => iep.Interpret(inner, mockInnerProjection.Object))
                 .Returns(new Exception("Projected " + inner.Message))
                 .Verifiable();
 
-            var projection = new ScheduledEventExceptionProjection();
+            var projection = new ScheduledEventExceptionInterpreter();
 
-            projection.Project(exception, mockInnerProjection.Object);
+            projection.Interpret(exception, mockInnerProjection.Object);
 
-            mockInnerProjection.Verify(iep => iep.Project(inner, mockInnerProjection.Object), Times.Exactly(1));
+            mockInnerProjection.Verify(iep => iep.Interpret(inner, mockInnerProjection.Object), Times.Exactly(1));
         }
 
         private Exception CreateExceptionFromType(Type type)

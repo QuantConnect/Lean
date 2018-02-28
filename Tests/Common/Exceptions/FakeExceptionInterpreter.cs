@@ -21,12 +21,12 @@ namespace QuantConnect.Tests.Common.Exceptions
     /// <summary>
     /// Provids a fake implementation that can be utilized in tests
     /// </summary>
-    public class FakeExceptionProjection : IExceptionProjection
+    public class FakeExceptionInterpreter : IExceptionInterpreter
     {
         private readonly Func<Exception, bool> _canProject;
         private readonly Func<Exception, Exception> _project;
 
-        public FakeExceptionProjection()
+        public FakeExceptionInterpreter()
         {
             _canProject = e => true;
 
@@ -41,18 +41,18 @@ namespace QuantConnect.Tests.Common.Exceptions
             };
         }
 
-        public FakeExceptionProjection(Func<Exception, bool> canProject, Func<Exception, Exception> project)
+        public FakeExceptionInterpreter(Func<Exception, bool> canProject, Func<Exception, Exception> project)
         {
             _canProject = canProject;
             _project = project;
         }
 
-        public bool CanProject(Exception exception)
+        public bool CanInterpret(Exception exception)
         {
             return _canProject(exception);
         }
 
-        public Exception Project(Exception exception, IExceptionProjection innerProjection)
+        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             return _project(exception);
         }

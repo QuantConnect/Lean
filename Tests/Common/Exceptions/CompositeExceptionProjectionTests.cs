@@ -27,9 +27,9 @@ namespace QuantConnect.Tests.Common.Exceptions
         [Test]
         public void CreatesFromAssemblies()
         {
-            var assembly = typeof(FakeExceptionProjection).Assembly;
-            var projector = CompositeExceptionProjection.CreateFromAssemblies(new[] {assembly});
-            Assert.AreEqual(1, projector.Projections.Count(p => p.GetType() == typeof(FakeExceptionProjection)));
+            var assembly = typeof(FakeExceptionInterpreter).Assembly;
+            var projector = StackExceptionInterpreter.CreateFromAssemblies(new[] {assembly});
+            Assert.AreEqual(1, projector.Interpreters.Count(p => p.GetType() == typeof(FakeExceptionInterpreter)));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var projectCalled = new List<int>();
             var projections = new[]
             {
-                new FakeExceptionProjection(e =>
+                new FakeExceptionInterpreter(e =>
                 {
                     canProjectCalled.Add(0);
                     return false;
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Exceptions
                     projectCalled.Add(0);
                     return e;
                 }),
-                new FakeExceptionProjection(e =>
+                new FakeExceptionInterpreter(e =>
                 {
                     canProjectCalled.Add(1);
                     return true;
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Exceptions
                     projectCalled.Add(1);
                     return e;
                 }),
-                new FakeExceptionProjection(e =>
+                new FakeExceptionInterpreter(e =>
                 {
                     canProjectCalled.Add(2);
                     return false;
@@ -68,8 +68,8 @@ namespace QuantConnect.Tests.Common.Exceptions
                 })
             };
 
-            var projector = new CompositeExceptionProjection(projections);
-            projector.Project(new Exception(), null);
+            var projector = new StackExceptionInterpreter(projections);
+            projector.Interpret(new Exception(), null);
 
             // can project called for 1st and second entry
             Assert.Contains(0, canProjectCalled);
@@ -92,12 +92,12 @@ namespace QuantConnect.Tests.Common.Exceptions
             var inner = new Exception("inner");
             var middle = new Exception("middle", inner);
             var outter = new Exception("outter", middle);
-            var projector = new CompositeExceptionProjection(new[]
+            var projector = new StackExceptionInterpreter(new[]
             {
-                new FakeExceptionProjection()
+                new FakeExceptionInterpreter()
             });
 
-            var projected = projector.Project(outter, null);
+            var projected = projector.Interpret(outter, null);
             Assert.AreEqual("Projected 1: outter", projected.Message);
             Assert.AreEqual("Projected 2: middle", projected.InnerException.Message);
             Assert.AreEqual("Projected 3: inner", projected.InnerException.InnerException.Message);

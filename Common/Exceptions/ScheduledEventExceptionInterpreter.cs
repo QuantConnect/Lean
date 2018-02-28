@@ -21,25 +21,25 @@ namespace QuantConnect.Exceptions
     /// <summary>
     /// Projects <see cref="ScheduledEventException"/> instances
     /// </summary>
-    public class ScheduledEventExceptionProjection : IExceptionProjection
+    public class ScheduledEventExceptionInterpreter : IExceptionInterpreter
     {
         /// <summary>
-        /// Determines if this projection should be applied to the specified exception.
+        /// Determines if this interpreter should be applied to the specified exception.
         /// </summary>
         /// <param name="exception">The exception to check</param>
-        /// <returns>True if the exception can be projected, false otherwise</returns>
-        public bool CanProject(Exception exception) => exception?.GetType() == typeof(ScheduledEventException);
+        /// <returns>True if the exception can be interpreted, false otherwise</returns>
+        public bool CanInterpret(Exception exception) => exception?.GetType() == typeof(ScheduledEventException);
 
         /// <summary>
-        /// Project the specified exception into a new exception
+        /// Interprets the specified exception into a new exception
         /// </summary>
-        /// <param name="exception">The exception to be projected</param>
-        /// <param name="innerProjection">A projection that should be applied to the inner exception.
-        /// This provides a link back allowing the inner exception to be projected using the projections
-        /// configured in the exception projector. Individual implementations *may* ignore this value if
-        /// required.</param>
-        /// <returns>The projected exception</returns>
-        public Exception Project(Exception exception, IExceptionProjection innerProjection)
+        /// <param name="exception">The exception to be interpreted</param>
+        /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.
+        /// This provides a link back allowing the inner exceptions to be interpreted using the intepretators
+        /// configured in the <see cref="StackExceptionInterpreter"/>. Individual implementations *may* ignore
+        /// this value if required.</param>
+        /// <returns>The interpreted exception</returns>
+        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var see = (ScheduledEventException) exception;
 
@@ -50,7 +50,7 @@ namespace QuantConnect.Exceptions
                 message = $"In Scheduled Event '{see.ScheduledEventName}', {message}";
             }
 
-            var inner = innerProjection.Project(see.InnerException, innerProjection);
+            var inner = innerInterpreter.Interpret(see.InnerException, innerInterpreter);
             return new ScheduledEventException(see.ScheduledEventName, message, inner);
         }
     }
