@@ -22,14 +22,14 @@ using QuantConnect.Exceptions;
 namespace QuantConnect.Tests.Common.Exceptions
 {
     [TestFixture]
-    public class ExceptionProjectorTests
+    public class CompositeExceptionProjectionTests
     {
         [Test]
         public void CreatesFromAssemblies()
         {
-            var assembly = typeof(MockExceptionProjection).Assembly;
-            var projector = ExceptionProjector.CreateFromAssemblies(new[] {assembly});
-            Assert.AreEqual(1, projector.Projections.Count(p => p.GetType() == typeof(MockExceptionProjection)));
+            var assembly = typeof(FakeExceptionProjection).Assembly;
+            var projector = CompositeExceptionProjection.CreateFromAssemblies(new[] {assembly});
+            Assert.AreEqual(1, projector.Projections.Count(p => p.GetType() == typeof(FakeExceptionProjection)));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var projectCalled = new List<int>();
             var projections = new[]
             {
-                new MockExceptionProjection(e =>
+                new FakeExceptionProjection(e =>
                 {
                     canProjectCalled.Add(0);
                     return false;
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Exceptions
                     projectCalled.Add(0);
                     return e;
                 }),
-                new MockExceptionProjection(e =>
+                new FakeExceptionProjection(e =>
                 {
                     canProjectCalled.Add(1);
                     return true;
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Exceptions
                     projectCalled.Add(1);
                     return e;
                 }),
-                new MockExceptionProjection(e =>
+                new FakeExceptionProjection(e =>
                 {
                     canProjectCalled.Add(2);
                     return false;
@@ -68,8 +68,8 @@ namespace QuantConnect.Tests.Common.Exceptions
                 })
             };
 
-            var projector = new ExceptionProjector(projections);
-            projector.Project(new Exception());
+            var projector = new CompositeExceptionProjection(projections);
+            projector.Project(new Exception(), null);
 
             // can project called for 1st and second entry
             Assert.Contains(0, canProjectCalled);
@@ -86,34 +86,21 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.That(projectCalled, Is.Not.Contains(2));
         }
 
-        class MockExceptionProjection : IExceptionProjection
+        [Test]
+        public void RecursivelyProjectsInnerExceptions()
         {
-            private readonly Func<Exception, bool> _canProject;
-            private readonly Func<Exception, Exception> _project;
-
-            public MockExceptionProjection()
+            var inner = new Exception("inner");
+            var middle = new Exception("middle", inner);
+            var outter = new Exception("outter", middle);
+            var projector = new CompositeExceptionProjection(new[]
             {
-                _canProject = e => true;
+                new FakeExceptionProjection()
+            });
 
-                var count = 0;
-                _project = e => new Exception($"Projected {++count}", e);
-            }
-
-            public MockExceptionProjection(Func<Exception, bool> canProject, Func<Exception, Exception> project)
-            {
-                _canProject = canProject;
-                _project = project;
-            }
-
-            public bool CanProject(Exception exception)
-            {
-                return _canProject(exception);
-            }
-
-            public Exception Project(Exception exception)
-            {
-                return _project(exception);
-            }
+            var projected = projector.Project(outter, null);
+            Assert.AreEqual("Projected 1: outter", projected.Message);
+            Assert.AreEqual("Projected 2: middle", projected.InnerException.Message);
+            Assert.AreEqual("Projected 3: inner", projected.InnerException.InnerException.Message);
         }
     }
 }

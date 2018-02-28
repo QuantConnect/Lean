@@ -171,7 +171,7 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
-    <Compile Include="Exceptions\ExceptionProjector.cs" />
+    <Compile Include="Exceptions\CompositeExceptionProjection.cs" />
     <Compile Include="Exceptions\IExceptionProjection.cs" />
     <Compile Include="Exceptions\ScheduledEventExceptionProjection.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />

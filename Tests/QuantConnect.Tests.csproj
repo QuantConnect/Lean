@@ -148,6 +148,7 @@
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
     <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
+    <Compile Include="Common\Exceptions\FakeExceptionProjection.cs" />
     <Compile Include="Common\Exceptions\ScheduledEventExceptionProjectionTests.cs" />
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
@@ -270,7 +271,7 @@
     <Compile Include="Engine\DataFeeds\ZipEntryNameSubscriptionFactoryTests.cs" />
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
-    <Compile Include="Common\Exceptions\ExceptionProjectorTests.cs" />
+    <Compile Include="Common\Exceptions\CompositeExceptionProjectionTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />

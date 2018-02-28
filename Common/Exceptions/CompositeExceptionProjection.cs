@@ -24,15 +24,15 @@ namespace QuantConnect.Exceptions
     /// <summary>
     /// Projects exceptions using the configured projections
     /// </summary>
-    public class ExceptionProjector
+    public class CompositeExceptionProjection : IExceptionProjection
     {
         private readonly List<IExceptionProjection> _projections;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExceptionProjector"/> class
+        /// Initializes a new instance of the <see cref="CompositeExceptionProjection"/> class
         /// </summary>
         /// <param name="projections">The projections to use</param>
-        public ExceptionProjector(IEnumerable<IExceptionProjection> projections)
+        public CompositeExceptionProjection(IEnumerable<IExceptionProjection> projections)
         {
             _projections = projections.ToList();
         }
@@ -43,19 +43,41 @@ namespace QuantConnect.Exceptions
         public IEnumerable<IExceptionProjection> Projections => _projections;
 
         /// <summary>
-        /// Invokes the first matching projection on the specified exception
+        /// Determines if this projection should be applied to the specified exception.
+        /// </summary>
+        /// <param name="exception">The exception to check</param>
+        /// <returns>True if the exception can be projected, false otherwise</returns>
+        public bool CanProject(Exception exception)
+        {
+            return _projections.Any(projection => projection.CanProject(exception));
+        }
+
+        /// <summary>
+        /// Project the specified exception into a new exception.
+        /// The innerProjection parameter is optional, specify null to enable the default recursive
+        /// behavior of the composite projection.
         /// </summary>
         /// <param name="exception">The exception to be projected</param>
-        /// <returns>The projected exception, or the original exception if no projection matches</returns>
-        public Exception Project(Exception exception)
+        /// <param name="innerProjection">A projection that should be applied to the inner exception.
+        /// This provides a link back allowing the inner exception to be projected using the projections
+        /// configured in the exception projector. Individual implementations *may* ignore this value if
+        /// required.</param>
+        /// <returns>The projected exception</returns>
+        public Exception Project(Exception exception, IExceptionProjection innerProjection)
         {
+            if (exception == null)
+            {
+                return null;
+            }
+
             foreach (var projection in _projections)
             {
                 try
                 {
                     if (projection.CanProject(exception))
                     {
-                        return projection.Project(exception);
+                        // use this composite projection to project inner exceptions as well, unless one was specified
+                        return projection.Project(exception, innerProjection ?? this);
                     }
                 }
                 catch (Exception err)
@@ -68,11 +90,11 @@ namespace QuantConnect.Exceptions
         }
 
         /// <summary>
-        /// Creates a new <see cref="ExceptionProjector"/> by loading implementations with default constructors from the specified assemblies
+        /// Creates a new <see cref="CompositeExceptionProjection"/> by loading implementations with default constructors from the specified assemblies
         /// </summary>
         /// <param name="assemblies">The assemblies to scan</param>
-        /// <returns>A new <see cref="ExceptionProjector"/> containing projections from the specified assemblies</returns>
-        public static ExceptionProjector CreateFromAssemblies(IEnumerable<Assembly> assemblies)
+        /// <returns>A new <see cref="CompositeExceptionProjection"/> containing projections from the specified assemblies</returns>
+        public static CompositeExceptionProjection CreateFromAssemblies(IEnumerable<Assembly> assemblies)
         {
             var projections =
                 from assembly in assemblies
@@ -87,7 +109,7 @@ namespace QuantConnect.Exceptions
                 orderby type.FullName
                 select (IExceptionProjection) Activator.CreateInstance(type);
 
-            var projector = new ExceptionProjector(projections);
+            var projector = new CompositeExceptionProjection(projections);
 
             foreach (var projection in projector.Projections)
             {

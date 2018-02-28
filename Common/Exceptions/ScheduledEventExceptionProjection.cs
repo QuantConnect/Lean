@@ -34,8 +34,12 @@ namespace QuantConnect.Exceptions
         /// Project the specified exception into a new exception
         /// </summary>
         /// <param name="exception">The exception to be projected</param>
+        /// <param name="innerProjection">A projection that should be applied to the inner exception.
+        /// This provides a link back allowing the inner exception to be projected using the projections
+        /// configured in the exception projector. Individual implementations *may* ignore this value if
+        /// required.</param>
         /// <returns>The projected exception</returns>
-        public Exception Project(Exception exception)
+        public Exception Project(Exception exception, IExceptionProjection innerProjection)
         {
             var see = (ScheduledEventException) exception;
 
@@ -46,7 +50,8 @@ namespace QuantConnect.Exceptions
                 message = $"In Scheduled Event '{see.ScheduledEventName}', {message}";
             }
 
-            return new ScheduledEventException(see.ScheduledEventName, message, see.InnerException);
+            var inner = innerProjection.Project(see.InnerException, innerProjection);
+            return new ScheduledEventException(see.ScheduledEventName, message, inner);
         }
     }
 }

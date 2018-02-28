@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Moq;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using QuantConnect.Exceptions;
@@ -48,7 +50,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var exception = CreateExceptionFromType(exceptionType);
             var projection = new ScheduledEventExceptionProjection();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
-            Assert.That(() => projection.Project(exception), constraint);
+            Assert.That(() => projection.Project(exception, null), constraint);
         }
 
         [Test]
@@ -58,7 +60,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var name = id.ToString("D");
             var message = id.ToString("N");
             var exception = new ScheduledEventException(name, message, null);
-            var projected = new ScheduledEventExceptionProjection().Project(exception);
+            var projected = new ScheduledEventExceptionProjection().Project(exception, null);
 
             var expectedProjectedMessage = $"In Scheduled Event '{name}', {message}";
             Assert.AreEqual(expectedProjectedMessage, projected.Message);
@@ -69,8 +71,25 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var inner = new Exception();
             var exception = new ScheduledEventException("name", "message", inner);
-            var projected = new ScheduledEventExceptionProjection().Project(exception);
+            var projected = new ScheduledEventExceptionProjection().Project(exception, null);
             Assert.AreEqual(inner, projected.InnerException);
+        }
+
+        [Test]
+        public void InvokesInnerExceptionProjectionOnInnerException()
+        {
+            var inner = new Exception("inner");
+            var exception = new ScheduledEventException("name", "message", inner);
+            var mockInnerProjection = new Mock<IExceptionProjection>();
+            mockInnerProjection.Setup(iep => iep.Project(inner, mockInnerProjection.Object))
+                .Returns(new Exception("Projected " + inner.Message))
+                .Verifiable();
+
+            var projection = new ScheduledEventExceptionProjection();
+
+            projection.Project(exception, mockInnerProjection.Object);
+
+            mockInnerProjection.Verify(iep => iep.Project(inner, mockInnerProjection.Object), Times.Exactly(1));
         }
 
         private Exception CreateExceptionFromType(Type type)
