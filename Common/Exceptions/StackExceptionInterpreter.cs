@@ -88,6 +88,17 @@ namespace QuantConnect.Exceptions
         }
 
         /// <summary>
+        /// Interprets the specified exception as a string. This will traverse the inner
+        /// exceptions compiling an end string for the user.
+        /// </summary>
+        /// <param name="exception">The interpreted exception</param>
+        /// <returns>A single string to describe the entire exception stack</returns>
+        public string ToString(Exception exception)
+        {
+            return string.Join(" ", InnersAndSelf(exception).Select(e => e.Message));
+        }
+
+        /// <summary>
         /// Creates a new <see cref="StackExceptionInterpreter"/> by loading implementations with default constructors from the specified assemblies
         /// </summary>
         /// <param name="assemblies">The assemblies to scan</param>
@@ -115,6 +126,16 @@ namespace QuantConnect.Exceptions
             }
 
             return projector;
+        }
+
+        private IEnumerable<Exception> InnersAndSelf(Exception exception)
+        {
+            yield return exception;
+            while (exception.InnerException != null)
+            {
+                exception = exception.InnerException;
+                yield return exception;
+            }
         }
     }
 }

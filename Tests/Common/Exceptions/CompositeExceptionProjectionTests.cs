@@ -77,12 +77,8 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.That(canProjectCalled, Is.Not.Contains(2));
 
             // project only called on second entry
-            Assert.That(canProjectCalled, Is.Not.Contains(0));
+            Assert.That(projectCalled, Is.Not.Contains(0));
             Assert.Contains(1, projectCalled);
-            Assert.That(canProjectCalled, Is.Not.Contains(2));
-
-            // third entry never touched
-            Assert.That(canProjectCalled, Is.Not.Contains(2));
             Assert.That(projectCalled, Is.Not.Contains(2));
         }
 
@@ -101,6 +97,16 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.AreEqual("Projected 1: outter", projected.Message);
             Assert.AreEqual("Projected 2: middle", projected.InnerException.Message);
             Assert.AreEqual("Projected 3: inner", projected.InnerException.InnerException.Message);
+        }
+
+        [Test]
+        public void RecursivelyFlattensExceptionMessages()
+        {
+            var inner = new Exception("inner");
+            var middle = new Exception("middle", inner);
+            var outter = new Exception("outter", middle);
+            var message = new StackExceptionInterpreter(Enumerable.Empty<IExceptionInterpreter>()).ToString(outter);
+            Assert.AreEqual("outter middle inner", message);
         }
     }
 }
