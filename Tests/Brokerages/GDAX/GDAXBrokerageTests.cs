@@ -370,5 +370,26 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             // conversion rates are inverted: value = 1 / 1.234
             Assert.AreEqual(0.8103727714748784440842787682m, _unit.Ticks.First().Price);
         }
+
+        [Test]
+        public void ErrorTest()
+        {
+            string actual = null;
+
+            // subscribe to invalid symbol
+            const string expected = "[\"BTC-LTC\"]";
+            _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
+
+            _unit.Subscribe(new[] { Symbol.Create("BTCLTC", SecurityType.Crypto, Market.GDAX)});
+
+            StringAssert.Contains(expected, actual);
+
+            BrokerageMessageType messageType = 0;
+            _unit.Message += (sender, e) => { messageType = e.Type; };
+            const string json = "{\"type\":\"error\",\"message\":\"Failed to subscribe\",\"reason\":\"Invalid product ID provided\"}";
+            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
+
+            Assert.AreEqual(BrokerageMessageType.Warning, messageType);
+        }
     }
 }
