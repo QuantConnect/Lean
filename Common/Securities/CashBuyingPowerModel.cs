@@ -97,20 +97,21 @@ namespace QuantConnect.Securities
 
             if (order.Type == OrderType.Market)
             {
+                // include existing holdings (in quote currency)
+                var holdingsValue =
+                    portfolio.CashBook.Convert(
+                        portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount, baseCurrency.BaseCurrencySymbol, security.QuoteCurrency.Symbol);
+
                 // find a target value in account currency for buy market orders
                 var targetValue =
-                    portfolio.CashBook.ConvertToAccountCurrency(totalQuantity - openOrdersReservedQuantity,
+                    portfolio.CashBook.ConvertToAccountCurrency(totalQuantity - openOrdersReservedQuantity + holdingsValue,
                         security.QuoteCurrency.Symbol);
 
+                // maximum quantity that can be bought (in quote currency)
                 var maximumQuantity =
                     GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue).Quantity * GetOrderPrice(security, order);
 
-                // include existing holdings
-                var holdingsValue =
-                    portfolio.CashBook.ConvertToAccountCurrency(
-                        portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount, baseCurrency.BaseCurrencySymbol);
-
-                isSufficient = orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
+                isSufficient = orderQuantity <= Math.Abs(maximumQuantity);
                 if (!isSufficient)
                 {
                     reason = $"Your portfolio holds {totalQuantity.Normalize()} {security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {security.QuoteCurrency.Symbol}, but only a total value of {(Math.Abs(maximumQuantity) + holdingsValue).Normalize()} {security.QuoteCurrency.Symbol} is available.";

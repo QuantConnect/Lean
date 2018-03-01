@@ -323,6 +323,14 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             StringAssert.Contains(expected, actual);
 
+            // spin for a few seconds, waiting for the GBPUSD tick
+            var start = DateTime.UtcNow;
+            var timeout = start.AddSeconds(5);
+            while (_unit.Ticks.Count == 0 && DateTime.UtcNow < timeout)
+            {
+                Thread.Sleep(1);
+            }
+
             // only rate conversion ticks are received during subscribe
             Assert.AreEqual(1, _unit.Ticks.Count);
             Assert.AreEqual("GBPUSD", _unit.Ticks[0].Symbol.Value);
