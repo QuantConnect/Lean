@@ -175,7 +175,7 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     Log.Error($"GDAXBrokerage.OnMessage.error(): Data: {Environment.NewLine}{e.Message}");
                     var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"GDAXBrokerage.OnMessage: {error.Message} {error.Reason}"));
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"GDAXBrokerage.OnMessage: {error.Message} {error.Reason}"));
                     return;
                 }
                 else if (raw.Type == "done")
