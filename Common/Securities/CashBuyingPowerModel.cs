@@ -54,11 +54,14 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
-        public bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        /// <returns>Returns buying power information for an order</returns>
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             var baseCurrency = security as IBaseCurrencySymbol;
-            if (baseCurrency == null) return false;
+            if (baseCurrency == null)
+            {
+                return new HasSufficientBuyingPowerForOrderResult(false, $"The '{security.Symbol.Value}' security is not supported by this cash model. Currently only SecurityType.Crypto and SecurityType.Forex are supported.");
+            }
 
             decimal totalQuantity;
             decimal orderQuantity;
@@ -78,10 +81,18 @@ namespace QuantConnect.Securities
             // calculate reserved quantity for open orders (in quote or base currency depending on direction)
             var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(portfolio, security, order);
 
+            bool isSufficient;
+            var reason = string.Empty;
             if (order.Direction == OrderDirection.Sell)
             {
                 // can sell available and non-reserved quantities
-                return orderQuantity <= totalQuantity - openOrdersReservedQuantity;
+                isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity;
+                if (!isSufficient)
+                {
+                    reason = $"Your portfolio holds {totalQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol} of which are reserved for open orders, but your Sell order is for {orderQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders.";
+                }
+
+                return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
             }
 
             if (order.Type == OrderType.Market)
@@ -92,14 +103,20 @@ namespace QuantConnect.Securities
                         security.QuoteCurrency.Symbol);
 
                 var maximumQuantity =
-                    GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue) * GetOrderPrice(security, order);
+                    GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue).Quantity * GetOrderPrice(security, order);
 
                 // include existing holdings
                 var holdingsValue =
                     portfolio.CashBook.ConvertToAccountCurrency(
                         portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount, baseCurrency.BaseCurrencySymbol);
 
-                return orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
+                isSufficient = orderQuantity <= Math.Abs(maximumQuantity) + holdingsValue;
+                if (!isSufficient)
+                {
+                    reason = $"Your portfolio holds {totalQuantity.Normalize()} {security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {security.QuoteCurrency.Symbol}, but only a total value of {(Math.Abs(maximumQuantity) + holdingsValue).Normalize()} {security.QuoteCurrency.Symbol} is available.";
+                }
+
+                return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
             }
 
             // for limit orders, add fees to the order cost
@@ -110,7 +127,13 @@ namespace QuantConnect.Securities
                 orderFee = portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency, security.QuoteCurrency.Symbol);
             }
 
-            return orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
+            isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
+            if (!isSufficient)
+            {
+                reason = $"Your portfolio holds {totalQuantity.Normalize()} {security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {security.QuoteCurrency.Symbol}, but only a total value of {(totalQuantity - openOrdersReservedQuantity - orderFee).Normalize()} {security.QuoteCurrency.Symbol} is available.";
+            }
+
+            return new HasSufficientBuyingPowerForOrderResult(isSufficient, reason);
         }
 
         /// <summary>
@@ -119,19 +142,25 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
-        /// <returns>Returns the maximum allowed market order quantity</returns>
-        public decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
         {
             // no shorting allowed
-            if (targetPortfolioValue < 0) return 0;
+            if (targetPortfolioValue < 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, "The cash model does not allow shorting.");
+            }
 
             var baseCurrency = security as IBaseCurrencySymbol;
-            if (baseCurrency == null) return 0;
+            if (baseCurrency == null)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, "The security type must be SecurityType.Crypto or SecurityType.Forex.");
+            }
 
             // if target value is zero, return amount of base currency available to sell
             if (targetPortfolioValue == 0)
             {
-                return -portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
+                return new GetMaximumOrderQuantityForTargetValueResult(-portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount);
             }
 
             // convert base currency cash to account currency
@@ -146,7 +175,10 @@ namespace QuantConnect.Securities
 
             // determine the unit price in terms of the account currency
             var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security);
-            if (unitPrice == 0) return 0;
+            if (unitPrice == 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
+            }
 
             // remove directionality, we'll work in the land of absolutes
             var targetOrderValue = Math.Abs(targetPortfolioValue - baseCurrencyPosition);
@@ -154,7 +186,11 @@ namespace QuantConnect.Securities
 
             // calculate the total cash available
             var cashRemaining = direction == OrderDirection.Buy ? quoteCurrencyPosition : baseCurrencyPosition;
-            if (cashRemaining <= 0) return 0;
+            var currency = direction == OrderDirection.Buy ? security.QuoteCurrency.Symbol : baseCurrency.BaseCurrencySymbol;
+            if (cashRemaining <= 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The portfolio does not hold any {currency} for the order.");
+            }
 
             // continue iterating while we do not have enough cash for the order
             decimal cashRequired;
@@ -167,13 +203,20 @@ namespace QuantConnect.Securities
 
             // rounding off Order Quantity to the nearest multiple of Lot Size
             orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
+            if (orderQuantity == 0)
+            {
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The order quantity is less than the lot size of {security.SymbolProperties.LotSize} and has been rounded to zero.", false);
+            }
 
             do
             {
                 // reduce order quantity by feeToPriceRatio, since it is faster than by lot size
                 // if it becomes nonpositive, return zero
                 orderQuantity -= feeToPriceRatio;
-                if (orderQuantity <= 0) return 0;
+                if (orderQuantity <= 0)
+                {
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The portfolio does not hold enough {currency} including the order fees.");
+                }
 
                 // generate the order
                 var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
@@ -194,7 +237,7 @@ namespace QuantConnect.Securities
             } while (cashRequired > cashRemaining || orderValue + orderFees > targetOrderValue);
 
             // add directionality back in
-            return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
+            return new GetMaximumOrderQuantityForTargetValueResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
         }
 
         /// <summary>

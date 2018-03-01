@@ -45,8 +45,8 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
-        /// <returns>Returns true if there is sufficient buying power to execute the order, false otherwise</returns>
-        bool HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order);
+        /// <returns>Returns buying power information for an order</returns>
+        HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order);
 
         /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency
@@ -54,8 +54,8 @@ namespace QuantConnect.Securities
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
         /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
-        /// <returns>Returns the maximum allowed market order quantity</returns>
-        decimal GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue);
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue);
 
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position

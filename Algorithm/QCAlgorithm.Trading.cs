@@ -941,12 +941,22 @@ namespace QuantConnect.Algorithm
             var security = Securities[symbol];
 
             // can't order it if we don't have data
-            if (security.Price == 0) return 0;
+            if (security.Price == 0)
+            {
+                Error($"The order quantity for {symbol.Value} cannot be calculated: the price of the security is zero.");
+                return 0;
+            }
 
             // this is the value in account currency that we want our holdings to have
             var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
 
-            return security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
+            if (result.Quantity == 0 && result.IsError)
+            {
+                Error($"The order quantity for {symbol.Value} cannot be calculated: Reason: {result.Reason}.");
+            }
+
+            return result.Quantity;
         }
 
         /// <summary>
