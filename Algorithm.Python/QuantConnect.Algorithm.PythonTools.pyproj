@@ -69,6 +69,7 @@
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Compile Include="HourReverseSplitRegressionAlgorithm.py" />
     <Compile Include="HourSplitRegressionAlgorithm.py" />
+    <Compile Include="IndicatorSuiteAlgorithm.py" />
     <Compile Include="LimitFillRegressionAlgorithm.py" />
     <Compile Include="MACDTrendAlgorithm.py" />
     <Compile Include="main.py" />

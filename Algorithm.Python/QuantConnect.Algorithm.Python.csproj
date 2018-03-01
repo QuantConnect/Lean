@@ -43,6 +43,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="IndicatorSuiteAlgorithm.py" />
     <None Include="BasicTemplateAlgorithm.py" />
     <None Include="BasicTemplateDailyAlgorithm.py" />
     <None Include="BasicTemplateFillForwardAlgorithm.py" />
