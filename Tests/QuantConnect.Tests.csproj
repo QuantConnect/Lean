@@ -400,6 +400,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
+    <Content Include="RegressionAlgorithms\Test_CustomDataAlgorithm.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="RegressionAlgorithms\Test_MethodOverload.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
