@@ -15,50 +15,27 @@
 
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class MovingAverageConvergenceDivergenceTests
+    public class MovingAverageConvergenceDivergenceTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComputesCorrectly()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var fast = new SimpleMovingAverage(3);
-            var slow = new SimpleMovingAverage(5);
-            var signal = new SimpleMovingAverage(3);
-            var macd = new MovingAverageConvergenceDivergence("macd", 3, 5, 3, MovingAverageType.Simple);
-
-            foreach (var data in TestHelper.GetDataStream(7))
+            if (DateTime.Now < new DateTime(2018, 03, 01))
             {
-                fast.Update(data);
-                slow.Update(data);
-                macd.Update(data);
-                Assert.AreEqual(fast - slow, macd);
-                if (fast.IsReady && slow.IsReady)
-                {
-                    signal.Update(new IndicatorDataPoint(data.Time, macd));
-                    Assert.AreEqual(signal.Current.Value, macd.Current.Value);
-                }
+                return new MovingAverageConvergenceDivergence(12, 26, 9, MovingAverageType.Exponential);
+            }
+            else
+            {
+                // This is a kind of reminder, if the default MovingAverageType is not changed by the 2018-03-01, then this test will fail.
+                return new MovingAverageConvergenceDivergence(12, 26, 9);
             }
         }
 
-        [Test]
-        public void ResetsProperly()
-        {
-            var macd = new MovingAverageConvergenceDivergence("macd", 3, 5, 3);
-            foreach (var data in TestHelper.GetDataStream(30))
-            {
-                macd.Update(data);
-            }
-            Assert.IsTrue(macd.IsReady);
-
-            macd.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(macd);
-            TestHelper.AssertIndicatorIsInDefaultState(macd.Fast);
-            TestHelper.AssertIndicatorIsInDefaultState(macd.Signal);
-            TestHelper.AssertIndicatorIsInDefaultState(macd.Signal);
-        }
+        protected override string TestFileName => "spy_macd.csv";
+        protected override string TestColumnName => "MACD";
     }
 }
