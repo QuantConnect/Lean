@@ -24,15 +24,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            if (DateTime.Now < new DateTime(2018, 03, 01))
-            {
-                return new MovingAverageConvergenceDivergence(12, 26, 9, MovingAverageType.Exponential);
-            }
-            else
-            {
-                // This is a kind of reminder, if the default MovingAverageType is not changed by the 2018-03-01, then this test will fail.
                 return new MovingAverageConvergenceDivergence(12, 26, 9);
-            }
         }
 
         protected override string TestFileName => "spy_macd.csv";
