@@ -19,6 +19,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using CloneExtensions;
 using Fasterflect;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Util
 {
@@ -133,6 +134,10 @@ namespace QuantConnect.Util
             if (!_activatorsByType.ContainsKey(key))
             {
                 _activatorsByType.Add(key, value);
+            }
+            else
+            {
+                throw new ArgumentException($"ObjectActivator.AddActivator(): a method to return an instance of {key.Name} has already been added");
             }
         }
 
