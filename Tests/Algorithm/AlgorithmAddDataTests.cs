@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -100,6 +103,35 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(quandlSubscription.Type, typeof(Quandl));
         }
 
+        [Test, Ignore]
+        public void PythonCustomDataTypes_AreAddedToSubscriptions_Successfully()
+        {
+            var pythonPath = new System.IO.DirectoryInfo("RegressionAlgorithms");
+            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
+
+            using (Py.GIL())
+            {
+                var module = Py.Import("Test_CustomDataAlgorithm");
+                var qcAlgorithm = new AlgorithmPythonWrapper(module);
+
+                // Initialize contains the statements:
+                // self.AddData(Nifty, "NIFTY")
+                // self.AddData(QuandlFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+                qcAlgorithm.Initialize();
+
+                var niftySubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "NIFTY");
+                Assert.IsNotNull(niftySubscription);
+
+                var niftyFactory = (BaseData)ObjectActivator.GetActivator(niftySubscription.Type).Invoke(new object[] { niftySubscription.Type });
+                Assert.DoesNotThrow(() => niftyFactory.GetSource(niftySubscription, DateTime.UtcNow, false));
+
+                var quandlSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "SCF/CME_CL1_ON");
+                Assert.IsNotNull(quandlSubscription);
+
+                var quandlFactory = (BaseData)ObjectActivator.GetActivator(quandlSubscription.Type).Invoke(new object[] { quandlSubscription.Type });
+                Assert.DoesNotThrow(() => quandlFactory.GetSource(quandlSubscription, DateTime.UtcNow, false));
+            }
+        }
 
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
         {
