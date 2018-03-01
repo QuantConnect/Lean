@@ -23,38 +23,38 @@ namespace QuantConnect.Tests.Common.Exceptions
     /// </summary>
     public class FakeExceptionInterpreter : IExceptionInterpreter
     {
-        private readonly Func<Exception, bool> _canProject;
-        private readonly Func<Exception, Exception> _project;
+        private readonly Func<Exception, bool> _canInterpret;
+        private readonly Func<Exception, Exception> _interpret;
 
         public FakeExceptionInterpreter()
         {
-            _canProject = e => true;
+            _canInterpret = e => true;
 
             var count = 0;
-            _project = e =>
+            _interpret = e =>
             {
                 if (e == null)
                 {
                     return null;
                 }
-                return new Exception($"Projected {++count}: " + e.Message, _project(e.InnerException));
+                return new Exception($"Projected {++count}: " + e.Message, _interpret(e.InnerException));
             };
         }
 
-        public FakeExceptionInterpreter(Func<Exception, bool> canProject, Func<Exception, Exception> project)
+        public FakeExceptionInterpreter(Func<Exception, bool> canInterpret, Func<Exception, Exception> interpret)
         {
-            _canProject = canProject;
-            _project = project;
+            _canInterpret = canInterpret;
+            _interpret = interpret;
         }
 
         public bool CanInterpret(Exception exception)
         {
-            return _canProject(exception);
+            return _canInterpret(exception);
         }
 
         public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
-            return _project(exception);
+            return _interpret(exception);
         }
     }
 }

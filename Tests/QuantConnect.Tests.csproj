@@ -272,7 +272,7 @@
     <Compile Include="Engine\DataFeeds\ZipEntryNameSubscriptionFactoryTests.cs" />
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
-    <Compile Include="Common\Exceptions\CompositeExceptionProjectionTests.cs" />
+    <Compile Include="Common\Exceptions\StackExceptionInterpreterTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />

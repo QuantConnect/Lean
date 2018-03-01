@@ -36,7 +36,7 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.
         /// This provides a link back allowing the inner exceptions to be interpreted using the intepretators
-        /// configured in the <see cref="StackExceptionInterpreter"/>. Individual implementations *may* ignore
+        /// configured in the <see cref="Interpreter"/>. Individual implementations *may* ignore
         /// this value if required.</param>
         /// <returns>The interpreted exception</returns>
         Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter);

@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine
         private readonly bool _liveMode;
         private readonly LeanEngineSystemHandlers _systemHandlers;
         private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
-        private readonly StackExceptionInterpreter _exceptionProjector = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        private readonly StackExceptionInterpreter _exceptionInterpreter = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -436,8 +436,8 @@ namespace QuantConnect.Lean.Engine
             if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
             if (_algorithmHandlers.Results != null)
             {
-                // perform exception projection
-                err = _exceptionProjector.Interpret(err, _exceptionProjector);
+                // perform exception interpretation
+                err = _exceptionInterpreter.Interpret(err, _exceptionInterpreter);
 
                 var message = "Runtime Error: " + err;
                 Log.Trace("Engine.Run(): Sending runtime error to user...");

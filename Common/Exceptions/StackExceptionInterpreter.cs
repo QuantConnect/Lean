@@ -49,7 +49,7 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public bool CanInterpret(Exception exception)
         {
-            return _interpreters.Any(projection => projection.CanInterpret(exception));
+            return _interpreters.Any(interpreter => interpreter.CanInterpret(exception));
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace QuantConnect.Exceptions
                 from type in assembly.GetTypes()
                 // ignore non-public and non-instantiable abstract types
                 where type.IsPublic && !type.IsAbstract
-                // type implements IExceptionProjection
+                // type implements IExceptionInterpreter
                 where typeof(IExceptionInterpreter).IsAssignableFrom(type)
                 // type has default parameterless ctor
                 where type.GetConstructor(new Type[0]) != null
@@ -118,14 +118,14 @@ namespace QuantConnect.Exceptions
                 orderby type.FullName
                 select (IExceptionInterpreter) Activator.CreateInstance(type);
 
-            var projector = new StackExceptionInterpreter(interpreters);
+            var stackExceptionInterpreter = new StackExceptionInterpreter(interpreters);
 
-            foreach (var projection in projector.Interpreters)
+            foreach (var interpreter in stackExceptionInterpreter.Interpreters)
             {
-                Log.Debug($"Loaded ExceptionInterpreter: {projection.GetType().Name}");
+                Log.Debug($"Loaded ExceptionInterpreter: {interpreter.GetType().Name}");
             }
 
-            return projector;
+            return stackExceptionInterpreter;
         }
 
         private IEnumerable<Exception> InnersAndSelf(Exception exception)

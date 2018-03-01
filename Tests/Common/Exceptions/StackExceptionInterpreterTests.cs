@@ -22,7 +22,7 @@ using QuantConnect.Exceptions;
 namespace QuantConnect.Tests.Common.Exceptions
 {
     [TestFixture]
-    public class CompositeExceptionProjectionTests
+    public class StackExceptionInterpretersTests
     {
         [Test]
         public void CreatesFromAssemblies()
@@ -33,53 +33,53 @@ namespace QuantConnect.Tests.Common.Exceptions
         }
 
         [Test]
-        public void CallsProjectOnFirstProjectionThatCanProject()
+        public void CallsInterpretOnFirstProjectionThatCanInterpret()
         {
-            var canProjectCalled = new List<int>();
-            var projectCalled = new List<int>();
-            var projections = new[]
+            var canInterpretCalled = new List<int>();
+            var interpretCalled = new List<int>();
+            var interpreters = new[]
             {
                 new FakeExceptionInterpreter(e =>
                 {
-                    canProjectCalled.Add(0);
+                    canInterpretCalled.Add(0);
                     return false;
                 }, e =>
                 {
-                    projectCalled.Add(0);
+                    interpretCalled.Add(0);
                     return e;
                 }),
                 new FakeExceptionInterpreter(e =>
                 {
-                    canProjectCalled.Add(1);
+                    canInterpretCalled.Add(1);
                     return true;
                 }, e =>
                 {
-                    projectCalled.Add(1);
+                    interpretCalled.Add(1);
                     return e;
                 }),
                 new FakeExceptionInterpreter(e =>
                 {
-                    canProjectCalled.Add(2);
+                    canInterpretCalled.Add(2);
                     return false;
                 }, e =>
                 {
-                    projectCalled.Add(2);
+                    interpretCalled.Add(2);
                     return e;
                 })
             };
 
-            var projector = new StackExceptionInterpreter(projections);
+            var projector = new StackExceptionInterpreter(interpreters);
             projector.Interpret(new Exception(), null);
 
             // can project called for 1st and second entry
-            Assert.Contains(0, canProjectCalled);
-            Assert.Contains(1, canProjectCalled);
-            Assert.That(canProjectCalled, Is.Not.Contains(2));
+            Assert.Contains(0, canInterpretCalled);
+            Assert.Contains(1, canInterpretCalled);
+            Assert.That(canInterpretCalled, Is.Not.Contains(2));
 
             // project only called on second entry
-            Assert.That(projectCalled, Is.Not.Contains(0));
-            Assert.Contains(1, projectCalled);
-            Assert.That(projectCalled, Is.Not.Contains(2));
+            Assert.That(interpretCalled, Is.Not.Contains(0));
+            Assert.Contains(1, interpretCalled);
+            Assert.That(interpretCalled, Is.Not.Contains(2));
         }
 
         [Test]
@@ -88,15 +88,15 @@ namespace QuantConnect.Tests.Common.Exceptions
             var inner = new Exception("inner");
             var middle = new Exception("middle", inner);
             var outter = new Exception("outter", middle);
-            var projector = new StackExceptionInterpreter(new[]
+            var interpreter = new StackExceptionInterpreter(new[]
             {
                 new FakeExceptionInterpreter()
             });
 
-            var projected = projector.Interpret(outter, null);
-            Assert.AreEqual("Projected 1: outter", projected.Message);
-            Assert.AreEqual("Projected 2: middle", projected.InnerException.Message);
-            Assert.AreEqual("Projected 3: inner", projected.InnerException.InnerException.Message);
+            var interpreted = interpreter.Interpret(outter, null);
+            Assert.AreEqual("Projected 1: outter", interpreted.Message);
+            Assert.AreEqual("Projected 2: middle", interpreted.InnerException.Message);
+            Assert.AreEqual("Projected 3: inner", interpreted.InnerException.InnerException.Message);
         }
 
         [Test]
