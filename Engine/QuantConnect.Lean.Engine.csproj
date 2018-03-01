@@ -225,6 +225,7 @@
     <Compile Include="RealTime\ScheduledEventFactory.cs" />
     <Compile Include="Results\DesktopResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
+    <Compile Include="Setup\AlgorithmSetupException.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />

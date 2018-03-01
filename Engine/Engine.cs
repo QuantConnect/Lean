@@ -164,7 +164,7 @@ namespace QuantConnect.Lean.Engine
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
                         var errorMessage = String.Join(",", algorithm.ErrorMessages);
-                        errorMessage += String.Join(",", _algorithmHandlers.Setup.Errors);
+                        errorMessage += String.Join(",", _algorithmHandlers.Setup.Errors.Select(e => e.Message));
                         Log.Error("Engine.Run(): " + errorMessage);
                         _algorithmHandlers.Results.RuntimeError(errorMessage);
                         _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
