@@ -31,8 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicator field selection" />
     public class IndicatorSuiteAlgorithm : QCAlgorithm
     {
-        private string _symbol = "SPY";
-        private string _customSymbol = "WIKI/FB";
+        private string _ticker = "SPY";
+        private string _customTicker = "WIKI/FB";
+
+        private Symbol _symbol;
+        private Symbol _customSymbol;
+
         private Indicators _indicators;
         private Indicators _selectorIndicators;
         private IndicatorBase<IndicatorDataPoint> _ratio;
@@ -55,10 +59,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(25000);
 
             //Add as many securities as you like. All the data will be passed into the event handler:
-            AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
+            _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
-            AddData<Quandl>(_customSymbol);
+            _customSymbol = AddData<Quandl>(_customTicker, Resolution.Daily).Symbol;
 
             //Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
             _indicators = new Indicators
@@ -112,9 +116,9 @@ namespace QuantConnect.Algorithm.CSharp
             // these are indicators that require multiple inputs. the most common of which is a ratio.
             // suppose we seek the ratio of BTC to SPY, we could write the following:
             var spyClose = Identity(_symbol);
-            var btcClose = Identity(_customSymbol);
-            // this will create a new indicator whose value is BTC/SPY
-            _ratio = btcClose.Over(spyClose);
+            var fbClose = Identity(_customSymbol);
+            // this will create a new indicator whose value is FB/SPY
+            _ratio = fbClose.Over(spyClose);
             // we can also easily plot our indicators each time they update using th PlotIndicator function
             PlotIndicator("Ratio", _ratio);
         }
