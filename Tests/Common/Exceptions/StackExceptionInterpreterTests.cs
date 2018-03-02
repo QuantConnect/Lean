@@ -100,13 +100,16 @@ namespace QuantConnect.Tests.Common.Exceptions
         }
 
         [Test]
-        public void RecursivelyFlattensExceptionMessages()
+        public void GetsExceptionMessageHeaderAsAllInnersJoinedBySpace()
         {
             var inner = new Exception("inner");
             var middle = new Exception("middle", inner);
             var outter = new Exception("outter", middle);
-            var message = new StackExceptionInterpreter(Enumerable.Empty<IExceptionInterpreter>()).ToString(outter);
-            Assert.AreEqual("outter middle inner", message);
+            var message = new StackExceptionInterpreter(Enumerable.Empty<IExceptionInterpreter>()).GetExceptionMessageHeader(outter);
+
+            // header line w/ exception message and then the full detail on a new line
+            var expectedMessage = "outter middle inner";
+            Assert.AreEqual(expectedMessage, message);
         }
     }
 }

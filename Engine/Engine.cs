@@ -439,10 +439,10 @@ namespace QuantConnect.Lean.Engine
                 // perform exception interpretation
                 err = _exceptionInterpreter.Interpret(err, _exceptionInterpreter);
 
-                var message = "Runtime Error: " + err;
+                var message = "Runtime Error: " + _exceptionInterpreter.GetExceptionMessageHeader(err);
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 _algorithmHandlers.Results.LogMessage(message);
-                _algorithmHandlers.Results.RuntimeError(message, err.StackTrace);
+                _algorithmHandlers.Results.RuntimeError(message, err.ToString());
                 _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
             }
         }
