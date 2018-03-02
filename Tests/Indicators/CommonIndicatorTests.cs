@@ -54,6 +54,8 @@ namespace QuantConnect.Tests.Indicators
                 throw new NotSupportedException("ResetsProperly: Unsupported indicator data type: " + typeof(T));
         }
 
+        public IndicatorBase<T> Indicator => CreateIndicator();
+
         /// <summary>
         /// Executes a test of the specified indicator
         /// </summary>
