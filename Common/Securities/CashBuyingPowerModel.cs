@@ -178,7 +178,7 @@ namespace QuantConnect.Securities
             var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security);
             if (unitPrice == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The internal cash feed required for converting {security.QuoteCurrency.Symbol} to {CashBook.AccountCurrency} does not have any data yet (or market may be closed).");
             }
 
             // remove directionality, we'll work in the land of absolutes
