@@ -150,7 +150,7 @@
     <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
     <Compile Include="Common\Exceptions\FakeExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\NullExceptionInterpreter.cs" />
-    <Compile Include="Common\Exceptions\ScheduledEventExceptionProjectionTests.cs" />
+    <Compile Include="Common\Exceptions\ScheduledEventExceptionInterpreterTests.cs" />
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
