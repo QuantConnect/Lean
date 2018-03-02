@@ -209,21 +209,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            // return None if there's no changes, otherwise return what we've modified
+            var securityChanges = additions.Count + removals.Count != 0
+                ? new SecurityChanges(additions, removals)
+                : SecurityChanges.None;
+
             // Add currency data feeds that weren't explicitly added in Initialize
             if (additions.Count > 0)
             {
-                var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.BrokerageModel.DefaultMarkets);
+                var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.BrokerageModel.DefaultMarkets, securityChanges);
                 foreach (var security in addedSecurities)
                 {
                     // assume currency feeds are always one subscription per, these are typically quote subscriptions
                     _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, new SubscriptionDataConfig(security.Subscriptions.First()), dateTimeUtc, algorithmEndDateUtc));
                 }
             }
-
-            // return None if there's no changes, otherwise return what we've modified
-            var securityChanges = additions.Count + removals.Count != 0
-                ? new SecurityChanges(additions, removals)
-                : SecurityChanges.None;
 
             if (securityChanges != SecurityChanges.None)
             {

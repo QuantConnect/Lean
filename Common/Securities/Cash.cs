@@ -19,6 +19,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
@@ -143,9 +144,24 @@ namespace QuantConnect.Securities
         /// <param name="symbolPropertiesDatabase">A symbol properties database instance</param>
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <param name="cashBook">The cash book - used for resolving quote currencies for created conversion securities</param>
+        /// <param name="changes"></param>
         /// <returns>Returns the added currency security if needed, otherwise null</returns>
-        public Security EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, CashBook cashBook)
+        public Security EnsureCurrencyDataFeed(SecurityManager securities,
+            SubscriptionManager subscriptions,
+            MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase,
+            IReadOnlyDictionary<SecurityType, string> marketMap,
+            CashBook cashBook,
+            SecurityChanges changes
+            )
         {
+            // this gets called every time we add securities using universe selection,
+            // so must of the time we've already resolved the value and don't need to again
+            if (ConversionRateSecurity != null)
+            {
+                return null;
+            }
+
             if (Symbol == CashBook.AccountCurrency)
             {
                 ConversionRateSecurity = null;
@@ -154,25 +170,28 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            // we require a subscription that converts this into the base currency
+            // we require a security that converts this into the base currency
             string normal = Symbol + CashBook.AccountCurrency;
             string invert = CashBook.AccountCurrency + Symbol;
-            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd ||
-            config.SecurityType == SecurityType.Crypto))
+            var securitiesToSearch = securities.Select(kvp => kvp.Value)
+                .Concat(changes.AddedSecurities)
+                .Where(s => s.Type == SecurityType.Forex || s.Type == SecurityType.Cfd || s.Type == SecurityType.Crypto);
+
+            foreach (var security in securitiesToSearch)
             {
-                if (config.Symbol.Value == normal)
+                if (security.Symbol.Value == normal)
                 {
-                    ConversionRateSecurity = securities[config.Symbol];
+                    ConversionRateSecurity = security;
                     return null;
                 }
-                if (config.Symbol.Value == invert)
+                if (security.Symbol.Value == invert)
                 {
-                    ConversionRateSecurity = securities[config.Symbol];
+                    ConversionRateSecurity = security;
                     _invertRealTimePrice = true;
                     return null;
                 }
             }
-            // if we've made it here we didn't find a subscription, so we'll need to add one
+            // if we've made it here we didn't find a security, so we'll need to add one
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
             var markets = securities.Select(x => x.Key).GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
