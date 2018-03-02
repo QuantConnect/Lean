@@ -750,9 +750,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.Equals("TypeError : OnEndOfDay() takes exactly 2 arguments (1 given)"))
+                if (!exception.Message.StartsWith("TypeError : OnEndOfDay()"))
                 {
-                    throw exception;
+                    _baseAlgorithm.SetRunTimeError(exception);
                 }
             }
         }
@@ -778,9 +778,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.Equals("TypeError : OnEndOfDay() takes exactly 1 argument (2 given)"))
+                if (!exception.Message.StartsWith("TypeError : OnEndOfDay()"))
                 {
-                    throw exception;
+                    _baseAlgorithm.SetRunTimeError(exception);
                 }
             }
         }
