@@ -171,6 +171,7 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
+    <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\StackExceptionInterpreter.cs" />
     <Compile Include="Exceptions\IExceptionInterpreter.cs" />
     <Compile Include="Exceptions\ScheduledEventExceptionInterpreter.cs" />

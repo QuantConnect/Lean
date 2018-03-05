@@ -87,6 +87,24 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Get a string between two characters from another string
+        /// </summary>
+        /// <param name="value">The original string</param>
+        /// <param name="left">Left bound of the substring</param>
+        /// <param name="right">Right bound of the substring</param>
+        /// <returns>Substring from original string bounded by the two characters</returns>
+        public static string GetStringBetweenChars(string value, char left, char right)
+        {
+            var startIndex = 1 + value.IndexOf(left);
+            var length = value.IndexOf(right, startIndex) - startIndex;
+            if (length > 0)
+            {
+                return value.Substring(startIndex, length);
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Try to get the length of arguments of a method
         /// </summary>
         /// <param name="pyObject">Object representing a method</param>
