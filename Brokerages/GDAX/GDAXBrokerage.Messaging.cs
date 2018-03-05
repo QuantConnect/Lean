@@ -28,6 +28,7 @@ using System.Threading;
 using RestSharp;
 using System.Text.RegularExpressions;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -48,6 +49,12 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
         private readonly bool _isDataQueueHandler;
+
+        // GDAX has different rate limits for public and private endpoints
+        // https://docs.gdax.com/#rate-limits
+        internal enum GdaxEndpointType { Public, Private }
+        private readonly RateGate _publicEndpointRateLimiter = new RateGate(6, TimeSpan.FromSeconds(1));
+        private readonly RateGate _privateEndpointRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
 
         /// <summary>
         /// Rest client used to call missing conversion rates
@@ -435,7 +442,7 @@ namespace QuantConnect.Brokerages.GDAX
         public Tick GetTick(Symbol symbol)
         {
             var req = new RestRequest($"/products/{ConvertSymbol(symbol)}/ticker", Method.GET);
-            var response = RestClient.Execute(req);
+            var response = ExecuteRestRequest(req, GdaxEndpointType.Public);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 throw new Exception($"GDAXBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
@@ -545,9 +552,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             WebSocket.Send(json);
 
-
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subscribe."));
-
         }
 
         /// <summary>
@@ -556,7 +561,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbol"></param>
         public void PollTick(Symbol symbol)
         {
-
             int delay = 36000000;
             var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
@@ -619,6 +623,5 @@ namespace QuantConnect.Brokerages.GDAX
                 WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = ChannelNames}));
             }
         }
-
     }
 }
