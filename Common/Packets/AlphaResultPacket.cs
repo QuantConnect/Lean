@@ -39,7 +39,7 @@ namespace QuantConnect.Packets
         /// The deployer alpha id. If this is a user backtest or live algo then this will not be specified
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public int? AlphaId { get; set; }
+        public string AlphaId { get; set; }
 
         /// <summary>
         /// The algorithm's unique identifier

@@ -26,8 +26,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Gets or sets the alpha id
         /// </summary>
-        [JsonProperty(PropertyName = "iAlphaID")]
-        public int AlphaId { get; set; }
+        [JsonProperty(PropertyName = "sAlphaID")]
+        public string AlphaId { get; set; }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="AlgorithmNodePacket"/> class
