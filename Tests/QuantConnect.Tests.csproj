@@ -122,6 +122,7 @@
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXBrokerageAdditionalTests.cs" />
     <Compile Include="Common\Brokerages\GDAXBrokerageModelTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageIntegrationTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageTests.cs" />

@@ -147,5 +147,29 @@ namespace QuantConnect.Brokerages.GDAX
 
             return Orders.OrderStatus.None;
         }
+
+        private IRestResponse ExecuteRestRequest(IRestRequest request, GdaxEndpointType endpointType)
+        {
+            const int maxAttempts = 10;
+            var attempts = 0;
+            IRestResponse response;
+
+            do
+            {
+                if (endpointType == GdaxEndpointType.Private)
+                {
+                    _privateEndpointRateLimiter.WaitToProceed();
+                }
+                else
+                {
+                    _publicEndpointRateLimiter.WaitToProceed();
+                }
+
+                response = RestClient.Execute(request);
+                // 429 status code: Too Many Requests
+            } while (++attempts < maxAttempts && (int) response.StatusCode == 429);
+
+            return response;
+        }
     }
 }

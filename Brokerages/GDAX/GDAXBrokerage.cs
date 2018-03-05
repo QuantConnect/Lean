@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.GDAX
             req.AddJsonBody(payload);
 
             GetAuthenticationToken(req);
-            var response = RestClient.Execute(req);
+            var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
 
             if (response.StatusCode == HttpStatusCode.OK && response.Content != null)
             {
@@ -148,7 +148,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
                 GetAuthenticationToken(req);
-                var response = RestClient.Execute(req);
+                var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
                 success.Add(response.StatusCode == HttpStatusCode.OK);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -179,7 +179,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             var req = new RestRequest("/orders?status=open&status=pending", Method.GET);
             GetAuthenticationToken(req);
-            var response = RestClient.Execute(req);
+            var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -231,7 +231,6 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             return list;
-
         }
 
         /// <summary>
@@ -258,7 +257,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             var request = new RestRequest("/accounts", Method.GET);
             GetAuthenticationToken(request);
-            var response = RestClient.Execute(request);
+            var response = ExecuteRestRequest(request, GdaxEndpointType.Private);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -310,7 +309,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var req = new RestRequest("/orders/" + item, Method.GET);
                 GetAuthenticationToken(req);
-                var response = RestClient.Execute(req);
+                var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
@@ -325,5 +324,13 @@ namespace QuantConnect.Brokerages.GDAX
             return totalFee;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public override void Dispose()
+        {
+            _publicEndpointRateLimiter.Dispose();
+            _privateEndpointRateLimiter.Dispose();
+        }
     }
 }
