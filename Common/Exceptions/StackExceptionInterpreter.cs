@@ -88,12 +88,11 @@ namespace QuantConnect.Exceptions
         }
 
         /// <summary>
-        /// Interprets the specified exception as a string. This will traverse the inner
-        /// exceptions compiling an end string for the user.
+        /// Combines the exception messages from this exception and all inner exceptions.
         /// </summary>
-        /// <param name="exception">The interpreted exception</param>
-        /// <returns>A single string to describe the entire exception stack</returns>
-        public string ToString(Exception exception)
+        /// <param name="exception">The exception to create a collated message from</param>
+        /// <returns>The collate exception message</returns>
+        public string GetExceptionMessageHeader(Exception exception)
         {
             return string.Join(" ", InnersAndSelf(exception).Select(e => e.Message));
         }

@@ -43,14 +43,15 @@ namespace QuantConnect.Exceptions
         {
             var see = (ScheduledEventException) exception;
 
+            var inner = innerInterpreter.Interpret(see.InnerException, innerInterpreter);
+
             // prepend the scheduled event name
             var message = exception.Message;
             if (!message.Contains(see.ScheduledEventName))
             {
-                message = $"In Scheduled Event '{see.ScheduledEventName}', {message}";
+                message = $"In Scheduled Event '{see.ScheduledEventName}',";
             }
 
-            var inner = innerInterpreter.Interpret(see.InnerException, innerInterpreter);
             return new ScheduledEventException(see.ScheduledEventName, message, inner);
         }
     }
