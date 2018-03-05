@@ -149,6 +149,7 @@
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
     <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
+    <Compile Include="Common\Exceptions\InvalidTokenPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\FakeExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\NullExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\ScheduledEventExceptionInterpreterTests.cs" />
