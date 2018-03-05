@@ -200,7 +200,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // keep track of security changes, we emit these to the algorithm
             // as notifications, used in universe selection
-            _changes += SecurityChanges.Added(request.Security);
+            if (!request.IsUniverseSubscription)
+            {
+                _changes += SecurityChanges.Added(request.Security);
+            }
 
             UpdateFillForwardResolution();
 
@@ -240,8 +243,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
-            _changes += SecurityChanges.Removed(security);
-
+            if (!subscription.IsUniverseSelectionSubscription)
+            {
+                _changes += SecurityChanges.Removed(security);
+            }
 
             Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration);
             UpdateFillForwardResolution();
