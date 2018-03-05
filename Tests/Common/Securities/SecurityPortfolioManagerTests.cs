@@ -32,6 +32,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -175,7 +176,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), DefaultBrokerageModel.DefaultMarketMap);
+            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None);
 
             for (int i = 0; i < fills.Count; i++)
             {

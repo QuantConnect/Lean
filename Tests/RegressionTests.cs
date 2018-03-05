@@ -751,6 +751,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HourReverseSplitRegressionAlgorithm", hourReverseSplitStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("IndicatorSuiteAlgorithm", indicatorSuiteAlgorithmStatistics, Language.CSharp),
 
                 // Python

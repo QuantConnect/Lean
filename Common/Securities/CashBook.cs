@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using QuantConnect.Data;
 using System.Collections.Concurrent;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
@@ -76,14 +77,14 @@ namespace QuantConnect.Securities
         /// <param name="symbolPropertiesDatabase">A symbol properties database instance</param>
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <returns>Returns a list of added currency securities</returns>
-        public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap)
+        public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, SecurityChanges changes)
         {
             var addedSecurities = new List<Security>();
             foreach (var kvp in _currencies)
             {
                 var cash = kvp.Value;
 
-                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this);
+                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
                 if (security != null)
                 {
                     addedSecurities.Add(security);
