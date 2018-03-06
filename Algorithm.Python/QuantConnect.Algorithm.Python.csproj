@@ -117,6 +117,7 @@
     <None Include="HourSplitRegressionAlgorithm.py" />
     <None Include="HourReverseSplitRegressionAlgorithm.py" />
     <None Include="MultipleSymbolConsolidationAlgorithm.py" />
+    <None Include="ConstituentsQC500GeneratorAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

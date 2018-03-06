@@ -180,6 +180,7 @@
     <Compile Include="OrderTicketDemoAlgorithm.cs" />
     <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.cs" />
     <Compile Include="OptionChainProviderAlgorithm.cs" />
+    <Compile Include="ConstituentsQC500GeneratorAlgorithm.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">
