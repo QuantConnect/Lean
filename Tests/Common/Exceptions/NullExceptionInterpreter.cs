@@ -25,6 +25,8 @@ namespace QuantConnect.Tests.Common.Exceptions
     {
         public static readonly IExceptionInterpreter Instance = new NullExceptionInterpreter();
 
+        public int Order => int.MaxValue;
+
         private NullExceptionInterpreter()
         {
         }
