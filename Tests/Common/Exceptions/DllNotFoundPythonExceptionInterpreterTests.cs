@@ -21,7 +21,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
-    [TestFixture]
+    [TestFixture, Ignore]
     public class DllNotFoundPythonExceptionInterpreterTests
     {
         [Test]

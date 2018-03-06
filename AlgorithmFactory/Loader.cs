@@ -190,7 +190,7 @@ namespace QuantConnect.AlgorithmFactory
                 e = interpreter.Interpret(e, interpreter);
 
                 Log.Error(e);
-                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. {e.Message}";
+                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. {interpreter.GetExceptionMessageHeader(e)}";
             }
 
             //Successful load.
