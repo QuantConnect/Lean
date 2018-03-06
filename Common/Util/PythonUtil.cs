@@ -105,6 +105,53 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Parsers <see cref="PythonException.StackTrace"/> into a readable message 
+        /// </summary>
+        /// <param name="value">String with the stacktrace information</param>
+        /// <returns>String with relevant part of the stacktrace</returns>
+        public static string PythonExceptionStackParser(string value)
+        {
+            var errorLine = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return errorLine;
+            }
+            
+            // Get the place where the error occurred in the PythonException.StackTrace
+            var stack = value.Replace("\\\\", "/").Split(new[] { @"\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var baseScript = stack[0].Substring(1 + stack[0].IndexOf('\"')).Split('\"')[0];
+            var directory = string.Empty;
+
+            var length = baseScript.LastIndexOf('/');
+            if (length < 0)
+            {
+                return errorLine;
+            }
+
+            directory = baseScript.Substring(0, length);
+            baseScript = baseScript.Substring(1 + directory.Length);
+
+            for (var i = 0; i < stack.Length; i += 2)
+            {
+                if (stack[i].Contains(directory))
+                {
+                    var index = stack[i].IndexOf(directory) + directory.Length + 1;
+                    var info = stack[i].Substring(index).Split(',');
+
+                    var script = info[0].Remove(info[0].Length - 1);
+                    var line = int.Parse(info[1].Remove(0, 6));
+                    var method = info[2].Replace("in", "at");
+                    var statement = stack[i + 1].Trim();
+
+                    errorLine += $"{Environment.NewLine}  {method} in {script}:line {line} :: {statement}{Environment.NewLine}";
+                }
+            }
+
+            return errorLine;
+        }
+
+        /// <summary>
         /// Try to get the length of arguments of a method
         /// </summary>
         /// <param name="pyObject">Object representing a method</param>
