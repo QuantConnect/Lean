@@ -15,19 +15,45 @@
 
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class MovingAverageConvergenceDivergenceTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class MovingAverageConvergenceDivergenceTests
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        private string _externalDataFilename = "spy_with_macd.txt";
+
+        [Test]
+        public void ComparesWithExternalDataMACD()
         {
-                return new MovingAverageConvergenceDivergence(12, 26, 9);
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            TestHelper.TestIndicator(
+                macd,
+                _externalDataFilename,
+                "MACD",
+                (ind, expected) => Assert.AreEqual(expected, (double)((MovingAverageConvergenceDivergence)ind).Current.Value, delta: 1e-4));
         }
 
-        protected override string TestFileName => "spy_macd.csv";
-        protected override string TestColumnName => "MACD";
+        [Test]
+        public void ComparesWithExternalDataMACDHistogram()
+        {
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            TestHelper.TestIndicator(
+                macd,
+                _externalDataFilename,
+                "Histogram",
+                (ind, expected) => Assert.AreEqual(expected, (double)((MovingAverageConvergenceDivergence)ind).Histogram.Current.Value, delta: 1e-4));
+        }
+
+        [Test]
+        public void ComparesWithExternalDataMACDSignal()
+        {
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            TestHelper.TestIndicator(
+                macd,
+                _externalDataFilename,
+                "Signal",
+                (ind, expected) => Assert.AreEqual(expected, (double)((MovingAverageConvergenceDivergence)ind).Signal.Current.Value, delta: 1e-4));
+        }
     }
 }
