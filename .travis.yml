@@ -1,6 +1,7 @@
+sudo: required
 language: csharp
 mono:
-  - 5.2.0
+  - 5.8.0
 solution: QuantConnect.Lean.sln
 install:
   - nuget restore QuantConnect.Lean.sln
