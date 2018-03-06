@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ZeroTargetWithZeroHoldingsIsNotAnError()
         {
             var algorithm = new QCAlgorithm();
-            var security = algorithm.AddEquity("SPY");
+            var security = algorithm.AddSecurity(SecurityType.Equity, "SPY");
 
             var model = new SecurityMarginModel();
             var result = model.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, 0);
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ZeroTargetWithNonZeroHoldingsReturnsNegativeOfQuantity()
         {
             var algorithm = new QCAlgorithm();
-            var security = algorithm.AddEquity("SPY");
+            var security = algorithm.AddSecurity(SecurityType.Equity, "SPY");
             security.Holdings.SetHoldings(200, 10);
 
             var model = new SecurityMarginModel();
