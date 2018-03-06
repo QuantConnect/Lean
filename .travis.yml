@@ -1,3 +1,4 @@
+sudo: required
 language: csharp
 mono:
   - 5.2.0
