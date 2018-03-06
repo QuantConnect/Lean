@@ -569,7 +569,8 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             var sentMessage = false;
-            var reqs = requests.ToList();
+            // filter out any universe securities that may have made it this far
+            var reqs = requests.Where(hr => !UniverseManager.ContainsKey(hr.Symbol)) .ToList();
             foreach (var request in reqs)
             {
                 // prevent future requests
