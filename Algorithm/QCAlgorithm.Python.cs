@@ -317,45 +317,37 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
+            IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
+            IndicatorBase<IBaseDataBar> indicatorDataBar;
+            IndicatorBase<TradeBar> indicatorTradeBar;
+
+            if (indicator.TryConvert(out indicatorDataPoint))
+            {
+                Func<IBaseData, decimal> func = null;
+                selector?.TryConvert(out func);
+                RegisterIndicator(symbol, indicatorDataPoint, consolidator, func);
+                return;
+            }
+            else if (indicator.TryConvert(out indicatorDataBar))
+            {
+                Func<IBaseData, IBaseDataBar> func = null;
+                selector?.TryConvert(out func);
+                RegisterIndicator(symbol, indicatorDataBar, consolidator, func);
+                return;
+            }
+            else if (indicator.TryConvert(out indicatorTradeBar))
+            {
+                Func<IBaseData, TradeBar> func = null;
+                selector?.TryConvert(out func);
+                RegisterIndicator(symbol, indicatorTradeBar, consolidator, func);
+                return;
+            }
+
             using (Py.GIL())
             {
-                try
+                if (!indicator.HasAttr("Update"))
                 {
-                    // QuantConnect Indicators
-                    var indicatorPythonType = indicator.GetPythonType();
-                    var indicatorType = GetIndicatorBaseType(indicatorPythonType.As<Type>());
-                    var genericArgumentType = indicatorType.GetGenericArguments().FirstOrDefault();
-
-                    if (genericArgumentType == typeof(IndicatorDataPoint))
-                    {
-                        var managedIndicator = indicator.AsManagedObject(indicatorType) as IndicatorBase<IndicatorDataPoint>;
-                        var managedSelector = PythonUtil.ToFunc<IBaseData, decimal>(selector);
-                        RegisterIndicator(symbol, managedIndicator, consolidator, managedSelector);
-                    }
-                    else if (genericArgumentType == typeof(IBaseDataBar))
-                    {
-                        var managedIndicator = indicator.AsManagedObject(indicatorType) as IndicatorBase<IBaseDataBar>;
-                        var managedSelector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
-                        RegisterIndicator(symbol, managedIndicator, consolidator, managedSelector);
-                    }
-                    else if (genericArgumentType == typeof(TradeBar))
-                    {
-                        var managedIndicator = indicator.AsManagedObject(indicatorType) as IndicatorBase<TradeBar>;
-                        var managedSelector = PythonUtil.ToFunc<IBaseData, TradeBar>(selector);
-                        RegisterIndicator(symbol, managedIndicator, consolidator, managedSelector);
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"QCAlgorithm.RegisterIndicator(): Unsupported indicator data type: {genericArgumentType.Name}");
-                    }
-                    return;
-                }
-                catch (InvalidCastException)
-                {
-                    if (!indicator.HasAttr("Update"))
-                    {
-                        throw new ArgumentException($"QCAlgorithm.RegisterIndicator(): Update method must be defined. Please checkout {indicator}");
-                    }
+                    throw new ArgumentException($"QCAlgorithm.RegisterIndicator(): Update method must be defined. Please checkout {indicator}");
                 }
             }
 

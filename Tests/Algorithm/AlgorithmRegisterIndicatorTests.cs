@@ -63,18 +63,20 @@ namespace QuantConnect.Tests.Algorithm
                     {
                         var indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).Indicator;
                         Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute, Field.Close));
+                        expected++;
                     }
                     else if (key == typeof(IBaseDataBar))
                     {
                         var indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).Indicator;
                         Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
+                        expected++;
                     }
                     else if (key == typeof(TradeBar))
                     {
                         var indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).Indicator;
                         Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
+                        expected++;
                     }
-                    expected++;
                     var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
                     Assert.AreEqual(expected, actual);
                 }
@@ -98,6 +100,7 @@ namespace QuantConnect.Tests.Algorithm
                             var indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).Indicator.ToPython();
                             Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
                         }
+                        expected++;
                     }
                     else if (key == typeof(IBaseDataBar))
                     {
@@ -106,6 +109,7 @@ namespace QuantConnect.Tests.Algorithm
                             var indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).Indicator.ToPython();
                             Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
                         }
+                        expected++;
                     }
                     else if (key == typeof(TradeBar))
                     {
@@ -114,8 +118,8 @@ namespace QuantConnect.Tests.Algorithm
                             var indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).Indicator.ToPython();
                             Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
                         }
+                        expected++;
                     }
-                    expected++;
                     var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
                     Assert.AreEqual(expected, actual);
                 }
