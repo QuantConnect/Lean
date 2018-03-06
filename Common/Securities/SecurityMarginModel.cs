@@ -283,7 +283,7 @@ namespace QuantConnect.Securities
             // if targeting zero, simply return the negative of the quantity
             if (targetPortfolioValue == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(-security.Holdings.Quantity);
+                return new GetMaximumOrderQuantityForTargetValueResult(-security.Holdings.Quantity, string.Empty, false);
             }
 
             var currentHoldingsValue = security.Holdings.HoldingsValue;
