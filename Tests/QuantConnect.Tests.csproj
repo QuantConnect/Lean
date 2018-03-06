@@ -153,6 +153,7 @@
     <Compile Include="Common\Exceptions\InvalidTokenPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\FakeExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\KeyErrorPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\UnsupportedOperandPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\NoMethodMatchPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\NullExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\ScheduledEventExceptionInterpreterTests.cs" />
