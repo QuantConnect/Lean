@@ -22,6 +22,15 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+	/// <summary>
+	/// Demonstration of how to estimate constituents of QC500 index based on the company fundamentals
+	/// The algorithm creates a default tradable and liquid universe containing 500 US equities 
+	/// which are chosen at the first trading day of each month.   
+	/// </summary>
+	/// <meta name="tag" content="using data" />
+	/// <meta name="tag" content="universes" />
+	/// <meta name="tag" content="coarse universes" />
+	/// <meta name="tag" content="fine universes" />
 	public class ConstituentsQC500GeneratorAlgorithm : QCAlgorithm
 	{
 		private const int NumberOfSymbolsCoarse = 1000;
@@ -29,6 +38,23 @@ namespace QuantConnect.Algorithm.CSharp
 
 		public readonly Dictionary<string, decimal> DollarVolumeData = new Dictionary<string, decimal>();
 		private bool _rebalance = true;
+		
+        public override void Initialize()
+		{
+			UniverseSettings.Resolution = Resolution.Daily;
+
+			SetStartDate(2018, 1, 1); //Set Start Date
+			SetEndDate(2018, 1, 3); //Set End Date
+			SetCash(50000); //Set Strategy Cash
+			var spy = AddEquity("SPY", Resolution.Daily);
+
+			// this add universe method accepts two parameters:
+			// - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>
+			// - fine selection function: accepts an IEnumerable<FineFundamental> and returns an IEnumerable<Symbol>
+			AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
+			Schedule.On(DateRules.MonthStart(spy.Symbol), TimeRules.At(0, 0),
+						() => { _rebalance = true; });
+		}
 
 		public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
 		{
@@ -89,18 +115,6 @@ namespace QuantConnect.Algorithm.CSharp
 			return topFine.Select(x => x.Symbol);
 		}
 
-		public override void Initialize()
-		{
-			UniverseSettings.Resolution = Resolution.Daily;
-
-			SetStartDate(year: 2013, month: 09, day: 1);
-			SetEndDate(year: 2014, month: 3, day: 1);
-			SetCash(startingCash: 50000);
-			var spy = AddEquity("SPY", Resolution.Daily);
-			AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
-			Schedule.On(DateRules.MonthStart(spy.Symbol), TimeRules.At(hour: 0, minute: 0),
-						() => { _rebalance = true; });
-		}
 
 		public void OnData(TradeBars data) { }
 	}

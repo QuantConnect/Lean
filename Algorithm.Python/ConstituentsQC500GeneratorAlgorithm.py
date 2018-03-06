@@ -22,14 +22,30 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
+### <summary>
+### Demonstration of how to estimate constituents of QC500 index based on the company fundamentals
+### The algorithm creates a default tradable and liquid universe containing 500 US equities 
+### which are chosen at the first trading day of each month.   
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="universes" />
+### <meta name="tag" content="coarse universes" />
+### <meta name="tag" content="fine universes" />
 class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2018, 1, 1)  
-        self.SetEndDate(2018, 1, 3)        
-        self.SetCash(50000)          
+        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+
+        self.SetStartDate(2018, 1, 1) #Set Start Date 
+        self.SetEndDate(2018, 1, 3) #Set End Date       
+        self.SetCash(50000) #Set Strategy Cash          
         self.UniverseSettings.Resolution = Resolution.Daily
+
+        # this add universe method accepts two parameters:
+        # - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>
+        # - fine selection function: accepts an IEnumerable<FineFundamental> and returns an IEnumerable<Symbol>
         self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
+
         self.spy = self.AddEquity("SPY", Resolution.Daily)
         self.Schedule.On(self.DateRules.MonthStart("SPY"), self.TimeRules.At(0, 0), Action(self.monthly_rebalance))
         self.num_coarse = 1000
@@ -49,6 +65,8 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
         sort_filtered = sorted(filtered, key=lambda x: x.DollarVolume, reverse=True)[:self.num_coarse] 
         for i in sort_filtered:
             self.dollar_volume[i.Symbol.Value] = i.DollarVolume
+
+        # return the symbol objects our sorted collection
         return [x.Symbol for x in sort_filtered]
 
     def FineSelectionFunction(self, fine):
