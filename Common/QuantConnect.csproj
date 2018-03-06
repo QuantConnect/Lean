@@ -174,6 +174,7 @@
     <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\InvalidTokenPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\KeyErrorPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\NoMethodMatchPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\StackExceptionInterpreter.cs" />
     <Compile Include="Exceptions\IExceptionInterpreter.cs" />
     <Compile Include="Exceptions\ScheduledEventExceptionInterpreter.cs" />
