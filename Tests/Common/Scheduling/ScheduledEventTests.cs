@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         [Test]
         public void FiresSkippedEventsInSameCallToScan()
         {
-            int count = 0;
+            var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
             var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time}, (n, t) => count++);
             sevent.Scan(time);
@@ -64,12 +64,13 @@ namespace QuantConnect.Tests.Common.Scheduling
         [Test]
         public void SkipsEventsUntilTime()
         {
-            int count = 0;
+            var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
             var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time }, (n, t) => count++);
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
             Assert.AreEqual(time, sevent.NextEventUtcTime);
+            Assert.AreEqual(0, count);
         }
 
         [Test]
@@ -79,8 +80,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
             {
                 triggered = true;
-            });
-            se.IsLoggingEnabled = true;
+            })
+            { IsLoggingEnabled = true };
 
             se.Scan(new DateTime(2015, 08, 06));
             Assert.IsFalse(triggered);
@@ -96,8 +97,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
             {
                 triggered = true;
-            });
-            se.IsLoggingEnabled = true;
+            })
+            { IsLoggingEnabled = true };
 
             se.Scan(new DateTime(2015, 08, 06));
             Assert.IsFalse(triggered);
@@ -143,13 +144,35 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
-        public void ScheduledEventsHaveUniqueName()
+        public void ScheduledEventsWithSameNameAreDifferent()
         {
             var first = DateTime.UtcNow;
             var se1 = new ScheduledEvent("test", first);
             var se2 = new ScheduledEvent("test", first);
 
-            Assert.IsTrue(se1.Name != se2.Name);
+            Assert.AreEqual(se1.Name, se2.Name);
+            Assert.AreNotEqual(se1, se2);
+        }
+
+        [Test]
+        public void CompareToItselfReturnsTrue()
+        {
+            var time = DateTime.UtcNow;
+            var se1 = new ScheduledEvent("test", time);
+            var se2 = se1;
+
+            Assert.IsTrue(Equals(se1, se2));
+            Assert.AreEqual(se1, se2);
+        }
+
+        [Test]
+        public void CompareToNullReturnsFalse()
+        {
+            var time = DateTime.UtcNow;
+            var se = new ScheduledEvent("test", time);
+
+            Assert.IsFalse(Equals(se, null));
+            Assert.AreNotEqual(se, null);
         }
     }
 }
