@@ -93,11 +93,8 @@ namespace QuantConnect.Indicators
             Slow.Update(input);
 
             var macd = Fast - Slow;
-            if (Fast.IsReady && Slow.IsReady)
-            {
-                Signal.Update(input.Time, macd);
-            }
 
+            Signal.Update(input.Time, macd);
             Histogram.Update(input.Time, macd - Signal);
             return macd;
         }
