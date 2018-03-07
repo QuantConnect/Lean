@@ -48,7 +48,7 @@ namespace QuantConnect.Exceptions
             var pe = (PythonException)exception;
 
             var message = "Trying to include an invalid token/character in any statement throws a SyntaxError exception. To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero).";
-            var errorLine = PythonUtil.GetStringBetweenChars(pe.Message, '(', ')');
+            var errorLine = pe.Message.GetStringBetweenChars('(', ')');
 
             return new Exception($"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}", pe);
         }

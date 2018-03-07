@@ -297,6 +297,39 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(time, roundedTime);
         }
 
+        [Test]
+        public void GetStringBetweenCharsTests()
+        {
+            const string expected = "python3.6";
+
+            // Different characters cases
+            var input = "[ python3.6 ]";
+            var actual = input.GetStringBetweenChars('[', ']');
+            Assert.AreEqual(expected, actual);
+
+            input = "[ python3.6 ] [ python2.7 ]";
+            actual = input.GetStringBetweenChars('[', ']');
+            Assert.AreEqual(expected, actual);
+
+            input = "[ python2.7 [ python3.6 ] ]";
+            actual = input.GetStringBetweenChars('[', ']');
+            Assert.AreEqual(expected, actual);
+
+            // Same character cases
+            input = "\'python3.6\'";
+            actual = input.GetStringBetweenChars('\'', '\'');
+            Assert.AreEqual(expected, actual);
+
+            input = "\' python3.6 \' \' python2.7 \'";
+            actual = input.GetStringBetweenChars('\'', '\'');
+            Assert.AreEqual(expected, actual);
+
+            // In this case, it is not equal
+            input = "\' python2.7 \' python3.6 \' \'";
+            actual = input.GetStringBetweenChars('\'', '\'');
+            Assert.AreNotEqual(expected, actual);
+        }
+
         private class Super<T>
         {
         }
