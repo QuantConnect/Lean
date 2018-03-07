@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,6 +90,47 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     Console.WriteLine($"{DateTime.UtcNow:O} Response time: {stopwatch.Elapsed}");
                 });
                 while (!result.IsCompleted) Thread.Sleep(1000);
+            }
+
+            InteractiveBrokersGatewayRunner.Stop();
+        }
+
+        [Test]
+        public void GetsHistoryWithMultipleApiCalls()
+        {
+            using (var brokerage = GetBrokerage())
+            {
+                Assert.IsTrue(brokerage.IsConnected);
+
+                // request a week of historical data (including a weekend)
+                var request = new HistoryRequest(
+                    new DateTime(2018, 2, 1, 9, 30, 0).ConvertToUtc(TimeZones.NewYork),
+                    new DateTime(2018, 2, 7, 16, 0, 0).ConvertToUtc(TimeZones.NewYork),
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Minute,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    TimeZones.NewYork,
+                    null,
+                    false,
+                    false,
+                    DataNormalizationMode.Raw,
+                    TickType.Trade);
+
+                var history = brokerage.GetHistory(request).ToList();
+
+                // check if data points are in chronological order
+                var previousEndTime = DateTime.MinValue;
+                foreach (var bar in history)
+                {
+                    Assert.IsTrue(bar.EndTime > previousEndTime);
+
+                    previousEndTime = bar.EndTime;
+                }
+
+                // should return 5 days of data (Thu-Fri-Mon-Tue-Wed)
+                // each day has 390 minute bars for equities
+                Assert.AreEqual(5 * 390, history.Count);
             }
 
             InteractiveBrokersGatewayRunner.Stop();

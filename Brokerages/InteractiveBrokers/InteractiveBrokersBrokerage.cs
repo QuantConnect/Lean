@@ -2661,7 +2661,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var history = new List<TradeBar>();
             var dataDownloading = new AutoResetEvent(false);
-            var dataDownloaded = new ManualResetEvent(false);
+            var dataDownloaded = new AutoResetEvent(false);
 
             var useRegularTradingHours = Convert.ToInt32(!request.IncludeExtendedMarketHours);
 
@@ -2750,7 +2750,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 var filteredPiece = historyPiece.OrderBy(x => x.Time);
 
-                history.AddRange(filteredPiece);
+                history.InsertRange(0, filteredPiece);
 
                 // moving endTime to the new position to proceed with next request (if needed)
                 endTime = filteredPiece.First().Time;
