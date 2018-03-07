@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private readonly Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
+        private readonly ConcurrentDictionary<string, Chart> _charts = new ConcurrentDictionary<string, Chart>();
 
         private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames = new Dictionary<string, List<string>>
         {
@@ -50,10 +50,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Plot(string,string,decimal)"/>
         public void AddChart(Chart chart)
         {
-            if (!_charts.ContainsKey(chart.Name))
-            {
-                _charts.Add(chart.Name, chart);
-            }
+            _charts.TryAdd(chart.Name, chart);
         }
 
         /// <summary>
@@ -175,16 +172,13 @@ namespace QuantConnect.Algorithm
             }
 
             // If we don't have the chart, create it:
-            if (!_charts.ContainsKey(chart))
-            {
-                _charts.Add(chart, new Chart(chart));
-            }
+            _charts.TryAdd(chart, new Chart(chart));
 
             var thisChart = _charts[chart];
             if (!thisChart.Series.ContainsKey(series))
             {
                 //Number of series in total, excluding reserved charts
-                var seriesCount = _charts.Values.Sum(c => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
+                var seriesCount = _charts.Select(x => x.Value).Sum(c => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
                     ? c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
                     : c.Series.Count);
 
@@ -334,7 +328,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>GetChartUpdates returns the latest updates since previous request.</remarks>
         public List<Chart> GetChartUpdates(bool clearChartData = false)
         {
-            var updates = _charts.Values.Select(chart => chart.GetUpdates()).ToList();
+            var updates = _charts.Select(x => x.Value).Select(chart => chart.GetUpdates()).ToList();
 
             if (clearChartData)
             {
