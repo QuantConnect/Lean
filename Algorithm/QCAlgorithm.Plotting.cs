@@ -50,10 +50,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Plot(string,string,decimal)"/>
         public void AddChart(Chart chart)
         {
-            if (!_charts.ContainsKey(chart.Name))
-            {
-                _charts.TryAdd(chart.Name, chart);
-            }
+            _charts.TryAdd(chart.Name, chart);
         }
 
         /// <summary>
@@ -175,10 +172,7 @@ namespace QuantConnect.Algorithm
             }
 
             // If we don't have the chart, create it:
-            if (!_charts.ContainsKey(chart))
-            {
-                _charts.TryAdd(chart, new Chart(chart));
-            }
+            _charts.TryAdd(chart, new Chart(chart));
 
             var thisChart = _charts[chart];
             if (!thisChart.Series.ContainsKey(series))
