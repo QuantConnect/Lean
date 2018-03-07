@@ -171,9 +171,14 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
+    <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\InvalidTokenPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\KeyErrorPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\NoMethodMatchPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\StackExceptionInterpreter.cs" />
     <Compile Include="Exceptions\IExceptionInterpreter.cs" />
     <Compile Include="Exceptions\ScheduledEventExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\UnsupportedOperandPythonExceptionInterpreter.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
     <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
     <Compile Include="Orders\GDAXOrderProperties.cs" />

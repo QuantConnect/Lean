@@ -49,6 +49,9 @@ class Test_MethodOverload(QCAlgorithm):
     def call_plot_throw_pyobject_test(self):
         self.Plot("ERROR", self.a)
 
+    def no_method_match(self):
+        self.Log(1)
+
 
 class A(object):
    def __init__(self):
