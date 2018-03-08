@@ -890,6 +890,26 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Get the first occurence of a string between two characters from another string
+        /// </summary>
+        /// <param name="value">The original string</param>
+        /// <param name="left">Left bound of the substring</param>
+        /// <param name="right">Right bound of the substring</param>
+        /// <returns>Substring from original string bounded by the two characters</returns>
+        public static string GetStringBetweenChars(this string value, char left, char right)
+        {
+            var startIndex = 1 + value.IndexOf(left);
+            var length = value.IndexOf(right, startIndex) - startIndex;
+            if (length > 0)
+            {
+                value = value.Substring(startIndex, length);
+                startIndex = 1 + value.IndexOf(left);
+                return value.Substring(startIndex).Trim();
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Return the first in the series of names, or find the one that matches the configured algirithmTypeName
         /// </summary>
         /// <param name="names">The list of class names</param>

@@ -44,7 +44,7 @@ namespace QuantConnect.Exceptions
         {
             var dnfe = (DllNotFoundException)exception;
 
-            var dllName = PythonUtil.GetStringBetweenChars(dnfe.Message, '\'', '\'');
+            var dllName = dnfe.Message.GetStringBetweenChars('\'', '\'');
             var platform = Environment.OSVersion.Platform.ToString();
             var message = $"The dynamic-link library for {dllName} could not be found. Please visit https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/readme.md for instructions on how to enable python support in {platform}";
             return new DllNotFoundException(message, dnfe);
