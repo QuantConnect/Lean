@@ -28,8 +28,8 @@ namespace QuantConnect.Tests.Common.Exceptions
         public void CreatesFromAssemblies()
         {
             var assembly = typeof(FakeExceptionInterpreter).Assembly;
-            var projector = StackExceptionInterpreter.CreateFromAssemblies(new[] {assembly});
-            Assert.AreEqual(1, projector.Interpreters.Count(p => p.GetType() == typeof(FakeExceptionInterpreter)));
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] {assembly});
+            Assert.AreEqual(1, interpreter.Interpreters.Count(p => p.GetType() == typeof(FakeExceptionInterpreter)));
         }
 
         [Test]
@@ -47,7 +47,8 @@ namespace QuantConnect.Tests.Common.Exceptions
                 {
                     interpretCalled.Add(0);
                     return e;
-                }),
+                },
+                order : 2),
                 new FakeExceptionInterpreter(e =>
                 {
                     canInterpretCalled.Add(1);
@@ -56,7 +57,8 @@ namespace QuantConnect.Tests.Common.Exceptions
                 {
                     interpretCalled.Add(1);
                     return e;
-                }),
+                },
+                order : 1),
                 new FakeExceptionInterpreter(e =>
                 {
                     canInterpretCalled.Add(2);
@@ -65,21 +67,25 @@ namespace QuantConnect.Tests.Common.Exceptions
                 {
                     interpretCalled.Add(2);
                     return e;
-                })
+                },
+                order : 0)
             };
 
-            var projector = new StackExceptionInterpreter(interpreters);
-            projector.Interpret(new Exception(), null);
+            var interpreter = new StackExceptionInterpreter(interpreters);
+            interpreter.Interpret(new Exception(), null);
 
-            // can project called for 1st and second entry
-            Assert.Contains(0, canInterpretCalled);
+            // can interpret called for 3nd and 2rd entry
+            Assert.Contains(2, canInterpretCalled);
             Assert.Contains(1, canInterpretCalled);
-            Assert.That(canInterpretCalled, Is.Not.Contains(2));
+            Assert.That(canInterpretCalled, Is.Not.Contains(0));
 
-            // project only called on second entry
+            // interpret only called on second entry
             Assert.That(interpretCalled, Is.Not.Contains(0));
             Assert.Contains(1, interpretCalled);
             Assert.That(interpretCalled, Is.Not.Contains(2));
+
+            // interpreter called 3rd before 2nd
+            Assert.Greater(canInterpretCalled.First(), canInterpretCalled.Last());
         }
 
         [Test]

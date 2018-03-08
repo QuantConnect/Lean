@@ -24,6 +24,11 @@ namespace QuantConnect.Exceptions
     public interface IExceptionInterpreter
     {
         /// <summary>
+        /// Determines the order that a class that implements this interface should be called
+        /// </summary>
+        int Order { get; }
+
+        /// <summary>
         /// Determines if this interpreter should be applied to the specified exception.
         /// </summary>
         /// <param name="exception">The exception to check</param>

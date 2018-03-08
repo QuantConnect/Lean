@@ -29,12 +29,17 @@ namespace QuantConnect.Exceptions
         private readonly List<IExceptionInterpreter> _interpreters;
 
         /// <summary>
+        /// Determines the order that an instance of this class should be called
+        /// </summary>
+        public int Order => 0;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="StackExceptionInterpreter"/> class
         /// </summary>
         /// <param name="interpreters">The interpreters to use</param>
         public StackExceptionInterpreter(IEnumerable<IExceptionInterpreter> interpreters)
         {
-            _interpreters = interpreters.ToList();
+            _interpreters = interpreters.OrderBy(x => x.Order).ToList();
         }
 
         /// <summary>

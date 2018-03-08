@@ -23,8 +23,11 @@ namespace QuantConnect.Tests.Common.Exceptions
     /// </summary>
     public class FakeExceptionInterpreter : IExceptionInterpreter
     {
+        private readonly int _order = 0;
         private readonly Func<Exception, bool> _canInterpret;
         private readonly Func<Exception, Exception> _interpret;
+
+        public int Order => _order;
 
         public FakeExceptionInterpreter()
         {
@@ -41,10 +44,11 @@ namespace QuantConnect.Tests.Common.Exceptions
             };
         }
 
-        public FakeExceptionInterpreter(Func<Exception, bool> canInterpret, Func<Exception, Exception> interpret)
+        public FakeExceptionInterpreter(Func<Exception, bool> canInterpret, Func<Exception, Exception> interpret, int order = 0)
         {
             _canInterpret = canInterpret;
             _interpret = interpret;
+            _order = order;
         }
 
         public bool CanInterpret(Exception exception)
