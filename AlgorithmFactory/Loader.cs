@@ -60,6 +60,11 @@ namespace QuantConnect.AlgorithmFactory
         private const string AlgorithmBaseTypeFullName = "QuantConnect.Algorithm.QCAlgorithm";
 
         /// <summary>
+        /// The full type name of QCAlgorithmFramework, this is so we don't pick him up when querying for types
+        /// </summary>
+        private const string FrameworkBaseTypeFullName = "QuantConnect.Algorithm.Framework.QCAlgorithmFramework";
+
+        /// <summary>
         /// Creates a new loader with a 10 second maximum load time that forces exactly one derived type to be found
         /// </summary>
         public Loader()
@@ -327,6 +332,7 @@ namespace QuantConnect.AlgorithmFactory
                              where !t.IsAbstract                                // require concrete impl
                              where AlgorithmInterfaceType.IsAssignableFrom(t)   // require derived from IAlgorithm
                              where t.FullName != AlgorithmBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithm
+                             where t.FullName != FrameworkBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithmFramework
                              where t.GetConstructor(Type.EmptyTypes) != null    // require default ctor
                              select t.FullName).ToList();
                 }
