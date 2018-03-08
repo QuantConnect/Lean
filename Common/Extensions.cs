@@ -1050,6 +1050,7 @@ namespace QuantConnect
                 try
                 {
                     result = pyObject.AsManagedObject(typeof(T)) as T;
+                    return true;
                 }
                 catch
                 {
@@ -1058,7 +1059,7 @@ namespace QuantConnect
                 }
             }
 
-            return result != default(T);
+            return false;
         }
     }
 }

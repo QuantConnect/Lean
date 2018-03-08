@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -52,6 +53,14 @@ namespace QuantConnect.Tests.Indicators
                 TestHelper.TestIndicatorReset(indicator as IndicatorBase<TradeBar>, TestFileName);
             else
                 throw new NotSupportedException("ResetsProperly: Unsupported indicator data type: " + typeof(T));
+        }
+
+        public PyObject GetIndicatorAsPyObject()
+        {
+            using (Py.GIL())
+            {
+                return Indicator.ToPython();
+            }
         }
 
         public IndicatorBase<T> Indicator => CreateIndicator();

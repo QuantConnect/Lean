@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Algorithm
     {
         private Symbol _spy;
         private QCAlgorithm _algorithm;
-        private IEnumerable<IGrouping<Type, Type>> _indicatorTestsGroups;
+        private IEnumerable<Type> _indicatorTestsTypes;
 
         [SetUp]
         public void Setup()
@@ -39,47 +39,48 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _spy = _algorithm.AddEquity("SPY").Symbol;
 
-            _indicatorTestsGroups =
+            _indicatorTestsTypes =
                 from type in GetType().Assembly.GetTypes()
                 where type.IsPublic && !type.IsAbstract
                 where
                    typeof(CommonIndicatorTests<TradeBar>).IsAssignableFrom(type) ||
                    typeof(CommonIndicatorTests<IBaseDataBar>).IsAssignableFrom(type) ||
                    typeof(CommonIndicatorTests<IndicatorDataPoint>).IsAssignableFrom(type)
-                group type by type.BaseType.GetGenericArguments().FirstOrDefault();
+                select type;
         }
 
         [Test]
         public void RegistersIndicatorProperly()
         {
             var expected = 0;
-            foreach (var group in _indicatorTestsGroups)
+
+            foreach (var type in _indicatorTestsTypes)
             {
-                var key = group.Key;
-                foreach (var type in group)
+                var indicatorTest = Activator.CreateInstance(type);
+                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
                 {
-                    var indicatorTest = Activator.CreateInstance(type);
-                    if (key == typeof(IndicatorDataPoint))
-                    {
-                        var indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).Indicator;
-                        Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute, Field.Close));
-                        expected++;
-                    }
-                    else if (key == typeof(IBaseDataBar))
-                    {
-                        var indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).Indicator;
-                        Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                        expected++;
-                    }
-                    else if (key == typeof(TradeBar))
-                    {
-                        var indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).Indicator;
-                        Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                        expected++;
-                    }
-                    var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
-                    Assert.AreEqual(expected, actual);
+                    var indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).Indicator;
+                    Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute, Field.Close));
+                    expected++;
                 }
+                else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
+                {
+                    var indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).Indicator;
+                    Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
+                    expected++;
+                }
+                else if (indicatorTest is CommonIndicatorTests<TradeBar>)
+                {
+                    var indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).Indicator;
+                    Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
+                    expected++;
+                }
+                else
+                {
+                    throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
+                }
+                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -87,42 +88,32 @@ namespace QuantConnect.Tests.Algorithm
         public void RegistersIndicatorProperlyPython()
         {
             var expected = 0;
-            foreach (var group in _indicatorTestsGroups)
+            PyObject indicator;
+
+            foreach (var type in _indicatorTestsTypes)
             {
-                var key = group.Key;
-                foreach (var type in group)
+                var indicatorTest = Activator.CreateInstance(type);
+                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
                 {
-                    var indicatorTest = Activator.CreateInstance(type);
-                    if (key == typeof(IndicatorDataPoint))
-                    {
-                        using (Py.GIL())
-                        {
-                            var indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).Indicator.ToPython();
-                            Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                        }
-                        expected++;
-                    }
-                    else if (key == typeof(IBaseDataBar))
-                    {
-                        using (Py.GIL())
-                        {
-                            var indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).Indicator.ToPython();
-                            Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                        }
-                        expected++;
-                    }
-                    else if (key == typeof(TradeBar))
-                    {
-                        using (Py.GIL())
-                        {
-                            var indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).Indicator.ToPython();
-                            Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                        }
-                        expected++;
-                    }
-                    var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
-                    Assert.AreEqual(expected, actual);
+                    indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
                 }
+                else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).GetIndicatorAsPyObject();
+                }
+                else if (indicatorTest is CommonIndicatorTests<TradeBar>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).GetIndicatorAsPyObject();
+                }
+                else
+                {
+                    throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
+                }
+                Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
+                expected++;
+
+                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -131,7 +122,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString("x",
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
                     "class GoodCustomIndicator:\n" +
                     "    def __init__(self):\n" +
                     "        pass\n" +
