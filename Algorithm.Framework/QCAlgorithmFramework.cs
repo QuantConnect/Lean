@@ -16,6 +16,8 @@
 using System;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
@@ -31,6 +33,8 @@ namespace QuantConnect.Algorithm.Framework
     /// </summary>
     public abstract class QCAlgorithmFramework : QCAlgorithm
     {
+        private readonly ISecurityValuesProvider _securityValuesProvider;
+
         /// <summary>
         /// Returns true since algorithms derived from this use the framework
         /// </summary>
@@ -66,6 +70,8 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         public QCAlgorithmFramework()
         {
+            _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
+
             // set model defaults
             Execution = new ImmediateExecutionModel();
             RiskManagement = new NullRiskManagementModel();
@@ -172,6 +178,7 @@ namespace QuantConnect.Algorithm.Framework
         private Alpha SetGeneratedAndClosedTimes(Alpha alpha)
         {
             alpha.GeneratedTimeUtc = UtcTime;
+            alpha.ReferenceValue = _securityValuesProvider.GetValues(alpha.Symbol).Get(alpha.Type);
 
             TimeSpan barSize;
             Security security;

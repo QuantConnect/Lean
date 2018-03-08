@@ -62,6 +62,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public AlphaType Type { get; private set; }
 
         /// <summary>
+        /// Gets the reference value this alpha is predicting against. The value is dependent on the specified <see cref="AlphaType"/>
+        /// </summary>
+        [JsonProperty]
+        public decimal ReferenceValue { get; internal set; }
+
+        /// <summary>
         /// Gets the predicted direction, down, flat or up
         /// </summary>
         [JsonProperty, JsonConverter(typeof(StringEnumConverter))]
