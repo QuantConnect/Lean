@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
         // so we want to be ready to accept events as soon as possible
-        private readonly ConcurrentDictionary<string, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<string, ScheduledEvent>();
+        private readonly ConcurrentDictionary<ScheduledEvent, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<ScheduledEvent, ScheduledEvent>();
 
         //Algorithm and Handlers:
         private IApi _api;
@@ -158,8 +158,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var marketHours = _api.MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
-                Log.Trace(string.Format("LiveTradingRealTimeHandler.RefreshMarketHoursToday({0}): Market hours set: Symbol: {1} {2} ({3})",
-                        security.Type, security.Symbol, localMarketHours, security.Exchange.Hours.TimeZone));
+                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
             }
         }
 
@@ -174,17 +173,16 @@ namespace QuantConnect.Lean.Engine.RealTime
                 scheduledEvent.SkipEventsUntil(_algorithm.UtcTime);
             }
 
-            _scheduledEvents.AddOrUpdate(scheduledEvent.Name, scheduledEvent);
+            _scheduledEvents.AddOrUpdate(scheduledEvent, scheduledEvent);
         }
 
         /// <summary>
         /// Removes the specified event from the schedule
         /// </summary>
-        /// <param name="name"></param>
-        public void Remove(string name)
+        /// <param name="scheduledEvent">The event to be removed</param>
+        public void Remove(ScheduledEvent scheduledEvent)
         {
-            ScheduledEvent scheduledEvent;
-            _scheduledEvents.TryRemove(name, out scheduledEvent);
+            _scheduledEvents.TryRemove(scheduledEvent, out scheduledEvent);
         }
 
         /// <summary>

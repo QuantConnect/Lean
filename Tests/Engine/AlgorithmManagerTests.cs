@@ -358,7 +358,7 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void Remove(string name)
+            public void Remove(ScheduledEvent scheduledEvent)
             {
             }
 
