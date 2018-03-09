@@ -33,22 +33,26 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The user's id that deployed the alpha stream
         /// </summary>
+        [JsonProperty("user-id")]
         public int UserId { get; set; }
 
         /// <summary>
-        /// The deployer alpha id. If this is a user backtest or live algo then this will not be specified
+        /// The deployed alpha id. This is the id generated upon submssion to the alpha marketplace.
+        /// If this is a user backtest or live algo then this will not be specified
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty("alpha-id", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string AlphaId { get; set; }
 
         /// <summary>
         /// The algorithm's unique identifier
         /// </summary>
+        [JsonProperty("algorithm-id")]
         public string AlgorithmId { get; set; }
 
         /// <summary>
         /// The generated insights
         /// </summary>
+        [JsonProperty("insights")]
         public List<Insight> Insights { get; set; }
 
         /// <summary>
