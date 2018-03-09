@@ -57,4 +57,4 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
 
             btcHoldings = self.Portfolio.CashBook["BTC"].Amount
             usdCash = self.Portfolio.CashBook["USD"].Amount
-            self.Log("{0} - BTC holdings: {1} - USD cash: {2}".format(str(self.Time), str(btcHoldings), str(usdCash)))
+            self.Log("{} - BTC holdings: {} - USD cash: {}".format(self.Time, btcHoldings, usdCash))
