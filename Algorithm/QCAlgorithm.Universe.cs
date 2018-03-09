@@ -325,17 +325,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private void AddToUserDefinedUniverse(Security security)
         {
-            // if we are adding a non-internal security which is also the benchmark, we remove it first
+            // if we are adding a non-internal security which already has an internal feed, we remove it first
             Security existingSecurity;
             if (Securities.TryGetValue(security.Symbol, out existingSecurity))
             {
-                if (!security.IsInternalFeed() && existingSecurity.Symbol == _benchmarkSymbol)
+                if (!security.IsInternalFeed() && existingSecurity.IsInternalFeed())
                 {
                     var securityUniverse = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(security.Symbol));
-                    if (securityUniverse != null)
-                    {
-                        securityUniverse.Remove(security.Symbol);
-                    }
+                    securityUniverse?.Remove(security.Symbol);
 
                     Securities.Remove(security.Symbol);
                 }
