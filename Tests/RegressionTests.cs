@@ -683,18 +683,18 @@ namespace QuantConnect.Tests
                 {"Drawdown", "5.400%"},
                 {"Expectancy", "-1"},
                 {"Net Profit", "-5.656%"},
-                {"Sharpe Ratio", "-20.375"},
+                {"Sharpe Ratio", "-20.372"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
                 {"Alpha", "-11.165"},
-                {"Beta", "574.802"},
+                {"Beta", "574.85"},
                 {"Annual Standard Deviation", "0.353"},
                 {"Annual Variance", "0.125"},
-                {"Information Ratio", "-20.43"},
+                {"Information Ratio", "-20.427"},
                 {"Tracking Error", "0.353"},
                 {"Treynor Ratio", "-0.013"},
-                {"Total Fees", "$6076.32"}
+                {"Total Fees", "$6076.08"}
             };
 
             var indicatorSuiteAlgorithmStatistics = new Dictionary<string, string>
