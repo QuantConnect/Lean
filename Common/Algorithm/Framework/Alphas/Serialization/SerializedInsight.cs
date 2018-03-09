@@ -25,13 +25,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public string Ticker { get; set; }
 
         [JsonProperty("type")]
-        public AlphaType Type { get; set; }
+        public InsightType Type { get; set; }
 
         [JsonProperty("reference")]
         public decimal Reference { get; set; }
 
         [JsonProperty("direction")]
-        public AlphaDirection Direction { get; set; }
+        public InsightDirection Direction { get; set; }
 
         [JsonProperty("period")]
         public double Period { get; set; }
@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// Initializes a new instance of the <see cref="SerializedInsight "/> class by copying the specified insight
         /// </summary>
         /// <param name="insight">The insight to copy</param>
-        public SerializedInsight(Alpha insight)
+        public SerializedInsight(Insight insight)
         {
             Id = insight.Id.ToString("N");
             GeneratedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);

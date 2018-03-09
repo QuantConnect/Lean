@@ -11,6 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using Newtonsoft.Json;
@@ -19,24 +20,19 @@ using Newtonsoft.Json.Converters;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Specifies the predicted direction for a alpha (price/volatility)
+    /// Defines a specific type of score for a insight
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter), true)]
-    public enum AlphaDirection
+    public enum InsightScoreType
     {
         /// <summary>
-        /// The value will go down
+        /// Directional accuracy
         /// </summary>
-        Down = -1,
+        Direction,
 
         /// <summary>
-        /// The value will stay flat
+        /// Magnitude accuracy
         /// </summary>
-        Flat = 0,
-
-        /// <summary>
-        /// The value will go up
-        /// </summary>
-        Up = 1
+        Magnitude
     }
 }

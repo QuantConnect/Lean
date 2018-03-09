@@ -8,7 +8,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// Abstraction point to handle the various concerns from a common api.
     /// At the time of writing, these concerns are charting, scoring, perisistence and messaging.
     /// </summary>
-    public interface IAlphaManagerExtension
+    public interface IInsightManagerExtension
     {
         /// <summary>
         /// Invokes the manager at the end of the time step.
@@ -25,21 +25,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         void InitializeForRange(DateTime algorithmStartDate, DateTime algorithmEndDate, DateTime algorithmUtcTime);
 
         /// <summary>
-        /// Pipes new
+        /// Invoked when the insight manager first received a generated insight from the algorithm
         /// </summary>
-        /// <param name="context">Context whose alpha has just generated</param>
-        void OnAlphaGenerated(AlphaAnalysisContext context);
+        /// <param name="context">Context whose insight has just generated</param>
+        void OnInsightGenerated(InsightAnalysisContext context);
 
         /// <summary>
-        /// Invoked when the alpha manager detects that an alpha has closed (frontier has passed alpha period)
+        /// Invoked when the insight manager detects that an insight has closed (frontier has passed insight period)
         /// </summary>
-        /// <param name="context">Context whose alpha has just closed</param>
-        void OnAlphaClosed(AlphaAnalysisContext context);
+        /// <param name="context">Context whose insight has just closed</param>
+        void OnInsightClosed(InsightAnalysisContext context);
 
         /// <summary>
-        /// Invoked when the alpha manager has completed analysis on an alpha
+        /// Invoked when the insight manager has completed analysis on an insight
         /// </summary>
-        /// <param name="context">Context whose alpha has just completed analysis</param>
-        void OnAlphaAnalysisCompleted(AlphaAnalysisContext context);
+        /// <param name="context">Context whose insight has just completed analysis</param>
+        void OnInsightAnalysisCompleted(InsightAnalysisContext context);
     }
 }

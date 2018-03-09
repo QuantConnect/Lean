@@ -24,11 +24,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public interface IPortfolioConstructionModel : INotifiedSecurityChanges
     {
         /// <summary>
-        /// Create portfolio targets from the specified alphas
+        /// Create portfolio targets from the specified insights
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="alphas">The alphas to create portoflio targets from</param>
+        /// <param name="insights">The insights to create portoflio targets from</param>
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Alpha> alphas);
+        IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Insight> insights);
     }
 }

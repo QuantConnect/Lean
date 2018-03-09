@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Alphas
     /// <summary>
     /// Manages alpha statistics responsbilities
     /// </summary>
-    public class StatisticsAlphaManagerExtension : IAlphaManagerExtension
+    public class StatisticsInsightManagerExtension : IInsightManagerExtension
     {
         private readonly double _smoothingFactor;
         private readonly int _rollingAverageIsReadyCount;
@@ -39,14 +39,14 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets whether or not the rolling average statistics is ready
         /// </summary>
-        public bool RollingAverageIsReady => Statistics.TotalAlphasAnalysisCompleted >= _rollingAverageIsReadyCount;
+        public bool RollingAverageIsReady => Statistics.TotalInsightsAnalysisCompleted >= _rollingAverageIsReadyCount;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StatisticsAlphaManagerExtension"/> class
+        /// Initializes a new instance of the <see cref="StatisticsInsightManagerExtension"/> class
         /// </summary>
         /// <param name="tradablePercentOfVolume">Percent of volume of first bar used to estimate the maximum number of tradable shares. Defaults to 1%</param>
-        /// <param name="period">The period used for exponential smoothing of scores - this is a number of alphas. Defaults to 100 alpha predictions</param>
-        public StatisticsAlphaManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100)
+        /// <param name="period">The period used for exponential smoothing of scores - this is a number of insights. Defaults to 100 insight predictions</param>
+        public StatisticsInsightManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100)
         {
             Statistics = new AlphaRuntimeStatistics();
             _tradablePercentOfVolume = tradablePercentOfVolume;
@@ -57,35 +57,35 @@ namespace QuantConnect.Lean.Engine.Alphas
         }
 
         /// <summary>
-        /// Handles the <see cref="IAlgorithm.AlphasGenerated"/> event
+        /// Handles the <see cref="IAlgorithm.InsightsGenerated"/> event
         /// Increments total, long and short counters. Updates long/short ratio
         /// </summary>
-        /// <param name="context">The newly generated alpha context</param>
-        public void OnAlphaGenerated(AlphaAnalysisContext context)
+        /// <param name="context">The newly generated insight context</param>
+        public void OnInsightGenerated(InsightAnalysisContext context)
         {
-            // incremement total alpha counter
-            Statistics.TotalAlphasGenerated++;
+            // incremement total insight counter
+            Statistics.TotalInsightsGenerated++;
 
             // update long/short ratio statistics
-            if (context.Alpha.Direction == AlphaDirection.Up)
+            if (context.Insight.Direction == InsightDirection.Up)
             {
                 Statistics.LongCount++;
             }
-            else if (context.Alpha.Direction == AlphaDirection.Down)
+            else if (context.Insight.Direction == InsightDirection.Down)
             {
                 Statistics.ShortCount++;
             }
         }
 
         /// <summary>
-        /// Computes an estimated value for the alpha. This is intended to be invoked at the end of the
-        /// alpha period, i.e, when now == alpha.GeneratedTimeUtc + alpha.Period;
+        /// Computes an estimated value for the insight. This is intended to be invoked at the end of the
+        /// insight period, i.e, when now == insight.GeneratedTimeUtc + insight.Period;
         /// </summary>
-        /// <param name="context">Context whose alpha has just closed</param>
-        public void OnAlphaClosed(AlphaAnalysisContext context)
+        /// <param name="context">Context whose insight has just closed</param>
+        public void OnInsightClosed(InsightAnalysisContext context)
         {
-            // increment closed alpha counter
-            Statistics.TotalAlphasClosed += 1;
+            // increment closed insight counter
+            Statistics.TotalInsightsClosed += 1;
 
             // tradable volume (purposefully includes fractional shares)
             var volume = _tradablePercentOfVolume * context.InitialValues.Volume;
@@ -97,33 +97,33 @@ namespace QuantConnect.Lean.Engine.Alphas
             var exitValue = volume * context.CurrentValues.Price * context.CurrentValues.QuoteCurrencyConversionRate;
 
             // total value delta between enter and exit values
-            var alphaValue = (int)context.Alpha.Direction * (exitValue - enterValue);
+            var insightValue = (int)context.Insight.Direction * (exitValue - enterValue);
 
-            context.Alpha.EstimatedValue = alphaValue;
-            Statistics.TotalEstimatedAlphaValue += alphaValue;
+            context.Insight.EstimatedValue = insightValue;
+            Statistics.TotalEstimatedAlphaValue += insightValue;
         }
 
         /// <summary>
         /// Updates the specified statistics with the new scores
         /// </summary>
-        /// <param name="context">Context whose alpha has just completed analysis</param>
-        public void OnAlphaAnalysisCompleted(AlphaAnalysisContext context)
+        /// <param name="context">Context whose insight has just completed analysis</param>
+        public void OnInsightAnalysisCompleted(InsightAnalysisContext context)
         {
             // increment analysis completed counter
-            Statistics.TotalAlphasAnalysisCompleted += 1;
+            Statistics.TotalInsightsAnalysisCompleted += 1;
 
-            foreach (var scoreType in AlphaManager.ScoreTypes)
+            foreach (var scoreType in InsightManager.ScoreTypes)
             {
                 var score = context.Score.GetScore(scoreType);
                 var currentTime = context.CurrentValues.TimeUtc;
 
                 // online population average
                 var mean = Statistics.MeanPopulationScore.GetScore(scoreType);
-                var newMean = mean + (score - mean) / Statistics.TotalAlphasAnalysisCompleted;
+                var newMean = mean + (score - mean) / Statistics.TotalInsightsAnalysisCompleted;
                 Statistics.MeanPopulationScore.SetScore(scoreType, newMean, currentTime);
 
                 var newEma = score;
-                if (Statistics.TotalAlphasAnalysisCompleted > 1)
+                if (Statistics.TotalInsightsAnalysisCompleted > 1)
                 {
                     // compute the traditional ema
                     var ema = Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="frontierTimeUtc">The current frontier time utc</param>
         public void Step(DateTime frontierTimeUtc)
         {
-            //NOP - Statistics are updated in line as alpha is generated, closed, and analyzed
+            //NOP - Statistics are updated in line as insight is generated, closed, and analyzed
         }
 
         /// <summary>

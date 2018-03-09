@@ -19,33 +19,33 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Defines a context for performing analysis on a single alpha
+    /// Defines a context for performing analysis on a single insight
     /// </summary>
-    public class AlphaAnalysisContext
+    public class InsightAnalysisContext
     {
         private DateTime _previousEvaluationTimeUtc;
         private readonly Dictionary<string, object> _contextStorage;
         private readonly TimeSpan _analysisPeriod;
 
         /// <summary>
-        /// Gets the id of this context which is the same as the alpha's id
+        /// Gets the id of this context which is the same as the insight's id
         /// </summary>
-        public Guid Id => Alpha.Id;
+        public Guid Id => Insight.Id;
 
         /// <summary>
-        /// Gets the symbol the alpha is for
+        /// Gets the symbol the insight is for
         /// </summary>
-        public Symbol Symbol => Alpha.Symbol;
+        public Symbol Symbol => Insight.Symbol;
 
         /// <summary>
-        /// Gets the alpha being analyzed
+        /// Gets the insight being analyzed
         /// </summary>
-        public Alpha Alpha { get; }
+        public Insight Insight { get; }
 
         /// <summary>
-        /// Gets the alpha's current score
+        /// Gets the insight's current score
         /// </summary>
-        public AlphaScore Score => Alpha.Score;
+        public InsightScore Score => Insight.Score;
 
         /// <summary>
         /// Gets ending time of the analysis period
@@ -53,19 +53,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public DateTime AnalysisEndTimeUtc { get; }
 
         /// <summary>
-        /// Gets ending time of the alpha, that is, the time it was generated at + the alpha period
+        /// Gets ending time of the insight, that is, the time it was generated at + the insight period
         /// </summary>
-        public DateTime AlphaPeriodEndTimeUtc { get; }
+        public DateTime InsightPeriodEndTimeUtc { get; }
 
         /// <summary>
-        /// Gets the initial values. These are values of price/volatility at the time the alpha was generated
+        /// Gets the initial values. These are values of price/volatility at the time the insight was generated
         /// </summary>
         public SecurityValues InitialValues { get; }
 
         /// <summary>
-        /// Gets whether or not this alpha's period has closed
+        /// Gets whether or not this insight's period has closed
         /// </summary>
-        public bool AlphaPeriodClosed { get; private set; }
+        public bool InsightPeriodClosed { get; private set; }
 
         /// <summary>
         /// Gets the current values. These are values of price/volatility as of the current algorithm time.
@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Percentage through the analysis period
         /// </summary>
-        public double NormalizedTime => Time.NormalizeInstantWithinRange(Alpha.GeneratedTimeUtc, CurrentValues.TimeUtc, _analysisPeriod);
+        public double NormalizedTime => Time.NormalizeInstantWithinRange(Insight.GeneratedTimeUtc, CurrentValues.TimeUtc, _analysisPeriod);
 
         /// <summary>
         /// Percentage of the current time step w.r.t analysis period
@@ -85,26 +85,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public double NormalizedTimeStep => Time.NormalizeTimeStep(_analysisPeriod, CurrentValues.TimeUtc - _previousEvaluationTimeUtc);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlphaAnalysisContext"/> class
+        /// Initializes a new instance of the <see cref="InsightAnalysisContext"/> class
         /// </summary>
-        /// <param name="alpha">The alpha to be analyzed</param>
-        /// <param name="initialValues">The initial security values from when the alpha was generated</param>
-        /// <param name="analysisPeriod">The period over which to perform analysis of the alpha. This should be
-        /// greater than or equal to <see cref="Alphas.Alpha.Period"/>. Specify null for default, alpha.Period</param>
-        public AlphaAnalysisContext(Alpha alpha, SecurityValues initialValues, TimeSpan analysisPeriod)
+        /// <param name="insight">The insight to be analyzed</param>
+        /// <param name="initialValues">The initial security values from when the insight was generated</param>
+        /// <param name="analysisPeriod">The period over which to perform analysis of the insight. This should be
+        /// greater than or equal to <see cref="Insight.Period"/>. Specify null for default, insight.Period</param>
+        public InsightAnalysisContext(Insight insight, SecurityValues initialValues, TimeSpan analysisPeriod)
         {
-            Alpha = alpha;
+            Insight = insight;
             _contextStorage = new Dictionary<string, object>();
 
             CurrentValues = InitialValues = initialValues;
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
 
-            AlphaPeriodEndTimeUtc = alpha.GeneratedTimeUtc + alpha.Period;
+            InsightPeriodEndTimeUtc = insight.GeneratedTimeUtc + insight.Period;
 
             var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
-            var barCount = (int)(alpha.Period.Ticks / barSize.Ticks);
-            AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, alpha.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
+            var barCount = (int)(insight.Period.Ticks / barSize.Ticks);
+            AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, insight.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
             _analysisPeriod = AnalysisEndTimeUtc - initialValues.TimeUtc;
         }
 
@@ -115,9 +115,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         {
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
 
-            if (values.TimeUtc >= AlphaPeriodEndTimeUtc)
+            if (values.TimeUtc >= InsightPeriodEndTimeUtc)
             {
-                AlphaPeriodClosed = true;
+                InsightPeriodClosed = true;
             }
 
             CurrentValues = values;
@@ -152,15 +152,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         }
 
         /// <summary>
-        /// Determines whether or not this context/alpha can be analyzed for the specified score type
+        /// Determines whether or not this context/insight can be analyzed for the specified score type
         /// </summary>
-        /// <param name="scoreType">The type of alpha score</param>
-        /// <returns>True to proceed with analyzing this alpha for the specified score type, false to skip analysis of the score type</returns>
-        public bool ShouldAnalyze(AlphaScoreType scoreType)
+        /// <param name="scoreType">The type of insight score</param>
+        /// <returns>True to proceed with analyzing this insight for the specified score type, false to skip analysis of the score type</returns>
+        public bool ShouldAnalyze(InsightScoreType scoreType)
         {
-            if (scoreType == AlphaScoreType.Magnitude)
+            if (scoreType == InsightScoreType.Magnitude)
             {
-                return Alpha.Magnitude.HasValue;
+                return Insight.Magnitude.HasValue;
             }
 
             return true;
@@ -171,7 +171,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"{Alpha.Id}: {Alpha.GeneratedTimeUtc}/{Alpha.CloseTimeUtc} -- {Alpha.Score}";
+            return $"{Insight.Id}: {Insight.GeneratedTimeUtc}/{Insight.CloseTimeUtc} -- {Insight.Score}";
         }
 
         /// <summary>Serves as the default hash function. </summary>
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Id.Equals(((AlphaAnalysisContext)obj).Id);
+            return Id.Equals(((InsightAnalysisContext)obj).Id);
         }
     }
 }

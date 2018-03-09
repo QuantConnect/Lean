@@ -22,14 +22,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
     /// <summary>
     /// Defines how insights should be serialized to json
     /// </summary>
-    public class InsightJsonConverter : TypeChangeJsonConverter<Alpha, SerializedInsight>
+    public class InsightJsonConverter : TypeChangeJsonConverter<Insight, SerializedInsight>
     {
         /// <summary>
         /// Convert the input value to a value to be serialzied
         /// </summary>
         /// <param name="value">The input value to be converted before serialziation</param>
         /// <returns>A new instance of TResult that is to be serialzied</returns>
-        protected override SerializedInsight Convert(Alpha value)
+        protected override SerializedInsight Convert(Insight value)
         {
             return new SerializedInsight(value);
         }
@@ -39,9 +39,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// </summary>
         /// <param name="value">The deserialized value that needs to be converted to T</param>
         /// <returns>The converted value</returns>
-        protected override Alpha Convert(SerializedInsight value)
+        protected override Insight Convert(SerializedInsight value)
         {
-            var insight = new Alpha(
+            var insight = new Insight(
                 Time.UnixTimeStampToDateTime(value.GeneratedTime),
                 new Symbol(SecurityIdentifier.Parse(value.Symbol), value.Ticker),
                 value.Type,
@@ -59,12 +59,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             // set score values
             if (value.ScoreMagnitude != 0)
             {
-                insight.Score.SetScore(AlphaScoreType.Magnitude, value.ScoreMagnitude, insight.CloseTimeUtc);
+                insight.Score.SetScore(InsightScoreType.Magnitude, value.ScoreMagnitude, insight.CloseTimeUtc);
             }
 
             if (value.ScoreDirection != 0)
             {
-                insight.Score.SetScore(AlphaScoreType.Direction, value.ScoreDirection, insight.CloseTimeUtc);
+                insight.Score.SetScore(InsightScoreType.Direction, value.ScoreDirection, insight.CloseTimeUtc);
             }
             if (value.ScoreIsFinal)
             {

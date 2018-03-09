@@ -11,28 +11,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-namespace QuantConnect.Algorithm.Framework.Alphas
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Defines a specific type of score for a alpha
+    /// Retrieves the registered scoring function for the specified insight/score type
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter), true)]
-    public enum AlphaScoreType
+    public interface IInsightScoreFunctionProvider
     {
         /// <summary>
-        /// Directional accuracy
+        /// Gets the insight scoring function for the specified insight type and score type
         /// </summary>
-        Direction,
-
-        /// <summary>
-        /// Magnitude accuracy
-        /// </summary>
-        Magnitude
+        /// <param name="insightType">The insight's type</param>
+        /// <param name="scoreType">The scoring type</param>
+        /// <returns>A function to be used to compute insight scores</returns>
+        IInsightScoreFunction GetScoreFunction(InsightType insightType, InsightScoreType scoreType);
     }
 }

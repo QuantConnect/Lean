@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine
         public IDataProvider DataProvider { get; }
 
         /// <summary>
-        /// Gets the alpha handler used to process algorithm generated alphas
+        /// Gets the alpha handler used to process algorithm generated insights
         /// </summary>
         public IAlphaHandler Alphas { get; }
 
@@ -90,7 +90,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="mapFileProvider">The map file provider used to retrieve map files for the data feed</param>
         /// <param name="factorFileProvider">Map file provider used as a map file source for the data feed</param>
         /// <param name="dataProvider">file provider used to retrieve security data if it is not on the file system</param>
-        /// <param name="alphas">The alpha handler used to process generated alphas</param>
+        /// <param name="alphas">The alpha handler used to process generated insights</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,

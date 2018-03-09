@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set algorithm framework models
             PortfolioSelection = new ManualPortfolioSelectionModel(QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX));
-            Alpha = new ConstantAlphaModel(AlphaType.Price, AlphaDirection.Up, TimeSpan.FromMinutes(20), 0.025, null);
+            Alpha = new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null);
             PortfolioConstruction = new SimplePortfolioConstructionModel();
             Execution = new ImmediateExecutionModel();
             RiskManagement = new Algorithm.Framework.Risk.NullRiskManagementModel();

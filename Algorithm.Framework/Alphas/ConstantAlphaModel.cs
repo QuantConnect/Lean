@@ -22,25 +22,25 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IAlphaModel"/> that always returns the same alpha for each security
+    /// Provides an implementation of <see cref="IAlphaModel"/> that always returns the same insight for each security
     /// </summary>
     public class ConstantAlphaModel : IAlphaModel
     {
-        private readonly AlphaType _type;
-        private readonly AlphaDirection _direction;
+        private readonly InsightType _type;
+        private readonly InsightDirection _direction;
         private readonly TimeSpan _period;
         private readonly double? _magnitude;
         private readonly double? _confidence;
         private readonly HashSet<Security> _securities;
-        private readonly Dictionary<Symbol, DateTime> _alphaTimeBySymbol;
+        private readonly Dictionary<Symbol, DateTime> _insightsTimeBySymbol;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
         /// </summary>
-        /// <param name="type">The type of alpha</param>
-        /// <param name="direction">The direction of the alpha</param>
-        /// <param name="period">The period over which the alpha with come to fruition</param>
-        public ConstantAlphaModel(AlphaType type, AlphaDirection direction, TimeSpan period)
+        /// <param name="type">The type of insight</param>
+        /// <param name="direction">The direction of the insight</param>
+        /// <param name="period">The period over which the insight with come to fruition</param>
+        public ConstantAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
             : this(type, direction, period, null, null)
         {
         }
@@ -48,12 +48,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
         /// </summary>
-        /// <param name="type">The type of alpha</param>
-        /// <param name="direction">The direction of the alpha</param>
-        /// <param name="period">The period over which the alpha with come to fruition</param>
+        /// <param name="type">The type of insight</param>
+        /// <param name="direction">The direction of the insight</param>
+        /// <param name="period">The period over which the insight with come to fruition</param>
         /// <param name="magnitude">The predicted change in magnitude as a +- percentage</param>
-        /// <param name="confidence">The confidence in the alpha</param>
-        public ConstantAlphaModel(AlphaType type, AlphaDirection direction, TimeSpan period, double? magnitude, double? confidence)
+        /// <param name="confidence">The confidence in the insight</param>
+        public ConstantAlphaModel(InsightType type, InsightDirection direction, TimeSpan period, double? magnitude, double? confidence)
         {
             _type = type;
             _direction = direction;
@@ -64,22 +64,22 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _confidence = confidence;
 
             _securities = new HashSet<Security>();
-            _alphaTimeBySymbol = new Dictionary<Symbol, DateTime>();
+            _insightsTimeBySymbol = new Dictionary<Symbol, DateTime>();
         }
 
         /// <summary>
-        /// Creates a constant alpha for each security as specified via the constructor
+        /// Creates a constant insight for each security as specified via the constructor
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
-        /// <returns>The new alphas generated</returns>
-        public IEnumerable<Alpha> Update(QCAlgorithmFramework algorithm, Slice data)
+        /// <returns>The new insights generated</returns>
+        public IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var security in _securities)
             {
-                if (ShouldEmitAlpha(algorithm.UtcTime, security.Symbol))
+                if (ShouldEmitInsight(algorithm.UtcTime, security.Symbol))
                 {
-                    yield return new Alpha(security.Symbol, _type, _direction, _period, _magnitude, _confidence);
+                    yield return new Insight(security.Symbol, _type, _direction, _period, _magnitude, _confidence);
                 }
             }
         }
@@ -93,29 +93,29 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             NotifiedSecurityChanges.UpdateCollection(_securities, changes);
 
-            // this will allow the alpha to be re-sent when the security re-joins the universe
+            // this will allow the insight to be re-sent when the security re-joins the universe
             foreach (var removed in changes.RemovedSecurities)
             {
-                _alphaTimeBySymbol.Remove(removed.Symbol);
+                _insightsTimeBySymbol.Remove(removed.Symbol);
             }
         }
 
-        private bool ShouldEmitAlpha(DateTime utcTime, Symbol symbol)
+        private bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
         {
             DateTime generatedTimeUtc;
-            if (_alphaTimeBySymbol.TryGetValue(symbol, out generatedTimeUtc))
+            if (_insightsTimeBySymbol.TryGetValue(symbol, out generatedTimeUtc))
             {
-                // we previously emitted a alpha for this symbol, check it's period to see
-                // if we should emit another alpha
+                // we previously emitted a insight for this symbol, check it's period to see
+                // if we should emit another insight
                 if (utcTime - generatedTimeUtc < _period)
                 {
                     return false;
                 }
             }
 
-            // we either haven't emitted a alpha for this symbol or the previous
-            // alpha's period has expired, so emit a new alpha now for this symbol
-            _alphaTimeBySymbol[symbol] = utcTime;
+            // we either haven't emitted a insight for this symbol or the previous
+            // insight's period has expired, so emit a new insight now for this symbol
+            _insightsTimeBySymbol[symbol] = utcTime;
             return true;
         }
     }

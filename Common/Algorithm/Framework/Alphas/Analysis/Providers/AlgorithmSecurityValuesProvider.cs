@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         /// Gets the current values for the specified symbol (price/volatility)
         /// </summary>
         /// <param name="symbol">The symbol to get price/volatility for</param>
-        /// <returns>The alpha target values for the specified symbol</returns>
+        /// <returns>The insight target values for the specified symbol</returns>
         public SecurityValues GetValues(Symbol symbol)
         {
             var security = _algorithm.Securities[symbol];

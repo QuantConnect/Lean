@@ -19,7 +19,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Algorithm framework model that produces alphas
+    /// Algorithm framework model that produces insights
     /// </summary>
     public interface IAlphaModel : INotifiedSecurityChanges
     {
@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
-        /// <returns>The new alphas generated</returns>
-        IEnumerable<Alpha> Update(QCAlgorithmFramework algorithm, Slice data);
+        /// <returns>The new insights generated</returns>
+        IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data);
     }
 }

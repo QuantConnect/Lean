@@ -32,7 +32,7 @@ using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.Alphas
 {
     /// <summary>
-    /// Default alpha handler that supports sending alphas to the messaging handler, analyzing alphas online
+    /// Default alpha handler that supports sending insights to the messaging handler, analyzing insights online
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
@@ -42,11 +42,11 @@ namespace QuantConnect.Lean.Engine.Alphas
 
         private bool _isNotFrameworkAlgorithm;
         private IMessagingHandler _messagingHandler;
-        private ChartingAlphaManagerExtension _charting;
+        private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
-        private readonly ConcurrentQueue<AlphaQueueItem> _alphaQueue = new ConcurrentQueue<AlphaQueueItem>();
+        private readonly ConcurrentQueue<InsightQueueItem> _insightQueue = new ConcurrentQueue<InsightQueueItem>();
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -79,31 +79,26 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected IAlgorithm Algorithm { get; private set; }
 
         /// <summary>
-        /// Gets or sets the interval at which the alphas are persisted
+        /// Gets or sets the interval at which the insights are persisted
         /// </summary>
         protected TimeSpan PersistenceUpdateInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
-        /// Gets or sets the interval at which alpha updates are sent to the messaging handler
+        /// Gets or sets the interval at which insight updates are sent to the messaging handler
         /// </summary>
         protected TimeSpan MessagingUpdateInterval { get; set; } = TimeSpan.FromSeconds(2);
 
         /// <summary>
-        /// Gets the alpha manager instance used to manage the analysis of algorithm alphas
+        /// Gets the insight manager instance used to manage the analysis of algorithm insights
         /// </summary>
-        protected AlphaManager AlphaManager { get; private set; }
+        protected InsightManager InsightManager { get; private set; }
 
         /// <summary>
-        /// Gets the collection of managers that events are forwarded to
-        /// </summary>
-        protected List<IAlphaManagerExtension> AlphaManagers { get; } = new List<IAlphaManagerExtension>();
-
-        /// <summary>
-        /// Initializes this alpha handler to accept alphas from the specified algorithm
+        /// Initializes this alpha handler to accept insights from the specified algorithm
         /// </summary>
         /// <param name="job">The algorithm job</param>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="messagingHandler">Handler used for sending alphas</param>
+        /// <param name="messagingHandler">Handler used for sending insights</param>
         /// <param name="api">Api instance</param>
         public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api)
         {
@@ -120,16 +115,16 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
-            AlphaManager = CreateAlphaManager();
+            InsightManager = CreateInsightManager();
 
-            var statistics = new StatisticsAlphaManagerExtension();
+            var statistics = new StatisticsInsightManagerExtension();
             RuntimeStatistics = statistics.Statistics;
-            AlphaManager.AddExtension(statistics);
-            _charting = new ChartingAlphaManagerExtension(algorithm, statistics);
-            AlphaManager.AddExtension(_charting);
+            InsightManager.AddExtension(statistics);
+            _charting = new ChartingInsightManagerExtension(algorithm, statistics);
+            InsightManager.AddExtension(_charting);
 
-            // when alpha is generated, take snapshot of securities and place in queue for alpha manager to process on alpha thread
-            algorithm.AlphasGenerated += (algo, collection) => _alphaQueue.Enqueue(new AlphaQueueItem(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection));
+            // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
+            algorithm.InsightsGenerated += (algo, collection) => _insightQueue.Enqueue(new InsightQueueItem(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection));
         }
 
         /// <summary>
@@ -146,7 +141,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             // send date ranges to extensions for initialization -- this data wasn't available when the handler was
             // initialzied, so we need to invoke it here
-            AlphaManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
+            InsightManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
         }
 
         /// <summary>
@@ -159,10 +154,10 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
-            // check the last snap shot time, we may have already produced a snapshot via OnAlphasGenerated
+            // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
             if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
-                _alphaQueue.Enqueue(new AlphaQueueItem(Algorithm.UtcTime, CreateSecurityValuesSnapshot()));
+                _insightQueue.Enqueue(new InsightQueueItem(Algorithm.UtcTime, CreateSecurityValuesSnapshot()));
             }
         }
 
@@ -195,18 +190,18 @@ namespace QuantConnect.Lean.Engine.Alphas
                 Thread.Sleep(1);
             }
 
-            // finish alpha scoring analysis
-            _alphaQueue.ProcessUntilEmpty(item => AlphaManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedAlphas));
+            // finish insight scoring analysis
+            _insightQueue.ProcessUntilEmpty(item => InsightManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedInsights));
 
-            // send final alpha scoring updates before we exit
-            var alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList();
-            _messages.Enqueue(new AlphaResultPacket(AlgorithmId, Job.UserId, alphas));
+            // send final insight scoring updates before we exit
+            var insights = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
+            _messages.Enqueue(new AlphaResultPacket(AlgorithmId, Job.UserId, insights));
 
             // finish sending packets
             _messages.ProcessUntilEmpty(packet => _messagingHandler.Send(packet));
 
-            // persist alphas at exit
-            StoreAlphas();
+            // persist insights at exit
+            StoreInsights();
 
             Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
             IsActive = false;
@@ -228,41 +223,41 @@ namespace QuantConnect.Lean.Engine.Alphas
         }
 
         /// <summary>
-        /// Performs asynchronous processing, including broadcasting of alphas to messaging handler
+        /// Performs asynchronous processing, including broadcasting of insights to messaging handler
         /// </summary>
         protected void ProcessAsynchronousEvents()
         {
-            // step the alpha manager forward in time
-            AlphaQueueItem item;
-            while (_alphaQueue.TryDequeue(out item))
+            // step the insight manager forward in time
+            InsightQueueItem item;
+            while (_insightQueue.TryDequeue(out item))
             {
-                AlphaManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedAlphas);
+                InsightManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedInsights);
             }
 
-            // send alpha upate messages
+            // send insight upate messages
             Packet packet;
             while (_messages.TryDequeue(out packet))
             {
                 _messagingHandler.Send(packet);
             }
 
-            // persist generated alphas to storage
+            // persist generated insights to storage
             if (DateTime.UtcNow > _nextPersistenceUpdate)
             {
-                StoreAlphas();
+                StoreInsights();
                 _nextPersistenceUpdate = DateTime.UtcNow + PersistenceUpdateInterval;
             }
 
-            // push updated alphas through messaging handler
+            // push updated insights through messaging handler
             if (DateTime.UtcNow > _nextMessagingUpdate)
             {
-                var alphas = AlphaManager.GetUpdatedContexts().Select(context => context.Alpha).ToList();
-                if (alphas.Count > 0)
+                var list = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
+                if (list.Count > 0)
                 {
                     _messages.Enqueue(new AlphaResultPacket
                     {
                         AlgorithmId = AlgorithmId,
-                        Alphas = alphas
+                        Insights = list
                     });
                 }
                 _nextMessagingUpdate = DateTime.UtcNow + MessagingUpdateInterval;
@@ -270,29 +265,29 @@ namespace QuantConnect.Lean.Engine.Alphas
         }
 
         /// <summary>
-        /// Save alpha results to persistent storage
+        /// Save insight results to persistent storage
         /// </summary>
-        protected virtual void StoreAlphas()
+        protected virtual void StoreInsights()
         {
             // default save all results to disk and don't remove any from memory
-            // this will result in one file with all of the alphas/results in it
-            var alphas = AlphaManager.AllAlphas.OrderBy(alpha => alpha.GeneratedTimeUtc).ToList();
-            if (alphas.Count > 0)
+            // this will result in one file with all of the insights/results in it
+            var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
+            if (insights.Count > 0)
             {
                 var path = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId, "alpha-results.json");
                 Directory.CreateDirectory(new FileInfo(path).DirectoryName);
-                File.WriteAllText(path, JsonConvert.SerializeObject(alphas, Formatting.Indented));
+                File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
             }
         }
 
         /// <summary>
-        /// Creates the <see cref="AlphaManager"/> to manage the analysis of generated alphas
+        /// Creates the <see cref="InsightManager"/> to manage the analysis of generated insights
         /// </summary>
-        /// <returns>A new alpha manager instance</returns>
-        protected virtual AlphaManager CreateAlphaManager()
+        /// <returns>A new insight manager instance</returns>
+        protected virtual InsightManager CreateInsightManager()
         {
-            var scoreFunctionProvider = new DefaultAlphaScoreFunctionProvider();
-            return new AlphaManager(scoreFunctionProvider, 0);
+            var scoreFunctionProvider = new DefaultInsightScoreFunctionProvider();
+            return new InsightManager(scoreFunctionProvider, 0);
         }
 
         private ReadOnlySecurityValuesCollection CreateSecurityValuesSnapshot()
@@ -301,17 +296,17 @@ namespace QuantConnect.Lean.Engine.Alphas
             return _securityValuesProvider.GetValues(Algorithm.Securities.Keys);
         }
 
-        class AlphaQueueItem
+        class InsightQueueItem
         {
             public DateTime FrontierTimeUtc;
-            public AlphaCollection GeneratedAlphas;
+            public InsightCollection GeneratedInsights;
             public ReadOnlySecurityValuesCollection SecurityValues;
 
-            public AlphaQueueItem(DateTime frontierTimeUtc, ReadOnlySecurityValuesCollection securityValues, AlphaCollection generatedAlphas = null)
+            public InsightQueueItem(DateTime frontierTimeUtc, ReadOnlySecurityValuesCollection securityValues, InsightCollection generatedInsights = null)
             {
                 FrontierTimeUtc = frontierTimeUtc;
                 SecurityValues = securityValues;
-                GeneratedAlphas = generatedAlphas ?? new AlphaCollection(frontierTimeUtc, Enumerable.Empty<Algorithm.Framework.Alphas.Alpha>());
+                GeneratedInsights = generatedInsights ?? new InsightCollection(frontierTimeUtc, Enumerable.Empty<Insight>());
             }
         }
     }

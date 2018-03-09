@@ -20,31 +20,31 @@ using System.Linq;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines a collection of alphas that were generated at the same time step
+    /// Defines a collection of insights that were generated at the same time step
     /// </summary>
-    public class AlphaCollection
+    public class InsightCollection
     {
         /// <summary>
-        /// The utc date time the alphas were generated
+        /// The utc date time the insights were generated
         /// </summary>
         public DateTime DateTimeUtc { get; }
 
         /// <summary>
-        /// The generated alphas
+        /// The generated insights
         /// </summary>
-        public List<Alpha> Alphas { get; }
+        public List<Insight> Insights { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlphaCollection"/> class
+        /// Initializes a new instance of the <see cref="InsightCollection"/> class
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
-        /// <param name="alphas">The generated alphas</param>
-        public AlphaCollection(DateTime dateTimeUtc, IEnumerable<Alpha> alphas)
+        /// <param name="insights">The generated insights</param>
+        public InsightCollection(DateTime dateTimeUtc, IEnumerable<Insight> insights)
         {
             DateTimeUtc = dateTimeUtc;
 
             // ensure we're keeping copies to avoid reference shenanigans
-            Alphas = alphas.Select(alpha => alpha.Clone()).ToList();
+            Insights = insights.Select(insight => insight.Clone()).ToList();
         }
     }
 }
