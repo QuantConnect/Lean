@@ -14,11 +14,15 @@
  *
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
     /// Defines a specific type of score for a alpha
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter), true)]
     public enum AlphaScoreType
     {
         /// <summary>

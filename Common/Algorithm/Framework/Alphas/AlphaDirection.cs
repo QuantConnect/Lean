@@ -13,11 +13,15 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
     /// Specifies the predicted direction for a alpha (price/volatility)
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter), true)]
     public enum AlphaDirection
     {
         /// <summary>
