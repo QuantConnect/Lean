@@ -41,37 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <returns>The converted value</returns>
         protected override Insight Convert(SerializedInsight value)
         {
-            var insight = new Insight(
-                Time.UnixTimeStampToDateTime(value.GeneratedTime),
-                new Symbol(SecurityIdentifier.Parse(value.Symbol), value.Ticker),
-                value.Type,
-                value.Direction,
-                TimeSpan.FromSeconds(value.Period),
-                value.Magnitude,
-                value.Confidence
-            )
-            {
-                CloseTimeUtc = Time.UnixTimeStampToDateTime(value.CloseTime),
-                EstimatedValue = value.EstimatedValue,
-                ReferenceValue = value.Reference
-            };
-
-            // set score values
-            if (value.ScoreMagnitude != 0)
-            {
-                insight.Score.SetScore(InsightScoreType.Magnitude, value.ScoreMagnitude, insight.CloseTimeUtc);
-            }
-
-            if (value.ScoreDirection != 0)
-            {
-                insight.Score.SetScore(InsightScoreType.Direction, value.ScoreDirection, insight.CloseTimeUtc);
-            }
-            if (value.ScoreIsFinal)
-            {
-                insight.Score.Finalize(insight.CloseTimeUtc);
-            }
-
-            return insight;
+            return Insight.FromSerializedInsight(value);
         }
     }
 }

@@ -181,6 +181,52 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             return new Insight(symbol, InsightType.Price, direction, period, magnitude, confidence);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Insight"/> object from the specified serialized form
+        /// </summary>
+        /// <param name="serializedInsight">The insight DTO</param>
+        /// <returns>A new insight containing the information specified</returns>
+        internal static Insight FromSerializedInsight(SerializedInsight serializedInsight)
+        {
+            var insight = new Insight(
+                Time.UnixTimeStampToDateTime(serializedInsight.GeneratedTime),
+                new Symbol(SecurityIdentifier.Parse(serializedInsight.Symbol), serializedInsight.Ticker),
+                serializedInsight.Type,
+                serializedInsight.Direction,
+                TimeSpan.FromSeconds(serializedInsight.Period),
+                serializedInsight.Magnitude,
+                serializedInsight.Confidence
+            )
+            {
+                Id = Guid.Parse(serializedInsight.Id),
+                CloseTimeUtc = Time.UnixTimeStampToDateTime(serializedInsight.CloseTime),
+                EstimatedValue = serializedInsight.EstimatedValue,
+                ReferenceValue = serializedInsight.ReferenceValue
+            };
+
+            // only set score values if non-zero or if they're the final scores
+            if (serializedInsight.ScoreIsFinal)
+            {
+                insight.Score.SetScore(InsightScoreType.Magnitude, serializedInsight.ScoreMagnitude, insight.CloseTimeUtc);
+                insight.Score.SetScore(InsightScoreType.Direction, serializedInsight.ScoreDirection, insight.CloseTimeUtc);
+                insight.Score.Finalize(insight.CloseTimeUtc);
+            }
+            else
+            {
+                if (serializedInsight.ScoreMagnitude != 0)
+                {
+                    insight.Score.SetScore(InsightScoreType.Magnitude, serializedInsight.ScoreMagnitude, insight.CloseTimeUtc);
+                }
+
+                if (serializedInsight.ScoreDirection != 0)
+                {
+                    insight.Score.SetScore(InsightScoreType.Direction, serializedInsight.ScoreDirection, insight.CloseTimeUtc);
+                }
+            }
+
+            return insight;
+        }
+
         /// <summary>Returns a string that represents the current object.</summary>
         /// <returns>A string that represents the current object.</returns>
         /// <filterpriority>2</filterpriority>
