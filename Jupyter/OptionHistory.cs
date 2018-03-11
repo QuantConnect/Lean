@@ -64,7 +64,7 @@ namespace QuantConnect.Jupyter
         }
 
         /// <summary>
-        /// Gets all expity dates in the option history
+        /// Gets all expiry dates in the option history
         /// </summary>
         /// <returns></returns>
         public PyObject GetExpiryDates()
