@@ -140,7 +140,7 @@ namespace QuantConnect.Tests
             var passedOrderLogFile = ordersLogFile.Replace("./regression/", "./passed/");
             Directory.CreateDirectory(Path.GetDirectoryName(passedFile));
             File.Delete(passedOrderLogFile);
-            File.Copy(ordersLogFile, passedOrderLogFile);
+            if (File.Exists(ordersLogFile)) File.Copy(ordersLogFile, passedOrderLogFile);
         }
 
         private static void AssertAlphaStatistics(AlphaRuntimeStatistics expected, AlphaRuntimeStatistics actual, Expression<Func<AlphaRuntimeStatistics, object>> selector)

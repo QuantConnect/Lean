@@ -22,7 +22,7 @@ namespace QuantConnect.Tests
     [TestFixture, Category("TravisExclude")]
     public class RegressionTests
     {
-        [Test, TestCaseSource("GetRegressionTestParameters")]
+        [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
             QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
@@ -41,6 +41,29 @@ namespace QuantConnect.Tests
 
         private static TestCaseData[] GetRegressionTestParameters()
         {
+            var emptyStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "0"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "0%"},
+                {"Drawdown", "0%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.00"}
+            };
+
             var basicTemplateStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
@@ -753,6 +776,8 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("IndicatorSuiteAlgorithm", indicatorSuiteAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("ForexInternalFeedOnDataSameResolutionRegressionAlgorithm", emptyStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm", emptyStatistics, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),

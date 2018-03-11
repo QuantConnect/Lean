@@ -91,6 +91,8 @@
     <Compile Include="BasicTemplateLibrary.cs" />
     <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
+    <Compile Include="ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm.cs" />
+    <Compile Include="ForexInternalFeedOnDataSameResolutionRegressionAlgorithm.cs" />
     <Compile Include="RollingWindowAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
     <Compile Include="BasicTemplateFxcmVolumeAlgorithm.cs" />
