@@ -24,6 +24,11 @@ namespace QuantConnect.Exceptions
     public class DllNotFoundPythonExceptionInterpreter : IExceptionInterpreter
     {
         /// <summary>
+        /// Determines the order that an instance of this class should be called
+        /// </summary>
+        public int Order => 0;
+
+        /// <summary>
         /// Determines if this interpreter should be applied to the specified exception.
         /// </summary>
         /// <param name="exception">The exception to check</param>
