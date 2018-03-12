@@ -26,12 +26,9 @@ namespace QuantConnect.Tests.Common.Exceptions
     [TestFixture, Ignore]
     public class NoMethodMatchPythonExceptionInterpreterTests
     {
-        private dynamic _algorithm;
+        private PythonException _pythonException;
 
-        /// <summary>
-        /// Run before every test
-        /// </summary>
-        [SetUp]
+        [TestFixtureSetUp]
         public void Setup()
         {
             var pythonPath = new DirectoryInfo("RegressionAlgorithms");
@@ -39,8 +36,18 @@ namespace QuantConnect.Tests.Common.Exceptions
 
             using (Py.GIL())
             {
-                var module = Py.Import("Test_MethodOverload");
-                _algorithm = module.GetAttr("Test_MethodOverload").Invoke();
+                var module = Py.Import("Test_PythonExceptionInterpreter");
+                dynamic algorithm = module.GetAttr("Test_PythonExceptionInterpreter").Invoke();
+
+                try
+                {
+                    // self.Log(1)
+                    algorithm.no_method_match();
+                }
+                catch (PythonException pythonException)
+                {
+                    _pythonException = pythonException;
+                }
             }
         }
 
@@ -70,25 +77,16 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
         }
 
-        private Exception CreateExceptionFromType(Type type)
+        [Test]
+        public void VerifyMessageContainsStackTraceInformation()
         {
-            if (type == typeof(PythonException))
-            {
-                try
-                {
-                    using (Py.GIL())
-                    {
-                        // self.Log(1)
-                        _algorithm.no_method_match();
-                    }
-                }
-                catch (PythonException e)
-                {
-                    return e;
-                }
-            }
-
-            return (Exception)Activator.CreateInstance(type);
+            var exception = CreateExceptionFromType(typeof(PythonException));
+            var assembly = typeof(PythonExceptionInterpreter).Assembly;
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
+            Assert.True(exception.Message.Contains("self.Log(1)"));
         }
+
+        private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
     }
 }
