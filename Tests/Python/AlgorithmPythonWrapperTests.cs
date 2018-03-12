@@ -90,8 +90,8 @@ namespace QuantConnect.Tests.Python
 
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString("Test_AlgorithmPythonWrapper", code);
-                return new AlgorithmPythonWrapper(module);
+                PythonEngine.ModuleFromString("Test_AlgorithmPythonWrapper", code);
+                return new AlgorithmPythonWrapper("Test_AlgorithmPythonWrapper");
             }
         }
     }

@@ -25,7 +25,6 @@ using QuantConnect.Logging;
 using Python.Runtime;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Util;
-using QuantConnect.Exceptions;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -156,50 +155,27 @@ namespace QuantConnect.AlgorithmFactory
                 return false;
             }
 
+            var pythonFile = new FileInfo(assemblyPath);
+            var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
+
+            //Help python find the module
+            Environment.SetEnvironmentVariable("PYTHONPATH", pythonFile.DirectoryName);
+
             try
             {
-                var pythonFile = new FileInfo(assemblyPath);
-                var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
+                algorithmInstance = new AlgorithmPythonWrapper(moduleName);
 
-                //Help python find the module
-                Environment.SetEnvironmentVariable("PYTHONPATH", pythonFile.DirectoryName);
-
-                // Initialize Python Engine
-                if (!PythonEngine.IsInitialized)
-                {
-                    PythonEngine.Initialize();
-                    PythonEngine.BeginAllowThreads();
-                }
-
-                // Import Python module
-                using (Py.GIL())
-                {
-                    Log.Trace($"Loader.TryCreatePythonAlgorithm(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
-                    var module = Py.Import(moduleName);
-
-                    if (module == null)
-                    {
-                        errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. Check for errors in the python scripts.";
-                        return false;
-                    }
-
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Creating IAlgorithm instance.");
-
-                    algorithmInstance = new AlgorithmPythonWrapper(module);
-                }
+                PythonEngine.BeginAllowThreads();
             }
             catch (Exception e)
             {
-                // perform exception interpretation for error in module import
-                var interpreter = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
-                e = interpreter.Interpret(e, interpreter);
-
                 Log.Error(e);
-                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. {interpreter.GetExceptionMessageHeader(e)}";
+                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. {e.Message}";
+                return false;
             }
 
             //Successful load.
-            return algorithmInstance != null;
+            return true;
         }
 
         /// <summary>
