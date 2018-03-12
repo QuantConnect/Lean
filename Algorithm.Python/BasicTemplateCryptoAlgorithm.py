@@ -56,4 +56,5 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
                 self.Liquidate()
 
             btcHoldings = self.Portfolio.CashBook["BTC"].Amount
-            self.Log("{0} - BTC holdings: {1}".format(str(self.Time), str(btcHoldings)))
+            usdCash = self.Portfolio.CashBook["USD"].Amount
+            self.Log("{} - BTC holdings: {} - USD cash: {}".format(self.Time, btcHoldings, usdCash))

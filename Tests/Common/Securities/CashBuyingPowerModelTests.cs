@@ -464,6 +464,26 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
         }
 
+        [Test]
+        public void MarketBuyOrderUsesAskPriceIfAvailable()
+        {
+            _portfolio.SetCash(10000);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050 });
+            _algorithm.SetFinishedWarmingUp();
+
+            Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
+
+            // Maximum we can market buy at ask price with 10000 USD is 0.99253731 BTC
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 10000m).Quantity;
+            Assert.AreEqual(0.99253731m, quantity);
+
+            // the maximum order quantity can be executed
+            var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
+        }
+
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)
         {
             using (var resetEvent = new ManualResetEvent(false))

@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Orders.Fees
@@ -55,7 +54,10 @@ namespace QuantConnect.Orders.Fees
             Fees.TryGetValue(security.Symbol.Value, out fee);
 
             // get order value in account currency, then apply fee factor
-            return Math.Abs(order.GetValue(security)) * fee;
+            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
+
+            return unitPrice * order.AbsoluteQuantity * fee;
         }
     }
 }

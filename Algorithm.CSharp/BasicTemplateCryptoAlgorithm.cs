@@ -60,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var btcHoldings = Portfolio.CashBook["BTC"].Amount;
-                Log($"{Time} - BTC holdings: {btcHoldings:F8}");
+                var usdCash = Portfolio.CashBook["USD"].Amount;
+                Log($"{Time} - BTC holdings: {btcHoldings:F8} - USD cash: {usdCash:F2}");
             }
         }
     }
