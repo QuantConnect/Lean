@@ -28,6 +28,7 @@ using NodaTime;
 using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect
@@ -1025,6 +1026,40 @@ namespace QuantConnect
                 }
                 return value;
             }
+        }
+
+        /// <summary>
+        /// Tries to convert a <see cref="PyObject"/> into a managed object
+        /// </summary>
+        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
+        /// <param name="pyObject">PyObject to be converted</param>
+        /// <param name="result">Managed object </param>
+        /// <returns>True if successful conversion</returns>
+        public static bool TryConvert<T>(this PyObject pyObject, out T result)
+            where T : class
+        {
+            result = default(T);
+
+            if (pyObject == null)
+            {
+                return true;
+            }
+
+            using (Py.GIL())
+            {
+                try
+                {
+                    result = pyObject.AsManagedObject(typeof(T)) as T;
+                    return true;
+                }
+                catch
+                {
+                    // Do not throw or log the exception.
+                    // Return false as an exception means that the conversion could not be made.
+                }
+            }
+
+            return false;
         }
     }
 }
