@@ -21,36 +21,36 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Functions
     /// Defines a scoring function that always returns 1 or 0.
     /// You're either right or you're wrong with this one :)
     /// </summary>
-    public class BinaryAlphaScoreFunction : IAlphaScoreFunction
+    public class BinaryInsightScoreFunction : IInsightScoreFunction
     {
         /// <inheritdoc />
-        public double Evaluate(AlphaAnalysisContext context, AlphaScoreType scoreType)
+        public double Evaluate(InsightAnalysisContext context, InsightScoreType scoreType)
         {
-            var alpha = context.Alpha;
+            var insight = context.Insight;
 
-            var startingValue = context.InitialValues.Get(alpha.Type);
-            var currentValue = context.CurrentValues.Get(alpha.Type);
+            var startingValue = context.InitialValues.Get(insight.Type);
+            var currentValue = context.CurrentValues.Get(insight.Type);
 
-            switch (alpha.Direction)
+            switch (insight.Direction)
             {
-                case AlphaDirection.Down:
+                case InsightDirection.Down:
                     return currentValue < startingValue ? 1 : 0;
 
-                case AlphaDirection.Flat:
+                case InsightDirection.Flat:
                     // can't really do percent changes with zero
                     if (startingValue == 0) return currentValue == startingValue ? 1 : 0;
 
-                    // TODO : Re-evaluate flat predictions, potentially adding IAlpha.Tolerance to say 'how flat'
+                    // TODO : Re-evaluate flat predictions, potentially adding Insight.Tolerance to say 'how flat'
                     var deltaPercent = Math.Abs(currentValue - startingValue)/startingValue;
-                    if (alpha.Magnitude.HasValue)
+                    if (insight.Magnitude.HasValue)
                     {
-                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(alpha.Magnitude.Value) ? 1 : 0;
+                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(insight.Magnitude.Value) ? 1 : 0;
                     }
 
                     // this is pretty much impossible, I suppose unless the ticks are large and/or volumes are small
                     return currentValue == startingValue ? 1 : 0;
 
-                case AlphaDirection.Up:
+                case InsightDirection.Up:
                     return currentValue > startingValue ? 1 : 0;
 
                 default:

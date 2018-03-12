@@ -13,26 +13,38 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Specifies the predicted direction for a alpha (price/volatility)
+    /// Defines a collection of insights that were generated at the same time step
     /// </summary>
-    public enum AlphaDirection
+    public class InsightCollection
     {
         /// <summary>
-        /// The value will go down
+        /// The utc date time the insights were generated
         /// </summary>
-        Down = -1,
+        public DateTime DateTimeUtc { get; }
 
         /// <summary>
-        /// The value will stay flat
+        /// The generated insights
         /// </summary>
-        Flat = 0,
+        public List<Insight> Insights { get; }
 
         /// <summary>
-        /// The value will go up
+        /// Initializes a new instance of the <see cref="InsightCollection"/> class
         /// </summary>
-        Up = 1
+        /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
+        /// <param name="insights">The generated insights</param>
+        public InsightCollection(DateTime dateTimeUtc, IEnumerable<Insight> insights)
+        {
+            DateTimeUtc = dateTimeUtc;
+
+            // ensure we're keeping copies to avoid reference shenanigans
+            Insights = insights.Select(insight => insight.Clone()).ToList();
+        }
     }
 }

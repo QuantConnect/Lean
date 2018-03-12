@@ -20,9 +20,9 @@ using Newtonsoft.Json;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines the scores given to a particular alpha
+    /// Defines the scores given to a particular insight
     /// </summary>
-    public class AlphaScore
+    public class InsightScore
     {
         /// <summary>
         /// Gets the time these scores were last updated
@@ -43,25 +43,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public double Magnitude { get; private set; }
 
         /// <summary>
-        /// Gets whether or not this is the alpha's final score
+        /// Gets whether or not this is the insight's final score
         /// </summary>
         [JsonProperty]
         public bool IsFinalScore { get; private set; }
 
         /// <summary>
-        /// Initializes a new, default instance of the <see cref="AlphaScore"/> class
+        /// Initializes a new, default instance of the <see cref="InsightScore"/> class
         /// </summary>
-        public AlphaScore()
+        public InsightScore()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlphaScore"/> class
+        /// Initializes a new instance of the <see cref="InsightScore"/> class
         /// </summary>
-        /// <param name="direction">The alpha direction score</param>
-        /// <param name="magnitude">The alpha percent change score</param>
+        /// <param name="direction">The insight direction score</param>
+        /// <param name="magnitude">The insight percent change score</param>
         /// <param name="updatedTimeUtc">The algorithm utc time these scores were computed</param>
-        public AlphaScore(double direction, double magnitude, DateTime updatedTimeUtc)
+        public InsightScore(double direction, double magnitude, DateTime updatedTimeUtc)
         {
             Direction = direction;
             Magnitude = magnitude;
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The score type to be set, Direction/Magnitude</param>
         /// <param name="value">The new value for the score</param>
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
-        internal void SetScore(AlphaScoreType type, double value, DateTime algorithmUtcTime)
+        internal void SetScore(InsightScoreType type, double value, DateTime algorithmUtcTime)
         {
             if (IsFinalScore) return;
 
@@ -82,11 +82,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             switch (type)
             {
-                case AlphaScoreType.Direction:
+                case InsightScoreType.Direction:
                     Direction = Math.Max(0, Math.Min(1, value));
                     break;
 
-                case AlphaScoreType.Magnitude:
+                case InsightScoreType.Magnitude:
                     Magnitude = Math.Max(0, Math.Min(1, value));
                     break;
 
@@ -110,14 +110,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="type">The type of score to get, Direction/Magnitude</param>
         /// <returns>The requested score</returns>
-        public double GetScore(AlphaScoreType type)
+        public double GetScore(InsightScoreType type)
         {
             switch (type)
             {
-                case AlphaScoreType.Direction:
+                case InsightScoreType.Direction:
                     return Direction;
 
-                case AlphaScoreType.Magnitude:
+                case InsightScoreType.Magnitude:
                     return Magnitude;
 
                 default:

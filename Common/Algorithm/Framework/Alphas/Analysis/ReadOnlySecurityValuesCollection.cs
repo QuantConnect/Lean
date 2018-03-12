@@ -21,7 +21,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// Defines the security values at a given instant. This is analagous
     /// to TimeSlice/Slice, but decoupled from the algorithm thread and is
     /// intended to contain all of the information necessary to score all
-    /// alphas at this particular time step
+    /// insight at this particular time step
     /// </summary>
     public class ReadOnlySecurityValuesCollection
     {

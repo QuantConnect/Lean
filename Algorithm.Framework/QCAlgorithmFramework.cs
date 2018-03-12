@@ -16,6 +16,8 @@
 using System;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
@@ -31,6 +33,8 @@ namespace QuantConnect.Algorithm.Framework
     /// </summary>
     public abstract class QCAlgorithmFramework : QCAlgorithm
     {
+        private readonly ISecurityValuesProvider _securityValuesProvider;
+
         /// <summary>
         /// Returns true since algorithms derived from this use the framework
         /// </summary>
@@ -66,6 +70,8 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         public QCAlgorithmFramework()
         {
+            _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
+
             // set model defaults
             Execution = new ImmediateExecutionModel();
             RiskManagement = new NullRiskManagementModel();
@@ -93,19 +99,19 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public sealed override void OnFrameworkData(Slice slice)
         {
-            // generate, timestamp and emit alphas
-            var alphas = Alpha.Update(this, slice)
+            // generate, timestamp and emit insights
+            var insights = Alpha.Update(this, slice)
                 .Select(SetGeneratedAndClosedTimes)
                 .ToList();
 
-            if (alphas.Count != 0)
+            if (insights.Count != 0)
             {
-                // only fire alphas generated event if we actually have alphas
-                OnAlphasGenerated(alphas);
+                // only fire insights generated event if we actually have insights
+                OnInsightsGenerated(insights);
             }
 
-            // construct portfolio targets from alphas
-            var targets = PortfolioConstruction.CreateTargets(this, alphas);
+            // construct portfolio targets from insights
+            var targets = PortfolioConstruction.CreateTargets(this, insights);
 
             // execute on the targets and manage risk
             Execution.Execute(this, targets);
@@ -145,7 +151,7 @@ namespace QuantConnect.Algorithm.Framework
         /// <summary>
         /// Sets the portfolio construction model
         /// </summary>
-        /// <param name="portfolioConstruction">Model defining how to build a portoflio from alphas</param>
+        /// <param name="portfolioConstruction">Model defining how to build a portoflio from insights</param>
         public void SetPortfolioConstruction(IPortfolioConstructionModel portfolioConstruction)
         {
             PortfolioConstruction = portfolioConstruction;
@@ -169,31 +175,32 @@ namespace QuantConnect.Algorithm.Framework
             RiskManagement = riskManagement;
         }
 
-        private Alpha SetGeneratedAndClosedTimes(Alpha alpha)
+        private Insight SetGeneratedAndClosedTimes(Insight insight)
         {
-            alpha.GeneratedTimeUtc = UtcTime;
+            insight.GeneratedTimeUtc = UtcTime;
+            insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
 
             TimeSpan barSize;
             Security security;
             SecurityExchangeHours exchangeHours;
-            if (Securities.TryGetValue(alpha.Symbol, out security))
+            if (Securities.TryGetValue(insight.Symbol, out security))
             {
                 exchangeHours = security.Exchange.Hours;
                 barSize = security.Resolution.ToTimeSpan();
             }
             else
             {
-                barSize = alpha.Period.ToHigherResolutionEquivalent(false).ToTimeSpan();
-                exchangeHours = MarketHoursDatabase.GetExchangeHours(alpha.Symbol.ID.Market, alpha.Symbol, alpha.Symbol.SecurityType);
+                barSize = insight.Period.ToHigherResolutionEquivalent(false).ToTimeSpan();
+                exchangeHours = MarketHoursDatabase.GetExchangeHours(insight.Symbol.ID.Market, insight.Symbol, insight.Symbol.SecurityType);
             }
 
             var localStart = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
             barSize = QuantConnect.Time.Max(barSize, QuantConnect.Time.OneMinute);
-            var barCount = (int) (alpha.Period.Ticks / barSize.Ticks);
+            var barCount = (int) (insight.Period.Ticks / barSize.Ticks);
 
-            alpha.CloseTimeUtc = QuantConnect.Time.GetEndTimeForTradeBars(exchangeHours, localStart, barSize, barCount, false).ConvertToUtc(exchangeHours.TimeZone);
+            insight.CloseTimeUtc = QuantConnect.Time.GetEndTimeForTradeBars(exchangeHours, localStart, barSize, barCount, false).ConvertToUtc(exchangeHours.TimeZone);
 
-            return alpha;
+            return insight;
         }
 
         private void CheckModels()

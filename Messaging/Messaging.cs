@@ -15,15 +15,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
-using QuantConnect.Util;
 
 namespace QuantConnect.Messaging
 {
@@ -99,10 +96,10 @@ namespace QuantConnect.Messaging
 
                 case PacketType.AlphaResult:
                     // spams the logs
-                    //var alphas = ((AlphaResultPacket) packet).Alphas;
-                    //foreach (var alpha in alphas)
+                    //var insights = ((AlphaResultPacket) packet).Insights;
+                    //foreach (var insight in insights)
                     //{
-                    //    Log.Trace("Alpha: " + alpha);
+                    //    Log.Trace("Insight: " + insight);
                     //}
                     break;
 

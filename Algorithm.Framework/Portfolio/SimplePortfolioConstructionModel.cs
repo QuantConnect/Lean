@@ -24,20 +24,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Provides an implementation of <see cref="IPortfolioConstructionModel"/> that gives equal weighting to all
     /// securities. The target percent holdings of each security is 1/N where N is the number of securities. For
-    /// alphas of direction <see cref="AlphaDirection.Up"/>, long targets are returned and for alphas of direction
-    /// <see cref="AlphaDirection.Down"/>, short targets are returned.
+    /// insights of direction <see cref="InsightDirection.Up"/>, long targets are returned and for insights of direction
+    /// <see cref="InsightDirection.Down"/>, short targets are returned.
     /// </summary>
     public class SimplePortfolioConstructionModel : IPortfolioConstructionModel
     {
         private readonly HashSet<Security> _securities = new HashSet<Security>();
 
         /// <summary>
-        /// Create portfolio targets from the specified alphas
+        /// Create portfolio targets from the specified insights
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="alphas">The alphas to create portoflio targets from</param>
+        /// <param name="insights">The insights to create portoflio targets from</param>
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Alpha> alphas)
+        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Insight> insights)
         {
             if (_securities.Count == 0)
             {
@@ -46,8 +46,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // give equal weighting to each security
             var percent = 1m / _securities.Count;
-            return alphas.Select(alpha =>
-                PortfolioTarget.Percent(algorithm, alpha.Symbol, (int) alpha.Direction * percent)
+            return insights.Select(insight =>
+                PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent)
             );
         }
 

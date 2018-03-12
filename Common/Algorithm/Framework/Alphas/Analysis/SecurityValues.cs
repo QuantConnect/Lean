@@ -19,7 +19,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Contains security values required by alpha analysis components
+    /// Contains security values required by insight analysis components
     /// </summary>
     /// <remarks>
     /// The main purpose here is providing an ACL against the algorithm to remove the dependencies
@@ -83,18 +83,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         }
 
         /// <summary>
-        /// Gets the security value corresponding to the specified alpha type
+        /// Gets the security value corresponding to the specified insight type
         /// </summary>
-        /// <param name="type">The alpha type</param>
-        /// <returns>The security value for the specified alpha type</returns>
-        public decimal Get(AlphaType type)
+        /// <param name="type">The insight type</param>
+        /// <returns>The security value for the specified insight type</returns>
+        public decimal Get(InsightType type)
         {
             switch (type)
             {
-                case AlphaType.Price:
+                case InsightType.Price:
                     return Price;
 
-                case AlphaType.Volatility:
+                case InsightType.Volatility:
                     return Volatility;
 
                 default:

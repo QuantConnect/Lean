@@ -130,8 +130,8 @@ namespace QuantConnect
             DateTime time;
             try
             {
-                // Unix timestamp is seconds past epoch
-                time = EpochTime.AddSeconds(unixTimeStamp);
+                var ticks = unixTimeStamp * TimeSpan.TicksPerSecond;
+                time = EpochTime.AddTicks((long)ticks);
             }
             catch (Exception err)
             {
@@ -151,8 +151,8 @@ namespace QuantConnect
             DateTime time;
             try
             {
-                // Unix timestamp is seconds past epoch
-                time = EpochTime.AddMilliseconds(unixTimeStamp);
+                var ticks = unixTimeStamp * TimeSpan.TicksPerMillisecond;
+                time = EpochTime.AddTicks((long)ticks);
             }
             catch (Exception err)
             {

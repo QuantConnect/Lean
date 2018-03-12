@@ -13,21 +13,19 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework.Alphas
+namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Specifies the type of alpha
+    /// Retrieves the registered scoring function for the specified insight/score type
     /// </summary>
-    public enum AlphaType
+    public interface IInsightScoreFunctionProvider
     {
         /// <summary>
-        /// The alpha is for a security's price
+        /// Gets the insight scoring function for the specified insight type and score type
         /// </summary>
-        Price,
-
-        /// <summary>
-        /// The alpha is for a security's price volatility
-        /// </summary>
-        Volatility
+        /// <param name="insightType">The insight's type</param>
+        /// <param name="scoreType">The scoring type</param>
+        /// <returns>A function to be used to compute insight scores</returns>
+        IInsightScoreFunction GetScoreFunction(InsightType insightType, InsightScoreType scoreType);
     }
 }

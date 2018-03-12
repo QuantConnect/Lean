@@ -13,19 +13,25 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Retrieves the registered scoring function for the specified alpha/score type
+    /// Specifies the type of insight
     /// </summary>
-    public interface IAlphaScoreFunctionProvider
+    [JsonConverter(typeof(StringEnumConverter), true)]
+    public enum InsightType
     {
         /// <summary>
-        /// Gets the alpha scoring function for the specified alpha type and score type
+        /// The insight is for a security's price
         /// </summary>
-        /// <param name="alphaType">The alpha's type</param>
-        /// <param name="scoreType">The scoring type</param>
-        /// <returns>A function to be used to compute alpha scores</returns>
-        IAlphaScoreFunction GetScoreFunction(AlphaType alphaType, AlphaScoreType scoreType);
+        Price,
+
+        /// <summary>
+        /// The insight is for a security's price volatility
+        /// </summary>
+        Volatility
     }
 }

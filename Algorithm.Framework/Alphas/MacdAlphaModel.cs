@@ -24,13 +24,13 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines a custom alpha model that uses MACD crossovers. The alpha line is
-    /// used to generate buy/sell alphas if it's stronger than the bounce threshold.
-    /// If the alpha is within the bounce threshold then a flat price alpha is returned.
+    /// Defines a custom alpha model that uses MACD crossovers. The MACD signal line is
+    /// used to generate up/down insights if it's stronger than the bounce threshold.
+    /// If the MACD signal is within the bounce threshold then a flat price insight is returned.
     /// </summary>
     public class MacdAlphaModel : IAlphaModel
     {
-        private readonly TimeSpan _alphaPeriod;
+        private readonly TimeSpan _insightPeriod;
         private readonly TimeSpan _consolidatorPeriod;
         private readonly decimal _bounceThresholdPercent;
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
@@ -39,23 +39,23 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
         /// </summary>
         /// <param name="consolidatorPeriod">The period of the MACD's input</param>
-        /// <param name="alphaPeriod">The period assigned to generated alphas</param>
-        /// <param name="bounceThresholdPercent">The percent change required in the alpha to warrant an up/down alpha</param>
-        public MacdAlphaModel(TimeSpan consolidatorPeriod, TimeSpan alphaPeriod, decimal bounceThresholdPercent)
+        /// <param name="insightPeriod">The period assigned to generate insight</param>
+        /// <param name="bounceThresholdPercent">The percent change required in the MACD signal line to warrant an up/down insight</param>
+        public MacdAlphaModel(TimeSpan consolidatorPeriod, TimeSpan insightPeriod, decimal bounceThresholdPercent)
         {
-            _alphaPeriod = alphaPeriod;
+            _insightPeriod = insightPeriod;
             _consolidatorPeriod = consolidatorPeriod;
             _bounceThresholdPercent = Math.Abs(bounceThresholdPercent);
             _symbolData = new Dictionary<Symbol, SymbolData>();
         }
 
         /// <summary>
-        /// Determines a alpha for each security based on it's current MACD alpha
+        /// Determines an insight for each security based on it's current MACD signal
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
-        /// <returns>The new alphas generated</returns>
-        public IEnumerable<Alpha> Update(QCAlgorithmFramework algorithm, Slice data)
+        /// <returns>The new insights generated</returns>
+        public IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var sd in _symbolData.Values)
             {
@@ -64,25 +64,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     continue;
                 }
 
-                var direction = AlphaDirection.Flat;
-                var normalizedAlpha = sd.MACD.Signal / sd.Security.Price;
-                if (normalizedAlpha > _bounceThresholdPercent)
+                var direction = InsightDirection.Flat;
+                var normalizedSignal = sd.MACD.Signal / sd.Security.Price;
+                if (normalizedSignal > _bounceThresholdPercent)
                 {
-                    direction = AlphaDirection.Up;
+                    direction = InsightDirection.Up;
                 }
-                else if (normalizedAlpha < -_bounceThresholdPercent)
+                else if (normalizedSignal < -_bounceThresholdPercent)
                 {
-                    direction = AlphaDirection.Down;
+                    direction = InsightDirection.Down;
                 }
 
-                var alpha = new Alpha(sd.Security.Symbol, AlphaType.Price, direction, _alphaPeriod);
-                if (alpha.Equals(sd.PreviousAlpha))
+                var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, _insightPeriod);
+                if (insight.Equals(sd.PreviousInsight))
                 {
                     continue;
                 }
 
-                sd.PreviousAlpha = alpha.Clone();
-                yield return alpha;
+                sd.PreviousInsight = insight.Clone();
+                yield return insight;
             }
         }
 
@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
         class SymbolData
         {
-            public Alpha PreviousAlpha;
+            public Insight PreviousInsight;
 
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;

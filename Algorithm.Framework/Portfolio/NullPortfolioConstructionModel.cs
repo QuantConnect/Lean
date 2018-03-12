@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
         }
 
-        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Alpha> alphas)
+        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Insight> insights)
         {
             return Enumerable.Empty<IPortfolioTarget>();
         }

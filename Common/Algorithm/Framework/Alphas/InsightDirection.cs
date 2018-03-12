@@ -13,38 +13,30 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Defines a collection of alphas that were generated at the same time step
+    /// Specifies the predicted direction for a insight (price/volatility)
     /// </summary>
-    public class AlphaCollection
+    [JsonConverter(typeof(StringEnumConverter), true)]
+    public enum InsightDirection
     {
         /// <summary>
-        /// The utc date time the alphas were generated
+        /// The value will go down
         /// </summary>
-        public DateTime DateTimeUtc { get; }
+        Down = -1,
 
         /// <summary>
-        /// The generated alphas
+        /// The value will stay flat
         /// </summary>
-        public List<Alpha> Alphas { get; }
+        Flat = 0,
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlphaCollection"/> class
+        /// The value will go up
         /// </summary>
-        /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
-        /// <param name="alphas">The generated alphas</param>
-        public AlphaCollection(DateTime dateTimeUtc, IEnumerable<Alpha> alphas)
-        {
-            DateTimeUtc = dateTimeUtc;
-
-            // ensure we're keeping copies to avoid reference shenanigans
-            Alphas = alphas.Select(alpha => alpha.Clone()).ToList();
-        }
+        Up = 1
     }
 }

@@ -46,9 +46,9 @@ namespace QuantConnect.Interfaces
     public interface IAlgorithm
     {
         /// <summary>
-        /// Event fired when an algorithm generates a alpha
+        /// Event fired when an algorithm generates a insight
         /// </summary>
-        event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+        event AlgorithmEvent<InsightCollection> InsightsGenerated;
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.

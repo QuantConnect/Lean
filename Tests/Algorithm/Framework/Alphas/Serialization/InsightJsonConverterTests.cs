@@ -1,0 +1,150 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Serialization;
+
+namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
+{
+    [TestFixture]
+    public class InsightJsonConverterTests
+    {
+        [Test]
+        public void DeserializesInsightWithoutScore()
+        {
+            var jObject = JObject.Parse(jsonNoScore);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonNoScore);
+            Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToString("N"));
+            Assert.AreEqual(jObject["generated-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
+            Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
+            Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
+            Assert.AreEqual(jObject["ticker"].Value<string>(), result.Symbol.Value);
+            Assert.AreEqual(jObject["type"].Value<string>(), result.Type.ToLower());
+            Assert.AreEqual(jObject["reference"].Value<decimal>(), result.ReferenceValue);
+            Assert.AreEqual(jObject["direction"].Value<string>(), result.Direction.ToLower());
+            Assert.AreEqual(jObject["period"].Value<double>(), result.Period.TotalSeconds);
+            Assert.AreEqual(jObject["magnitude"].Value<double>(), result.Magnitude);
+            Assert.AreEqual(null, result.Confidence);
+
+            // default values for scores
+            Assert.AreEqual(false, result.Score.IsFinalScore);
+            Assert.AreEqual(0, result.Score.Magnitude);
+            Assert.AreEqual(0, result.Score.Direction);
+        }
+
+        [Test]
+        public void DeserializesInsightWithScore()
+        {
+            var jObject = JObject.Parse(jsonWithScore);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonWithScore);
+            Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToString("N"));
+            Assert.AreEqual(jObject["generated-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
+            Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
+            Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
+            Assert.AreEqual(jObject["ticker"].Value<string>(), result.Symbol.Value);
+            Assert.AreEqual(jObject["type"].Value<string>(), result.Type.ToLower());
+            Assert.AreEqual(jObject["reference"].Value<decimal>(), result.ReferenceValue);
+            Assert.AreEqual(jObject["direction"].Value<string>(), result.Direction.ToLower());
+            Assert.AreEqual(jObject["period"].Value<double>(), result.Period.TotalSeconds);
+            Assert.AreEqual(jObject["magnitude"].Value<double>(), result.Magnitude);
+            Assert.AreEqual(null, result.Confidence);
+            Assert.AreEqual(true, result.Score.IsFinalScore);
+            Assert.AreEqual(jObject["score-magnitude"].Value<double>(), result.Score.Magnitude);
+            Assert.AreEqual(jObject["score-direction"].Value<double>(), result.Score.Direction);
+        }
+
+        [Test]
+        public void SerializesInsightWithoutScore()
+        {
+            var jObject = JObject.Parse(jsonNoScore);
+            var insight = Insight.FromSerializedInsight(new SerializedInsight
+            {
+                Id = jObject["id"].Value<string>(),
+                GeneratedTime = jObject["generated-time"].Value<double>(),
+                CloseTime = jObject["close-time"].Value<double>(),
+                Symbol = jObject["symbol"].Value<string>(),
+                Ticker = jObject["ticker"].Value<string>(),
+                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
+                ReferenceValue = jObject["reference"].Value<decimal>(),
+                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
+                Period = jObject["period"].Value<double>(),
+                Magnitude = jObject["magnitude"].Value<double>()
+            });
+            var result = JsonConvert.SerializeObject(insight, Formatting.Indented);
+            Assert.AreEqual(jsonNoScore, result);
+        }
+
+        [Test]
+        public void SerializesInsightWithScore()
+        {
+            var jObject = JObject.Parse(jsonWithScore);
+            var insight = Insight.FromSerializedInsight(new SerializedInsight
+            {
+                Id = jObject["id"].Value<string>(),
+                GeneratedTime = jObject["generated-time"].Value<double>(),
+                CloseTime = jObject["close-time"].Value<double>(),
+                Symbol = jObject["symbol"].Value<string>(),
+                Ticker = jObject["ticker"].Value<string>(),
+                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
+                ReferenceValue = jObject["reference"].Value<decimal>(),
+                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
+                Period = jObject["period"].Value<double>(),
+                Magnitude = jObject["magnitude"].Value<double>(),
+                ScoreIsFinal = jObject["score-final"].Value<bool>(),
+                ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
+                ScoreDirection = jObject["score-direction"].Value<double>(),
+                EstimatedValue = jObject["estimated-value"].Value<decimal>()
+            });
+            var result = JsonConvert.SerializeObject(insight, Formatting.Indented);
+            Assert.AreEqual(jsonWithScore, result);
+        }
+
+        private const string jsonNoScore =
+@"{
+  ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
+  ""generated-time"": 1520711961.00055,
+  ""close-time"": 1520711961.00055,
+  ""symbol"": ""BTCUSD XJ"",
+  ""ticker"": ""BTCUSD"",
+  ""type"": ""price"",
+  ""reference"": 9143.53,
+  ""direction"": ""up"",
+  ""period"": 5.0,
+  ""magnitude"": 0.025
+}";
+
+        private const string jsonWithScore =
+@"{
+  ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
+  ""generated-time"": 1520711961.00055,
+  ""close-time"": 1520711961.00055,
+  ""symbol"": ""BTCUSD XJ"",
+  ""ticker"": ""BTCUSD"",
+  ""type"": ""price"",
+  ""reference"": 9143.53,
+  ""direction"": ""up"",
+  ""period"": 5.0,
+  ""magnitude"": 0.025,
+  ""score-final"": true,
+  ""score-magnitude"": 1.0,
+  ""score-direction"": 1.0,
+  ""estimated-value"": 1113.2484
+}";
+    }
+}

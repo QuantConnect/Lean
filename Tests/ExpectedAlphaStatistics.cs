@@ -25,22 +25,22 @@ namespace QuantConnect.Tests
     {
         public double MeanPopuationDirection
         {
-            set { MeanPopulationScore.SetScore(AlphaScoreType.Direction, value, new DateTime()); }
+            set { MeanPopulationScore.SetScore(InsightScoreType.Direction, value, new DateTime()); }
         }
 
         public double MeanPopuationMagnitude
         {
-            set { MeanPopulationScore.SetScore(AlphaScoreType.Magnitude, value, new DateTime()); }
+            set { MeanPopulationScore.SetScore(InsightScoreType.Magnitude, value, new DateTime()); }
         }
 
         public double RollingAveragedPopuationDirection
         {
-            set { RollingAveragedPopulationScore.SetScore(AlphaScoreType.Direction, value, new DateTime()); }
+            set { RollingAveragedPopulationScore.SetScore(InsightScoreType.Direction, value, new DateTime()); }
         }
 
         public double RollingAveragedPopuationMagnitude
         {
-            set { RollingAveragedPopulationScore.SetScore(AlphaScoreType.Magnitude, value, new DateTime()); }
+            set { RollingAveragedPopulationScore.SetScore(InsightScoreType.Magnitude, value, new DateTime()); }
         }
     }
 }

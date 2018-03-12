@@ -78,7 +78,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             // write events such that when the base handles an event it
                             // will also invoke event handlers defined on this instance
-                            _baseAlgorithm.AlphasGenerated += AlphasGenerated;
+                            _baseAlgorithm.InsightsGenerated += InsightsGenerated;
 
                             // Set pandas
                             _baseAlgorithm.SetPandasConverter();
@@ -445,9 +445,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Event fired when an algorithm generates a alpha
+        /// Event fired when an algorithm generates a insight
         /// </summary>
-        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+        public event AlgorithmEvent<InsightCollection> InsightsGenerated;
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.

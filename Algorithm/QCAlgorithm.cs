@@ -161,9 +161,9 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Event fired when the algorithm generates alphas
+        /// Event fired when the algorithm generates insights
         /// </summary>
-        public event AlgorithmEvent<AlphaCollection> AlphasGenerated;
+        public event AlgorithmEvent<InsightCollection> InsightsGenerated;
 
         /// <summary>
         /// Security collection is an array of the security objects such as Equities and FOREX. Securities data
@@ -1924,12 +1924,12 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="AlphasGenerated"/> event
+        /// Event invocator for the <see cref="InsightsGenerated"/> event
         /// </summary>
-        /// <param name="alphas">The collection of alphas generaed at the current time step</param>
-        protected void OnAlphasGenerated(IEnumerable<Alpha> alphas)
+        /// <param name="insights">The collection of insights generaed at the current time step</param>
+        protected void OnInsightsGenerated(IEnumerable<Insight> insights)
         {
-            AlphasGenerated?.Invoke(this, new AlphaCollection(UtcTime, alphas));
+            InsightsGenerated?.Invoke(this, new InsightCollection(UtcTime, insights));
         }
     }
 }
