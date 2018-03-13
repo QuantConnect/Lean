@@ -25,6 +25,25 @@ namespace QuantConnect.Tests.Common.Exceptions
     [TestFixture, Ignore]
     public class InvalidTokenPythonExceptionInterpreterTests
     {
+        private PythonException _pythonException;
+
+        [TestFixtureSetUp]
+        public void Setup()
+        {
+            using (Py.GIL())
+            {
+                try
+                {
+                    // importing a module with syntax error 'x = 01' will throw
+                    PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), "x = 01");
+                }
+                catch (PythonException pythonException)
+                {
+                    _pythonException = pythonException;
+                }
+            }
+        }
+
         [Test]
         [TestCase(typeof(Exception), ExpectedResult = false)]
         [TestCase(typeof(KeyNotFoundException), ExpectedResult = false)]
@@ -51,25 +70,16 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
         }
 
-        private Exception CreateExceptionFromType(Type type)
+        [Test]
+        public void VerifyMessageContainsStackTraceInformation()
         {
-            if (type == typeof(PythonException))
-            {
-                try
-                {
-                    using (Py.GIL())
-                    {
-                        // importing a module with syntax error 'x = 01' will throw
-                        PythonEngine.ModuleFromString("module", "x = 01");
-                    }
-                }
-                catch (PythonException e)
-                {
-                    return e;
-                }
-            }
-
-            return (Exception)Activator.CreateInstance(type);
+            var exception = CreateExceptionFromType(typeof(PythonException));
+            var assembly = typeof(PythonExceptionInterpreter).Assembly;
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
+            Assert.True(exception.Message.Contains("x = 01"));
         }
+
+        private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
     }
 }

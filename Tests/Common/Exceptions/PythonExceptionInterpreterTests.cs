@@ -24,7 +24,7 @@ using System.IO;
 namespace QuantConnect.Tests.Common.Exceptions
 {
     [TestFixture, Ignore]
-    public class NoMethodMatchPythonExceptionInterpreterTests
+    public class PythonExceptionInterpreterTests
     {
         private PythonException _pythonException;
 
@@ -41,8 +41,8 @@ namespace QuantConnect.Tests.Common.Exceptions
 
                 try
                 {
-                    // self.Log(1)
-                    algorithm.no_method_match();
+                    // x = 1 / 0
+                    algorithm.zero_division_error();
                 }
                 catch (PythonException pythonException)
                 {
@@ -57,10 +57,10 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), ExpectedResult = false)]
         [TestCase(typeof(InvalidOperationException), ExpectedResult = false)]
         [TestCase(typeof(PythonException), ExpectedResult = true)]
-        public bool CanInterpretReturnsTrueForOnlyNoMethodMatchPythonExceptionType(Type exceptionType)
+        public bool CanInterpretReturnsTrueForOnlyPythonExceptionType(Type exceptionType)
         {
             var exception = CreateExceptionFromType(exceptionType);
-            return new NoMethodMatchPythonExceptionInterpreter().CanInterpret(exception);
+            return new PythonExceptionInterpreter().CanInterpret(exception);
         }
 
         [Test]
@@ -69,10 +69,10 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestCase(typeof(DivideByZeroException), true)]
         [TestCase(typeof(InvalidOperationException), true)]
         [TestCase(typeof(PythonException), false)]
-        public void InterpretThrowsForNonNoMethodMatchPythonExceptionTypes(Type exceptionType, bool expectThrow)
+        public void InterpretThrowsForNonPythonExceptionTypes(Type exceptionType, bool expectThrow)
         {
             var exception = CreateExceptionFromType(exceptionType);
-            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            var interpreter = new PythonExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
             Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
         }
@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var assembly = typeof(PythonExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
-            Assert.True(exception.Message.Contains("self.Log(1)"));
+            Assert.True(exception.Message.Contains("x = 1 / 0"));
         }
 
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);

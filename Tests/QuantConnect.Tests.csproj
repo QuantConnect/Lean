@@ -156,6 +156,7 @@
     <Compile Include="Common\Exceptions\InvalidTokenPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\FakeExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\KeyErrorPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\PythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\UnsupportedOperandPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\NoMethodMatchPythonExceptionInterpreterTests.cs" />
     <Compile Include="Common\Exceptions\NullExceptionInterpreter.cs" />
@@ -416,6 +417,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="RegressionAlgorithms\Test_CustomDataAlgorithm.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="RegressionAlgorithms\Test_PythonExceptionInterpreter.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="RegressionAlgorithms\Test_MethodOverload.py">
