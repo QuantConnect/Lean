@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework
     /// <summary>
     /// Algorithm framework base class that enforces a modular approach to algorithm development
     /// </summary>
-    public class QCAlgorithmFramework : QCAlgorithm
+    public partial class QCAlgorithmFramework : QCAlgorithm
     {
         private readonly ISecurityValuesProvider _securityValuesProvider;
 
