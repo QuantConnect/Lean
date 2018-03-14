@@ -10,6 +10,7 @@ using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -127,6 +128,26 @@ namespace QuantConnect.Tests.Algorithm
 
             var quandlFactory = (BaseData)ObjectActivator.GetActivator(quandlSubscription.Type).Invoke(new object[] { quandlSubscription.Type });
             Assert.DoesNotThrow(() => quandlFactory.GetSource(quandlSubscription, DateTime.UtcNow, false));
+        }
+
+        [Test, Ignore]
+        public void PythonCustomDataTypes_AreAddedToConsolidator_Successfully()
+        {
+            var pythonPath = new System.IO.DirectoryInfo("RegressionAlgorithms");
+            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
+
+            var qcAlgorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
+
+            // Initialize contains the statements:
+            // self.AddData(Nifty, "NIFTY")
+            // self.AddData(QuandlFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+            qcAlgorithm.Initialize();
+
+            var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("NIFTY", niftyConsolidator));
+
+            var quandlConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("SCF/CME_CL1_ON", quandlConsolidator));
         }
 
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
