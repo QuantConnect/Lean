@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     if (!model.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"IPortfolioConstructionModel.{attributeName} must be implemented. Please checkout the {model.GetPythonType()}");
+                        throw new NotImplementedException($"IPortfolioConstructionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
                 }
             }

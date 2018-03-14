@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     if (!model.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"IAlphaModel.{attributeName} must be implemented. Please checkout the {model.GetPythonType()}");
+                        throw new NotImplementedException($"IAlphaModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
                 }
             }
