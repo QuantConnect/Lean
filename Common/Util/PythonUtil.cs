@@ -16,6 +16,7 @@
 
 using Python.Runtime;
 using System;
+using System.Linq;
 
 namespace QuantConnect.Util
 {
@@ -93,44 +94,45 @@ namespace QuantConnect.Util
         /// <returns>String with relevant part of the stacktrace</returns>
         public static string PythonExceptionStackParser(string value)
         {
-            var errorLine = string.Empty;
-
             if (string.IsNullOrWhiteSpace(value))
             {
-                return errorLine;
+                return string.Empty;
             }
-            
-            // Get the place where the error occurred in the PythonException.StackTrace
-            var stack = value.Replace("\\\\", "/").Split(new[] { @"\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var baseScript = stack[0].Substring(1 + stack[0].IndexOf('\"')).Split('\"')[0];
-            var directory = string.Empty;
 
-            var length = baseScript.LastIndexOf('/');
+            // Get the directory where the user files are located
+            var baseScript = value.GetStringBetweenChars('\"', '\"');
+            var length = Math.Max(baseScript.LastIndexOf('/'), baseScript.LastIndexOf('\\'));
             if (length < 0)
             {
-                return errorLine;
+                return string.Empty;
             }
+            var directory = baseScript.Substring(0, 1 + length);
 
-            directory = baseScript.Substring(0, length);
-            baseScript = baseScript.Substring(1 + directory.Length);
-
-            for (var i = 0; i < stack.Length; i += 2)
-            {
-                if (stack[i].Contains(directory))
+            // Format the information in every line
+            var lines = value.Substring(1, value.Length - 1)
+                .Split(new[] { "\'  File " }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(x => x.Contains(directory))
+                .Where(x => x.Split(',').Length > 2)
+                .Select(x =>
                 {
-                    var index = stack[i].IndexOf(directory) + directory.Length + 1;
-                    var info = stack[i].Substring(index).Split(',');
+                    var info = x.Replace(directory, string.Empty).Split(',');
+                    var line = info[0].GetStringBetweenChars('\"', '\"');
+                    line = $" in {line}:{info[1].Trim()}";
 
-                    var script = info[0].Remove(info[0].Length - 1);
-                    var line = int.Parse(info[1].Remove(0, 6));
-                    var method = info[2].Replace("in", "at");
-                    var statement = stack[i + 1].Trim();
+                    info = info[2].Split(new[] { "\\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    line = $" {info[0].Replace("in", "at")}{line}";
 
-                    errorLine += $"{Environment.NewLine}  {method} in {script}:line {line} :: {statement}";
-                }
-            }
+                    // If we have the exact statement, add it to the error line
+                    if (info.Length > 2) line += $" :: {info[1].Trim()}";
 
-            return $"{errorLine}{(errorLine.Length > 1 ? Environment.NewLine : string.Empty)}";
+                    return line;
+                });
+
+            var errorLine = string.Join(Environment.NewLine, lines);
+
+            return string.IsNullOrWhiteSpace(errorLine)
+                ? string.Empty
+                : $"{Environment.NewLine}{errorLine}{Environment.NewLine}";
         }
 
         /// <summary>
