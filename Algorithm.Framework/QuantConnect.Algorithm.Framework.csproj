@@ -53,19 +53,24 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="Execution\NullExecutionModel.cs" />
+    <Compile Include="Execution\ExecutionModelPythonWrapper.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\SimplePortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QCAlgorithmFramework.Python.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
     <Compile Include="Risk\IRiskManagementModel.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
+    <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />
     <Compile Include="Selection\CoarseFundamentalPortfolioSelectionModel.cs" />
     <Compile Include="Selection\FineFundamentalPortfolioSelectionModel.cs" />
     <Compile Include="Selection\FundamentalPortfolioSelectionModel.cs" />
@@ -75,6 +80,7 @@
     <Compile Include="Alphas\ConstantAlphaModel.cs" />
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
+    <Compile Include="Selection\PortfolioSelectionModelPythonWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
