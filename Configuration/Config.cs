@@ -96,7 +96,7 @@ namespace QuantConnect.Configuration
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
+                //Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
             return token.ToString();
@@ -182,7 +182,7 @@ namespace QuantConnect.Configuration
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Trace(string.Format("Config.GetValue(): {0} - Using default value: {1}", key, defaultValue));
+                //Log.Trace(string.Format("Config.GetValue(): {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
 

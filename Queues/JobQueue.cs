@@ -177,7 +177,7 @@ namespace QuantConnect.Queues
         {
             // Make the console window pause so we can read log output before exiting and killing the application completely
             Console.WriteLine("Engine.Main(): Analysis Complete. Press any key to continue.");
-            System.Console.Read();
+            //System.Console.Read();
         }
     }
 

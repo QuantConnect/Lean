@@ -71,20 +71,23 @@ namespace QuantConnect.Orders.Fills
             // Assume that the security has both a trade and quote subscription
             // This should be true for crypto securities
             var quoteBar = asset.Cache.GetData<QuoteBar>();
-            var tradeBar = asset.Cache.GetData<TradeBar>();
+            if (quoteBar != null)
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
 
-            if (tradeBar.EndTime > quoteBar.EndTime)
-            {
-                // The latest pricing data came from a trade
-                return new Prices(tradeBar);
-            }
-            else
-            {
-                // The latest pricing data came from a quote
-                var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
-                if (bar != null)
+                if (tradeBar != null && tradeBar.EndTime > quoteBar.EndTime)
                 {
-                    return new Prices(bar);
+                    // The latest pricing data came from a trade
+                    return new Prices(tradeBar);
+                }
+                else
+                {
+                    // The latest pricing data came from a quote
+                    var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
+                    if (bar != null)
+                    {
+                        return new Prices(bar);
+                    }
                 }
             }
 

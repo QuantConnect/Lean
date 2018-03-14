@@ -9,7 +9,7 @@
   "environment": "backtesting",// "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateAlgorithm",
+  "algorithm-type-name": "MeltingTree",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
@@ -22,7 +22,20 @@
   //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
 
   // engine
-  "data-folder": "../../../Data/",
+  "data-folder": "../../../../Data/",
+  "data-directory": "../../../../Data/",
+
+  "job-project-id": 0,
+  "lean-manager-type": "LocalLeanManager",
+  "plugin-directory": null,
+  "algorithm-path-python": "../../../Algorithm.Python/",
+  "algorithm-manager-time-loop-maximum": 40,
+  "forward-console-messages": true,
+  "send-via-api": false,
+  "ignore-version-checks": false,
+  "cache-location": "../../../../Data/",
+  "version-id": "",
+  "security-data-feeds": "",
 
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",
