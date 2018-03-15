@@ -281,14 +281,6 @@ namespace QuantConnect.Interfaces
         void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
 
         /// <summary>
-        /// Market Status Today: REST call.
-        /// </summary>
-        /// <param name="time">The date we need market hours for</param>
-        /// <param name="symbol"></param>
-        /// <returns>Market open hours.</returns>
-        IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol);
-
-        /// <summary>
         /// Send an email to the user associated with the specified algorithm id
         /// </summary>
         /// <param name="algorithmId">The algorithm id</param>
