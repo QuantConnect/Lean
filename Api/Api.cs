@@ -36,7 +36,6 @@ namespace QuantConnect.Api
     public class Api : IApi
     {
         private ApiWebSocketConnection _socketConnection;
-        private static MarketHoursDatabase _marketHoursDatabase;
         private string _dataFolder;
 
         /// <summary>
@@ -51,7 +50,6 @@ namespace QuantConnect.Api
         {
             ApiConnection = new ApiConnection(userId, token);
             _socketConnection = new ApiWebSocketConnection(userId, token);
-            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder(dataFolder);
             _dataFolder = dataFolder;
 
             //Allow proper decoding of orders from the API.
@@ -650,25 +648,6 @@ namespace QuantConnect.Api
         public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
             //
-        }
-
-        /// <summary>
-        /// Get the calendar open hours for the date.
-        /// </summary>
-        
-        public virtual IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol)
-        {
-            if (Config.GetBool("force-exchange-always-open"))
-            {
-                yield return MarketHoursSegment.OpenAllDay();
-                yield break;
-            }
-
-            var hours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
-            foreach (var segment in hours.MarketHours[time.DayOfWeek].Segments)
-            {
-                yield return segment;
-            }
         }
 
         /// <summary>
