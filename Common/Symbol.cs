@@ -174,6 +174,27 @@ namespace QuantConnect
                 ID.Date == SecurityIdentifier.DefaultDate;
         }
 
+        /// <summary>
+        /// Determines if the specified <paramref name="symbol"/> is an underlying of this symbol instance
+        /// </summary>
+        /// <param name="symbol">The underlying to check for</param>
+        /// <returns>True if the specified <paramref name="symbol"/> is an underlying of this symbol instance</returns>
+        public bool HasUnderlyingSymbol(Symbol symbol)
+        {
+            var current = this;
+            while (current.HasUnderlying)
+            {
+                if (current.Underlying == symbol)
+                {
+                    return true;
+                }
+
+                current = current.Underlying;
+            }
+
+            return false;
+        }
+
         #region Properties
 
         /// <summary>
