@@ -60,7 +60,7 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
             self.Data[symbol] = SymbolData(forex.Symbol, BarPeriod, RollingWindowSize)
 
         # loop through all our symbols and request data subscriptions and initialize indicator
-        for symbol, symbolData in self.Data.iteritems():
+        for symbol, symbolData in self.Data.items():
             # define the indicator
             symbolData.SMA = SimpleMovingAverage(self.CreateIndicatorName(symbol, "SMA" + str(SimpleMovingAveragePeriod), Resolution.Minute), SimpleMovingAveragePeriod)
             # define a consolidator to consolidate data for this symbol on the requested period
