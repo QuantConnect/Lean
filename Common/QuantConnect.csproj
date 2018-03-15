@@ -204,6 +204,7 @@
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />
+    <Compile Include="Securities\IDerivativeSecurity.cs" />
     <Compile Include="Securities\Option\EmptyOptionChainProvider.cs" />
     <Compile Include="Interfaces\IOptionChainProvider.cs" />
     <Compile Include="Brokerages\OandaTransactionModel.cs" />
