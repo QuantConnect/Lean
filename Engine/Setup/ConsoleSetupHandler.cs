@@ -172,7 +172,7 @@ namespace QuantConnect.Lean.Engine.Setup
             catch (Exception err)
             {
                 Log.Error(err);
-                Errors.Add(new AlgorithmSetupException("Failed to initialize algorithm: Initialize(): " + err.Message, err));
+                Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
             }
 
             if (Errors.Count == 0)

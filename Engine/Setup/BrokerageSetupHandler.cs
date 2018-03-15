@@ -421,7 +421,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="inner">The inner exception being wrapped</param>
         private void AddInitializationError(string message, Exception inner = null)
         {
-            Errors.Add(new AlgorithmSetupException("Failed to initialize algorithm: " + message, inner));
+            Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: " + message, inner));
         }
 
         /// <summary>
