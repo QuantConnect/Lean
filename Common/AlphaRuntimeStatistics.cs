@@ -74,7 +74,7 @@ namespace QuantConnect
                 {"Long Insight Count", $"{LongCount}"},
                 {"Short Insight Count", $"{ShortCount}"},
                 {"Long/Short Ratio", $"{Math.Round(100*LongShortRatio, 2)}%"},
-                {"Total Estimated Insight Value", $"{accountCurrencySymbol}{TotalEstimatedAlphaValue.SmartRounding()}"},
+                {"Total Estimated Alpha Value", $"{accountCurrencySymbol}{TotalEstimatedAlphaValue.SmartRounding()}"},
                 {"Mean Population Estimated Insight Value", $"{accountCurrencySymbol}{MeanPopulationEstimatedInsightValue.SmartRounding()}"},
                 {"Mean Population Direction", $"{Math.Round(100 * MeanPopulationScore.Direction, 4)}%"},
                 {"Mean Population Magnitude", $"{Math.Round(100 * MeanPopulationScore.Magnitude, 4)}%"},
