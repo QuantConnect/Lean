@@ -904,11 +904,12 @@ namespace QuantConnect.Algorithm
                 {
                     an = new AssemblyName(type.Repr().Split('\'')[1]);
                 }
-                var moduleBuilder = AppDomain.CurrentDomain
+                var typeBuilder = AppDomain.CurrentDomain
                     .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
-                    .DefineDynamicModule("MainModule");
+                    .DefineDynamicModule("MainModule")
+                    .DefineType(an.Name, TypeAttributes.Class, typeof(DynamicData));
 
-                pythonType = new PythonActivator(moduleBuilder.DefineType(an.Name).CreateType(), type);
+                pythonType = new PythonActivator(typeBuilder.CreateType(), type);
 
                 ObjectActivator.AddActivator(pythonType.Type, pythonType.Factory);
 
