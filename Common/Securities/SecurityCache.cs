@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -94,17 +95,34 @@ namespace QuantConnect.Securities
         /// </summary>
         public void AddData(BaseData data)
         {
+            // Only cache no fill-forward data.
+            if (data.IsFillForward) return;
+
             var openInterest = data as OpenInterest;
             if (openInterest != null)
             {
                 OpenInterest = (long)openInterest.Value;
                 return;
             }
+            
+            // If the _dataByType dictionary is not populated or it only has one MarketDataType, just use the last value.
+            if (_dataByType.Keys.Count <= 1)
+            {
+                _lastData = data;
+                _dataByType[data.GetType()] = data;
+            }
+            else
+            {
+                // If there are more then one MarketDataType then update _lastData only if is the latest, prioritizing QuoteBars
+                if (data.Time > _lastData.Time || data.Time == _lastData.Time && data.DataType == MarketDataType.QuoteBar)
+                {
+                    _lastData = data;
+                }
+                _dataByType[data.GetType()] = data;
+            }
+            
 
-            _lastData = data;
-            _dataByType[data.GetType()] = data;
-
-            var tick = data as Tick;
+            var tick = _lastData as Tick;
             if (tick != null)
             {
                 if (tick.Value != 0) Price = tick.Value;
@@ -119,10 +137,10 @@ namespace QuantConnect.Securities
 
                 return;
             }
-            var bar = data as IBar;
+            var bar = _lastData as IBar;
             if (bar != null)
             {
-                if (_lastQuoteBarUpdate != data.EndTime)
+                if (_lastQuoteBarUpdate != _lastData.EndTime)
                 {
                     if (bar.Open != 0) Open = bar.Open;
                     if (bar.High != 0) High = bar.High;
@@ -151,7 +169,7 @@ namespace QuantConnect.Securities
             }
             else
             {
-                Price = data.Price;
+                Price = _lastData.Price;
             }
         }
 
@@ -170,10 +188,10 @@ namespace QuantConnect.Securities
         /// <typeparam name="T">The data type</typeparam>
         /// <returns>The last data packet, null if none received of type</returns>
         public T GetData<T>()
-            where T:BaseData
+            where T : BaseData
         {
             BaseData data;
-            _dataByType.TryGetValue(typeof (T), out data);
+            _dataByType.TryGetValue(typeof(T), out data);
             return data as T;
         }
 
