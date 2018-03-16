@@ -25,10 +25,6 @@ using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Python;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Crypto;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
@@ -115,10 +111,9 @@ namespace QuantConnect.Jupyter
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public new PyObject History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
-            where T : IBaseData
+        public new PyObject History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
-            return PandasConverter.GetDataFrame(History<T>(symbol, Time - span, Time, resolution).Memoize());
+            return History(symbol.ToPython(), span, resolution);
         }
 
         /// <summary>
@@ -222,7 +217,7 @@ namespace QuantConnect.Jupyter
             var provider = new BacktestingOptionChainProvider();
             var allSymbols = provider.GetOptionContractList(symbol.Underlying, date);
             
-            var requests = History(symbol.Underlying, TimeSpan.FromDays(1), resolution)
+            var requests = base.History(symbol.Underlying, TimeSpan.FromDays(1), resolution)
                 .SelectMany(x => option.ContractFilter.Filter(new OptionFilterUniverse(allSymbols, x)))
                 .Distinct()
                 .Select(x =>
