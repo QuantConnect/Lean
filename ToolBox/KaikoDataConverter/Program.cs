@@ -57,10 +57,19 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 foreach (var symbolMonthDirectory in Directory.EnumerateDirectories(symbolDirectoryInfo.FullName))
                 {
-                    foreach (var tradeFile in Directory.EnumerateFiles(symbolMonthDirectory))
+                    foreach (var tradeFile in Directory.EnumerateFiles(symbolMonthDirectory, "*.gz"))
                     {
+                        string unzippedFile;
                         // Unzip file
-                        var unzippedFile = Compression.UnGZip(tradeFile, symbolMonthDirectory);
+                        try
+                        {
+                            unzippedFile = Compression.UnGZip(tradeFile, symbolMonthDirectory);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error($"KaikoDataConverter.CreateCryptoTicks(): File {tradeFile} cannot be unzipped. Exception {e}");
+                            continue;
+                        }
 
                         // Write the ticks
                         var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
@@ -87,7 +96,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 var symbolDirectoryInfo = new DirectoryInfo(tickDirectory);
                 var symbol = Symbol.Create(symbolDirectoryInfo.Name, SecurityType.Crypto, market);
 
-                foreach (var tickDateFile in Directory.EnumerateFiles(symbolDirectoryInfo.FullName))
+                foreach (var tickDateFile in Directory.EnumerateFiles(symbolDirectoryInfo.FullName, "*.zip"))
                 {
                     // There are both trade and quote files in directory - we only want one type
                     if (!tickDateFile.Contains(tickType.ToLower())) continue;
