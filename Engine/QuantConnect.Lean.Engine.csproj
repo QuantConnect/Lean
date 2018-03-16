@@ -185,7 +185,6 @@
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
-    <Compile Include="DataFeeds\Queues\ApiDataQueueHandler.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
