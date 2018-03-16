@@ -98,23 +98,30 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 foreach (var tickDateFile in Directory.EnumerateFiles(symbolDirectoryInfo.FullName, "*.zip"))
                 {
-                    // There are both trade and quote files in directory - we only want one type
-                    if (!tickDateFile.Contains(tickType.ToLower())) continue;
-
-                    var consolidators = GetDataAggregatorsForTickType(tickType);
-                    var reader = GetLeanDataTickReader(symbol, tickType, tickDateFile);
-
-                    foreach (var tickBar in reader.Parse().Select(x => x as Tick))
+                    try
                     {
+                        // There are both trade and quote files in directory - we only want one type
+                        if (!tickDateFile.Contains(tickType.ToLower())) continue;
+
+                        var consolidators = GetDataAggregatorsForTickType(tickType);
+                        var reader = GetLeanDataTickReader(symbol, tickType, tickDateFile);
+
+                        foreach (var tickBar in reader.Parse().Select(x => x as Tick))
+                        {
+                            foreach (var consolidator in consolidators)
+                            {
+                                consolidator.Consolidator.Update(tickBar);
+                            }
+                        }
+
                         foreach (var consolidator in consolidators)
                         {
-                            consolidator.Consolidator.Update(tickBar);
+                            WriteTradeTicksForResolution(symbol, consolidator.Resolution, tickType, consolidator.Flush());
                         }
                     }
-
-                    foreach (var consolidator in consolidators)
+                    catch (Exception e)
                     {
-                        WriteTradeTicksForResolution(symbol, consolidator.Resolution, tickType, consolidator.Flush());
+                        Log.Error($"KaikoDataConverter.AggregateTicksInAllResolutions(): Error processing file {tickDateFile}. Exception {e}");
                     }
                 }
             }
