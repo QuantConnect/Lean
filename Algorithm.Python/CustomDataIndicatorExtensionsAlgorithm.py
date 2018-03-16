@@ -47,21 +47,21 @@ class CustomDataIndicatorExtensionsAlgorithm(QCAlgorithm):
         self.SetEndDate(2018,1,1)  
         self.SetCash(25000)
         
-        vix = 'CBOE/VIX'
-        vxv = 'CBOE/VXV'
+        self.vix = 'CBOE/VIX'
+        self.vxv = 'CBOE/VXV'
         
         # Define the symbol and "type" of our generic data
-        self.AddData(QuandlVix, vix, Resolution.Daily)
-        self.AddData[Quandl](vxv, Resolution.Daily)
+        self.AddData(QuandlVix, self.vix, Resolution.Daily)
+        self.AddData[Quandl](self.vxv, Resolution.Daily)
         
         # Set up default Indicators, these are just 'identities' of the closing price
-        self.vix_sma = self.SMA(vix, 1, Resolution.Daily)
-        self.vxv_sma = self.SMA(vxv, 1, Resolution.Daily)
+        self.vix_sma = self.SMA(self.vix, 1, Resolution.Daily)
+        self.vxv_sma = self.SMA(self.vxv, 1, Resolution.Daily)
         
         # This will create a new indicator whose value is smaVXV / smaVIX
         self.ratio = IndicatorExtensions.Over(self.vxv_sma, self.vix_sma)
         
-        # Plot our indicators each time they update using th PlotIndicator function
+        # Plot indicators each time they update using the PlotIndicator function
         self.PlotIndicator("Ratio", self.ratio)
         self.PlotIndicator("Data", self.vix_sma, self.vxv_sma)
     
@@ -71,7 +71,7 @@ class CustomDataIndicatorExtensionsAlgorithm(QCAlgorithm):
         # Wait for all indicators to fully initialize
         if not (self.vix_sma.IsReady and self.vxv_sma.IsReady and self.ratio.IsReady): return
         if not self.Portfolio.Invested and self.ratio.Current.Value > 1:
-            self.MarketOrder('CBOE/VIX', 100)
+            self.MarketOrder(self.vix, 100)
         elif self.ratio.Current.Value < 1:
                 self.Liquidate()
 

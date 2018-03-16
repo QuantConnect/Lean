@@ -34,11 +34,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="charting" />
     public class CustomDataIndicatorExtensionsAlgorithm : QCAlgorithm
     {
-        private const string VIX = "CBOE/VIX";
-        private const string VXV = "CBOE/VXV";
-        private SimpleMovingAverage smaVIX;
-        private SimpleMovingAverage smaVXV;
-        private IndicatorBase<IndicatorDataPoint> ratio;
+        private const string _vix = "CBOE/VIX";
+        private const string _vxv = "CBOE/VXV";
+        private SimpleMovingAverage _smaVIX;
+        private SimpleMovingAverage _smaVXV;
+        private IndicatorBase<IndicatorDataPoint> _ratio;
 
         /// <summary>
         /// Initialize the data and resolution you require for your strategy
@@ -50,13 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(25000);
 
             // Define the symbol and "type" of our generic data
-            AddData<QuandlVix>(VIX, Resolution.Daily);
-            AddData<Quandl>(VXV, Resolution.Daily);
+            AddData<QuandlVix>(_vix, Resolution.Daily);
+            AddData<Quandl>(_vxv, Resolution.Daily);
             // Set up default Indicators, these are just 'identities' of the closing price
-            smaVIX = SMA(VIX, 1);
-            smaVXV = SMA(VXV, 1);
+            _smaVIX = SMA(_vix, 1);
+            _smaVXV = SMA(_vxv, 1);
             // This will create a new indicator whose value is smaVXV / smaVIX
-            ratio = smaVXV.Over(smaVIX);
+            _ratio = _smaVXV.Over(_smaVIX);
         }
 
         /// <summary>
@@ -66,19 +66,19 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Quandl data)
         {
             // Wait for all indicators to fully initialize
-            if (smaVIX.IsReady && smaVXV.IsReady && ratio.IsReady)
+            if (_smaVIX.IsReady && _smaVXV.IsReady && _ratio.IsReady)
             {
-                if (!Portfolio.Invested && ratio > 1)
+                if (!Portfolio.Invested && _ratio > 1)
                 {
-                    MarketOrder(VIX, 100);
+                    MarketOrder(_vix, 100);
                 }
-                else if (ratio < 1)
+                else if (_ratio < 1)
                 {
                     Liquidate();
                 }
-                // plot our indicators 
-                Plot("SMA", smaVIX, smaVXV);
-                Plot("Ratio", ratio);
+                // plot all indicators
+                PlotIndicator("SMA", _smaVIX, _smaVXV);
+                PlotIndicator("Ratio", _ratio);
             }
         }
     }
