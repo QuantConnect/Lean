@@ -183,6 +183,7 @@
     <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.cs" />
     <Compile Include="OptionChainProviderAlgorithm.cs" />
     <Compile Include="ConstituentsQC500GeneratorAlgorithm.cs" />
+    <Compile Include="CustomDataIndicatorExtensionsAlgorithm.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">
