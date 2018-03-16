@@ -14,16 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
-using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
 using RestSharp;
 using RestSharp.Extensions;
 using QuantConnect.Util;
@@ -35,7 +30,6 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi
     {
-        private ApiWebSocketConnection _socketConnection;
         private string _dataFolder;
 
         /// <summary>
@@ -49,7 +43,6 @@ namespace QuantConnect.Api
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             ApiConnection = new ApiConnection(userId, token);
-            _socketConnection = new ApiWebSocketConnection(userId, token);
             _dataFolder = dataFolder;
 
             //Allow proper decoding of orders from the API.
@@ -660,33 +653,6 @@ namespace QuantConnect.Api
         public virtual void SendUserEmail(string algorithmId, string subject, string body)
         {
             //
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void LiveSubscribe(IEnumerable<Symbol> symbols)
-        {
-            _socketConnection.Subscribe(symbols);
-        }
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void LiveUnsubscribe(IEnumerable<Symbol> symbols)
-        {
-            _socketConnection.Unsubscribe(symbols);
-        }
-
-        /// <summary>
-        /// Get next ticks if they have arrived from the server.
-        /// </summary>
-        /// <returns>Array of <see cref="BaseData"/></returns>
-        public IEnumerable<BaseData> GetLiveData()
-        {
-            return _socketConnection.GetLiveData();
         }
 
         /// <summary>

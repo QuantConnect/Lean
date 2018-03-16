@@ -15,13 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
 using QuantConnect.API;
-using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
@@ -287,21 +283,5 @@ namespace QuantConnect.Interfaces
         /// <param name="subject">The email subject</param>
         /// <param name="body">The email message body</param>
         void SendUserEmail(string algorithmId, string subject, string body);
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void LiveSubscribe(IEnumerable<Symbol> symbols);
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void LiveUnsubscribe(IEnumerable<Symbol> symbols);
-        /// <summary>
-        /// Get next ticks if they have arrived from the server.
-        /// </summary>
-        /// <returns>Array of <see cref="BaseData"/></returns>
-        IEnumerable<BaseData> GetLiveData();
     }
 }
