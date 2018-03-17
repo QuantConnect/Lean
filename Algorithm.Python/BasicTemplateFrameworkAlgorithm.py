@@ -26,6 +26,7 @@ from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Alphas import *
+from datetime import timedelta
 import numpy as np
 
 ### <summary>
@@ -55,13 +56,11 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithmFramework):
 
         # set algorithm framework models
         self.PortfolioSelection = ManualPortfolioSelectionModel(symbols)
-        self.Alpha = ConstantAlphaModel(AlphaType.Price, AlphaDirection.Up, TimeSpan.FromMinutes(20), 0.025, None)
+        self.Alpha = ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None)
         self.PortfolioConstruction = SimplePortfolioConstructionModel()
+        self.Execution = ImmediateExecutionModel()
+        self.RiskManagement = NullRiskManagementModel()
 
-        # these are the default values for Execution and RiskManagement models
-        #self.Execution = ImmediateExecutionModel()
-        #self.RiskManagement = NullRiskManagementModel()
-        
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
     def OnOrderEvent(self, orderEvent):
