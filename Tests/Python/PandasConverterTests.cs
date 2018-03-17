@@ -289,21 +289,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void HandlesCustomDataBars()
+        [TestCase(typeof(Quandl), "yyyy-MM-dd")]
+        [TestCase(typeof(FxcmVolume), "yyyyMMdd HH:mm")]
+        public void HandlesCustomDataBars(Type type, string format)
         {
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
             var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
-            var quandl = new Quandl();
-            quandl.Reader(config, "date,open,high,low,close,settle", DateTime.UtcNow, false);
+            var custom = Activator.CreateInstance(type) as BaseData;
+            if (type == typeof(Quandl)) custom.Reader(config, "date,open,high,low,close,transactions", DateTime.UtcNow, false);
 
             var rawBars = Enumerable
                 .Range(0, 10)
                 .Select(i =>
                 {
-                    var line = $"{DateTime.UtcNow.AddDays(i).ToString("yyyy-MM-dd")},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
-                    return quandl.Reader(config, line, DateTime.UtcNow.AddDays(i), false);
+                    var line = $"{DateTime.UtcNow.AddDays(i).ToString(format)},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
+                    return custom.Reader(config, line, DateTime.UtcNow.AddDays(i), false);
                 })
                 .ToArray();
 
@@ -325,8 +327,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var index = subDataFrame.index[i];
                     var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
                     Assert.AreEqual(rawBars[i].Value, value);
-                    var settle = subDataFrame.loc[index].settle.AsManagedObject(typeof(decimal));
-                    Assert.AreEqual(((DynamicData)rawBars[i]).GetProperty("settle"), settle);
+                    var transactions = subDataFrame.loc[index].transactions.AsManagedObject(typeof(decimal));
+                    var expected = (rawBars[i] as DynamicData)?.GetProperty("transactions");
+                    expected = expected ?? type.GetProperty("Transactions")?.GetValue(rawBars[i]);
+                    Assert.AreEqual(expected, transactions);
                 }
             }
 
@@ -349,8 +353,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var index = subDataFrame.index[i];
                     var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
                     Assert.AreEqual(rawBars[i].Value, value);
-                    var settle = subDataFrame.loc[index].settle.AsManagedObject(typeof(decimal));
-                    Assert.AreEqual(((DynamicData)rawBars[i]).GetProperty("settle"), settle);
+                    var transactions = subDataFrame.loc[index].transactions.AsManagedObject(typeof(decimal));
+                    var expected = (rawBars[i] as DynamicData)?.GetProperty("transactions");
+                    expected = expected ?? type.GetProperty("Transactions")?.GetValue(rawBars[i]);
+                    Assert.AreEqual(expected, transactions);
                 }
             }
         }
