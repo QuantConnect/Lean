@@ -95,18 +95,18 @@ namespace QuantConnect.Securities
         /// </summary>
         public void AddData(BaseData data)
         {
-            // Only cache no fill-forward data.
-            if (data.IsFillForward) return;
-
             var openInterest = data as OpenInterest;
             if (openInterest != null)
             {
                 OpenInterest = (long)openInterest.Value;
                 return;
             }
+
+            // Only cache no fill-forward data.
+            if (data.IsFillForward) return;
             
             // If the _dataByType dictionary is not populated or it only has one MarketDataType, just use the last value.
-            if (_dataByType.Keys.Count <= 1)
+            if (_lastData == null)
             {
                 _lastData = data;
                 _dataByType[data.GetType()] = data;
