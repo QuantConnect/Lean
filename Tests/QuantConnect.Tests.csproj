@@ -338,6 +338,7 @@
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Jupyter\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
     <Compile Include="Python\AlgorithmPythonWrapperTests.cs" />
     <Compile Include="Python\MethodOverloadTests.cs" />
@@ -411,6 +412,12 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Jupyter\RegressionScripts\custom_data.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Jupyter\RegressionScripts\Test_QuantBookHistory.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
     <Content Include="RegressionAlgorithms\Test_AlgorithmPythonWrapper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -549,6 +556,10 @@
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Jupyter\QuantConnect.Jupyter.csproj">
+      <Project>{9561d14a-467e-40ad-928e-ee9f758d7d98}</Project>
+      <Name>QuantConnect.Jupyter</Name>
     </ProjectReference>
     <ProjectReference Include="..\Launcher\QuantConnect.Lean.Launcher.csproj">
       <Project>{09e7b916-e58b-4021-bd8b-c10b4446e226}</Project>

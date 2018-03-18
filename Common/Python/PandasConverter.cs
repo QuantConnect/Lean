@@ -15,7 +15,6 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
@@ -28,29 +27,19 @@ namespace QuantConnect.Python
     /// </summary>
     public class PandasConverter
     {
-        dynamic _pandas;
+        private static dynamic _pandas;
 
         /// <summary>
         /// Creates an instance of <see cref="PandasConverter"/>.
         /// </summary>
-        /// <param name="pandas"></param>
-        public PandasConverter(PyObject pandas = null)
+        public PandasConverter()
         {
-            try
+            if (_pandas == null)
             {
-                if (pandas == null)
+                using (Py.GIL())
                 {
-                    using (Py.GIL())
-                    {
-                        pandas = Py.Import("pandas");
-                    }
+                    _pandas = Py.Import("pandas");
                 }
-
-                _pandas = pandas;
-            }
-            catch (PythonException pythonException)
-            {
-                Logging.Log.Error($"PandasConverter: Failed to import pandas module: {pythonException}");
             }
         }
 
@@ -68,15 +57,25 @@ namespace QuantConnect.Python
             {
                 foreach (var key in slice.Keys)
                 {
+                    var baseData = slice[key];
+
                     PandasData value;
                     if (!sliceDataDict.TryGetValue(key, out value))
                     {
-                        sliceDataDict.Add(key, value = new PandasData(slice[key]));
+                        sliceDataDict.Add(key, value = new PandasData(baseData));
                         maxLevels = Math.Max(maxLevels, value.Levels);
+                    }
+
+                    if (value.IsCustomData)
+                    {
+                        value.Add(baseData);
                     }
                     else
                     {
-                        value.Add(slice[key]);
+                        var ticks = slice.Ticks.ContainsKey(key) ? slice.Ticks[key] : null;
+                        var tradeBars = slice.Bars.ContainsKey(key) ? slice.Bars[key] : null;
+                        var quoteBars = slice.QuoteBars.ContainsKey(key) ? slice.QuoteBars[key] : null;
+                        value.Add(ticks, tradeBars, quoteBars);
                     }
                 }
             }
@@ -87,7 +86,7 @@ namespace QuantConnect.Python
                 {
                     return _pandas.DataFrame();
                 }
-                var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(_pandas, maxLevels));
+                var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
                 return _pandas.concat(dataFrames.ToArray());
             }
         }
@@ -107,22 +106,20 @@ namespace QuantConnect.Python
                 {
                     sliceData = new PandasData(datum);
                 }
-                else
-                {
-                    sliceData.Add(datum);
-                }
+
+                sliceData.Add(datum);
             }
 
-            // If sliceData is still null, data is an empty enumerable
-            // returns an empty pandas.DataFrame
-            if (sliceData == null)
+            using (Py.GIL())
             {
-                using (Py.GIL())
+                // If sliceData is still null, data is an empty enumerable
+                // returns an empty pandas.DataFrame
+                if (sliceData == null)
                 {
                     return _pandas.DataFrame();
                 }
+                return sliceData.ToPandasDataFrame();
             }
-            return sliceData.ToPandasDataFrame(_pandas);
         }
 
         /// <summary>
