@@ -25,7 +25,7 @@ namespace QuantConnect.VisualStudioPlugin
     {
         private const string QUANT_CONNECT = "QuantConnect.";
 
-        private string _logSource;
+        private readonly string _logSource;
 
         public Log(Type type)
         {
@@ -35,6 +35,10 @@ namespace QuantConnect.VisualStudioPlugin
         public void Info(string message)
         {
             ActivityLog.LogInformation(_logSource, message);
+        }
+        public void Error(string message)
+        {
+            ActivityLog.LogError(_logSource, message);
         }
     }
 }

@@ -20,26 +20,30 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// A command to perform QuantConnect authentication
     /// </summary>
-    class LogInCommand
+    class AuthenticationCommand
     {
-        private static readonly Log _log = new Log(typeof(LogInCommand));
+        /// <summary>
+        /// Log instance used to log into VisualStudio ActivityLog
+        /// </summary>
+        private static readonly Log _log = new Log(typeof(AuthenticationCommand));
 
-        private CredentialsManager _credentialsManager = new CredentialsManager();
+        private readonly CredentialsManager _credentialsManager = new CredentialsManager();
 
         /// <summary>
         /// Perform QuantConnect authentication
         /// </summary>
         /// <param name="serviceProvider">Visual Studio services provider</param>
+        /// <param name="dataFolderPath">Data folder path to use</param>
         /// <param name="explicitLogin">User explicitly clicked Log In button</param>
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
-        public bool DoLogIn(IServiceProvider serviceProvider, string dataFolderPath, bool explicitLogin)
+        public bool Login(IServiceProvider serviceProvider, string dataFolderPath, bool explicitLogin)
         {
             _log.Info("Logging in");
 
             if (!PathUtils.DataFolderPathValid(dataFolderPath))
             {
                 VsUtils.ShowMessageBox(serviceProvider, "Incorrect data folder", 
-                    $"Incorrect data folder path: {dataFolderPath}\nGo to Tools -> Settings -> QuantConnect to set it");
+                    $"Incorrect data folder path: {dataFolderPath}\nGo to 'Tools' -> 'Options' -> 'QuantConnect' to set it");
                 return false;
             }
 
@@ -57,12 +61,12 @@ namespace QuantConnect.VisualStudioPlugin
                 return true;
             }
 
-            return LogInWithDialog(serviceProvider, previousCredentials, dataFolderPath);
+            return LoginWithDialog(serviceProvider, previousCredentials, dataFolderPath);
         }
 
-        private bool LogInWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials, string dataFolderPath)
+        private bool LoginWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials, string dataFolderPath)
         {
-            var logInDialog = new LogInDialog(AuthorizationManager.GetInstance(), previousCredentials, dataFolderPath);
+            var logInDialog = new LoginDialog(AuthorizationManager.GetInstance(), previousCredentials, dataFolderPath);
             VsUtils.DisplayDialogWindow(logInDialog);
 
             var credentials = logInDialog.GetCredentials();
@@ -72,12 +76,12 @@ namespace QuantConnect.VisualStudioPlugin
                 _log.Info("Logged in successfully");
                 _log.Info("Storring credentials");
                 _credentialsManager.StoreCredentials(credentials.Value);
-                VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect");
+                VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect. Using data folder: " + dataFolderPath);
                 return true;
             }
             else
             {
-                _log.Info("Log in cancelled");
+                _log.Info("Login cancelled");
                 return false;
             }
         }
@@ -90,17 +94,16 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             var credentials = previousCredentials.Value;
-            return AuthorizationManager.GetInstance().LogIn(credentials, dataFolderPath);
+            return AuthorizationManager.GetInstance().Login(credentials, dataFolderPath);
         }
 
         /// <summary>
         /// Log out QuantConnect API
         /// </summary>
         /// <param name="serviceProvider">Visual Studio service provider</param>
-        public void DoLogOut(IServiceProvider serviceProvider)
+        public void Logout(IServiceProvider serviceProvider)
         {
-            _credentialsManager.ForgetCredentials();
-            AuthorizationManager.GetInstance().LogOut();
+            AuthorizationManager.GetInstance().Logout();
             VsUtils.DisplayInStatusBar(serviceProvider, "Logged out of QuantConnect");
         }
     }

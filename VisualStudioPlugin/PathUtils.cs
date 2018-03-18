@@ -59,8 +59,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>True if this is a valid data folder path, false otherwise</returns>
         public static bool DataFolderPathValid(string dataFolderPath)
         {
-            var databasePath = Path.Combine(dataFolderPath, "market-hours", "market-hours-database.json");
-            return File.Exists(databasePath);
+            return Directory.Exists(dataFolderPath);
         }
     }
 }

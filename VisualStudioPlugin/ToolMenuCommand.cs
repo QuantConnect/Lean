@@ -16,8 +16,6 @@
 using System;
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using EnvDTE80;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -27,24 +25,39 @@ namespace QuantConnect.VisualStudioPlugin
     internal sealed class ToolMenuCommand
     {
         /// <summary>
-        /// Command IDs for buttons in the "Tools" section
+        /// Command IDs for 'Login' in the "Tools" menu
         /// </summary>
-        public const int LogInCommandId = 256;
+        private const int _loginCommandId = 256;
 
-        public const int LogOutCommandId = 512;
+        /// <summary>
+        /// Command IDs for 'Logout' in the "Tools" menu
+        /// </summary>
+        private const int _logoutCommandId = 512;
 
         /// <summary>
         /// Command menu group (command set GUID).
         /// </summary>
-        public static readonly Guid CommandSet = new Guid("fefaf282-a478-45f4-b89a-a8f15dd8aaff");
+        private static readonly Guid _commandSet = new Guid("fefaf282-a478-45f4-b89a-a8f15dd8aaff");
 
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly QuantConnectPackage _package;
 
-        private LogInCommand _logInCommand;
-        private DTE2 _dte2;
+        /// <summary>
+        /// A command to perform QuantConnect authentication.
+        /// </summary>
+        private readonly AuthenticationCommand _authenticationCommand;
+
+        /// <summary>
+        /// Gets the instance of the command.
+        /// </summary>
+        private static ToolMenuCommand _instance;
+
+        /// <summary>
+        /// Gets the service provider from the owner package.
+        /// </summary>
+        private IServiceProvider _serviceProvider => _package;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolMenuCommand"/> class.
@@ -55,63 +68,41 @@ namespace QuantConnect.VisualStudioPlugin
         {
             if (package == null)
             {
-                throw new ArgumentNullException("package");
+                throw new ArgumentNullException(nameof(package));
             }
 
             _package = package as QuantConnectPackage;
-            _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
-            _logInCommand = new LogInCommand();
+            _authenticationCommand = new AuthenticationCommand();
 
-            var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var commandService = _serviceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                RegisterLogInCommand(commandService);
-                RegisterLogOutCommand(commandService);
+                RegisterLoginCommand(commandService);
+                RegisterLogoutCommand(commandService);
             }
         }
 
-        private void RegisterLogInCommand(OleMenuCommandService commandService)
+        private void RegisterLoginCommand(OleMenuCommandService commandService)
         {
-            var menuCommandID = new CommandID(CommandSet, LogInCommandId);
-            var logInMenuItem = new OleMenuCommand(this.LogInCallback, menuCommandID);
-            logInMenuItem.BeforeQueryStatus += (sender, evt) =>
+            var menuCommandId = new CommandID(_commandSet, _loginCommandId);
+            var loginMenuItem = new OleMenuCommand(LoginCallback, menuCommandId);
+            loginMenuItem.BeforeQueryStatus += (sender, evt) =>
             {
-                logInMenuItem.Enabled = !AuthorizationManager.GetInstance().IsLoggedIn();
+                loginMenuItem.Enabled = !AuthorizationManager.GetInstance().IsLoggedIn();
             };
 
-            commandService.AddCommand(logInMenuItem);
+            commandService.AddCommand(loginMenuItem);
         }
 
-        private void RegisterLogOutCommand(OleMenuCommandService commandService)
+        private void RegisterLogoutCommand(OleMenuCommandService commandService)
         {
-            var menuCommandID = new CommandID(CommandSet, LogOutCommandId);
-            var logOutMenuItem = new OleMenuCommand(this.LogOutCallback, menuCommandID);
-            logOutMenuItem.BeforeQueryStatus += (sender, evt) =>
+            var menuCommandId = new CommandID(_commandSet, _logoutCommandId);
+            var logoutMenuItem = new OleMenuCommand(LogoutCallback, menuCommandId);
+            logoutMenuItem.BeforeQueryStatus += (sender, evt) =>
             {
-                logOutMenuItem.Enabled = AuthorizationManager.GetInstance().IsLoggedIn();
+                logoutMenuItem.Enabled = AuthorizationManager.GetInstance().IsLoggedIn();
             };
-            commandService.AddCommand(logOutMenuItem);
-        }
-
-
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static ToolMenuCommand Instance
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IServiceProvider ServiceProvider
-        {
-            get
-            {
-                return _package;
-            }
+            commandService.AddCommand(logoutMenuItem);
         }
 
         /// <summary>
@@ -120,25 +111,27 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="package">Owner package, not null.</param>
         public static void Initialize(Package package)
         {
-            Instance = new ToolMenuCommand(package);
+            _instance = new ToolMenuCommand(package);
         }
 
         /// <summary>
-        /// This function is the callback used to execute the command when the menu item is clicked.
-        /// See the constructor to see how the menu item is associated with this function using
-        /// OleMenuCommandService service and MenuCommand class.
+        /// This function is the callback used to execute the command when the menu item Login is clicked.
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void LogInCallback(object sender, EventArgs e)
+        private void LoginCallback(object sender, EventArgs e)
         {
-            _logInCommand.DoLogIn(this.ServiceProvider, _package.DataPath, explicitLogin: true);
+            _authenticationCommand.Login(_serviceProvider, _package.DataPath, true);
         }
 
-        private void LogOutCallback(object sender, EventArgs e)
+        /// <summary>
+        /// This function is the callback used to execute the command when the menu item Logout is clicked.
+        /// </summary>
+        /// <param name="sender">Event sender.</param>
+        /// <param name="e">Event args.</param>
+        private void LogoutCallback(object sender, EventArgs e)
         {
-            _logInCommand.DoLogOut(this.ServiceProvider);
+            _authenticationCommand.Logout(_serviceProvider);
         }
-
     }
 }

@@ -78,8 +78,8 @@
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
     <Compile Include="Log.cs" />
-    <Compile Include="LogInCommand.cs" />
-    <Compile Include="LogInDialog.xaml.cs" />
+    <Compile Include="AuthenticationCommand.cs" />
+    <Compile Include="LoginDialog.xaml.cs" />
     <Compile Include="PathUtils.cs" />
     <Compile Include="ProjectFinder.cs" />
     <Compile Include="ProjectNameDialog.xaml.cs" />
@@ -106,7 +106,7 @@
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <Page Include="LogInDialog.xaml">
+    <Page Include="LoginDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

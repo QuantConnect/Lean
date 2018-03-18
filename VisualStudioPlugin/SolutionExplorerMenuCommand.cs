@@ -35,24 +35,24 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Command IDs for Solution Explorer menu buttons
         /// </summary>
-        public const int SendForBacktestingCommandId = 0x0100;
-        public const int SaveToQuantConnectCommandId = 0x0110;
+        private const int _sendForBacktestingCommandId = 0x0100;
+        private const int _saveToQuantConnectCommandId = 0x0110;
 
         /// <summary>
         /// Command menu group (command set GUID).
         /// </summary>
-        public static readonly Guid CommandSet = new Guid("00ce2ccb-74c7-42f4-bf63-52c573fc1532");
+        private static readonly Guid _commandSet = new Guid("00ce2ccb-74c7-42f4-bf63-52c573fc1532");
 
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly QuantConnectPackage _package;
 
-        private DTE2 _dte2;
+        private readonly DTE2 _dte2;
 
         private ProjectFinder _projectFinder;
 
-        private LogInCommand _logInCommand;
+        private readonly AuthenticationCommand _authenticationCommand;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
@@ -63,14 +63,14 @@ namespace QuantConnect.VisualStudioPlugin
         {
             if (package == null)
             {
-                throw new ArgumentNullException("package");
+                throw new ArgumentNullException(nameof(package));
             }
 
             _package = package as QuantConnectPackage;
-            _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
-            _logInCommand = CreateLogInCommand();
+            _dte2 = _serviceProvider.GetService(typeof(SDTE)) as DTE2;
+            _authenticationCommand = CreateLogInCommand();
 
-            var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var commandService = _serviceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
                 RegisterSendForBacktesting(commandService);
@@ -84,22 +84,22 @@ namespace QuantConnect.VisualStudioPlugin
             return new ProjectFinder(PathUtils.GetSolutionFolder(_dte2));
         }
 
-        private LogInCommand CreateLogInCommand()
+        private AuthenticationCommand CreateLogInCommand()
         {
-            return new LogInCommand();
+            return new AuthenticationCommand();
         }
 
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
         {
-            var menuCommandID = new CommandID(CommandSet, SendForBacktestingCommandId);
-            var oleMenuItem = new OleMenuCommand(new EventHandler(SendForBacktestingCallback), menuCommandID);
+            var menuCommandId = new CommandID(_commandSet, _sendForBacktestingCommandId);
+            var oleMenuItem = new OleMenuCommand(SendForBacktestingCallback, menuCommandId);
             commandService.AddCommand(oleMenuItem);
         }
 
         private void RegisterSaveToQuantConnect(OleMenuCommandService commandService)
         {
-            var menuCommandID = new CommandID(CommandSet, SaveToQuantConnectCommandId);
-            var oleMenuItem = new OleMenuCommand(new EventHandler(SaveToQuantConnectCallback), menuCommandID);
+            var menuCommandId = new CommandID(_commandSet, _saveToQuantConnectCommandId);
+            var oleMenuItem = new OleMenuCommand(SaveToQuantConnectCallback, menuCommandId);
             commandService.AddCommand(oleMenuItem);
         }
 
@@ -115,25 +115,10 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
-        private IServiceProvider ServiceProvider
-        {
-            get
-            {
-                return _package;
-            }
-        }
+        private IServiceProvider _serviceProvider => _package;
 
-        // Lazily create ProjectFinder only when we have an opened solution
-        private ProjectFinder ProjectFinder
-        {
-            get {
-                if (_projectFinder == null)
-                {
-                    _projectFinder = CreateProjectFinder();
-                }
-                return _projectFinder;
-            }
-        }
+        // Lazily create _projectFinder only when we have an opened solution
+        private ProjectFinder _lazyProjectFinder => _projectFinder ?? (_projectFinder = CreateProjectFinder());
 
         /// <summary>
         /// Initializes the singleton instance of the command.
@@ -148,31 +133,29 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var fileNames = files.Select(f => f.FileName).ToList();
-
-                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Uploading files to server ...");
                 UploadFilesToServer(selectedProjectId, files);
 
-                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compiling project ...");
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Compiling project ...");
                 var compileStatus = CompileProjectOnServer(selectedProjectId);
                 if (compileStatus.State == Api.CompileState.BuildError)
                 {
-                    VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compile error.");
-                    VsUtils.ShowMessageBox(this.ServiceProvider, "Compile Error", "Error when compiling project.");
+                    VsUtils.DisplayInStatusBar(_serviceProvider, "Compile error.");
+                    VsUtils.ShowMessageBox(_serviceProvider, "Compile Error", "Error when compiling project.");
                     return;
                 }
 
-                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtesting project ...");
-                Api.Backtest backtest = BacktestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project ...");
+                BacktestProjectOnServer(selectedProjectId, compileStatus.CompileId);
                 // Errors are not being transfered in response, so client can't tell if the backtest failed or not.
                 // This response error handling code will not work but should.
                 /* if (backtest.Errors.Count != 0) {
-                    VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtest error.");
+                    VsUtils.DisplayInStatusBar(_serviceProvider, "Backtest error.");
                     showMessageBox("Backtest Error", "Error when backtesting project.");
                     return;
                 }*/
 
-                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtest complete.");
+                VsUtils.DisplayInStatusBar(this._serviceProvider, "Backtest complete.");
                 var projectUrl = string.Format(
                     CultureInfo.CurrentCulture, 
                     "https://www.quantconnect.com/terminal/#open/{0}", 
@@ -186,11 +169,9 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var fileNames = files.Select(f => f.FileName).ToList();
-
-                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Uploading files to server ...");
                 UploadFilesToServer(selectedProjectId, files);
-                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Files upload complete.");
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Files upload complete.");
             });
         }
 
@@ -233,7 +214,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
         {
-            if (_logInCommand.DoLogIn(this.ServiceProvider, _package.DataPath, explicitLogin: false))
+            if (_authenticationCommand.Login(_serviceProvider, _package.DataPath, explicitLogin: false))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;
@@ -241,22 +222,22 @@ namespace QuantConnect.VisualStudioPlugin
 
                 var files = GetSelectedFiles(sender);
                 var fileNames = files.Select(tuple => tuple.FileName).ToList();
-                var suggestedProjectName = ProjectFinder.ProjectNameForFiles(fileNames);
+                var suggestedProjectName = _lazyProjectFinder.ProjectNameForFiles(fileNames);
                 var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
                 VsUtils.DisplayDialogWindow(projectNameDialog);
 
-                if (projectNameDialog.ProjectNameProvided())
+                if (projectNameDialog.ProjectNameProvided)
                 {
-                    var selectedProjectName = projectNameDialog.GetSelectedProjectName();
-                    var selectedProjectId = projectNameDialog.GetSelectedProjectId();
-                    ProjectFinder.AssociateProjectWith(selectedProjectName, fileNames);
+                    var selectedProjectName = projectNameDialog.SelectedProjectName;
+                    var selectedProjectId = projectNameDialog.SelectedProjectId;
+                    _lazyProjectFinder.AssociateProjectWith(selectedProjectName, fileNames);
 
                     if (!selectedProjectId.HasValue)
                     {
                         var newProjectLanguage = PathUtils.DetermineProjectLanguage(files.Select(f => f.FilePath).ToList());
                         if (!newProjectLanguage.HasValue)
                         {
-                            VsUtils.ShowMessageBox(this.ServiceProvider, "Failed to determine project language",
+                            VsUtils.ShowMessageBox(_serviceProvider, "Failed to determine project language",
                                 $"Failed to determine programming laguage for a project");
                             return;
                         }
@@ -264,7 +245,7 @@ namespace QuantConnect.VisualStudioPlugin
                         selectedProjectId = CreateQuantConnectProject(selectedProjectName, newProjectLanguage.Value);
                         if (!selectedProjectId.HasValue)
                         {
-                            VsUtils.ShowMessageBox(this.ServiceProvider, "Failed to create a project", $"Failed to create a project {selectedProjectName}");
+                            VsUtils.ShowMessageBox(_serviceProvider, "Failed to create a project", $"Failed to create a project {selectedProjectName}");
                         }
                         onProject.Invoke(selectedProjectId.Value, selectedProjectName, files);
                     }
@@ -289,8 +270,6 @@ namespace QuantConnect.VisualStudioPlugin
 
         private List<SelectedItem> GetSelectedFiles(object sender)
         {
-            var myCommand = sender as OleMenuCommand;
-
             var selectedFiles = new List<SelectedItem>();
             var selectedItems = (object[])_dte2.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (EnvDTE.UIHierarchyItem selectedUIHierarchyItem in selectedItems)

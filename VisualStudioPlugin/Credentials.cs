@@ -20,9 +20,6 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     public struct Credentials
     {
-        private string _userId;
-        private string _accessToken;
-
         /// <summary>
         /// Create Credentials
         /// </summary>
@@ -30,31 +27,18 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="accessToken">Access token</param>
         public Credentials(string userId, string accessToken)
         {
-            _userId = userId;
-            _accessToken = accessToken;
+            UserId = userId;
+            AccessToken = accessToken;
         }
 
         /// <summary>
         /// User id for QuantConnect API
         /// </summary>
-        public string UserId
-        {
-            get
-            {
-                return _userId;
-            }
-        }
+        public string UserId { get; }
 
         /// <summary>
         /// Access token for QuantConnect API
         /// </summary>
-        public string AccessToken
-        {
-            get
-            {
-                return _accessToken;
-            }
-        }
-
+        public string AccessToken { get; }
     }
 }

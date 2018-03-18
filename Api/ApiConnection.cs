@@ -31,7 +31,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Authorized client to use for requests.
         /// </summary>
-        public RestClient Client;
+        private readonly RestClient _client;
 
         // Authorization Credentials
         private readonly string _userId;
@@ -46,7 +46,7 @@ namespace QuantConnect.Api
         {
             _token = token;
             _userId = userId.ToString();
-            Client = new RestClient("https://www.quantconnect.com/api/v2/");
+            _client = new RestClient("https://www.quantconnect.com/api/v2/");
         }
 
         /// <summary>
@@ -58,11 +58,7 @@ namespace QuantConnect.Api
             {
                 var request = new RestRequest("authenticate", Method.GET);
                 AuthenticationResponse response;
-                if (TryRequest(request, out response))
-                {
-                    return response.Success;
-                }
-                return false;
+                return TryRequest(request, out response) && response.Success;
             }
         }
 
@@ -86,10 +82,10 @@ namespace QuantConnect.Api
                 var timestamp = (int)Time.TimeStamp();
                 var hash = Api.CreateSecureHash(timestamp, _token);
                 request.AddHeader("Timestamp", timestamp.ToString());
-                Client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
+                _client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
                 
                 // Execute the authenticated REST API Call
-                var restsharpResponse = Client.Execute(request);
+                var restsharpResponse = _client.Execute(request);
 
                 // Use custom converter for deserializing live results data
                 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
