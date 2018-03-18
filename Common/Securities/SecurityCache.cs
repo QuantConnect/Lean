@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -104,9 +103,9 @@ namespace QuantConnect.Securities
 
             // Only cache no fill-forward data.
             if (data.IsFillForward) return;
-            
+
             // If the _dataByType dictionary is not populated or it only has one MarketDataType, just use the last value.
-            if (_lastData == null)
+            if (_dataByType.Keys.Count <= 1)
             {
                 _lastData = data;
                 _dataByType[data.GetType()] = data;
