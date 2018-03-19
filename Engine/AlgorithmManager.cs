@@ -618,6 +618,9 @@ namespace QuantConnect.Lean.Engine
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
 
+                // poke the algorithm at the end of each time step
+                algorithm.OnEndOfTimeStep();
+
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops

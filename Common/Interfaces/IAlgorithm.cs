@@ -409,6 +409,12 @@ namespace QuantConnect.Interfaces
         void OnFrameworkSecuritiesChanged(SecurityChanges changes);
 
         /// <summary>
+        /// Invoked at the end of every time step. This allows the algorithm
+        /// to process events before advancing to the next time step.
+        /// </summary>
+        void OnEndOfTimeStep();
+
+        /// <summary>
         /// Send debug message
         /// </summary>
         /// <param name="message"></param>
