@@ -304,18 +304,18 @@ namespace QuantConnect.VisualStudioPlugin
 
             return selectedFiles;
         }
-    }
 
-    class SelectedItem
-    {
-        public string FileName
+        private class SelectedItem
         {
-            get; set;
-        }
+            public string FileName
+            {
+                get; set;
+            }
 
-        public string FilePath
-        {
-            get; set;
+            public string FilePath
+            {
+                get; set;
+            }
         }
     }
 }

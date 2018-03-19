@@ -140,31 +140,31 @@ namespace QuantConnect.VisualStudioPlugin
 
             return projectAssociations;
         }
-    }
 
-    /// <summary>
-    /// List of project associations
-    /// </summary>
-    [CollectionDataContract(Name = "ProjectAssociations")]
-    class ProjectAssociations : List<ProjectAssociation>
-    {
-    }
-
-    /// <summary>
-    /// A pair that represent a project and list of files associated with it
-    /// </summary>
-    [DataContract(Name = "ProjectAssociation")]
-    class ProjectAssociation
-    {
-        [DataMember(Name = "ProjectName")]
-        public readonly string ProjectName;
-        [DataMember(Name = "FileNames")]
-        public readonly List<string> FileNames;
-
-        public ProjectAssociation(string projectName, List<string> fileNames)
+        /// <summary>
+        /// List of project associations
+        /// </summary>
+        [CollectionDataContract(Name = "ProjectAssociations")]
+        private class ProjectAssociations : List<ProjectAssociation>
         {
-            ProjectName = projectName;
-            FileNames = fileNames;
+        }
+
+        /// <summary>
+        /// A pair that represent a project and list of files associated with it
+        /// </summary>
+        [DataContract(Name = "ProjectAssociation")]
+        private class ProjectAssociation
+        {
+            [DataMember(Name = "ProjectName")]
+            public readonly string ProjectName;
+            [DataMember(Name = "FileNames")]
+            public readonly List<string> FileNames;
+
+            public ProjectAssociation(string projectName, List<string> fileNames)
+            {
+                ProjectName = projectName;
+                FileNames = fileNames;
+            }
         }
     }
 }
