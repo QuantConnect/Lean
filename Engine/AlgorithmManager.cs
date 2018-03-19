@@ -780,11 +780,20 @@ namespace QuantConnect.Lean.Engine
                             var security = algorithm.Securities[symbol];
                             var data = slice[symbol];
                             var list = new List<BaseData>();
-                            var ticks = data as List<Tick>;
-                            if (ticks != null) list.AddRange(ticks);
-                            else               list.Add(data);
+                            Type dataType;
 
-                            Type dataType = data.GetType();
+                            var ticks = data as List<Tick>;
+                            if (ticks != null)
+                            {
+                                list.AddRange(ticks);
+                                dataType = typeof(Tick);
+                            }
+                            else
+                            {
+                                list.Add(data);
+                                dataType = data.GetType();
+                            }
+
                             var config = security.Subscriptions.FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
                             if (config == null)
                             {
@@ -793,6 +802,7 @@ namespace QuantConnect.Lean.Engine
 
                             paired.Add(new DataFeedPacket(security, config, list));
                         }
+
                         timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None);
                     }
                     catch (Exception err)
