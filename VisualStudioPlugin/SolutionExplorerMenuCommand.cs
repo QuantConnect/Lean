@@ -214,7 +214,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
         {
-            if (_authenticationCommand.Login(_serviceProvider, _package.DataPath, explicitLogin: false))
+            if (_authenticationCommand.Login(_serviceProvider, false))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;

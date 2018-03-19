@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
@@ -61,15 +60,6 @@ namespace QuantConnect.VisualStudioPlugin
             // initialization is the Initialize method.
         }
 
-        public string DataPath
-        {
-            get
-            {
-                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
-                return page.DataPath;
-            }
-        }
-
         #region Package Members
 
         /// <summary>
@@ -92,9 +82,5 @@ namespace QuantConnect.VisualStudioPlugin
     [Guid("92D0E244-D0DA-458C-88FB-9C0827052177")]
     public class OptionPageGrid : DialogPage
     {
-        [Category("QuantConnect")]
-        [DisplayName("Price data path")]
-        [Description("Path to QuantConnect price data")]
-        public string DataPath { get; set; }
     }
 }

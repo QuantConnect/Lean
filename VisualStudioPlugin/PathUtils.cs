@@ -8,10 +8,9 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Collections of util methods to work with directories
     /// </summary>
-    static class PathUtils
+    internal static class PathUtils
     {
-
-        private static Dictionary<string, Language> _extensionsDictionary = new Dictionary<string, Language>();
+        private static readonly Dictionary<string, Language> _extensionsDictionary = new Dictionary<string, Language>();
 
         static PathUtils()
         {
@@ -50,16 +49,6 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Validate if a provided path is a valid data folder path
-        /// </summary>
-        /// <param name="dataFolderPath">Path to a data folder</param>
-        /// <returns>True if this is a valid data folder path, false otherwise</returns>
-        public static bool DataFolderPathValid(string dataFolderPath)
-        {
-            return Directory.Exists(dataFolderPath);
         }
     }
 }

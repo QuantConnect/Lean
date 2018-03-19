@@ -22,7 +22,8 @@
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              mc:Ignorable="d" 
              WindowStartupLocation="CenterScreen"
-        Title="Log in to QuantConnect" Height="238.493" Width="412.196" ResizeMode="NoResize">
+        Title="Log in to QuantConnect" Height="238.493" Width="412.196" ResizeMode="NoResize"
+                         x:ClassModifier="internal">
     <Grid>
         <PasswordBox x:Name="accessTokenBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="21,111,0,0" Height="22" TabIndex="2" KeyDown="InputField_KeyDown"/>
         <TextBox x:Name="userIdBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="21,53,0,0" TabIndex="1" Height="22" KeyDown="InputField_KeyDown"/>

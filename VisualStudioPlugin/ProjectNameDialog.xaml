@@ -22,7 +22,7 @@
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              mc:Ignorable="d" 
              WindowStartupLocation="CenterScreen"
-        Title="Enter Project Name" Height="195.372" Width="372.379" ResizeMode="NoResize">
+        Title="Enter Project Name" Height="195.372" Width="372.379" ResizeMode="NoResize" x:ClassModifier="internal">
     <Grid>
         <ComboBox x:Name="projectNameBox" HorizontalAlignment="Left" Margin="34,54,0,0" VerticalAlignment="Top" Width="286" TabIndex="1" IsEditable="True"/>
         <Label x:Name="projectNameLabel" Content="Project name" HorizontalAlignment="Left" Margin="34,23,0,0" VerticalAlignment="Top"/>

@@ -121,7 +121,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LoginCallback(object sender, EventArgs e)
         {
-            _authenticationCommand.Login(_serviceProvider, _package.DataPath, true);
+            _authenticationCommand.Login(_serviceProvider, true);
         }
 
         /// <summary>

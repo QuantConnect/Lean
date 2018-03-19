@@ -24,11 +24,11 @@ namespace QuantConnect.VisualStudioPlugin
     /// Stores associations between a list of files and a QuantConnect project 
     /// that is associated with them.
     /// </summary>
-    class ProjectFinder
+    internal class ProjectFinder
     {
-        private const string PROJECT_ASSOCIATIONS_FILE = "QuantConnectProjects.xml";
-        private string _projectsFilePath;
-        private IDictionary<HashSet<string>, string> _projectForFiles 
+        private const string _projectAssociationsFile = "QuantConnectProjects.xml";
+        private readonly string _projectsFilePath;
+        private readonly IDictionary<HashSet<string>, string> _projectForFiles
             = new Dictionary<HashSet<string>, string>(HashSet<string>.CreateSetComparer());
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="solutionDirectory">Path to current solution's folder</param>
         public ProjectFinder(string solutionDirectory)
         {
-            _projectsFilePath = Path.Combine(solutionDirectory, PROJECT_ASSOCIATIONS_FILE);
+            _projectsFilePath = Path.Combine(solutionDirectory, _projectAssociationsFile);
             ReadProjectAssociations();
         }
 
@@ -157,30 +157,14 @@ namespace QuantConnect.VisualStudioPlugin
     class ProjectAssociation
     {
         [DataMember(Name = "ProjectName")]
-        private string _projectName;
+        public readonly string ProjectName;
         [DataMember(Name = "FileNames")]
-        private List<string> _fileNames;
+        public readonly List<string> FileNames;
 
         public ProjectAssociation(string projectName, List<string> fileNames)
         {
-            _projectName = projectName;
-            _fileNames = fileNames;
-        }
-
-        public string ProjectName
-        {
-            get
-            {
-                return _projectName;
-            }
-        }
-
-        public List<string> FileNames
-        {
-            get
-            {
-                return _fileNames;
-            }
+            ProjectName = projectName;
+            FileNames = fileNames;
         }
     }
 }

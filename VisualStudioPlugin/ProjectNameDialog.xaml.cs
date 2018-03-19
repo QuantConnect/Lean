@@ -23,7 +23,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// Dialog window to select a project in QuantConnect that will be
     /// used to save selected files to
     /// </summary>
-    public partial class ProjectNameDialog : DialogWindow
+    internal partial class ProjectNameDialog : DialogWindow
     {
         /// <summary>
         /// True if user selected a valid project name

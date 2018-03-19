@@ -22,13 +22,12 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Interaction logic for LoginDialog.xaml
     /// </summary>
-    public partial class LoginDialog : DialogWindow
+    internal partial class LoginDialog : DialogWindow
     {
         private static readonly Log _log = new Log(typeof(LoginDialog));
 
         private readonly AuthorizationManager _authorizationManager;
         private Credentials? _credentials;
-        private readonly string _dataFolder;
 
         private readonly Brush _userIdNormalBrush;
         private readonly Brush _accessTokenNormalBrush;
@@ -38,13 +37,11 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="authorizationManager">Authorization manager</param>
         /// <param name="previousCredentials">User previous credentials</param>
-        /// <param name="dataFolder">Data folder path</param>
-        public LoginDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials, string dataFolder)
+        public LoginDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials)
         {
-            _log.Info($"Created login dialog with data folder: {dataFolder}");
+            _log.Info("Created login dialog");
             InitializeComponent();
             _authorizationManager = authorizationManager;
-            _dataFolder = dataFolder;
 
             DisplayPreviousCredentials(previousCredentials);
             _userIdNormalBrush = userIdBox.BorderBrush;
@@ -68,7 +65,7 @@ namespace QuantConnect.VisualStudioPlugin
             var accessToken = accessTokenBox.Password;
             var credentials = new Credentials(userId, accessToken);
 
-            if (_authorizationManager.Login(credentials, _dataFolder))
+            if (_authorizationManager.Login(credentials))
             {
                 _log.Info("Logged in successfully");
                 _credentials = new Credentials(userId, accessToken);
@@ -102,5 +99,4 @@ namespace QuantConnect.VisualStudioPlugin
             accessTokenBox.BorderBrush = _accessTokenNormalBrush;
         }
     }
-
 }

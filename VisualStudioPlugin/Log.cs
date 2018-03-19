@@ -21,15 +21,15 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Log helper to write messages into VisualStudio ActivityLog
     /// </summary>
-    public class Log
+    internal class Log
     {
-        private const string QUANT_CONNECT = "QuantConnect.";
+        private const string _quantConnect = "QuantConnect.";
 
         private readonly string _logSource;
 
         public Log(Type type)
         {
-            _logSource = QUANT_CONNECT + type.Name;
+            _logSource = _quantConnect + type.Name;
         }
 
         public void Info(string message)
