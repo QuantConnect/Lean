@@ -80,10 +80,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             // IAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
                             _baseAlgorithm = _algorithm.AsManagedObject(type);
 
-                            // write events such that when the base handles an event it
-                            // will also invoke event handlers defined on this instance
-                            _baseAlgorithm.InsightsGenerated += InsightsGenerated;
-
                             // determines whether OnData method was defined or inherits from QCAlgorithm
                             // If it is not, OnData from the base class will not be called
                             var pythonType = (_algorithm as PyObject).GetAttr("OnData").GetPythonType();
@@ -326,7 +322,18 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Event fired when an algorithm generates a insight
         /// </summary>
-        public event AlgorithmEvent<InsightCollection> InsightsGenerated;
+        public event AlgorithmEvent<InsightCollection> InsightsGenerated
+        {
+            add
+            {
+                _baseAlgorithm.InsightsGenerated += value;
+            }
+
+            remove
+            {
+                _baseAlgorithm.InsightsGenerated -= value;
+            }
+        }
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
