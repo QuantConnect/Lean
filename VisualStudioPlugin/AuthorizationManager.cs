@@ -23,11 +23,6 @@ namespace QuantConnect.VisualStudioPlugin
     internal class AuthorizationManager
     {
         /// <summary>
-        /// Log instance used to log into VisualStudio ActivityLog 
-        /// </summary>
-        private static readonly Log _log = new Log(typeof(AuthorizationManager));
-
-        /// <summary>
         /// Authorization manager singleton instance
         /// </summary>
         private static readonly AuthorizationManager _authorizationManager = new AuthorizationManager();
@@ -51,7 +46,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             if (_api == null)
             {
-                _log.Error("Accessing API without logging in first");
+                VSActivityLog.Error("Accessing API without logging in first");
                 throw new InvalidOperationException("Accessing API without logging in first");
             }
             return _api;
@@ -73,7 +68,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if successfully authenticated API, false otherwise</returns>
         public bool Login(Credentials credentials)
         {
-            _log.Info("Authenticating QuantConnect API");
+            VSActivityLog.Info("Authenticating QuantConnect API");
             try
             {
                 var api = new Api.Api();
@@ -86,7 +81,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
             catch (FormatException)
             {
-                _log.Error("User id is not a valid number");
+                VSActivityLog.Error("User id is not a valid number");
             }
             return false;
         }

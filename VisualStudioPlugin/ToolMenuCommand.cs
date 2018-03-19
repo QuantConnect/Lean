@@ -50,7 +50,7 @@ namespace QuantConnect.VisualStudioPlugin
         private readonly AuthenticationCommand _authenticationCommand;
 
         /// <summary>
-        /// Gets the instance of the command.
+        /// Instance of the command.
         /// </summary>
         private static ToolMenuCommand _instance;
 

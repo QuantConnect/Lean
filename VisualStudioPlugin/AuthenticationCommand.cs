@@ -23,11 +23,6 @@ namespace QuantConnect.VisualStudioPlugin
     internal class AuthenticationCommand
     {
         /// <summary>
-        /// Log instance used to log into VisualStudio ActivityLog
-        /// </summary>
-        private static readonly Log _log = new Log(typeof(AuthenticationCommand));
-
-        /// <summary>
         /// Perform QuantConnect authentication
         /// </summary>
         /// <param name="serviceProvider">Visual Studio services provider</param>
@@ -35,19 +30,19 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
         public bool Login(IServiceProvider serviceProvider, bool explicitLogin)
         {
-            _log.Info("Logging in");
+            VSActivityLog.Info("Logging in");
 
             var authorizationManager = AuthorizationManager.GetInstance();
             if (authorizationManager.IsLoggedIn())
             {
-                _log.Info("Already logged in");
+                VSActivityLog.Info("Already logged in");
                 return true;
             }
 
             var previousCredentials = CredentialsManager.GetLastCredential();
             if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials))
             {
-                _log.Info("Logged in with previously storred credentials");
+                VSActivityLog.Info("Logged in with previously storred credentials");
                 return true;
             }
 
@@ -63,15 +58,14 @@ namespace QuantConnect.VisualStudioPlugin
 
             if (credentials.HasValue)
             {
-                _log.Info("Logged in successfully");
-                _log.Info("Storring credentials");
+                VSActivityLog.Info("Logged in successfully. Storring credentials");
                 CredentialsManager.StoreCredentials(credentials.Value);
                 VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect");
                 return true;
             }
             else
             {
-                _log.Info("Login cancelled");
+                VSActivityLog.Info("Login cancelled");
                 return false;
             }
         }

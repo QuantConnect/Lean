@@ -24,8 +24,6 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     internal partial class LoginDialog : DialogWindow
     {
-        private static readonly Log _log = new Log(typeof(LoginDialog));
-
         private readonly AuthorizationManager _authorizationManager;
         private Credentials? _credentials;
 
@@ -39,7 +37,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="previousCredentials">User previous credentials</param>
         public LoginDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials)
         {
-            _log.Info("Created login dialog");
+            VSActivityLog.Info("Created login dialog");
             InitializeComponent();
             _authorizationManager = authorizationManager;
 
@@ -59,7 +57,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void Login_Click(object sender, RoutedEventArgs e)
         {
-            _log.Info("Log in button clicked");
+            VSActivityLog.Info("Log in button clicked");
             logInButton.IsEnabled = false;
             var userId = userIdBox.Text;
             var accessToken = accessTokenBox.Password;
@@ -67,12 +65,13 @@ namespace QuantConnect.VisualStudioPlugin
 
             if (_authorizationManager.Login(credentials))
             {
-                _log.Info("Logged in successfully");
+                VSActivityLog.Info("Logged in successfully");
                 _credentials = new Credentials(userId, accessToken);
                 Close();
             }
             else
             {
+                VSActivityLog.Error("Failed to login");
                 userIdBox.BorderBrush = Brushes.Red;
                 accessTokenBox.BorderBrush = Brushes.Red;
             }

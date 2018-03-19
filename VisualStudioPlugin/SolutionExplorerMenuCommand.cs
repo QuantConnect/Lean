@@ -55,6 +55,28 @@ namespace QuantConnect.VisualStudioPlugin
         private readonly AuthenticationCommand _authenticationCommand;
 
         /// <summary>
+        /// Instance of the solution explorer menu command.
+        /// </summary>
+        public static SolutionExplorerMenuCommand Instance
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the service provider from the owner package.
+        /// </summary>
+        private IServiceProvider _serviceProvider => _package;
+
+        // Lazily create _projectFinder only when we have an opened solution
+        private ProjectFinder _lazyProjectFinder => _projectFinder ?? (_projectFinder = CreateProjectFinder());
+
+        private ProjectFinder CreateProjectFinder()
+        {
+            return new ProjectFinder(PathUtils.GetSolutionFolder(_dte2));
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
@@ -68,7 +90,7 @@ namespace QuantConnect.VisualStudioPlugin
 
             _package = package as QuantConnectPackage;
             _dte2 = _serviceProvider.GetService(typeof(SDTE)) as DTE2;
-            _authenticationCommand = CreateLogInCommand();
+            _authenticationCommand = new AuthenticationCommand();
 
             var commandService = _serviceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -76,17 +98,6 @@ namespace QuantConnect.VisualStudioPlugin
                 RegisterSendForBacktesting(commandService);
                 RegisterSaveToQuantConnect(commandService);
             }
-        }
-
-
-        private ProjectFinder CreateProjectFinder()
-        {
-            return new ProjectFinder(PathUtils.GetSolutionFolder(_dte2));
-        }
-
-        private AuthenticationCommand CreateLogInCommand()
-        {
-            return new AuthenticationCommand();
         }
 
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
@@ -102,23 +113,6 @@ namespace QuantConnect.VisualStudioPlugin
             var oleMenuItem = new OleMenuCommand(SaveToQuantConnectCallback, menuCommandId);
             commandService.AddCommand(oleMenuItem);
         }
-
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static SolutionExplorerMenuCommand Instance
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IServiceProvider _serviceProvider => _package;
-
-        // Lazily create _projectFinder only when we have an opened solution
-        private ProjectFinder _lazyProjectFinder => _projectFinder ?? (_projectFinder = CreateProjectFinder());
 
         /// <summary>
         /// Initializes the singleton instance of the command.
@@ -157,8 +151,8 @@ namespace QuantConnect.VisualStudioPlugin
 
                 VsUtils.DisplayInStatusBar(this._serviceProvider, "Backtest complete.");
                 var projectUrl = string.Format(
-                    CultureInfo.CurrentCulture, 
-                    "https://www.quantconnect.com/terminal/#open/{0}", 
+                    CultureInfo.CurrentCulture,
+                    "https://www.quantconnect.com/terminal/#open/{0}",
                     selectedProjectId
                 );
                 Process.Start(projectUrl);
