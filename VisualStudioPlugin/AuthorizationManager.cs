@@ -64,7 +64,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Authenticate API 
         /// </summary>
-        /// <param name="credentials">User id & access token to authenticate the API</param>
+        /// <param name="credentials">User id and access token to authenticate the API</param>
         /// <returns>true if successfully authenticated API, false otherwise</returns>
         public bool Login(Credentials credentials)
         {

@@ -58,7 +58,7 @@ namespace QuantConnect.VisualStudioPlugin
 
             if (credentials.HasValue)
             {
-                VSActivityLog.Info("Logged in successfully. Storring credentials");
+                VSActivityLog.Info("Logged in successfully. Storing credentials");
                 CredentialsManager.StoreCredentials(credentials.Value);
                 VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect");
                 return true;
