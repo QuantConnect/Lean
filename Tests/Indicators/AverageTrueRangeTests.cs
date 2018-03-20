@@ -26,8 +26,11 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesAgainstExternalData()
         {
-            var atr = new AverageTrueRange(14, MovingAverageType.Simple);
-            TestHelper.TestIndicator(atr, "spy_atr.txt", "Average True Range 14");
+            var atrSimple = new AverageTrueRange(14, MovingAverageType.Simple);
+            TestHelper.TestIndicator(atrSimple, "spy_atr.txt", "Average True Range 14");
+
+            var atrWilders = new AverageTrueRange(14, MovingAverageType.Wilders);
+            TestHelper.TestIndicator(atrWilders, "spy_atr_wilder.txt", "Average True Range 14");
         }
 
         [Test]
