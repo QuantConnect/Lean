@@ -212,7 +212,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 return;
             }
 
-            Log.Trace("DefaultAlphaHandler.Run(): Exiting Thread...");
+            Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
 
             _cancellationTokenSource.Cancel(false);
         }
@@ -232,22 +232,37 @@ namespace QuantConnect.Lean.Engine.Alphas
             // persist generated insights to storage
             if (DateTime.UtcNow > _nextPersistenceUpdate)
             {
-                StoreInsights();
+                try
+                {
+                    StoreInsights();
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "DefaultAlphaHandler.ProcessAsynchronousEvents(): Error storing insights");
+                }
                 _nextPersistenceUpdate = DateTime.UtcNow + PersistenceUpdateInterval;
             }
 
             // push updated insights through messaging handler
             if (DateTime.UtcNow > _nextMessagingUpdate)
             {
-                var list = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
-                if (list.Count > 0)
+                try
                 {
-                    _messages.Enqueue(new AlphaResultPacket
+                    var list = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
+                    if (list.Count > 0)
                     {
-                        AlgorithmId = AlgorithmId,
-                        Insights = list
-                    });
+                        _messages.Enqueue(new AlphaResultPacket
+                        {
+                            AlgorithmId = AlgorithmId,
+                            Insights = list
+                        });
+                    }
                 }
+                catch (Exception err)
+                {
+                    Log.Error(err, "DefaultAlphaHandler.ProcessAsynchronousEvents(): Error enqueueing message of updated contexts");
+                }
+
                 _nextMessagingUpdate = DateTime.UtcNow + MessagingUpdateInterval;
             }
         }
