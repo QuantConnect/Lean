@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -91,6 +92,10 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Add a new market data point to the local security cache for the current market price.
+        /// Rules:
+        ///     Don't cache fill forward data.
+        ///     Always return the last observation.
+        ///     If two consecutive data has the same time stamp and one is Quotebars and the other Tradebar, prioritize the Quotebar.
         /// </summary>
         public void AddData(BaseData data)
         {
@@ -101,25 +106,19 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // Only cache no fill-forward data.
-            if (data.IsFillForward) return;
+            // Always keep track of the last obesrvation
+            _dataByType[data.GetType()] = data;
+            if (_lastData != null)
+            {
+                // Only cache no fill-forward data.
+                if (data.IsFillForward
+                    || _lastData.DataType == MarketDataType.QuoteBar
+                    && data.DataType == MarketDataType.TradeBar
+                    && data.EndTime == _lastData.EndTime)
+                    return;
+            }
+            _lastData = data;
 
-            // If the _dataByType dictionary is not populated or it only has one MarketDataType, just use the last value.
-            if (_dataByType.Keys.Count <= 1)
-            {
-                _lastData = data;
-                _dataByType[data.GetType()] = data;
-            }
-            else
-            {
-                // If there are more then one MarketDataType then update _lastData only if is the latest, prioritizing QuoteBars
-                if (data.Time > _lastData.Time || data.Time == _lastData.Time && data.DataType == MarketDataType.QuoteBar)
-                {
-                    _lastData = data;
-                }
-                _dataByType[data.GetType()] = data;
-            }
-            
 
             var tick = _lastData as Tick;
             if (tick != null)
