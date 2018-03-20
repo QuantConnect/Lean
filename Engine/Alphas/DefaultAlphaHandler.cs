@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -35,16 +34,12 @@ namespace QuantConnect.Lean.Engine.Alphas
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
-        private DateTime _nextMessagingUpdate;
-        private DateTime _nextPersistenceUpdate;
         private DateTime _lastSecurityValuesSnapshotTime;
 
         private bool _isNotFrameworkAlgorithm;
-        private IMessagingHandler _messagingHandler;
         private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
-        private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -77,16 +72,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected IAlgorithm Algorithm { get; private set; }
 
         /// <summary>
-        /// Gets or sets the interval at which the insights are persisted
-        /// </summary>
-        protected TimeSpan PersistenceUpdateInterval { get; set; } = TimeSpan.FromMinutes(1);
-
-        /// <summary>
-        /// Gets or sets the interval at which insight updates are sent to the messaging handler
-        /// </summary>
-        protected TimeSpan MessagingUpdateInterval { get; set; } = TimeSpan.FromSeconds(2);
-
-        /// <summary>
         /// Gets the insight manager instance used to manage the analysis of algorithm insights
         /// </summary>
         protected InsightManager InsightManager { get; private set; }
@@ -103,7 +88,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             // initializing these properties just in case, doens't hurt to have them populated
             Job = job;
             Algorithm = algorithm;
-            _messagingHandler = messagingHandler;
             _isNotFrameworkAlgorithm = !algorithm.IsFrameworkAlgorithm;
             if (_isNotFrameworkAlgorithm)
             {
@@ -188,13 +172,6 @@ namespace QuantConnect.Lean.Engine.Alphas
                 Thread.Sleep(1);
             }
 
-            // send final insight scoring updates before we exit
-            var insights = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
-            _messages.Enqueue(new AlphaResultPacket(AlgorithmId, Job.UserId, insights));
-
-            // finish sending packets
-            _messages.ProcessUntilEmpty(packet => _messagingHandler.Send(packet));
-
             // persist insights at exit
             StoreInsights();
 
@@ -222,49 +199,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         protected void ProcessAsynchronousEvents()
         {
-            // send insight upate messages
-            Packet packet;
-            while (_messages.TryDequeue(out packet))
-            {
-                _messagingHandler.Send(packet);
-            }
-
-            // persist generated insights to storage
-            if (DateTime.UtcNow > _nextPersistenceUpdate)
-            {
-                try
-                {
-                    StoreInsights();
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "DefaultAlphaHandler.ProcessAsynchronousEvents(): Error storing insights");
-                }
-                _nextPersistenceUpdate = DateTime.UtcNow + PersistenceUpdateInterval;
-            }
-
-            // push updated insights through messaging handler
-            if (DateTime.UtcNow > _nextMessagingUpdate)
-            {
-                try
-                {
-                    var list = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
-                    if (list.Count > 0)
-                    {
-                        _messages.Enqueue(new AlphaResultPacket
-                        {
-                            AlgorithmId = AlgorithmId,
-                            Insights = list
-                        });
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "DefaultAlphaHandler.ProcessAsynchronousEvents(): Error enqueueing message of updated contexts");
-                }
-
-                _nextMessagingUpdate = DateTime.UtcNow + MessagingUpdateInterval;
-            }
         }
 
         /// <summary>
