@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Python.Runtime;
@@ -412,6 +413,18 @@ namespace QuantConnect.Tests.Common.Util
                 Assert.IsFalse(canConvert);
                 Assert.IsNull(indicatorBaseTradeBar);
             }
+        }
+
+        [Test]
+        public void BatchByDoesNotDropItems()
+        {
+            var list = new List<int> {1, 2, 3, 4, 5};
+            var by2 = list.BatchBy(2).ToList();
+            Assert.AreEqual(3, by2.Count);
+            Assert.AreEqual(2, by2[0].Count);
+            Assert.AreEqual(2, by2[1].Count);
+            Assert.AreEqual(1, by2[2].Count);
+            CollectionAssert.AreEqual(list, by2.SelectMany(x => x));
         }
 
         private PyObject ConvertToPyObject(object value)
