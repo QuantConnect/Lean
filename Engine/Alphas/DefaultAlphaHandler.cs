@@ -262,8 +262,9 @@ namespace QuantConnect.Lean.Engine.Alphas
             var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
             if (insights.Count > 0)
             {
-                var path = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId, "alpha-results.json");
-                Directory.CreateDirectory(new FileInfo(path).DirectoryName);
+                var directory = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId);
+                var path = Path.Combine(directory, "alpha-results.json");
+                Directory.CreateDirectory(directory);
                 File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
             }
         }
