@@ -408,6 +408,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             => _baseAlgorithm.AddOptionContract(symbol, resolution, fillDataForward, leverage);
 
         /// <summary>
+        /// Invoked at the end of every time step. This allows the algorithm
+        /// to process events before advancing to the next time step.
+        /// </summary>
+        public void OnEndOfTimeStep()
+        {
+            _baseAlgorithm.OnEndOfTimeStep();
+        }
+
+        /// <summary>
         /// Send debug message
         /// </summary>
         /// <param name="message">String message</param>

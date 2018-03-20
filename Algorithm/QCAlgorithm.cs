@@ -532,36 +532,8 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            // add option underlying securities if not present
-            foreach (var option in Securities.Select(x => x.Value).OfType<Option>())
-            {
-                var underlying = option.Symbol.Underlying;
-                Security equity;
-                if (!Securities.TryGetValue(underlying, out equity))
-                {
-                    // if it wasn't manually added, add a subscription for underlying updates
-                    equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
-                }
-                // In the options trading, the strike price, the options settlement and exercise are
-                // all based on the raw price of the underlying asset instead of the adjusted price.
-                // In order to select the accurate contracts, we need to set
-                // the data normalization mode of the underlying asset to be raw
-                else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
-                {
-                    Debug($"Warning: The {underlying.ToString()} equity security was set the raw price normalization mode to work with options.");
-                }
-                equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
-
-                // set the underlying property on the option chain
-                option.Underlying = equity;
-
-                // check for the null volatility model and update it
-                if (equity.VolatilityModel == VolatilityModel.Null)
-                {
-                    const int periods = 30;
-                    equity.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods);
-                }
-            }
+            // perform end of time step checks, such as enforcing underlying securities are in raw data mode
+            OnEndOfTimeStep();
         }
 
         /// <summary>
@@ -1467,11 +1439,11 @@ namespace QuantConnect.Algorithm
 
             // add this security to the user defined universe
             Universe universe;
-            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
+            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != canonicalSymbol))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
                 universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer, LiveMode);
-                UniverseManager.Add(canonicalSymbol, universe);
+                _pendingUniverseAdditions.Add(universe);
             }
 
             return canonicalSecurity;
@@ -1513,11 +1485,11 @@ namespace QuantConnect.Algorithm
 
             // add this security to the user defined universe
             Universe universe;
-            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
+            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != canonicalSymbol))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
                 universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
-                UniverseManager.Add(canonicalSymbol, universe);
+                _pendingUniverseAdditions.Add(universe);
             }
 
             return canonicalSecurity;
@@ -1848,11 +1820,11 @@ namespace QuantConnect.Algorithm
             {
                 // check to see if any universes arn't the ones added via AddSecurity
                 var hasNonAddSecurityUniverses = (
-                    from kvp in UniverseManager
-                    let config = kvp.Value.Configuration
+                    from universe in UniverseManager.Select(kvp => kvp.Value).Union(_pendingUniverseAdditions)
+                    let config = universe.Configuration
                     let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
                     where config.Symbol != symbol
-                    select kvp).Any();
+                    select universe).Any();
 
                 resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
             }

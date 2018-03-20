@@ -27,7 +27,7 @@ namespace QuantConnect.Securities.Future
     /// Futures Security Object Implementation for Futures Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Future : Security
+    public class Future : Security, IDerivativeSecurity
     {
         /// <summary>
         /// The default number of days required to settle a futures sale
@@ -118,7 +118,7 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         public SettlementType SettlementType
         {
-            get; set; 
+            get; set;
         }
 
         /// <summary>

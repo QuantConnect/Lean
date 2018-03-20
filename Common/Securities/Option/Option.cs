@@ -28,7 +28,7 @@ namespace QuantConnect.Securities.Option
     /// Option Security Object Implementation for Option Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Option : Security
+    public class Option : Security, IDerivativeSecurity
     {
         /// <summary>
         /// The default number of days required to settle an equity sale

@@ -379,7 +379,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name + "," + TickType;
+            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name + "," + TickType + "," + DataNormalizationMode;
         }
     }
 }
