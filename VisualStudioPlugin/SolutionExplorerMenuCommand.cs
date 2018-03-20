@@ -140,7 +140,7 @@ namespace QuantConnect.VisualStudioPlugin
                 }
 
                 VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project ...");
-                BacktestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+                Api.Backtest backtest = BacktestProjectOnServer(selectedProjectId, compileStatus.CompileId);
                 // Errors are not being transfered in response, so client can't tell if the backtest failed or not.
                 // This response error handling code will not work but should.
                 /* if (backtest.Errors.Count != 0) {
@@ -149,7 +149,7 @@ namespace QuantConnect.VisualStudioPlugin
                     return;
                 }*/
 
-                VsUtils.DisplayInStatusBar(this._serviceProvider, "Backtest complete.");
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Backtest complete.");
                 var projectUrl = string.Format(
                     CultureInfo.CurrentCulture,
                     "https://www.quantconnect.com/terminal/#open/{0}",

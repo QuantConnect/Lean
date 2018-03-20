@@ -77,7 +77,7 @@
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
-    <Compile Include="Log.cs" />
+    <Compile Include="VSActivityLog.cs" />
     <Compile Include="AuthenticationCommand.cs" />
     <Compile Include="LoginDialog.xaml.cs" />
     <Compile Include="PathUtils.cs" />
@@ -92,7 +92,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Key.snk" />
-    <None Include="packages.QuantConnect.VisualStudio17Plugin.config" />
+    <None Include="packages.QuantConnect.VisualStudio17Plugin.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
