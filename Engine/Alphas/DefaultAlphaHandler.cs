@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -46,7 +45,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentQueue<Packet> _messages = new ConcurrentQueue<Packet>();
-        private readonly ConcurrentQueue<InsightQueueItem> _insightQueue = new ConcurrentQueue<InsightQueueItem>();
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -124,7 +122,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             InsightManager.AddExtension(_charting);
 
             // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
-            algorithm.InsightsGenerated += (algo, collection) => _insightQueue.Enqueue(new InsightQueueItem(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection));
+            algorithm.InsightsGenerated += (algo, collection) => InsightManager.Step(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection);
         }
 
         /// <summary>
@@ -157,7 +155,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
             if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
-                _insightQueue.Enqueue(new InsightQueueItem(Algorithm.UtcTime, CreateSecurityValuesSnapshot()));
+                InsightManager.Step(Algorithm.UtcTime, CreateSecurityValuesSnapshot(), new InsightCollection(Algorithm.UtcTime, Enumerable.Empty<Insight>()));
             }
         }
 
@@ -189,9 +187,6 @@ namespace QuantConnect.Lean.Engine.Alphas
 
                 Thread.Sleep(1);
             }
-
-            // finish insight scoring analysis
-            _insightQueue.ProcessUntilEmpty(item => InsightManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedInsights));
 
             // send final insight scoring updates before we exit
             var insights = InsightManager.GetUpdatedContexts().Select(context => context.Insight).ToList();
@@ -227,13 +222,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         protected void ProcessAsynchronousEvents()
         {
-            // step the insight manager forward in time
-            InsightQueueItem item;
-            while (_insightQueue.TryDequeue(out item))
-            {
-                InsightManager.Step(item.FrontierTimeUtc, item.SecurityValues, item.GeneratedInsights);
-            }
-
             // send insight upate messages
             Packet packet;
             while (_messages.TryDequeue(out packet))
@@ -294,20 +282,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             _lastSecurityValuesSnapshotTime = Algorithm.UtcTime;
             return _securityValuesProvider.GetValues(Algorithm.Securities.Keys);
-        }
-
-        class InsightQueueItem
-        {
-            public DateTime FrontierTimeUtc;
-            public InsightCollection GeneratedInsights;
-            public ReadOnlySecurityValuesCollection SecurityValues;
-
-            public InsightQueueItem(DateTime frontierTimeUtc, ReadOnlySecurityValuesCollection securityValues, InsightCollection generatedInsights = null)
-            {
-                FrontierTimeUtc = frontierTimeUtc;
-                SecurityValues = securityValues;
-                GeneratedInsights = generatedInsights ?? new InsightCollection(frontierTimeUtc, Enumerable.Empty<Insight>());
-            }
         }
     }
 }
