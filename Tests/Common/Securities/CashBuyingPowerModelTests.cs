@@ -484,6 +484,31 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
+        [Test]
+        public void ZeroTargetWithZeroHoldingsIsNotAnError()
+        {
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+
+            var result = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_algorithm.Portfolio, _btcusd, 0);
+
+            Assert.AreEqual(0, result.Quantity);
+            Assert.AreEqual(string.Empty, result.Reason);
+            Assert.AreEqual(false, result.IsError);
+        }
+
+        [Test]
+        public void ZeroTargetWithNonZeroHoldingsReturnsNegativeOfQuantity()
+        {
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _portfolio.CashBook.Add("BTC", 1m, 12000m);
+
+            var result = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_algorithm.Portfolio, _btcusd, 0);
+
+            Assert.AreEqual(-1, result.Quantity);
+            Assert.AreEqual(string.Empty, result.Reason);
+            Assert.AreEqual(false, result.IsError);
+        }
+
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)
         {
             using (var resetEvent = new ManualResetEvent(false))
