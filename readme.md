@@ -2,10 +2,10 @@
 Lean C# Algorithmic Trading Engine
 =========
 
-[![Join the chat at https://www.quantconnect.com/slack](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://www.quantconnect.com/slack) &nbsp;&nbsp;&nbsp;&nbsp;
-[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean)
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
-[Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
+
+[Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
 
 ----------
 
