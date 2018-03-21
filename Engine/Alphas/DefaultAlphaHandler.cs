@@ -15,6 +15,8 @@
 */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -26,6 +28,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Alphas
 {
@@ -72,6 +75,11 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected IAlgorithm Algorithm { get; private set; }
 
         /// <summary>
+        /// Gets the confgured messaging handler for sending packets
+        /// </summary>
+        protected IMessagingHandler MessagingHandler { get; private set; }
+
+        /// <summary>
         /// Gets the insight manager instance used to manage the analysis of algorithm insights
         /// </summary>
         protected InsightManager InsightManager { get; private set; }
@@ -88,16 +96,19 @@ namespace QuantConnect.Lean.Engine.Alphas
             // initializing these properties just in case, doens't hurt to have them populated
             Job = job;
             Algorithm = algorithm;
+            MessagingHandler = messagingHandler;
             _isNotFrameworkAlgorithm = !algorithm.IsFrameworkAlgorithm;
             if (_isNotFrameworkAlgorithm)
             {
                 return;
             }
 
-
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
             InsightManager = CreateInsightManager();
+
+            // send scored insights to messaging handler
+            InsightManager.AddExtension(CreateAlphaResultPacketSender());
 
             var statistics = new StatisticsInsightManagerExtension();
             RuntimeStatistics = statistics.Statistics;
@@ -234,10 +245,115 @@ namespace QuantConnect.Lean.Engine.Alphas
             return new InsightManager(scoreFunctionProvider, 0);
         }
 
+        /// <summary>
+        /// Creates the <see cref="AlphaResultPacketSender"/> to manage sending finalized insights via the messaging handler
+        /// </summary>
+        /// <returns>A new <see cref="CreateAlphaResultPacketSender"/> instance</returns>
+        protected virtual AlphaResultPacketSender CreateAlphaResultPacketSender()
+        {
+            return new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(1), 50);
+        }
+
         private ReadOnlySecurityValuesCollection CreateSecurityValuesSnapshot()
         {
             _lastSecurityValuesSnapshotTime = Algorithm.UtcTime;
             return _securityValuesProvider.GetValues(Algorithm.Securities.Keys);
+        }
+
+        /// <summary>
+        /// Encapsulates routing finalized insights to the messaging handler
+        /// </summary>
+        protected class AlphaResultPacketSender : IInsightManagerExtension, IDisposable
+        {
+            private readonly Timer _timer;
+            private readonly TimeSpan _interval;
+            private readonly int _maximumQueueLength;
+            private readonly AlgorithmNodePacket _job;
+            private readonly ConcurrentQueue<Insight> _insights;
+            private readonly IMessagingHandler _messagingHandler;
+            private readonly int _maximumNumberOfInsightsPerPacket;
+
+            public AlphaResultPacketSender(AlgorithmNodePacket job, IMessagingHandler messagingHandler, TimeSpan interval, int maximumNumberOfInsightsPerPacket)
+            {
+                _job = job;
+                _interval = interval;
+                _messagingHandler = messagingHandler;
+                _insights = new ConcurrentQueue<Insight>();
+                _maximumNumberOfInsightsPerPacket = maximumNumberOfInsightsPerPacket;
+
+                _timer = new Timer(MessagingUpdateIntervalElapsed);
+                _timer.Change(interval, interval);
+
+                // don't bother holding on more than makes sense. this makes the maximum
+                // number of insights we'll hold in the queue equal to one hour's worth of
+                // processing. For 50 insights/message @ 1message/sec this is 90K
+                _maximumQueueLength = (int) (TimeSpan.FromMinutes(30).Ticks / interval.Ticks * maximumNumberOfInsightsPerPacket);
+            }
+
+            private void MessagingUpdateIntervalElapsed(object state)
+            {
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                try
+                {
+
+                    Insight insight;
+                    var insights = new List<Insight>();
+                    while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
+                    {
+                        insights.Add(insight);
+                    }
+
+                    if (insights.Count > 0)
+                    {
+                        _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                }
+
+                _timer.Change(_interval, _interval);
+            }
+
+            /// <summary>
+            /// Enqueue finalized insights to be sent via the messaging handler
+            /// </summary>
+            public void OnInsightAnalysisCompleted(InsightAnalysisContext context)
+            {
+                if (_insights.Count < _maximumQueueLength)
+                {
+                    _insights.Enqueue(context.Insight);
+                }
+            }
+
+            public void Step(DateTime frontierTimeUtc)
+            {
+                //NOP
+            }
+
+            public void InitializeForRange(DateTime algorithmStartDate, DateTime algorithmEndDate, DateTime algorithmUtcTime)
+            {
+                //NOP
+            }
+
+            public void OnInsightGenerated(InsightAnalysisContext context)
+            {
+                //NOP
+            }
+
+            public void OnInsightClosed(InsightAnalysisContext context)
+            {
+                //NOP
+            }
+
+            /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+            /// <filterpriority>2</filterpriority>
+            public void Dispose()
+            {
+                _timer?.DisposeSafely();
+            }
         }
     }
 }
