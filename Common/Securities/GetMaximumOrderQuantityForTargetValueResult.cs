@@ -44,7 +44,7 @@ namespace QuantConnect.Securities
         {
             Quantity = quantity;
             Reason = reason ?? string.Empty;
-            IsError = reason != string.Empty;
+            IsError = Reason != string.Empty;
         }
 
         /// <summary>
