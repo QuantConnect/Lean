@@ -67,6 +67,12 @@ namespace QuantConnect.Packets
         public int RemainingLogAllowance;
 
         /// <summary>
+        /// Maximimum number of insights we'll store and score in a single backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "iBacktestingMaxInsights")]
+        public int BacktestingMaxInsights;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -78,6 +84,7 @@ namespace QuantConnect.Packets
             BacktestLogLimit = 10000;
             DailyLogLimit = 3000000;
             RemainingLogAllowance = 10000;
+            BacktestingMaxInsights = 10000;
         }
 
         /// <summary>

@@ -106,7 +106,13 @@ namespace QuantConnect.Lean.Engine.Alphas
             InsightManager.AddExtension(_charting);
 
             // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
-            algorithm.InsightsGenerated += (algo, collection) => InsightManager.Step(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection);
+            algorithm.InsightsGenerated += (algo, collection) =>
+            {
+                if (RuntimeStatistics.TotalInsightsGenerated < job.Controls.BacktestingMaxInsights)
+                {
+                    InsightManager.Step(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection);
+                }
+            };
         }
 
         /// <summary>
