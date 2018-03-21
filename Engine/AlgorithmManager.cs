@@ -784,20 +784,23 @@ namespace QuantConnect.Lean.Engine
                             var data = slice[symbol];
                             var list = new List<BaseData>();
                             Type dataType;
+                            SubscriptionDataConfig config;
 
                             var ticks = data as List<Tick>;
                             if (ticks != null)
                             {
                                 list.AddRange(ticks);
                                 dataType = typeof(Tick);
+                                config = algorithm.SubscriptionManager.Subscriptions.FirstOrDefault(
+                                    subscription => subscription.Symbol == symbol && dataType.IsAssignableFrom(subscription.Type));
                             }
                             else
                             {
                                 list.Add(data);
                                 dataType = data.GetType();
+                                config = security.Subscriptions.FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
                             }
 
-                            var config = security.Subscriptions.FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
                             if (config == null)
                             {
                                 throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
