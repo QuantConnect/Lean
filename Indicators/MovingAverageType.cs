@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         Exponential,
         /// <summary>
-        /// The standard exponential moving average, using a smoothing factor of 1/n
+        /// An exponential moving average, using a smoothing factor of 1/n and simple moving average as seeding
         /// </summary>
         Wilders,
         /// <summary>

@@ -130,6 +130,7 @@
     <Compile Include="DetrendedPriceOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
+    <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />

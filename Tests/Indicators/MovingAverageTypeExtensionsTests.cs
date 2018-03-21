@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsInstanceOf(typeof(ExponentialMovingAverage), indicator);
 
             indicator = MovingAverageType.Wilders.AsIndicator(1);
-            Assert.IsInstanceOf(typeof(ExponentialMovingAverage), indicator);
+            Assert.IsInstanceOf(typeof(WilderMovingAverage), indicator);
 
             indicator = MovingAverageType.LinearWeightedMovingAverage.AsIndicator(1);
             Assert.IsInstanceOf(typeof(LinearWeightedMovingAverage), indicator);
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsInstanceOf(typeof(ExponentialMovingAverage), indicator);
 
             indicator = MovingAverageType.Wilders.AsIndicator(name, 1);
-            Assert.IsInstanceOf(typeof(ExponentialMovingAverage), indicator);
+            Assert.IsInstanceOf(typeof(WilderMovingAverage), indicator);
 
             indicator = MovingAverageType.LinearWeightedMovingAverage.AsIndicator(name, 1);
             Assert.IsInstanceOf(typeof(LinearWeightedMovingAverage), indicator);
