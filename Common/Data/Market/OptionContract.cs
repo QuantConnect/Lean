@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,10 +14,6 @@
 */
 
 using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Data.Market
@@ -49,50 +45,32 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the strike price
         /// </summary>
-        public decimal Strike
-        {
-            get { return Symbol.ID.StrikePrice; }
-        }
+        public decimal Strike => Symbol.ID.StrikePrice;
 
         /// <summary>
         /// Gets the expiration date
         /// </summary>
-        public DateTime Expiry
-        {
-            get { return Symbol.ID.Date; }
-        }
+        public DateTime Expiry => Symbol.ID.Date;
 
         /// <summary>
         /// Gets the right being purchased (call [right to buy] or put [right to sell])
         /// </summary>
-        public OptionRight Right
-        {
-            get { return Symbol.ID.OptionRight; }
-        }
+        public OptionRight Right => Symbol.ID.OptionRight;
 
         /// <summary>
         /// Gets the theoretical price of this option contract as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal TheoreticalPrice
-        {
-            get { return _optionPriceModelResult.Value.TheoreticalPrice; }
-        }
+        public decimal TheoreticalPrice => _optionPriceModelResult.Value.TheoreticalPrice;
 
         /// <summary>
         /// Gets the implied volatility of the option contract as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal ImpliedVolatility
-        {
-            get { return _optionPriceModelResult.Value.ImpliedVolatility; }
-        }
+        public decimal ImpliedVolatility => _optionPriceModelResult.Value.ImpliedVolatility;
 
         /// <summary>
         /// Gets the greeks for this contract
         /// </summary>
-        public Greeks Greeks
-        {
-            get { return _optionPriceModelResult.Value.Greeks; }
-        }
+        public Greeks Greeks => _optionPriceModelResult.Value.Greeks;
 
         /// <summary>
         /// Gets the local date time this contract's data was last updated
@@ -114,6 +92,14 @@ namespace QuantConnect.Data.Market
         /// Gets the last price this contract traded at
         /// </summary>
         public decimal LastPrice
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets the last volume this contract traded at
+        /// </summary>
+        public long Volume
         {
             get; set;
         }
@@ -184,9 +170,6 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// A string that represents the current object.
         /// </returns>
-        public override string ToString()
-        {
-            return string.Format("{0}{1}{2}{3:00000000}", Symbol.ID.Symbol, Expiry.ToString(DateFormat.EightCharacter), Right.ToString()[0], Strike*1000m);
-        }
+        public override string ToString() => Symbol.Value;
     }
 }
