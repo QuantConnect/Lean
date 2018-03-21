@@ -171,6 +171,7 @@
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
     <Compile Include="Common\Securities\Options\OptionChainProviderTests.cs" />
+    <Compile Include="Common\Securities\SecurityCacheTest.cs" />
     <Compile Include="Common\Securities\SecurityMarginModelTests.cs" />
     <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
