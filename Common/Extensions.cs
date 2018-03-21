@@ -1061,5 +1061,41 @@ namespace QuantConnect
 
             return false;
         }
+
+        /// <summary>
+        /// Performs on-line batching of the specified enumerator, emitting chunks of the requested batch size
+        /// </summary>
+        /// <typeparam name="T">The enumerable item type</typeparam>
+        /// <param name="enumerable">The enumerable to be batched</param>
+        /// <param name="batchSize">The number of items per batch</param>
+        /// <returns>An enumerable of lists</returns>
+        public static IEnumerable<List<T>> BatchBy<T>(this IEnumerable<T> enumerable, int batchSize)
+        {
+            using (var enumerator = enumerable.GetEnumerator())
+            {
+                List<T> list = null;
+                while (enumerator.MoveNext())
+                {
+                    if (list == null)
+                    {
+                        list = new List<T> {enumerator.Current};
+                    }
+                    else if (list.Count < batchSize)
+                    {
+                        list.Add(enumerator.Current);
+                    }
+                    else
+                    {
+                        yield return list;
+                        list = new List<T> {enumerator.Current};
+                    }
+                }
+
+                if (list?.Count > 0)
+                {
+                    yield return list;
+                }
+            }
+        }
     }
 }
