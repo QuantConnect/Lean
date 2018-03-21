@@ -106,13 +106,14 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            // Only cache no fill-forward data.
+            if(data.IsFillForward) return;
+
             // Always keep track of the last obesrvation
             _dataByType[data.GetType()] = data;
             if (_lastData != null)
             {
-                // Only cache no fill-forward data.
-                if (data.IsFillForward
-                    || _lastData.DataType == MarketDataType.QuoteBar
+                if (_lastData.DataType == MarketDataType.QuoteBar
                     && data.DataType == MarketDataType.TradeBar
                     && data.EndTime == _lastData.EndTime)
                     return;
