@@ -424,25 +424,29 @@ namespace QuantConnect.Algorithm
             {
                 if (!UniverseManager.TryGetValue(universeSymbol, out universe))
                 {
-                    // create a new universe, these subscription settings don't currently get used
-                    // since universe selection proper is never invoked on this type of universe
-                    var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
-
-                    if (security.Type == SecurityType.Base)
+                    universe = _pendingUniverseAdditions.FirstOrDefault(x => x.Configuration.Symbol == universeSymbol);
+                    if (universe == null)
                     {
-                        // set entry in market hours database for the universe subscription to match the custom data
-                        var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
-                        MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType, security.Exchange.Hours, uconfig.DataTimeZone);
-                    }
+                        // create a new universe, these subscription settings don't currently get used
+                        // since universe selection proper is never invoked on this type of universe
+                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
 
-                    universe = new UserDefinedUniverse(uconfig,
-                        new UniverseSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours,
-                            TimeSpan.Zero),
-                        SecurityInitializer,
-                        QuantConnect.Time.MaxTimeSpan,
-                        new List<Symbol> {security.Symbol}
-                    );
-                    _pendingUniverseAdditions.Add(universe);
+                        if (security.Type == SecurityType.Base)
+                        {
+                            // set entry in market hours database for the universe subscription to match the custom data
+                            var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
+                            MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType, security.Exchange.Hours, uconfig.DataTimeZone);
+                        }
+
+                        universe = new UserDefinedUniverse(uconfig,
+                            new UniverseSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours,
+                                TimeSpan.Zero),
+                            SecurityInitializer,
+                            QuantConnect.Time.MaxTimeSpan,
+                            new List<Symbol> {security.Symbol}
+                        );
+                        _pendingUniverseAdditions.Add(universe);
+                    }
                 }
             }
 
