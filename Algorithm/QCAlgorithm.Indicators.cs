@@ -1231,6 +1231,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a WilderMovingAverage indicator for the symbol. 
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose WMA we want</param>
+        /// <param name="period">The period of the WMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The WilderMovingAverage for the given parameters</returns>
+        /// <remarks>WWMA for Welles Wilder Moving Average</remarks>
+        public WilderMovingAverage WWMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            string name = CreateIndicatorName(symbol, "WWMA" + period, resolution);
+            var wwma = new WilderMovingAverage(name, period);
+            RegisterIndicator(symbol, wwma, resolution, selector);
+            return wwma;
+        }
+
+        /// <summary>
         /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
