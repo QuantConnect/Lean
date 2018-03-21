@@ -77,9 +77,9 @@
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
-    <Compile Include="Log.cs" />
-    <Compile Include="LogInCommand.cs" />
-    <Compile Include="LogInDialog.xaml.cs" />
+    <Compile Include="VSActivityLog.cs" />
+    <Compile Include="AuthenticationCommand.cs" />
+    <Compile Include="LoginDialog.xaml.cs" />
     <Compile Include="PathUtils.cs" />
     <Compile Include="ProjectFinder.cs" />
     <Compile Include="ProjectNameDialog.xaml.cs" />
@@ -92,7 +92,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Key.snk" />
-    <None Include="packages.QuantConnect.VisualStudio17Plugin.config" />
+    <None Include="packages.QuantConnect.VisualStudio17Plugin.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -106,7 +108,7 @@
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <Page Include="LogInDialog.xaml">
+    <Page Include="LoginDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

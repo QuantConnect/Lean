@@ -41,7 +41,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         private readonly ConcurrentDictionary<ScheduledEvent, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<ScheduledEvent, ScheduledEvent>();
 
         //Algorithm and Handlers:
-        private IApi _api;
         private IAlgorithm _algorithm;
         private IResultHandler _resultHandler;
 
@@ -58,7 +57,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
         {
             //Initialize:
-            _api = api;
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _cancellationTokenSource = new CancellationTokenSource();

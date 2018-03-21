@@ -20,33 +20,30 @@ using System.Windows.Media;
 namespace QuantConnect.VisualStudioPlugin
 {
     /// <summary>
-    /// Interaction logic for LogInDialog.xaml
+    /// Interaction logic for LoginDialog.xaml
     /// </summary>
-    public partial class LogInDialog : DialogWindow
+    internal partial class LoginDialog : DialogWindow
     {
-        private static readonly Log _log = new Log(typeof(LogInDialog));
-
-        private AuthorizationManager _authorizationManager;
+        private readonly AuthorizationManager _authorizationManager;
         private Credentials? _credentials;
-        private string _dataFolder;
 
-        private Brush _userIdNormalBrush;
-        private Brush _accessTokenNormalBrush;
+        private readonly Brush _userIdNormalBrush;
+        private readonly Brush _accessTokenNormalBrush;
 
         /// <summary>
-        /// Create LogInDialog
+        /// Create LoginDialog
         /// </summary>
         /// <param name="authorizationManager">Authorization manager</param>
-        /// <param name="solutionFolder">Path to the folder with opened solution</param>
-        public LogInDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials, string dataFolder)
+        /// <param name="previousCredentials">User previous credentials</param>
+        public LoginDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials)
         {
-            _log.Info($"Created log in dialog with data folder: {dataFolder}");
+            VSActivityLog.Info("Created login dialog");
             InitializeComponent();
             _authorizationManager = authorizationManager;
-            _dataFolder = dataFolder;
 
             DisplayPreviousCredentials(previousCredentials);
-            StoreCurrentComponentsColors();
+            _userIdNormalBrush = userIdBox.BorderBrush;
+            _accessTokenNormalBrush = userIdBox.BorderBrush;
         }
 
         private void DisplayPreviousCredentials(Credentials? previousCredentials)
@@ -58,37 +55,32 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private void StoreCurrentComponentsColors()
+        private void Login_Click(object sender, RoutedEventArgs e)
         {
-            _userIdNormalBrush = userIdBox.BorderBrush;
-            _accessTokenNormalBrush = userIdBox.BorderBrush;
-        }
-
-        private void LogIn_Click(object sender, RoutedEventArgs e)
-        {
-            _log.Info("Log in button clicked");
+            VSActivityLog.Info("Log in button clicked");
             logInButton.IsEnabled = false;
             var userId = userIdBox.Text;
             var accessToken = accessTokenBox.Password;
             var credentials = new Credentials(userId, accessToken);
 
-            if (_authorizationManager.LogIn(credentials, _dataFolder))
+            if (_authorizationManager.Login(credentials))
             {
-                _log.Info("Logged in successfully");
+                VSActivityLog.Info("Logged in successfully");
                 _credentials = new Credentials(userId, accessToken);
-                this.Close();
+                Close();
             }
             else
             {
+                VSActivityLog.Error("Failed to login");
                 userIdBox.BorderBrush = Brushes.Red;
                 accessTokenBox.BorderBrush = Brushes.Red;
             }
             logInButton.IsEnabled = true;
         }
 
-        private void LogOut_Click(object sender, RoutedEventArgs e)
+        private void Logout_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         /// <summary>
@@ -100,11 +92,10 @@ namespace QuantConnect.VisualStudioPlugin
             return _credentials;
         }
 
-        private void inputField_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void InputField_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             userIdBox.BorderBrush = _userIdNormalBrush;
             accessTokenBox.BorderBrush = _accessTokenNormalBrush;
         }
     }
-
 }

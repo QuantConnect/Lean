@@ -24,11 +24,11 @@ namespace QuantConnect.VisualStudioPlugin
     /// Stores associations between a list of files and a QuantConnect project 
     /// that is associated with them.
     /// </summary>
-    class ProjectFinder
+    internal class ProjectFinder
     {
-        private const string PROJECT_ASSOCIATIONS_FILE = "QuantConnectProjects.xml";
-        private string _projectsFilePath;
-        private IDictionary<HashSet<string>, string> _projectForFiles 
+        private const string _projectAssociationsFile = "QuantConnectProjects.xml";
+        private readonly string _projectsFilePath;
+        private readonly IDictionary<HashSet<string>, string> _projectForFiles
             = new Dictionary<HashSet<string>, string>(HashSet<string>.CreateSetComparer());
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="solutionDirectory">Path to current solution's folder</param>
         public ProjectFinder(string solutionDirectory)
         {
-            _projectsFilePath = Path.Combine(solutionDirectory, PROJECT_ASSOCIATIONS_FILE);
+            _projectsFilePath = Path.Combine(solutionDirectory, _projectAssociationsFile);
             ReadProjectAssociations();
         }
 
@@ -140,46 +140,30 @@ namespace QuantConnect.VisualStudioPlugin
 
             return projectAssociations;
         }
-    }
 
-    /// <summary>
-    /// List of project associations
-    /// </summary>
-    [CollectionDataContract(Name = "ProjectAssociations")]
-    class ProjectAssociations : List<ProjectAssociation>
-    {
-    }
-
-    /// <summary>
-    /// A pair that represent a project and list of files associated with it
-    /// </summary>
-    [DataContract(Name = "ProjectAssociation")]
-    class ProjectAssociation
-    {
-        [DataMember(Name = "ProjectName")]
-        private string _projectName;
-        [DataMember(Name = "FileNames")]
-        private List<string> _fileNames;
-
-        public ProjectAssociation(string projectName, List<string> fileNames)
+        /// <summary>
+        /// List of project associations
+        /// </summary>
+        [CollectionDataContract(Name = "ProjectAssociations")]
+        private class ProjectAssociations : List<ProjectAssociation>
         {
-            _projectName = projectName;
-            _fileNames = fileNames;
         }
 
-        public string ProjectName
+        /// <summary>
+        /// A pair that represent a project and list of files associated with it
+        /// </summary>
+        [DataContract(Name = "ProjectAssociation")]
+        private class ProjectAssociation
         {
-            get
-            {
-                return _projectName;
-            }
-        }
+            [DataMember(Name = "ProjectName")]
+            public readonly string ProjectName;
+            [DataMember(Name = "FileNames")]
+            public readonly List<string> FileNames;
 
-        public List<string> FileNames
-        {
-            get
+            public ProjectAssociation(string projectName, List<string> fileNames)
             {
-                return _fileNames;
+                ProjectName = projectName;
+                FileNames = fileNames;
             }
         }
     }

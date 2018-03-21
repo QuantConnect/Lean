@@ -20,11 +20,12 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Singleton that stores a reference to an authenticated Api instance
     /// </summary>
-    public class AuthorizationManager
+    internal class AuthorizationManager
     {
-        private static readonly Log _log = new Log(typeof(AuthorizationManager));
-
-        private static AuthorizationManager _authorizationManager = new AuthorizationManager();
+        /// <summary>
+        /// Authorization manager singleton instance
+        /// </summary>
+        private static readonly AuthorizationManager _authorizationManager = new AuthorizationManager();
         private Api.Api _api;
 
         /// <summary>
@@ -40,11 +41,12 @@ namespace QuantConnect.VisualStudioPlugin
         /// Get an authenticated API instance. 
         /// </summary>
         /// <returns>Authenticated API instance</returns>
-        /// <exception cref="NotAuthenticatedException">It API is not authenticated</exception>
+        /// <exception cref="InvalidOperationException">API is not authenticated</exception>
         public Api.Api GetApi()
         {
             if (_api == null)
             {
+                VSActivityLog.Error("Accessing API without logging in first");
                 throw new InvalidOperationException("Accessing API without logging in first");
             }
             return _api;
@@ -62,41 +64,34 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Authenticate API 
         /// </summary>
-        /// <param name="userId">User id to authenticate the API</param>
-        /// <param name="accessToken">Access token to authenticate the API</param>
+        /// <param name="credentials">User id and access token to authenticate the API</param>
         /// <returns>true if successfully authenticated API, false otherwise</returns>
-        public bool LogIn(Credentials credentials, string dataFolderPath)
+        public bool Login(Credentials credentials)
         {
-            _log.Info($"Authenticating QuantConnect API with data folder {dataFolderPath}");
+            VSActivityLog.Info("Authenticating QuantConnect API");
             try
             {
                 var api = new Api.Api();
-                api.Initialize(int.Parse(credentials.UserId), credentials.AccessToken, dataFolderPath);
+                api.Initialize(int.Parse(credentials.UserId), credentials.AccessToken, Globals.DataFolder);
                 if (api.Connected)
                 {
                     _api = api;
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
             catch (FormatException)
             {
-                // User id is not a number
-                return false;
+                VSActivityLog.Error("User id is not a valid number");
             }
-
+            return false;
         }
 
         /// <summary>
-        /// Log out the API
+        /// Logout the API
         /// </summary>
-        public void LogOut()
+        public void Logout()
         {
             _api = null;
         }
-
     }
 }
