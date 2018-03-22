@@ -10,7 +10,6 @@ namespace QuantConnect
     /// </summary>
     public class AlphaRuntimeStatistics
     {
-        private double _totalPeriod;
         private DateTime _startDate;
         private double _daysCompleted;
 
@@ -110,7 +109,6 @@ namespace QuantConnect
         public void SetRange(DateTime algorithmStartDate, DateTime algorithmEndDate)
         {
             _startDate = algorithmStartDate;
-            _totalPeriod = (algorithmEndDate - algorithmStartDate).TotalDays;
         }
     }
 }
