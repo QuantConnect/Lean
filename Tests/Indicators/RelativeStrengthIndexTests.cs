@@ -25,8 +25,11 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesAgainstExternalData()
         {
-            var rsi = new RelativeStrengthIndex("rsi", 14, MovingAverageType.Simple);
-            TestHelper.TestIndicator(rsi, "RSI 14");
+            var rsiSimple = new RelativeStrengthIndex("rsi", 14, MovingAverageType.Simple);
+            TestHelper.TestIndicator(rsiSimple, "RSI 14");
+
+            var rsiWilder = new RelativeStrengthIndex("rsi", 14, MovingAverageType.Wilders);
+            TestHelper.TestIndicator(rsiWilder, "RSI 14 Wilder");
         }
 
         [Test]
