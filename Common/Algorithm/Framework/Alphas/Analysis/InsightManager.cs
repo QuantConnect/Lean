@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -35,7 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// are potentially at different frontiers. In fact, it is the common case where the openInsightContexts
     /// collection is ahead of everything else.
     /// </remarks>
-    public class InsightManager
+    public class InsightManager : IDisposable
     {
         /// <summary>
         /// Gets all insight score types
@@ -231,6 +232,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             }
 
             _openInsightContexts.RemoveWhere(removals.Contains);
+        }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            foreach (var ext in _extensions)
+            {
+                (ext as IDisposable)?.DisposeSafely();
+            }
         }
     }
 }
