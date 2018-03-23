@@ -100,7 +100,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             var insightValue = (int)context.Insight.Direction * (exitValue - enterValue);
 
             context.Insight.EstimatedValue = insightValue;
-            Statistics.TotalEstimatedAlphaValue += insightValue;
+            Statistics.TotalAccumulatedEstimatedAlphaValue += insightValue;
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="frontierTimeUtc">The current frontier time utc</param>
         public void Step(DateTime frontierTimeUtc)
         {
-            //NOP - Statistics are updated in line as insight is generated, closed, and analyzed
+            Statistics.SetDate(frontierTimeUtc);
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithmUtcTime">The algorithm's current utc time</param>
         public void InitializeForRange(DateTime algorithmStartDate, DateTime algorithmEndDate, DateTime algorithmUtcTime)
         {
-            //NOP - All statistics are streaming and don't require knowledge of the range
+            Statistics.SetStartDate(algorithmStartDate);
         }
     }
 }
