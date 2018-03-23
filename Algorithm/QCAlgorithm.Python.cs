@@ -523,8 +523,6 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = GetSymbolsFromPyObject(tickers);
-            if (symbols == null) return null;
-
             return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
@@ -539,8 +537,6 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
             var symbols = GetSymbolsFromPyObject(tickers);
-            if (symbols == null) return null;
-
             return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
@@ -555,8 +551,6 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = GetSymbolsFromPyObject(tickers);
-            if (symbols == null) return null;
-
             return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
@@ -572,7 +566,6 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = GetSymbolsFromPyObject(tickers);
-            if (symbols == null) return null;
 
             var requests = symbols.Select(x =>
             {
@@ -600,7 +593,6 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = GetSymbolsFromPyObject(tickers);
-            if (symbols == null) return null;
 
             var requests = symbols.Select(x =>
             {
@@ -773,35 +765,34 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the symbols/string from a PyObject
+        /// Gets Enumerable of <see cref="Symbol"/> from a PyObject
         /// </summary>
-        /// <param name="pyObject">PyObject containing symbols</param>
-        /// <returns>List of symbols</returns>
-        public List<Symbol> GetSymbolsFromPyObject(PyObject pyObject)
+        /// <param name="pyObject">PyObject containing Symbol or Array of Symbol</param>
+        /// <returns>Enumerable of Symbol</returns>
+        private IEnumerable<Symbol> GetSymbolsFromPyObject(PyObject pyObject)
         {
-            using (Py.GIL())
+            Symbol symbol;
+            Symbol[] symbols;
+
+            if (pyObject.TryConvert(out symbol))
             {
-                // If not a PyList, convert it into one
-                if (!PyList.IsListType(pyObject))
+                if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
+                yield return symbol;
+            }
+            else if (pyObject.TryConvert(out symbols))
+            {
+                foreach (var s in symbols)
                 {
-                    var tmp = new PyList();
-                    tmp.Append(pyObject);
-                    pyObject = tmp;
+                    if (s == null) throw new ArgumentException(_symbolEmptyErrorMessage);
+                    yield return s;
                 }
-
-                var symbols = new List<Symbol>();
-                foreach (PyObject item in pyObject)
+            }
+            else
+            {
+                using (Py.GIL())
                 {
-                    var symbol = (Symbol)item.AsManagedObject(typeof(Symbol));
-
-                    if (string.IsNullOrWhiteSpace(symbol.Value))
-                    {
-                        continue;
-                    }
-
-                    symbols.Add(symbol);
+                    throw new ArgumentException($"Argument type should be Symbol or a list of Symbol. Object: {pyObject}.");
                 }
-                return symbols.Count == 0 ? null : symbols;
             }
         }
 
