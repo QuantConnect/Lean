@@ -1,5 +1,5 @@
 #
-#	LEAN Jupyter Docker Container 20180223
+#	LEAN Jupyter Docker Container 20180323
 #
 
 # Use base system for cleaning up wayward processes
@@ -13,9 +13,14 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-#Install Jupyter and Python.NET
+#Install Jupyter and other packages
+RUN conda install -y jupyter && \
+    conda install -y jsonschema plotly quandl && \
+    conda clean -y --all
+
+#Install Python.NET
 RUN apt-get update && apt-get install -y clang git libglib2.0-dev && \
-    pip install --egg jsonschema jupyter git+https://github.com/QuantConnect/pythonnet
+    pip install --egg  git+https://github.com/QuantConnect/pythonnet
 
 # Setting some environment variables
 ENV WORK /root/Lean/Jupyter/bin/Debug
