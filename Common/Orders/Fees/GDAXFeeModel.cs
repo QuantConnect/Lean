@@ -26,7 +26,7 @@ namespace QuantConnect.Orders.Fees
         /// Tier 1 maker fees
         /// https://www.gdax.com/fees/BTC-USD
         /// </summary>
-        private static readonly Dictionary<string, decimal> Fees = new Dictionary<string, decimal>
+        public static readonly Dictionary<string, decimal> Fees = new Dictionary<string, decimal>
         {
             { "BTCUSD", 0.0025m }, { "BTCEUR", 0.0025m }, { "BTCGBP", 0.0025m },
             { "BCHBTC", 0.003m  }, { "BCHEUR", 0.003m  }, { "BCHUSD", 0.003m  },
