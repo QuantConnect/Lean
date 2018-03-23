@@ -20,6 +20,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -165,5 +166,66 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual("Item 2", ((DailyFx)data2).Title);
         }
 
+        [Test]
+        public void FutureDataHasVolume()
+        {
+            var initialVolume = 100;
+            var slices = GetSlices(Symbols.Fut_SPY_Mar19_2016, initialVolume).ToArray();
+
+            for (var i = 0; i < 10; i++)
+            {
+                var chain = slices[i].FutureChains.FirstOrDefault().Value;
+                var contract = chain.FirstOrDefault();
+                var expected = (i + 1) * initialVolume;
+                Assert.AreEqual(expected, contract.Volume);
+            }
+        }
+
+        [Test]
+        public void OptionsDataHasVolume()
+        {
+            var initialVolume = 150;
+            var slices = GetSlices(Symbols.SPY_C_192_Feb19_2016, initialVolume).ToArray();
+
+            for (var i = 0; i < 10; i++)
+            {
+                var chain = slices[i].OptionChains.FirstOrDefault().Value;
+                var contract = chain.FirstOrDefault();
+                var expected = (i + 1) * initialVolume;
+                Assert.AreEqual(expected, contract.Volume);
+            }
+        }
+
+        private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
+        {
+            var subscriptionDataConfig = new SubscriptionDataConfig(typeof(ZipEntryName), symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), subscriptionDataConfig, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var refTime = DateTime.UtcNow;
+
+            return Enumerable
+                .Range(0, 10)
+                .Select(i =>
+                {
+                    var time = refTime.AddSeconds(i);
+                    var bid = new Bar(100, 100, 100, 100);
+                    var ask = new Bar(110, 110, 110, 110);
+                    var volume = (i + 1) * initialVolume;
+
+                    return TimeSlice.Create(
+                        time,
+                        TimeZones.Utc,
+                        new CashBook(),
+                        new List<DataFeedPacket>
+                        {
+                            new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
+                            {
+                                new QuoteBar(time, symbol, bid, i*10, ask, (i + 1) * 11),
+                                new TradeBar(time, symbol, 100, 100, 110, 106, volume)
+                            }),
+                        },
+                        new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()))
+                        .Slice;
+                });
+        }
     }
 }

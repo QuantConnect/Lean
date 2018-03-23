@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -341,6 +340,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Time = baseData.EndTime,
                     LastPrice = security.Close,
+                    Volume = (long)security.Volume,
                     BidPrice = security.BidPrice,
                     BidSize = (long)security.BidSize,
                     AskPrice = security.AskPrice,
@@ -369,7 +369,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case MarketDataType.TradeBar:
                     var tradeBar = (TradeBar)baseData;
                     chain.TradeBars[symbol] = tradeBar;
-                    contract.LastPrice = tradeBar.Close;
+                    UpdateContract(contract, tradeBar);
                     break;
 
                 case MarketDataType.QuoteBar:
@@ -416,6 +416,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Time = baseData.EndTime,
                     LastPrice = security.Close,
+                    Volume = (long)security.Volume,
                     BidPrice = security.BidPrice,
                     BidSize = (long)security.BidSize,
                     AskPrice = security.AskPrice,
@@ -437,7 +438,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case MarketDataType.TradeBar:
                     var tradeBar = (TradeBar)baseData;
                     chain.TradeBars[symbol] = tradeBar;
-                    contract.LastPrice = tradeBar.Close;
+                    UpdateContract(contract, tradeBar);
                     break;
 
                 case MarketDataType.QuoteBar:
@@ -495,6 +496,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
+        private static void UpdateContract(OptionContract contract, TradeBar tradeBar)
+        {
+            if (tradeBar.Close == 0m) return;
+            contract.LastPrice = tradeBar.Close;
+            contract.Volume = (long)tradeBar.Volume;
+        }
+
         private static void UpdateContract(FuturesContract contract, QuoteBar quote)
         {
             if (quote.Ask != null && quote.Ask.Close != 0m)
@@ -535,6 +543,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     contract.OpenInterest = tick.Value;
                 }
             }
+        }
+
+        private static void UpdateContract(FuturesContract contract, TradeBar tradeBar)
+        {
+            if (tradeBar.Close == 0m) return;
+            contract.LastPrice = tradeBar.Close;
+            contract.Volume = (long)tradeBar.Volume;
         }
     }
 }
