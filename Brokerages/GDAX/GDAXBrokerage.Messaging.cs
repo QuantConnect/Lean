@@ -28,6 +28,7 @@ using System.Threading;
 using RestSharp;
 using System.Text.RegularExpressions;
 using QuantConnect.Logging;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
@@ -46,7 +47,6 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
-        private readonly ConcurrentDictionary<int, decimal> _orderFees = new ConcurrentDictionary<int, decimal>();
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
         private readonly bool _isDataQueueHandler;
 
@@ -187,6 +187,7 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else if (raw.Type == "done")
                 {
+                    // TODO: this message type is only received when subscribing to the "full" channel, we don't need it and will be removed in a forthcoming PR
                     OrderDone(e.Message);
                     return;
                 }
@@ -359,21 +360,15 @@ namespace QuantConnect.Brokerages.GDAX
                 direction = message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy;
             }
 
-            decimal totalOrderFee;
-            if (!_orderFees.TryGetValue(orderId, out totalOrderFee))
-            {
-                totalOrderFee = GetFee(order);
-                _orderFees[orderId] = totalOrderFee;
-            }
-
-            // apply order fee on a pro rata basis
-            var orderFee = totalOrderFee * Math.Abs(message.Size) / Math.Abs(order.Quantity);
+            var fillPrice = message.Price;
+            var fillQuantity = direction == OrderDirection.Sell ? -message.Size : message.Size;
+            var isMaker = order.BrokerId[0] == message.MakerOrderId;
+            var orderFee = GetFillFee(symbol, fillPrice, fillQuantity, isMaker);
 
             var orderEvent = new OrderEvent
             (
                 orderId, symbol, message.Time, status,
-                direction,
-                message.Price, direction == OrderDirection.Sell ? -message.Size : message.Size,
+                direction, fillPrice, fillQuantity,
                 orderFee, $"GDAX Match Event {direction}"
             );
 
@@ -382,9 +377,6 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 Order outOrder;
                 CachedOrderIDs.TryRemove(orderId, out outOrder);
-
-                decimal outOrderFee;
-                _orderFees.TryRemove(orderId, out outOrderFee);
             }
 
             OnOrderEvent(orderEvent);
@@ -412,20 +404,24 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             var orderId = cached[0].Key;
-            var order = cached[0].Value;
 
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1,
                 $"GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId: {message.OrderId} orderId: {orderId}"));
 
             var split = FillSplit[orderId];
 
+            var symbol = ConvertProductId(message.ProductId);
+            var fillPrice = message.Price;
+            var fillQuantity = message.Side == "sell" ? -split.TotalQuantity() : split.TotalQuantity();
+            var orderFee = GetFillFee(symbol, fillPrice, fillQuantity, true);
+
             //should have already been filled but match message may have been missed. Let's say we've filled now
             var orderEvent = new OrderEvent
             (
-                orderId, ConvertProductId(message.ProductId), message.Time, OrderStatus.Filled,
+                orderId, symbol, message.Time, OrderStatus.Filled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
-                message.Price, message.Side == "sell" ? -split.TotalQuantity() : split.TotalQuantity(),
-                GetFee(order), "GDAX Fill Event"
+                fillPrice, fillQuantity,
+                orderFee, "GDAX Fill Event"
             );
 
             Order outOrder;
@@ -622,6 +618,22 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = ChannelNames}));
             }
+        }
+
+        /// <summary>
+        /// Returns the fee paid for a total or partial order fill
+        /// </summary>
+        public static decimal GetFillFee(Symbol symbol, decimal fillPrice, decimal fillQuantity, bool isMaker)
+        {
+            if (isMaker)
+            {
+                return 0;
+            }
+
+            decimal fee;
+            GDAXFeeModel.Fees.TryGetValue(symbol.Value, out fee);
+
+            return fillPrice * Math.Abs(fillQuantity) * fee;
         }
     }
 }
