@@ -81,6 +81,7 @@
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
     <Compile Include="Selection\PortfolioSelectionModelPythonWrapper.cs" />
+    <Compile Include="Selection\QC500PortfolioSelectionModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
