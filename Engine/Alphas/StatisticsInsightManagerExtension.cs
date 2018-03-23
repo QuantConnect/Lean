@@ -150,7 +150,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithmUtcTime">The algorithm's current utc time</param>
         public void InitializeForRange(DateTime algorithmStartDate, DateTime algorithmEndDate, DateTime algorithmUtcTime)
         {
-            Statistics.SetRange(algorithmStartDate, algorithmEndDate);
+            Statistics.SetStartDate(algorithmStartDate);
         }
     }
 }

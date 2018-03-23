@@ -105,8 +105,7 @@ namespace QuantConnect
         /// Set the date range of the statistics
         /// </summary>
         /// <param name="algorithmStartDate"></param>
-        /// <param name="algorithmEndDate"></param>
-        public void SetRange(DateTime algorithmStartDate, DateTime algorithmEndDate)
+        public void SetStartDate(DateTime algorithmStartDate)
         {
             _startDate = algorithmStartDate;
         }
