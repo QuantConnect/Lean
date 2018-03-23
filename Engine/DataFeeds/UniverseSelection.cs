@@ -74,33 +74,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // perform initial filtering and limit the result
                 selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData);
 
-                // prepare a BaseDataCollection of FineFundamental instances
-                var fineCollection = new BaseDataCollection();
-                var dataProvider = new DefaultDataProvider();
-
-                foreach (var symbol in selectSymbolsResult)
+                if (!ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
                 {
-                    var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { dateTimeUtc });
-                    var config = FineFundamentalUniverse.CreateConfiguration(symbol);
+                    // prepare a BaseDataCollection of FineFundamental instances
+                    var fineCollection = new BaseDataCollection();
+                    var dataProvider = new DefaultDataProvider();
 
-                    var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, CashBook.AccountCurrency);
-                    var quoteCash = _algorithm.Portfolio.CashBook[symbolProperties.QuoteCurrency];
-
-                    var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
-
-                    var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), dateTimeUtc, dateTimeUtc);
-                    using (var enumerator = factory.CreateEnumerator(request, dataProvider))
+                    foreach (var symbol in selectSymbolsResult)
                     {
-                        if (enumerator.MoveNext())
+                        var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { dateTimeUtc });
+                        var config = FineFundamentalUniverse.CreateConfiguration(symbol);
+
+                        var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+                        var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, CashBook.AccountCurrency);
+                        var quoteCash = _algorithm.Portfolio.CashBook[symbolProperties.QuoteCurrency];
+
+                        var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
+
+                        var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), dateTimeUtc, dateTimeUtc);
+                        using (var enumerator = factory.CreateEnumerator(request, dataProvider))
                         {
-                            fineCollection.Data.Add(enumerator.Current);
+                            if (enumerator.MoveNext())
+                            {
+                                fineCollection.Data.Add(enumerator.Current);
+                            }
                         }
                     }
-                }
 
-                // perform the fine fundamental universe selection
-                selectSymbolsResult = fineFiltered.FineFundamentalUniverse.PerformSelection(dateTimeUtc, fineCollection);
+                    // perform the fine fundamental universe selection
+                    selectSymbolsResult = fineFiltered.FineFundamentalUniverse.PerformSelection(dateTimeUtc, fineCollection);
+                }
             }
             else
             {
