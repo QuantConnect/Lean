@@ -49,13 +49,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
         public ManualPortfolioSelectionModel(params Symbol[] symbols)
+            : this (symbols?.AsEnumerable(), null, null)
         {
-            if (symbols == null)
-            {
-                throw new ArgumentNullException(nameof(symbols));
-            }
-
-            _symbols = symbols.ToList();
         }
 
         /// <summary>
@@ -66,9 +61,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="securityInitializer">Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer</param>
         public ManualPortfolioSelectionModel(IEnumerable<Symbol> symbols, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
         {
+            if (symbols == null)
+            {
+                throw new ArgumentNullException(nameof(symbols));
+            }
+
             _symbols = symbols.ToList();
             _universeSettings = universeSettings;
             _securityInitializer = securityInitializer;
+
+            foreach (var symbol in _symbols)
+            {
+                SymbolCache.Set(symbol.Value, symbol);
+            }
         }
 
         /// <summary>
