@@ -74,26 +74,24 @@ namespace QuantConnect.VisualStudioPlugin
                 var userId = userIdBox.Text;
                 var accessToken = accessTokenBox.Password;
                 var credentials = new Credentials(userId, accessToken);
-
                 if (_authorizationManager.Login(credentials))
                 {
                     VSActivityLog.Info("Logged in successfully");
                     VsUtils.DisplayInStatusBar(_serviceProvider, "Logged into QuantConnect");
                     _credentials = new Credentials(userId, accessToken);
                     Close();
-                }
-                else
-                {
-                    VSActivityLog.Error("Failed to login");
-                    VsUtils.DisplayInStatusBar(_serviceProvider, "Failed to login");
-                    userIdBox.BorderBrush = Brushes.Red;
-                    accessTokenBox.BorderBrush = Brushes.Red;
+                    return;
                 }
             }
             catch (Exception ex)
             {
+                MessageBox.Show(ex.ToString(), "QuantConnect Login Exception");
                 VSActivityLog.Error(ex.ToString());
             }
+            VsUtils.DisplayInStatusBar(_serviceProvider, "Failed to login");
+            userIdBox.BorderBrush = Brushes.Red;
+            accessTokenBox.BorderBrush = Brushes.Red;
+            // Re enable button and textbox
             userIdBox.IsReadOnly = false;
             accessTokenBox.IsEnabled = true;
             logInButton.IsEnabled = true;
