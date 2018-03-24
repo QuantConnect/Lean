@@ -19,8 +19,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-             mc:Ignorable="d"
-             WindowStartupLocation="CenterScreen"
+             mc:Ignorable="d" WindowStartupLocation="CenterScreen"
              Title="Login to QuantConnect" Height="240" Width="390"
              x:ClassModifier="internal" Visibility="Visible" ResizeMode="NoResize" HasHelpButton="True" Name="Login">
     <Grid>
@@ -44,15 +43,11 @@
         </Button>
         <Button x:Name="logOutButton" HorizontalAlignment="Right" VerticalAlignment="Top" Width="85" Margin="0,140,0,0" Height="30" Click="Logout_Click" TabIndex="4" HorizontalContentAlignment="Center">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition Height="0*"/>
-                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/dialog-close-32.png" Stretch="Fill" Width="16" Height="16" Margin="0,5"/>
+                <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/dialog-close-32.png" Stretch="Fill" Width="16" Height="16"/>
                 <Label Grid.Column="1" Content="Cancel" FontSize="12"/>
             </Grid>
         </Button>
