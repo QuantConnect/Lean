@@ -51,16 +51,15 @@ namespace QuantConnect.VisualStudioPlugin
 
         private bool LoginWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials)
         {
-            var logInDialog = new LoginDialog(AuthorizationManager.GetInstance(), previousCredentials);
+            var logInDialog = new LoginDialog(AuthorizationManager.GetInstance(), previousCredentials, serviceProvider);
             VsUtils.DisplayDialogWindow(logInDialog);
 
             var credentials = logInDialog.GetCredentials();
 
             if (credentials.HasValue)
             {
-                VSActivityLog.Info("Logged in successfully. Storing credentials");
+                VSActivityLog.Info("Storing credentials");
                 CredentialsManager.StoreCredentials(credentials.Value);
-                VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect");
                 return true;
             }
             else

@@ -14,7 +14,10 @@
 */
 
 using Microsoft.VisualStudio.PlatformUI;
+using System;
+using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace QuantConnect.VisualStudioPlugin
@@ -29,18 +32,21 @@ namespace QuantConnect.VisualStudioPlugin
 
         private readonly Brush _userIdNormalBrush;
         private readonly Brush _accessTokenNormalBrush;
+        private const string _needHelpURL = "https://www.quantconnect.com/docs#Visual-Studio-Plugin";
+        private readonly IServiceProvider _serviceProvider;
 
         /// <summary>
         /// Create LoginDialog
         /// </summary>
         /// <param name="authorizationManager">Authorization manager</param>
         /// <param name="previousCredentials">User previous credentials</param>
-        public LoginDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials)
+        /// <param name="serviceProvider">Service provider</param>
+        public LoginDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials, IServiceProvider serviceProvider)
         {
             VSActivityLog.Info("Created login dialog");
             InitializeComponent();
             _authorizationManager = authorizationManager;
-
+            _serviceProvider = serviceProvider;
             DisplayPreviousCredentials(previousCredentials);
             _userIdNormalBrush = userIdBox.BorderBrush;
             _accessTokenNormalBrush = userIdBox.BorderBrush;
@@ -57,24 +63,39 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void Login_Click(object sender, RoutedEventArgs e)
         {
-            VSActivityLog.Info("Log in button clicked");
-            logInButton.IsEnabled = false;
-            var userId = userIdBox.Text;
-            var accessToken = accessTokenBox.Password;
-            var credentials = new Credentials(userId, accessToken);
+            VSActivityLog.Info("Login button clicked");
+            try
+            {
+                // Disable textbox passwordBox and login button
+                userIdBox.IsReadOnly = true;
+                accessTokenBox.IsEnabled = false;
+                logInButton.IsEnabled = false;
 
-            if (_authorizationManager.Login(credentials))
-            {
-                VSActivityLog.Info("Logged in successfully");
-                _credentials = new Credentials(userId, accessToken);
-                Close();
+                var userId = userIdBox.Text;
+                var accessToken = accessTokenBox.Password;
+                var credentials = new Credentials(userId, accessToken);
+
+                if (_authorizationManager.Login(credentials))
+                {
+                    VSActivityLog.Info("Logged in successfully");
+                    VsUtils.DisplayInStatusBar(_serviceProvider, "Logged into QuantConnect");
+                    _credentials = new Credentials(userId, accessToken);
+                    Close();
+                }
+                else
+                {
+                    VSActivityLog.Error("Failed to login");
+                    VsUtils.DisplayInStatusBar(_serviceProvider, "Failed to login");
+                    userIdBox.BorderBrush = Brushes.Red;
+                    accessTokenBox.BorderBrush = Brushes.Red;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                VSActivityLog.Error("Failed to login");
-                userIdBox.BorderBrush = Brushes.Red;
-                accessTokenBox.BorderBrush = Brushes.Red;
+                VSActivityLog.Error(ex.ToString());
             }
+            userIdBox.IsReadOnly = false;
+            accessTokenBox.IsEnabled = true;
             logInButton.IsEnabled = true;
         }
 
@@ -92,10 +113,19 @@ namespace QuantConnect.VisualStudioPlugin
             return _credentials;
         }
 
-        private void InputField_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void InputField_KeyDown(object sender, KeyEventArgs e)
         {
             userIdBox.BorderBrush = _userIdNormalBrush;
             accessTokenBox.BorderBrush = _accessTokenNormalBrush;
+            if (e.Key == Key.Return)
+            {
+                Login_Click(sender, e);
+            }
+        }
+
+        protected override void InvokeDialogHelp()
+        {
+            Process.Start(_needHelpURL);
         }
     }
 }
