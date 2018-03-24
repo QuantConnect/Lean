@@ -79,8 +79,8 @@
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
-    <Compile Include="Log.cs" />
-    <Compile Include="LogInCommand.cs" />
+    <Compile Include="VSActivityLog.cs" />
+    <Compile Include="AuthenticationCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
     <Compile Include="PathUtils.cs" />
     <Compile Include="ProjectFinder.cs" />
@@ -112,15 +112,21 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Content Include="icon_128x128.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Resource Include="..\UserInterface\Icons\dialog-close-32.png">
+      <Link>Resources\dialog-close-32.png</Link>
+    </Resource>
+    <Resource Include="..\UserInterface\Icons\dialog-ok-apply-32.png">
+      <Link>Resources\dialog-ok-apply-32.png</Link>
+    </Resource>
+    <Content Include="..\UserInterface\Icons\icon_128x128.png">
+      <Link>icon_128x128.png</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\QuantConnectPackage.ico" />
     <Content Include="Resources\ToolMenuCommand.png" />
   </ItemGroup>
   <ItemGroup>
