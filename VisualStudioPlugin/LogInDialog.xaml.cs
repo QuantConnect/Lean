@@ -85,7 +85,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "QuantConnect Login Exception");
+                VsUtils.ShowMessageBox(_serviceProvider, "QuantConnect Login Exception", ex.ToString());
                 VSActivityLog.Error(ex.ToString());
             }
             VsUtils.DisplayInStatusBar(_serviceProvider, "Failed to login");
