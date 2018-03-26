@@ -62,6 +62,8 @@ namespace QuantConnect.Tests.Engine
             var token = new CancellationToken();
 
             algorithm.Initialize();
+            algorithm.PostInitialize();
+
             results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), feed, new BacktestingSetupHandler(), transactions);
             results.SetAlgorithm(algorithm);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);

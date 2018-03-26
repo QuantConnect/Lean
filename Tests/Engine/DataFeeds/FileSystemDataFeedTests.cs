@@ -45,6 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider);
             algorithm.Initialize();
+            algorithm.PostInitialize();
 
             var feedThreadStarted = new ManualResetEvent(false);
             var dataFeedThread = new Thread(() =>
@@ -80,6 +81,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             algorithm.Initialize();
+            algorithm.PostInitialize();
 
             var dataProvider = new DefaultDataProvider();
             var resultHandler = new BacktestingResultHandler();
