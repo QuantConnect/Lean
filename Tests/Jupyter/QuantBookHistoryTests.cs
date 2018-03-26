@@ -21,7 +21,7 @@ using System.IO;
 
 namespace QuantConnect.Tests.Jupyter
 {
-    [TestFixture, Ignore]
+    [TestFixture, Category("TravisExclude")]
     public class QuantBookHistoryTests
     {
         dynamic _module;
