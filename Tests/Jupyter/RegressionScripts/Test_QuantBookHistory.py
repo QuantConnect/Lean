@@ -35,12 +35,12 @@ class SecurityHistoryTest():
         return "{} on {}".format(self.symbol.ID, self.qb.StartDate)
 
     def test_period_overload(self, period):
-        history = self.qb.History(self.symbol, period)
+        history = self.qb.History([self.symbol], period)
         return history[self.column].unstack(level=0)
 
     def test_daterange_overload(self, end):
         start = end - timedelta(1)
-        history = self.qb.History(self.symbol, start, end)
+        history = self.qb.History([self.symbol], start, end)
         return history[self.column].unstack(level=0)
 
 class OptionHistoryTest(SecurityHistoryTest):
@@ -80,5 +80,5 @@ class MultipleSecuritiesHistoryTest(SecurityHistoryTest):
         self.qb.AddCrypto('BTCUSD', Resolution.Daily)
 
     def test_period_overload(self, period):
-        history = self.qb.History(period)
+        history = self.qb.History(self.qb.Securities.Keys, period)
         return history['close'].unstack(level=0)
