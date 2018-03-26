@@ -83,69 +83,6 @@ namespace QuantConnect.Jupyter
         }
 
         /// <summary>
-        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
-        /// </summary>
-        /// <param name="span">The span over which to retrieve recent historical data</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public new PyObject History(TimeSpan span, Resolution? resolution = null)
-        {
-            return History(Securities.Keys.ToPython(), span, resolution);
-        }
-
-        /// <summary>
-        /// Get the history for all configured securities over the requested span.
-        /// This will use the resolution and other subscription settings for each security.
-        /// The symbols must exist in the Securities collection.
-        /// </summary>
-        /// <param name="periods">The number of bars to request</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public new PyObject History(int periods, Resolution? resolution = null)
-        {
-            return History(Securities.Keys.ToPython(), periods, resolution);
-        }
-
-        /// <summary>
-        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
-        /// </summary>
-        /// <typeparam name="T">The data type of the symbol</typeparam>
-        /// <param name="symbol">The symbol to retrieve historical data for</param>
-        /// <param name="span">The span over which to retrieve recent historical data</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public new PyObject History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
-        {
-            return History(symbol.ToPython(), span, resolution);
-        }
-
-        /// <summary>
-        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
-        /// The symbol must exist in the Securities collection.
-        /// </summary>
-        /// <param name="symbol">The symbol to retrieve historical data for</param>
-        /// <param name="periods">The number of bars to request</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public new PyObject History(Symbol symbol, int periods, Resolution? resolution = null)
-        {
-            return History(symbol.ToPython(), periods, resolution);
-        }
-
-        /// <summary>
-        /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
-        /// </summary>
-        /// <param name="symbol">The symbol to retrieve historical data for</param>
-        /// <param name="start">The start time in the algorithm's time zone</param>
-        /// <param name="end">The end time in the algorithm's time zone</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public new PyObject History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
-        {
-            return History(symbol.ToPython(), start, end, resolution);
-        }
-        
-        /// <summary>
         /// Get fundamental data from given symbols
         /// </summary>
         /// <param name="pyObject">The symbols to retrieve fundamental data for</param>
