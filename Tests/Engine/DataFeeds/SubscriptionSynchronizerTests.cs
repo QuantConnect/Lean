@@ -50,6 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
         {
             algorithm.Initialize();
+            algorithm.PostInitialize();
 
             // set exchanges to be always open
             foreach (var kvp in algorithm.Securities)
