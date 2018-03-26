@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             PortfolioSelection = new CustomFundamentalPortfolioSelectionModel();
             Alpha = new MacdAlphaModel(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30), 0.01m);
-            PortfolioConstruction = new SimplePortfolioConstructionModel();
+            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

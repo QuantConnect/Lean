@@ -57,7 +57,7 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithmFramework):
         # set algorithm framework models
         self.PortfolioSelection = ManualPortfolioSelectionModel(symbols)
         self.Alpha = ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None)
-        self.PortfolioConstruction = SimplePortfolioConstructionModel()
+        self.PortfolioConstruction = EqualWeightingPortfolioConstructionModel()
         self.Execution = ImmediateExecutionModel()
         self.RiskManagement = NullRiskManagementModel()
 

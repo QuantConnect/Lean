@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// insights of direction <see cref="InsightDirection.Up"/>, long targets are returned and for insights of direction
     /// <see cref="InsightDirection.Down"/>, short targets are returned.
     /// </summary>
-    public class SimplePortfolioConstructionModel : IPortfolioConstructionModel
+    public class EqualWeightingPortfolioConstructionModel : IPortfolioConstructionModel
     {
         private readonly HashSet<Security> _securities = new HashSet<Security>();
 
