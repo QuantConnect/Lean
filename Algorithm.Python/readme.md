@@ -35,12 +35,13 @@ Known issue with macOS: Python.Runtime.dll cannot import CLR modules after their
 
 ### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
 **1. Install Python 3.6 with Miniconda:**
+By default, **miniconda** is installed in the users home directory (**$HOME**):
 ```
-export PATH="/opt/miniconda3/bin:$PATH"
+export PATH="$HOME/miniconda3/bin:$PATH"
 wget http://cdn.quantconnect.com.s3.amazonaws.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
 bash Miniconda3-4.3.31-Linux-x86_64.sh -b
 rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
-ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6.so
+sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6.so
 conda update -y python conda pip
 conda install -y cython pandas
 ```
