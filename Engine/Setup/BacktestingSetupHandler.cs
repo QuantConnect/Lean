@@ -202,6 +202,9 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
+
+                    // finalize initialization
+                    algorithm.PostInitialize();
                 }
                 catch (Exception err)
                 {
@@ -216,8 +219,6 @@ namespace QuantConnect.Lean.Engine.Setup
             // TODO: Refactor the BacktestResultHandler to use algorithm not job to set times
             job.PeriodStart = algorithm.StartDate;
             job.PeriodFinish = algorithm.EndDate;
-
-            algorithm.PostInitialize();
 
             //Calculate the max runtime for the strategy
             _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, baseJob.Controls);
