@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Tests
 {
@@ -34,6 +35,16 @@ namespace QuantConnect.Tests
                 QuantConnect.Configuration.Config.Set("symbol-minute-limit", "100");
                 QuantConnect.Configuration.Config.Set("symbol-second-limit", "100");
                 QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
+            }
+
+            if (parameters.Algorithm == "BasicTemplateIntrinioEconomicData")
+            {
+                var intrinioCredentials = new Dictionary<string, string>
+                {
+                    {"intrinio-username", "121078c02c20a09aa5d9c541087e7fa4"},
+                    {"intrinio-password", "65be35238b14de4cd0afc0edf364efc3" }
+                };
+                QuantConnect.Configuration.Config.Set("parameters", JsonConvert.SerializeObject(intrinioCredentials));
             }
 
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
@@ -744,6 +755,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$1.00"}
             };
 
+            var basicTemplateIntrinioEconomicData = new Dictionary<string, string>
+            {
+                {"Total Trades", "89"},
+                {"Average Win", "0.09%"},
+                {"Average Loss", "-0.01%"},
+                {"Compounding Annual Return", "5.704%"},
+                {"Drawdown", "4.800%"},
+                {"Expectancy", "1.469"},
+                {"Net Profit", "24.865%"},
+                {"Sharpe Ratio", "1.143"},
+                {"Loss Rate", "70%"},
+                {"Win Rate", "30%"},
+                {"Profit-Loss Ratio", "7.23"},
+                {"Alpha", "0.065"},
+                {"Beta", "-0.522"},
+                {"Annual Standard Deviation", "0.048"},
+                {"Annual Variance", "0.002"},
+                {"Information Ratio", "0.74"},
+                {"Tracking Error", "0.048"},
+                {"Treynor Ratio", "-0.105"},
+                {"Total Fees", "$100.58"}
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -779,6 +813,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("IndicatorSuiteAlgorithm", indicatorSuiteAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("ForexInternalFeedOnDataSameResolutionRegressionAlgorithm", emptyStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm", emptyStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateIntrinioEconomicData", basicTemplateIntrinioEconomicData, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
@@ -810,7 +845,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("FractionalQuantityRegressionAlgorithm", fractionalQuantityRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CustomIndicatorAlgorithm", basicTemplateStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.Python),
-                new AlgorithmStatisticsTestParameters("IndicatorSuiteAlgorithm", indicatorSuiteAlgorithmStatistics, Language.Python)
+                new AlgorithmStatisticsTestParameters("IndicatorSuiteAlgorithm", indicatorSuiteAlgorithmStatistics, Language.Python),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
