@@ -44,7 +44,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             Quantity = quantity;
         }
 
-
         /// <summary>
         /// Creates a new target for the specified percent
         /// </summary>
@@ -72,13 +71,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return new PortfolioTarget(symbol, 0);
             }
 
-            var quantity = percent * algorithm.Portfolio.TotalPortfolioValue / security.Price;
+            var targetValue = algorithm.Portfolio.TotalPortfolioValue * percent;
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, targetValue);
+            if (result.IsError)
+            {
+                algorithm.Log($"Unable to compute order quantity of {symbol}. Quantity set to zero. Reason: {result.Reason}");
+                return new PortfolioTarget(symbol, 0);
+            }
 
-            // round down to nearest lot size
-            var remainder = quantity % security.SymbolProperties.LotSize;
-            quantity = quantity - remainder;
+            return new PortfolioTarget(symbol, result.Quantity);
+        }
 
-            return new PortfolioTarget(symbol, quantity);
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return $"{Quantity} {Symbol}";
         }
     }
 }
