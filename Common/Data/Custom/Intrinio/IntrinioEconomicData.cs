@@ -17,8 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using System.Threading;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Data.Custom.Intrinio
 {
@@ -79,13 +77,15 @@ namespace QuantConnect.Data.Custom.Intrinio
     /// <seealso cref="QuantConnect.Data.BaseData" />
     public class IntrinioEconomicData : BaseData
     {
-        private static DateTime LastIntrinoAPICall;
+        private static DateTime _lastApiCall = DateTime.MinValue;
+        private static TimeSpan _msSinceLastCall = TimeSpan.MaxValue;
 
         private readonly string _baseUrl = @"https://api.intrinio.com/historical_data.csv?";
 
         private readonly IntrinioDataTransformation _dataTransformation;
 
-        private bool _firstTime = true;
+
+        private bool _backtestingFirstTimeCallOrLiveMode = true;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="IntrinioEconomicData" /> class.
@@ -101,6 +101,14 @@ namespace QuantConnect.Data.Custom.Intrinio
         public IntrinioEconomicData(IntrinioDataTransformation dataTransformation)
         {
             _dataTransformation = dataTransformation;
+
+            // If the user and the password is not set then then throw error.
+            if (!IntrinioConfig.IsInitialized)
+            {
+                throw new
+                    InvalidOperationException("Please set a valid Intrinio user and password using the 'IntrinioEconomicData.SetUserAndPassword' static method. " +
+                                              "For local backtesting, the user and password can be set in the 'parameters' fields from the 'config.json' file.");
+            }
         }
 
 
@@ -120,55 +128,18 @@ namespace QuantConnect.Data.Custom.Intrinio
         /// </remarks>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            // If the user and the password is not set then...
-            if (!IntrinioConfig.IsInitialized)
-            {
-                // ... try to get the user and password from the config file.
-                var user = Config.Get("intrinio-username");
-                var password = Config.Get("intrinio-password");
-                IntrinioConfig.SetUserAndPassword(user, password);
-
-                // If the user and password aren't available in the config file, then throw error.
-                if (!IntrinioConfig.IsInitialized)
-                {
-                    throw new InvalidOperationException("Please set a valid Intrinio user and password using the 'IntrinioEconomicData.SetUserAndPassword' static method. " +
-                    "For local backtesting, the user and password can be set in the 'config.json' file.");
-                }
-            }
-
             SubscriptionDataSource subscription;
-            var intrinioApiCallLimit = 1000 - (int)(DateTime.Now - LastIntrinoAPICall).TotalMilliseconds;
 
             // We want to make just one call with all the data in backtesting mode.
             // Also we want to make one call per second becasue of the API limit.
-            if (_firstTime || intrinioApiCallLimit > 0)
+            if (_backtestingFirstTimeCallOrLiveMode)
             {
-                var order = string.Empty;
-                if (isLiveMode)
-                {
-                    // In Live mode, we only want the last observation.
-                    order = "desc";
-                }
-                else
-                {
-                    // In backtesting mode, we need the data in ascending order...
-                    order = "asc";
-                    // and avoid making furthers calls for the same data.
-                    _firstTime = false;
-                }
+                // Force the engine to wait at least 1000 ms between API calls.
+                IntrinioConfig.RateGate.WaitToProceed();
 
-                var item = GetStringForDataTransformation(_dataTransformation);
-                var url = $"{_baseUrl}identifier={config.Symbol.Value}&item={item}&sort_order={order}";
-                var byteKey = Encoding.ASCII.GetBytes($"{IntrinioConfig.User}:{IntrinioConfig.Password}");
-                var authorizationHeaders = new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("Authorization",
-                                                     $"Basic ({Convert.ToBase64String(byteKey)})")
-                };
-
-                subscription = new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
-                                                          authorizationHeaders);
-                LastIntrinoAPICall = DateTime.Now;
+                // In backtesting mode, there is only one call at the beggining with all the data 
+                _backtestingFirstTimeCallOrLiveMode = false || isLiveMode;
+                subscription = GetIntrinioSubscription(config, isLiveMode);
             }
             else
             {
@@ -239,6 +210,23 @@ namespace QuantConnect.Data.Custom.Intrinio
                     break;
             }
             return item;
+        }
+
+        private SubscriptionDataSource GetIntrinioSubscription(SubscriptionDataConfig config, bool isLiveMode)
+        {
+            // In Live mode, we only want the last observation, in backtesitng we need the data in ascending order.
+            var order = isLiveMode ? "desc" : "asc";
+            var item = GetStringForDataTransformation(_dataTransformation);
+            var url = $"{_baseUrl}identifier={config.Symbol.Value}&item={item}&sort_order={order}";
+            var byteKey = Encoding.ASCII.GetBytes($"{IntrinioConfig.User}:{IntrinioConfig.Password}");
+            var authorizationHeaders = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("Authorization",
+                                                 $"Basic ({Convert.ToBase64String(byteKey)})")
+            };
+
+            return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv,
+                                              authorizationHeaders);
         }
     }
 }

@@ -97,16 +97,16 @@
   "gdax-api-key": "",
   "gdax-passphrase": "",
 
-  // Intrinio account user and password
-  "intrinio-username": "",
-  "intrinio-password": "",
-
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
 
   // parameters to set in the algorithm (the below are just samples)
-  "parameters": {
+  "parameters": { 
+    // Intrinio account user and password
+    "intrinio-username": "",
+    "intrinio-password": "",
+    
     "ema-fast": 10,
     "ema-slow": 20
   },
