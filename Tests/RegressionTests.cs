@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Tests
 {
@@ -38,9 +39,12 @@ namespace QuantConnect.Tests
 
             if (parameters.Algorithm == "BasicTemplateIntrinioEconomicData")
             {
-                // special arrangement for consistency test - we check if limits work fine
-                QuantConnect.Configuration.Config.Set("intrinio-username", "121078c02c20a09aa5d9c541087e7fa4");
-                QuantConnect.Configuration.Config.Set("intrinio-password", "65be35238b14de4cd0afc0edf364efc3");
+                var intrinioCredentials = new Dictionary<string, string>
+                {
+                    {"intrinio-username", "121078c02c20a09aa5d9c541087e7fa4"},
+                    {"intrinio-password", "65be35238b14de4cd0afc0edf364efc3" }
+                };
+                QuantConnect.Configuration.Config.Set("parameters", JsonConvert.SerializeObject(intrinioCredentials));
             }
 
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
