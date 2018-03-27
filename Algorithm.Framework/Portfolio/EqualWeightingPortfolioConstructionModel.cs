@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : IPortfolioConstructionModel
     {
+        private List<Symbol> _removedSymbols;
         private readonly HashSet<Security> _securities = new HashSet<Security>();
 
         /// <summary>
@@ -39,6 +40,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
         public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Insight> insights)
         {
+            var targets = new List<IPortfolioTarget>();
+            if (_removedSymbols != null)
+            {
+                targets.AddRange(_removedSymbols.Select(s => new PortfolioTarget(s, 0)));
+                _removedSymbols = null;
+            }
+
             if (_securities.Count == 0)
             {
                 return Enumerable.Empty<IPortfolioTarget>();
@@ -46,9 +54,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // give equal weighting to each security
             var percent = 1m / _securities.Count;
-            return insights.Select(insight =>
-                PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent)
-            );
+            foreach (var insight in insights)
+            {
+                targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent));
+            }
+
+            return targets;
         }
 
         /// <summary>
@@ -58,6 +69,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
+            // save securities removed so we can zero out our holdings
+            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
+
             NotifiedSecurityChanges.UpdateCollection(_securities, changes);
         }
     }
