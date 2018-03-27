@@ -90,7 +90,7 @@
     <Compile Include="BasicTemplateFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateLibrary.cs" />
     <Compile Include="Benchmarks\EmptyMinute400EquityBenchmark.cs" />
-    <Compile Include="Benchmarks\BasicTemplateAlgorithmBenchmark.cs" />
+    <Compile Include="Benchmarks\BasicTemplateBenchmark.cs" />
     <Compile Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.cs" />
     <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />

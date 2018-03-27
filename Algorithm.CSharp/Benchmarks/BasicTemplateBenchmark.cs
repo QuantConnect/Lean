@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
     /// All new projects in the cloud are created with the basic template algorithm. It uses a minute algorithm
     /// over a long period of time to establish a baseline.
     /// </remarks>
-    public class BasicTemplateAlgorithmBenchmark : QCAlgorithm
+    public class BasicTemplateBenchmark : QCAlgorithm
     {
         public override void Initialize()
         {
