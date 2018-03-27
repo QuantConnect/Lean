@@ -149,6 +149,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Setup Base Algorithm:
                     algorithm.Initialize();
 
+                    //Finalize Initialization
+                    algorithm.PostInitialize();
+
                     //Set the time frontier of the algorithm
                     algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
 
@@ -179,8 +182,6 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 initializeComplete = true;
             }
-
-            algorithm.PostInitialize();
 
             return initializeComplete;
         }
