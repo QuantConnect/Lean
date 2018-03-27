@@ -54,6 +54,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
+    <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
+    <Compile Include="Alphas\RsiAlphaModel.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="Execution\NullExecutionModel.cs" />
@@ -63,7 +65,7 @@
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
-    <Compile Include="Portfolio\SimplePortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithmFramework.Python.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
