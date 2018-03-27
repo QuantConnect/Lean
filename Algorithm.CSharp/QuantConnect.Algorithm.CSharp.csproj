@@ -89,7 +89,9 @@
     <Compile Include="BasicTemplateIntrinioEconomicData.cs" />
     <Compile Include="BasicTemplateFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateLibrary.cs" />
-    <Compile Include="Benchmarks\EmptySingleSecuritySecondEquityAlgorithm.cs" />
+    <Compile Include="Benchmarks\EmptyMinute400EquityBenchmark.cs" />
+    <Compile Include="Benchmarks\BasicTemplateAlgorithmBenchmark.cs" />
+    <Compile Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.cs" />
     <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm.cs" />
@@ -123,8 +125,6 @@
     <Compile Include="BasicTemplateForexAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsAlgorithm.cs" />
-    <Compile Include="Benchmarks\EmptyMinute400EquityAlgorithm.cs" />
-    <Compile Include="Benchmarks\Symbols.cs" />
     <Compile Include="CoarseUniverseTop5DollarVolumeAlgorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
