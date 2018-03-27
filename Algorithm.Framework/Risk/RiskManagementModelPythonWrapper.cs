@@ -16,6 +16,8 @@
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using System;
+using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -49,11 +51,15 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// Manages the algorithm's risk at each time step
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        public void ManageRisk(QCAlgorithmFramework algorithm)
+        public IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm)
         {
             using (Py.GIL())
             {
-                _model.ManageRisk(algorithm);
+                var targets = _model.ManageRisk(algorithm) as PyObject;
+                foreach (PyObject target in targets)
+                {
+                    yield return target.AsManagedObject(typeof(IPortfolioTarget)) as IPortfolioTarget;
+                }
             }
         }
 
