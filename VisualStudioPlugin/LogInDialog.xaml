@@ -23,15 +23,21 @@
              Title="Login to QuantConnect" Height="240" Width="390"
              x:ClassModifier="internal" Visibility="Visible" ResizeMode="NoResize" HasHelpButton="True" Name="Login">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="57*"/>
+            <RowDefinition Height="154*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="53*"/>
-            <ColumnDefinition Width="11*"/>
+            <ColumnDefinition Width="67*"/>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="67*"/>
         </Grid.ColumnDefinitions>
-        <PasswordBox x:Name="accessTokenBox" HorizontalAlignment="Right" VerticalAlignment="Top" Width="250" Margin="-2,95,0,0" Height="22" TabIndex="2" KeyDown="InputField_KeyDown" VerticalContentAlignment="Center" Padding="5,0"/>
-        <TextBox x:Name="userIdBox" HorizontalAlignment="Right" VerticalAlignment="Top" Width="250" Margin="0,35,0,0" TabIndex="1" Height="22" KeyDown="InputField_KeyDown" VerticalContentAlignment="Center" Padding="5,0"/>
-        <Label x:Name="userIdLabel" Content="User Id" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,5,0,0"/>
-        <Label x:Name="accessTokenLabel" Content="Access Token" HorizontalAlignment="Left" Margin="60,65,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="logInButton" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="132,140,0,0" Height="30" Click="Login_Click" TabIndex="3" Width="85">
+        <PasswordBox x:Name="accessTokenBox" VerticalAlignment="Top" Width="250" Margin="0,38,0,0" Height="22" TabIndex="2" KeyDown="InputField_KeyDown" VerticalContentAlignment="Center" Padding="5,0" Grid.Column="1" Grid.Row="1"/>
+        <TextBox x:Name="userIdBox" VerticalAlignment="Bottom" Width="250" TabIndex="1" Height="22" KeyDown="InputField_KeyDown" VerticalContentAlignment="Center" Padding="5,0" Grid.Column="1"/>
+        <Label x:Name="userIdLabel" Content="User Id" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,5,0,0" Grid.ColumnSpan="2"/>
+        <Label x:Name="accessTokenLabel" Content="Access Token" HorizontalAlignment="Left" Margin="60,8,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Grid.Row="1"/>
+        <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/icon_128x128_resource.png" Stretch="Fill" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Button x:Name="logInButton" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="65,83,0,0" Height="30" Click="Login_Click" TabIndex="3" Width="85" Grid.Column="1" Grid.Row="1" IsDefault="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -41,7 +47,7 @@
                 <Label Grid.Column="1" Content="Login" FontSize="12"/>
             </Grid>
         </Button>
-        <Button x:Name="logOutButton" HorizontalAlignment="Right" VerticalAlignment="Top" Width="85" Margin="0,140,0,0" Height="30" Click="Logout_Click" TabIndex="4" HorizontalContentAlignment="Center">
+        <Button x:Name="logOutButton" HorizontalAlignment="Right" VerticalAlignment="Top" Width="85" Margin="0,83,0,0" Height="30" Click="Logout_Click" TabIndex="4" HorizontalContentAlignment="Center" Grid.Column="1" Grid.Row="1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />

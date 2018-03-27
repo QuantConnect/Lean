@@ -127,6 +127,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Resource Include="Resources\icon_128x128_resource.png" />
     <Content Include="Resources\ToolMenuCommand.png" />
   </ItemGroup>
   <ItemGroup>
