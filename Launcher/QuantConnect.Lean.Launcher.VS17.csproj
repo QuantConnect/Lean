@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net452</TargetFramework>
+    <LangVersion>6</LangVersion>
+    <RootNamespace>QuantConnect.Lean.Launcher</RootNamespace>
+    <AssemblyName>QuantConnect.Lean.Launcher</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>QuantConnect.Lean.Launcher.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DynamicInterop" Version="0.7.4" />
+    <PackageReference Include="R.NET.Community" Version="1.6.5" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.VS17.csproj" />
+    <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.VS17.csproj" />
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.VS17.csproj" />
+    <ProjectReference Include="..\Api\QuantConnect.Api.VS17.csproj" />
+    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.VS17.csproj" />
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.VS17.csproj" />
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.VS17.csproj" />
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.VS17.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
+    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.VS17.csproj" />
+    <ProjectReference Include="..\Queues\QuantConnect.Queues.VS17.csproj" />
+    <ProjectReference Include="..\ToolBox\QuantConnect.ToolBox.VS17.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

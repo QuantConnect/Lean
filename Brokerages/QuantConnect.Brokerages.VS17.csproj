@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net452</TargetFramework>
+    <AssemblyName>QuantConnect.Brokerages</AssemblyName>
+    <RootNamespace>QuantConnect.Brokerages</RootNamespace>
+    <LangVersion>6</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CSharpAPI">
+      <HintPath>InteractiveBrokers\CSharpAPI.dll</HintPath>
+    </Reference>
+    <PackageReference Include="IKVM" Version="7.3.4830" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
+    </Reference>
+    <PackageReference Include="RestSharp" Version="105.2.3.0" />
+    <PackageReference Include="WebSocketSharpFork" Version="1.0.4.0" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="InteractiveBrokers\IB-symbol-map.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="InteractiveBrokers\run-ib-controller.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="InteractiveBrokers\run-ib-controller.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.VS17.csproj" />
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Fxcm\QuantConnect.Fxcm.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

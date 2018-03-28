@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net452</TargetFramework>
+    <RootNamespace>QuantConnect.ToolBox</RootNamespace>
+    <AssemblyName>QuantConnect.ToolBox</AssemblyName>
+    <LangVersion>6</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>QuantConnect.ToolBox.KaikoDataConverter.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.10.1" />
+    <PackageReference Include="EngineIoClientDotNet" Version="0.9.22" />
+    <PackageReference Include="IKVM" Version="7.3.4830" />
+
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="SevenZipSharp" Version="0.64" />
+    <PackageReference Include="SocketIoClientDotNet" Version="0.9.13" />
+    <PackageReference Include="WebSocket4Net" Version="0.14.1" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="QuantConnect.Fxcm">
+      <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AlgoSeekFuturesConverter\AlgoSeek.US.Futures.PriceMultipliers.1.1.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="CoarseUniverseGenerator\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="IQFeed\IQFeed-symbol-map.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="instruments_oanda.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.VS17.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.VS17.csproj" />
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.VS17.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="instruments_dukascopy.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CoarseUniverseGenerator\exclusions.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="instruments_fxcm.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net452</TargetFramework>
+    <AssemblyName>QuantConnect.Algorithm.FSharp</AssemblyName>
+    <RootNamespace>QuantConnect.Algorithm.FSharp</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BasicTemplateAlgorithm.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.VS17.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.VS17.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net452</TargetFramework>
+    <AssemblyName>QuantConnect.Algorithm.CSharp</AssemblyName>
+    <RootNamespace>QuantConnect.Algorithm.CSharp</RootNamespace>
+    <LangVersion>6</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Accord" Version="3.6.0" />
+    <PackageReference Include="Accord.Fuzzy" Version="3.6.0" />
+    <PackageReference Include="Accord.Math" Version="3.6.0" />
+    <PackageReference Include="Accord.Statistics" Version="3.6.0" />
+    <PackageReference Include="DynamicInterop" Version="0.7.4" />
+    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.5" />
+    <PackageReference Include="R.NET.Community" Version="1.6.5" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.VS17.csproj" />
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.VS17.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.VS17.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+</Project>

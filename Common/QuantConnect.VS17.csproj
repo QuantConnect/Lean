@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>QuantConnect.Common</AssemblyName>
+    <RootNamespace>QuantConnect.Common</RootNamespace>
+    <TargetFramework>net452</TargetFramework>
+    <LangVersion>6</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CloneExtensions" Version="1.3.0" />
+    <PackageReference Include="DotNetZip" Version="1.10.1" />
+    <PackageReference Include="Fasterflect" Version="2.1.3" />
+    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.5" />
+    <PackageReference Include="QLNet" Version="1.9.2.0" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.ComponentModel.Composition" />
+  </ItemGroup>
+</Project>
