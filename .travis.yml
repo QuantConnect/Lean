@@ -2,12 +2,12 @@ sudo: required
 language: csharp
 mono:
   - 5.8.0
-solution: QuantConnect.Lean.sln
+solution: QuantConnect.Lean.VS17.sln
 install:
-  - nuget restore QuantConnect.Lean.sln
+  - msbuild /t:restore QuantConnect.Lean.VS17.sln
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
 script:
-  - xbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.sln
+  - msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.VS17.sln
   - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --exclude:TravisExclude --labels
 after_success:
   - coveralls
