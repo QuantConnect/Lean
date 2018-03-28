@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -26,6 +27,8 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityCacheTests
     {
+        private static readonly DateTime ReferenceTime = new DateTime(2000, 01, 01);
+
         private readonly Random _rng = new Random(Seed: 123);
 
         [TestCase(MarketDataType.TradeBar, 10, true)]
@@ -88,9 +91,223 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.True(securityCache.GetData<QuoteBar>().Equals(quotes.Last()));
         }
 
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataWithSameEndTime_SetsOpenInterestValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            var map = new Dictionary<string, string> {{"OpenInterest", "Value"}};
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.OpenInterest, new OpenInterest
+            {
+                Value = 101,
+                EndTime = ReferenceTime
+            }, map);
+        }
 
-        private IEnumerable<BaseData> GenerateData(MarketDataType type, int quantity, bool sameTime,
-                                                   DateTime? firstTimeStamp = null)
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataWithSameEndTime_SetsQuoteTickValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.QuoteTick, new Tick
+            {
+                AskPrice = 101,
+                AskSize = 102,
+                BidPrice = 103,
+                BidSize = 104,
+                TickType = TickType.Quote,
+                EndTime = ReferenceTime
+            });
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataWithSameEndTime_SetsTradeTickValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            var map = new Dictionary<string, string> {{"Volume", "Quantity"}};
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.TradeTick, new Tick
+            {
+                Value = 101,
+                Quantity = 102,
+                TickType = TickType.Trade,
+                EndTime = ReferenceTime
+            }, map);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataWithSameEndTime_SetsTradeBarValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.TradeBar, new TradeBar
+            {
+                Open = 101,
+                High = 102,
+                Low = 103,
+                Close = 104,
+                Volume = 105,
+                EndTime = ReferenceTime
+            });
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataWithSameEndTime_SetsQuoteBarValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            var map = new Dictionary<string, string>
+            {
+                {"Price", "Close"},
+                {"BidPrice", "Bid.Close"},
+                {"BidSize", "LastBidSize"},
+                {"AskPrice", "Ask.Close"},
+                {"AskSize", "LastAskSize"}
+            };
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.QuoteBar, new QuoteBar
+            {
+                Bid = new Bar(101, 102, 103, 104),
+                Ask = new Bar(105, 106, 107, 108),
+                LastAskSize = 109,
+                LastBidSize = 110,
+                EndTime = ReferenceTime
+            }, map);
+        }
+
+        private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)
+        {
+            var before = JObject.FromObject(cache);
+            var dataSnapshot = JObject.FromObject(data);
+
+            cache.AddData(data);
+            var after = JObject.FromObject(cache);
+
+            var updatedCacheProperties = GetPropertiesBy(dataType);
+            if (seedType == SecuritySeedData.QuoteBar && (dataType  == SecuritySeedData.QuoteBar || dataType == SecuritySeedData.TradeBar))
+            {
+                // these properties aren't updated when previous data is quote bar at same time as a new IBar
+                updatedCacheProperties = updatedCacheProperties.Where(p =>
+                    p != "Open" &&
+                    p != "High" &&
+                    p != "Low" &&
+                    p != "Close" &&
+                    p != "Price"
+                ).ToArray();
+            }
+
+            foreach (var property in before.Properties())
+            {
+                string dataPropertyName = null;
+                if (updatedCacheProperties.Contains(property.Name))
+                {
+                    if (cacheToBaseDataPropertyMap?.TryGetValue(property.Name, out dataPropertyName) == true)
+                    {
+                        // avoiding failures due to decimal <> long in JToken.DeepEquals
+                        var e = dataSnapshot.SelectToken(dataPropertyName).ToString();
+                        var a = after.SelectToken(property.Name).ToString();
+                        Assert.AreEqual(e, a, $"{property.Name}: Expected {e}. Actual {a}");
+                    }
+                    else
+                    {
+                        dataSnapshot.IsEqualTo(after, property.Name);
+                    }
+                }
+                else
+                {
+                    before.IsEqualTo(after, property.Name);
+                }
+            }
+        }
+
+        public enum SecuritySeedData
+        {
+            None,
+            OpenInterest,
+            TradeTick,
+            QuoteTick,
+            TradeBar,
+            QuoteBar
+        }
+
+        public string[] GetPropertiesBy(SecuritySeedData type)
+        {
+            switch (type)
+            {
+                case SecuritySeedData.None:
+                    return new string[0];
+
+                case SecuritySeedData.OpenInterest:
+                    return new[] { "OpenInterest" };
+
+                case SecuritySeedData.TradeTick:
+                    return new[] {"Price", "Volume"};
+
+                case SecuritySeedData.QuoteTick:
+                    return new[] {"AskPrice", "AskSize", "BidPrice", "BidSize"};
+
+                case SecuritySeedData.TradeBar:
+                    return new[] {"Price", "Volume", "Open", "High", "Low", "Close"};
+
+                case SecuritySeedData.QuoteBar:
+                    return new[] { "Price", "Open", "High", "Low", "Close", "AskPrice", "AskSize", "BidPrice", "BidSize" };
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
+
+        private TestCaseData[] GetSecurityCacheInitialStates()
+        {
+            var defaultInstance = new SecurityCache();
+
+            var tradeTick = new SecurityCache();
+            tradeTick.AddData(new Tick
+            {
+                Value = 5,
+                Quantity = 6,
+                Time = ReferenceTime,
+                TickType = TickType.Trade
+            });
+
+            var quoteTick = new SecurityCache();
+            quoteTick.AddData(new Tick
+            {
+                AskPrice = 1,
+                AskSize = 2,
+                BidPrice = 3,
+                BidSize = 4,
+                Time = ReferenceTime,
+                TickType = TickType.Quote
+            });
+
+            var tradeBar = new SecurityCache();
+            tradeBar.AddData(new TradeBar
+            {
+                Open = 7,
+                High = 8,
+                Low = 9,
+                Close = 10,
+                Volume = 11,
+                EndTime = ReferenceTime
+            });
+
+            var quoteBar = new SecurityCache();
+            quoteBar.AddData(new QuoteBar
+            {
+                Ask = new Bar(12, 13, 14, 15),
+                Bid = new Bar(16, 17, 18, 19),
+                LastAskSize = 20,
+                LastBidSize = 21,
+                Value = 22,
+                EndTime = ReferenceTime
+            });
+
+            return new[]
+            {
+                new TestCaseData(defaultInstance, SecuritySeedData.None).SetName("Default Instance"),
+                new TestCaseData(tradeTick, SecuritySeedData.TradeTick).SetName("Seeded w/ Trade Tick"),
+                new TestCaseData(quoteTick, SecuritySeedData.QuoteTick).SetName("Seeded w/ Quote Tick"),
+                new TestCaseData(tradeBar, SecuritySeedData.TradeBar).SetName("Seeded w/ TradeBar"),
+                new TestCaseData(quoteBar, SecuritySeedData.QuoteBar).SetName("Seeded w/ QuoteBar"),
+            };
+        }
+
+        private IReadOnlyCollection<BaseData> GenerateData(MarketDataType type, int quantity, bool sameTime, DateTime? firstTimeStamp = null)
         {
             var time = firstTimeStamp ?? DateTime.Now;
             var outputTradeBars = new List<BaseData>();
