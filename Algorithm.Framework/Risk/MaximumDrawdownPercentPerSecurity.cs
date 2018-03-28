@@ -15,6 +15,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Risk
@@ -40,7 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// Manages the algorithm's risk at each time step
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        public void ManageRisk(QCAlgorithmFramework algorithm)
+        public IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm)
         {
             foreach (var kvp in algorithm.Securities)
             {
@@ -54,7 +56,8 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 var pnl = security.Holdings.UnrealizedProfitPercent;
                 if (pnl < _maximumDrawdownPercent)
                 {
-                    algorithm.Liquidate(security.Symbol);
+                    // liquidate
+                    yield return new PortfolioTarget(security.Symbol, 0);
                 }
             }
         }

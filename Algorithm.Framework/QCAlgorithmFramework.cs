@@ -25,6 +25,7 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework
 {
@@ -113,9 +114,10 @@ namespace QuantConnect.Algorithm.Framework
             // construct portfolio targets from insights
             var targets = PortfolioConstruction.CreateTargets(this, insights);
 
-            // execute on the targets and manage risk
-            Execution.Execute(this, targets);
-            RiskManagement.ManageRisk(this);
+            var riskTargetOverrides = RiskManagement.ManageRisk(this);
+
+            // execute on the targets, overriding targets for symbols w/ risk targets
+            Execution.Execute(this, riskTargetOverrides.Concat(targets).DistinctBy(pt => pt.Symbol));
         }
 
         /// <summary>
