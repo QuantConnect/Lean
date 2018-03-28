@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,12 +26,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// In this algorithm we demonstrate how to use the coarse fundamental data to
     /// define a universe as the top dollar volume
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="universes" />
+    /// <meta name="tag" content="coarse universes" />
+    /// <meta name="tag" content="regression test" />
     public class CoarseFundamentalTop5Algorithm : QCAlgorithm
     {
         private const int NumberOfSymbols = 5;
 
         // initialize our changes to nothing
-        SecurityChanges _changes = SecurityChanges.None;
+        private SecurityChanges _changes = SecurityChanges.None;
 
         public override void Initialize()
         {
@@ -60,6 +66,8 @@ namespace QuantConnect.Algorithm.CSharp
         //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
         public void OnData(TradeBars data)
         {
+            Console.WriteLine($"OnData({UtcTime:o}): Keys: {string.Join(", ", data.Keys.OrderBy(x => x))}");
+
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None) return;
 
@@ -85,6 +93,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             _changes = changes;
+        }
+
+        public override void OnOrderEvent(OrderEvent fill)
+        {
+            Console.WriteLine($"OnOrderEvent({UtcTime:o}):: {fill}");
         }
     }
 }

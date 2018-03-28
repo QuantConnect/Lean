@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -72,7 +73,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Boolean flag indicating the result hander thread is busy. 
+        /// Boolean flag indicating the result hander thread is busy.
         /// False means it has completely finished and ready to dispose.
         /// </summary>
         bool IsActive
@@ -128,7 +129,7 @@ namespace QuantConnect.Lean.Engine.Results
         void ErrorMessage(string error, string stacktrace = "");
 
         /// <summary>
-        /// Send a runtime error message back to the browser highlighted with in red 
+        /// Send a runtime error message back to the browser highlighted with in red
         /// </summary>
         /// <param name="message">Error message.</param>
         /// <param name="stacktrace">Stacktrace information string</param>
@@ -194,6 +195,12 @@ namespace QuantConnect.Lean.Engine.Results
         void SetAlgorithm(IAlgorithm algorithm);
 
         /// <summary>
+        /// Sets the current alpha runtime statistics
+        /// </summary>
+        /// <param name="statistics">The current alpha runtime statistics</param>
+        void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics);
+
+        /// <summary>
         /// Save the snapshot of the total results to storage.
         /// </summary>
         /// <param name="packet">Packet to store.</param>
@@ -210,7 +217,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="holdings">Current holdings state for the algorithm</param>
         /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
         /// <param name="banner">Runtime statistics banner information</param>
-        void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner);
+        void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> banner);
 
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.

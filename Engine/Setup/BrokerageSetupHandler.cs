@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Any errors from the initialization stored here:
         /// </summary>
-        public List<string> Errors { get; set; }
+        public List<Exception> Errors { get; set; }
 
         /// <summary>
         /// Get the maximum runtime for this algorithm job.
@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public BrokerageSetupHandler()
         {
-            Errors = new List<string>();
+            Errors = new List<Exception>();
             MaximumRuntime = TimeSpan.FromDays(10*365);
             MaxOrders = int.MaxValue;
         }
@@ -89,19 +89,7 @@ namespace QuantConnect.Lean.Engine.Setup
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(15), names =>
-            {
-                // if there's only one use that guy
-                if (names.Count == 1)
-                {
-                    return names.Single();
-                }
-
-                // if there's more than one then check configuration for which one we should use
-                var algorithmName = Config.Get("algorithm-type-name");
-                return names.Single(x => x.Contains("." + algorithmName));
-            });
-
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(15), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")));
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm and remove duplicate QCAlgorithm base classes.");
 
@@ -152,6 +140,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 AddInitializationError("BrokerageSetupHandler requires a LiveNodePacket");
                 return false;
             }
+
+            algorithm.Name = liveJob.GetAlgorithmName();
 
             // verify the brokerage was specified
             if (string.IsNullOrWhiteSpace(liveJob.Brokerage))
@@ -205,7 +195,10 @@ namespace QuantConnect.Lean.Engine.Setup
                         // set the option chain provider
                         algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new LiveOptionChainProvider()));
 
-                        // If we're going to receive market data from IB, 
+                        // set the future chain provider
+                        algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new LiveFutureChainProvider()));
+
+                        // If we're going to receive market data from IB,
                         // set the default subscription limit to 100,
                         // algorithms can override this setting in the Initialize method
                         if (brokerage is InteractiveBrokersBrokerage &&
@@ -216,6 +209,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
+
+                        //Finalize Initialization
+                        algorithm.PostInitialize();
+
                         if (liveJob.Brokerage != "PaperBrokerage")
                         {
                             //Zero the CashBook - we'll populate directly from brokerage
@@ -227,7 +224,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     }
                     catch (Exception err)
                     {
-                        AddInitializationError(err.ToString());
+                        AddInitializationError(err.ToString(), err);
                     }
                 }, controls.RamAllocation);
 
@@ -252,7 +249,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     Log.Error(err);
                     AddInitializationError(string.Format("Error connecting to brokerage: {0}. " +
-                        "This may be caused by incorrect login credentials or an unsupported account type.", err.Message));
+                        "This may be caused by incorrect login credentials or an unsupported account type.", err.Message), err);
                     return false;
                 }
 
@@ -277,27 +274,19 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error getting cash balance from brokerage: " + err.Message);
+                    AddInitializationError("Error getting cash balance from brokerage: " + err.Message, err);
                     return false;
                 }
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
                 try
                 {
-                    // populate the algorithm with the account's outstanding orders
-                    var openOrders = brokerage.GetOpenOrders();
-                    foreach (var order in openOrders)
-                    {
-                        // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
-                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.Value + " - " + order.Quantity);
-                        order.Id = algorithm.Transactions.GetIncrementOrderId();
-                        transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
-                    }
+                    GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage);
                 }
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error getting open orders from brokerage: " + err.Message);
+                    AddInitializationError("Error getting open orders from brokerage: " + err.Message, err);
                     return false;
                 }
 
@@ -306,7 +295,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future };
+                    var supportedSecurityTypes = new HashSet<SecurityType>
+                    {
+                        SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.Crypto
+                    };
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {
@@ -361,11 +353,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error getting account holdings from brokerage: " + err.Message);
+                    AddInitializationError("Error getting account holdings from brokerage: " + err.Message, err);
                     return false;
                 }
-
-                algorithm.PostInitialize();
 
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
@@ -373,7 +363,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             catch (Exception err)
             {
-                AddInitializationError(err.ToString());
+                AddInitializationError(err.ToString(), err);
             }
             finally
             {
@@ -384,6 +374,28 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             return Errors.Count == 0;
+        }
+
+        /// <summary>
+        /// Get the open orders from a brokerage. Adds <see cref="Orders.Order"/> and <see cref="Orders.OrderTicket"/> to the transaction handler
+        /// </summary>
+        /// <param name="algorithm">Algorithm instance</param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configurated transaction handler</param>
+        /// <param name="brokerage">Brokerage output instance</param>
+        protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
+        {
+            // populate the algorithm with the account's outstanding orders  resultHandler
+            var openOrders = brokerage.GetOpenOrders();
+            foreach (var order in openOrders)
+            {
+                // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
+                Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.Value + " - " + order.Quantity);
+                resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
+                order.Id = algorithm.Transactions.GetIncrementOrderId();
+                transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
+                transactionHandler.OrderTickets.AddOrUpdate(order.Id, order.ToOrderTicket(algorithm.Transactions));
+            }
         }
 
         /// <summary>
@@ -408,9 +420,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Adds initializaion error to the Errors list
         /// </summary>
         /// <param name="message">The error message to be added</param>
-        private void AddInitializationError(string message)
+        /// <param name="inner">The inner exception being wrapped</param>
+        private void AddInitializationError(string message, Exception inner = null)
         {
-            Errors.Add("Failed to initialize algorithm: " + message);
+            Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: " + message, inner));
         }
 
         /// <summary>

@@ -142,10 +142,17 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="Alphas\ChartingInsightManagerExtension.cs" />
+    <Compile Include="Alphas\StatisticsInsightManagerExtension.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />
+    <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
+    <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
@@ -178,15 +185,14 @@
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
-    <Compile Include="DataFeeds\Queues\ApiDataQueueHandler.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
+    <Compile Include="DataFeeds\SubscriptionData.cs" />
     <Compile Include="DataFeeds\TextSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\SubscriptionLimiter.cs" />
     <Compile Include="DataFeeds\SubscriptionSynchronizer.cs" />
     <Compile Include="DataFeeds\Subscription.cs" />
     <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />
@@ -204,6 +210,7 @@
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
     <Compile Include="Results\BaseResultsHandler.cs" />
+    <Compile Include="Results\RegressionResultHandler.cs" />
     <Compile Include="Server\LocalLeanManager.cs" />
     <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
@@ -217,6 +224,7 @@
     <Compile Include="RealTime\ScheduledEventFactory.cs" />
     <Compile Include="Results\DesktopResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
+    <Compile Include="Setup\AlgorithmSetupException.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
@@ -227,6 +235,8 @@
     </None>
     <Compile Include="Results\BacktestingResultHandler.cs" />
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
+    <Compile Include="Alphas\DefaultAlphaHandler.cs" />
+    <Compile Include="Alphas\IAlphaHandler.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />

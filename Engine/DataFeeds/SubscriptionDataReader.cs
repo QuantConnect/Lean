@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
 
-        // we'll use these flags to denote we've already fired off the DelistedType.Warning
+        // we'll use these flags to denote we've already fired off the DelistingType.Warning
         // and a DelistedType.Delisted Delisting object, the _delistingType object is save here
         // since we need to wait for the next trading day before emitting
         private bool _delisted;
@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                 _resultHandler.DebugMessage(
                                     string.Format("Data for symbol {0} has been limited due to numerical precision issues in the factor file. The starting date has been set to {1}.",
-                                    config.Symbol.Value, 
+                                    config.Symbol.Value,
                                     _factorFile.FactorFileMinimumDate.Value.ToShortDateString()));
                             }
                         }
@@ -357,7 +357,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             Current = _auxiliaryData.Dequeue();
                             _emittedAuxilliaryData = true;
 
-                            // with hourly resolution the first bar for the new date is received 
+                            // with hourly resolution the first bar for the new date is received
                             // before the price scale factor is updated by ResolveDataEnumerator,
                             // so we have to 'rescale' prices before emitting the bar
                             if (_config.Resolution == Resolution.Hour &&
@@ -579,7 +579,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends. 
+        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends.
         /// This backwards adjusted price is used by default and fed as the current price.
         /// </summary>
         /// <param name="date">Current date of the backtest.</param>
@@ -618,10 +618,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CheckForSplit(DateTime date)
         {
-            if (_splitFactor != null)
+            var factor = _splitFactor;
+            if (factor != null)
             {
                 var close = GetRawClose();
-                var split = new Split(_config.Symbol, date, close, _splitFactor.Value);
+                var split = new Split(_config.Symbol, date, close, factor.Value, SplitType.SplitOccurred);
                 _auxiliaryData.Enqueue(split);
                 _splitFactor = null;
             }
@@ -630,6 +631,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_factorFile.HasSplitEventOnNextTradingDay(date, out splitFactor))
             {
                 _splitFactor = splitFactor;
+                var split = new Split(_config.Symbol, date, GetRawClose(), splitFactor, SplitType.Warning);
+                _auxiliaryData.Enqueue(split);
             }
         }
 

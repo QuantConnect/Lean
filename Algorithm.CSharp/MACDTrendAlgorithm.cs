@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,19 @@ using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// MACD Example Algorithm
+    /// Simple indicator demonstration algorithm of MACD
     /// </summary>
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="indicator classes" />
+    /// <meta name="tag" content="plotting indicators" />
     public class MACDTrendAlgorithm : QCAlgorithm
     {
-        private DateTime previous;
-        private MovingAverageConvergenceDivergence macd;
-        private string symbol = "SPY";
+        private DateTime _previous;
+        private MovingAverageConvergenceDivergence _macd;
+        private readonly string _symbol = "SPY";
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,10 +39,10 @@ namespace QuantConnect.Algorithm.Examples
             SetStartDate(2004, 01, 01);
             SetEndDate(2015, 01, 01);
 
-            AddSecurity(SecurityType.Equity, symbol, Resolution.Daily);
+            AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
 
             // define our daily macd(12,26) with a 9 day signal
-            macd = MACD(symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
+            _macd = MACD(_symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
         }
 
         /// <summary>
@@ -49,33 +52,33 @@ namespace QuantConnect.Algorithm.Examples
         public void OnData(TradeBars data)
         {
             // only once per day
-            if (previous.Date == Time.Date) return;
+            if (_previous.Date == Time.Date) return;
 
-            if (!macd.IsReady) return;
+            if (!_macd.IsReady) return;
 
-            var holding = Portfolio[symbol];
+            var holding = Portfolio[_symbol];
 
-            decimal signalDeltaPercent = (macd - macd.Signal)/macd.Fast;
+            var signalDeltaPercent = (_macd - _macd.Signal)/_macd.Fast;
             var tolerance = 0.0025m;
 
             // if our macd is greater than our signal, then let's go long
             if (holding.Quantity <= 0 && signalDeltaPercent > tolerance) // 0.01%
             {
                 // longterm says buy as well
-                SetHoldings(symbol, 1.0);
+                SetHoldings(_symbol, 1.0);
             }
             // of our macd is less than our signal, then let's go short
             else if (holding.Quantity >= 0 && signalDeltaPercent < -tolerance)
             {
-                Liquidate(symbol);
+                Liquidate(_symbol);
             }
 
             // plot both lines
-            Plot("MACD", macd, macd.Signal);
-            Plot(symbol, "Open", data[symbol].Open);
-            Plot(symbol, macd.Fast, macd.Slow);
+            Plot("MACD", _macd, _macd.Signal);
+            Plot(_symbol, "Open", data[_symbol].Open);
+            Plot(_symbol, _macd.Fast, _macd.Slow);
 
-            previous = Time;
+            _previous = Time;
         }
     }
 }

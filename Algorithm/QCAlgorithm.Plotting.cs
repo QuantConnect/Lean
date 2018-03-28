@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,17 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private readonly Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
+        private readonly ConcurrentDictionary<string, Chart> _charts = new ConcurrentDictionary<string, Chart>();
+
+        private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames = new Dictionary<string, List<string>>
+        {
+            { "Strategy Equity", new List<string> { "Equity", "Daily Performance" } },
+            { "Meta", new List<string>() },
+            { "Alpha", new List<string> { "Direction Score", "Magnitude Score" } },
+            { "Alpha Count", new List<string> { "Count" } },
+            { "Alpha Assets", new List<string>() },
+            { "Alpha Asset Breakdown", new List<string>() }
+        };
 
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
@@ -40,10 +50,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Plot(string,string,decimal)"/>
         public void AddChart(Chart chart)
         {
-            if (!_charts.ContainsKey(chart.Name))
-            {
-                _charts.Add(chart.Name, chart);
-            }
+            _charts.TryAdd(chart.Name, chart);
         }
 
         /// <summary>
@@ -57,7 +64,6 @@ namespace QuantConnect.Algorithm
             //By default plot to the primary chart:
             Plot("Strategy Equity", series, value);
         }
-
 
         /// <summary>
         /// Plot a chart using string series name, with int value. Alias of Plot();
@@ -149,25 +155,32 @@ namespace QuantConnect.Algorithm
         /// <param name="chart">Chart name</param>
         /// <param name="series">Series name</param>
         /// <param name="value">Value of the point</param>
-        public void Plot(string chart, string series, decimal value) 
+        public void Plot(string chart, string series, decimal value)
         {
-            //Ignore the reserved chart names:
-            if ((chart == "Strategy Equity" && series == "Equity") || (chart == "Daily Performance") || (chart == "Meta"))
+            // Check if chart/series names are reserved
+            List<string> reservedSeriesNames;
+            if (ReservedChartSeriesNames.TryGetValue(chart, out reservedSeriesNames))
             {
-                throw new Exception("Algorithm.Plot(): 'Equity', 'Daily Performance' and 'Meta' are reserved chart names created for all charts.");
+                if (reservedSeriesNames.Count == 0)
+                {
+                    throw new Exception($"Algorithm.Plot(): '{chart}' is a reserved chart name.");
+                }
+                if (reservedSeriesNames.Contains(series))
+                {
+                    throw new Exception($"Algorithm.Plot(): '{series}' is a reserved series name for chart '{chart}'.");
+                }
             }
 
             // If we don't have the chart, create it:
-            if (!_charts.ContainsKey(chart))
-            {
-                _charts.Add(chart, new Chart(chart)); 
-            }
+            _charts.TryAdd(chart, new Chart(chart));
 
             var thisChart = _charts[chart];
-            if (!thisChart.Series.ContainsKey(series)) 
+            if (!thisChart.Series.ContainsKey(series))
             {
-                //Number of series in total.
-                var seriesCount = (from x in _charts.Values select x.Series.Count).Sum();
+                //Number of series in total, excluding reserved charts
+                var seriesCount = _charts.Select(x => x.Value).Sum(c => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
+                    ? c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
+                    : c.Series.Count);
 
                 if (seriesCount > 10)
                 {
@@ -184,10 +197,30 @@ namespace QuantConnect.Algorithm
             {
                 thisSeries.AddPoint(UtcTime, value, _liveMode);
             }
-            else 
+            else
             {
                 Debug("Exceeded maximum points per chart, data skipped.");
             }
+        }
+
+        /// <summary>
+        /// Add a series object for charting. This is useful when initializing charts with
+        /// series other than type = line. If a series exists in the chart with the same name,
+        /// then it is replaced.
+        /// </summary>
+        /// <param name="chart">The chart name</param>
+        /// <param name="series">The series name</param>
+        /// <param name="seriesType">The type of series, i.e, Scatter</param>
+        /// <param name="unit">The unit of the y axis, usually $</param>
+        public void AddSeries(string chart, string series, SeriesType seriesType, string unit = "$")
+        {
+            Chart c;
+            if (!_charts.TryGetValue(chart, out c))
+            {
+                _charts[chart] = c = new Chart(chart);
+            }
+
+            c.Series[series] = new Series(series, seriesType, unit);
         }
 
         /// <summary>
@@ -213,6 +246,8 @@ namespace QuantConnect.Algorithm
         {
             foreach (var i in indicators)
             {
+                if (i == null) continue;
+
                 // copy loop variable for usage in closure
                 var ilocal = i;
                 i.Updated += (sender, args) =>
@@ -230,6 +265,8 @@ namespace QuantConnect.Algorithm
         {
             foreach (var i in indicators)
             {
+                if (i == null) continue;
+
                 // copy loop variable for usage in closure
                 var ilocal = i;
                 i.Updated += (sender, args) =>
@@ -291,7 +328,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>GetChartUpdates returns the latest updates since previous request.</remarks>
         public List<Chart> GetChartUpdates(bool clearChartData = false)
         {
-            var updates = _charts.Values.Select(chart => chart.GetUpdates()).ToList();
+            var updates = _charts.Select(x => x.Value).Select(chart => chart.GetUpdates()).ToList();
 
             if (clearChartData)
             {
@@ -306,7 +343,5 @@ namespace QuantConnect.Algorithm
             }
             return updates;
         }
-
-    } // End Partial Algorithm Template - Plotting.
-
-} // End QC Namespace
+    }
+}

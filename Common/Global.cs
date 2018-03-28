@@ -34,7 +34,7 @@ namespace QuantConnect
         /// Daily and hourly time format
         public const string TwelveCharacter = "yyyyMMdd HH:mm";
         /// JSON Format Date Representation
-        public static string JsonFormat = "yyyy-MM-ddThh:mm:ss";
+        public static string JsonFormat = "yyyy-MM-ddTHH:mm:ss";
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
@@ -74,10 +74,10 @@ namespace QuantConnect
         /// Current market conversion rate into the account currency
         public decimal ConversionRate;
 
-        /// Current market value of the holding 
+        /// Current market value of the holding
         public decimal MarketValue;
 
-        /// Current unrealized P/L of the holding 
+        /// Current unrealized P/L of the holding
         public decimal UnrealizedPnL;
 
         /// Create a new default holding:
@@ -108,6 +108,12 @@ namespace QuantConnect
             {
                 rounding = 5;
             }
+            //do not round crypto
+            else if (holding.Type == SecurityType.Crypto)
+            {
+                rounding = 28;
+            }
+
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
@@ -234,7 +240,12 @@ namespace QuantConnect
         /// <summary>
         /// Hobbyist User with Included 512mb Server.
         /// </summary>
-        Hobbyist
+        Hobbyist,
+
+        /// <summary>
+        /// Professional plan for financial advisors
+        /// </summary>
+        Professional
     }
 
 
@@ -298,7 +309,12 @@ namespace QuantConnect
         /// <summary>
         /// Contract For a Difference Security Type.
         /// </summary>
-        Cfd
+        Cfd,
+
+        /// <summary>
+        /// Cryptocurrency Security Type.
+        /// </summary>
+        Crypto
     }
 
     /// <summary>
@@ -366,7 +382,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Types of tick data 
+    /// Types of tick data
     /// </summary>
     /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
@@ -374,7 +390,7 @@ namespace QuantConnect
         /// Trade type tick object.
         Trade,
         /// Quote type tick object.
-        Quote, 
+        Quote,
         /// Open Interest type tick object (for options, futures)
         OpenInterest
     }
@@ -393,6 +409,22 @@ namespace QuantConnect
         /// Specifies the symbol has been delisted
         /// </summary>
         Delisted = 1
+    }
+
+    /// <summary>
+    /// Specifies the type of <see cref="QuantConnect.Data.Market.Split"/> data
+    /// </summary>
+    public enum SplitType
+    {
+        /// <summary>
+        /// Specifies a warning of an imminent split event
+        /// </summary>
+        Warning = 0,
+
+        /// <summary>
+        /// Specifies the symbol has been split
+        /// </summary>
+        SplitOccurred = 1
     }
 
     /// <summary>
@@ -446,15 +478,15 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Specifies the type of settlement in derivative deals 
+    /// Specifies the type of settlement in derivative deals
     /// </summary>
     public enum SettlementType
     {
         /// <summary>
-        /// Physical delivery of the underlying security 
+        /// Physical delivery of the underlying security
         /// </summary>
-        PhysicalDelivery, 
-        
+        PhysicalDelivery,
+
         /// <summary>
         /// Cash is paid/received on settlement
         /// </summary>
@@ -472,10 +504,16 @@ namespace QuantConnect
         public AlgorithmControl()
         {
             // default to true, API can override
+            Initialized = false;
             HasSubscribers = true;
             Status = AlgorithmStatus.Running;
             ChartSubscription = "Strategy Equity";
         }
+
+        /// <summary>
+        /// Register this control packet as not defaults.
+        /// </summary>
+        public bool Initialized;
 
         /// <summary>
         /// Current run status of the algorithm id.

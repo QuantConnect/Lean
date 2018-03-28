@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,8 +47,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
-        public OptionChainUniverse(Option option, 
-                                   UniverseSettings universeSettings, 
+        public OptionChainUniverse(Option option,
+                                   UniverseSettings universeSettings,
                                    ISecurityInitializer securityInitializer,
                                    bool liveMode)
             : base(option.SubscriptionDataConfig, securityInitializer)
@@ -94,7 +94,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = (OptionFilterUniverse)_option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
+            var results = _option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
 
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)
@@ -127,7 +127,7 @@ namespace QuantConnect.Data.UniverseSelection
                 return false;
             }
 
-            // method take into account the case, when the option has experienced an adjustment 
+            // method take into account the case, when the option has experienced an adjustment
             // we update member reference in this case
             if (Securities.Any(x => x.Value.Security == security))
             {

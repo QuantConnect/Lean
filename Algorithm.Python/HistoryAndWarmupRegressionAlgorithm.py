@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,10 +27,15 @@ from QuantConnect.Orders import *
 from QuantConnect.Securities import *
 import decimal as d
 
-
+### <summary>
+### Regression test for history and warm up using the data available in open source.
+### </summary>
+### <meta name="tag" content="history and warm up" />
+### <meta name="tag" content="history" />
+### <meta name="tag" content="regression test" />
+### <meta name="tag" content="warm up" />
 class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
-    '''This algorithm demonstrates the various ways you can call the History function,
-    what it returns, and what you can do with the returned values.'''
+
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
@@ -54,7 +59,7 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
+
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
@@ -85,10 +90,10 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
         PercentTolerance = 0.001
         PercentGlobalStopLoss = 0.01
         LotSize = 10
-        
+
         def __init__(self, symbol, algorithm):
             self.Symbol = symbol
-            self.__algorithm = algorithm   # if we're receiving daily 
+            self.__algorithm = algorithm   # if we're receiving daily
 
             self.__currentStopLoss = None
 
@@ -131,7 +136,7 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
             elif self.IsDowntrend:
                 qty = -self.LotSize
                 limit = self.Security.High
-            
+
             if qty != 0:
                 ticket = self.__algorithm.LimitOrder(self.Symbol, qty, limit, "TryEnter at: {0}".format(limit))
 
@@ -139,7 +144,7 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
         def TryExit(self):
             # can't exit if we haven't entered
             if not self.Security.Invested: return
-            
+
             limit = 0
             qty = self.Security.Holdings.Quantity
             exitTolerance = d.Decimal(1 + 2 * self.PercentTolerance)
@@ -163,7 +168,7 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
                     else fill.FillPrice*d.Decimal(1 + self.PercentGlobalStopLoss)
 
                 self.__currentStopLoss = self.__algorithm.StopMarketOrder(self.Symbol, -qty, stop, "StopLoss at: {0}".format(stop))
-                
+
             # check for an exit, cancel the stop loss
             elif (self.__currentStopLoss is not None and self.__currentStopLoss.Status is not OrderStatus.Filled):
                 # cancel our current stop loss

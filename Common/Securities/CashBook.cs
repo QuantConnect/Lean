@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using QuantConnect.Data;
 using System.Collections.Concurrent;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
@@ -42,7 +43,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalValueInAccountCurrency
         {
-            get { return _currencies.Values.Sum(x => x.ValueInAccountCurrency); }
+            get { return _currencies.Sum(x => x.Value.ValueInAccountCurrency); }
         }
 
         /// <summary>
@@ -76,12 +77,14 @@ namespace QuantConnect.Securities
         /// <param name="symbolPropertiesDatabase">A symbol properties database instance</param>
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <returns>Returns a list of added currency securities</returns>
-        public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap)
+        public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, SecurityChanges changes)
         {
             var addedSecurities = new List<Security>();
-            foreach (var cash in _currencies.Values)
+            foreach (var kvp in _currencies)
             {
-                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this);
+                var cash = kvp.Value;
+
+                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
                 if (security != null)
                 {
                     addedSecurities.Add(security);
@@ -127,13 +130,13 @@ namespace QuantConnect.Securities
         {
             var sb = new StringBuilder();
             sb.AppendLine(string.Format("{0} {1,13}    {2,10} = {3}", "Symbol", "Quantity", "Conversion", "Value in " + AccountCurrency));
-            foreach (var value in Values)
+            foreach (var value in _currencies.Select(x => x.Value))
             {
                 sb.AppendLine(value.ToString());
             }
             sb.AppendLine("-------------------------------------------------");
-            sb.AppendLine(string.Format("CashBook Total Value:                {0}{1}", 
-                Currencies.GetCurrencySymbol(AccountCurrency), 
+            sb.AppendLine(string.Format("CashBook Total Value:                {0}{1}",
+                Currencies.GetCurrencySymbol(AccountCurrency),
                 Math.Round(TotalValueInAccountCurrency, 2))
                 );
 
@@ -146,10 +149,7 @@ namespace QuantConnect.Securities
         /// Gets the count of Cash items in this CashBook.
         /// </summary>
         /// <value>The count.</value>
-        public int Count
-        {
-            get { return _currencies.Count; }
-        }
+        public int Count => _currencies.Skip(0).Count();
 
         /// <summary>
         /// Gets a value indicating whether this instance is read only.
@@ -283,19 +283,13 @@ namespace QuantConnect.Securities
         /// Gets the keys.
         /// </summary>
         /// <value>The keys.</value>
-        public ICollection<string> Keys
-        {
-            get { return _currencies.Keys; }
-        }
+        public ICollection<string> Keys => _currencies.Select(x => x.Key).ToList();
 
         /// <summary>
         /// Gets the values.
         /// </summary>
         /// <value>The values.</value>
-        public ICollection<Cash> Values
-        {
-            get { return _currencies.Values; }
-        }
+        public ICollection<Cash> Values => _currencies.Select(x => x.Value).ToList();
 
         /// <summary>
         /// Gets the enumerator.

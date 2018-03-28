@@ -13,20 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Win32;
-using System.IO;
-using System.Windows.Forms;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -50,7 +39,7 @@ namespace QuantConnect.VisualStudioPlugin
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [Guid(QuantConnectPackage.PackageGuidString)]
+    [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideOptionPage(typeof(OptionPageGrid), "QuantConnect", "Settings", 0, 0, true)]
     public sealed class QuantConnectPackage : Package
@@ -71,15 +60,6 @@ namespace QuantConnect.VisualStudioPlugin
             // initialization is the Initialize method.
         }
 
-        public string DataPath
-        {
-            get
-            {
-                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
-                return page.DataPath;
-            }
-        }
-
         #region Package Members
 
         /// <summary>
@@ -90,7 +70,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             SolutionExplorerMenuCommand.Initialize(this);
             base.Initialize();
-            QuantConnect.VisualStudioPlugin.ToolMenuCommand.Initialize(this);
+            ToolMenuCommand.Initialize(this);
         }
 
         #endregion
@@ -102,16 +82,5 @@ namespace QuantConnect.VisualStudioPlugin
     [Guid("92D0E244-D0DA-458C-88FB-9C0827052177")]
     public class OptionPageGrid : DialogPage
     {
-        // private string path = GetDefaultDataFolder();
-        private string path = "C:\\";
-
-        [Category("QuantConnect")]
-        [DisplayName("Price data path")]
-        [Description("Path to QuantConnect price data")]
-        public string DataPath
-        {
-            get { return path; }
-            set { path = value; }
-        }
     }
 }

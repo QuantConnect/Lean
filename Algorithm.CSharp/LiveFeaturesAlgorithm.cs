@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,16 +16,20 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json;
-using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// QuantConnect University: Live Trading Functionality Demonstration:
-    /// This algorithm demonstrates the underlying functionality specifically for live trading.
+    /// Live Trading Functionality Demonstration algorithm including SMS, Email and Web hook notifications.
     /// </summary>
+    /// <meta name="tag" content="live trading" />
+    /// <meta name="tag" content="alerts" />
+    /// <meta name="tag" content="sms alerts" />
+    /// <meta name="tag" content="web hooks" />
+    /// <meta name="tag" content="email alerts" />
+    /// <meta name="tag" content="runtime statistics" />
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -44,7 +48,7 @@ namespace QuantConnect
             AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute);
 
             //Custom/Bitcoin Live Data: 24/7
-            AddData<Bitcoin>("BTC", Resolution.Second);
+            AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
         }
 
         /// <summary>
@@ -91,41 +95,25 @@ namespace QuantConnect
     /// </summary>
     public class Bitcoin : BaseData
     {
-        //Set the defaults:
-        /// <summary>
-        /// Open Price
-        /// </summary>
+        [JsonProperty("timestamp")]
+        public int Timestamp = 0;
+        [JsonProperty("open")]
         public decimal Open = 0;
-        
-        /// <summary>
-        /// High Price
-        /// </summary>
+        [JsonProperty("high")]
         public decimal High = 0;
-        
-        /// <summary>
-        /// Low Price
-        /// </summary>
+        [JsonProperty("low")]
         public decimal Low = 0;
-
-        /// <summary>
-        /// Closing Price
-        /// </summary>
+        [JsonProperty("last")]
         public decimal Close = 0;
-
-        /// <summary>
-        /// Volume in BTC
-        /// </summary>
-        public decimal VolumeBTC = 0;
-
-        /// <summary>
-        /// Volume in USD
-        /// </summary>
-        public decimal VolumeUSD = 0;
-        
-        /// <summary>
-        /// Volume in USD:
-        /// </summary>
+        [JsonProperty("bid")]
+        public decimal Bid = 0;
+        [JsonProperty("ask")]
+        public decimal Ask = 0;
+        [JsonProperty("vwap")]
         public decimal WeightedPrice = 0;
+        [JsonProperty("volume")]
+        public decimal VolumeBTC = 0;
+        public decimal VolumeUSD = 0;
 
         /// <summary>
         /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.
@@ -176,21 +164,14 @@ namespace QuantConnect
                 //{"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
                 try
                 {
-                    var liveBTC = JsonConvert.DeserializeObject<LiveBitcoin>(line);
-                    coin.Time = DateTime.Now;
-                    coin.Open = liveBTC.Last;
-                    coin.High = liveBTC.High;
-                    coin.Low = liveBTC.Low;
-                    coin.Close = liveBTC.Last;
-                    coin.VolumeBTC = liveBTC.Volume;
-                    coin.WeightedPrice = liveBTC.VWAP;
-                    coin.Symbol = "BTC";
+                    coin = JsonConvert.DeserializeObject<Bitcoin>(line);
+                    coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
                     coin.Value = coin.Close;
                 }
                 catch { /* Do nothing, possible error in json decoding */ }
                 return coin;
             }
-            
+
             //Example Line Format:
             //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
             //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
@@ -205,35 +186,11 @@ namespace QuantConnect
                 coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
                 coin.VolumeUSD = Convert.ToDecimal(data[6], CultureInfo.InvariantCulture);
                 coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
-                coin.Symbol = "BTC";
                 coin.Value = coin.Close;
             }
             catch { /* Do nothing, skip first title row */ }
 
             return coin;
         }
-    }
-
-    /// <summary>
-    /// Live data structure
-    /// </summary>
-    public class LiveBitcoin
-    {
-        [JsonProperty("timestamp")]
-        public int Timestamp = 0;
-        [JsonProperty("last")]
-        public decimal Last = 0;
-        [JsonProperty("high")]
-        public decimal High = 0;
-        [JsonProperty("low")]
-        public decimal Low = 0;
-        [JsonProperty("bid")]
-        public decimal Bid = 0;
-        [JsonProperty("ask")]
-        public decimal Ask = 0;
-        [JsonProperty("vwap")]
-        public decimal VWAP = 0;
-        [JsonProperty("volume")]
-        public decimal Volume = 0;
     }
 }

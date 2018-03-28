@@ -27,7 +27,7 @@ namespace QuantConnect.Interfaces
     /// Brokerage interface that defines the operations all brokerages must implement. The IBrokerage implementation
     /// must have a matching IBrokerageFactory implementation.
     /// </summary>
-    public interface IBrokerage
+    public interface IBrokerage : IDisposable
     {
         /// <summary>
         /// Event that fires each time an order is filled

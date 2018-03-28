@@ -12,9 +12,10 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
     <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -67,9 +68,8 @@
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.4.4\lib\Python.Runtime.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.5\lib\Python.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -95,6 +95,10 @@
       <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="WebSocket4Net, Version=0.14.1.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocket4Net.0.14.1\lib\net45\WebSocket4Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -104,10 +108,15 @@
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
     <Compile Include="Algorithm\AlgorithmInitializeTests.cs" />
+    <Compile Include="Algorithm\AlgorithmPlottingTests.cs" />
+    <Compile Include="Algorithm\AlgorithmRegisterIndicatorTests.cs" />
     <Compile Include="Algorithm\AlgorithmResolveConsolidatorTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetBrokerageTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
+    <Compile Include="Algorithm\CashModelAlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />
+    <Compile Include="Algorithm\Framework\InsightTests.cs" />
     <Compile Include="API\ApiTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />
@@ -116,6 +125,11 @@
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXBrokerageAdditionalTests.cs" />
+    <Compile Include="Common\Brokerages\GDAXBrokerageModelTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXBrokerageIntegrationTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXBrokerageTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXTestHelpers.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Oanda\OandaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\SecurityProvider.cs" />
@@ -137,12 +151,28 @@
     <Compile Include="Common\BrokerageNameTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
+    <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
+    <Compile Include="Common\Exceptions\DllNotFoundPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\InvalidTokenPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\FakeExceptionInterpreter.cs" />
+    <Compile Include="Common\Exceptions\KeyErrorPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\PythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\UnsupportedOperandPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\NoMethodMatchPythonExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Exceptions\NullExceptionInterpreter.cs" />
+    <Compile Include="Common\Exceptions\ScheduledEventExceptionInterpreterTests.cs" />
+    <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
+    <Compile Include="Common\Scheduling\ScheduleManagerTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
+    <Compile Include="Common\Securities\CashBuyingPowerModelTests.cs" />
+    <Compile Include="Common\Securities\Forex\ForexHoldingTest.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
     <Compile Include="Common\Securities\Options\OptionChainProviderTests.cs" />
+    <Compile Include="Common\Securities\SecurityCacheTest.cs" />
+    <Compile Include="Common\Securities\SecurityMarginModelTests.cs" />
     <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
@@ -173,10 +203,10 @@
     <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
     <Compile Include="Common\Securities\MarketHoursDatabaseTests.cs" />
-    <Compile Include="Common\Securities\FuturesMarginModelTests.cs" />
-    <Compile Include="Common\Securities\OptionMarginModelTests.cs" />
+    <Compile Include="Common\Securities\FutureMarginBuyingPowerModelTests.cs" />
+    <Compile Include="Common\Securities\OptionMarginBuyingPowerModelTests.cs" />
     <Compile Include="Common\Securities\OptionPriceModelTests.cs" />
-    <Compile Include="Common\Securities\PatternDayTradingMarginModelTests.cs" />
+    <Compile Include="Common\Securities\PatternDayTradingMarginBuyingPowerModelTests.cs" />
     <Compile Include="Common\Securities\RelativeStandardDeviationVolatilityModelTests.cs" />
     <Compile Include="Common\Securities\SecurityDatabaseKeyTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
@@ -218,22 +248,26 @@
     <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
+    <Compile Include="Engine\AlgorithmManagerTests.cs" />
     <Compile Include="Engine\BasicOptionAssignmentSimulationTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BrokerageTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataCacheProviders\SingleEntryDataCacheProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\AlgorithmStub.cs" />
-    <Compile Include="Engine\DataFeeds\ApiDataQueueHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\Auxiliary\MapFileResolverTests.cs" />
     <Compile Include="Engine\DataFeeds\BaseDataExchangeTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\EnqueableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactoryTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactoryTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\QuoteBarFillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\RefreshEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\SynchronizingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
@@ -244,18 +278,26 @@
     <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
+    <Compile Include="Engine\DataFeeds\SubscriptionCollectionTests.cs" />
+    <Compile Include="Engine\DataFeeds\SubscriptionSynchronizerTests.cs" />
     <Compile Include="Engine\DataFeeds\TimeSliceTests.cs" />
-    <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
+    <Compile Include="Engine\DataFeeds\ZipEntryNameSubscriptionFactoryTests.cs" />
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
+    <Compile Include="Common\Exceptions\StackExceptionInterpreterTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
-    <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
+    <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
+    <Compile Include="ExpectedAlphaStatistics.cs" />
     <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
+    <Compile Include="Indicators\AccelerationBandsTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
+    <Compile Include="Indicators\CoppockCurveTests.cs" />
+    <Compile Include="Indicators\DetrendedPriceOscillatorTests.cs" />
     <Compile Include="Indicators\FractalAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\ArnaudLegouxMovingAverageTest.cs" />
     <Compile Include="Indicators\HullMovingAverageTest.cs" />
@@ -270,6 +312,7 @@
     <Compile Include="Indicators\HeikinAshiTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\MassIndexTests.cs" />
     <Compile Include="Indicators\RegressionChannelTest.cs" />
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
@@ -296,11 +339,16 @@
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Jupyter\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
+    <Compile Include="Python\AlgorithmPythonWrapperTests.cs" />
+    <Compile Include="Python\MethodOverloadTests.cs" />
+    <Compile Include="Python\PandasConverterTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\ForexVolume\FxcmVolumeDownloaderTest.cs" />
     <Compile Include="ToolBox\LeanDataReaderTests.cs" />
     <Compile Include="ToolBox\LeanDataWriterTests.cs" />
     <None Include="app.config">
@@ -365,6 +413,25 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Jupyter\RegressionScripts\custom_data.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Jupyter\RegressionScripts\Test_QuantBookHistory.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
+    <Content Include="RegressionAlgorithms\Test_AlgorithmPythonWrapper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="RegressionAlgorithms\Test_CustomDataAlgorithm.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="RegressionAlgorithms\Test_PythonExceptionInterpreter.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="RegressionAlgorithms\Test_MethodOverload.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -375,21 +442,72 @@
     <Content Include="TestData\ewz_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\gdax_accounts.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_match.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_holding.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_pollTick.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_orderById.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_openOrders.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_ticker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_tick.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\SampleMarketHoursDatabase.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\frama.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="TestData\fxVolumeDaily.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\fxVolumeHourly.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\fxVolumeMinute.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\spy_acceleration_bands_20_4.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_order.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_alma.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_atr_wilder.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_hma.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_mass_index_25.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_coppock_curve.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="TestData\spy_dpo.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\spy_with_ichimoku.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -442,6 +560,10 @@
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Jupyter\QuantConnect.Jupyter.csproj">
+      <Project>{9561d14a-467e-40ad-928e-ee9f758d7d98}</Project>
+      <Name>QuantConnect.Jupyter</Name>
     </ProjectReference>
     <ProjectReference Include="..\Launcher\QuantConnect.Lean.Launcher.csproj">
       <Project>{09e7b916-e58b-4021-bd8b-c10b4446e226}</Project>
@@ -579,6 +701,9 @@
     <Content Include="TestData\spy_with_indicators.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_with_macd.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_with_obv.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -621,12 +746,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,19 +14,18 @@
 */
 
 using System;
-
 using System.Globalization;
-using QuantConnect.Orders;
-using QuantConnect.Logging;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Securities.Future
 {
     /// <summary>
-    /// Represents a simple margining model for margining futures. Margin file contains Initial and Maintenance margins 
+    /// Represents a simple margining model for margining futures. Margin file contains Initial and Maintenance margins
     /// </summary>
-    public class FutureMarginModel : ISecurityMarginModel
+    public class FutureMarginModel : SecurityMarginModel
     {
         private static readonly object DataFolderSymbolLock = new object();
 
@@ -34,20 +33,12 @@ namespace QuantConnect.Securities
         private MarginRequirementsEntry[] _marginRequirementsHistory;
         private int _marginCurrentIndex;
 
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FutureMarginModel"/>
-        /// </summary>
-        public FutureMarginModel()
-        {
-        }
-
         /// <summary>
         /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
         /// <returns>The current leverage in the security</returns>
-        public virtual decimal GetLeverage(Security security)
+        public override decimal GetLeverage(Security security)
         {
             var marginRequirement = GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
             return marginRequirement == 0 ? 1m : 1 / marginRequirement;
@@ -61,7 +52,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="security"></param>
         /// <param name="leverage">The new leverage</param>
-        public virtual void SetLeverage(Security security, decimal leverage)
+        public override void SetLeverage(Security security, decimal leverage)
         {
             // Futures are leveraged products and different leverage cannot be set by user.
             throw new InvalidOperationException("Futures are leveraged products and different leverage cannot be set by user");
@@ -73,7 +64,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to compute initial margin for</param>
         /// <param name="order">The order to be executed</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public virtual decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+        protected override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
@@ -89,9 +80,16 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
-        public virtual decimal GetMaintenanceMargin(Security security)
+        protected override decimal GetMaintenanceMargin(Security security)
         {
-            return security.Holdings.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
+            if (security?.GetLastData() == null || security.Holdings.HoldingsCost == 0m)
+                return 0m;
+
+            var symbol = security.Symbol;
+            var date = security.GetLastData().Time.Date;
+            var marginReq = GetCurrentMarginRequirements(symbol, date);
+
+            return marginReq.MaintenanceOvernight * Math.Sign(security.Holdings.HoldingsCost);
         }
 
         /// <summary>
@@ -101,7 +99,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="direction">The direction of the trade</param>
         /// <returns>The margin available for the trade</returns>
-        public virtual decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             var holdings = security.Holdings;
 
@@ -152,7 +150,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        public virtual decimal GetInitialMarginRequirement(Security security)
+        protected override decimal GetInitialMarginRequirement(Security security)
         {
             return GetInitialMarginRequirement(security, security.Holdings.HoldingsCost);
         }
@@ -160,18 +158,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        public virtual decimal GetMaintenanceMarginRequirement(Security security)
+        public override decimal GetMaintenanceMarginRequirement(Security security)
         {
             return GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
         }
+
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        protected virtual decimal GetInitialMarginRequirement(Security security, decimal holdingValue)
+        private decimal GetInitialMarginRequirement(Security security, decimal holdingValue)
         {
-            if (security == null ||
-                security.GetLastData() == null ||
-                holdingValue == 0m)
+            if (security?.GetLastData() == null || holdingValue == 0m)
                 return 0m;
 
             var symbol = security.Symbol;
@@ -184,11 +181,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        protected virtual decimal GetMaintenanceMarginRequirement(Security security, decimal holdingValue)
+        private decimal GetMaintenanceMarginRequirement(Security security, decimal holdingValue)
         {
-            if (security == null ||
-                security.GetLastData() == null ||
-                holdingValue == 0m)
+            if (security?.GetLastData() == null || holdingValue == 0m)
                 return 0m;
 
             var symbol = security.Symbol;
@@ -197,8 +192,7 @@ namespace QuantConnect.Securities
 
             return marginReq.MaintenanceOvernight / holdingValue;
         }
-                
-        
+
         private MarginRequirementsEntry GetCurrentMarginRequirements (Symbol symbol, DateTime date)
         {
             if (_marginRequirementsHistory == null)
@@ -207,7 +201,7 @@ namespace QuantConnect.Securities
                 _marginCurrentIndex = 0;
             }
 
-            while (_marginCurrentIndex + 1 < _marginRequirementsHistory.Length && 
+            while (_marginCurrentIndex + 1 < _marginRequirementsHistory.Length &&
                 _marginRequirementsHistory[_marginCurrentIndex + 1].Date <= date )
             {
                 _marginCurrentIndex++;
@@ -217,7 +211,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the sorted list of historical margin changes produced by reading in the margin requirements 
+        /// Gets the sorted list of historical margin changes produced by reading in the margin requirements
         /// data found in /Data/symbol-margin/
         /// </summary>
         /// <returns>Sorted list of historical margin changes</returns>
@@ -232,7 +226,7 @@ namespace QuantConnect.Securities
                 return FromCsvFile(Path.Combine(directory, symbol.ID.Symbol + ".csv"));
             }
         }
-                
+
         /// <summary>
         /// Reads margin requirements file and returns a sorted list of historical margin changes
         /// </summary>
@@ -261,7 +255,7 @@ namespace QuantConnect.Securities
                 .OrderBy(x => x.Date)
                 .ToArray();
         }
-                
+
         /// <summary>
         /// Creates a new instance of <see cref="MarginRequirementsEntry"/> from the specified csv line
         /// </summary>
@@ -299,7 +293,6 @@ namespace QuantConnect.Securities
                     };
         }
 
-
         // Private POCO class for modeling margin requirements at given date
         class MarginRequirementsEntry
         {
@@ -307,7 +300,7 @@ namespace QuantConnect.Securities
             /// Date of margin requirements change
             /// </summary>
             public DateTime Date;
-            
+
             /// <summary>
             /// Initial overnight margin for the contract effective from the date of change
             /// </summary>

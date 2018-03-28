@@ -43,6 +43,7 @@ namespace QuantConnect.Tests.Common.Util
 
             var results = (
                 from securityType in securityTypes
+                where securityType != SecurityType.Commodity
                 from market in markets
                 from resolution in resolutions
                 from tickType in tickTypes

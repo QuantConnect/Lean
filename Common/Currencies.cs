@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,10 +24,40 @@ namespace QuantConnect
     public static class Currencies
     {
         /// <summary>
+        /// Gets the listing of crypto pairs used for currency conversion rates
+        /// </summary>
+        /// <remarks>
+        /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
+        /// </remarks>
+        public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>
+        {
+            "BTCUSD",
+            "BCHUSD",
+            "LTCUSD",
+            "ETHUSD",
+            "BTCEUR",
+            "BCHEUR",
+            "LTCEUR",
+            "ETHEUR"
+        };
+
+        /// <summary>
+        /// Gets the listing of cfds used for currency conversion rates
+        /// </summary>
+        /// <remarks>
+        /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
+        /// </remarks>
+        public static readonly IReadOnlyList<string> CfdCurrencyPairs = new List<string>
+        {
+            "XAUUSD",
+            "XAGUSD"
+        };
+
+        /// <summary>
         /// Gets the listing of currently supported currency pairs.
         /// </summary>
         /// <remarks>
-        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
+        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#forex
         /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
         /// </remarks>
         public static readonly IReadOnlyList<string> CurrencyPairs = new List<string>
@@ -50,7 +80,6 @@ namespace QuantConnect
             "USDJPY",
             "USDHKD",
             "USDSGD",
-            "XAGUSD",
 
 
             "AUDCAD",
@@ -243,6 +272,7 @@ namespace QuantConnect
             {"HKD", "$"},
             {"SGD", "$"},
             {"XAG", "Ag"},
+            {"XAU", "Au"},
             {"CNH", "¥"},
             {"CNY", "¥"},
             {"CZK", "Kč"},
@@ -257,7 +287,12 @@ namespace QuantConnect
             {"THB", "฿"},
             {"TRY", "₺"},
             {"TWD", "NT$"},
-            {"ZAR", "R"}
+            {"ZAR", "R"},
+
+            {"BTC", "฿"},
+            {"BCH", "฿"},
+            {"LTC", "Ł"},
+            {"ETH", "Ξ"}
         };
 
         /// <summary>

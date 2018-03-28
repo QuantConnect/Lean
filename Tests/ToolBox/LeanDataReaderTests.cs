@@ -1,9 +1,23 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -16,9 +30,8 @@ using QuantConnect.Data.Consolidators;
 namespace QuantConnect.Tests.ToolBox
 {
     [TestFixture]
-    class LeanDataReaderTests
+    public class LeanDataReaderTests
     {
-
         #region futures
 
         string _dataDirectory = "../../../Data/";
@@ -28,7 +41,7 @@ namespace QuantConnect.Tests.ToolBox
 
         [Test]
         public void ReadFutureChainData()
-        {           
+        {
             var canonicalFutures = new Dictionary<Symbol,string>()
             {
                 { Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
@@ -36,7 +49,7 @@ namespace QuantConnect.Tests.ToolBox
                 {Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA),
                 "GCV13|GCX13|GCZ13|GCG14|GCJ14|GCM14|GCQ14|GCV14|GCZ14|GCG15|GCJ15|GCM15|GCQ15|GCZ15|GCM16|GCZ16|GCM17|GCZ17|GCM18|GCZ18|GCM19"},
             };
-                                                      
+
             var tickTypes = new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest };
 
             var resolutions = new[] {Resolution.Hour, Resolution.Daily };
@@ -65,7 +78,7 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
-        List<Symbol> LoadFutureChain(Symbol baseFuture, DateTime date, TickType tickType, Resolution res)
+        private List<Symbol> LoadFutureChain(Symbol baseFuture, DateTime date, TickType tickType, Resolution res)
         {
             var filePath = LeanData.GenerateZipFilePath(_dataDirectory, baseFuture, date, res, tickType);
 
@@ -73,15 +86,13 @@ namespace QuantConnect.Tests.ToolBox
             var config = new SubscriptionDataConfig(typeof(ZipEntryName), baseFuture, res,
                 TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
 
-            var dataProvider = new DefaultDataProvider();
-            var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
-            var factory = new ZipEntryNameSubscriptionDataSourceReader(dataCacheProvider, config, date, false);
+            var factory = new ZipEntryNameSubscriptionDataSourceReader(config, date, false);
 
             return factory.Read(new SubscriptionDataSource(filePath, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName))
                    .Select(s => s.Symbol).ToList();
         }
 
-        string LoadFutureData(Symbol future, TickType tickType, Resolution res)
+        private string LoadFutureData(Symbol future, TickType tickType, Resolution res)
         {
             var dataType = LeanData.GetDataType(res, tickType);
             var config = new SubscriptionDataConfig(dataType, future, res,
@@ -110,7 +121,7 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void GenerateDailyAndHourlyFutureDataFromMinutes()
         {
-            
+
             var tickTypes = new[] {TickType.Trade, TickType.Quote, TickType.OpenInterest };
 
             var futures = new[] { Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
@@ -123,7 +134,7 @@ namespace QuantConnect.Tests.ToolBox
                         ConvertMinuteFuturesData(future, tickType, res);
         }
 
-        void ConvertMinuteFuturesData(Symbol canonical, TickType tickType, Resolution outputResolution, Resolution inputResolution = Resolution.Minute)
+        private void ConvertMinuteFuturesData(Symbol canonical, TickType tickType, Resolution outputResolution, Resolution inputResolution = Resolution.Minute)
         {
 
             var timeSpans = new Dictionary<Resolution, TimeSpan>()
@@ -158,12 +169,12 @@ namespace QuantConnect.Tests.ToolBox
                     {
                         futures[future.Value] = future;
                         var config = new SubscriptionDataConfig(LeanData.GetDataType(outputResolution, tickType),
-                                future, inputResolution,TimeZones.NewYork, TimeZones.NewYork, 
+                                future, inputResolution,TimeZones.NewYork, TimeZones.NewYork,
                                 false, false, false, false, tickType);
                         configs[future.Value] = config;
 
                         consolidators[future.Value] = tickTypeConsolidatorMap[tickType].Invoke();
-                        
+
                         var sb = new StringBuilder();
                         outputFiles[future.Value] = sb;
 
@@ -202,7 +213,7 @@ namespace QuantConnect.Tests.ToolBox
                 var zipEntry = LeanData.GenerateZipEntryName(future, _fromDate, outputResolution, tickType);
                 var sb = outputFiles[future.Value];
 
-                //Uncomment to write zip files              
+                //Uncomment to write zip files
                 //QuantConnect.Compression.ZipCreateAppendData(zipPath, zipEntry, sb.ToString());
 
                 Assert.IsTrue(sb.Length > 0);

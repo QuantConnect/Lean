@@ -1,5 +1,5 @@
 #
-#	LEAN Jupyter Docker Container 20170803
+#	LEAN Jupyter Docker Container 20180323
 #
 
 # Use base system for cleaning up wayward processes
@@ -13,13 +13,18 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-#Install Jupyter and Python.NET
-RUN apt-get update && apt-get install -y git libglib2.0-dev && \
-    pip install jupyter git+https://github.com/QuantConnect/pythonnet
+#Install Jupyter and other packages
+RUN conda install -y jupyter && \
+    conda install -y jsonschema plotly quandl && \
+    conda clean -y --all
+
+#Install Python.NET
+RUN apt-get update && apt-get install -y clang git libglib2.0-dev && \
+    pip install --egg  git+https://github.com/QuantConnect/pythonnet
 
 # Setting some environment variables
 ENV WORK /root/Lean/Jupyter/bin/Debug
-ENV LEAN /usr/lib/python2.7/Lean
+ENV LEAN /opt/miniconda3/Lean
 ENV PYTHONPATH=${LEAN}:${PYTHONPATH}
 
 # Copy Lean files to convinient locations
@@ -28,6 +33,7 @@ COPY ./Jupyter/*.ipynb ${WORK}/
 COPY ./Jupyter/config.json ${WORK}
 RUN rm -irf ${LEAN}/*Python*
 
+EXPOSE 8888
 WORKDIR $WORK
 
 ENTRYPOINT [ "/usr/local/bin/tini", "--" ]

@@ -52,7 +52,7 @@
         <Parent guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" />
         <Icon guid="quantConnectImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Send for backtesting</ButtonText>
+          <ButtonText>Send for Backtesting</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidQuantConnectSolutionExplorerSet" id="SaveToQuantConnect" priority="0x0101" type="Button">
@@ -62,20 +62,20 @@
           <ButtonText>Save to QuantConnect</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidQuantConnectToolsSet" id="LogInCommand" priority="0x0100" type="Button">
+      <Button guid="guidQuantConnectToolsSet" id="LoginCommand" priority="0x0100" type="Button">
         <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
         <Icon guid="quantConnectImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Log in</ButtonText>
+          <ButtonText>Login</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidQuantConnectToolsSet" id="LogOutCommand" priority="0x0100" type="Button">
+      <Button guid="guidQuantConnectToolsSet" id="LogoutCommand" priority="0x0100" type="Button">
         <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
         <Icon guid="quantConnectImages" id="bmpPic1" />
-        <!-- A user need to log in first to enable log out button -->
+        <!-- A user need to log in first to enable logout button -->
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
-          <ButtonText>Log out</ButtonText>
+          <ButtonText>Logout</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -112,8 +112,8 @@
       <IDSymbol name="ToolsMenuGroup" value="4128" />
       <IDSymbol name="ToolsSubMenuGroup" value="2048" />
       <IDSymbol name="ToolsSubMenu" value="1024" />
-      <IDSymbol name="LogOutCommand" value="512" />
-      <IDSymbol name="LogInCommand" value="256" />
+      <IDSymbol name="LogoutCommand" value="512" />
+      <IDSymbol name="LoginCommand" value="256" />
     </GuidSymbol>
   
     <GuidSymbol name="quantConnectImages" value="{a83a3e3f-83ce-4967-a1b6-0ef707b1830b}">

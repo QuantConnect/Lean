@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,13 +22,13 @@ using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
 using QuantConnect.Util;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
     /// Single Parent Chart Object for Custom Charting
     /// </summary>
     [JsonObject]
-    public class Chart 
+    public class Chart
     {
         /// Name of the Chart:
         public string Name = "";
@@ -51,7 +51,7 @@ namespace QuantConnect
         /// <param name="name">Name of the Chart</param>
         /// <param name="type"> Type of the chart</param>
         [Obsolete("ChartType is now obsolete and ignored in charting. Please use Series indexes instead by setting index in the series constructor.")]
-        public Chart(string name, ChartType type = ChartType.Overlay) 
+        public Chart(string name, ChartType type = ChartType.Overlay)
         {
             Name = name;
             Series = new Dictionary<string, Series>();
@@ -72,14 +72,14 @@ namespace QuantConnect
         /// Add a reference to this chart series:
         /// </summary>
         /// <param name="series">Chart series class object</param>
-        public void AddSeries(Series series) 
+        public void AddSeries(Series series)
         {
             //If we dont already have this series, add to the chrt:
             if (!Series.ContainsKey(series.Name))
             {
                 Series.Add(series.Name, series);
             }
-            else 
+            else
             {
                 throw new Exception("Chart.AddSeries(): Chart series name already exists");
             }
@@ -89,11 +89,11 @@ namespace QuantConnect
         /// Fetch the updates of the chart, and save the index position.
         /// </summary>
         /// <returns></returns>
-        public Chart GetUpdates() 
+        public Chart GetUpdates()
         {
             var copy = new Chart(Name);
             try
-            {   
+            {
                 foreach (var series in Series.Values)
                 {
                     copy.AddSeries(series.GetUpdates());
@@ -103,6 +103,22 @@ namespace QuantConnect
                 Log.Error(err);
             }
             return copy;
+        }
+
+        /// <summary>
+        /// Return a new instance clone of this object
+        /// </summary>
+        /// <returns></returns>
+        public Chart Clone()
+        {
+            var chart = new Chart(Name);
+
+            foreach (var kvp in Series)
+            {
+                chart.Series.Add(kvp.Key, kvp.Value.Clone());
+            }
+
+            return chart;
         }
     }
 
@@ -140,7 +156,7 @@ namespace QuantConnect
         public SeriesType SeriesType = SeriesType.Line;
 
         /// <summary>
-        /// Color the series 
+        /// Color the series
         /// </summary>
         [JsonConverter(typeof(ColorJsonConverter))]
         public Color Color = Color.Empty;
@@ -304,7 +320,7 @@ namespace QuantConnect
         /// Get the updates since the last call to this function.
         /// </summary>
         /// <returns>List of the updates from the series</returns>
-        public Series GetUpdates() 
+        public Series GetUpdates()
         {
             var copy = new Series(Name, SeriesType, Index, Unit)
             {
@@ -314,7 +330,7 @@ namespace QuantConnect
 
             try
             {
-                //Add the updates since the last 
+                //Add the updates since the last
                 for (var i = _updatePosition; i < Values.Count; i++)
                 {
                     copy.Values.Add(Values[i]);
@@ -335,6 +351,31 @@ namespace QuantConnect
         {
             Values.Clear();
             _updatePosition = 0;
+        }
+
+        /// <summary>
+        /// Return a new instance clone of this object
+        /// </summary>
+        /// <returns></returns>
+        public Series Clone()
+        {
+            var series = new Series
+            {
+                Name = Name,
+                Values = new List<ChartPoint>(),
+                SeriesType = SeriesType,
+                Unit = Unit,
+                Index = Index,
+                Color = Color,
+                ScatterMarkerSymbol = ScatterMarkerSymbol
+            };
+
+            foreach (var point in Values)
+            {
+                series.Values.Add(new ChartPoint(point.x, point.y));
+            }
+
+            return series;
         }
     }
 
@@ -368,14 +409,14 @@ namespace QuantConnect
         }
 
         ///Constructor for datetime-value arguements:
-        public ChartPoint(DateTime time, decimal value) 
+        public ChartPoint(DateTime time, decimal value)
         {
             x = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(time.ToUniversalTime()));
             y = value.SmartRounding();
         }
 
         ///Cloner Constructor:
-        public ChartPoint(ChartPoint point) 
+        public ChartPoint(ChartPoint point)
         {
             x = point.x;
             y = point.y.SmartRounding();
@@ -393,8 +434,8 @@ namespace QuantConnect
     /// <summary>
     /// Available types of charts
     /// </summary>
-    public enum SeriesType 
-    { 
+    public enum SeriesType
+    {
         /// Line Plot for Value Types
         Line,
         /// Scatter Plot for Chart Distinct Types
@@ -404,14 +445,18 @@ namespace QuantConnect
         /// Bar chart.
         Bar,
         /// Flag indicators
-        Flag
+        Flag,
+        /// 100% area chart showing relative proportions of series values at each time index
+        StackedArea,
+        /// Pie chart
+        Pie
     }
 
     /// <summary>
     /// Type of chart - should we draw the series as overlayed or stacked
     /// </summary>
-    public enum ChartType 
-    { 
+    public enum ChartType
+    {
         /// Overlayed stacked
         Overlay,
         /// Stacked series on top of each other.

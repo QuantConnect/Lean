@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,18 +23,25 @@ from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
 
-
+### <summary>
+### Demonstration of using coarse and fine universe selection together to filter down a smaller universe of stocks.
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="universes" />
+### <meta name="tag" content="coarse universes" />
+### <meta name="tag" content="fine universes" />
 class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
-    '''In this algorithm we demonstrate how to define a universe as a combination of use the coarse fundamental data and fine fundamental data'''
+
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
-        self.SetStartDate(2014,01,01)  #Set Start Date
-        self.SetEndDate(2015,01,01)    #Set End Date
+
+        self.SetStartDate(2014,1,1)  #Set Start Date
+        self.SetEndDate(2015,1,1)    #Set End Date
         self.SetCash(50000)            #Set Strategy Cash
-        
-        self.UniverseSettings.Resolution = Resolution.Daily        
-        
+
+        # what resolution should the data *added* to the universe be?
+        self.UniverseSettings.Resolution = Resolution.Daily
+
         # this add universe method accepts two parameters:
         # - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>
         # - fine selection function: accepts an IEnumerable<FineFundamental> and returns an IEnumerable<Symbol>
@@ -42,23 +49,16 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
 
         self.__numberOfSymbols = 5
         self.__numberOfSymbolsFine = 2
-        self._changes = SecurityChanges.None
+        self._changes = None
 
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
     def CoarseSelectionFunction(self, coarse):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True) 
+        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        top5 = sortedByDollarVolume[:self.__numberOfSymbols]
-
-        # we need to return only the symbol objects
-        list = List[Symbol]()
-        for x in top5:
-            list.Add(x.Symbol)
-
-        return list
+        return [ x.Symbol for x in sortedByDollarVolume[:self.__numberOfSymbols] ]
 
     # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
     def FineSelectionFunction(self, fine):
@@ -66,29 +66,22 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
 
         # take the top entries from our sorted collection
-        topFine = sortedByPeRatio[:self.__numberOfSymbolsFine]
-
-        list = List[Symbol]()
-        for x in topFine:
-            list.Add(x.Symbol)
-
-        return list
-
+        return [ x.Symbol for x in sortedByPeRatio[:self.__numberOfSymbolsFine] ]
 
     def OnData(self, data):
         # if we have no changes, do nothing
-        if self._changes == SecurityChanges.None: return
+        if self._changes == None: return
 
         # liquidate removed securities
         for security in self._changes.RemovedSecurities:
             if security.Invested:
                 self.Liquidate(security.Symbol)
-         
+
         # we want 20% allocation in each security in our universe
         for security in self._changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.2)    
- 
-        self._changes = SecurityChanges.None;
+            self.SetHoldings(security.Symbol, 0.2)
+
+        self._changes = None;
 
 
     # this event fires whenever we have changes to our universe

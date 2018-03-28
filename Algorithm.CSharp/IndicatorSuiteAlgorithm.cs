@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,32 +14,39 @@
 */
 
 using System;
-using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// QuantConnect University: Indicator Suite Example.
+    /// Demonstration algorithm of popular indicators and plotting them.
     /// </summary>
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="indicator classes" />
+    /// <meta name="tag" content="plotting indicators" />
+    /// <meta name="tag" content="charting" />
+    /// <meta name="tag" content="indicator field selection" />
     public class IndicatorSuiteAlgorithm : QCAlgorithm
     {
-        string _symbol = "SPY";
-        string _customSymbol = "BTC";
+        private string _ticker = "SPY";
+        private string _customTicker = "WIKI/FB";
 
+        private Symbol _symbol;
+        private Symbol _customSymbol;
 
-        Indicators _indicators;
-        Indicators _selectorIndicators;
-        IndicatorBase<IndicatorDataPoint> _ratio;
+        private Indicators _indicators;
+        private Indicators _selectorIndicators;
+        private IndicatorBase<IndicatorDataPoint> _ratio;
 
-            //RSI Custom Data:
-        RelativeStrengthIndex _rsiCustom;
-        Minimum _minCustom;
-        Maximum _maxCustom;
+        //RSI Custom Data:
+        private RelativeStrengthIndex _rsiCustom;
+        private Minimum _minCustom;
+        private Maximum _maxCustom;
 
-        decimal _price;
+        private decimal _price;
 
         /// <summary>
         /// Initialize the data and resolution you require for your strategy
@@ -52,10 +59,10 @@ namespace QuantConnect
             SetCash(25000);
 
             //Add as many securities as you like. All the data will be passed into the event handler:
-            AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
+            _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
-            AddData<Bitcoin>("BTC");
+            _customSymbol = AddData<Quandl>(_customTicker, Resolution.Daily).Symbol;
 
             //Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
             _indicators = new Indicators
@@ -109,9 +116,9 @@ namespace QuantConnect
             // these are indicators that require multiple inputs. the most common of which is a ratio.
             // suppose we seek the ratio of BTC to SPY, we could write the following:
             var spyClose = Identity(_symbol);
-            var btcClose = Identity(_customSymbol);
-            // this will create a new indicator whose value is BTC/SPY
-            _ratio = btcClose.Over(spyClose);
+            var fbClose = Identity(_customSymbol);
+            // this will create a new indicator whose value is FB/SPY
+            _ratio = fbClose.Over(spyClose);
             // we can also easily plot our indicators each time they update using th PlotIndicator function
             PlotIndicator("Ratio", _ratio);
         }
@@ -119,8 +126,8 @@ namespace QuantConnect
         /// <summary>
         /// Custom data event handler:
         /// </summary>
-        /// <param name="data">Bitcoin - dictionary of TradeBarlike Bars of Bitcoin Data</param>
-        public void OnData(Bitcoin data)
+        /// <param name="data">Quandl - dictionary Bars of Quandl Data</param>
+        public void OnData(Quandl data)
         {
         }
 
@@ -141,7 +148,7 @@ namespace QuantConnect
                 //Order function places trades: enter the string symbol and the quantity you want:
                 Order(_symbol, quantity);
 
-                //Debug sends messages to the user console: "Time" is the algorithm time keeper object 
+                //Debug sends messages to the user console: "Time" is the algorithm time keeper object
                 Debug("Purchased SPY on " + Time.ToShortDateString());
             }
         }
@@ -167,19 +174,20 @@ namespace QuantConnect
 
             Plot("AROON", _indicators.AROON.AroonUp, _indicators.AROON.AroonDown);
 
-            Plot("MOM", _indicators.MOM);
-            Plot("MOMP", _indicators.MOMP);
+            // The following Plot method calls are commented out because of the 10 series limit for backtests
+            //Plot("MOM", _indicators.MOM);
+            //Plot("MOMP", _indicators.MOMP);
 
-            Plot("MACD", "Price", _price);
-            Plot("MACD", _indicators.MACD.Fast, _indicators.MACD.Slow, _indicators.MACD.Signal);
+            //Plot("MACD", "Price", _price);
+            //Plot("MACD", _indicators.MACD.Fast, _indicators.MACD.Slow, _indicators.MACD.Signal);
 
-            Plot("Averages", _indicators.EMA, _indicators.SMA);
+            //Plot("Averages", _indicators.EMA, _indicators.SMA);
         }
 
         /// <summary>
         /// Class to hold a bunch of different indicators for this example
         /// </summary>
-        class Indicators
+        private class Indicators
         {
             public BollingerBands BB;
             public SimpleMovingAverage SMA;

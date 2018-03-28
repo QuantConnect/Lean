@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Util
@@ -79,6 +83,18 @@ namespace QuantConnect.Tests.Common.Util
             var expected = time.Date;
             var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
+            Assert.AreEqual(expected, exchangeRounded);
+        }
+
+        [Test]
+        public void ExchangeRoundDownInTimeZoneSkipsWeekends()
+        {
+            // moment before EST market open in UTC (time + one day)
+            var time = new DateTime(2017, 10, 01, 9, 29, 59).ConvertToUtc(TimeZones.NewYork);
+            var expected = new DateTime(2017, 09, 29).ConvertFromUtc(TimeZones.NewYork);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneDay, hours, TimeZones.Utc, false);
+            Assert.AreEqual(expected, exchangeRounded);
         }
 
         [Test]
@@ -200,7 +216,7 @@ namespace QuantConnect.Tests.Common.Util
             var value = input.ToDecimal();
             Assert.AreEqual(-0m, value);
         }
-        
+
         [Test]
         public void ConvertsTimeSpanFromString()
         {
@@ -274,6 +290,151 @@ namespace QuantConnect.Tests.Common.Util
             var output = input.Normalize();
             Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
         }
+
+        [Test]
+        public void RoundsDownInTimeZone()
+        {
+            var dataTimeZone = TimeZones.Utc;
+            var exchangeTimeZone = TimeZones.EasternStandard;
+            var time = new DateTime(2000, 01, 01).ConvertTo(dataTimeZone, exchangeTimeZone);
+            var roundedTime = time.RoundDownInTimeZone(Time.OneDay, exchangeTimeZone, dataTimeZone);
+            Assert.AreEqual(time, roundedTime);
+        }
+
+        [Test]
+        public void GetStringBetweenCharsTests()
+        {
+            const string expected = "python3.6";
+
+            // Different characters cases
+            var input = "[ python3.6 ]";
+            var actual = input.GetStringBetweenChars('[', ']');
+            Assert.AreEqual(expected, actual);
+
+            input = "[ python3.6 ] [ python2.7 ]";
+            actual = input.GetStringBetweenChars('[', ']');
+            Assert.AreEqual(expected, actual);
+
+            input = "[ python2.7 [ python3.6 ] ]";
+            actual = input.GetStringBetweenChars('[', ']');
+            Assert.AreEqual(expected, actual);
+
+            // Same character cases
+            input = "\'python3.6\'";
+            actual = input.GetStringBetweenChars('\'', '\'');
+            Assert.AreEqual(expected, actual);
+
+            input = "\' python3.6 \' \' python2.7 \'";
+            actual = input.GetStringBetweenChars('\'', '\'');
+            Assert.AreEqual(expected, actual);
+
+            // In this case, it is not equal
+            input = "\' python2.7 \' python3.6 \' \'";
+            actual = input.GetStringBetweenChars('\'', '\'');
+            Assert.AreNotEqual(expected, actual);
+        }
+
+        [Test, Ignore]
+        public void PyObjectTryConvertQuoteBar()
+        {
+            // Wrap a QuoteBar around a PyObject and convert it back
+            var value = ConvertToPyObject(new QuoteBar());
+
+            QuoteBar quoteBar;
+            var canConvert = value.TryConvert(out quoteBar);
+            Assert.IsTrue(canConvert);
+            Assert.IsNotNull(quoteBar);
+            Assert.IsAssignableFrom<QuoteBar>(quoteBar);
+        }
+
+        [Test, Ignore]
+        public void PyObjectTryConvertSMA()
+        {
+            // Wrap a SimpleMovingAverage around a PyObject and convert it back
+            var value = ConvertToPyObject(new SimpleMovingAverage(14));
+
+            IndicatorBase<IndicatorDataPoint> indicatorBaseDataPoint;
+            var canConvert = value.TryConvert(out indicatorBaseDataPoint);
+            Assert.IsTrue(canConvert);
+            Assert.IsNotNull(indicatorBaseDataPoint);
+            Assert.IsAssignableFrom<SimpleMovingAverage>(indicatorBaseDataPoint);
+        }
+
+        [Test, Ignore]
+        public void PyObjectTryConvertATR()
+        {
+            // Wrap a AverageTrueRange around a PyObject and convert it back
+            var value = ConvertToPyObject(new AverageTrueRange(14, MovingAverageType.Simple));
+
+            IndicatorBase<IBaseDataBar> indicatorBaseDataBar;
+            var canConvert = value.TryConvert(out indicatorBaseDataBar);
+            Assert.IsTrue(canConvert);
+            Assert.IsNotNull(indicatorBaseDataBar);
+            Assert.IsAssignableFrom<AverageTrueRange>(indicatorBaseDataBar);
+        }
+
+        [Test, Ignore]
+        public void PyObjectTryConvertAD()
+        {
+            // Wrap a AccumulationDistribution around a PyObject and convert it back
+            var value = ConvertToPyObject(new AccumulationDistribution("AD"));
+
+            IndicatorBase<TradeBar> indicatorBaseTradeBar;
+            var canConvert = value.TryConvert(out indicatorBaseTradeBar);
+            Assert.IsTrue(canConvert);
+            Assert.IsNotNull(indicatorBaseTradeBar);
+            Assert.IsAssignableFrom<AccumulationDistribution>(indicatorBaseTradeBar);
+
+        }
+
+        [Test, Ignore]
+        public void PyObjectTryConvertFailCSharp()
+        {
+            // Try to convert a AccumulationDistribution as a QuoteBar
+            var value = ConvertToPyObject(new AccumulationDistribution("AD"));
+
+            QuoteBar quoteBar;
+            bool canConvert = value.TryConvert(out quoteBar);
+            Assert.IsFalse(canConvert);
+            Assert.IsNull(quoteBar);
+        }
+
+        [Test, Ignore]
+        public void PyObjectTryConvertFailPython()
+        {
+            using (Py.GIL())
+            {
+                // Try to convert a python object as a IndicatorBase<TradeBar>
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), "class A:\n    pass");
+                var value = module.GetAttr("A").Invoke();
+
+                IndicatorBase<TradeBar> indicatorBaseTradeBar;
+                bool canConvert = value.TryConvert(out indicatorBaseTradeBar);
+                Assert.IsFalse(canConvert);
+                Assert.IsNull(indicatorBaseTradeBar);
+            }
+        }
+
+        [Test]
+        public void BatchByDoesNotDropItems()
+        {
+            var list = new List<int> {1, 2, 3, 4, 5};
+            var by2 = list.BatchBy(2).ToList();
+            Assert.AreEqual(3, by2.Count);
+            Assert.AreEqual(2, by2[0].Count);
+            Assert.AreEqual(2, by2[1].Count);
+            Assert.AreEqual(1, by2[2].Count);
+            CollectionAssert.AreEqual(list, by2.SelectMany(x => x));
+        }
+
+        private PyObject ConvertToPyObject(object value)
+        {
+            using (Py.GIL())
+            {
+                return value.ToPython();
+            }
+        }
+
 
         private class Super<T>
         {

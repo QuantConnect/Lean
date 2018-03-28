@@ -1,7 +1,14 @@
 {
-  // In this configuration file, the data folder and the plugin directory are defined
-  // We use absolute paths to be able to load notebooks across different folders
-  
-  "data-folder": "/root/Lean/Data/",
-  "plugin-directory" : "/usr/lib/python2.7/Lean"
+    // In this configuration file, the data folder and the plugin directory are defined
+    // We use absolute paths to be able to load notebooks across different folders
+    "data-folder": "/root/Lean/Data/",
+    "plugin-directory": "/opt/miniconda3/Lean/",
+
+    // To get your api access token go to quantconnect.com/account
+    "job-user-id": "0",
+    "api-access-token": "",
+
+    // Required to access data from Quandl
+    // To get your access token go to https://www.quandl.com/account/api
+    "quandl-auth-token": ""
 }

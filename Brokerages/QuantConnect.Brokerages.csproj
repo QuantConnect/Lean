@@ -158,6 +158,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -167,6 +170,7 @@
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
     <Compile Include="Backtesting\IBacktestingMarketSimulation.cs" />
+    <Compile Include="BaseWebsocketsBrokerage.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
@@ -176,6 +180,20 @@
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
     <Compile Include="Fxcm\FxcmBrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmSymbolMapper.cs" />
+    <Compile Include="GDAX\AuthenticationToken.cs" />
+    <Compile Include="GDAX\BestBidAskUpdatedEventArgs.cs" />
+    <Compile Include="GDAX\GDAXBrokerage.Utility.cs" />
+    <Compile Include="GDAX\GDAXBrokerage.cs" />
+    <Compile Include="GDAX\GDAXBrokerageFactory.cs" />
+    <Compile Include="GDAX\GDAXDataQueueHandler.cs" />
+    <Compile Include="GDAX\GDAXFill.cs" />
+    <Compile Include="GDAX\GDAXBrokerage.Messaging.cs" />
+    <Compile Include="GDAX\OrderBook.cs" />
+    <Compile Include="IWebSocket.cs" />
+    <Compile Include="GDAX\Messages.cs" />
+    <Compile Include="WebSocketError.cs" />
+    <Compile Include="WebSocketMessage.cs" />
+    <Compile Include="WebSocketWrapper.cs" />
     <Compile Include="InteractiveBrokers\Client\AccountDownloadEndEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\AccountSummaryEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\ActionSide.cs" />
@@ -248,7 +266,13 @@
     <Compile Include="InteractiveBrokers\Client\ScannerParametersEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\ScannerDataEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\UpdatePortfolioEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\Allocation.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\AllocationProfile.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\Group.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountAlias.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\FinancialAdvisorConfiguration.cs" />
     <Compile Include="InteractiveBrokers\HistoricalDataType.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersAccountData.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\Client\InteractiveBrokersClient.cs" />

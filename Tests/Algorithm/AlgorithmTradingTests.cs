@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -956,6 +956,13 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
             Assert.AreEqual(3000m, actual);
 
+            var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
+            btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
+            // Set Price to $26
+            Update(btcusd, 26);
+            // So 100000/26 = 3846.153846153846, After Rounding off becomes 3846.15384615, since lot size is 0.00000001
+            actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, 1m);
+            Assert.AreEqual(3846.15384615m, actual);
         }
 
         [Test]
@@ -972,6 +979,14 @@ namespace QuantConnect.Tests.Algorithm
             // So -100000/26 = -3846, After Rounding off becomes -3000
             var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, -1m);
             Assert.AreEqual(-3000m, actual);
+
+            var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
+            btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
+            // Set Price to $26
+            Update(btcusd, 26);
+            // Cash model does not allow shorts
+            actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, -1m);
+            Assert.AreEqual(0, actual);
         }
 
         [Test]
@@ -989,7 +1004,7 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
             Assert.AreEqual(0m, actual);
         }
-        
+
         //[Test]
         //public void SetHoldings_LongToLonger_PriceRise()
         //{
@@ -1070,7 +1085,7 @@ namespace QuantConnect.Tests.Algorithm
         //    //Now: 2000 * 50 = $0k Net Holdings, $50k Cash: $50k. MSFT is 0% of holdings.
         //    var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
 
-        //    //Want to hold -75% of MSFT: 50k total, -37.5k / $50-share = -750 TOTAL. 
+        //    //Want to hold -75% of MSFT: 50k total, -37.5k / $50-share = -750 TOTAL.
         //    // Currently -2000, so net order +1250.
         //    Assert.AreEqual(1250, actual);
         //}
@@ -1100,13 +1115,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
+            algo.SetFinishedWarmingUp();
+
             //Set price to $25
             Update(msft, 25);
 
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<IOrderProcessor>();
-            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null);
+            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<Orders.OrderRequest>())).Returns(new Orders.OrderTicket(null, request.Object));
             algo.Transactions.SetOrderProcessor(mock.Object);
 
@@ -1180,7 +1197,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetCash(100000);
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
             msft = algo.Securities[Symbols.MSFT];
-            msft.MarginModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement);
+            msft.BuyingPowerModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement);
             return algo;
         }
 

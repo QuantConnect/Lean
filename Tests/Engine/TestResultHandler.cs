@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Engine
@@ -89,7 +90,7 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void DebugMessage(string message)
+        public virtual void DebugMessage(string message)
         {
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
         }
@@ -194,6 +195,7 @@ namespace QuantConnect.Tests.Engine
             Dictionary<int, Order> orders,
             Dictionary<DateTime, decimal> profitLoss,
             Dictionary<string, Holding> holdings,
+            CashBook cashbook,
             StatisticsResults statisticsResults,
             Dictionary<string, string> banner)
         {

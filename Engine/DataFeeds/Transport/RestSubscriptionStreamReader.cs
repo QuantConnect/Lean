@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using RestSharp;
@@ -28,15 +29,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private readonly RestClient _client;
         private readonly RestRequest _request;
+        private bool _isLiveMode;
+        private bool _delivered;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RestSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="source">The source url to poll with a GET</param>
-        public RestSubscriptionStreamReader(string source)
+        /// <param name="headers">Defines header values to add to the request</param>
+        public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers, bool isLiveMode)
         {
             _client = new RestClient(source);
             _request = new RestRequest(Method.GET);
+            _isLiveMode = isLiveMode;
+            _delivered = false;
+
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    _request.AddHeader(header.Key, header.Value);
+                }
+            }
         }
 
         /// <summary>
@@ -52,11 +66,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public bool EndOfStream
         {
-            get { return false; }
+            get { return !_isLiveMode && _delivered; }
         }
 
         /// <summary>
-        /// Gets the next line/batch of content from the stream 
+        /// Gets the next line/batch of content from the stream
         /// </summary>
         public string ReadLine()
         {
@@ -65,6 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 var response = _client.Execute(_request);
                 if (response != null)
                 {
+                    _delivered = true;
                     return response.Content;
                 }
             }

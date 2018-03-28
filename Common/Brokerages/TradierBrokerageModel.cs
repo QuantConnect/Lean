@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,13 +29,13 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : DefaultBrokerageModel
     {
-        private static readonly EquityExchange EquityExchange = 
-            new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity, TimeZones.NewYork));
-        
+        private static readonly EquityExchange EquityExchange =
+            new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity));
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public TradierBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "This model only supports equities."
                     );
-                
+
                 return false;
             }
 
@@ -114,7 +114,7 @@ namespace QuantConnect.Brokerages
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
-        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// market prices are sufficient for the fill to take place. This is used to emulate the
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
         /// executions during extended market hours. This is not intended to be checking whether or not
         /// the exchange is open, that is handled in the Security.Exchange property.

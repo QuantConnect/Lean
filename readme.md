@@ -2,9 +2,10 @@
 Lean C# Algorithmic Trading Engine
 =========
 
-[![Join the chat at https://www.quantconnect.com/slack](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://www.quantconnect.com/slack) &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master"> 
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
-[Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
+
+[Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
 
 ----------
 
@@ -13,6 +14,8 @@ Lean C# Algorithmic Trading Engine
 Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. Lean drives the web based algorithmic trading platform [QuantConnect][4].
 
 ## System Overview ##
+
+![alt tag](Documentation/2-Overview-Detailed-New.png)
 
 Lean outsourced key infrastructure management to plugins. The most important plugins are:
 
@@ -62,20 +65,31 @@ mono QuantConnect.Lean.Launcher.exe
 
 - Install [Mono](http://www.mono-project.com/download/#download-lin):
 ```
-sudo apt-get update && rm -rf /var/lib/apt/lists/*
+sudo apt-get update && sudo rm -rf /var/lib/apt/lists/*
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
 echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > sudo /etc/apt/sources.list.d/mono-xamarin.list
+```
+If you get this error on the last command:
+ 
+**Unable to locate package referenceassemblies-pcl**,
+ 
+run the following command (it works on current version of Ubuntu - 17.10):
+```
+echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-official.list
+```
+
+```
 sudo apt-get update
 sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
 ```
-- Install Nuget and Python
+- Install Nuget
 ```
-sudo apt-get update && apt-get install -y nuget python-pip
+sudo apt-get update && sudo apt-get install -y nuget
 ```
 - Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
-xbuild
+xbuild QuantConnect.Lean.sln
 ```
 If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
 
@@ -88,19 +102,24 @@ If you get other errors that lead to the failure of your building, please refer 
 cd Lean/Launcher/bin/Debug
 mono ./QuantConnect.Lean.Launcher.exe
 ```
+- Interactive Brokers set up details
+
+Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
+
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001 to match the settings in your IBGateway/TWS.
+
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
+- Build the solution by clicking Build Menu -> Build Solution (this should trigger the Nuget package restore)
 - Press `F5` to run
 
-By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again.
+Nuget packages not being restored is the most common build issue. By default Visual Studio includes NuGet, if your installation of Visual Studio (or your IDE) cannot find DLL references, install [Nuget](https://www.nuget.org/), run nuget on the solution and re-build the Solution again. 
 
 ### Python Support
 
-- Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-- Windows: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
-- macOs: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.mac` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
+A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
 
 ### R Support
 
@@ -127,16 +146,15 @@ devenv /log <path-to-log>
 
 Please submit bugs and feature requests as an issue to the [Lean Repository][5]. Before submitting an issue please read others to ensure it is not a duplicate.
 
-## Mailing List ##
+## Mailing List ## 
 
-The mailing list for the project can be found on [Google Groups][6]
+The mailing list for the project can be found on [Google Groups][6]. Please use this to request assistance with your installations and setup questions.
 
 ## Contributors and Pull Requests ##
 
 Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
-## Build Status ##
-<img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
+All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
 ## Acknowledgements ##
 

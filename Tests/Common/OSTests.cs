@@ -14,6 +14,8 @@
 */
 
 using NUnit.Framework;
+using System.IO;
+using System.Reflection;
 
 namespace QuantConnect.Tests.Common
 {
@@ -29,6 +31,15 @@ namespace QuantConnect.Tests.Common
             //{
             //    Console.WriteLine("{0, -" + maxKeyLength + "} - {1}", statistic.Key, statistic.Value);
             //}
+        }
+        
+        [Test]
+        public void GetDriveCorrectly()
+        {
+            var expectedDrive = Path.GetPathRoot(Assembly.GetAssembly(GetType()).Location);
+            var expectedDriveInfo = new DriveInfo(expectedDrive);
+            var totalSizeInMegaBytes = (int)(expectedDriveInfo.TotalSize / (1024 * 1024));
+            Assert.AreEqual(totalSizeInMegaBytes, OS.DriveTotalSpace);
         }
     }
 }

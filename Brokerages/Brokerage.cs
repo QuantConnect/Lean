@@ -100,6 +100,14 @@ namespace QuantConnect.Brokerages
         public abstract void Disconnect();
 
         /// <summary>
+        /// Dispose of the brokerage instance
+        /// </summary>
+        public virtual void Dispose()
+        {
+            // NOP
+        }
+
+        /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
         /// <param name="e">The OrderEvent</param>

@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,20 +29,22 @@ import decimal as d
 from math import copysign
 from datetime import datetime
 
-
+### <summary>
+### Provides a regression baseline focused on updating orders
+### </summary>
+### <meta name="tag" content="regression test" />
 class UpdateOrderRegressionAlgorithm(QCAlgorithm):
-    '''Basic template algorithm simply initializes the date range and cash'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
-        self.SetStartDate(2013,01,01)  #Set Start Date
-        self.SetEndDate(2015,01,01)    #Set End Date
+
+        self.SetStartDate(2013,1,1)    #Set Start Date
+        self.SetEndDate(2015,1,1)      #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
 
         self.security = self.AddEquity("SPY", Resolution.Daily)
-        
+
         self.last_month = -1
         self.quantity = 100
         self.delta_quantity = 10
@@ -61,7 +63,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
     def onCircleCompleted(self, sender, event):
         '''Flip our signs when we've gone through all the order types'''
         self.quantity *= -1
-        
+
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
@@ -79,7 +81,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
             isLong = self.quantity > 0
             stopPrice = d.Decimal(1 + self.stop_percentage)*data["SPY"].High if isLong else d.Decimal(1 - self.stop_percentage)*data["SPY"].Low
             limitPrice = d.Decimal(1 - self.limit_percentage)*stopPrice if isLong else d.Decimal(1 + self.limit_percentage)*stopPrice
-            
+
             if orderType == OrderType.Limit:
                 limitPrice = d.Decimal(1 + self.limit_percentage)*data["SPY"].High if not isLong else d.Decimal(1 - self.limit_percentage)*data["SPY"].Low
 
@@ -89,15 +91,15 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
 
         elif len(self.tickets) > 0:
             ticket = self.tickets[-1]
-                    
+
             if self.Time.day > 8 and self.Time.day < 14:
                 if len(ticket.UpdateRequests) == 0 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
                     updateOrderFields = UpdateOrderFields()
-                    updateOrderFields.Quantity = ticket.Quantity + copysign(self.delta_quantity, self.quantity)
+                    updateOrderFields.Quantity = ticket.Quantity + d.Decimal(copysign(self.delta_quantity, self.quantity))
                     updateOrderFields.Tag = "Change quantity: {0}".format(self.Time)
                     ticket.Update(updateOrderFields)
-                    
+
             elif self.Time.day > 13 and self.Time.day < 20:
                 if len(ticket.UpdateRequests) == 1 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))

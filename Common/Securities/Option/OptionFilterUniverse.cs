@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ namespace QuantConnect.Securities
 {
     /// <summary>
     /// Represents options symbols universe used in filtering.
-    /// </summary> 
+    /// </summary>
     public class OptionFilterUniverse : IDerivativeSecurityFilterUniverse
     {
         /// <summary>
@@ -262,7 +262,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day 
+        /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in less than 10 days</param>
@@ -316,7 +316,7 @@ namespace QuantConnect.Securities
     public static class OptionFilterUniverseEx
     {
         /// <summary>
-        /// Filters universe 
+        /// Filters universe
         /// </summary>
         /// <param name="universe"></param>
         /// <param name="predicate"></param>
@@ -329,7 +329,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Maps universe 
+        /// Maps universe
         /// </summary>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
@@ -339,7 +339,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Binds universe 
+        /// Binds universe
         /// </summary>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {

@@ -21,44 +21,39 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class MovingAverageConvergenceDivergenceTests
     {
-        [Test]
-        public void ComputesCorrectly()
-        {
-            var fast = new SimpleMovingAverage(3);
-            var slow = new SimpleMovingAverage(5);
-            var signal = new SimpleMovingAverage(3);
-            var macd = new MovingAverageConvergenceDivergence("macd", 3, 5, 3, MovingAverageType.Simple);
+        private string _externalDataFilename = "spy_with_macd.txt";
 
-            foreach (var data in TestHelper.GetDataStream(7))
-            {
-                fast.Update(data);
-                slow.Update(data);
-                macd.Update(data);
-                Assert.AreEqual(fast - slow, macd);
-                if (fast.IsReady && slow.IsReady)
-                {
-                    signal.Update(new IndicatorDataPoint(data.Time, macd));
-                    Assert.AreEqual(signal.Current.Value, macd.Current.Value);
-                }
-            }
+        [Test]
+        public void ComparesWithExternalDataMACD()
+        {
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            TestHelper.TestIndicator(
+                macd,
+                _externalDataFilename,
+                "MACD",
+                (ind, expected) => Assert.AreEqual(expected, (double)((MovingAverageConvergenceDivergence)ind).Current.Value, delta: 1e-4));
         }
 
         [Test]
-        public void ResetsProperly()
+        public void ComparesWithExternalDataMACDHistogram()
         {
-            var macd = new MovingAverageConvergenceDivergence("macd", 3, 5, 3);
-            foreach (var data in TestHelper.GetDataStream(30))
-            {
-                macd.Update(data);
-            }
-            Assert.IsTrue(macd.IsReady);
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            TestHelper.TestIndicator(
+                macd,
+                _externalDataFilename,
+                "Histogram",
+                (ind, expected) => Assert.AreEqual(expected, (double)((MovingAverageConvergenceDivergence)ind).Histogram.Current.Value, delta: 1e-4));
+        }
 
-            macd.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(macd);
-            TestHelper.AssertIndicatorIsInDefaultState(macd.Fast);
-            TestHelper.AssertIndicatorIsInDefaultState(macd.Signal);
-            TestHelper.AssertIndicatorIsInDefaultState(macd.Signal);
+        [Test]
+        public void ComparesWithExternalDataMACDSignal()
+        {
+            var macd = new MovingAverageConvergenceDivergence(fastPeriod: 12, slowPeriod: 26, signalPeriod: 9);
+            TestHelper.TestIndicator(
+                macd,
+                _externalDataFilename,
+                "Signal",
+                (ind, expected) => Assert.AreEqual(expected, (double)((MovingAverageConvergenceDivergence)ind).Signal.Current.Value, delta: 1e-4));
         }
     }
 }

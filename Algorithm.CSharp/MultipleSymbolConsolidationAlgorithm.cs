@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,15 +16,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm provides a structure for defining consolidators and indicators for many different symbols.
+    /// Example structure for structuring an algorithm with indicator and consolidator data for many tickers.
     /// </summary>
+    /// <meta name="tag" content="consolidating data" />
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="strategy example" />
     public class MultipleSymbolConsolidationAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -48,8 +53,8 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public readonly IReadOnlyList<string> EquitySymbols = new List<string>
         {
-            "AAPL", 
-            "SPY", 
+            "AAPL",
+            "SPY",
             "IBM"
         };
         /// <summary>
@@ -81,13 +86,15 @@ namespace QuantConnect.Algorithm.Examples
             // initialize our equity data
             foreach (var symbol in EquitySymbols)
             {
-                Data.Add(symbol, new SymbolData(symbol, SecurityType.Equity, BarPeriod, RollingWindowSize));
+                var equity = AddEquity(symbol);
+                Data.Add(symbol, new SymbolData(equity.Symbol, BarPeriod, RollingWindowSize));
             }
 
             // initialize our forex data
             foreach (var symbol in ForexSymbols)
             {
-                Data.Add(symbol, new SymbolData(symbol, SecurityType.Forex, BarPeriod, RollingWindowSize));
+                var forex = AddForex(symbol);
+                Data.Add(symbol, new SymbolData(forex.Symbol, BarPeriod, RollingWindowSize));
             }
 
             // loop through all our symbols and request data subscriptions and initialize indicatora
@@ -97,17 +104,19 @@ namespace QuantConnect.Algorithm.Examples
                 // see: http://stackoverflow.com/questions/14907987/access-to-foreach-variable-in-closure-warning
                 var symbolData = kvp.Value;
 
-                // request data subscription
-                AddSecurity(symbolData.SecurityType, symbolData.Symbol, Resolution.Minute);
-
                 // define a consolidator to consolidate data for this symbol on the requested period
-                var consolidator = new TradeBarConsolidator(BarPeriod);
+                var consolidator = symbolData.Symbol.SecurityType == SecurityType.Equity
+                    ? (IDataConsolidator)new TradeBarConsolidator(BarPeriod)
+                    : (IDataConsolidator)new QuoteBarConsolidator(BarPeriod);
+
                 // define our indicator
                 symbolData.SMA = new SimpleMovingAverage(CreateIndicatorName(symbolData.Symbol, "SMA" + SimpleMovingAveragePeriod, Resolution.Minute), SimpleMovingAveragePeriod);
                 // wire up our consolidator to update the indicator
-                consolidator.DataConsolidated += (sender, bar) =>
+                consolidator.DataConsolidated += (sender, baseData) =>
                 {
                     // 'bar' here is our newly consolidated data
+                    var bar = (IBaseDataBar)baseData;
+                    // update the indicator
                     symbolData.SMA.Update(bar.Time, bar.Close);
                     // we're also going to add this bar to our rolling window so we have access to it later
                     symbolData.Bars.Add(bar);
@@ -122,7 +131,7 @@ namespace QuantConnect.Algorithm.Examples
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             // loop through each symbol in our structure
             foreach (var symbolData in Data.Values)
@@ -150,7 +159,7 @@ namespace QuantConnect.Algorithm.Examples
                 // we have too many symbols to plot them all, so plot ever other
                 if (kvp.Value.IsReady && ++i%2 == 0)
                 {
-                    Plot(kvp.Value.Symbol, kvp.Value.SMA);
+                    Plot(kvp.Value.Symbol.ToString(), kvp.Value.SMA);
                 }
             }
         }
@@ -163,18 +172,14 @@ namespace QuantConnect.Algorithm.Examples
             /// <summary>
             /// This symbol the other data in this class is associated with
             /// </summary>
-            public readonly string Symbol;
-            /// <summary>
-            /// The security type of the symbol
-            /// </summary>
-            public readonly SecurityType SecurityType;
+            public readonly Symbol Symbol;
             /// <summary>
             /// A rolling window of data, data needs to be pumped into Bars by using Bars.Update( tradeBar ) and
             /// can be accessed like:
             ///  mySymbolData.Bars[0] - most first recent piece of data
             ///  mySymbolData.Bars[5] - the sixth most recent piece of data (zero based indexing)
             /// </summary>
-            public readonly RollingWindow<TradeBar> Bars;
+            public readonly RollingWindow<IBaseDataBar> Bars;
             /// <summary>
             /// The period used when population the Bars rolling window.
             /// </summary>
@@ -187,12 +192,11 @@ namespace QuantConnect.Algorithm.Examples
             /// <summary>
             /// Initializes a new instance of SymbolData
             /// </summary>
-            public SymbolData(string symbol, SecurityType securityType, TimeSpan barPeriod, int windowSize)
+            public SymbolData(Symbol symbol, TimeSpan barPeriod, int windowSize)
             {
                 Symbol = symbol;
-                SecurityType = securityType;
                 BarPeriod = barPeriod;
-                Bars = new RollingWindow<TradeBar>(windowSize);
+                Bars = new RollingWindow<IBaseDataBar>(windowSize);
             }
 
             /// <summary>

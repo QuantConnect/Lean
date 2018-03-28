@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
                     return new ExponentialMovingAverage(period);
 
                 case MovingAverageType.Wilders:
-                    return new ExponentialMovingAverage(period, 1m/period);
+                    return new WilderMovingAverage(period);
 
                 case MovingAverageType.LinearWeightedMovingAverage:
                     return new LinearWeightedMovingAverage(period);
@@ -90,7 +90,7 @@ namespace QuantConnect.Indicators
                     return new ExponentialMovingAverage(name, period);
 
                 case MovingAverageType.Wilders:
-                    return new ExponentialMovingAverage(name, period, 1m / period);
+                    return new WilderMovingAverage(name, period);
 
                 case MovingAverageType.LinearWeightedMovingAverage:
                     return new LinearWeightedMovingAverage(name, period);

@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,23 +24,27 @@ from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
 
-
+### <summary>
+### Demonstration of payments for cash dividends in backtesting. When data normalization mode is set
+### to "Raw" the dividends are paid as cash directly into your portfolio.
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="data event handlers" />
+### <meta name="tag" content="dividend event" />
 class DividendAlgorithm(QCAlgorithm):
-    '''Showcases the dividend and split event of QCAlgorithm
-    The data for this algorithm isn't in the github repo, so this will need to be run on the QC site'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(1998,01,01)  #Set Start Date		
-        self.SetEndDate(2006,01,21)    #Set End Date		
-        self.SetCash(100000)           #Set Strategy Cash		
-        # Find more symbols here: http://quantconnect.com/data		
-        equity = self.AddEquity("MSFT", Resolution.Daily)		
+        self.SetStartDate(1998,1,1)  #Set Start Date
+        self.SetEndDate(2006,1,21)    #Set End Date
+        self.SetCash(100000)           #Set Strategy Cash
+        # Find more symbols here: http://quantconnect.com/data
+        equity = self.AddEquity("MSFT", Resolution.Daily)
         equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        
-        # this will use the Tradier Brokerage open order split behavior		
-        # forward split will modify open order to maintain order value		
-        # reverse split open orders will be cancelled		
+
+        # this will use the Tradier Brokerage open order split behavior
+        # forward split will modify open order to maintain order value
+        # reverse split open orders will be cancelled
         self.SetBrokerageModel(BrokerageName.TradierBrokerage)
 
 

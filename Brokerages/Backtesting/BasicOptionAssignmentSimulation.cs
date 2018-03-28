@@ -60,7 +60,7 @@ namespace QuantConnect.Brokerages.Backtesting
             if (_lastUpdate == DateTime.MinValue ||
                 algorithm.UtcTime - _lastUpdate > _securitiesRescanPeriod)
             {
-                var expirations = algorithm.Securities.Keys
+                var expirations = algorithm.Securities.Select(x => x.Key)
                             .Where(x => x.ID.SecurityType == SecurityType.Option &&
                                         x.ID.Date > algorithm.Time &&
                                         x.ID.Date - algorithm.Time <= _securitiesRescanPeriod)

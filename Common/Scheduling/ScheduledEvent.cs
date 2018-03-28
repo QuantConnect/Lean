@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -120,6 +120,23 @@ namespace QuantConnect.Scheduling
             Enabled = true;
         }
 
+        /// <summary>Serves as the default hash function. </summary>
+        /// <returns>A hash code for the current object.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
+
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            return !ReferenceEquals(null, obj) && ReferenceEquals(this, obj);
+        }
+
         /// <summary>
         /// Scans this event and fires the callback if an event happened
         /// </summary>
@@ -228,15 +245,48 @@ namespace QuantConnect.Scheduling
         /// <param name="triggerTime">The event's time in UTC</param>
         protected void OnEventFired(DateTime triggerTime)
         {
-            // don't fire the event if we're turned off
-            if (!Enabled) return;
-
-            if (_callback != null)
+            try
             {
-                _callback(_name, _orderedEventUtcTimes.Current);
+                // don't fire the event if we're turned off
+                if (!Enabled) return;
+
+                if (_callback != null)
+                {
+                    _callback(_name, _orderedEventUtcTimes.Current);
+                }
+                var handler = EventFired;
+                if (handler != null) handler(_name, triggerTime);
             }
-            var handler = EventFired;
-            if (handler != null) handler(_name, triggerTime);
+            catch (Exception ex)
+            {
+                Log.Error($"ScheduledEvent.Scan(): Exception was thrown in OnEventFired: {ex}");
+
+                // This scheduled event failed, so don't repeat the same event
+                _needsMoveNext = true;
+                throw new ScheduledEventException(_name, ex.Message, ex);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Throw this if there is an exception in the callback function of the scheduled event
+    /// </summary>
+    public class ScheduledEventException : Exception
+    {
+        /// <summary>
+        /// Gets the name of the scheduled event
+        /// </summary>
+        public string ScheduledEventName { get; }
+
+        /// <summary>
+        /// ScheduledEventException constructor
+        /// </summary>
+        /// <param name="name">The name of the scheduled event</param>
+        /// <param name="message">The exception as a string</param>
+        /// <param name="innerException">The exception that is the cause of the current exception</param>
+        public ScheduledEventException(string name, string message, Exception innerException) : base(message, innerException)
+        {
+            ScheduledEventName = name;
         }
     }
 }

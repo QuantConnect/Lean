@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,16 +15,17 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Base class caching caching spot for security data and any other temporary properties.
     /// </summary>
     /// <remarks>
-    /// This class is virtually unused and will soon be made obsolete. 
+    /// This class is virtually unused and will soon be made obsolete.
     /// This comment made in a remark to prevent obsolete errors in all users algorithms
     /// </remarks>
     public class SecurityCache
@@ -91,6 +92,10 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Add a new market data point to the local security cache for the current market price.
+        /// Rules:
+        ///     Don't cache fill forward data.
+        ///     Always return the last observation.
+        ///     If two consecutive data has the same time stamp and one is Quotebars and the other Tradebar, prioritize the Quotebar.
         /// </summary>
         public void AddData(BaseData data)
         {
@@ -101,10 +106,22 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            _lastData = data;
-            _dataByType[data.GetType()] = data;
+            // Only cache no fill-forward data.
+            if(data.IsFillForward) return;
 
-            var tick = data as Tick;
+            // Always keep track of the last obesrvation
+            _dataByType[data.GetType()] = data;
+            if (_lastData != null)
+            {
+                if (_lastData.DataType == MarketDataType.QuoteBar
+                    && data.DataType == MarketDataType.TradeBar
+                    && data.EndTime == _lastData.EndTime)
+                    return;
+            }
+            _lastData = data;
+
+
+            var tick = _lastData as Tick;
             if (tick != null)
             {
                 if (tick.Value != 0) Price = tick.Value;
@@ -114,11 +131,15 @@ namespace QuantConnect.Securities
 
                 if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
                 if (tick.AskSize != 0) AskSize = tick.AskSize;
+
+                if (tick.Quantity != 0) Volume = tick.Quantity;
+
+                return;
             }
-            var bar = data as IBar;
+            var bar = _lastData as IBar;
             if (bar != null)
             {
-                if (_lastQuoteBarUpdate != data.EndTime)
+                if (_lastQuoteBarUpdate != _lastData.EndTime)
                 {
                     if (bar.Open != 0) Open = bar.Open;
                     if (bar.High != 0) High = bar.High;
@@ -147,7 +168,7 @@ namespace QuantConnect.Securities
             }
             else
             {
-                Price = data.Price;
+                Price = _lastData.Price;
             }
         }
 
@@ -166,10 +187,10 @@ namespace QuantConnect.Securities
         /// <typeparam name="T">The data type</typeparam>
         /// <returns>The last data packet, null if none received of type</returns>
         public T GetData<T>()
-            where T:BaseData
+            where T : BaseData
         {
             BaseData data;
-            _dataByType.TryGetValue(typeof (T), out data);
+            _dataByType.TryGetValue(typeof(T), out data);
             return data as T;
         }
 

@@ -15,13 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
 using QuantConnect.API;
-using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
@@ -281,35 +277,11 @@ namespace QuantConnect.Interfaces
         void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
 
         /// <summary>
-        /// Market Status Today: REST call.
-        /// </summary>
-        /// <param name="time">The date we need market hours for</param>
-        /// <param name="symbol"></param>
-        /// <returns>Market open hours.</returns>
-        IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol);
-
-        /// <summary>
         /// Send an email to the user associated with the specified algorithm id
         /// </summary>
         /// <param name="algorithmId">The algorithm id</param>
         /// <param name="subject">The email subject</param>
         /// <param name="body">The email message body</param>
         void SendUserEmail(string algorithmId, string subject, string body);
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void LiveSubscribe(IEnumerable<Symbol> symbols);
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void LiveUnsubscribe(IEnumerable<Symbol> symbols);
-        /// <summary>
-        /// Get next ticks if they have arrived from the server.
-        /// </summary>
-        /// <returns>Array of <see cref="BaseData"/></returns>
-        IEnumerable<BaseData> GetLiveData();
     }
 }

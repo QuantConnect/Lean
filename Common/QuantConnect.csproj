@@ -17,6 +17,8 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <LangVersion>6</LangVersion>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -106,9 +108,8 @@
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
-    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.4.4\lib\Python.Runtime.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.5\lib\Python.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="QLNet, Version=1.9.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QLNet.1.9.2\lib\net45\QLNet.dll</HintPath>
@@ -128,6 +129,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmSettings.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\ReadOnlySecurityValuesCollection.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\IInsightManagerExtension.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverter.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Serialization\SerializedInsight.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioTarget.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\Providers\AlgorithmSecurityValuesProvider.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\Functions\BinaryInsightScoreFunction.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\ISecurityValuesProvider.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\IInsightScoreFunction.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\IInsightScoreFunctionProvider.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\Providers\DefaultInsightScoreFunctionProvider.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\SecurityValues.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Insight.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightAnalysisContext.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightCollection.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightManager.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightScore.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightScoreType.cs" />
+    <Compile Include="AlphaRuntimeStatistics.cs" />
     <Compile Include="API\AuthenticationResponse.cs" />
     <Compile Include="API\Backtest.cs" />
     <Compile Include="API\Compile.cs" />
@@ -148,6 +169,42 @@
     <Compile Include="Brokerages\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
+    <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
+    <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
+    <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
+    <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\InvalidTokenPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\KeyErrorPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\NoMethodMatchPythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\PythonExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\StackExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\IExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\ScheduledEventExceptionInterpreter.cs" />
+    <Compile Include="Exceptions\UnsupportedOperandPythonExceptionInterpreter.cs" />
+    <Compile Include="Interfaces\IFutureChainProvider.cs" />
+    <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
+    <Compile Include="Orders\GDAXOrderProperties.cs" />
+    <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
+    <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Packets\AlphaNodePacket.cs" />
+    <Compile Include="Packets\AlphaResultPacket.cs" />
+    <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
+    <Compile Include="Python\PythonActivator.cs" />
+    <Compile Include="Python\PythonSlice.cs" />
+    <Compile Include="Python\VolatilityModelPythonWrapper.cs" />
+    <Compile Include="Python\PandasData.cs" />
+    <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
+    <Compile Include="Python\SlippageModelPythonWrapper.cs" />
+    <Compile Include="Python\FillModelPythonWrapper.cs" />
+    <Compile Include="Python\PandasConverter.cs" />
+    <Compile Include="Python\FeeModelPythonWrapper.cs" />
+    <Compile Include="Securities\CashBuyingPowerModel.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
+    <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
+    <Compile Include="Securities\IBaseCurrencySymbol.cs" />
+    <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />
+    <Compile Include="Securities\IDerivativeSecurity.cs" />
     <Compile Include="Securities\Option\EmptyOptionChainProvider.cs" />
     <Compile Include="Interfaces\IOptionChainProvider.cs" />
     <Compile Include="Brokerages\OandaTransactionModel.cs" />
@@ -157,6 +214,7 @@
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
     <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
+    <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Market\IBaseDataBar.cs" />
     <Compile Include="Data\Consolidators\OpenInterestConsolidator.cs" />
     <Compile Include="Data\Market\OpenInterest.cs" />
@@ -275,6 +333,7 @@
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
+    <Compile Include="Orders\Fees\GDAXFeeModel.cs" />
     <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
     <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
     <Compile Include="Orders\Fees\IFeeModel.cs" />
@@ -335,6 +394,9 @@
     <Compile Include="Securities\Cfd\CfdHolding.cs" />
     <Compile Include="Securities\CompositeSecurityInitializer.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
+    <Compile Include="Securities\Crypto\Crypto.cs" />
+    <Compile Include="Securities\Crypto\CryptoExchange.cs" />
+    <Compile Include="Securities\Crypto\CryptoHolding.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
     <Compile Include="Securities\AdjustedPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecuritySeeder.cs" />
@@ -396,7 +458,7 @@
     <Compile Include="Securities\MarketHoursDatabase.cs" />
     <Compile Include="Securities\ISecurityProvider.cs" />
     <Compile Include="Securities\IOrderProcessor.cs" />
-    <Compile Include="Securities\ISecurityMarginModel.cs" />
+    <Compile Include="Securities\IBuyingPowerModel.cs" />
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\DefaultMarginCallModel.cs" />
@@ -468,6 +530,8 @@
     <Compile Include="Securities\SecurityPortfolioManager.cs" />
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightDirection.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightType.cs" />
     <Compile Include="Statistics\AlgorithmPerformance.cs" />
     <Compile Include="Statistics\PortfolioStatistics.cs" />
     <Compile Include="Statistics\StatisticsBuilder.cs" />
@@ -496,6 +560,7 @@
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\DisposableExtensions.cs" />
+    <Compile Include="Util\EnumeratorExtensions.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
@@ -508,6 +573,7 @@
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\ColorJsonConverter.cs" />
+    <Compile Include="Util\PythonUtil.cs" />
     <Compile Include="Util\RateGate.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
@@ -535,16 +601,17 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.5\build\QuantConnect.pythonnet.targets'))" />
   </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

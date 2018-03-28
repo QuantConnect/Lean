@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,24 +15,18 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Securities.Option;
-using QuantConnect.Brokerages;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This is an option split regression algorithm
+    /// Options Open Interest data regression test.
     /// </summary>
+    /// <meta name="tag" content="options" />
+    /// <meta name="tag" content="regression test" />
     public class OptionOpenInterestRegressionAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "twx";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
-
         public override void Initialize()
         {
             // this test opens position in the first day of trading, lives through stock split (7 for 1), and closes adjusted position on the second day
@@ -40,15 +34,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 06);
             SetCash(1000000);
 
-            var equity = AddEquity(UnderlyingTicker);
-            var option = AddOption(UnderlyingTicker);
-
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var option = AddOption("TWX");
 
             option.SetFilter(-10, +10, TimeSpan.Zero, TimeSpan.FromDays(365 * 2));
 
             // use the underlying equity as the benchmark
-            SetBenchmark(equity.Symbol);
+            SetBenchmark("TWX");
         }
 
         /// <summary>
@@ -93,9 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            Log(orderEvent.ToString());
         }
     }
 }
-
-
-

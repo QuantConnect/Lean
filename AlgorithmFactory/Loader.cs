@@ -59,6 +59,11 @@ namespace QuantConnect.AlgorithmFactory
         private const string AlgorithmBaseTypeFullName = "QuantConnect.Algorithm.QCAlgorithm";
 
         /// <summary>
+        /// The full type name of QCAlgorithmFramework, this is so we don't pick him up when querying for types
+        /// </summary>
+        private const string FrameworkBaseTypeFullName = "QuantConnect.Algorithm.Framework.QCAlgorithmFramework";
+
+        /// <summary>
         /// Creates a new loader with a 10 second maximum load time that forces exactly one derived type to be found
         /// </summary>
         public Loader()
@@ -146,51 +151,31 @@ namespace QuantConnect.AlgorithmFactory
             //File does not exist.
             if (!File.Exists(assemblyPath))
             {
-                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find py file: " + assemblyPath;
+                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to find py file: {assemblyPath}";
                 return false;
             }
 
+            var pythonFile = new FileInfo(assemblyPath);
+            var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
+
+            //Help python find the module
+            Environment.SetEnvironmentVariable("PYTHONPATH", pythonFile.DirectoryName);
+
             try
             {
-                var pythonFile = new FileInfo(assemblyPath);
-                var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
+                algorithmInstance = new AlgorithmPythonWrapper(moduleName);
 
-                //Help python find the module
-                Environment.SetEnvironmentVariable("PYTHONPATH", pythonFile.DirectoryName);
-
-                // Initialize Python Engine
-                if (!PythonEngine.IsInitialized)
-                {
-                    PythonEngine.Initialize();
-                    PythonEngine.BeginAllowThreads();
-                }
-
-                // Import Python module
-                using (Py.GIL())
-                {
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + moduleName);
-                    var module = Py.Import(moduleName);
-
-                    if (module == null)
-                    {
-                        errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module " + assemblyPath + ". Check for errors in the python scripts.";
-                        return false;
-                    }
-
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Creating IAlgorithm instance.");
-
-                    algorithmInstance = new AlgorithmPythonWrapper(module);
-                    ObjectActivator.SetPythonModule(module);
-                }
+                PythonEngine.BeginAllowThreads();
             }
             catch (Exception e)
             {
                 Log.Error(e);
-                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module " + assemblyPath + ". " + e.Message;
+                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Unable to import python module {assemblyPath}. {e.Message}";
+                return false;
             }
 
             //Successful load.
-            return algorithmInstance != null;
+            return true;
         }
 
         /// <summary>
@@ -211,7 +196,8 @@ namespace QuantConnect.AlgorithmFactory
                 
                 // if the assembly is located in the base directory then don't bother loading the pdbs
                 // manually, they'll be loaded automatically by the .NET runtime.
-                if (new FileInfo(assemblyPath).DirectoryName == AppDomain.CurrentDomain.BaseDirectory)
+                var directoryName = new FileInfo(assemblyPath).DirectoryName;
+                if (directoryName != null && directoryName.TrimEnd(Path.DirectorySeparatorChar) != AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar))
                 {
                     // see if the pdb exists
                     var mdbFilename = assemblyPath + ".mdb";
@@ -322,6 +308,7 @@ namespace QuantConnect.AlgorithmFactory
                              where !t.IsAbstract                                // require concrete impl
                              where AlgorithmInterfaceType.IsAssignableFrom(t)   // require derived from IAlgorithm
                              where t.FullName != AlgorithmBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithm
+                             where t.FullName != FrameworkBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithmFramework
                              where t.GetConstructor(Type.EmptyTypes) != null    // require default ctor
                              select t.FullName).ToList();
                 }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,15 +82,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
                     var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
-                    var offsetProvider = subscription.OffsetProvider;
-                    var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
-                    while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
+                    while (subscription.Current.EmitTimeUtc <= frontier)
                     {
-                        // we want bars rounded using their subscription times, we make a clone
-                        // so we don't interfere with the enumerator's internal logic
-                        var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                        clone.Time = clone.Time.RoundDown(subscription.Configuration.Increment);
-                        packet.Add(clone);
+                        packet.Add(subscription.Current.Data);
                         Interlocked.Increment(ref _dataPointCount);
                         if (!subscription.MoveNext())
                         {
@@ -103,8 +97,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     if (subscription.Current != null)
                     {
                         // take the earliest between the next piece of data or the next tz discontinuity
-                        var nextDataOrDiscontinuity = Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity());
-                        earlyBirdTicks = Math.Min(earlyBirdTicks, nextDataOrDiscontinuity);
+                        earlyBirdTicks = Math.Min(earlyBirdTicks, subscription.Current.EmitTimeUtc.Ticks);
                     }
                 }
 

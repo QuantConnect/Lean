@@ -59,6 +59,10 @@ namespace QuantConnect.ToolBox
             {
                 return new Bz2StreamProvider();
             }
+            if (ext == ".gz")
+            {
+                return new GzipStreamProvider();
+            }
 
             return new FileStreamProvider();
         }

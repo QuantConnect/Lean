@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,12 +27,14 @@ import numpy as np
 import math
 import json
 
+### <summary>
+### This demonstration imports indian NSE index "NIFTY" as a tradable security in addition to the USDINR currency pair. We move into the
+### NSE market when the economy is performing well.
+### </summary>
+### <meta name="tag" content="strategy example" />
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="custom data" />
 class CustomDataNIFTYAlgorithm(QCAlgorithm):
-    '''3.0 CUSTOM DATA SOURCE: USE YOUR OWN MARKET DATA (OPTIONS, FOREX, FUTURES, DERIVATIVES etc).
-    The new QuantConnect Lean Backtesting Engine is incredibly flexible and allows you to define your own data source. 
-    This includes any data source which has a TIME and VALUE. These are the *only* requirements. 
-    To demonstrate this we're loading in "Nifty" data. This by itself isn't special, the cool part is next:
-    We load the "Nifty" data as a tradable security we're calling "NIFTY".'''
 
     def Initialize(self):
         self.SetStartDate(2008, 1, 8)
@@ -42,18 +44,18 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         # Define the symbol and "type" of our generic data:
         self.AddData(DollarRupee, "USDINR")
         self.AddData(Nifty, "NIFTY")
-        
+
         self.minimumCorrelationHistory = 50
         self.today = CorrelationPair()
         self.prices = []
-        
+
 
     def OnData(self, data):
-        if "USDINR" in data:
+        if data.ContainsKey("USDINR"):
             self.today = CorrelationPair(self.Time)
             self.today.CurrencyPrice = data["USDINR"].Close
 
-        if "NIFTY" not in data: return
+        if not data.ContainsKey("NIFTY"): return
 
         self.today.NiftyPrice = data["NIFTY"].Close
 
@@ -61,7 +63,7 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
             self.prices.append(self.today)
             if len(self.prices) > self.minimumCorrelationHistory:
                 self.prices.pop(0)
-        
+
         # Strategy
         if self.Time.weekday() != 2: return
 
@@ -82,7 +84,7 @@ class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
     def GetSource(self, config, date, isLiveMode):
         return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
-        
+
 
     def Reader(self, config, line, date, isLiveMode):
         if not (line.strip() and line[0].isdigit()): return None
@@ -90,20 +92,20 @@ class Nifty(PythonData):
         # New Nifty object
         index = Nifty();
         index.Symbol = config.Symbol
-        
+
         try:
             # Example File Format:
             # Date,       Open       High        Low       Close     Volume      Turnover
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
-            index.Time = datetime.strptime(data[0], "%Y-%m-%d")            
+            index.Time = datetime.strptime(data[0], "%Y-%m-%d")
             index.Value = decimal.Decimal(data[4])
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
             index["Low"] = float(data[3])
             index["Close"] = float(data[4])
-                
-        
+
+
         except ValueError:
                 # Do nothing
                 return None
@@ -122,13 +124,13 @@ class DollarRupee(PythonData):
         # New USDINR object
         currency = DollarRupee();
         currency.Symbol = config.Symbol
-        
+
         try:
             data = line.split(',')
             currency.Time = datetime.strptime(data[0], "%Y-%m-%d")
             currency.Value = decimal.Decimal(data[1])
             currency["Close"] = float(data[1])
-            
+
         except ValueError:
             # Do nothing
             return None

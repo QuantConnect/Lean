@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,18 @@ namespace QuantConnect
             Tuple.Create(CBOT, 8),
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
-            Tuple.Create(NSE,11)
+            Tuple.Create(NSE, 11),
+
+            Tuple.Create(GDAX, 12),
+            Tuple.Create(Kraken, 13),
+            Tuple.Create(Bittrex, 14),
+            Tuple.Create(Bithumb, 15),
+            Tuple.Create(Binance, 16),
+            Tuple.Create(Poloniex, 17),
+            Tuple.Create(Coinone, 18),
+            Tuple.Create(HitBTC, 19),
+            Tuple.Create(OkCoin, 20),
+            Tuple.Create(Bitstamp, 21),
         };
 
         static Market()
@@ -57,7 +68,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// USA Market 
+        /// USA Market
         /// </summary>
         public const string USA = "usa";
 
@@ -112,6 +123,56 @@ namespace QuantConnect
         /// NSE
         /// </summary>
         public const string NSE = "nse";
+
+        /// <summary>
+        /// GDAX
+        /// </summary>
+        public const string GDAX = "gdax";
+
+        /// <summary>
+        /// Kraken
+        /// </summary>
+        public const string Kraken = "kraken";
+
+        /// <summary>
+        /// Bitstamp
+        /// </summary>
+        public const string Bitstamp = "bitstamp";
+
+        /// <summary>
+        /// OkCoin
+        /// </summary>
+        public const string OkCoin = "okcoin";
+
+        /// <summary>
+        /// Bithumb
+        /// </summary>
+        public const string Bithumb = "bithumb";
+
+        /// <summary>
+        /// Binance
+        /// </summary>
+        public const string Binance = "binance";
+
+        /// <summary>
+        /// Poloniex
+        /// </summary>
+        public const string Poloniex = "poloniex";
+
+        /// <summary>
+        /// Coinone
+        /// </summary>
+        public const string Coinone = "coinone";
+
+        /// <summary>
+        /// HitBTC
+        /// </summary>
+        public const string HitBTC = "hitbtc";
+
+        /// <summary>
+        /// Bittrex
+        /// </summary>
+        public const string Bittrex = "bittrex";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,7 +93,7 @@ namespace QuantConnect.Util
         /// <summary>
         /// Extension method to searches the composition container for an export that has a matching type name. This function
         /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
-        /// 
+        ///
         /// This method will not throw if multiple types are found matching the name, it will just return the first one it finds.
         /// </summary>
         /// <typeparam name="T">The type of the export</typeparam>
@@ -160,8 +160,8 @@ namespace QuantConnect.Util
 
                     return instance;
                 }
-            } 
-            catch (ReflectionTypeLoadException err) 
+            }
+            catch (ReflectionTypeLoadException err)
             {
                 foreach (var exception in err.LoaderExceptions)
                 {

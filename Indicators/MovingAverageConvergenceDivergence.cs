@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -37,6 +39,13 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Signal { get; private set; }
 
         /// <summary>
+        /// Developed by Thomas Aspray in 1986, the MACD-Histogram measures the distance between MACD and its signal line, 
+        /// is an oscillator that fluctuates above and below the zero line.
+        /// Bullish or bearish divergences in the MACD-Histogram can alert chartists to an imminent signal line crossover in MACD.
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Histogram { get; private set; }
+
+        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady
@@ -51,7 +60,7 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-        public MovingAverageConvergenceDivergence(int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Simple)
+        public MovingAverageConvergenceDivergence(int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
             : this(string.Format("MACD({0},{1})", fastPeriod, slowPeriod), fastPeriod, slowPeriod, signalPeriod, type)
         {
         }
@@ -64,12 +73,13 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-        public MovingAverageConvergenceDivergence(string name, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Simple)
+        public MovingAverageConvergenceDivergence(string name, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
             : base(name)
         {
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
+            Histogram = new Identity(name + "_Histogram");
         }
 
         /// <summary>
@@ -83,11 +93,9 @@ namespace QuantConnect.Indicators
             Slow.Update(input);
 
             var macd = Fast - Slow;
-            if (Fast.IsReady && Slow.IsReady)
-            {
-                Signal.Update(input.Time, macd);
-            }
 
+            Signal.Update(input.Time, macd);
+            Histogram.Update(input.Time, macd - Signal);
             return macd;
         }
 
@@ -99,7 +107,7 @@ namespace QuantConnect.Indicators
             Fast.Reset();
             Slow.Reset();
             Signal.Reset();
-
+            Histogram.Reset();
             base.Reset();
         }
     }

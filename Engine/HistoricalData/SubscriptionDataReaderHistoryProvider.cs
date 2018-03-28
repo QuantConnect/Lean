@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -94,30 +94,30 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
             end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
-            var config = new SubscriptionDataConfig(request.DataType, 
-                request.Symbol, 
-                request.Resolution, 
-                request.TimeZone, 
-                request.ExchangeHours.TimeZone, 
-                request.FillForwardResolution.HasValue, 
-                request.IncludeExtendedMarketHours, 
-                false, 
+            var config = new SubscriptionDataConfig(request.DataType,
+                request.Symbol,
+                request.Resolution,
+                request.DataTimeZone,
+                request.ExchangeHours.TimeZone,
+                request.FillForwardResolution.HasValue,
+                request.IncludeExtendedMarketHours,
+                false,
                 request.IsCustomData,
-                null,
+                request.TickType,
                 true,
                 request.DataNormalizationMode
                 );
 
             var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
-            IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
-                start, 
-                end, 
+            IEnumerator<BaseData> reader = new SubscriptionDataReader(config,
+                start,
+                end,
                 ResultHandlerStub.Instance,
-                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
+                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty,
                 _factorFileProvider,
                 _dataProvider,
-                Time.EachTradeableDay(request.ExchangeHours, start, end), 
+                Time.EachTradeableDay(request.ExchangeHours, start, end),
                 false,
                 _dataCacheProvider,
                 false
@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, security.IsExtendedMarketHours, end, config.Increment);
+                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, security.IsExtendedMarketHours, end, config.Increment, config.DataTimeZone);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
@@ -153,7 +153,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
-            return new Subscription(null, security, config, reader, timeZoneOffsetProvider, start, end, false);
+            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, reader);
+            return new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
         }
 
         // this implementation is provided solely for the data reader's dependency,
@@ -193,7 +194,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             public void SampleRange(List<Chart> samples) { }
             public void SetAlgorithm(IAlgorithm algorithm) { }
             public void StoreResult(Packet packet, bool async = false) { }
-            public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner) { }
+            public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> banner) { }
             public void SendStatusUpdate(AlgorithmStatus status, string message = "") { }
             public void SetChartSubscription(string symbol) { }
             public void RuntimeStatistic(string key, string value) { }

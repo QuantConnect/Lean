@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -26,14 +27,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class SubscriptionCollection : IEnumerable<Subscription>
     {
-        private readonly ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, Subscription>> _subscriptions;
+        private readonly ConcurrentDictionary<SubscriptionDataConfig, Subscription> _subscriptions;
+
+        // some asset types (options, futures, crypto) have multiple subscriptions for different tick types,
+        // we keep a sorted list of subscriptions so we can return them in a deterministic order
+        private List<Subscription> _subscriptionsByTickType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionCollection"/> class
         /// </summary>
         public SubscriptionCollection()
         {
-            _subscriptions = new ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, Subscription>>();
+            _subscriptions = new ConcurrentDictionary<SubscriptionDataConfig, Subscription>();
+            _subscriptionsByTickType = new List<Subscription>();
         }
 
         /// <summary>
@@ -43,23 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if a subscription with the specified configuration is found in this collection, false otherwise</returns>
         public bool Contains(SubscriptionDataConfig configuration)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryGetValue(configuration.Symbol, out dictionary))
-            {
-                return false;
-            }
-
-            return dictionary.ContainsKey(configuration);
-        }
-
-        /// <summary>
-        /// Checks the collection for any subscriptions with the specified symbol
-        /// </summary>
-        /// <param name="symbol">The symbol to check</param>
-        /// <returns>True if any subscriptions are found with the specified symbol</returns>
-        public bool ContainsAny(Symbol symbol)
-        {
-            return _subscriptions.ContainsKey(symbol);
+            return _subscriptions.ContainsKey(configuration);
         }
 
         /// <summary>
@@ -70,14 +60,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription is successfully added, false otherwise</returns>
         public bool TryAdd(Subscription subscription)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryGetValue(subscription.Configuration.Symbol, out dictionary))
-            {
-                dictionary = new ConcurrentDictionary<SubscriptionDataConfig, Subscription>();
-                _subscriptions[subscription.Configuration.Symbol] = dictionary;
-            }
+            if (!_subscriptions.TryAdd(subscription.Configuration, subscription))
+                return false;
 
-            return dictionary.TryAdd(subscription.Configuration, subscription);
+            SortSubscriptions();
+
+            return true;
         }
 
         /// <summary>
@@ -88,33 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription is successfully retrieved, false otherwise</returns>
         public bool TryGetValue(SubscriptionDataConfig configuration, out Subscription subscription)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryGetValue(configuration.Symbol, out dictionary))
-            {
-                subscription = null;
-                return false;
-            }
-
-            return dictionary.TryGetValue(configuration, out subscription);
-        }
-        
-        /// <summary>
-        /// Attempts to retrieve the subscription with the specified configuration
-        /// </summary>
-        /// <param name="symbol">The symbol of the subscription's configuration</param>
-        /// <param name="subscriptions">The subscriptions matching the symbol, null if not found</param>
-        /// <returns>True if the subscriptions are successfully retrieved, false otherwise</returns>
-        public bool TryGetAll(Symbol symbol, out ICollection<Subscription> subscriptions)
-        {
-            ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryGetValue(symbol, out dictionary))
-            {
-                subscriptions = null;
-                return false;
-            }
-            
-            subscriptions = dictionary.Values;
-            return true;
+            return _subscriptions.TryGetValue(configuration, out subscription);
         }
 
         /// <summary>
@@ -125,32 +87,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription is successfully removed, false otherwise</returns>
         public bool TryRemove(SubscriptionDataConfig configuration, out Subscription subscription)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryGetValue(configuration.Symbol, out dictionary))
-            {
-                subscription = null;
+            if (!_subscriptions.TryRemove(configuration, out subscription))
                 return false;
-            }
 
-            return dictionary.TryRemove(configuration, out subscription);
-        }
+            SortSubscriptions();
 
-        /// <summary>
-        /// Attempts to remove all subscriptons for the specified symbol
-        /// </summary>
-        /// <param name="symbol">The symbol of the subscriptions to remove</param>
-        /// <param name="subscriptions">The removed subscriptions</param>
-        /// <returns></returns>
-        public bool TryRemoveAll(Symbol symbol, out ICollection<Subscription> subscriptions)
-        {
-            ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryRemove(symbol, out dictionary))
-            {
-                subscriptions = null;
-                return false;
-            }
-
-            subscriptions = dictionary.Values;
             return true;
         }
 
@@ -162,15 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </returns>
         public IEnumerator<Subscription> GetEnumerator()
         {
-            foreach (var subscriptionsBySymbol in _subscriptions)
-            {
-                var subscriptionsByConfig = subscriptionsBySymbol.Value;
-                foreach (var kvp in subscriptionsByConfig)
-                {
-                    var subscription = kvp.Value;
-                    yield return subscription;
-                }
-            }
+            return _subscriptionsByTickType.GetEnumerator();
         }
 
         /// <summary>
@@ -182,6 +115,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private void SortSubscriptions()
+        {
+            // it's important that we enumerate underlying securities before derivatives to this end,
+            // we order by security type so that equity subscriptions are enumerated before option
+            // securities to ensure the underlying data is available when we process the options data
+            _subscriptionsByTickType = _subscriptions
+                .Select(x => x.Value)
+                .OrderBy(x => x.Configuration.SecurityType)
+                .ThenBy(x => x.Configuration.TickType)
+                .ToList();
         }
     }
 }

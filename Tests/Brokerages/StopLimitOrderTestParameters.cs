@@ -31,12 +31,12 @@ namespace QuantConnect.Tests.Brokerages
             _lowLimit = lowLimit;
         }
 
-        public override Order CreateShortOrder(int quantity)
+        public override Order CreateShortOrder(decimal quantity)
         {
             return new StopLimitOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.Now);
         }
 
-        public override Order CreateLongOrder(int quantity)
+        public override Order CreateLongOrder(decimal quantity)
         {
             return new StopLimitOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.Now);
         }
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Brokerages
                 stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice/2, Math.Round(lastMarketPrice, 2, MidpointRounding.AwayFromZero)));
                 
                 //change behaviour for forex type unit tests
-                if(order.SecurityType == SecurityType.Forex)
+                if(order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
                 {
                     stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, Math.Round(lastMarketPrice, 4, MidpointRounding.AwayFromZero)));
                 }
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Brokerages
 
 
                 //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex)
+                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
                 {
                     stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, Math.Round(lastMarketPrice, 4, MidpointRounding.AwayFromZero)));
                 }

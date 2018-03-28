@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,18 +36,24 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Set the cash for the strategy:
             SetCash(100000);
+            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
-            var security = AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Daily, Market.Bitfinex, false, 3.3m, true);
+            var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 3.3m, true);
+
+            // The default buying power model for the Crypto security type is now CashBuyingPowerModel.
+            // Since this test algorithm uses leverage we need to set a buying power model with margin.
+            security.BuyingPowerModel = new SecurityMarginModel(3.3m);
+
             var con = new QuoteBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
-            con.DataConsolidated += con_DataConsolidated;
+            con.DataConsolidated += DataConsolidated;
             SetBenchmark(security.Symbol);
         }
 
-        void con_DataConsolidated(object sender, QuoteBar e)
+        private void DataConsolidated(object sender, QuoteBar e)
         {
-            var quantity = Math.Truncate(Portfolio.Cash / Math.Abs(e.Value + 1));
+            var quantity = Math.Truncate((Portfolio.Cash + Portfolio.TotalFees) / Math.Abs(e.Value + 1));
             if (!Portfolio.Invested)
             {
                 Order("BTCUSD", quantity);
@@ -64,8 +72,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Portfolio["BTCUSD"].Quantity == quantity + 0.09m)
             {
-                //should fail
-                Order("BTCUSD", 0.001);
+                //should fail (below minimum order quantity)
+                Order("BTCUSD", 0.00001);
 
                 SetHoldings("BTCUSD", -2.0m);
                 SetHoldings("BTCUSD", 2.0m);
