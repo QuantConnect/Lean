@@ -744,7 +744,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            order.Status = OrderStatus.Submitted;
             return OrderResponse.Success(request);
         }
 
