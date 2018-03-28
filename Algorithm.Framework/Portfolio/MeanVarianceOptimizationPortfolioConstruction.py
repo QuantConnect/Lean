@@ -5,6 +5,13 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 #
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,8 +68,6 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
         Returns: 
             An enumerable of portoflio targets to be sent to the execution model
         """
-        if len(self.securities) == 0:
-            return [ ]
         
         symbols = [insight.Symbol for insight in insights]
         # request the daily history price of last year
@@ -71,13 +76,10 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
         # calculate the daily return 
         daily_return = (df_price / df_price.shift(1)).dropna()
         weights = PortfolioOptimization(daily_return, self.min_weight, self.max_weight).opt_portfolio() 
-        weights.index = sorted([insight.Symbol.Value for insight in insights])
-        
         # Create portfolio targets from the specified insights
         for insight in insights:
-            yield PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * weights[insight.Symbol.Value])
-
-      
+            yield PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * weights[str(insight.Symbol)])
+        
     def OnSecuritiesChanged(self, algorithm, changes):
         """ 
         Event fired each time the we add/remove securities from the data feed
@@ -107,17 +109,17 @@ class PortfolioOptimization(object):
         self.max_weight = max_weight
         self.n = df_return.columns.size 
 
-    def annual_port_return(self, weights):
+    def annual_portfolio_return(self, weights):
         # calculate the annual return of the portfolio
         return np.sum(self.df_return.mean() * weights) * 252
 
-    def annual_port_vol(self, weights):
+    def annual_portfolio_vol(self, weights):
         # calculate the annual volatility of the portfolio
         return np.sqrt(np.dot(weights.T, np.dot(self.df_return.cov() * 252, weights)))
 
     def min_func(self, weights):
         # object function of Sharpe ratio
-        return - self.annual_port_return(weights) / self.annual_port_vol(weights)
+        return - self.annual_portfolio_return(weights) / self.annual_portfolio_vol(weights)
         
     def opt_portfolio(self):
         # maximize the Sharpe ratio to find the optimal weights
