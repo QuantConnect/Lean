@@ -537,13 +537,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Used to send data updates to algorithm framework models
         /// </summary>
         /// <param name="slice">The current data slice</param>
-        public void OnFrameworkData(Slice slice)
-        {
-            using (Py.GIL())
-            {
-                _algorithm.OnFrameworkData(slice);
-            }
-        }
+        public void OnFrameworkData(Slice slice) => _baseAlgorithm.OnFrameworkData(slice);
 
         /// <summary>
         /// Call this event at the end of the algorithm running.
