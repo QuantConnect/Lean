@@ -6,6 +6,7 @@
     <RootNamespace>QuantConnect.Brokerages</RootNamespace>
     <LangVersion>6</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CSharpAPI">

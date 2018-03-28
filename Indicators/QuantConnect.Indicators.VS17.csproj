@@ -7,6 +7,7 @@
     <RootNamespace>QuantConnect.Indicators</RootNamespace>
     <AssemblyName>QuantConnect.Indicators</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="3.19.0" />

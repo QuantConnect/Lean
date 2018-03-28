@@ -6,6 +6,7 @@
     <AssemblyName>QuantConnect.Jupyter</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <LangVersion>6</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="1.3.4" />

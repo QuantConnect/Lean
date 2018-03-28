@@ -6,6 +6,7 @@
     <RootNamespace>QuantConnect.Algorithm.Framework</RootNamespace>
     <LangVersion>6</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="1.3.4" />

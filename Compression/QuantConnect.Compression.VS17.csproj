@@ -6,6 +6,7 @@
     <RootNamespace>QuantConnect.Compression</RootNamespace>
     <AssemblyName>QuantConnect.Compression</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.10.1" />

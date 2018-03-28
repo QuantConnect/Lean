@@ -11,6 +11,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>QuantConnect.ToolBox.KaikoDataConverter.Program</StartupObject>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.10.1" />

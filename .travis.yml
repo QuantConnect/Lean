@@ -4,10 +4,11 @@ mono:
   - 5.8.0
 solution: QuantConnect.Lean.VS17.sln
 install:
-  - msbuild /t:restore QuantConnect.Lean.VS17.sln
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
 script:
-  - msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.VS17.sln
+  - msbuild /p:Version="2.4.0.1" /t:restore,build /p:Configuration=Release QuantConnect.Lean.VS17.sln
   - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --exclude:TravisExclude --labels
 after_success:
-  - coveralls
+  - coveralls  
+  - curl -O https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+  - find . -name *.nupkg -not -path "*/packages/*" -not -path "*/testrunner/*"  -exec mono ./nuget.exe push {} $mygetApiKey  -Source https://www.myget.org/F/leantest/api/v2/package \;

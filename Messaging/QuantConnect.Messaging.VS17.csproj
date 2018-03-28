@@ -6,6 +6,7 @@
     <RootNamespace>QuantConnect.Messaging</RootNamespace>
     <AssemblyName>QuantConnect.Messaging</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AsyncIO" Version="0.1.26.0" />

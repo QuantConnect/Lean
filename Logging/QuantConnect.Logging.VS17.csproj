@@ -6,6 +6,7 @@
     <RootNamespace>QuantConnect.Logging</RootNamespace>
     <AssemblyName>QuantConnect.Logging</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="4.4.11" />

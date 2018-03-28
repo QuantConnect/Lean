@@ -7,6 +7,7 @@
     <LangVersion>6</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="3.19.0.0" />

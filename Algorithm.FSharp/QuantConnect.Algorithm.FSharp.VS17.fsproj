@@ -5,6 +5,7 @@
     <AssemblyName>QuantConnect.Algorithm.FSharp</AssemblyName>
     <RootNamespace>QuantConnect.Algorithm.FSharp</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="1.3.4" />

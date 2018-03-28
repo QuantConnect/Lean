@@ -6,6 +6,7 @@
     <RootNamespace>QuantConnect.Algorithm.CSharp</RootNamespace>
     <LangVersion>6</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Accord" Version="3.6.0" />
