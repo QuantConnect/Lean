@@ -21,16 +21,7 @@
     </Reference>
     <PackageReference Include="RestSharp" Version="105.2.3.0" />
     <PackageReference Include="WebSocketSharpFork" Version="1.0.4.0" />
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -50,7 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
-    <ProjectReference Include="..\Compression\QuantConnect.Compression.VS17.csproj" />
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
   </ItemGroup>

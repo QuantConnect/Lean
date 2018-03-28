@@ -29,6 +29,7 @@
     <PackageReference Include="WebSocket4Net" Version="0.14.1.0" />
     <PackageReference Include="WebSocketSharpFork" Version="1.0.4.0" />
     <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.5" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
@@ -37,18 +38,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Brokerages\InteractiveBrokers\CSharpAPI.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">

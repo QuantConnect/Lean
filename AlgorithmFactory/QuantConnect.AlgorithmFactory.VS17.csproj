@@ -10,13 +10,6 @@
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="1.3.4" />
     <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.5" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -26,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.VS17.csproj" />
     <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
-    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
   </ItemGroup>
   <ItemGroup>

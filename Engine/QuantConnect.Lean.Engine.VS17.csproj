@@ -18,12 +18,6 @@
     <PackageReference Include="RestSharp" Version="105.2.3" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -31,14 +25,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.VS17.csproj" />
     <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.VS17.csproj" />
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.VS17.csproj" />
     <ProjectReference Include="..\Api\QuantConnect.Api.VS17.csproj" />
     <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.VS17.csproj" />
     <ProjectReference Include="..\Compression\QuantConnect.Compression.VS17.csproj" />
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.VS17.csproj" />
-    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.VS17.csproj" />
     <ProjectReference Include="..\Common\QuantConnect.VS17.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.VS17.csproj" />
   </ItemGroup>

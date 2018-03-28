@@ -11,14 +11,6 @@
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
     <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.5" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
