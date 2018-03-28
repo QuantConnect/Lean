@@ -78,7 +78,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
         weights = PortfolioOptimization(daily_return, self.min_weight, self.max_weight).opt_portfolio() 
         # Create portfolio targets from the specified insights
         for insight in insights:
-            yield PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * weights[str(insight.Symbol)])
+            yield PortfolioTarget.Percent(algorithm, insight.Symbol, weights[str(insight.Symbol)])
         
     def OnSecuritiesChanged(self, algorithm, changes):
         """ 
