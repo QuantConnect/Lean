@@ -21,17 +21,17 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IPortfolioSelectionModel"/> that wraps a <see cref="PyObject"/> object
+    /// Provides an implementation of <see cref="IUniverseSelectionModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class PortfolioSelectionModelPythonWrapper : IPortfolioSelectionModel
+    public class UniverseSelectionModelPythonWrapper : IUniverseSelectionModel
     {
         private readonly dynamic _model;
 
         /// <summary>
-        /// Constructor for initialising the <see cref="IPortfolioSelectionModel"/> class with wrapped <see cref="PyObject"/> object
+        /// Constructor for initialising the <see cref="IUniverseSelectionModel"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Model defining universes for the algorithm</param>
-        public PortfolioSelectionModelPythonWrapper(PyObject model)
+        public UniverseSelectionModelPythonWrapper(PyObject model)
         {
             using (Py.GIL())
             {

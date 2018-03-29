@@ -24,19 +24,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Portoflio selection model that uses coarse/fine selectors. For US equities only.
     /// </summary>
-    public class FineFundamentalPortfolioSelectionModel : FundamentalPortfolioSelectionModel
+    public class FineFundamentalUniverseSelectionModel : FundamentalUniverseSelectionModel
     {
         private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarseSelector;
         private readonly Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> _fineSelector;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FineFundamentalPortfolioSelectionModel"/> class
+        /// Initializes a new instance of the <see cref="FineFundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
-        public FineFundamentalPortfolioSelectionModel(
+        public FineFundamentalUniverseSelectionModel(
             Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
             Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector,
             UniverseSettings universeSettings = null,

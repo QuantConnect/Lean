@@ -24,42 +24,42 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IPortfolioSelectionModel"/> that simply
+    /// Provides an implementation of <see cref="IUniverseSelectionModel"/> that simply
     /// subscribes to the specified set of symbols
     /// </summary>
-    public class ManualPortfolioSelectionModel : IPortfolioSelectionModel
+    public class ManualUniverseSelectionModel : IUniverseSelectionModel
     {
         private readonly IReadOnlyList<Symbol> _symbols;
         private readonly UniverseSettings _universeSettings;
         private readonly ISecurityInitializer _securityInitializer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManualPortfolioSelectionModel"/> class using the algorithm's
+        /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class using the algorithm's
         /// security initializer and universe settings
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
-        public ManualPortfolioSelectionModel(IEnumerable<Symbol> symbols)
+        public ManualUniverseSelectionModel(IEnumerable<Symbol> symbols)
             : this(symbols.ToArray())
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManualPortfolioSelectionModel"/> class using the algorithm's
+        /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class using the algorithm's
         /// security initializer and universe settings
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
-        public ManualPortfolioSelectionModel(params Symbol[] symbols)
+        public ManualUniverseSelectionModel(params Symbol[] symbols)
             : this (symbols?.AsEnumerable(), null, null)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManualPortfolioSelectionModel"/> class
+        /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings</param>
         /// <param name="securityInitializer">Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer</param>
-        public ManualPortfolioSelectionModel(IEnumerable<Symbol> symbols, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
+        public ManualUniverseSelectionModel(IEnumerable<Symbol> symbols, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
         {
             if (symbols == null)
             {
