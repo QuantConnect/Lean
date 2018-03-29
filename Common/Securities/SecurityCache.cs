@@ -106,22 +106,24 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // Only cache no fill-forward data.
-            if(data.IsFillForward) return;
+            // Only cache non fill-forward data.
+            if (data.IsFillForward) return;
 
             // Always keep track of the last obesrvation
             _dataByType[data.GetType()] = data;
-            if (_lastData != null)
+
+            // don't set _lastData if receive quotebar then tradebar w/ same end time. this
+            // was implemented to grant preference towards using quote data in the fill
+            // models and provide a level of determinism on the values exposed via the cache.
+            if (_lastData == null
+              || _lastQuoteBarUpdate != data.EndTime
+              || data.DataType != MarketDataType.TradeBar )
             {
-                if (_lastData.DataType == MarketDataType.QuoteBar
-                    && data.DataType == MarketDataType.TradeBar
-                    && data.EndTime == _lastData.EndTime)
-                    return;
+                _lastData = data;
             }
-            _lastData = data;
 
 
-            var tick = _lastData as Tick;
+            var tick = data as Tick;
             if (tick != null)
             {
                 if (tick.Value != 0) Price = tick.Value;
@@ -136,10 +138,10 @@ namespace QuantConnect.Securities
 
                 return;
             }
-            var bar = _lastData as IBar;
+            var bar = data as IBar;
             if (bar != null)
             {
-                if (_lastQuoteBarUpdate != _lastData.EndTime)
+                if (_lastQuoteBarUpdate != data.EndTime)
                 {
                     if (bar.Open != 0) Open = bar.Open;
                     if (bar.High != 0) High = bar.High;
@@ -168,7 +170,7 @@ namespace QuantConnect.Securities
             }
             else
             {
-                Price = _lastData.Price;
+                Price = data.Price;
             }
         }
 
