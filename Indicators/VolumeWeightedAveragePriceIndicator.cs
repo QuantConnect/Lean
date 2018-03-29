@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,8 +51,8 @@ namespace QuantConnect.Indicators
         {
             _price = new Identity("Price");
             _volume = new Identity("Volume");
-            
-            // This class will be using WeightedBy indicator extension 
+
+            // This class will be using WeightedBy indicator extension
             _vwap = _price.WeightedBy(_volume, period);
         }
 
@@ -82,9 +82,19 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _price.Update(input.EndTime, (input.Open + input.High + input.Low + input.Value) / 4);
+            _price.Update(input.EndTime, GetTimeWeightedAveragePrice(input));
             _volume.Update(input.EndTime, input.Volume);
             return _vwap.Current.Value;
+        }
+
+        /// <summary>
+        /// Gets an estimated average price to use for the interval covered by the input trade bar.
+        /// </summary>
+        /// <param name="input">The current trade bar input</param>
+        /// <returns>An estimated average price over the trade bar's interval</returns>
+        protected virtual decimal GetTimeWeightedAveragePrice(TradeBar input)
+        {
+            return (input.Open + input.High + input.Low + input.Value) / 4;
         }
     }
 }

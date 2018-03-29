@@ -1244,7 +1244,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a WilderMovingAverage indicator for the symbol. 
+        /// Creates a WilderMovingAverage indicator for the symbol.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose WMA we want</param>

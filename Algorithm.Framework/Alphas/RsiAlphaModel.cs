@@ -32,16 +32,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
 
         private readonly int _period;
+        private readonly Resolution _resolution;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RsiAlphaModel"/> class
         /// </summary>
         /// <param name="period">The RSI indicator period</param>
+        /// <param name="resolution">The resolution of data sent into the RSI indicator</param>
         public RsiAlphaModel(
-            int period = 14
+            int period = 14,
+            Resolution resolution = Resolution.Daily
             )
         {
             _period = period;
+            _resolution = resolution;
         }
 
         /// <summary>
@@ -63,8 +67,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 if (state != previousState && rsi.IsReady)
                 {
-                    var resolution = algorithm.Securities[symbol].Resolution;
-                    var insightPeriod = resolution.ToTimeSpan().Multiply(_period);
+                    var insightPeriod = _resolution.ToTimeSpan().Multiply(_period);
 
                     switch (state)
                     {
@@ -114,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                     {
-                        var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, added.Resolution);
+                        var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, _resolution);
                         var symbolData = new SymbolData(added.Symbol, rsi);
                         _symbolDataBySymbol[added.Symbol] = symbolData;
                         newSymbolData.Add(symbolData);
@@ -122,7 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 // seed new indicators using history request
-                var history = algorithm.History(newSymbolData.Select(x => x.Symbol), _period);
+                var history = algorithm.History(newSymbolData.Select(x => x.Symbol), _period, _resolution);
                 foreach (var slice in history)
                 {
                     foreach (var symbol in slice.Keys)

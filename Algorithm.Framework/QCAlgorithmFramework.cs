@@ -97,6 +97,8 @@ namespace QuantConnect.Algorithm.Framework
                 AddUniverse(universe);
             }
 
+            InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.OrderBy(i => i.Symbol.ToString()))}");
+
             base.PostInitialize();
         }
 

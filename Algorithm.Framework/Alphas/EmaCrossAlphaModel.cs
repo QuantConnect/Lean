@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     {
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
+        private readonly Resolution _resolution;
         private readonly int _predictionInterval;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
 
@@ -37,13 +38,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="fastPeriod">The fast EMA period</param>
         /// <param name="slowPeriod">The slow EMA period</param>
+        /// <param name="resolution">The resolution of data sent into the EMA indicators</param>
         public EmaCrossAlphaModel(
             int fastPeriod = 12,
-            int slowPeriod = 26
+            int slowPeriod = 26,
+            Resolution resolution = Resolution.Daily
             )
         {
             _fastPeriod = fastPeriod;
             _slowPeriod = slowPeriod;
+            _resolution = resolution;
             _predictionInterval = fastPeriod;
             _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
         }
@@ -62,7 +66,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (symbolData.Fast.IsReady && symbolData.Slow.IsReady)
                 {
-                    var insightPeriod = symbolData.DataResolution.Multiply(_predictionInterval);
+                    var insightPeriod = _resolution.ToTimeSpan().Multiply(_predictionInterval);
                     if (symbolData.FastIsOverSlow)
                     {
                         if (symbolData.Slow > symbolData.Fast)
@@ -125,7 +129,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public Symbol Symbol => Security.Symbol;
             public ExponentialMovingAverage Fast { get; set; }
             public ExponentialMovingAverage Slow { get; set; }
-            public TimeSpan DataResolution => Security.Resolution.ToTimeSpan();
 
             /// <summary>
             /// True if the fast is above the slow, otherwise false.

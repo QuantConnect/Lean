@@ -28,7 +28,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// This model is free to delay or spread out these orders as it sees fit
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="targets">The portfolio targets to be ordered</param>
+        /// <param name="targets">The portfolio targets just emitted by the portfolio construction model.
+        /// These are always just the new/updated targets and not a complete set of targets</param>
         void Execute(QCAlgorithmFramework algorithm, IEnumerable<IPortfolioTarget> targets);
     }
 }

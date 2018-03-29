@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework
             );
         }
 
-        private static void Update(SecurityChanges changes, Action<Security> add, Action<Security> remove)
+        public static void Update(SecurityChanges changes, Action<Security> add, Action<Security> remove)
         {
             foreach (var added in changes.AddedSecurities)
             {
