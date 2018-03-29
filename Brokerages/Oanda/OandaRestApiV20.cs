@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using Oanda.RestV20.Api;
+using Oanda.RestV20.Client;
 using Oanda.RestV20.Model;
 using Oanda.RestV20.Session;
 using QuantConnect.Data.Market;
@@ -50,6 +51,7 @@ namespace QuantConnect.Brokerages.Oanda
         private TransactionStreamSession _eventsSession;
         private PricingStreamSession _ratesSession;
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
+        private readonly object _locker = new object();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaRestApiV20"/> class.
@@ -152,10 +154,19 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            var request = GenerateOrderRequest(order);
-            var response = _apiRest.CreateOrder(Authorization, AccountId, request);
+            const int orderFee = 0;
+            ApiResponse<InlineResponse201> response;
 
-            order.BrokerId.Add(response.Data.OrderCreateTransaction.Id);
+            lock (_locker)
+            {
+                var request = GenerateOrderRequest(order);
+                response = _apiRest.CreateOrder(Authorization, AccountId, request);
+                order.BrokerId.Add(response.Data.OrderCreateTransaction.Id);
+
+                // send Submitted order event
+                order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+            }
 
             // if market order, find fill quantity and price
             var fill = response.Data.OrderFillTransaction;
@@ -180,14 +191,6 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     marketOrderFillQuantity += fill.TradesClosed.Sum(trade => Convert.ToInt32(trade.Units));
                 }
-            }
-
-            // send Submitted order event
-            const int orderFee = 0;
-            if (order.Type != OrderType.Market)
-            {
-                order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
             }
 
             if (order.Type == OrderType.Market && order.Status != OrderStatus.Filled)
@@ -344,20 +347,31 @@ namespace QuantConnect.Brokerages.Oanda
                 case "ORDER_FILL":
                     var transaction = obj.ToObject<OrderFillTransaction>();
 
-                    var order = OrderProvider.GetOrderByBrokerageId(transaction.OrderID);
-                    if (order != null && (order.Type != OrderType.Market || order.Status != OrderStatus.Filled))
+                    Order order;
+                    lock (_locker)
                     {
-                        order.Status = OrderStatus.Filled;
-
-                        order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-
-                        const int orderFee = 0;
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                        order = OrderProvider.GetOrderByBrokerageId(transaction.OrderID);
+                    }
+                    if (order != null)
+                    {
+                        if (order.Type != OrderType.Market || order.Status != OrderStatus.Filled)
                         {
-                            Status = OrderStatus.Filled,
-                            FillPrice = transaction.Price.ToDecimal(),
-                            FillQuantity = Convert.ToInt32(transaction.Units)
-                        });
+                            order.Status = OrderStatus.Filled;
+
+                            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+
+                            const int orderFee = 0;
+                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                            {
+                                Status = OrderStatus.Filled,
+                                FillPrice = transaction.Price.ToDecimal(),
+                                FillQuantity = Convert.ToInt32(transaction.Units)
+                            });
+                        }
+                    }
+                    else
+                    {
+                        Log.Error($"OandaBrokerage.OnTransactionDataReceived(): order id not found: {transaction.OrderID}");
                     }
                     break;
             }
