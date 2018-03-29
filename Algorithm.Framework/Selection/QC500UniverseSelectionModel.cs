@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// Defines the QC500 universe as a universe selection model for framework algorithm
     /// For details: https://github.com/QuantConnect/Lean/pull/1663
     /// </summary>
-    public class Qc500UniverseSelectionModel : FundamentalUniverseSelectionModel
+    public class QC500UniverseSelectionModel : FundamentalUniverseSelectionModel
     {
         private const int NumberOfSymbolsCoarse = 1000;
         private const int NumberOfSymbolsFine = 500;
@@ -36,19 +36,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
         private readonly Dictionary<Symbol, decimal> _dollarVolumeBySymbol = new Dictionary<Symbol, decimal>();
 
         /// <summary>
-        /// Initializes a new default instance of the <see cref="Qc500UniverseSelectionModel"/>
+        /// Initializes a new default instance of the <see cref="QC500UniverseSelectionModel"/>
         /// </summary>
-        public Qc500UniverseSelectionModel()
+        public QC500UniverseSelectionModel()
             : base(true)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Qc500UniverseSelectionModel"/>
+        /// Initializes a new instance of the <see cref="QC500UniverseSelectionModel"/>
         /// </summary>
         /// <param name="universeSettings">Universe settings defines what subscription properties will be applied to selected securities</param>
         /// <param name="securityInitializer">Security initializer initializes newly selected securities</param>
-        public Qc500UniverseSelectionModel(UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
+        public QC500UniverseSelectionModel(UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
             : base(true, universeSettings, securityInitializer)
         {
         }
