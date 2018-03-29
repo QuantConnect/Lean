@@ -190,6 +190,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                         model = CreateCSharpAlphaModel();
                         return true;
                     case Language.Python:
+                        _algorithm.SetPandasConverter();
                         model = CreatePythonAlphaModel();
                         return true;
                     default:
