@@ -117,6 +117,7 @@
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
     <Compile Include="API\ApiTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />

@@ -79,7 +79,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return new PortfolioTarget(symbol, 0);
             }
 
-            return new PortfolioTarget(symbol, result.Quantity);
+            // be sure to back out existing holdings quantity since the buying power model yields
+            // the required delta quantity to reach a final target portfolio value for a symbol
+            return new PortfolioTarget(symbol, result.Quantity + security.Holdings.Quantity);
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
