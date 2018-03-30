@@ -1,5 +1,5 @@
 ![alt tag](Documentation/logo.white.small.png)
-Lean C# Algorithmic Trading Engine
+Lean Algorithmic Trading Engine
 =========
 
 [![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
@@ -11,27 +11,31 @@ Lean C# Algorithmic Trading Engine
 
 ## Introduction ##
 
-Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. Lean drives the web based algorithmic trading platform [QuantConnect][4].
+Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
+
+The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web based algorithmic trading platform [QuantConnect][4].
 
 ## System Overview ##
 
 ![alt tag](Documentation/2-Overview-Detailed-New.png)
 
-Lean outsourced key infrastructure management to plugins. The most important plugins are:
+The Engine is broken into many modular pieces which can be extended without touching other files. The modules are configured in config.json as set "environments". Through these environments you can control LEAN to operate in the mode required. 
 
- - **Result Processing**
+The most important plugins are:
+
+ - **Result Processing** (IResultHandler)
    > Handle all messages from the algorithmic trading engine. Decide what should be sent, and where the messages should go. The result processing system can send messages to a local GUI, or the web interface.
 
- - **Datafeed Sourcing**
+ - **Datafeed Sourcing** (IDataFeed)
    > Connect and download data required for the algorithmic trading engine. For backtesting this sources files from the disk, for live trading it connects to a stream and generates the data objects.
 
- - **Transaction Processing**
+ - **Transaction Processing** (ITransactionHandler)
    > Process new order requests; either using the fill models provided by the algorithm, or with an actual brokerage. Send the processed orders back to the algorithm's portfolio to be filled.
 
- - **Realtime Event Management**
+ - **Realtime Event Management** (IRealtimeHandler)
    > Generate real time events - such as end of day events. Trigger callbacks to real time event handlers. For backtesting this is mocked-up an works on simulated time. 
  
- - **Algorithm State Setup**
+ - **Algorithm State Setup** (ISetupHandler)
    > Configure the algorithm cash, portfolio and data requested. Initialize all state parameters required.
 
 For more information on the system design and contributing please see the Lean Website Documentation.
