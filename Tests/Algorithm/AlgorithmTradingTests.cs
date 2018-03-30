@@ -947,6 +947,7 @@ namespace QuantConnect.Tests.Algorithm
             var algo = new QCAlgorithm();
             algo.AddSecurity(SecurityType.Forex, "EURUSD");
             algo.SetCash(100000);
+            algo.SetCash("BTC", 0, 8000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
             algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
             Security eurusd = algo.Securities[Symbols.EURUSD];
