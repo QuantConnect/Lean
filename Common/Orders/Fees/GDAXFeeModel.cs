@@ -42,10 +42,16 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Securities.Security security, Order order)
         {
-            //0% maker fee after reimbursement.
             if (order.Type == OrderType.Limit)
             {
-                return 0m;
+                // marketable limit orders are considered takers
+                var limitPrice = ((LimitOrder) order).LimitPrice;
+                if (order.Direction == OrderDirection.Buy && limitPrice < security.AskPrice ||
+                    order.Direction == OrderDirection.Sell && limitPrice > security.BidPrice)
+                {
+                    // limit order posted to the order book, 0% fee
+                    return 0m;
+                }
             }
 
             // currently we do not model daily rebates
