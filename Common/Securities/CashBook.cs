@@ -104,8 +104,19 @@ namespace QuantConnect.Securities
         {
             var source = this[sourceCurrency];
             var destination = this[destinationCurrency];
-            var conversionRate = source.ConversionRate*destination.ConversionRate;
-            return sourceQuantity*conversionRate;
+
+            if (source.ConversionRate == 0)
+            {
+                throw new Exception($"The conversion rate for {sourceCurrency} is not available.");
+            }
+
+            if (destination.ConversionRate == 0)
+            {
+                throw new Exception($"The conversion rate for {destinationCurrency} is not available.");
+            }
+
+            var conversionRate = source.ConversionRate / destination.ConversionRate;
+            return sourceQuantity * conversionRate;
         }
 
         /// <summary>
