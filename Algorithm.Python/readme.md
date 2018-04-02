@@ -18,8 +18,8 @@ Before we enable python support, follow the [installation instructions](https://
 
 **2. Run python algorithm:**
    1. Prepare Python.Runtime.dll. This is needed to run Python algorithms in LEAN.
-      1. Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.5\lib
-      2. Using windows you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.5\build\ *Python.Runtime.win* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
+      1. Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.7\lib
+      2. Using windows you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.7\build\ *Python.Runtime.win* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
   2. Update the [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json) to run the python algorithm:
 ```json
 "algorithm-type-name": "BasicTemplateAlgorithm",
