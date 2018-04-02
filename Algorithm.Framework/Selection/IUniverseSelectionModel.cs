@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Algorithm framework model that defines the universes to be used by an algorithm
     /// </summary>
-    public interface IPortfolioSelectionModel
+    public interface IUniverseSelectionModel
     {
         /// <summary>
         /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>

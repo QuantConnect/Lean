@@ -25,28 +25,28 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Provides a base class for defining equity coarse/fine fundamental selection models
     /// </summary>
-    public abstract class FundamentalPortfolioSelectionModel : IPortfolioSelectionModel
+    public abstract class FundamentalUniverseSelectionModel : IUniverseSelectionModel
     {
         private readonly bool _filterFineData;
         private readonly UniverseSettings _universeSettings;
         private readonly ISecurityInitializer _securityInitializer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FundamentalPortfolioSelectionModel"/> class
+        /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="filterFineData">True to also filter using fine fundamental data, false to only filter on coarse data</param>
-        protected FundamentalPortfolioSelectionModel(bool filterFineData)
+        protected FundamentalUniverseSelectionModel(bool filterFineData)
             : this(filterFineData, null, null)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FundamentalPortfolioSelectionModel"/> class
+        /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
         /// </summary>
         /// <param name="filterFineData">True to also filter using fine fundamental data, false to only filter on coarse data</param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings</param>
         /// <param name="securityInitializer">Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer</param>
-        protected FundamentalPortfolioSelectionModel(bool filterFineData, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
+        protected FundamentalUniverseSelectionModel(bool filterFineData, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)
         {
             _filterFineData = filterFineData;
             _universeSettings = universeSettings;
@@ -114,10 +114,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Convenience method for creating a selection model that uses only coarse data
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
-        /// <returns>A new portfolio selection model that will select US equities according to the selection function specified</returns>
-        public static IPortfolioSelectionModel Coarse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector)
+        /// <returns>A new universe selection model that will select US equities according to the selection function specified</returns>
+        public static IUniverseSelectionModel Coarse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector)
         {
-            return new CoarseFundamentalPortfolioSelectionModel(coarseSelector);
+            return new CoarseFundamentalUniverseSelectionModel(coarseSelector);
         }
 
         /// <summary>
@@ -125,10 +125,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
         /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param
-        /// <returns>A new portfolio selection model that will select US equities according to the selection functions specified</returns>
-        public static IPortfolioSelectionModel Fine(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        /// <returns>A new universe selection model that will select US equities according to the selection functions specified</returns>
+        public static IUniverseSelectionModel Fine(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
-            return new FineFundamentalPortfolioSelectionModel(coarseSelector, fineSelector);
+            return new FineFundamentalUniverseSelectionModel(coarseSelector, fineSelector);
         }
     }
 }

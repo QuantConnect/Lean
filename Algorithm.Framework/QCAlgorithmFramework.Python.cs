@@ -79,19 +79,19 @@ namespace QuantConnect.Algorithm.Framework
         }
 
         /// <summary>
-        /// Sets the portfolio selection model
+        /// Sets the universe selection model
         /// </summary>
         /// <param name="portfolioSelection">Model defining universes for the algorithm</param>
         public void SetPortfolioSelection(PyObject portfolioSelection)
         {
-            IPortfolioSelectionModel model;
+            IUniverseSelectionModel model;
             if (portfolioSelection.TryConvert(out model))
             {
                 SetPortfolioSelection(model);
             }
             else
             {
-                PortfolioSelection = new PortfolioSelectionModelPythonWrapper(portfolioSelection);
+                UniverseSelection = new UniverseSelectionModelPythonWrapper(portfolioSelection);
             }
         }
 

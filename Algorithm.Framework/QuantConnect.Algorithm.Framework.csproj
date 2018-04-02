@@ -73,17 +73,17 @@
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />
-    <Compile Include="Selection\CoarseFundamentalPortfolioSelectionModel.cs" />
-    <Compile Include="Selection\FineFundamentalPortfolioSelectionModel.cs" />
-    <Compile Include="Selection\FundamentalPortfolioSelectionModel.cs" />
-    <Compile Include="Selection\IPortfolioSelectionModel.cs" />
-    <Compile Include="Selection\ManualPortfolioSelectionModel.cs" />
+    <Compile Include="Selection\CoarseFundamentalUniverseSelectionModel.cs" />
+    <Compile Include="Selection\FineFundamentalUniverseSelectionModel.cs" />
+    <Compile Include="Selection\FundamentalUniverseSelectionModel.cs" />
+    <Compile Include="Selection\IUniverseSelectionModel.cs" />
+    <Compile Include="Selection\ManualUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Alphas\ConstantAlphaModel.cs" />
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
-    <Compile Include="Selection\PortfolioSelectionModelPythonWrapper.cs" />
-    <Compile Include="Selection\QC500PortfolioSelectionModel.cs" />
+    <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
+    <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

@@ -42,9 +42,9 @@ namespace QuantConnect.Algorithm.Framework
         public override bool IsFrameworkAlgorithm => true;
 
         /// <summary>
-        /// Gets or sets the portfolio selection model.
+        /// Gets or sets the universe selection model.
         /// </summary>
-        public IPortfolioSelectionModel PortfolioSelection { get; set; }
+        public IUniverseSelectionModel UniverseSelection { get; set; }
 
         /// <summary>
         /// Gets or sets the alpha model
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.Framework
         {
             CheckModels();
 
-            foreach (var universe in PortfolioSelection.CreateUniverses(this))
+            foreach (var universe in UniverseSelection.CreateUniverses(this))
             {
                 AddUniverse(universe);
             }
@@ -133,12 +133,12 @@ namespace QuantConnect.Algorithm.Framework
         }
 
         /// <summary>
-        /// Sets the portfolio selection model
+        /// Sets the universe selection model
         /// </summary>
-        /// <param name="portfolioSelection">Model defining universes for the algorithm</param>
-        public void SetPortfolioSelection(IPortfolioSelectionModel portfolioSelection)
+        /// <param name="universeSelection">Model defining universes for the algorithm</param>
+        public void SetPortfolioSelection(IUniverseSelectionModel universeSelection)
         {
-            PortfolioSelection = portfolioSelection;
+            UniverseSelection = universeSelection;
         }
 
         /// <summary>
@@ -207,25 +207,25 @@ namespace QuantConnect.Algorithm.Framework
 
         private void CheckModels()
         {
-            if (PortfolioSelection == null)
+            if (UniverseSelection == null)
             {
-                throw new Exception("Framework algorithms must specify a portfolio selection model using the 'PortfolioSelection' property.");
+                throw new Exception($"Framework algorithms must specify a portfolio selection model using the '{nameof(UniverseSelection)}' property.");
             }
             if (Alpha == null)
             {
-                throw new Exception("Framework algorithms must specify a alpha model using the 'Alpha' property.");
+                throw new Exception($"Framework algorithms must specify a alpha model using the '{nameof(Alpha)}' property.");
             }
             if (PortfolioConstruction == null)
             {
-                throw new Exception("Framework algorithms must specify a portfolio construction model using the 'PortfolioConstruction' property");
+                throw new Exception($"Framework algorithms must specify a portfolio construction model using the '{nameof(PortfolioConstruction)}' property");
             }
             if (Execution == null)
             {
-                throw new Exception("Framework algorithms must specify an execution model using the 'Execution' property.");
+                throw new Exception($"Framework algorithms must specify an execution model using the '{nameof(Execution)}' property.");
             }
             if (RiskManagement == null)
             {
-                throw new Exception("Framework algorithms must specify an risk management model using the 'RiskManagement' property.");
+                throw new Exception($"Framework algorithms must specify an risk management model using the '{nameof(RiskManagement)}' property.");
             }
         }
     }
