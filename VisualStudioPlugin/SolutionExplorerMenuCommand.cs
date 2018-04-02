@@ -180,7 +180,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>Returns false if any file failed to be uploaded</returns>
         private bool UploadFilesToServer(int selectedProjectId, IEnumerable<SelectedItem> files)
         {
-            VsUtils.DisplayInStatusBar(_serviceProvider, "Uploading files to server ...");
+            VsUtils.DisplayInStatusBar(_serviceProvider, "Uploading files to server...");
             var api = AuthorizationManager.GetInstance().GetApi();
             // Counters to keep track of files uploaded or not
             var filesUploaded = 0;
@@ -223,7 +223,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// Item2 is compile Id if compilation succeeded else error message.</returns>
         private Tuple<bool, string> CompileProjectOnServer(int projectId)
         {
-            VsUtils.DisplayInStatusBar(_serviceProvider, "Compiling project ...");
+            VsUtils.DisplayInStatusBar(_serviceProvider, "Compiling project...");
             var api = AuthorizationManager.GetInstance().GetApi();
             var compileStatus = api.CreateCompile(projectId);
             var compileId = compileStatus.CompileId;
@@ -256,7 +256,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// Item2 is error message if backtest failed.</returns>
         private Tuple<bool, string> BacktestProjectOnServer(int projectId, string compileId)
         {
-            VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project ...");
+            VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project...");
             var api = AuthorizationManager.GetInstance().GetApi();
             var backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
             var backtestId = backtestStatus.BacktestId;

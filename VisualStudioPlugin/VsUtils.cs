@@ -53,6 +53,12 @@ namespace QuantConnect.VisualStudioPlugin
             dialogWindow.ShowModal();
         }
 
+        /// <summary>
+        /// Display information message box
+        /// </summary>
+        /// <param name="serviceProvider">Visual Studio services provider</param>
+        /// <param name="title">Title of message box</param>
+        /// <param name="message">Message to display</param>
         public static void ShowMessageBox(IServiceProvider serviceProvider, string title, string message)
         {
             VsShellUtilities.ShowMessageBox(
@@ -65,6 +71,12 @@ namespace QuantConnect.VisualStudioPlugin
             );
         }
 
+        /// <summary>
+        /// Display error message box
+        /// </summary>
+        /// <param name="serviceProvider">Visual Studio services provider</param>
+        /// <param name="title">Title of message box</param>
+        /// <param name="message">Message to display</param>
         public static void ShowErrorMessageBox(IServiceProvider serviceProvider, string title, string message)
         {
             VsShellUtilities.ShowMessageBox(
