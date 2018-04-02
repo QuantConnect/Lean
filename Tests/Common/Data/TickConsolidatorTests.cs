@@ -281,10 +281,20 @@ namespace QuantConnect.Tests.Common.Data
             var tick3 = new Tick
             {
                 Symbol = Symbols.SPY,
+                Time = reference.AddSeconds(10),
+                Value = 10000m,
+                TickType = TickType.Quote
+            };
+            consolidator.Update(tick3);
+            Assert.IsNull(consolidated);
+
+            var tick4 = new Tick
+            {
+                Symbol = Symbols.SPY,
                 Time = reference.AddSeconds(61),
                 Value = 250m
             };
-            consolidator.Update(tick3);
+            consolidator.Update(tick4);
             Assert.IsNotNull(consolidated);
 
             Assert.AreEqual(consolidated.Time, reference);
