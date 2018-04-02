@@ -77,6 +77,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AuthorizationManager.cs" />
+    <Compile Include="ErrorDialog.xaml.cs">
+      <DependentUpon>ErrorDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
     <Compile Include="VSActivityLog.cs" />
@@ -100,6 +103,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ErrorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ProjectNameDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

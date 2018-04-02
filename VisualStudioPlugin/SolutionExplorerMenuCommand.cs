@@ -24,6 +24,7 @@ using System.Linq;
 using System.IO;
 using System.Threading;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -125,30 +126,38 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
+            ExecuteOnProject(sender, async (selectedProjectId, selectedProjectName, files) =>
             {
-                if (!UploadFilesToServer(selectedProjectId, files))
+                var uploadResult = await System.Threading.Tasks.Task.Run(() =>
+                    UploadFilesToServer(selectedProjectId, files));
+                if (!uploadResult)
                 {
                     return;
                 }
 
-                var compileId = CompileProjectOnServer(selectedProjectId);
-                if (string.IsNullOrEmpty(compileId))
+                var compilationResult = await System.Threading.Tasks.Task.Run(() =>
+                    CompileProjectOnServer(selectedProjectId));
+                if (!compilationResult.Item1)
                 {
+                    var errorDialog = new ErrorDialog("Compilation Error", compilationResult.Item2);
+                    VsUtils.DisplayDialogWindow(errorDialog);
                     return;
                 }
 
-                if (!BacktestProjectOnServer(selectedProjectId, compileId))
+                var backtestResult = await System.Threading.Tasks.Task.Run(() =>
+                    BacktestProjectOnServer(selectedProjectId, compilationResult.Item2));
+                if (!backtestResult.Item1)
                 {
+                    var errorDialog = new ErrorDialog("Backtest Failed", backtestResult.Item2);
+                    VsUtils.DisplayDialogWindow(errorDialog);
                     return;
                 }
 
                 var projectUrl = string.Format(
-                    CultureInfo.CurrentCulture,
-                    "https://www.quantconnect.com/terminal/#open/{0}",
-                    selectedProjectId
-                );
-                Process.Start(projectUrl);
+                        CultureInfo.CurrentCulture,
+                        "https://www.quantconnect.com/terminal/#open/{0}",
+                        selectedProjectId
+                    );
             });
         }
 
@@ -156,7 +165,10 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                UploadFilesToServer(selectedProjectId, files);
+                System.Threading.Tasks.Task.Factory.StartNew(() =>
+                {
+                    UploadFilesToServer(selectedProjectId, files);
+                }, CancellationToken.None, TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
             });
         }
 
@@ -195,28 +207,30 @@ namespace QuantConnect.VisualStudioPlugin
             VsUtils.DisplayInStatusBar(_serviceProvider, message);
 
             // Return false if any file failed to be uploaded
-            var res = filesNotUploaded == 0;
-            if (!res)
+            var result = filesNotUploaded == 0;
+            if (!result)
             {
-                VsUtils.ShowMessageBox(_serviceProvider, "Upload Files Failed", message);
+                VsUtils.ShowErrorMessageBox(_serviceProvider, "Upload Files Failed", message);
             }
-            return res;
+            return result;
         }
 
         /// <summary>
         /// Compiles specific projectId at QuantConnect
         /// </summary>
         /// <param name="projectId">Target project Id</param>
-        /// <returns>Returns empty if failed else compile Id</returns>
-        private string CompileProjectOnServer(int projectId)
+        /// <returns>Tuple&lt;bool, string&gt;. Item1 is true if compilation succeeded.
+        /// Item2 is compile Id if compilation succeeded else error message.</returns>
+        private Tuple<bool, string> CompileProjectOnServer(int projectId)
         {
             VsUtils.DisplayInStatusBar(_serviceProvider, "Compiling project ...");
             var api = AuthorizationManager.GetInstance().GetApi();
             var compileStatus = api.CreateCompile(projectId);
             var compileId = compileStatus.CompileId;
+
             while (compileStatus.State == Api.CompileState.InQueue)
             {
-                Thread.Sleep(2500);
+                Thread.Sleep(2000);
                 compileStatus = api.ReadCompile(projectId, compileId);
             }
 
@@ -227,11 +241,10 @@ namespace QuantConnect.VisualStudioPlugin
                     compileStatus.Logs.FirstOrDefault() : compileStatus.Errors.FirstOrDefault();
                 var message = "Compilation error \"" + error + "\"";
                 VsUtils.DisplayInStatusBar(_serviceProvider, message);
-                VsUtils.ShowMessageBox(_serviceProvider, "Compilation Error", error);
-                return "";
+                return new Tuple<bool, string>(false, error);
             }
             VsUtils.DisplayInStatusBar(_serviceProvider, "Compilation succeeded");
-            return compileStatus.CompileId;
+            return new Tuple<bool, string>(true, compileStatus.CompileId);
         }
 
         /// <summary>
@@ -239,10 +252,10 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="projectId">Target project Id</param>
         /// <param name="compileId">Target compile Id</param>
-        /// <returns>Returns false if failed else true</returns>
-        private bool BacktestProjectOnServer(int projectId, string compileId)
+        /// <returns>Tuple&lt;bool, string&gt;. Item1 is true if backtest succeeded.
+        /// Item2 is error message if backtest failed.</returns>
+        private Tuple<bool, string> BacktestProjectOnServer(int projectId, string compileId)
         {
-            var res = true;
             VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project ...");
             var api = AuthorizationManager.GetInstance().GetApi();
             var backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
@@ -254,23 +267,20 @@ namespace QuantConnect.VisualStudioPlugin
                 backtestStatus = api.ReadBacktest(projectId, backtestId);
                 if (backtestStatus == null)
                 {
-                    // this is happening when backtest failed and result in json is a white space char ' '
                     break;
                 }
             }
+            var result = true;
+            var message = "Backtest Completed";
             // Errors are not being transfered in response, so client can't tell if the backtest failed or not.
             // This response error handling code will not work but should.
             if (backtestStatus == null || backtestStatus.Errors.Count != 0)
             {
-                VsUtils.DisplayInStatusBar(_serviceProvider, "Backtest Failed");
-                VsUtils.ShowMessageBox(_serviceProvider, "Backtest Failed", "Error when backtesting project.");
-                res = false;
+                message = "Error when backtesting project.";
+                result = false;
             }
-            else
-            {
-                VsUtils.DisplayInStatusBar(_serviceProvider, "Backtest Completed");
-            }
-            return res;
+            VsUtils.DisplayInStatusBar(_serviceProvider, message);
+            return new Tuple<bool, string>(result, message);
         }
 
         private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
