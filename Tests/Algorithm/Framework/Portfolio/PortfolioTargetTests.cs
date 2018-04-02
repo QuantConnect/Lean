@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     public class PortfolioTargetTests
     {
         [Test]
-        public void PercentInvokesBuyingPowerModelAndSubtractsOutExistingHoldings()
+        public void PercentInvokesBuyingPowerModelAndAddsInExistingHoldings()
         {
             const decimal bpmQuantity = 100;
             const decimal holdings = 50;
