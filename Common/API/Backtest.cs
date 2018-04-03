@@ -59,6 +59,18 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "result")]
         public BacktestResult Result;
+
+        /// <summary>
+        /// Backtest error message
+        /// </summary>
+        [JsonProperty(PropertyName = "error")]
+        public string Error;
+
+        /// <summary>
+        /// Backtest error stacktrace
+        /// </summary>
+        [JsonProperty(PropertyName = "stacktrace")]
+        public string StackTrace;
     }
 
     /// <summary>

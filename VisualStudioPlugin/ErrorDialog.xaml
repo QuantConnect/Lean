@@ -1,0 +1,46 @@
+﻿<!--
+ QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ 
+ Licensed under the Apache License, Version 2.0 (the "License"); 
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<platformUi:DialogWindow x:Class="QuantConnect.VisualStudioPlugin.ErrorDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+             mc:Ignorable="d" WindowStartupLocation="CenterScreen"
+             Title="Title" Height="190"
+             x:ClassModifier="internal" Visibility="Visible" Name="CompilationError" ResizeMode="CanResizeWithGrip">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="136*"/>
+            <RowDefinition Height="50*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Row="0" Grid.Column="1"  Background="White" />
+        <Border Grid.Row="0" Grid.Column="0"  Background="White" />
+        <Border Grid.Row="1" Grid.Column="1"  Background="WhiteSmoke" />
+        <Border Grid.Row="1" Grid.Column="0"  Background="WhiteSmoke" />
+        <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/dialog-close-32.png" Stretch="Fill" Width="40" Height="40" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0"/>
+        <ScrollViewer Grid.Column="1" >
+        <TextBlock FontFamily="Courier New" FontSize="14" x:Name="textBox" TextWrapping="Wrap" Margin="0,10,10,0">
+            Error converting value " " to type 'QuantConnect.Packets.BacktestResult'. Path 'result', line 1, position 128.
+        </TextBlock>
+        </ScrollViewer>
+        <Button x:Name="okButton" Content="Ok" Width="80" Margin="0,0,15,0" Height="25" HorizontalContentAlignment="Center" Grid.Column="1" Grid.Row="1" IsCancel="True" IsDefault="True" HorizontalAlignment="Right" VerticalAlignment="Center" />
+    </Grid>
+</platformUi:DialogWindow>

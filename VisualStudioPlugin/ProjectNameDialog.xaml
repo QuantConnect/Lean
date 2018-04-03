@@ -22,12 +22,36 @@
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              mc:Ignorable="d" 
              WindowStartupLocation="CenterScreen"
-        Title="Enter Project Name" Height="195.372" Width="372.379" ResizeMode="NoResize" x:ClassModifier="internal">
+        Title="Select Project Name" Height="150" Width="365" ResizeMode="NoResize" x:ClassModifier="internal">
     <Grid>
-        <ComboBox x:Name="projectNameBox" HorizontalAlignment="Left" Margin="34,54,0,0" VerticalAlignment="Top" Width="286" TabIndex="1" IsEditable="True"/>
-        <Label x:Name="projectNameLabel" Content="Project name" HorizontalAlignment="Left" Margin="34,23,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="selectButton" Content="Select" HorizontalAlignment="Left" VerticalAlignment="Top" Width="76" Margin="38,102,0,0" Height="22" TabIndex="2" Click="SelectButton_Click"/>
-        <Button x:Name="cancelButton" Content="Cancel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="150,102,0,0" Height="22" TabIndex="3" Click="CancelButton_Click"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="30*"/>
+            <ColumnDefinition Width="290"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
+        <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/icon_128x128_resource.png" Stretch="Fill" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="8,21,9,0"/>
+        <ComboBox x:Name="projectNameBox" HorizontalAlignment="Center" Margin="0,40,0,0" VerticalAlignment="Top" Width="290" TabIndex="2" IsEditable="True" Grid.Column="1"/>
+        <Label x:Name="projectNameLabel" Content="Project Name" HorizontalAlignment="Left" Margin="48,10,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <Button x:Name="selectButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="85" Margin="105,70,0,0" Height="30" TabIndex="1" Click="SelectButton_Click" Grid.Column="1" IsDefault="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/dialog-ok-apply-32.png" Stretch="Fill" Width="16" Height="16"/>
+                <Label Grid.Column="1" Content="Select" FontSize="12"/>
+            </Grid>
+        </Button>
+        <Button x:Name="cancelButton" HorizontalAlignment="Right" VerticalAlignment="Top" Width="85" Margin="0,70,0,0" Height="30" TabIndex="3" Click="CancelButton_Click" Grid.Column="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/dialog-close-32.png" Stretch="Fill" Width="16" Height="16"/>
+                <Label Grid.Column="1" Content="Cancel" FontSize="12"/>
+            </Grid>
+        </Button>
 
     </Grid>
 </platformUi:DialogWindow>
