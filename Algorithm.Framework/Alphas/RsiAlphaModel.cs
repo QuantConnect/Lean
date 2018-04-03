@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,26 +29,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class RsiAlphaModel : IAlphaModel
     {
-        private readonly Parameters _parameters;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
 
-        /// <summary>
-        /// Initializes a new default instance of the <see cref="RsiAlphaModel"/> class.
-        /// This uses the traditional 30/70 bounds coupled with 5% bounce protection.
-        /// The traditional period of 14 days is used and the prediction interval is set to 14 days as well.
-        /// </summary>
-        public RsiAlphaModel()
-            : this(new Parameters())
-        {
-        }
+        private readonly int _period;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RsiAlphaModel"/> class
         /// </summary>
-        /// <param name="parameters">Model parameters</param>
-        public RsiAlphaModel(Parameters parameters)
+        /// <param name="period">The RSI indicator period</param>
+        public RsiAlphaModel(
+            int period = 14
+            )
         {
-            _parameters = parameters;
+            _period = period;
         }
 
         /// <summary>
@@ -71,14 +63,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 if (state != previousState && rsi.IsReady)
                 {
+                    var resolution = algorithm.Securities[symbol].Resolution;
+                    var insightPeriod = resolution.ToTimeSpan().Multiply(_period);
+
                     switch (state)
                     {
                         case State.TrippedLow:
-                            insights.Add(new Insight(symbol, InsightType.Price, InsightDirection.Up, _parameters.PredictionInterval));
+                            insights.Add(new Insight(symbol, InsightType.Price, InsightDirection.Up, insightPeriod));
                             break;
 
                         case State.TrippedHigh:
-                            insights.Add(new Insight(symbol, InsightType.Price, InsightDirection.Down, _parameters.PredictionInterval));
+                            insights.Add(new Insight(symbol, InsightType.Price, InsightDirection.Down, insightPeriod));
                             break;
                     }
                 }
@@ -119,20 +114,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                     {
-                        var rsi = algorithm.RSI(added.Symbol, _parameters.RsiPeriod, MovingAverageType.Wilders, _parameters.Resolution);
+                        var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, added.Resolution);
                         var symbolData = new SymbolData(added.Symbol, rsi);
                         _symbolDataBySymbol[added.Symbol] = symbolData;
                         newSymbolData.Add(symbolData);
-
-                        if (_parameters.Plot)
-                        {
-                            algorithm.PlotIndicator("RSI Alpha Model", true, rsi);
-                        }
                     }
                 }
 
                 // seed new indicators using history request
-                var history = algorithm.History(newSymbolData.Select(x => x.Symbol), _parameters.RsiPeriod);
+                var history = algorithm.History(newSymbolData.Select(x => x.Symbol), _period);
                 foreach (var slice in history)
                 {
                     foreach (var symbol in slice.Keys)
@@ -157,19 +147,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         private State GetState(RelativeStrengthIndex rsi, State previous)
         {
-            if (rsi > _parameters.UpperRsiBound)
+            if (rsi > 70m)
             {
                 return State.TrippedHigh;
             }
 
-            if (rsi < _parameters.LowerRsiBound)
+            if (rsi < 30m)
             {
                 return State.TrippedLow;
             }
 
             if (previous == State.TrippedLow)
             {
-                if (rsi > _parameters.LowerRsiBound + _parameters.BounceTolerance)
+                if (rsi > 35m)
                 {
                     return State.Middle;
                 }
@@ -177,7 +167,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             if (previous == State.TrippedHigh)
             {
-                if (rsi < _parameters.UpperRsiBound - _parameters.BounceTolerance)
+                if (rsi < 65m)
                 {
                     return State.Middle;
                 }
@@ -211,72 +201,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             TrippedLow,
             Middle,
             TrippedHigh
-        }
-
-        public class Parameters
-        {
-            /// <summary>
-            /// RSI indicator resolution
-            /// </summary>
-            public Resolution Resolution { get; set; } = Resolution.Daily;
-
-            /// <summary>
-            /// Generated insight prediction interval
-            /// </summary>
-            public TimeSpan PredictionInterval { get; set; } = TimeSpan.FromDays(14);
-
-            /// <summary>
-            /// RSI period
-            /// </summary>
-            public int RsiPeriod { get; set; } = 14;
-
-            /// <summary>
-            /// RSI lower bound. Values below this will trigger an UP prediction.
-            /// </summary>
-            public decimal LowerRsiBound { get; set; } = 30;
-
-            /// <summary>
-            /// RSI upper bound. Values above this will trigger a DOWN prediction.
-            /// </summary>
-            public decimal UpperRsiBound { get; set; } = 70;
-
-            /// <summary>
-            /// Plots the indicator values
-            /// </summary>
-            public bool Plot { get; set; } = false;
-
-            /// <summary>
-            /// Before allowing another signal to be generated, we must cross-over this
-            /// tolernce towards 50. For example, if we just crossed below the lower bound
-            /// (nominally 30), we won't interpret another crossing until it moves above
-            /// 35 (lower bound + tolerance). Likewise for the upper bound, just that we
-            /// subtract, nominally 70 - 5 = 65.
-            /// </summary>
-            public decimal BounceTolerance { get; set; } = 5;
-
-            /// <summary>
-            /// Initializes a new default instance of the <see cref="Parameters"/> class
-            /// </summary>
-            public Parameters()
-            {
-            }
-
-            /// <summary>
-            /// Intializes a new instance of the <see cref="Parameters"/> class
-            /// </summary>
-            /// <param name="resolution">The RSI indicator resolution</param>
-            /// <param name="rsiPeriod">The RSI indicator period</param>
-            /// <param name="lowerRsiBound">The RSI lower bound, used to signal UP insights</param>
-            /// <param name="upperRsiBound">The RSI upper bound, used to signal DOWN insights</param>
-            /// <param name="predictionInterval">The period applied to each generated insight</param>
-            public Parameters(Resolution resolution, int rsiPeriod, decimal lowerRsiBound, decimal upperRsiBound, TimeSpan predictionInterval)
-            {
-                Resolution = resolution;
-                RsiPeriod = rsiPeriod;
-                LowerRsiBound = lowerRsiBound;
-                UpperRsiBound = upperRsiBound;
-                PredictionInterval = predictionInterval;
-            }
         }
     }
 }

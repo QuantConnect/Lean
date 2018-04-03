@@ -133,5 +133,14 @@ namespace QuantConnect.Tests.Common
             var actual = Time.EachTradeableDayInTimeZone(exchange, start, end, dataTimeZone, true);
             CollectionAssert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public void MultipliesTimeSpans()
+        {
+            var interval = TimeSpan.FromSeconds(1);
+            var expected = TimeSpan.FromSeconds(5);
+            var actual = interval.Multiply(5d);
+            Assert.AreEqual(expected, actual);
+        }
     }
 }

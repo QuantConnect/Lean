@@ -30,22 +30,31 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class MacdAlphaModel : IAlphaModel
     {
-        private readonly TimeSpan _insightPeriod;
-        private readonly TimeSpan _consolidatorPeriod;
-        private readonly decimal _bounceThresholdPercent;
+        private readonly int _fastPeriod;
+        private readonly int _slowPeriod;
+        private readonly int _signalPeriod;
+        private readonly MovingAverageType _movingAverageType;
+        private const decimal BounceThresholdPercent = 0.01m;
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
         /// </summary>
-        /// <param name="consolidatorPeriod">The period of the MACD's input</param>
-        /// <param name="insightPeriod">The period assigned to generate insight</param>
-        /// <param name="bounceThresholdPercent">The percent change required in the MACD signal line to warrant an up/down insight</param>
-        public MacdAlphaModel(TimeSpan consolidatorPeriod, TimeSpan insightPeriod, decimal bounceThresholdPercent)
+        /// <param name="fastPeriod">The MACD fast period</param>
+        /// <param name="slowPeriod">The MACD slow period</param>
+        /// <param name="signalPeriod">The smoothing period for the MACD signal</param>
+        /// <param name="movingAverageType">The type of moving average to use in the MACD</param>
+        public MacdAlphaModel(
+            int fastPeriod = 12,
+            int slowPeriod = 26,
+            int signalPeriod = 9,
+            MovingAverageType movingAverageType = MovingAverageType.Exponential
+            )
         {
-            _insightPeriod = insightPeriod;
-            _consolidatorPeriod = consolidatorPeriod;
-            _bounceThresholdPercent = Math.Abs(bounceThresholdPercent);
+            _fastPeriod = fastPeriod;
+            _slowPeriod = slowPeriod;
+            _signalPeriod = signalPeriod;
+            _movingAverageType = movingAverageType;
             _symbolData = new Dictionary<Symbol, SymbolData>();
         }
 
@@ -66,16 +75,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 var direction = InsightDirection.Flat;
                 var normalizedSignal = sd.MACD.Signal / sd.Security.Price;
-                if (normalizedSignal > _bounceThresholdPercent)
+                if (normalizedSignal > BounceThresholdPercent)
                 {
                     direction = InsightDirection.Up;
                 }
-                else if (normalizedSignal < -_bounceThresholdPercent)
+                else if (normalizedSignal < -BounceThresholdPercent)
                 {
                     direction = InsightDirection.Down;
                 }
 
-                var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, _insightPeriod);
+                var insightPeriod = sd.DataResolution.Multiply(_fastPeriod);
+                var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, insightPeriod);
                 if (insight.Equals(sd.PreviousInsight))
                 {
                     continue;
@@ -96,15 +106,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             foreach (var added in changes.AddedSecurities)
             {
-                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _consolidatorPeriod));
+                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _fastPeriod, _slowPeriod, _signalPeriod, _movingAverageType));
             }
+
             foreach (var removed in changes.RemovedSecurities)
             {
                 SymbolData data;
                 if (_symbolData.TryGetValue(removed.Symbol, out data))
                 {
-                    data.CleanUp(algorithm);
-                    _symbolData.Remove(removed.Symbol);
+                    // clean up our consolidator
+                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.Consolidator);
                 }
             }
         }
@@ -116,31 +127,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;
             public readonly MovingAverageConvergenceDivergence MACD;
+            public TimeSpan DataResolution => Security.Resolution.ToTimeSpan();
 
-            public SymbolData(QCAlgorithmFramework algorithm, Security security, TimeSpan period)
+            public SymbolData(QCAlgorithmFramework algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType)
             {
                 Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, period);
+                Consolidator = algorithm.ResolveConsolidator(security.Symbol, security.Resolution);
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
 
-                MACD = new MovingAverageConvergenceDivergence(12, 26, 9, MovingAverageType.Exponential);
+                MACD = algorithm.MACD(security.Symbol, fastPeriod, slowPeriod, signalPeriod, movingAverageType);
 
-                Consolidator.DataConsolidated += OnDataConsolidated;
-            }
-
-            /// <summary>
-            /// Cleans up the indicator and consolidator
-            /// </summary>
-            /// <param name="algorithm">The algorithm instance</param>
-            public void CleanUp(QCAlgorithmFramework algorithm)
-            {
-                Consolidator.DataConsolidated -= OnDataConsolidated;
-                algorithm.SubscriptionManager.RemoveConsolidator(Security.Symbol, Consolidator);
-            }
-
-            private void OnDataConsolidated(object sender, IBaseData consolidated)
-            {
-                MACD.Update(consolidated.EndTime, consolidated.Value);
+                algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
             }
         }
     }
