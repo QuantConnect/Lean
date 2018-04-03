@@ -197,6 +197,7 @@ namespace QuantConnect
         {
             return TimeSpan.FromTicks(Math.Max(one.Ticks, two.Ticks));
         }
+
         /// <summary>
         /// Returns the timespan with the smaller value
         /// </summary>
@@ -219,6 +220,17 @@ namespace QuantConnect
         public static DateTime Min(DateTime one, DateTime two)
         {
             return one < two ? one : two;
+        }
+
+        /// <summary>
+        /// Multiplies the specified interval by the multiplier
+        /// </summary>
+        /// <param name="interval">The interval to be multiplied, such as TimeSpan.FromSeconds(1)</param>
+        /// <param name="multiplier">The number of times to multiply the interval</param>
+        /// <returns>The multiplied interval, such as 1s*5 = 5s</returns>
+        public static TimeSpan Multiply(this TimeSpan interval, double multiplier)
+        {
+            return TimeSpan.FromTicks((long) (interval.Ticks * multiplier));
         }
 
         /// <summary>
