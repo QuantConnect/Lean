@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     {
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
-        private readonly TimeSpan _predictionInterval;
+        private readonly int _predictionInterval;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
 
         /// <summary>
@@ -37,12 +37,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="fastPeriod">The fast EMA period</param>
         /// <param name="slowPeriod">The slow EMA period</param>
-        /// <param name="predictionInterval">The interval over which we're predicting</param>
-        public EmaCrossAlphaModel(int fastPeriod, int slowPeriod, TimeSpan predictionInterval)
+        public EmaCrossAlphaModel(
+            int fastPeriod = 12,
+            int slowPeriod = 26
+            )
         {
             _fastPeriod = fastPeriod;
             _slowPeriod = slowPeriod;
-            _predictionInterval = predictionInterval;
+            _predictionInterval = fastPeriod;
             _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
         }
 
@@ -60,18 +62,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (symbolData.Fast.IsReady && symbolData.Slow.IsReady)
                 {
+                    var insightPeriod = symbolData.DataResolution.Multiply(_predictionInterval);
                     if (symbolData.FastIsOverSlow)
                     {
                         if (symbolData.Slow > symbolData.Fast)
                         {
-                            insights.Add(new Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Down, _predictionInterval));
+                            insights.Add(new Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Down, insightPeriod));
                         }
                     }
                     else if (symbolData.SlowIsOverFast)
                     {
                         if (symbolData.Fast > symbolData.Slow)
                         {
-                            insights.Add(new Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Up, _predictionInterval));
+                            insights.Add(new Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Up, insightPeriod));
                         }
                     }
                 }
@@ -122,6 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public Symbol Symbol => Security.Symbol;
             public ExponentialMovingAverage Fast { get; set; }
             public ExponentialMovingAverage Slow { get; set; }
+            public TimeSpan DataResolution => Security.Resolution.ToTimeSpan();
 
             /// <summary>
             /// True if the fast is above the slow, otherwise false.
