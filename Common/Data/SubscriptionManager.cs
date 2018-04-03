@@ -207,6 +207,9 @@ namespace QuantConnect.Data
             {
                 subscription.Consolidators.Remove(consolidator);
             }
+
+            // dispose of the consolidator to remove any remaining event handlers
+            consolidator.DisposeSafely();
         }
 
         /// <summary>

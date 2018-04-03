@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,7 +93,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
+        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public RenkoConsolidator(decimal barSize, Func<IBaseData, decimal> selector, Func<IBaseData, decimal> volumeSelector = null, bool evenBars = true)
@@ -310,7 +310,7 @@ namespace QuantConnect.Data.Consolidators
             var volume = _volumeSelector(data);
 
             decimal? close = null;
-            
+
             // if we're already in a bar then update it
             if (_currentBar != null)
             {
@@ -359,6 +359,13 @@ namespace QuantConnect.Data.Consolidators
 
             Consolidated = consolidated;
         }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            _dataConsolidatedHandler = null;
+        }
     }
 
     /// <summary>
@@ -374,7 +381,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
+        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public RenkoConsolidator(decimal barSize, Func<TInput, decimal> selector, Func<TInput, decimal> volumeSelector = null, bool evenBars = true)
