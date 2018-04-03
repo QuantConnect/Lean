@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Close = algorithm.Identity(symbol);
                 ADX = algorithm.ADX(symbol, 14);
                 EMA = algorithm.EMA(symbol, 14);
-                MACD = algorithm.MACD(symbol, 12, 26, 9);
+                MACD = algorithm.MACD(symbol, 12, 26, 9, MovingAverageType.Simple);
 
                 // if we're receiving daily
 
