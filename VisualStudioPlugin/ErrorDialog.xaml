@@ -21,7 +21,7 @@
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              mc:Ignorable="d" WindowStartupLocation="CenterScreen"
              Title="Title" Height="190"
-             x:ClassModifier="internal" Visibility="Visible" ResizeMode="NoResize" Name="CompilationError">
+             x:ClassModifier="internal" Visibility="Visible" Name="CompilationError" ResizeMode="CanResizeWithGrip">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="136*"/>
@@ -36,9 +36,11 @@
         <Border Grid.Row="1" Grid.Column="1"  Background="WhiteSmoke" />
         <Border Grid.Row="1" Grid.Column="0"  Background="WhiteSmoke" />
         <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/dialog-close-32.png" Stretch="Fill" Width="40" Height="40" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0"/>
-        <TextBlock Grid.Column="1" FontFamily="Courier New" FontSize="14" x:Name="textBox" TextWrapping="Wrap" Margin="0,10,10,0">
+        <ScrollViewer Grid.Column="1" >
+        <TextBlock FontFamily="Courier New" FontSize="14" x:Name="textBox" TextWrapping="Wrap" Margin="0,10,10,0">
             Error converting value " " to type 'QuantConnect.Packets.BacktestResult'. Path 'result', line 1, position 128.
         </TextBlock>
+        </ScrollViewer>
         <Button x:Name="okButton" Content="Ok" Width="80" Margin="0,0,15,0" Height="25" HorizontalContentAlignment="Center" Grid.Column="1" Grid.Row="1" IsCancel="True" IsDefault="True" HorizontalAlignment="Right" VerticalAlignment="Center" />
     </Grid>
 </platformUi:DialogWindow>

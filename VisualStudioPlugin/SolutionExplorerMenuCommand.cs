@@ -158,6 +158,7 @@ namespace QuantConnect.VisualStudioPlugin
                         "https://www.quantconnect.com/terminal/#open/{0}",
                         selectedProjectId
                     );
+                Process.Start(projectUrl);
             });
         }
 
@@ -239,11 +240,10 @@ namespace QuantConnect.VisualStudioPlugin
                 // Default to show Errors, now it is coming empty so use Logs. Will only show First Error || Log
                 var error = compileStatus.Errors.Count == 0 ?
                     compileStatus.Logs.FirstOrDefault() : compileStatus.Errors.FirstOrDefault();
-                var message = "Compilation error \"" + error + "\"";
-                VsUtils.DisplayInStatusBar(_serviceProvider, message);
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Error when compiling project");
                 return new Tuple<bool, string>(false, error);
             }
-            VsUtils.DisplayInStatusBar(_serviceProvider, "Compilation succeeded");
+            VsUtils.DisplayInStatusBar(_serviceProvider, "Compilation completed successfully");
             return new Tuple<bool, string>(true, compileStatus.CompileId);
         }
 
@@ -265,22 +265,16 @@ namespace QuantConnect.VisualStudioPlugin
             {
                 Thread.Sleep(5000);
                 backtestStatus = api.ReadBacktest(projectId, backtestId);
-                if (backtestStatus == null)
-                {
-                    break;
-                }
             }
-            var result = true;
-            var message = "Backtest Completed";
-            // Errors are not being transfered in response, so client can't tell if the backtest failed or not.
-            // This response error handling code will not work but should.
-            if (backtestStatus == null || backtestStatus.Errors.Count != 0)
+
+            if (!string.IsNullOrEmpty(backtestStatus.Error))
             {
-                message = "Error when backtesting project.";
-                result = false;
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Error when backtesting project");
+                return new Tuple<bool, string>(false, backtestStatus.Error);
             }
-            VsUtils.DisplayInStatusBar(_serviceProvider, message);
-            return new Tuple<bool, string>(result, message);
+            var successMessage = "Backtest completed successfully";
+            VsUtils.DisplayInStatusBar(_serviceProvider, successMessage);
+            return new Tuple<bool, string>(true, successMessage);
         }
 
         private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
