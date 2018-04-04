@@ -25,6 +25,16 @@ namespace QuantConnect.Tests.Algorithm.Framework
     public class InsightTests
     {
         [Test]
+        public void HasReferenceTypeEqualitySemantics()
+        {
+            var one = new Insight(Symbols.SPY, InsightType.Price, InsightDirection.Up, Time.OneSecond);
+            var two = new Insight(Symbols.SPY, InsightType.Price, InsightDirection.Up, Time.OneSecond);
+            Assert.AreNotEqual(one, two);
+            Assert.AreEqual(one, one);
+            Assert.AreEqual(two, two);
+        }
+
+        [Test]
         public void SurvivesRoundTripSerializationUsingJsonConvert()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
