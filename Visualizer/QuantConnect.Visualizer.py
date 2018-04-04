@@ -44,7 +44,6 @@ def plot_single_file(zip_file_path, plot_filename, csv_filename, size_px):
 
 if __name__ == "__main__":
     arguments = docopt(__doc__)
-    print(arguments)
     if arguments['DATAFILE'] is None or arguments['PLOTFILE'] is None:
         raise NotImplementedError("WIP - First iterations, all options will be implemented soon.")
     size_px = [int(p) for p in arguments['--size'].split(',')]
