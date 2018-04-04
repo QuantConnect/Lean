@@ -58,6 +58,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Fram
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.ApiPython", "ApiPython\QuantConnect.ApiPython.pyproj", "{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.Visualizer", "Visualizer\QuantConnect.Visualizer.pyproj", "{0EA5ECF3-F7F2-40D0-BDA8-5569BAC00A76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -218,8 +220,15 @@ Global
 		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Release|x64.ActiveCfg = Release|Any CPU
+		{0EA5ECF3-F7F2-40D0-BDA8-5569BAC00A76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EA5ECF3-F7F2-40D0-BDA8-5569BAC00A76}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0EA5ECF3-F7F2-40D0-BDA8-5569BAC00A76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EA5ECF3-F7F2-40D0-BDA8-5569BAC00A76}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7FCEACB4-BFF0-4DCE-AC57-6F8A33CE2A2C}
 	EndGlobalSection
 EndGlobal
