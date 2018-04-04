@@ -32,11 +32,8 @@ from lean_data_parser import parse_zipped_data_file
 
 
 def plot_single_file(zip_file_path, plot_filename, csv_filename, size_px):
-    if csv_filename is not None:
-        # do the magic
-        raise NotImplementedError("Futures and option no implemented, yet")
-        pass
-    df = parse_zipped_data_file(zip_file_path)
+
+    df = parse_zipped_data_file(zip_file_path, csv_filename)
     cols_to_plot = [col for col in df.columns if 'Close' in col]
     plot = df.loc[:, cols_to_plot].plot(grid=True)
     fig = plot.get_figure()
@@ -48,9 +45,8 @@ def plot_single_file(zip_file_path, plot_filename, csv_filename, size_px):
 if __name__ == "__main__":
     arguments = docopt(__doc__)
     print(arguments)
-    # First iterations, all options will be implemented soon.
     if arguments['DATAFILE'] is None or arguments['PLOTFILE'] is None:
-        raise NotImplementedError("WIP")
+        raise NotImplementedError("WIP - First iterations, all options will be implemented soon.")
     size_px = [int(p) for p in arguments['--size'].split(',')]
     # Get rid of the extension, for now all plots will be png.
     plot_filename = ''.join(arguments['PLOTFILE'].split('.')[:-1])
