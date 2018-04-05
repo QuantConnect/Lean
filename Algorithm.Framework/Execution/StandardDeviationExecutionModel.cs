@@ -149,17 +149,16 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         private bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
+            var deviations = _deviations * data.STD;
             if (unorderedQuantity > 0)
             {
                 var price = data.Security.BidPrice == 0
                     ? data.Security.Price
                     : data.Security.BidPrice;
 
-                var threshold = data.SMA - _deviations * data.STD;
-
-                if (price < threshold)
+                if (price < data.SMA - deviations)
                 {
-                    return false;
+                    return true;
                 }
             }
             else
@@ -168,15 +167,13 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     ? data.Security.AskPrice
                     : data.Security.Price;
 
-                var threshold = data.SMA + _deviations * data.STD;
-
-                if (price > threshold)
+                if (price > data.SMA + deviations)
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         class SymbolData

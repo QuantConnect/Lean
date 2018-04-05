@@ -134,9 +134,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     ? data.Security.Price
                     : data.Security.BidPrice;
 
-                if (price > vwap)
+                if (price < vwap)
                 {
-                    return false;
+                    return true;
                 }
             }
             else
@@ -145,13 +145,13 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     ? data.Security.AskPrice
                     : data.Security.Price;
 
-                if (price < vwap)
+                if (price > vwap)
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         private class SymbolData
