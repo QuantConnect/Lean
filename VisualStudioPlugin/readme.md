@@ -1,4 +1,4 @@
-![alt tag](Documentation/logo.white.small.png)
+![alt tag](../Documentation/logo.white.small.png)
 QuantConnect Visual Studio Plugin
 =========
 
