@@ -53,6 +53,15 @@ namespace QuantConnect.Indicators
         public override bool IsReady => Samples >= _period;
 
         /// <summary>
+        ///     Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _sma.Reset();
+            base.Reset();
+        }
+
+        /// <summary>
         ///     Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
