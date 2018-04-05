@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,18 +19,15 @@ using System.Linq;
 
 namespace QuantConnect.Indicators
 {
-
     /// <summary>
     /// The Fractal Adaptive Moving Average (FRAMA) by John Ehlers
     /// </summary>
     public class FractalAdaptiveMovingAverage : BarIndicator
     {
-
-        double _filt;
-        int _n = 16;
-        double _w = -4.6;
-        RollingWindow<double> _high;
-        RollingWindow<double> _low;
+        private readonly int _n = 16;
+        private readonly double _w = -4.6;
+        private RollingWindow<double> _high;
+        private RollingWindow<double> _low;
 
         /// <summary>
         /// Initializes a new instance of the average class
@@ -43,10 +40,10 @@ namespace QuantConnect.Indicators
         {
             if (n % 2 > 0)
             {
-                throw new ArgumentException("N must be even.");
+                throw new ArgumentException($"{name}: N must be even, N = {n}");
             }
             _n = n;
-            _w = CalculateW(longPeriod);
+            _w = Math.Log(2d / (1 + longPeriod));
             _high = new RollingWindow<double>(n);
             _low = new RollingWindow<double>(n);
         }
@@ -55,8 +52,19 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the average class
         /// </summary>
         /// <param name="n">The window period (must be even). Example value: 16</param>
+        /// <param name="longPeriod">The average period. Example value: 198</param>
+        public FractalAdaptiveMovingAverage(int n, int longPeriod)
+            : this($"FRAMA({n},{longPeriod})", n, longPeriod)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the average class
+        /// </summary>
+        /// <param name="n">The window period (must be even). Example value: 16</param>
         public FractalAdaptiveMovingAverage(int n)
-            : this("FRAMA" + n, n, 198)
+            : this(n, 198)
         {
 
         }
@@ -68,79 +76,60 @@ namespace QuantConnect.Indicators
         /// <returns>The average value</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var price = (double)(input.High + input.Low) / 2;
+            var price = (input.High + input.Low) / 2;
             _high.Add((double)input.High);
             _low.Add((double)input.Low);
 
             // our first data point just return identity
             if (_high.Samples <= _high.Size)
             {
-                _filt = price;
+                return price;
             }
-            double n1;
-            double n2;
-            double n3;
-            double hh;
-            double ll;
+
+            var hh = _high.Take(_n / 2).Max();
+            var ll = _low.Take(_n / 2).Min();
+            var n1 = (hh - ll) / (_n / 2);
+
+            hh = _high.Skip(_n / 2).Take(_n / 2).Max();
+            ll = _low.Skip(_n / 2).Take(_n / 2).Min();
+
+            var n2 = (hh - ll) / (_n / 2);
+            var n3 = (_high.Max() - _low.Min()) / _n;
+
             double dimen = 0;
-            double alpha;
 
-            n3 = (_high.Max() - _low.Min()) / _n;
-
-            hh = _high.Take(_n / 2).Max();
-            ll = _low.Take(_n / 2).Min();
-
-            n1 = (hh - ll) / (_n / 2);
-
-            if (_high.IsReady)
+            if (n1 + n2 > 0 && n3 > 0)
             {
-                hh = _high.Skip(_n / 2).Take(_n / 2).Max();
-                ll = _low.Skip(_n / 2).Take(_n / 2).Min();
+                dimen = Math.Log((n1 + n2) / n3) / Math.Log(2);
             }
 
-            n2 = (hh - ll) / (_n / 2);
+            var alpha = (decimal)Math.Exp(_w * (dimen - 1));
 
-            if (n1 > 0 && n2 > 0 && n3 > 0)
+            if (alpha < .01m)
             {
-                dimen = (Math.Log(n1 + n2) - Math.Log(n3)) / Math.Log(2);
-            };
+                alpha = .01m;
+            }
+            if (alpha > 1)
+            {
+                alpha = 1;
+            }
 
-            alpha = Math.Exp(_w * (dimen - 1));
-            if (alpha < .01) { alpha = .01; }
-            if (alpha > 1) { alpha = 1; }
-
-            _filt = alpha * price + (1 - alpha) * _filt;
-
-            return (decimal)_filt;
-
+            return alpha * price + (1 - alpha) * Current.Value;
         }
-
-        private double CalculateW(int period)
-        {
-            return Math.Log(2d / (period + 1d));
-        }
-
 
         /// <summary>
         /// Returns whether the indicator will return valid results
         /// </summary>
-        public override bool IsReady
-        {
-            get { return _high.IsReady; }
-        }
+        public override bool IsReady => _high.IsReady;
 
         /// <summary>
         /// Resets the average to its initial state
         /// </summary>
         public override void Reset()
         {
-            _filt = 0;
             _high.Reset();
-			_low.Reset();
-            _n = 16;
-            _w = -4.6;
+            _low.Reset();
             base.Reset();
         }
-
     }
 }
