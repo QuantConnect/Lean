@@ -58,7 +58,7 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
 
         # set algorithm framework models
         self.UniverseSelection = ManualUniverseSelectionModel(symbols)
-        self.SetAlpha(HistoricalReturnsAlphaModel(period = 63, resolution = Resolution.Daily))
+        self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
         self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
         self.Execution = ImmediateExecutionModel()
         self.RiskManagement = NullRiskManagementModel()
@@ -72,7 +72,7 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
         '''Maximum Sharpe Ratio optimization method'''
 
         # Objective function
-        fun = lambda weights: self.sharpe_ratio(returns, weights)
+        fun = lambda weights: -self.sharpe_ratio(returns, weights)
 
         # Constraint #1: The weights can be negative, which means investors can short a security.
         constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1}]
@@ -95,4 +95,4 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
     def sharpe_ratio(self, returns, weights):
         annual_return = np.dot(np.matrix(returns.mean()), np.matrix(weights).T).item()
         annual_volatility = np.sqrt(np.dot(weights.T, np.dot(returns.cov(), weights)))
-        return -annual_return/annual_volatility
+        return annual_return/annual_volatility
