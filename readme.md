@@ -135,16 +135,9 @@ sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc &&
 For Windows and macOs users:
 Please visit the official [R website](https://www.r-project.org/) to download R. 
 
-### QuantConnect plugin
+### QuantConnect Visual Studio Plugin
 
-To install QuantConnect plugin build the `VisualStudioPlugin` project in `Release` mode. Then go to `VisualStudioPlugin/bin/Release` and run `QuantConnect.VisualStudioPlugin.vsix` file. Restart VisualStudio.
-In VisualStudio go to Tools -> Options -> QuantConnect and set "<Path to Lean repo>/Data" value to "Price data path".
-
-VisualStudio plugin writes log data to the VisualStudio activity log, but only if VisualStudio is started with the `/log` parameter passed to it. To debug the QuantConnect plugin start VisualStudio with the following command:
-
-```
-devenv /log <path-to-log>
-```
+For more information please see the QuantConnect Visual Studio Plugin [Documentation][8]
 
 ## Issues and Feature Requests ##
 
@@ -174,3 +167,4 @@ Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan,
   [5]: https://github.com/QuantConnect/Lean/issues
   [6]: https://groups.google.com/forum/#!forum/lean-engine
   [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
+  [8]: https://github.com/QuantConnect/Lean/blob/master/VisualStudioPlugin/readme.md

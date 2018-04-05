@@ -189,15 +189,23 @@ namespace QuantConnect.VisualStudioPlugin
             foreach (var file in files)
             {
                 api.DeleteProjectFile(selectedProjectId, file.FileName);
-                var fileContent = File.ReadAllText(file.FilePath);
-                var response = api.AddProjectFile(selectedProjectId, file.FileName, fileContent);
-                if (response.Success)
+                try
                 {
-                    filesUploaded++;
+                    var fileContent = File.ReadAllText(file.FilePath);
+                    var response = api.AddProjectFile(selectedProjectId, file.FileName, fileContent);
+                    if (response.Success)
+                    {
+                        filesUploaded++;
+                    }
+                    else
+                    {
+                        VSActivityLog.Error("Failed to add project file " + file.FileName);
+                        filesNotUploaded++;
+                    }
                 }
-                else
+                catch (Exception exception)
                 {
-                    VSActivityLog.Error("Failed to add project file " + file.FileName);
+                    VSActivityLog.Error("Exception adding project file " + file.FileName + ". Exception " + exception);
                     filesNotUploaded++;
                 }
             }
