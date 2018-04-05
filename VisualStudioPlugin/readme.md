@@ -1,5 +1,5 @@
 ![alt tag](../Documentation/logo.white.small.png)
-QuantConnect Visual Studio Plugin
+ Visual Studio Plugin
 =========
 
 ## Introduction ##
