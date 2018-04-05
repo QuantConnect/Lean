@@ -31,10 +31,6 @@ The plugin is a tool which allows a QuantConnect user to integrate with the plat
 
 >**Manually logging in is only required the first time**. The plugin will automatically login, using previous valid credentials, when required.
 
-
-[1]: https://www.quantconnect.com/
-[2]: https://www.quantconnect.com/account/
-
 ## Features
 
 Currently the plugin can **save files** to a **project**, **compile** and **backtest** it.
@@ -71,3 +67,18 @@ This feature allows the user to upload to QC one or more files to a target proje
 		> If the error is due to a **run-time issue** during the backtest process, popup box will contain error details and the corresponding stack trace.
 		>
 		> ![alt tag](Resources/backtestFailedBox.PNG)
+
+## Troubleshooting
+
+VisualStudio plugin writes log data to the VisualStudio activity log, but only if VisualStudio is started with the `/log` parameter passed to it. To debug the QuantConnect plugin start VisualStudio with the following command:
+
+```
+devenv /log <path-to-log>
+```
+
+[For more information][3]
+
+
+[1]: https://www.quantconnect.com/
+[2]: https://www.quantconnect.com/account/
+[3]: https://docs.microsoft.com/en-us/visualstudio/ide/reference/log-devenv-exe
