@@ -84,14 +84,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     direction = InsightDirection.Down;
                 }
 
-                var insightPeriod = sd.DataResolution.Multiply(_fastPeriod);
-                var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, insightPeriod);
-                if (insight.Equals(sd.PreviousInsight))
+                // ignore signal for same direction as previous signal
+                if (direction == sd.PreviousDirection)
                 {
                     continue;
                 }
 
-                sd.PreviousInsight = insight.Clone();
+                var insightPeriod = sd.DataResolution.Multiply(_fastPeriod);
+                var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, insightPeriod);
+                sd.PreviousDirection = insight.Direction;
                 yield return insight;
             }
         }
@@ -122,7 +123,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
         class SymbolData
         {
-            public Insight PreviousInsight;
+            public InsightDirection? PreviousDirection { get; set; }
 
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;

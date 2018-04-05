@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// Serialization of this type is delegated to the <see cref="InsightJsonConverter"/> which uses the <see cref="SerializedInsight"/> as a model.
     /// </remarks>
     [JsonConverter(typeof(InsightJsonConverter))]
-    public class Insight : IEquatable<Insight>
+    public class Insight
     {
         /// <summary>
         /// Gets the unique identifier for this insight
@@ -243,69 +243,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
 
             return str;
-        }
-
-        /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
-        /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
-        /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(Insight other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-
-            if (Id == other.Id) return true;
-
-            return Equals(Symbol, other.Symbol) &&
-                Direction == other.Direction &&
-                Type == other.Type &&
-                Confidence.Equals(other.Confidence) &&
-                Magnitude.Equals(other.Magnitude) &&
-                Period.Equals(other.Period);
-        }
-
-        /// <summary>Determines whether the specified object is equal to the current object.</summary>
-        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
-        /// <param name="obj">The object to compare with the current object. </param>
-        /// <filterpriority>2</filterpriority>
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((Insight)obj);
-        }
-
-        /// <summary>Serves as the default hash function. </summary>
-        /// <returns>A hash code for the current object.</returns>
-        /// <filterpriority>2</filterpriority>
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = (Symbol != null ? Symbol.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (int)Type;
-                hashCode = (hashCode * 397) ^ (int)Direction;
-                hashCode = (hashCode * 397) ^ Magnitude.GetHashCode();
-                hashCode = (hashCode * 397) ^ Confidence.GetHashCode();
-                hashCode = (hashCode * 397) ^ Period.GetHashCode();
-                return hashCode;
-            }
-        }
-
-        /// <summary>
-        /// Determines if the two insights are equal
-        /// </summary>
-        public static bool operator ==(Insight left, Insight right)
-        {
-            return Equals(left, right);
-        }
-
-        /// <summary>
-        /// Determines if the two insights are not equal
-        /// </summary>
-        public static bool operator !=(Insight left, Insight right)
-        {
-            return !Equals(left, right);
         }
     }
 }
