@@ -135,9 +135,9 @@ sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc &&
 For Windows and macOs users:
 Please visit the official [R website](https://www.r-project.org/) to download R. 
 
-### QuantConnect plugin
+### QuantConnect Visual Studio Plugin
 
-[Plugin documentation][8]
+For more information please see the QuantConnect Visual Studio Plugin [Documentation][8]
 
 ## Issues and Feature Requests ##
 
