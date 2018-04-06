@@ -26,19 +26,18 @@ from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.HistoricalReturnsAlphaModel import *
 from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
-from datetime import timedelta
-import numpy as np
+from QuantConnect.Util import PythonUtil
 
 ### <summary>
 ### Mean Variance Optimization algorithm
-### Uses the HistoricalReturnsAlphaModel and the MeanVarianceOptimizationPortfolioConstructionModel to create an
-### algorithm that rebalances the portfolio according to modern portfolio theory
+### Uses the HistoricalReturnsAlphaModel and the MeanVarianceOptimizationPortfolioConstructionModel
+### to create an algorithm that rebalances the portfolio according to modern portfolio theory
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
 class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
-    '''BMean Variance Optimization algorithm.'''
+    '''Mean Variance Optimization algorithm.'''
 
     def Initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -50,23 +49,28 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
-        # In this example, we are using an universe composed by only four assets
-        symbols = [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ['AIG', 'BAC', 'IBM', 'SPY'] ]
+        selector = PythonUtil.ToCoarseFundamentalSelector(self.coarseSelector)
+        self.symbols = [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in [ 'AIG', 'BAC', 'IBM', 'SPY' ] ]
 
         self.minimum_weight = -1
         self.maximum_weight = 1
 
         # set algorithm framework models
-        self.UniverseSelection = ManualUniverseSelectionModel(symbols)
+        self.UniverseSelection = CoarseFundamentalUniverseSelectionModel(selector)
         self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
         self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
         self.Execution = ImmediateExecutionModel()
         self.RiskManagement = NullRiskManagementModel()
 
+    def coarseSelector(self, coarse):
+        # Drops SPY after the 8th
+        last = 3 if self.Time.day > 8 else len(self.symbols)
+
+        return self.symbols[0:last]
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
+            self.Debug(orderEvent.ToString())
 
     def maximum_sharpe_ratio(self, returns):
         '''Maximum Sharpe Ratio optimization method'''
