@@ -100,6 +100,14 @@ namespace QuantConnect.Algorithm.Framework
 
             InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.OrderBy(i => i.Symbol.ToString()))}");
 
+            // emit warning message about using the framework with cash modelling
+            if (BrokerageModel.AccountType == AccountType.Cash)
+            {
+                Error("These models are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
+                    + " To prevent possible user error we've restricted them to Margin trading. You can select margin account types with"
+                    + " SetBrokerage( ... AccountType.Margin)");
+            }
+
             base.PostInitialize();
         }
 
