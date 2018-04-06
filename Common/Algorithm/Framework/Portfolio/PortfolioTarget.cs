@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"{Quantity} {Symbol}";
+            return $"{Symbol}: {Quantity.Normalize()}";
         }
     }
 }

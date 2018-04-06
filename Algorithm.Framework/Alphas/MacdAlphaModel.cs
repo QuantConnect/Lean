@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly int _slowPeriod;
         private readonly int _signalPeriod;
         private readonly MovingAverageType _movingAverageType;
+        private readonly Resolution _resolution;
         private const decimal BounceThresholdPercent = 0.01m;
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
 
@@ -44,17 +45,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="slowPeriod">The MACD slow period</param>
         /// <param name="signalPeriod">The smoothing period for the MACD signal</param>
         /// <param name="movingAverageType">The type of moving average to use in the MACD</param>
+        /// <param name="resolution">The resolution of data sent into the MACD indicator</param>
         public MacdAlphaModel(
             int fastPeriod = 12,
             int slowPeriod = 26,
             int signalPeriod = 9,
-            MovingAverageType movingAverageType = MovingAverageType.Exponential
+            MovingAverageType movingAverageType = MovingAverageType.Exponential,
+            Resolution resolution = Resolution.Daily
             )
         {
             _fastPeriod = fastPeriod;
             _slowPeriod = slowPeriod;
             _signalPeriod = signalPeriod;
             _movingAverageType = movingAverageType;
+            _resolution = resolution;
             _symbolData = new Dictionary<Symbol, SymbolData>();
         }
 
@@ -90,7 +94,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     continue;
                 }
 
-                var insightPeriod = sd.DataResolution.Multiply(_fastPeriod);
+                var insightPeriod = _resolution.ToTimeSpan().Multiply(_fastPeriod);
                 var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, insightPeriod);
                 sd.PreviousDirection = insight.Direction;
                 yield return insight;
@@ -107,7 +111,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             foreach (var added in changes.AddedSecurities)
             {
-                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _fastPeriod, _slowPeriod, _signalPeriod, _movingAverageType));
+                _symbolData.Add(added.Symbol, new SymbolData(algorithm, added, _fastPeriod, _slowPeriod, _signalPeriod, _movingAverageType, _resolution));
             }
 
             foreach (var removed in changes.RemovedSecurities)
@@ -128,12 +132,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;
             public readonly MovingAverageConvergenceDivergence MACD;
-            public TimeSpan DataResolution => Security.Resolution.ToTimeSpan();
 
-            public SymbolData(QCAlgorithmFramework algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType)
+            public SymbolData(QCAlgorithmFramework algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType, Resolution resolution)
             {
                 Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, security.Resolution);
+                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
 
                 MACD = algorithm.MACD(security.Symbol, fastPeriod, slowPeriod, signalPeriod, movingAverageType);

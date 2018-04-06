@@ -778,6 +778,78 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$100.58"}
             };
 
+            var volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "61"},
+                {"Average Win", "0.10%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "585.503%"},
+                {"Drawdown", "0.600%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "2.492%"},
+                {"Sharpe Ratio", "9.136"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "113.313"},
+                {"Annual Standard Deviation", "0.137"},
+                {"Annual Variance", "0.019"},
+                {"Information Ratio", "9.063"},
+                {"Tracking Error", "0.137"},
+                {"Treynor Ratio", "0.011"},
+                {"Total Fees", "$96.79"},
+                {"Total Insights Generated", "5"},
+                {"Total Insights Closed", "3"},
+                {"Total Insights Analysis Completed", "0"},
+                {"Long Insight Count", "3"},
+                {"Short Insight Count", "2"},
+                {"Long/Short Ratio", "150.0%"},
+                {"Estimated Monthly Alpha Value", "$54250.3481"},
+                {"Total Accumulated Estimated Alpha Value", "$8740.3339"},
+                {"Mean Population Estimated Insight Value", "$2913.4446"},
+                {"Mean Population Direction", "0%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "0%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
+            var standardDeviationExecutionModelRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "63"},
+                {"Average Win", "0.06%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "793.499%"},
+                {"Drawdown", "0.400%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "2.840%"},
+                {"Sharpe Ratio", "10.781"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "128.815"},
+                {"Annual Standard Deviation", "0.132"},
+                {"Annual Variance", "0.017"},
+                {"Information Ratio", "10.71"},
+                {"Tracking Error", "0.132"},
+                {"Treynor Ratio", "0.011"},
+                {"Total Fees", "$76.61"},
+                {"Total Insights Generated", "5"},
+                {"Total Insights Closed", "3"},
+                {"Total Insights Analysis Completed", "0"},
+                {"Long Insight Count", "3"},
+                {"Short Insight Count", "2"},
+                {"Long/Short Ratio", "150.0%"},
+                {"Estimated Monthly Alpha Value", "$54250.3481"},
+                {"Total Accumulated Estimated Alpha Value", "$8740.3339"},
+                {"Mean Population Estimated Insight Value", "$2913.4446"},
+                {"Mean Population Direction", "0%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "0%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -815,6 +887,8 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm", emptyStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateIntrinioEconomicData", basicTemplateIntrinioEconomicData, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DuplicateSecurityWithBenchmarkRegressionAlgorithm", emptyStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm", volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),

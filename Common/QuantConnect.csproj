@@ -148,6 +148,7 @@
     <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightManager.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightScore.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightScoreType.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollection.cs" />
     <Compile Include="AlphaRuntimeStatistics.cs" />
     <Compile Include="API\AuthenticationResponse.cs" />
     <Compile Include="API\Backtest.cs" />

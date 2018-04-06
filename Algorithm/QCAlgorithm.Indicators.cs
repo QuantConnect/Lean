@@ -1212,6 +1212,20 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates the canonical VWAP indicator that resets each day. The indicator will be automatically
+        /// updated on the security's configured resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VWAP we want</param>
+        /// <returns>The IntradayVWAP for the specified symbol</returns>
+        public IntradayVwap VWAP(Symbol symbol)
+        {
+            var name = CreateIndicatorName(symbol, "VWAP", null);
+            var vwap = new IntradayVwap(name);
+            RegisterIndicator(symbol, vwap);
+            return vwap;
+        }
+
+        /// <summary>
         /// Creates a new Williams %R indicator. This will compute the percentage change of
         /// the current closing price in relation to the high and low of the past N periods.
         /// The indicator will be automatically updated on the given resolution.
@@ -1230,7 +1244,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a WilderMovingAverage indicator for the symbol. 
+        /// Creates a WilderMovingAverage indicator for the symbol.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose WMA we want</param>

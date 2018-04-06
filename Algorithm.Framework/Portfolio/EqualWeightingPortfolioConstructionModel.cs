@@ -43,6 +43,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var targets = new List<IPortfolioTarget>();
             if (_removedSymbols != null)
             {
+                // zero out securities removes from the universe
                 targets.AddRange(_removedSymbols.Select(s => new PortfolioTarget(s, 0)));
                 _removedSymbols = null;
             }
