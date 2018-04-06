@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
@@ -116,18 +117,28 @@ namespace QuantConnect.Algorithm.Framework
             // only fire insights generated event if we actually have insights
             if (insights.Count != 0)
             {
+                // debug printing of generated insights
                 if (DebugMode)
                 {
                     Log($"{Time}: ALPHA: {string.Join(" | ", insights.Select(i => i.ToString()).OrderBy(i => i))}");
                 }
+
                 OnInsightsGenerated(insights);
             }
 
             // construct portfolio targets from insights
             var targets = PortfolioConstruction.CreateTargets(this, insights).ToList();
 
+            // set security targets w/ those generated via portfolio construction module
+            foreach (var target in targets)
+            {
+                var security = Securities[target.Symbol];
+                security.Holdings.Target = target;
+            }
+
             if (DebugMode)
             {
+                // debug printing of generated targets
                 if (targets.Any())
                 {
                     Log($"{Time}: PORTFOLIO: {string.Join(" | ", targets.Select(t => t.ToString()).OrderBy(t => t))}");
@@ -136,8 +147,16 @@ namespace QuantConnect.Algorithm.Framework
 
             var riskTargetOverrides = RiskManagement.ManageRisk(this).ToList();
 
+            // override security targets w/ those generated via risk management module
+            foreach (var target in riskTargetOverrides)
+            {
+                var security = Securities[target.Symbol];
+                security.Holdings.Target = target;
+            }
+
             if (DebugMode)
             {
+                // debug printing of generated risk target overrides
                 if (riskTargetOverrides.Any())
                 {
                     Log($"{Time}: RISK: {string.Join(" | ", riskTargetOverrides.Select(t => t.ToString()).OrderBy(t => t))}");

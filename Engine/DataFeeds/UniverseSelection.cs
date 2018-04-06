@@ -126,8 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // remove previously deselected members which were kept in the universe because of holdings or open orders
             foreach (var member in _pendingRemovals.ToList())
             {
-                var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
-                if (!member.HoldStock && !openOrders.Any())
+                if (IsSafeToRemove(member))
                 {
                     RemoveSecurityFromUniverse(universe, member, removals, dateTimeUtc, algorithmEndDateUtc);
 
@@ -149,9 +148,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // until open orders are closed and the security is liquidated
                 removals.Add(member);
 
-                // but don't physically remove it from the algorithm if we hold stock or have open orders against it
-                var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
-                if (!member.HoldStock && !openOrders.Any())
+                if (IsSafeToRemove(member))
                 {
                     RemoveSecurityFromUniverse(universe, member, removals, dateTimeUtc, algorithmEndDateUtc);
                 }
@@ -259,6 +256,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
             SymbolCache.TryRemove(member.Symbol);
+        }
+
+        /// <summary>
+        /// Determines if we can safely remove the security member from a universe.
+        /// We must ensure that we have zero holdings, no open orders, and no existing portfolio targets
+        /// </summary>
+        private bool IsSafeToRemove(Security member)
+        {
+            // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
+            var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
+            if (!member.HoldStock && !openOrders.Any() && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
