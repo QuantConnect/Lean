@@ -14,9 +14,12 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -123,12 +126,35 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
+            var addedSymbolData = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
                 // initialize new securities
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {
-                    _symbolData[added.Symbol] = new SymbolData(algorithm, added, _period, _resolution);
+                    var symbolData = new SymbolData(algorithm, added, _period, _resolution);
+                    addedSymbolData.Add(added.Symbol);
+                    _symbolData[added.Symbol] = symbolData;
+                }
+            }
+
+            if (addedSymbolData.Count > 0)
+            {
+                var history = algorithm.History(addedSymbolData, _period, _resolution);
+                foreach (var slice in history)
+                {
+                    foreach (var symbol in slice.Keys)
+                    {
+                        var value = slice[symbol];
+                        var list = value as IList;
+                        var data = (BaseData)(list != null ? list[list.Count - 1] : value);
+
+                        SymbolData symbolData;
+                        if (_symbolData.TryGetValue(symbol, out symbolData))
+                        {
+                            symbolData.Consolidator.Update(data);
+                        }
+                    }
                 }
             }
 
