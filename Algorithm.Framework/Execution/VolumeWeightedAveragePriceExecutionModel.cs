@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -116,10 +117,22 @@ namespace QuantConnect.Algorithm.Framework.Execution
                 SymbolData data;
                 if (_symbolData.TryGetValue(removed.Symbol, out data))
                 {
-                    _symbolData.Remove(removed.Symbol);
-                    algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                    if (IsSafeToRemove(algorithm, removed.Symbol))
+                    {
+                        _symbolData.Remove(removed.Symbol);
+                        algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines if it's safe to remove the associated symbol data
+        /// </summary>
+        private bool IsSafeToRemove(QCAlgorithmFramework algorithm, Symbol symbol)
+        {
+            // confirm the security isn't currently a member of any universe
+            return !algorithm.UniverseManager.Any(kvp => kvp.Value.ContainsMember(symbol));
         }
 
         /// <summary>
