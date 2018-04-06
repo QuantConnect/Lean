@@ -98,7 +98,10 @@ namespace QuantConnect.Algorithm.Framework
                 AddUniverse(universe);
             }
 
-            InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.OrderBy(i => i.Symbol.ToString()))}");
+            if (DebugMode)
+            {
+                InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.OrderBy(i => i.Symbol.ToString()))}");
+            }
 
             // emit warning message about using the framework with cash modelling
             if (BrokerageModel.AccountType == AccountType.Cash)
