@@ -15,7 +15,10 @@
 */
 
 using Python.Runtime;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Util
@@ -85,6 +88,42 @@ namespace QuantConnect.Util
                 dynamic method = GetModule().GetAttr("to_func");
                 return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Func<T1, T2>));
             }
+        }
+
+        /// <summary>
+        /// Encapsulates a python method in coarse fundamental universe selector.
+        /// </summary>
+        /// <param name="pyObject">The python method</param>
+        /// <returns>A <see cref="System.Func{IEnumerable{CoarseFundamental}, IEnumerable{Symbol}}"/> that encapsulates the python method</returns>
+        public static Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> ToCoarseFundamentalSelector(PyObject pyObject)
+        {
+            var selector = ToFunc<IEnumerable<CoarseFundamental>, Symbol[]>(pyObject);
+            if (selector == null)
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"{pyObject.Repr()} is not a valid coarse fundamental universe selector method.");
+                }
+            }
+            return selector;
+        }
+
+        /// <summary>
+        /// Encapsulates a python method in fine fundamental universe selector.
+        /// </summary>
+        /// <param name="pyObject">The python method</param>
+        /// <returns>A <see cref="System.Func{IEnumerable{FineFundamental}, IEnumerable{Symbol}}"/> that encapsulates the python method</returns>
+        public static Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> ToFineFundamentalSelector(PyObject pyObject)
+        {
+            var selector = ToFunc<IEnumerable<FineFundamental>, Symbol[]>(pyObject);
+            if (selector == null)
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"{pyObject.Repr()} is not a valid fine fundamental universe selector method.");
+                }
+            }
+            return selector;
         }
 
         /// <summary>
