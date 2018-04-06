@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         }
 
         /// <summary>
-        /// Gets the remaining quantity to be ordered to reach the specified target quantity
+        /// Gets the remaining quantity to be ordered to reach the specified target quantity.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="target">The portfolio target</param>
@@ -63,27 +63,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         public static decimal GetUnorderedQuantity(QCAlgorithmFramework algorithm, IPortfolioTarget target)
         {
             var security = algorithm.Securities[target.Symbol];
-            var baseCurrency = security as IBaseCurrencySymbol;
-            if (baseCurrency != null && algorithm.BrokerageModel.AccountType == AccountType.Cash)
-            {
-                // security represents a currency swap <base>/<quote>
-                var quoteC = security.QuoteCurrency;
-                var baseC = algorithm.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol];
-
-                // resolve which way we need to exchange to reach the target
-                var source = target.Quantity > baseC.Amount ? quoteC : baseC;
-                var destination = source == quoteC ? baseC : quoteC;
-                var delta = target.Quantity - destination.Amount;
-
-                // check if we're below the lot size threshold
-                if (Math.Abs(delta) < security.SymbolProperties.LotSize)
-                {
-                    return 0m;
-                }
-
-                return delta;
-            }
-
             var holdings = security.Holdings.Quantity;
             var openOrderQuantity = algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
             var quantity = target.Quantity - holdings - openOrderQuantity;
