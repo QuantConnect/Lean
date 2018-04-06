@@ -54,7 +54,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
         self.target_return = kwargs['target_return'] if 'target_return' is kwargs else 0.02
         self.optimization_method = kwargs['optimization_method'] if 'optimization_method' in kwargs else self.minimum_variance
         self.symbolDataBySymbol = {}
-
+        self.pendingRemoval = []
 
     def CreateTargets(self, algorithm, insights):
         """ 
@@ -65,6 +65,11 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
         Returns: 
             An enumerable of portoflio targets to be sent to the execution model
         """
+        for symbol in self.pendingRemoval:
+            yield PortfolioTarget.Percent(algorithm, symbol, 0)
+
+        self.pendingRemoval.clear()
+
         symbols = [insight.Symbol for insight in insights]
         if len(symbols) == 0:
             return []
@@ -95,13 +100,11 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
             changes: The security additions and removals from the algorithm'''
 
         # clean up data for removed securities
-        symbols = [ x.Symbol for x in changes.RemovedSecurities ]
-        if len(symbols) > 0:
-            for subscription in algorithm.SubscriptionManager.Subscriptions:
-                symbol = subscription.Symbol
-                if symbol in symbols and symbol in self.symbolDataBySymbol:
-                    algorithm.SubscriptionManager.RemoveConsolidator(symbol, consolidator)
-                    self.symbolDataBySymbol.pop(symbol)
+        for removed in changes.RemovedSecurities:
+            self.pendingRemoval.append(removed.Symbol)
+            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
+            if symbolData is not None:
+                symbolData.RemoveConsolidators(algorithm)
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
@@ -115,10 +118,8 @@ class MeanVarianceOptimizationPortfolioConstructionModel:
             if symbol not in self.symbolDataBySymbol:
                 symbolData = SymbolData(symbol, self.lookback, self.period)
                 self.symbolDataBySymbol[symbol] = symbolData
-                algorithm.RegisterIndicator(symbol, symbolData.ROC, self.resolution)
-
-            for tuple in history.loc[ticker].itertuples():
-                symbolData.ROC.Update(tuple.Index, tuple.close)
+                symbolData.RegisterIndicators(algorithm, self.resolution)
+                symbolData.WarmUpIndicators(history.loc[ticker])
 
 
     def minimum_variance(self, returns):
@@ -153,6 +154,19 @@ class SymbolData:
         self.ROC = RateOfChange('{}.ROC({})'.format(symbol, lookback), lookback)
         self.ROC.Updated += self.OnRateOfChangeUpdated
         self.Window = RollingWindow[IndicatorDataPoint](period)
+        self.Consolidator = None
+
+    def RegisterIndicators(self, algorithm, resolution):
+        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
+        algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
+
+    def RemoveConsolidators(self, algorithm):
+        if self.Consolidator is not None:
+            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
+
+    def WarmUpIndicators(self, history):
+        for tuple in history.itertuples():
+            self.ROC.Update(tuple.Index, tuple.close)
 
     def OnRateOfChangeUpdated(self, roc, value):
         if roc.IsReady:

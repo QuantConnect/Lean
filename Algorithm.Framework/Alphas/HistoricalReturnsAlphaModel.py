@@ -63,13 +63,10 @@ class HistoricalReturnsAlphaModel:
             changes: The security additions and removals from the algorithm'''
 
         # clean up data for removed securities
-        symbols = [ x.Symbol for x in changes.RemovedSecurities ]
-        if len(symbols) > 0:
-            for subscription in algorithm.SubscriptionManager.Subscriptions:
-                symbol = subscription.Symbol
-                if symbol in symbols and symbol in self.symbolDataBySymbol:
-                    algorithm.SubscriptionManager.RemoveConsolidator(symbol, consolidator)
-                    self.symbolDataBySymbol.pop(symbol)
+        for removed in changes.RemovedSecurities:
+            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
+            if symbolData is not None:
+                symbolData.RemoveConsolidators(algorithm)
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
@@ -83,10 +80,8 @@ class HistoricalReturnsAlphaModel:
             if symbol not in self.symbolDataBySymbol:
                 symbolData = SymbolData(symbol, self.lookback)
                 self.symbolDataBySymbol[symbol] = symbolData
-                algorithm.RegisterIndicator(symbol, symbolData.ROC, self.resolution)
-
-            for tuple in history.loc[ticker].itertuples():
-                symbolData.ROC.Update(tuple.Index, tuple.close)
+                symbolData.RegisterIndicators(algorithm, self.resolution)
+                symbolData.WarmUpIndicators(history.loc[ticker])
 
 
 class SymbolData:
@@ -94,7 +89,20 @@ class SymbolData:
     def __init__(self, symbol, lookback):
         self.Symbol = symbol
         self.ROC = RateOfChange('{}.ROC({})'.format(symbol, lookback), lookback)
+        self.Consolidator = None
         self.previous = 0
+
+    def RegisterIndicators(self, algorithm, resolution):
+        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
+        algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
+
+    def RemoveConsolidators(self, algorithm):
+        if self.Consolidator is not None:
+            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
+
+    def WarmUpIndicators(self, history):
+        for tuple in history.itertuples():
+            self.ROC.Update(tuple.Index, tuple.close)
 
     @property
     def Return(self):
