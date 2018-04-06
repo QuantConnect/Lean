@@ -110,37 +110,30 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
 
             // initialize data for added securities
-            if (changes.AddedSecurities.Count > 0)
+            var addedSymbols = new List<Symbol>();
+            foreach (var added in changes.AddedSecurities)
             {
-                var newSymbolData = new List<SymbolData>();
-                foreach (var added in changes.AddedSecurities)
+                if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                 {
-                    if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
-                    {
-                        var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, _resolution);
-                        var symbolData = new SymbolData(added.Symbol, rsi);
-                        _symbolDataBySymbol[added.Symbol] = symbolData;
-                        newSymbolData.Add(symbolData);
-                    }
+                    var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, _resolution);
+                    var symbolData = new SymbolData(added.Symbol, rsi);
+                    _symbolDataBySymbol[added.Symbol] = symbolData;
+                    addedSymbols.Add(symbolData.Symbol);
                 }
+            }
 
-                // seed new indicators using history request
-                var history = algorithm.History(newSymbolData.Select(x => x.Symbol), _period, _resolution);
-                foreach (var slice in history)
-                {
-                    foreach (var symbol in slice.Keys)
+            if (addedSymbols.Count > 0)
+            {
+                // warmup our indicators by pushing history through the consolidators
+                algorithm.History(addedSymbols, _period, _resolution)
+                    .PushThrough(data =>
                     {
-                        var value = slice[symbol];
-                        var list = value as IList;
-                        var data = (BaseData) (list != null ? list[list.Count - 1] : value);
-
                         SymbolData symbolData;
-                        if (_symbolDataBySymbol.TryGetValue(symbol, out symbolData))
+                        if (_symbolDataBySymbol.TryGetValue(data.Symbol, out symbolData))
                         {
                             symbolData.RSI.Update(data.EndTime, data.Value);
                         }
-                    }
-                }
+                    });
             }
         }
 

@@ -126,36 +126,27 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
-            var addedSymbolData = new List<Symbol>();
+            var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
                 // initialize new securities
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {
                     var symbolData = new SymbolData(algorithm, added, _period, _resolution);
-                    addedSymbolData.Add(added.Symbol);
+                    addedSymbols.Add(added.Symbol);
                     _symbolData[added.Symbol] = symbolData;
                 }
             }
 
-            if (addedSymbolData.Count > 0)
+            if (addedSymbols.Count > 0)
             {
-                var history = algorithm.History(addedSymbolData, _period, _resolution);
-                foreach (var slice in history)
-                {
-                    foreach (var symbol in slice.Keys)
+                // warmup our indicators by pushing history through the consolidators
+                algorithm.History(addedSymbols, _period, _resolution)
+                    .PushThroughConsolidators(symbol =>
                     {
-                        var value = slice[symbol];
-                        var list = value as IList;
-                        var data = (BaseData)(list != null ? list[list.Count - 1] : value);
-
-                        SymbolData symbolData;
-                        if (_symbolData.TryGetValue(symbol, out symbolData))
-                        {
-                            symbolData.Consolidator.Update(data);
-                        }
-                    }
-                }
+                        SymbolData data;
+                        return _symbolData.TryGetValue(symbol, out data) ? data.Consolidator : null;
+                    });
             }
 
             foreach (var removed in changes.RemovedSecurities)
