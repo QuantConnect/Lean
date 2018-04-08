@@ -105,7 +105,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Item that represents project name and project id in a combo box
         /// </summary>
-        private class ComboboxItem {
+        internal class ComboboxItem {
             public int ProjectId { get; }
             public string ProjectName { get; }
 
