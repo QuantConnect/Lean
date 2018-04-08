@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Microsoft.VisualStudio.Shell;
 using System;
 
 namespace QuantConnect.VisualStudioPlugin
@@ -66,22 +67,24 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="credentials">User id and access token to authenticate the API</param>
         /// <returns>true if successfully authenticated API, false otherwise</returns>
-        public bool Login(Credentials credentials)
+        public async System.Threading.Tasks.Task<bool> Login(Credentials credentials)
         {
             VSActivityLog.Info("Authenticating QuantConnect API");
             try
             {
                 var api = new Api.Api();
                 api.Initialize(int.Parse(credentials.UserId), credentials.AccessToken, Globals.DataFolder);
-                if (api.Connected)
+                var apiConnected = await System.Threading.Tasks.Task.Run(() => api.Connected);
+                if (apiConnected)
                 {
                     _api = api;
                     return true;
                 }
             }
-            catch (FormatException)
+            catch (Exception exception)
             {
-                VSActivityLog.Error("User id is not a valid number");
+                VsUtils.ShowErrorMessageBox(ServiceProvider.GlobalProvider,
+                    "QuantConnect Exception", exception.ToString());
             }
             return false;
         }

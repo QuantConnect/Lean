@@ -37,7 +37,7 @@ namespace QuantConnect.VisualStudioPlugin
             statusBar.IsFrozen(out frozen);
             if (frozen == 0)
             {
-                statusBar.SetText(msg);
+                statusBar.SetText("QuantConnect: " + msg);
             }
         }
 

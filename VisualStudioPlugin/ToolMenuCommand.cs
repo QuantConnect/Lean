@@ -119,9 +119,9 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void LoginCallback(object sender, EventArgs e)
+        private async void LoginCallback(object sender, EventArgs e)
         {
-            _authenticationCommand.Login(_serviceProvider, true);
+            await _authenticationCommand.Login(_serviceProvider, true);
         }
 
         /// <summary>
