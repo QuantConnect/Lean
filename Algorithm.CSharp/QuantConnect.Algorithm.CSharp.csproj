@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
     <Compile Include="DuplicateSecurityWithBenchmarkRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateCryptoAlgorithm.cs" />
     <Compile Include="BasicTemplateCryptoFrameworkAlgorithm.cs" />

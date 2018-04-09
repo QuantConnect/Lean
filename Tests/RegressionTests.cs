@@ -850,6 +850,29 @@ namespace QuantConnect.Tests
                 {"Rolling Averaged Population Magnitude", "0%"},
             };
 
+            var cancelOpenOrdersRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "-99.962%"},
+                {"Drawdown", "3.700%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "-2.133%"},
+                {"Sharpe Ratio", "-11.196"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-5.382"},
+                {"Beta", "390.206"},
+                {"Annual Standard Deviation", "0.24"},
+                {"Annual Variance", "0.058"},
+                {"Information Ratio", "-11.254"},
+                {"Tracking Error", "0.239"},
+                {"Treynor Ratio", "-0.007"},
+                {"Total Fees", "$0.00"}
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -889,6 +912,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("DuplicateSecurityWithBenchmarkRegressionAlgorithm", emptyStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm", volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CancelOpenOrdersRegressionAlgorithm", cancelOpenOrdersRegressionAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
