@@ -26,8 +26,8 @@ namespace QuantConnect.Indicators
     {
         private readonly int _n = 16;
         private readonly double _w = -4.6;
-        private RollingWindow<double> _high;
-        private RollingWindow<double> _low;
+        private readonly RollingWindow<double> _high;
+        private readonly RollingWindow<double> _low;
 
         /// <summary>
         /// Initializes a new instance of the average class
