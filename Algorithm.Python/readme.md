@@ -81,7 +81,7 @@ LEAN users do **not** need to compile `Python.Runtime.dll`. The information belo
 
 Download [QuantConnect/pythonnet](https://github.com/QuantConnect/pythonnet/) github clone or downloading the zip. If downloading the zip - unzip to a local pathway.
 
-**Note:** QuantConnect's version of pythonnet is an enhanced of [pythonnet](https://github.com/pythonnet/pythonnet) with support to `System.Decimal` and `System.DateTime`.
+**Note:** QuantConnect's version of pythonnet is an enhanced version of [pythonnet](https://github.com/pythonnet/pythonnet) with added support for `System.Decimal` and `System.DateTime`.
 
 Below we can find the compilation flags that create a suitable `Python.Runtime.dll` for each operating system.
 
