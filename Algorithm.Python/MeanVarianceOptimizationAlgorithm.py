@@ -57,8 +57,8 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
 
         # set algorithm framework models
         self.UniverseSelection = CoarseFundamentalUniverseSelectionModel(selector)
-        self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
-        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
+        self.Alpha = HistoricalReturnsAlphaModel(resolution = Resolution.Daily)
+        self.PortfolioConstruction = MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio)
         self.Execution = ImmediateExecutionModel()
         self.RiskManagement = NullRiskManagementModel()
 
