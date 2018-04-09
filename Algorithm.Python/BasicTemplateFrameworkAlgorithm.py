@@ -55,7 +55,7 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithmFramework):
         symbols = [ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]
 
         # set algorithm framework models
-        self.PortfolioSelection = ManualPortfolioSelectionModel(symbols)
+        self.UniverseSelection = ManualUniverseSelectionModel(symbols)
         self.Alpha = ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None)
         self.PortfolioConstruction = EqualWeightingPortfolioConstructionModel()
         self.Execution = ImmediateExecutionModel()
