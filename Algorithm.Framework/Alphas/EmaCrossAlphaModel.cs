@@ -71,14 +71,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     {
                         if (symbolData.Slow > symbolData.Fast)
                         {
-                            insights.Add(new Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Down, insightPeriod));
+                            insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Down));
                         }
                     }
                     else if (symbolData.SlowIsOverFast)
                     {
                         if (symbolData.Fast > symbolData.Slow)
                         {
-                            insights.Add(new Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Up, insightPeriod));
+                            insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Up));
                         }
                     }
                 }
