@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets to be ordered</param>
-        public void Execute(QCAlgorithmFramework algorithm, IEnumerable<IPortfolioTarget> targets)
+        public void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             foreach (var target in targets)
             {

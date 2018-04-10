@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets</param>
-        public void Execute(QCAlgorithmFramework algorithm, IEnumerable<IPortfolioTarget> targets)
+        public void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             _targetsCollection.AddRange(targets);
 
