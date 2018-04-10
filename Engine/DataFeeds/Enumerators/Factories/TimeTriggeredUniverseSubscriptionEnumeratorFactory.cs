@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,17 +28,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// ticks based on <see cref="UserDefinedUniverse.GetTriggerTimes"/>, allowing universe
     /// selection to fire at planned times.
     /// </summary>
-    public class UserDefinedUniverseSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
+    public class TimeTriggeredUniverseSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private readonly UserDefinedUniverse _universe;
+        private readonly ITimeTriggeredUniverse _universe;
         private readonly MarketHoursDatabase _marketHoursDatabase;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserDefinedUniverseSubscriptionEnumeratorFactory"/> class
+        /// Initializes a new instance of the <see cref="TimeTriggeredUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="universe">The user defined universe</param>
         /// <param name="marketHoursDatabase">The market hours database</param>
-        public UserDefinedUniverseSubscriptionEnumeratorFactory(UserDefinedUniverse universe, MarketHoursDatabase marketHoursDatabase)
+        public TimeTriggeredUniverseSubscriptionEnumeratorFactory(ITimeTriggeredUniverse universe, MarketHoursDatabase marketHoursDatabase)
         {
             _universe = universe;
             _marketHoursDatabase = marketHoursDatabase;

@@ -542,13 +542,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             IEnumerator<BaseData> enumerator;
 
-            var userDefined = request.Universe as UserDefinedUniverse;
-            if (userDefined != null)
+            var timeTriggered = request.Universe as ITimeTriggeredUniverse;
+            if (timeTriggered != null)
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
 
                 // spoof a tick on the requested interval to trigger the universe selection function
-                var enumeratorFactory = new UserDefinedUniverseSubscriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
+                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder());
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
@@ -558,21 +558,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = enqueueable;
 
                 // Trigger universe selection when security added/removed after Initialize
-                userDefined.CollectionChanged += (sender, args) =>
+                if (timeTriggered is UserDefinedUniverse)
                 {
-                    var items =
-                           args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
-                           args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
+                    var userDefined = (UserDefinedUniverse) timeTriggered;
+                    userDefined.CollectionChanged += (sender, args) =>
+                    {
+                        var items =
+                            args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
+                            args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
-                    if (items == null || _frontierUtc == DateTime.MinValue) return;
+                        if (items == null || _frontierUtc == DateTime.MinValue) return;
 
-                    var symbol = items.OfType<Symbol>().FirstOrDefault();
-                    if (symbol == null) return;
+                        var symbol = items.OfType<Symbol>().FirstOrDefault();
+                        if (symbol == null) return;
 
-                    var collection = new BaseDataCollection(_frontierUtc, symbol);
-                    var changes = _universeSelection.ApplyUniverseSelection(userDefined, _frontierUtc, collection);
-                    _algorithm.OnSecuritiesChanged(changes);
-                };
+                        var collection = new BaseDataCollection(_frontierUtc, symbol);
+                        var changes = _universeSelection.ApplyUniverseSelection(userDefined, _frontierUtc, collection);
+                        _algorithm.OnSecuritiesChanged(changes);
+                    };
+                }
             }
             else if (config.Type == typeof (CoarseFundamental))
             {

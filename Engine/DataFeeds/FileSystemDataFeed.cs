@@ -361,27 +361,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (request.IsUniverseSubscription)
             {
-                if (request.Universe is UserDefinedUniverse)
+                if (request.Universe is ITimeTriggeredUniverse)
                 {
-                    // Trigger universe selection when security added/removed after Initialize
-                    var universe = (UserDefinedUniverse) request.Universe;
-                    universe.CollectionChanged += (sender, args) =>
+                    var universe = request.Universe as UserDefinedUniverse;
+                    if (universe != null)
                     {
-                        var items =
-                            args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
-                            args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
+                        // Trigger universe selection when security added/removed after Initialize
+                        universe.CollectionChanged += (sender, args) =>
+                        {
+                            var items =
+                                args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
+                                args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
-                        if (items == null) return;
+                            if (items == null) return;
 
-                        var symbol = items.OfType<Symbol>().FirstOrDefault();
-                        if (symbol == null) return;
+                            var symbol = items.OfType<Symbol>().FirstOrDefault();
+                            if (symbol == null) return;
 
-                        var collection = new BaseDataCollection(_algorithm.UtcTime, symbol);
-                        var changes = _universeSelection.ApplyUniverseSelection(universe, _algorithm.UtcTime, collection);
-                        _algorithm.OnSecuritiesChanged(changes);
-                    };
+                            var collection = new BaseDataCollection(_algorithm.UtcTime, symbol);
+                            var changes = _universeSelection.ApplyUniverseSelection(universe, _algorithm.UtcTime, collection);
+                            _algorithm.OnSecuritiesChanged(changes);
+                        };
+                    }
 
-                    return new UserDefinedUniverseSubscriptionEnumeratorFactory(request.Universe as UserDefinedUniverse, MarketHoursDatabase.FromDataFolder());
+                    return new TimeTriggeredUniverseSubscriptionEnumeratorFactory(request.Universe as ITimeTriggeredUniverse, MarketHoursDatabase.FromDataFolder());
                 }
                 if (request.Configuration.Type == typeof (CoarseFundamental))
                 {
