@@ -42,6 +42,7 @@ namespace QuantConnect.VisualStudioPlugin
     [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideOptionPage(typeof(OptionPageGrid), "QuantConnect", "Settings", 0, 0, true)]
+    [ProvideToolWindow(typeof(ToolWindow1))]
     public sealed class QuantConnectPackage : Package
     {
         /// <summary>
@@ -68,9 +69,10 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         protected override void Initialize()
         {
-            SolutionExplorerMenuCommand.Initialize(this);
-            base.Initialize();
             ToolMenuCommand.Initialize(this);
+            var toolWindow = (IBacktestObserver)ToolWindow1Command.Initialize(this);
+            SolutionExplorerMenuCommand.Initialize(this, toolWindow);
+            base.Initialize();
         }
 
         #endregion

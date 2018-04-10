@@ -53,6 +53,8 @@ namespace QuantConnect.VisualStudioPlugin
 
         private ProjectFinder _projectFinder;
 
+        private IBacktestObserver _backtestObserver;
+
         private readonly AuthenticationCommand _authenticationCommand;
 
         /// <summary>
@@ -82,13 +84,14 @@ namespace QuantConnect.VisualStudioPlugin
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private SolutionExplorerMenuCommand(Package package)
+        private SolutionExplorerMenuCommand(Package package, IBacktestObserver backtestObserver)
         {
             if (package == null)
             {
                 throw new ArgumentNullException(nameof(package));
             }
 
+            _backtestObserver = backtestObserver;
             _package = package as QuantConnectPackage;
             _dte2 = _serviceProvider.GetService(typeof(SDTE)) as DTE2;
             _authenticationCommand = new AuthenticationCommand();
@@ -119,14 +122,14 @@ namespace QuantConnect.VisualStudioPlugin
         /// Initializes the singleton instance of the command.
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
+        public static void Initialize(Package package, IBacktestObserver backtestObserver)
         {
-            Instance = new SolutionExplorerMenuCommand(package);
+            Instance = new SolutionExplorerMenuCommand(package, backtestObserver);
         }
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, async (selectedProjectId, selectedProjectName, files) =>
+            ExecuteOnProjectAsync(sender, async (selectedProjectId, selectedProjectName, files) =>
             {
                 var uploadResult = await System.Threading.Tasks.Task.Run(() =>
                     UploadFilesToServer(selectedProjectId, files));
@@ -144,8 +147,7 @@ namespace QuantConnect.VisualStudioPlugin
                     return;
                 }
 
-                var backtestResult = await System.Threading.Tasks.Task.Run(() =>
-                    BacktestProjectOnServer(selectedProjectId, compilationResult.Item2));
+                var backtestResult = await BacktestProjectOnServer(selectedProjectId, compilationResult.Item2);
                 if (!backtestResult.Item1)
                 {
                     var errorDialog = new ErrorDialog("Backtest Failed", backtestResult.Item2);
@@ -164,7 +166,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
+            ExecuteOnProjectAsync(sender, (selectedProjectId, selectedProjectName, files) =>
             {
                 System.Threading.Tasks.Task.Factory.StartNew(() =>
                 {
@@ -262,35 +264,52 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="compileId">Target compile Id</param>
         /// <returns>Tuple&lt;bool, string&gt;. Item1 is true if backtest succeeded.
         /// Item2 is error message if backtest failed.</returns>
-        private Tuple<bool, string> BacktestProjectOnServer(int projectId, string compileId)
+        private async Task<Tuple<bool, string>> BacktestProjectOnServer(int projectId, string compileId)
         {
             VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project...");
             var api = AuthorizationManager.GetInstance().GetApi();
-            var backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
+            var backtestName = "My New Backtest";
+            var backtestStatus = await System.Threading.Tasks.Task.Run(() => api.CreateBacktest(projectId, compileId, backtestName));
             var backtestId = backtestStatus.BacktestId;
+
+            // Notify observer new backtest
+            _backtestObserver.NewBacktest(projectId, backtestId, backtestName, backtestStatus.CreationDateTime);
 
             while (!backtestStatus.Completed)
             {
-                Thread.Sleep(5000);
-                backtestStatus = api.ReadBacktest(projectId, backtestId);
+                backtestStatus = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    Thread.Sleep(5000);
+                    return api.ReadBacktest(projectId, backtestId);
+                });
+                // Notify observer backtest status
+                _backtestObserver.UpdateBacktest(projectId, backtestId, backtestStatus.Progress);
             }
 
             if (!string.IsNullOrEmpty(backtestStatus.Error))
             {
                 VsUtils.DisplayInStatusBar(_serviceProvider, "Error when backtesting project");
+                // Notify observer backtest finished
+                _backtestObserver.BacktestFinished(projectId, backtestId, false);
                 return new Tuple<bool, string>(false, backtestStatus.Error);
             }
             var successMessage = "Backtest completed successfully";
+            // Notify observer backtest finished
+            _backtestObserver.BacktestFinished(projectId, backtestId, true);
             VsUtils.DisplayInStatusBar(_serviceProvider, successMessage);
             return new Tuple<bool, string>(true, successMessage);
         }
 
-        private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
+        private async void ExecuteOnProjectAsync(object sender, Action<int, string, List<SelectedItem>> onProject)
         {
             if (_authenticationCommand.Login(_serviceProvider, false))
             {
-                var api = AuthorizationManager.GetInstance().GetApi();
-                var projects = api.ListProjects().Projects;
+                var projects = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var api = AuthorizationManager.GetInstance().GetApi();
+                    return api.ListProjects().Projects;
+                });
+
                 var projectNames = projects.Select(p => Tuple.Create(p.ProjectId, p.Name)).ToList();
 
                 var files = GetSelectedFiles(sender);
