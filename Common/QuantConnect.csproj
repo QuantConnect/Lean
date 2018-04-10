@@ -175,6 +175,7 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Data\UniverseSelection\ITimeTriggeredUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\ScheduledUniverse.cs" />
     <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\InvalidTokenPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\KeyErrorPythonExceptionInterpreter.cs" />

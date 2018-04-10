@@ -873,6 +873,42 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$0.00"}
             };
 
+            var scheduledUniverseSelectionModelRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "17"},
+                {"Average Win", "0.26%"},
+                {"Average Loss", "-0.11%"},
+                {"Compounding Annual Return", "26.961%"},
+                {"Drawdown", "0.700%"},
+                {"Expectancy", "1.895"},
+                {"Net Profit", "2.115%"},
+                {"Sharpe Ratio", "4.218"},
+                {"Loss Rate", "12%"},
+                {"Win Rate", "88%"},
+                {"Profit-Loss Ratio", "2.31"},
+                {"Alpha", "0.327"},
+                {"Beta", "-9.439"},
+                {"Annual Standard Deviation", "0.043"},
+                {"Annual Variance", "0.002"},
+                {"Information Ratio", "3.864"},
+                {"Tracking Error", "0.043"},
+                {"Treynor Ratio", "-0.019"},
+                {"Total Fees", "$0.00"},
+                {"Total Insights Generated", "54"},
+                {"Total Insights Closed", "52"},
+                {"Total Insights Analysis Completed", "46"},
+                {"Long Insight Count", "54"},
+                {"Short Insight Count", "0"},
+                {"Long/Short Ratio", "100%"},
+                {"Estimated Monthly Alpha Value", "$0"},
+                {"Total Accumulated Estimated Alpha Value", "$0"},
+                {"Mean Population Estimated Insight Value", "$0"},
+                {"Mean Population Direction", "43.4783%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "65.5952%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -913,6 +949,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm", volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CancelOpenOrdersRegressionAlgorithm", cancelOpenOrdersRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
