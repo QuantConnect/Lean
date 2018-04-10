@@ -199,7 +199,7 @@ namespace QuantConnect.Algorithm.Framework
         /// Sets the universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm</param>
-        public void SetPortfolioSelection(IUniverseSelectionModel universeSelection)
+        public void SetUniverseSelection(IUniverseSelectionModel universeSelection)
         {
             UniverseSelection = universeSelection;
         }
