@@ -45,12 +45,28 @@ namespace QuantConnect.Orders.Fees
             if (order.Type == OrderType.Limit)
             {
                 // marketable limit orders are considered takers
-                var limitPrice = ((LimitOrder) order).LimitPrice;
-                if (order.Direction == OrderDirection.Buy && limitPrice < security.AskPrice ||
-                    order.Direction == OrderDirection.Sell && limitPrice > security.BidPrice)
+                if (security.Resolution == Resolution.Tick)
                 {
-                    // limit order posted to the order book, 0% fee
-                    return 0m;
+                    // check if marketable limit order using bid/ask prices
+                    var limitPrice = ((LimitOrder)order).LimitPrice;
+                    if (order.Direction == OrderDirection.Buy && limitPrice < security.AskPrice ||
+                        order.Direction == OrderDirection.Sell && limitPrice > security.BidPrice)
+                    {
+                        // limit order posted to the order book, 0% maker fee
+                        return 0m;
+                    }
+                }
+                else
+                {
+                    // check if marketable limit order using fill time
+                    var currentTimeUtc = security.LocalTime.ConvertToUtc(security.Exchange.TimeZone);
+                    var resolutionIncrement = security.Resolution.ToTimeSpan();
+                    var maximumMarketableLimitOrderFillTimeUtc = order.Time + resolutionIncrement;
+                    if (currentTimeUtc > maximumMarketableLimitOrderFillTimeUtc)
+                    {
+                        // limit order posted to the order book, 0% maker fee
+                        return 0m;
+                    }
                 }
             }
 
@@ -59,7 +75,7 @@ namespace QuantConnect.Orders.Fees
             decimal fee;
             Fees.TryGetValue(security.Symbol.Value, out fee);
 
-            // get order value in account currency, then apply fee factor
+            // get order value in account currency, then apply taker fee factor
             var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
 
