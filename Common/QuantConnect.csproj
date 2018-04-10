@@ -131,6 +131,7 @@
     <Compile Include="AlgorithmSettings.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\ReadOnlySecurityValuesCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\IInsightManagerExtension.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverter.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\SerializedInsight.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
