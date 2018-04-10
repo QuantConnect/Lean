@@ -27,8 +27,8 @@ namespace QuantConnect.Tests.Algorithm.Framework
         [Test]
         public void HasReferenceTypeEqualitySemantics()
         {
-            var one = new Insight(Symbols.SPY, InsightType.Price, InsightDirection.Up, Time.OneSecond);
-            var two = new Insight(Symbols.SPY, InsightType.Price, InsightDirection.Up, Time.OneSecond);
+            var one = Insight.Price(Symbols.SPY, Time.OneSecond, InsightDirection.Up);
+            var two = Insight.Price(Symbols.SPY, Time.OneSecond, InsightDirection.Up);
             Assert.AreNotEqual(one, two);
             Assert.AreEqual(one, one);
             Assert.AreEqual(two, two);
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripSerializationUsingJsonConvert()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var insight = new Insight(time, Symbols.SPY, InsightType.Volatility, InsightDirection.Up, Time.OneMinute, 1, 2);
+            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2);
             var serialized = JsonConvert.SerializeObject(insight);
             var deserialized = JsonConvert.DeserializeObject<Insight>(serialized);
 

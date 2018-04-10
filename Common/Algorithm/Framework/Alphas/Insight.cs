@@ -99,11 +99,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Initializes a new instance of the <see cref="Insight"/> class
         /// </summary>
         /// <param name="symbol">The symbol this insight is for</param>
+        /// <param name="period">The period over which the prediction will come true</param>
         /// <param name="type">The type of insight, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
-        /// <param name="period">The period over which the prediction will come true</param>
-        public Insight(Symbol symbol, InsightType type, InsightDirection direction, TimeSpan period)
-            : this(symbol, type, direction, period, null, null)
+        public Insight(Symbol symbol, TimeSpan period, InsightType type, InsightDirection direction)
+            : this(symbol, period, type, direction, null, null)
         {
         }
 
@@ -111,12 +111,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Initializes a new instance of the <see cref="Insight"/> class
         /// </summary>
         /// <param name="symbol">The symbol this insight is for</param>
+        /// <param name="period">The period over which the prediction will come true</param>
         /// <param name="type">The type of insight, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
-        /// <param name="period">The period over which the prediction will come true</param>
         /// <param name="magnitude">The predicted magnitude as a percentage change</param>
         /// <param name="confidence">The confidence in this insight</param>
-        public Insight(Symbol symbol, InsightType type, InsightDirection direction, TimeSpan period, double? magnitude, double? confidence)
+        public Insight(Symbol symbol, TimeSpan period, InsightType type, InsightDirection direction, double? magnitude, double? confidence)
         {
             Id = Guid.NewGuid();
             Score = new InsightScore();
@@ -138,13 +138,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="generatedTimeUtc">The time this insight was generated in utc</param>
         /// <param name="symbol">The symbol this insight is for</param>
+        /// <param name="period">The period over which the prediction will come true</param>
         /// <param name="type">The type of insight, price/volatility</param>
         /// <param name="direction">The predicted direction</param>
-        /// <param name="period">The period over which the prediction will come true</param>
         /// <param name="magnitude">The predicted magnitude as a percentage change</param>
         /// <param name="confidence">The confidence in this insight</param>
-        public Insight(DateTime generatedTimeUtc, Symbol symbol, InsightType type, InsightDirection direction, TimeSpan period, double? magnitude, double? confidence)
-            : this(symbol,type, direction, period, magnitude, confidence)
+        public Insight(DateTime generatedTimeUtc, Symbol symbol, TimeSpan period, InsightType type, InsightDirection direction, double? magnitude, double? confidence)
+            : this(symbol, period, type, direction, magnitude, confidence)
         {
             GeneratedTimeUtc = generatedTimeUtc;
             CloseTimeUtc = generatedTimeUtc + period;
@@ -156,7 +156,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>A new insight with identical values, but new instances</returns>
         public Insight Clone()
         {
-            return new Insight(Symbol, Type, Direction, Period, Magnitude, Confidence)
+            return new Insight(Symbol, Period, Type, Direction, Magnitude, Confidence)
             {
                 GeneratedTimeUtc = GeneratedTimeUtc,
                 CloseTimeUtc = CloseTimeUtc,
@@ -172,13 +172,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="symbol">The symbol this insight is for</param>
         /// <param name="period">The period over which the prediction will come true</param>
+        /// <param name="direction">The predicted direction</param>
         /// <param name="magnitude">The predicted magnitude as a percent change</param>
         /// <param name="confidence">The confidence in this insight</param>
         /// <returns>A new insight object for the specified parameters</returns>
-        public static Insight PriceMagnitude(Symbol symbol, double magnitude, TimeSpan period, double? confidence = null)
+        public static Insight Price(Symbol symbol, TimeSpan period, InsightDirection direction, double? magnitude = null, double? confidence = null)
         {
-            var direction = (InsightDirection) Math.Sign(magnitude);
-            return new Insight(symbol, InsightType.Price, direction, period, magnitude, confidence);
+            return new Insight(symbol, period, InsightType.Price, direction, magnitude, confidence);
         }
 
         /// <summary>
@@ -191,9 +191,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             var insight = new Insight(
                 Time.UnixTimeStampToDateTime(serializedInsight.GeneratedTime),
                 new Symbol(SecurityIdentifier.Parse(serializedInsight.Symbol), serializedInsight.Ticker),
+                TimeSpan.FromSeconds(serializedInsight.Period),
                 serializedInsight.Type,
                 serializedInsight.Direction,
-                TimeSpan.FromSeconds(serializedInsight.Period),
                 serializedInsight.Magnitude,
                 serializedInsight.Confidence
             )

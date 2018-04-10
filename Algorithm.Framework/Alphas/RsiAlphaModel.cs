@@ -72,11 +72,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     switch (state)
                     {
                         case State.TrippedLow:
-                            insights.Add(new Insight(symbol, InsightType.Price, InsightDirection.Up, insightPeriod));
+                            insights.Add(Insight.Price(symbol, insightPeriod, InsightDirection.Up));
                             break;
 
                         case State.TrippedHigh:
-                            insights.Add(new Insight(symbol, InsightType.Price, InsightDirection.Down, insightPeriod));
+                            insights.Add(Insight.Price(symbol, insightPeriod, InsightDirection.Down));
                             break;
                     }
                 }

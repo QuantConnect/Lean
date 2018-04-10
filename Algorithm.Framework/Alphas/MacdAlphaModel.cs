@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 var insightPeriod = _resolution.ToTimeSpan().Multiply(_fastPeriod);
-                var insight = new Insight(sd.Security.Symbol, InsightType.Price, direction, insightPeriod);
+                var insight = Insight.Price(sd.Security.Symbol, insightPeriod, direction);
                 sd.PreviousDirection = insight.Direction;
                 yield return insight;
             }

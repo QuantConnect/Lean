@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (ShouldEmitInsight(algorithm.UtcTime, security.Symbol))
                 {
-                    yield return new Insight(security.Symbol, _type, _direction, _period, _magnitude, _confidence);
+                    yield return new Insight(security.Symbol, _period, _type, _direction, _magnitude, _confidence);
                 }
             }
         }
