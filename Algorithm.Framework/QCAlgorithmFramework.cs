@@ -155,7 +155,7 @@ namespace QuantConnect.Algorithm.Framework
                 }
             }
 
-            var riskTargetOverrides = RiskManagement.ManageRisk(this).ToArray();
+            var riskTargetOverrides = RiskManagement.ManageRisk(this, targets).ToArray();
 
             // override security targets w/ those generated via risk management module
             foreach (var target in riskTargetOverrides)
