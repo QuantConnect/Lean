@@ -322,7 +322,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Event fired when an algorithm generates a insight
         /// </summary>
-        public event AlgorithmEvent<InsightCollection> InsightsGenerated
+        public event AlgorithmEvent<GeneratedInsightsCollection> InsightsGenerated
         {
             add
             {

@@ -150,7 +150,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
             if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
-                InsightManager.Step(Algorithm.UtcTime, CreateSecurityValuesSnapshot(), new InsightCollection(Algorithm.UtcTime, Enumerable.Empty<Insight>()));
+                InsightManager.Step(Algorithm.UtcTime, CreateSecurityValuesSnapshot(), new GeneratedInsightsCollection(Algorithm.UtcTime, Enumerable.Empty<Insight>()));
             }
         }
 

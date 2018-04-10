@@ -144,7 +144,7 @@
     <Compile Include="Algorithm\Framework\Alphas\Analysis\SecurityValues.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Insight.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightAnalysisContext.cs" />
-    <Compile Include="Algorithm\Framework\Alphas\InsightCollection.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\GeneratedInsightsCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightManager.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightScore.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightScoreType.cs" />

@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Defines a collection of insights that were generated at the same time step
     /// </summary>
-    public class InsightCollection
+    public class GeneratedInsightsCollection
     {
         /// <summary>
         /// The utc date time the insights were generated
@@ -35,11 +35,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public List<Insight> Insights { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="InsightCollection"/> class
+        /// Initializes a new instance of the <see cref="GeneratedInsightsCollection"/> class
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
         /// <param name="insights">The generated insights</param>
-        public InsightCollection(DateTime dateTimeUtc, IEnumerable<Insight> insights)
+        public GeneratedInsightsCollection(DateTime dateTimeUtc, IEnumerable<Insight> insights)
         {
             DateTimeUtc = dateTimeUtc;
 
