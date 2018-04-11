@@ -209,6 +209,7 @@
     <Compile Include="DataFeeds\UpdateData.cs" />
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
+    <Compile Include="HistoricalData\SineHistoryProvider.cs" />
     <Compile Include="Results\BaseResultsHandler.cs" />
     <Compile Include="Results\RegressionResultHandler.cs" />
     <Compile Include="Server\LocalLeanManager.cs" />
