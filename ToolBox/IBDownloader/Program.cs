@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.IBDownloader
             if (args.Length != 5)
             {
                 Console.WriteLine("Usage: IBDownloader SECURITY_TYPE SYMBOLS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SECURITY_TYPE = eg Equity/Option/Commodity/Forex/Future/Cfd/Crypto");
+                Console.WriteLine("SECURITY_TYPE = eg Equity/Forex");
                 Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
                 Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
@@ -47,6 +47,8 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                 SecurityType securityType;
                 if (!Enum.TryParse(args[0], out securityType)) { throw new ApplicationException("Can't parse securityType "+ args[0]);}
+
+                if (securityType != SecurityType.Equity && securityType != SecurityType.Forex) { throw new ApplicationException("SECURITY_TYPE = eg Equity/Forex"); }
 
                 var tickers = args[1].Split(',');
                 var allResolutions = args[2].ToLower() == "all";
