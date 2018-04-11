@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
 
-                MACD = algorithm.MACD(security.Symbol, fastPeriod, slowPeriod, signalPeriod, movingAverageType);
+                MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType);
 
                 algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
             }
