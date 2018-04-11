@@ -24,34 +24,27 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     [TestFixture]
     public class MacdAlphaModelTests : CommonAlphaModelTests
     {
-        private InsightType _type = InsightType.Price;
-        private TimeSpan _consolidatorPeriod = TimeSpan.FromMinutes(10);
-        private TimeSpan _insightPeriod = TimeSpan.FromMinutes(30);
-        private decimal _bounceThresholdPercent = 0.01m;
-
-        protected override IAlphaModel CreateCSharpAlphaModel()
-        {
-            return new MacdAlphaModel(_consolidatorPeriod, _insightPeriod, _bounceThresholdPercent);
-        }
+        protected override IAlphaModel CreateCSharpAlphaModel() => new MacdAlphaModel();
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
             using (Py.GIL())
             {
                 dynamic model = Py.Import("MacdAlphaModel").GetAttr("MacdAlphaModel");
-                var instance = model(_consolidatorPeriod, _insightPeriod, _bounceThresholdPercent);
+                var instance = model();
                 return new AlphaModelPythonWrapper(instance);
             }
         }
 
         protected override IEnumerable<Insight> ExpectedInsights()
         {
+            var period = TimeSpan.FromDays(12);
             return new[]
             {
-                new Insight(Symbols.SPY, _type, InsightDirection.Flat, _insightPeriod),
-                new Insight(Symbols.SPY, _type, InsightDirection.Up, _insightPeriod),
-                new Insight(Symbols.SPY, _type, InsightDirection.Flat, _insightPeriod),
-                new Insight(Symbols.SPY, _type, InsightDirection.Down, _insightPeriod)
+                Insight.Price(Symbols.SPY, period, InsightDirection.Flat),
+                Insight.Price(Symbols.SPY, period, InsightDirection.Down),
+                Insight.Price(Symbols.SPY, period, InsightDirection.Flat),
+                Insight.Price(Symbols.SPY, period, InsightDirection.Up)
             };
         }
     }

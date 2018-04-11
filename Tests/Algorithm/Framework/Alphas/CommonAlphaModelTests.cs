@@ -13,16 +13,16 @@
  * limitations under the License.
 */
 
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Packets;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
@@ -46,9 +46,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
 
             _algorithm = new QCAlgorithmFramework();
-            _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm);
+            _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
+            _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
             _algorithm.SetStartDate(2018, 1, 4);
-            _security = _algorithm.AddEquity(Symbols.SPY.Value);
+            _security = _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);
         }
 
         [Test]
@@ -57,41 +58,52 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         public void InsightsGenerationTest(Language language)
         {
             IAlphaModel model;
-            if (!TryCreateAlphaModel(language, out model))
+            if (!TryCreateModel(language, out model))
             {
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
+            // Set the alpha model
+            _algorithm.SetAlpha(model);
+
             var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
-            model.OnSecuritiesChanged(_algorithm, changes);
+            _algorithm.OnFrameworkSecuritiesChanged(changes);
 
-            var allInsights = new List<Insight>();
+            var actualInsights = new List<Insight>();
+            _algorithm.InsightsGenerated += (s, e) => actualInsights.AddRange(e.Insights);
+
+            var expectedInsights = ExpectedInsights().ToList();
+
             var consolidators = _security.Subscriptions.SelectMany(x => x.Consolidators);
-            var slices = CreateSlices(changes);
+            var slices = CreateSlices();
 
-            foreach (var slice in slices)
+            foreach (var slice in slices.ToList())
             {
+                _algorithm.SetDateTime(slice.Time);
+
                 var data = slice[_security.Symbol];
+                _security.SetMarketPrice(data);
+
                 foreach (var consolidator in consolidators)
                 {
                     consolidator.Update(data);
                 }
-                _security.SetMarketPrice(data);
 
-                var insights = model.Update(_algorithm, slice);
-                allInsights.AddRange(insights);
+                _algorithm.OnFrameworkData(slice);
             }
 
-            var actualArray = allInsights.ToArray();
-            var expectedArray = ExpectedInsights().ToArray();
+            Assert.AreEqual(actualInsights.Count, expectedInsights.Count);
 
-            Assert.AreEqual(actualArray.Length, expectedArray.Length);
-
-            for (var i = 0; i < actualArray.Length; i++)
+            for (var i = 0; i < actualInsights.Count; i++)
             {
-                var actual = actualArray[i];
-                var expected = expectedArray[i];
-                Assert.True(actual.Equals(expected));
+                var actual = actualInsights[i];
+                var expected = expectedInsights[i];
+                Assert.AreEqual(actual.Symbol, expected.Symbol);
+                Assert.AreEqual(actual.Type, expected.Type);
+                Assert.AreEqual(actual.Direction, expected.Direction);
+                Assert.AreEqual(actual.Period, expected.Period);
+                Assert.AreEqual(actual.Magnitude, expected.Magnitude);
+                Assert.AreEqual(actual.Confidence, expected.Confidence);
             }
         }
 
@@ -101,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         public void AddedSecuritiesTest(Language language)
         {
             IAlphaModel model;
-            if (!TryCreateAlphaModel(language, out model))
+            if (!TryCreateModel(language, out model))
             {
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
@@ -117,7 +129,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         public void RemovedSecuritiesTest(Language language)
         {
             IAlphaModel model;
-            if (!TryCreateAlphaModel(language, out model))
+            if (!TryCreateModel(language, out model))
             {
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
@@ -155,30 +167,78 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// <summary>
         /// Creates an enumerable of Slice to update the alpha model
         /// </summary>
-        protected virtual IEnumerable<Slice> CreateSlices(SecurityChanges changes)
+        protected virtual IEnumerable<Slice> CreateSlices()
         {
-            return Enumerable
-                .Range(0, 360)
-                .Select(i =>
+            var cashBook = new CashBook();
+            var changes = SecurityChanges.None;
+            var sliceDateTimes = GetSliceDateTimes(360);
+
+            for (var i = 0; i < sliceDateTimes.Count; i++)
+            {
+                var utcDateTime = sliceDateTimes[i];
+                var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * i / 180.0));
+                var high = last * 1.005m;
+                var low = last / 1.005m;
+
+                var packets = new List<DataFeedPacket>();
+
+                foreach (var kvp in _algorithm.Securities)
                 {
-                    var time = _algorithm.StartDate.AddMinutes(i);
-                    var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * i / 180.0));
-                    var high = last * 1.005m;
-                    var low = last / 1.005m;
-
-                    var packets = _algorithm.Securities.Select(kvp =>
+                    var security = kvp.Value;
+                    var exchange = security.Exchange.Hours;
+                    var extendedMarket = security.IsExtendedMarketHours;
+                    var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
+                    if (!exchange.IsOpen(localDateTime, extendedMarket))
                     {
-                        var security = kvp.Value;
-                        var tradeBar = new TradeBar(time, security.Symbol, last, high, low, last, 1000);
-                        var configuration = security.Subscriptions.FirstOrDefault();
-                        return new DataFeedPacket(security, configuration, new List<BaseData> { tradeBar });
-                    });
+                        continue;
+                    }
+                    var configuration = security.Subscriptions.FirstOrDefault();
+                    var period = security.Resolution.ToTimeSpan();
+                    var time = (utcDateTime - period).ConvertFromUtc(configuration.DataTimeZone);
+                    var tradeBar = new TradeBar(time, security.Symbol, last, high, low, last, 1000, period);
+                    packets.Add(new DataFeedPacket(security, configuration, new List<BaseData> { tradeBar }));
+                }
 
-                    return TimeSlice.Create(time, TimeZones.NewYork, new CashBook(), packets.ToList(), changes).Slice;
-                });
+                if (packets.Count > 0)
+                {
+                    yield return TimeSlice.Create(utcDateTime, TimeZones.NewYork, cashBook, packets, changes).Slice;
+                }
+            }
         }
 
-        private bool TryCreateAlphaModel(Language language, out IAlphaModel model)
+        private List<DateTime> GetSliceDateTimes(int maxCount)
+        {
+            var i = 0;
+            var sliceDateTimes = new List<DateTime>();
+            var utcDateTime = _algorithm.StartDate;
+
+            while (sliceDateTimes.Count < maxCount)
+            {
+                foreach (var kvp in _algorithm.Securities)
+                {
+                    var resolution = kvp.Value.Resolution.ToTimeSpan();
+                    utcDateTime = utcDateTime.Add(resolution);
+                    if (resolution == Time.OneDay && utcDateTime.TimeOfDay == TimeSpan.Zero)
+                    {
+                        utcDateTime = utcDateTime.AddHours(17);
+                    }
+
+                    var security = kvp.Value;
+                    var exchange = security.Exchange.Hours;
+                    var extendedMarket = security.IsExtendedMarketHours;
+                    var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
+                    if (exchange.IsOpen(localDateTime, extendedMarket))
+                    {
+                        sliceDateTimes.Add(utcDateTime);
+                    }
+                    i++;
+                }
+            }
+
+            return sliceDateTimes;
+        }
+
+        private bool TryCreateModel(Language language, out IAlphaModel model)
         {
             model = default(IAlphaModel);
 
@@ -200,66 +260,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             catch
             {
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Implements a History provider that always return a IEnumerable of Slice with prices following a sine function
-        /// </summary>
-        internal class SineHistoryProvider : IHistoryProvider
-        {
-            private QCAlgorithmFramework _algorithm;
-
-            public int DataPointCount => 0;
-
-            public SineHistoryProvider(QCAlgorithmFramework algorithm)
-            {
-                _algorithm = algorithm;
-            }
-
-            public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
-            {
-            }
-
-            public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
-            {
-                foreach (var request in requests)
-                {
-                    Security security;
-                    if (!_algorithm.Securities.TryGetValue(request.Symbol, out security))
-                    {
-                        continue;
-                    }
-
-                    var utc = request.StartTimeUtc;
-                    var end = request.EndTimeUtc;
-                    var span = request.Resolution.ToTimeSpan();
-                    var range = 0;
-
-                    while (utc < end)
-                    {
-                        var time = utc.ConvertFromUtc(sliceTimeZone);
-                        if (request.ExchangeHours.IsOpen(time, request.IncludeExtendedMarketHours))
-                        {
-                            range++;
-                        }
-                        utc = utc.Add(span);
-                    }
-
-                    utc = request.StartTimeUtc;
-                    var configuration = security.Subscriptions.FirstOrDefault();
-
-                    for (var i = 0; i < range; i++)
-                    {
-                        var time = utc.AddSeconds(i * span.TotalSeconds);
-                        var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * (360 - range + i) / 180.0));
-                        var high = last * 1.005m;
-                        var low = last / 1.005m;
-                        var data = new List<BaseData> { new TradeBar(time, security.Symbol, last, high, last, last, 1000) };
-                        var packets = new List<DataFeedPacket> { new DataFeedPacket(security, configuration, data) };
-                        yield return TimeSlice.Create(time, sliceTimeZone, new CashBook(), packets, SecurityChanges.None).Slice;
-                    }
-                }
             }
         }
     }

@@ -12,9 +12,11 @@
 # limitations under the License.
 
 from clr import AddReference
+AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
 
+from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 
@@ -24,15 +26,25 @@ class MacdAlphaModel:
     is used to generate up/down insights if it's stronger than the bounce threshold.
     If the MACD signal is within the bounce threshold then a flat price insight is returned.'''
 
-    def __init__(self, consolidatorPeriod, insightPeriod, bounceThresholdPercent):
+    def __init__(self,
+                 fastPeriod = 12,
+                 slowPeriod = 26,
+                 signalPeriod = 9,
+                 movingAverageType = MovingAverageType.Exponential,
+                 resolution = Resolution.Daily):
         ''' Initializes a new instance of the MacdAlphaModel class
         Args:
-            consolidatorPeriod: The period of the MACD's input
-            insightPeriod: The period assigned to generate insight
-            bounceThresholdPercent: The percent change required in the MACD signal line to warrant an up/down insight'''
-        self.insightPeriod = insightPeriod
-        self.consolidatorPeriod = consolidatorPeriod
-        self.bounceThresholdPercent = abs(bounceThresholdPercent)
+            fastPeriod: The MACD fast period
+            slowPeriod: The MACD slow period</param>
+            signalPeriod: The smoothing period for the MACD signal
+            movingAverageType: The type of moving average to use in the MACD'''
+        self.fastPeriod = fastPeriod
+        self.slowPeriod = slowPeriod
+        self.signalPeriod = signalPeriod
+        self.movingAverageType = movingAverageType
+        self.resolution = resolution
+        self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), fastPeriod)
+        self.bounceThresholdPercent = 0.01
         self.symbolData = {};
 
     def Update(self, algorithm, data):
@@ -45,20 +57,21 @@ class MacdAlphaModel:
         for key, sd in self.symbolData.items():
             if sd.Security.Price == 0:
                 continue
-            
+
             direction = InsightDirection.Flat
             normalized_signal = sd.MACD.Signal.Current.Value / sd.Security.Price
+            algorithm.Log(str(algorithm.Time) + ":" + str(normalized_signal) + ":" + str(sd.MACD.Signal.Current.Value))
             if normalized_signal > self.bounceThresholdPercent:
                 direction = InsightDirection.Up
             elif normalized_signal < -self.bounceThresholdPercent:
                 direction = InsightDirection.Down
 
-            insight = Insight(sd.Security.Symbol, InsightType.Price, direction, self.insightPeriod)
-            if insight.Equals(sd.previous_insight):
-                continue
+            # ignore signal for same direction as previous signal
+            if direction == sd.PreviousDirection:
+                continue;
 
-            sd.previous_insight = insight.Clone()
-
+            insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
+            sd.PreviousDirection = insight.Direction
             yield insight
 
 
@@ -69,31 +82,20 @@ class MacdAlphaModel:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
         for added in changes.AddedSecurities:
-            self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.consolidatorPeriod)
+            self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.fastPeriod, self.slowPeriod, self.signalPeriod, self.movingAverageType, self.resolution)
 
         for removed in changes.RemovedSecurities:
-            data = self.symbolData.get(removed.Symbol)
+            data = self.symbolData.pop(removed.Symbol, None)
             if data is not None:
-                data.CleanUp(algorithm)
-                self.symbolData.pop(removed.Symbol)
+                # clean up our consolidator
+                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
 
 class SymbolData:
-    def __init__(self, algorithm, security, period):
+    def __init__(self, algorithm, security, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution):
         self.Security = security
-        self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, period)
-        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.Consolidator)
+        self.MACD = MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType)
 
-        self.MACD = MovingAverageConvergenceDivergence(12, 26, 9, MovingAverageType.Exponential)
-        self.Consolidator.DataConsolidated += self.OnDataConsolidated
+        self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
+        algorithm.RegisterIndicator(security.Symbol, self.MACD, self.Consolidator)
 
-        self.previous_insight = None
-
-    def OnDataConsolidated(self, sender, consolidated):
-        self.MACD.Update(consolidated.EndTime, consolidated.Value)
-
-    def CleanUp(self, algorithm):
-        '''Cleans up the indicator and consolidator
-        Args:
-            algorithm: The algorithm instance'''
-        self.Consolidator.DataConsolidated -= self.OnDataConsolidated
-        algorithm.SubscriptionManager.RemoveConsolidator(self.Security.Symbol, self.Consolidator)
+        self.PreviousDirection = None

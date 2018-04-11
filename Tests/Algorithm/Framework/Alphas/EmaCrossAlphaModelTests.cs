@@ -24,33 +24,26 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     [TestFixture]
     public class EmaCrossAlphaModelTests : CommonAlphaModelTests
     {
-        private InsightType _type = InsightType.Price;
-
-        private int _fastPeriod = 10;
-        private int _slowPeriod = 20;
-        private TimeSpan _predictionInterval = TimeSpan.FromMinutes(10);
-
-        protected override IAlphaModel CreateCSharpAlphaModel()
-        {
-            return new EmaCrossAlphaModel(_fastPeriod, _slowPeriod, _predictionInterval);
-        }
+        protected override IAlphaModel CreateCSharpAlphaModel() => new EmaCrossAlphaModel();
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
             using (Py.GIL())
             {
                 dynamic model = Py.Import("EmaCrossAlphaModel").GetAttr("EmaCrossAlphaModel");
-                var instance = model(_fastPeriod, _slowPeriod, _predictionInterval);
+                var instance = model();
                 return new AlphaModelPythonWrapper(instance);
             }
         }
 
         protected override IEnumerable<Insight> ExpectedInsights()
         {
+            var period = TimeSpan.FromDays(12);
+
             return new[]
             {
-                new Insight(Symbols.SPY, _type, InsightDirection.Down, _predictionInterval),
-                new Insight(Symbols.SPY, _type, InsightDirection.Up, _predictionInterval)
+                Insight.Price(Symbols.SPY, period, InsightDirection.Down),
+                Insight.Price(Symbols.SPY, period, InsightDirection.Up)
             };
         }
     }

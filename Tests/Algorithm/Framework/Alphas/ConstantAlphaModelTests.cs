@@ -18,6 +18,7 @@ using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -26,14 +27,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     {
         private InsightType _type = InsightType.Price;
         private InsightDirection _direction = InsightDirection.Up;
-        private TimeSpan _period = TimeSpan.FromMinutes(20);
+        private TimeSpan _period = Time.OneDay;
         private double? _magnitude = 0.025;
         private double? _confidence = null;
 
-        protected override IAlphaModel CreateCSharpAlphaModel()
-        {
-            return new ConstantAlphaModel(_type, _direction, _period, _magnitude, _confidence);
-        }
+        protected override IAlphaModel CreateCSharpAlphaModel() => new ConstantAlphaModel(_type, _direction, _period, _magnitude, _confidence);
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
@@ -47,7 +45,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override IEnumerable<Insight> ExpectedInsights()
         {
-            yield return new Insight(Symbols.SPY, _type, _direction, _period, _magnitude, _confidence);
+            return Enumerable.Range(0, 360).Select(x => new Insight(Symbols.SPY, _period, _type, _direction, _magnitude, _confidence));
         }
     }
 }

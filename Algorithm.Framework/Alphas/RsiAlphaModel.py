@@ -26,15 +26,15 @@ class RsiAlphaModel:
     '''Uses Wilder's RSI to create insights. 
     Using default settings, a cross over below 30 or above 70 will trigger a new insight.'''
 
-    def __init__(self, parameters = None):
-        '''Initializes a new default instance of the RsiAlphaModel class.
-        This uses the traditional 30/70 bounds coupled with 5% bounce protection.
-        The traditional period of 14 days is used and the prediction interval is set to 14 days as well.
+    def __init__(self, 
+                 period = 14,
+                 resolution = Resolution.Daily):
+        '''Initializes a new instance of the RsiAlphaModel class
         Args:
-            fastPeriod: The fast EMA period
-            slowPeriod: The slow EMA period
-            predictionInterval: The interval over which we're predicting'''
-        self.parameters = parameters if parameters is not None else Parameters()
+            period: The RSI indicator period'''
+        self.period = period
+        self.resolution = resolution
+        self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), period)
         self.symbolDataBySymbol ={}
 
     def Update(self, algorithm, data):
@@ -53,13 +53,14 @@ class RsiAlphaModel:
 
             if state != previous_state and rsi.IsReady:
                 if state == State.TrippedLow:
-                    insights.append(Insight(symbol, InsightType.Price, InsightDirection.Up, self.parameters.PredictionInterval))
+                    insights.append(Insight(symbol, self.insightPeriod, InsightDirection.Up))
                 if state == State.TrippedHigh:
-                    insights.append(Insight(symbol, InsightType.Price, InsightDirection.Down, self.parameters.PredictionInterval))
+                    insights.append(Insight(symbol, self.insightPeriod, InsightDirection.Down))
 
             symbolData.State = state
 
         return insights
+
 
     def OnSecuritiesChanged(self, algorithm, changes):
         '''Cleans out old security data and initializes the RSI for any newly added securities.
@@ -69,40 +70,47 @@ class RsiAlphaModel:
             changes: The security additions and removals from the algorithm'''
 
         # clean up data for removed securities
-        removed = [ x.Symbol for x in changes.RemovedSecurities ]
-        if len(removed) > 0:
+        symbols = [ x.Symbol for x in changes.RemovedSecurities ]
+        if len(symbols) > 0:
             for subscription in algorithm.SubscriptionManager.Subscriptions:
-                symbol = subscription.Symbol
-                if symbol in removed and symbol in self.symbolDataBySymbol:
-                    self.symbolDataBySymbol.pop(symbol)
+                if subscription.Symbol in symbols:
+                    self.symbolDataBySymbol.pop(subscription.Symbol, None)
+                    subscription.Consolidators.Clear()
 
         # initialize data for added securities
-        for added in changes.AddedSecurities:
-            if added.Symbol not in self.symbolDataBySymbol:
-                rsi = algorithm.RSI(added.Symbol, self.parameters.RsiPeriod, MovingAverageType.Wilders, self. parameters.Resolution)
 
-                # seed new indicators using history request
-                history = algorithm.History(added.Symbol, self.parameters.RsiPeriod)
-                for row in history.itertuples():
-                    rsi.Update(row.Index[1], row.close)
+        symbols = [ x.Symbol for x in changes.AddedSecurities ]
+        if len(symbols) == 0: return
 
-                self.symbolDataBySymbol[added.Symbol] = SymbolData(added, rsi)
-                if self.parameters.Plot:
-                    algorithm.PlotIndicator("RSI Alpha Model", True, rsi)
+        history = algorithm.History(symbols, self.period, self.resolution)
+        if history.empty: return
+
+        tickers = history.index.levels[0]
+        
+        for ticker in tickers:
+            symbol = SymbolCache.GetSymbol(ticker)
+
+            if symbol not in self.symbolDataBySymbol:
+                rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
+                symbolData = SymbolData(symbol, rsi)
+                self.symbolDataBySymbol[symbol] = symbolData
+
+                for tuple in history.loc[ticker].itertuples():
+                    symbolData.RSI.Update(tuple.Index, tuple.close)
 
 
     def GetState(self, rsi, previous):
         ''' Determines the new state. This is basically cross-over detection logic that
         includes considerations for bouncing using the configured bounce tolerance.'''
-        if rsi.Current.Value > self.parameters.UpperRsiBound:
+        if rsi.Current.Value > 70:
             return State.TrippedHigh
-        if rsi.Current.Value < self.parameters.LowerRsiBound:
+        if rsi.Current.Value < 30:
             return State.TrippedLow
         if previous == State.TrippedLow:
-            if rsi.Current.Value > self.parameters.LowerRsiBound + self.parameters.BounceTolerance:
+            if rsi.Current.Value > 35:
                 return State.Middle
         if previous == State.TrippedHigh:
-            if rsi.Current.Value < self.parameters.UpperRsiBound - self.parameters.BounceTolerance:
+            if rsi.Current.Value < 65:
                 return State.Middle
 
         return previous
@@ -121,35 +129,3 @@ class State(Enum):
     TrippedLow = 0
     Middle = 1
     TrippedHigh = 2
-
-
-class Parameters:
-    def __init__(self, *args, **kwargs):
-        ''' Intializes a new instance of the Parameters class
-        Args:
-            0 - resolution: The RSI indicator resolution
-            1 - rsiPeriod: The RSI indicator period
-            2 - lowerRsiBound: The RSI lower bound, used to signal UP insights
-            3 - upperRsiBound: The RSI upper bound, used to signal DOWN insights
-            4 - predictionInterval: The period applied to each generated insight'''
-
-        self.Plot = False                           # Plots the indicator values
-
-        if (args.count == 0):
-            self.Resolution = Resolution.Daily      # RSI indicator resolution
-            self.RsiPeriod = 14                     # RSI period
-            self.LowerRsiBound = 30                 # RSI lower bound. Values below this will trigger an UP prediction.
-            self.UpperRsiBound = 70                 # RSI upper bound. Values above this will trigger a DOWN prediction.
-            self.PredictionInterval = timedelta(14) # Generated insight prediction interval
-        else:
-            self.Resolution = args[0]
-            self.RsiPeriod = args[1]
-            self.LowerRsiBound = args[2]
-            self.UpperRsiBound = args[3]
-            self.PredictionInterval = args[4]
-
-        # Before allowing another signal to be generated, we must cross-over this tolernce towards 50.
-        # For example, if we just crossed below the lower bound (nominally 30), we won't interpret
-        # another crossing until it moves above 35 (lower bound + tolerance). 
-        # Likewise for the upper bound, just that we subtract, nominally 70 - 5 = 65.
-        self.BounceTolerance = 5

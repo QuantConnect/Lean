@@ -24,31 +24,25 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     [TestFixture]
     public class RsiAlphaModelTests : CommonAlphaModelTests
     {
-        private InsightType _type = InsightType.Price;
-        private RsiAlphaModel.Parameters _parameters = new RsiAlphaModel.Parameters() { Resolution = Resolution.Minute };
-
-        protected override IAlphaModel CreateCSharpAlphaModel()
-        {
-            return new RsiAlphaModel(_parameters);
-        }
+        protected override IAlphaModel CreateCSharpAlphaModel() => new RsiAlphaModel();
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
             using (Py.GIL())
             {
                 dynamic model = Py.Import("RsiAlphaModel").GetAttr("RsiAlphaModel");
-                var instance = model(_parameters);
+                var instance = model();
                 return new AlphaModelPythonWrapper(instance);
             }
         }
 
         protected override IEnumerable<Insight> ExpectedInsights()
         {
-            return new[]
+            var period = TimeSpan.FromDays(14);
+            foreach (var direction in new[] { InsightDirection.Up, InsightDirection.Down })
             {
-                new Insight(Symbols.SPY, _type, InsightDirection.Up, _parameters.PredictionInterval),
-                new Insight(Symbols.SPY, _type, InsightDirection.Down, _parameters.PredictionInterval)
-            };
+                yield return Insight.Price(Symbols.SPY, period, direction);
+            }
         }
     }
 }

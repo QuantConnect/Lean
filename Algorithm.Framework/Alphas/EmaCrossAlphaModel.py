@@ -12,9 +12,11 @@
 # limitations under the License.
 
 from clr import AddReference
+AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
 
+from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 
@@ -22,15 +24,18 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 class EmaCrossAlphaModel:
     '''Alpha model that uses an EMA cross to create insights'''
 
-    def __init__(self, fastPeriod, slowPeriod, predictionInterval):
+    def __init__(self,
+                 fastPeriod = 12,
+                 slowPeriod = 26,
+                 resolution = Resolution.Daily):
         '''Initializes a new instance of the EmaCrossAlphaModel class
         Args:
             fastPeriod: The fast EMA period
-            slowPeriod: The slow EMA period
-            predictionInterval: The interval over which we're predicting'''
+            slowPeriod: The slow EMA period'''
         self.fastPeriod = fastPeriod
         self.slowPeriod = slowPeriod
-        self.predictionInterval = predictionInterval
+        self.resolution = resolution
+        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), fastPeriod)
         self.symbolDataBySymbol = {}
 
     def Update(self, algorithm, data):
@@ -47,11 +52,11 @@ class EmaCrossAlphaModel:
 
                 if symbolData.FastIsOverSlow:
                     if symbolData.Slow > symbolData.Fast:
-                        insights.append(Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Down, self.predictionInterval))
+                        insights.append(Insight.Price(symbolData.Symbol, self.predictionInterval, InsightDirection.Down))
                 
                 elif symbolData.SlowIsOverFast:
                     if symbolData.Fast > symbolData.Slow:
-                        insights.append(Insight(symbolData.Symbol, InsightType.Price, InsightDirection.Up, self.predictionInterval))
+                        insights.append(Insight.Price(symbolData.Symbol, self.predictionInterval, InsightDirection.Up))
 
             symbolData.FastIsOverSlow = symbolData.Fast > symbolData.Slow
 

@@ -52,7 +52,7 @@ class HistoricalReturnsAlphaModel:
                 if magnitude > 0: direction = InsightDirection.Up
                 if magnitude < 0: direction = InsightDirection.Down
 
-                insights.append(Insight(symbol, InsightType.Price, direction, self.predictionInterval, magnitude, None))
+                insights.append(Insight.Price(symbol, self.predictionInterval, direction, magnitude, None))
 
         return insights
 

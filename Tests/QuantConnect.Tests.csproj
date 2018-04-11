@@ -116,6 +116,11 @@
     <Compile Include="Algorithm\AlgorithmSubscriptionManagerRemoveConsolidatorTests.cs" />
     <Compile Include="Algorithm\CashModelAlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\CommonAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\ConstantAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\EmaCrossAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\MacdAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\RsiAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />

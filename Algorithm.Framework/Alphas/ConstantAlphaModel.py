@@ -45,7 +45,7 @@ class ConstantAlphaModel:
             The new insights generated'''
         for security in self.securities:
             if self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
-                yield Insight(security.Symbol, self.type, self.direction, self.period, self.magnitude, self.confidence)
+                yield Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence)
 
 
     def OnSecuritiesChanged(self, algorithm, changes):
