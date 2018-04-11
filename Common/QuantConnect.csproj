@@ -131,6 +131,7 @@
     <Compile Include="AlgorithmSettings.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\ReadOnlySecurityValuesCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\IInsightManagerExtension.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\InsightCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverter.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\SerializedInsight.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\IPortfolioTarget.cs" />
@@ -144,7 +145,7 @@
     <Compile Include="Algorithm\Framework\Alphas\Analysis\SecurityValues.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Insight.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightAnalysisContext.cs" />
-    <Compile Include="Algorithm\Framework\Alphas\InsightCollection.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\GeneratedInsightsCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\InsightManager.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightScore.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightScoreType.cs" />
@@ -174,6 +175,8 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
+    <Compile Include="Data\UniverseSelection\ITimeTriggeredUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\ScheduledUniverse.cs" />
     <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\InvalidTokenPythonExceptionInterpreter.cs" />
     <Compile Include="Exceptions\KeyErrorPythonExceptionInterpreter.cs" />

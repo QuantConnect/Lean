@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// Manages the algorithm's risk at each time step
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm);
+        /// <param name="targets">The current portfolio targets to be assessed for risk</param>
+        IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets);
     }
 }

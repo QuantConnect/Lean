@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="insights">The insights to create portoflio targets from</param>
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, List<Insight> insights)
+        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
         {
             var targets = new List<IPortfolioTarget>();
             if (_removedSymbols != null)

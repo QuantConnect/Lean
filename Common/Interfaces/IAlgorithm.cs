@@ -48,7 +48,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Event fired when an algorithm generates a insight
         /// </summary>
-        event AlgorithmEvent<InsightCollection> InsightsGenerated;
+        event AlgorithmEvent<GeneratedInsightsCollection> InsightsGenerated;
 
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.

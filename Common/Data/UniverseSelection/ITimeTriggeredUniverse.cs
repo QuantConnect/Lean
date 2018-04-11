@@ -13,22 +13,23 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm.Framework.Portfolio
+namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// Algorithm framework model that
+    /// A universe implementing this interface will NOT use it's SubscriptionDataConfig to generate data
+    /// that is used to 'pulse' the universe selection function -- instead, the times output by
+    /// GetTriggerTimes are used to 'pulse' the universe selection function WITHOUT data.
     /// </summary>
-    public interface IPortfolioConstructionModel : INotifiedSecurityChanges
+    public interface ITimeTriggeredUniverse
     {
         /// <summary>
-        /// Create portfolio targets from the specified insights
+        /// Returns an enumerator that defines when this user defined universe will be invoked
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portoflio targets from</param>
-        /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights);
+        /// <returns>An enumerator of DateTime that defines when this universe will be invoked</returns>
+        IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase);
     }
 }

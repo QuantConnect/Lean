@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
@@ -123,10 +122,10 @@ namespace QuantConnect.Algorithm.Framework
             // generate, timestamp and emit insights
             var insights = Alpha.Update(this, slice)
                 .Select(SetGeneratedAndClosedTimes)
-                .ToList();
+                .ToArray();
 
             // only fire insights generated event if we actually have insights
-            if (insights.Count != 0)
+            if (insights.Length != 0)
             {
                 // debug printing of generated insights
                 if (DebugMode)
@@ -138,7 +137,7 @@ namespace QuantConnect.Algorithm.Framework
             }
 
             // construct portfolio targets from insights
-            var targets = PortfolioConstruction.CreateTargets(this, insights).ToList();
+            var targets = PortfolioConstruction.CreateTargets(this, insights).ToArray();
 
             // set security targets w/ those generated via portfolio construction module
             foreach (var target in targets)
@@ -150,13 +149,13 @@ namespace QuantConnect.Algorithm.Framework
             if (DebugMode)
             {
                 // debug printing of generated targets
-                if (targets.Any())
+                if (targets.Length > 0)
                 {
                     Log($"{Time}: PORTFOLIO: {string.Join(" | ", targets.Select(t => t.ToString()).OrderBy(t => t))}");
                 }
             }
 
-            var riskTargetOverrides = RiskManagement.ManageRisk(this).ToList();
+            var riskTargetOverrides = RiskManagement.ManageRisk(this, targets).ToArray();
 
             // override security targets w/ those generated via risk management module
             foreach (var target in riskTargetOverrides)
@@ -168,14 +167,21 @@ namespace QuantConnect.Algorithm.Framework
             if (DebugMode)
             {
                 // debug printing of generated risk target overrides
-                if (riskTargetOverrides.Any())
+                if (riskTargetOverrides.Length > 0)
                 {
                     Log($"{Time}: RISK: {string.Join(" | ", riskTargetOverrides.Select(t => t.ToString()).OrderBy(t => t))}");
                 }
             }
 
             // execute on the targets, overriding targets for symbols w/ risk targets
-            Execution.Execute(this, riskTargetOverrides.Concat(targets).DistinctBy(pt => pt.Symbol));
+            var riskAdjustedTargets = riskTargetOverrides.Concat(targets).DistinctBy(pt => pt.Symbol).ToArray();
+
+            if (DebugMode && riskAdjustedTargets.Length > 0)
+            {
+                Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskTargetOverrides.Select(t => t.ToString()).OrderBy(t => t))}");
+            }
+
+            Execution.Execute(this, riskAdjustedTargets);
         }
 
         /// <summary>
@@ -199,7 +205,7 @@ namespace QuantConnect.Algorithm.Framework
         /// Sets the universe selection model
         /// </summary>
         /// <param name="universeSelection">Model defining universes for the algorithm</param>
-        public void SetPortfolioSelection(IUniverseSelectionModel universeSelection)
+        public void SetUniverseSelection(IUniverseSelectionModel universeSelection)
         {
             UniverseSelection = universeSelection;
         }

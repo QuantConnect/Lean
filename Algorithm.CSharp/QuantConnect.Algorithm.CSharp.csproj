@@ -160,6 +160,7 @@
     <Compile Include="ParameterizedAlgorithm.cs" />
     <Compile Include="HourReverseSplitRegressionAlgorithm.cs" />
     <Compile Include="HourSplitRegressionAlgorithm.cs" />
+    <Compile Include="ScheduledUniverseSelectionModelRegressionAlgorithm.cs" />
     <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.cs" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />

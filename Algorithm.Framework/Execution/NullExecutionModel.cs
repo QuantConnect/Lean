@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
         }
 
-        public void Execute(QCAlgorithmFramework algorithm, IEnumerable<IPortfolioTarget> targets)
+        public void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
         }
     }
