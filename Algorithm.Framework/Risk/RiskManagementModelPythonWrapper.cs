@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         {
             using (Py.GIL())
             {
-                var riskTargetOverrides = _model.ManageRisk(algorithm) as PyObject;
+                var riskTargetOverrides = _model.ManageRisk(algorithm, targets) as PyObject;
                 foreach (PyObject target in riskTargetOverrides)
                 {
                     yield return target.AsManagedObject(typeof(IPortfolioTarget)) as IPortfolioTarget;
