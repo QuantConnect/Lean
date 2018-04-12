@@ -16,6 +16,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public string Id { get; set; }
 
         /// <summary>
+        /// See <see cref="Insight.SourceModel"/>
+        /// </summary>
+        [JsonProperty("source-model")]
+        public string SourceModel { get; set; }
+
+        /// <summary>
         /// See <see cref="Insight.GeneratedTimeUtc"/>
         /// </summary>
         [JsonProperty("generated-time")]
@@ -115,6 +121,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public SerializedInsight(Insight insight)
         {
             Id = insight.Id.ToString("N");
+            SourceModel = insight.SourceModel;
             GeneratedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
             CloseTime = Time.DateTimeToUnixTimeStamp(insight.CloseTimeUtc);
             Symbol = insight.Symbol.ID.ToString();

@@ -250,6 +250,11 @@ namespace QuantConnect.Algorithm.Framework
         {
             insight.GeneratedTimeUtc = UtcTime;
             insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
+            if (string.IsNullOrEmpty(insight.SourceModel))
+            {
+                // set the source model name if not already set
+                insight.SourceModel = Alpha.GetModelName();
+            }
 
             TimeSpan barSize;
             Security security;
