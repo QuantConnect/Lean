@@ -711,25 +711,25 @@ namespace QuantConnect.Tests
 
             var basicTemplateCryptoAlgorithmStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "25"},
+                {"Total Trades", "10"},
                 {"Average Win", "0%"},
-                {"Average Loss", "-0.46%"},
-                {"Compounding Annual Return", "-100.000%"},
-                {"Drawdown", "5.400%"},
+                {"Average Loss", "-0.17%"},
+                {"Compounding Annual Return", "-99.993%"},
+                {"Drawdown", "3.800%"},
                 {"Expectancy", "-1"},
-                {"Net Profit", "-5.603%"},
-                {"Sharpe Ratio", "-19.82"},
+                {"Net Profit", "-2.577%"},
+                {"Sharpe Ratio", "-15.89"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-11.165"},
-                {"Beta", "585.081"},
-                {"Annual Standard Deviation", "0.36"},
-                {"Annual Variance", "0.129"},
-                {"Information Ratio", "-19.873"},
-                {"Tracking Error", "0.359"},
-                {"Treynor Ratio", "-0.012"},
-                {"Total Fees", "$6076.49"}
+                {"Alpha", "-5.559"},
+                {"Beta", "333.506"},
+                {"Annual Standard Deviation", "0.205"},
+                {"Annual Variance", "0.042"},
+                {"Information Ratio", "-15.972"},
+                {"Tracking Error", "0.204"},
+                {"Treynor Ratio", "-0.01"},
+                {"Total Fees", "$96.51"}
             };
 
             var indicatorSuiteAlgorithmStatistics = new Dictionary<string, string>
