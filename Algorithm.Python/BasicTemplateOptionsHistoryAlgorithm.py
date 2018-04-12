@@ -45,7 +45,7 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
         option.PriceModel = OptionPriceModels.CrankNicolsonFD()
         option.SetFilter(-2,2, timedelta(0), timedelta(180))
 
-        self.SetBenchmark("GOOG")
+        self.SetBenchmark(lambda x: 0)
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
@@ -69,11 +69,11 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
                     contract.ImpliedVolatility))
 
     def OnSecuritiesChanged(self, changes):
-        if changes == None: return
         for change in changes.AddedSecurities:
-            history = self.History(change.Symbol, 10, Resolution.Hour).sort_index(level='time', ascending=False)[:3]
-
-            for i in range(len(history)):
-                self.Log("History: " + str(history.iloc[i].name[0])
-                        + ": " + str(history.iloc[i].name[1])
-                        + " > " + str(history.iloc[i]['close']))
+            # only print options price
+            if change.Symbol.Value == "GOOG": return
+            history = self.History(change.Symbol, 10, Resolution.Minute).sort_index(level='time', ascending=False)[:3]
+            for index, row in history.iterrows():
+                self.Log("History: " + str(index[3])
+                        + ": " + index[4].strftime("%m/%d/%Y %I:%M:%S %p")
+                        + " > " + str(row.close))
