@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -40,6 +41,26 @@ namespace QuantConnect.Algorithm.Framework.Selection
             : base(false, universeSettings, securityInitializer)
         {
             _coarseSelector = coarseSelector;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CoarseFundamentalUniverseSelectionModel"/> class
+        /// </summary>
+        /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
+        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
+        public CoarseFundamentalUniverseSelectionModel(
+            PyObject coarseSelector,
+            UniverseSettings universeSettings = null,
+            ISecurityInitializer securityInitializer = null
+            )
+            : base(false, universeSettings, securityInitializer)
+        {
+            Func<IEnumerable<CoarseFundamental>, Symbol[]> func;
+            if (coarseSelector.TryConvertToDelegate(out func))
+            {
+                _coarseSelector = func;
+            }
         }
 
         /// <inheritdoc />

@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
@@ -67,6 +67,46 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _dateRule = dateRule;
             _timeRule = timeRule;
             _selector = selector;
+            _settings = settings;
+            _initializer = initializer;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScheduledUniverseSelectionModel"/> class using the algorithm's time zone
+        /// </summary>
+        /// <param name="dateRule">Date rule defines what days the universe selection function will be invoked</param>
+        /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
+        /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
+        /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
+        /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
+        public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
+        {
+            Func<DateTime, Symbol[]> func;
+            selector.TryConvertToDelegate(out func);
+            _dateRule = dateRule;
+            _timeRule = timeRule;
+            _selector = func;
+            _settings = settings;
+            _initializer = initializer;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScheduledUniverseSelectionModel"/> class
+        /// </summary>
+        /// <param name="timeZone">The time zone the date/time rules are in</param>
+        /// <param name="dateRule">Date rule defines what days the universe selection function will be invoked</param>
+        /// <param name="timeRule">Time rule defines what times on each day selected by date rule the universe selection function will be invoked</param>
+        /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
+        /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
+        /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
+        public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
+        {
+            Func<DateTime, Symbol[]> func;
+            selector.TryConvertToDelegate(out func);
+            _timeZone = timeZone;
+            _dateRule = dateRule;
+            _timeRule = timeRule;
+            _selector = func;
             _settings = settings;
             _initializer = initializer;
         }
