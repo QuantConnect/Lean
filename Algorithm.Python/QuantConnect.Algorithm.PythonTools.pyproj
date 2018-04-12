@@ -94,6 +94,7 @@
     <Compile Include="RegressionChannelAlgorithm.py" />
     <Compile Include="RollingWindowAlgorithm.py" />
     <Compile Include="ScheduledEventsAlgorithm.py" />
+    <Compile Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Compile Include="UniverseSelectionRegressionAlgorithm.py" />
     <Compile Include="UpdateOrderRegressionAlgorithm.py" />
