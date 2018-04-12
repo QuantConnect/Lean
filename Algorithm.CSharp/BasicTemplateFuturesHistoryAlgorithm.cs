@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateFuturesHistoryAlgorithm : QCAlgorithm
     {
         // S&P 500 EMini futures
-        private string[] roots = new[]
+        private string [] roots = new []
         {
             Futures.Indices.SP500EMini,
             Futures.Metals.Gold,
