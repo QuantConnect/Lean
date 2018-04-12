@@ -46,29 +46,29 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
 
         futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute)
         futureGC.SetFilter(timedelta(0), timedelta(182))
-        self.SetBenchmark("SPY")
+        
+        self.SetBenchmark(lambda x: 0)
 
     def OnData(self,slice):
-        if not self.Portfolio.Invested:
-            for chain in slice.FutureChains:
-                for contract in chain.Value:
-                    self.Log("{0},Bid={1} Ask={2} Last={3} OI={4}".format(
-                            contract.Symbol.Value,
-                            contract.BidPrice,
-                            contract.AskPrice,
-                            contract.LastPrice,
-                            contract.OpenInterest))
+        if self.Portfolio.Invested: return
+        for chain in slice.FutureChains:
+            for contract in chain.Value:
+                self.Log("{0},Bid={1} Ask={2} Last={3} OI={4}".format(
+                        contract.Symbol.Value,
+                        contract.BidPrice,
+                        contract.AskPrice,
+                        contract.LastPrice,
+                        contract.OpenInterest))
 
 
     def OnSecuritiesChanged(self, changes):
-        #if changes == SecurityChanges.None: return
         for change in changes.AddedSecurities:
-            history = self.History(change.Symbol, 10, Resolution.Daily).sort_index(level='time', ascending=False)[:3]
-        
-            for i in range(len(history)):
-                self.Log("History: " + str(history.iloc[i].name[0])
-                        + ": " + str(history.iloc[i].name[1].strftime("%m/%d/%Y %I:%M:%S %p"))
-                        + " > " + str(history.iloc[i]['close']))
+            history = self.History(change.Symbol, 10, Resolution.Minute).sort_index(level='time', ascending=False)[:3]
+            
+            for index, row in history.iterrows():
+                self.Log("History: " + str(index[1])
+                        + ": " + index[2].strftime("%m/%d/%Y %I:%M:%S %p")
+                        + " > " + str(row.close))
                         
     def OnOrderEvent(self, orderEvent):
         # Order fill event handler. On an order fill update the resulting information is passed to this method.
