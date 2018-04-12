@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
@@ -334,7 +335,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreNotEqual(expected, actual);
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void PyObjectTryConvertQuoteBar()
         {
             // Wrap a QuoteBar around a PyObject and convert it back
@@ -347,7 +348,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<QuoteBar>(quoteBar);
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void PyObjectTryConvertSMA()
         {
             // Wrap a SimpleMovingAverage around a PyObject and convert it back
@@ -360,7 +361,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<SimpleMovingAverage>(indicatorBaseDataPoint);
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void PyObjectTryConvertATR()
         {
             // Wrap a AverageTrueRange around a PyObject and convert it back
@@ -373,7 +374,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<AverageTrueRange>(indicatorBaseDataBar);
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void PyObjectTryConvertAD()
         {
             // Wrap a AccumulationDistribution around a PyObject and convert it back
@@ -387,7 +388,7 @@ namespace QuantConnect.Tests.Common.Util
 
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void PyObjectTryConvertFailCSharp()
         {
             // Try to convert a AccumulationDistribution as a QuoteBar
@@ -399,19 +400,111 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsNull(quoteBar);
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void PyObjectTryConvertFailPython()
         {
             using (Py.GIL())
             {
                 // Try to convert a python object as a IndicatorBase<TradeBar>
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), "class A:\n    pass");
-                var value = module.GetAttr("A").Invoke();
+                var locals = new PyDict();
+                PythonEngine.Exec("class A:\n    pass", null, locals.Handle);
+                var value = locals.GetItem("A").Invoke();
 
                 IndicatorBase<TradeBar> indicatorBaseTradeBar;
                 bool canConvert = value.TryConvert(out indicatorBaseTradeBar);
                 Assert.IsFalse(canConvert);
                 Assert.IsNull(indicatorBaseTradeBar);
+            }
+        }
+
+        [Test, Category("TravisExclude")]
+        [TestCase("coarseSelector = lambda coarse: [ x.Symbol for x in coarse if x.Price % 2 == 0 ]")]
+        [TestCase("def coarseSelector(coarse): return [ x.Symbol for x in coarse if x.Price % 2 == 0 ]")]
+        public void PyObjectTryConvertToFunc(string code)
+        {
+            Func<IEnumerable<CoarseFundamental>, Symbol[]> coarseSelector;
+
+            using (Py.GIL())
+            {
+                var locals = new PyDict();
+                PythonEngine.Exec(code, null, locals.Handle);
+                var pyObject = locals.GetItem("coarseSelector");
+                pyObject.TryConvertToDelegate(out coarseSelector);
+            }
+
+            var coarse = Enumerable
+                .Range(0, 9)
+                .Select(x => new CoarseFundamental { Symbol = Symbol.Create(x.ToString(), SecurityType.Equity, Market.USA), Value = x });
+
+            var symbols = coarseSelector(coarse);
+
+            Assert.AreEqual(5, symbols.Length);
+            foreach (var symbol in symbols)
+            {
+                var price = Convert.ToInt32(symbol.Value);
+                Assert.AreEqual(0, price % 2);
+            }
+        }
+
+        [Test, Category("TravisExclude")]
+        public void PyObjectTryConvertToAction1()
+        {
+            Action<int> action;
+
+            using (Py.GIL())
+            {
+                var locals = new PyDict();
+                PythonEngine.Exec("def raise_number(a): raise ValueError(a)", null, locals.Handle);
+                var pyObject = locals.GetItem("raise_number");
+                pyObject.TryConvertToDelegate(out action);
+            }
+
+            try
+            {
+                action(2);
+                Assert.Fail();
+            }
+            catch (PythonException e)
+            {
+                Assert.AreEqual($"ValueError : {2}", e.Message);
+            }
+        }
+
+        [Test, Category("TravisExclude")]
+        public void PyObjectTryConvertToAction2()
+        {
+            Action<int, decimal> action;
+
+            using (Py.GIL())
+            {
+                var locals = new PyDict();
+                PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals.Handle);
+                var pyObject = locals.GetItem("raise_number");
+                pyObject.TryConvertToDelegate(out action);
+            }
+
+            try
+            {
+                action(2, 3m);
+                Assert.Fail();
+            }
+            catch (PythonException e)
+            {
+                Assert.AreEqual($"ValueError : {6}", e.Message);
+            }
+        }
+
+        [Test, Category("TravisExclude")]
+        public void PyObjectTryConvertToNonDelegateFail()
+        {
+            int action;
+
+            using (Py.GIL())
+            {
+                var locals = new PyDict();
+                PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals.Handle);
+                var pyObject = locals.GetItem("raise_number");
+                Assert.Throws<ArgumentException>(() => pyObject.TryConvertToDelegate(out action));
             }
         }
 

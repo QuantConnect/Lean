@@ -1063,6 +1063,58 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Tries to convert a <see cref="PyObject"/> into a managed object
+        /// </summary>
+        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
+        /// <param name="pyObject">PyObject to be converted</param>
+        /// <param name="result">Managed object </param>
+        /// <returns>True if successful conversion</returns>
+        public static bool TryConvertToDelegate<T>(this PyObject pyObject, out T result)
+        {
+            var type = typeof(T);
+
+            if (!typeof(MulticastDelegate).IsAssignableFrom(type))
+            {
+                throw new ArgumentException($"TryConvertToDelegate cannot be used to convert a PyObject into {type}.");
+            }
+
+            result = default(T);
+
+            if (pyObject == null)
+            {
+                return true;
+            }
+
+            var code = string.Empty;
+            var locals = new PyDict();
+            var types = type.GetGenericArguments();
+
+            for (var i = 0; i < types.Length; i++)
+            {
+                code += $",t{i}";
+                locals.SetItem($"t{i}", types[i].ToPython());
+            }
+            locals.SetItem("pyObject", pyObject);
+
+            try
+            {
+                var name = type.FullName.Substring(0, type.FullName.IndexOf('`'));
+                code = $"import System; delegate = {name}[{code.Substring(1)}](pyObject)";
+
+                PythonEngine.Exec(code, null, locals.Handle);
+                result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
+
+                return true;
+            }
+            catch
+            {
+                // Do not throw or log the exception.
+                // Return false as an exception means that the conversion could not be made.
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Performs on-line batching of the specified enumerator, emitting chunks of the requested batch size
         /// </summary>
         /// <typeparam name="T">The enumerable item type</typeparam>
