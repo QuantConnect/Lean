@@ -40,7 +40,6 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
     '''Mean Variance Optimization algorithm.'''
 
     def Initialize(self):
-        ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Minute
@@ -49,18 +48,17 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
-        selector = PythonUtil.ToCoarseFundamentalSelector(self.coarseSelector)
         self.symbols = [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in [ 'AIG', 'BAC', 'IBM', 'SPY' ] ]
 
         self.minimum_weight = -1
         self.maximum_weight = 1
 
         # set algorithm framework models
-        self.UniverseSelection = CoarseFundamentalUniverseSelectionModel(selector)
-        self.Alpha = HistoricalReturnsAlphaModel(resolution = Resolution.Daily)
-        self.PortfolioConstruction = MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio)
-        self.Execution = ImmediateExecutionModel()
-        self.RiskManagement = NullRiskManagementModel()
+        self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.coarseSelector))
+        self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
+        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
+        self.SetExecution(ImmediateExecutionModel())
+        self.SetRiskManagement(NullRiskManagementModel())
 
     def coarseSelector(self, coarse):
         # Drops SPY after the 8th
