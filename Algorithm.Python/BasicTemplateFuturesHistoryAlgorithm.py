@@ -47,7 +47,7 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute)
         futureGC.SetFilter(timedelta(0), timedelta(182))
         
-        self.SetBenchmark(lambda x: 0)
+        self.SetBenchmark(lambda x: 1000000)
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return

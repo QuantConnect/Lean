@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.PriceModel = OptionPriceModels.CrankNicolsonFD();
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
-            SetBenchmark(d => 1m);
+            SetBenchmark(d => 1000000);
         }
 
         /// <summary>

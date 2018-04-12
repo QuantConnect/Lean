@@ -45,7 +45,7 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
         option.PriceModel = OptionPriceModels.CrankNicolsonFD()
         option.SetFilter(-2,2, timedelta(0), timedelta(180))
 
-        self.SetBenchmark(lambda x: 0)
+        self.SetBenchmark(lambda x: 1000000)
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:

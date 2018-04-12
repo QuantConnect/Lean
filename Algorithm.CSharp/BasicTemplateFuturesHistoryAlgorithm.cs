@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
                 AddFuture(root, Resolution.Minute).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             }
 
-            SetBenchmark(d => 1m);
+            SetBenchmark(d => 1000000);
         }
 
         /// <summary>
