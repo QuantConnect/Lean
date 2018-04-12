@@ -141,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicTemplateCryptoAlgorithm.py" />
+    <None Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
     <Content Include="MeanVarianceOptimizationAlgorithm.py" />
     <Content Include="BasicTemplateFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateLibrary.py" />

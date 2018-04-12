@@ -982,6 +982,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("CustomIndicatorAlgorithm", basicTemplateStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateCryptoAlgorithm", basicTemplateCryptoAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("IndicatorSuiteAlgorithm", indicatorSuiteAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.Python),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
