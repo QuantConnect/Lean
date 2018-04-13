@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.PriceModel = OptionPriceModels.CrankNicolsonFD();
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
-            SetBenchmark("GOOG");
+            SetBenchmark(d => 1000000);
         }
 
         /// <summary>
@@ -82,7 +82,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var change in changes.AddedSecurities)
             {
-                var history = History(change.Symbol, 10, Resolution.Hour);
+                // Only print options price
+                if (change.Symbol.Value == "GOOG") continue;
+                var history = History(change.Symbol, 10, Resolution.Minute);
 
                 foreach (var data in history.OrderByDescending(x => x.Time).Take(3))
                 {

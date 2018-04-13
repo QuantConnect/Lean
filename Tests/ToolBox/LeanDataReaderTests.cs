@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var tickTypes = new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest };
 
-            var resolutions = new[] {Resolution.Hour, Resolution.Daily };
+            var resolutions = new[] { Resolution.Minute };
 
 
             foreach (var canonical in canonicalFutures)

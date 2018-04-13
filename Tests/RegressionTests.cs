@@ -686,29 +686,6 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$2045.20"}
             };
 
-            var basicTemplateFuturesAlgorithmDailyStatistics = new Dictionary<string, string>
-            {
-                {"Total Trades", "8"},
-                {"Average Win", "0%"},
-                {"Average Loss", "0.00%"},
-                {"Compounding Annual Return", "-1.655%"},
-                {"Drawdown", "0.000%"},
-                {"Expectancy", "-1"},
-                {"Net Profit", "-0.018%"},
-                {"Sharpe Ratio", "-23.092"},
-                {"Loss Rate", "100%"},
-                {"Win Rate", "0%"},
-                {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0"},
-                {"Beta", "0"},
-                {"Annual Standard Deviation", "0"},
-                {"Annual Variance", "0"},
-                {"Information Ratio", "0"},
-                {"Tracking Error", "0"},
-                {"Treynor Ratio", "0"},
-                {"Total Fees", "$14.80"}
-            };
-
             var basicTemplateCryptoAlgorithmStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "10"},
@@ -912,7 +889,6 @@ namespace QuantConnect.Tests
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
-                new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
@@ -952,7 +928,6 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.CSharp),
 
                 // Python
-                // new AlgorithmStatisticsTestParameters("BasicTemplateFuturesAlgorithmDaily", basicTemplateFuturesAlgorithmDailyStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.Python),
