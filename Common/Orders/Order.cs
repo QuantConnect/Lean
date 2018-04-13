@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -102,7 +103,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The symbol's security type
         /// </summary>
-        public SecurityType SecurityType { get { return Symbol.ID.SecurityType; } }
+        public SecurityType SecurityType => Symbol.ID.SecurityType;
 
         /// <summary>
         /// Order Direction Property based off Quantity.
@@ -126,18 +127,37 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Get the absolute quantity for this order
         /// </summary>
-        public decimal AbsoluteQuantity
-        {
-            get { return Math.Abs(Quantity); }
-        }
+        public decimal AbsoluteQuantity => Math.Abs(Quantity);
 
         /// <summary>
         /// Gets the executed value of this order. If the order has not yet filled,
         /// then this will return zero.
         /// </summary>
-        public decimal Value
+        public decimal Value => Quantity * Price;
+
+        /// <summary>
+        /// Gets the price data at the time the order was submitted
+        /// </summary>
+        public OrderSubmissionData OrderSubmissionData { get; internal set; }
+
+        /// <summary>
+        /// Returns true if the order is a marketable order.
+        /// </summary>
+        public bool IsMarketable
         {
-            get { return Quantity * Price; }
+            get
+            {
+                if (Type == OrderType.Limit)
+                {
+                    // check if marketable limit order using bid/ask prices
+                    var limitOrder = (LimitOrder)this;
+                    return OrderSubmissionData != null &&
+                           (Direction == OrderDirection.Buy && limitOrder.LimitPrice >= OrderSubmissionData.AskPrice ||
+                            Direction == OrderDirection.Sell && limitOrder.LimitPrice <= OrderSubmissionData.BidPrice);
+                }
+
+                return Type == OrderType.Market;
+            }
         }
 
         /// <summary>
@@ -259,6 +279,7 @@ namespace QuantConnect.Orders
             order.Symbol = Symbol;
             order.Tag = Tag;
             order.Properties = Properties?.Clone();
+            order.OrderSubmissionData = OrderSubmissionData?.Clone();
         }
 
         /// <summary>

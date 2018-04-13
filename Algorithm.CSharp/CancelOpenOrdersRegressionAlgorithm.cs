@@ -51,7 +51,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (UtcTime.Minute == 0)
             {
-                LimitOrder("BTCUSD", 0.10555181m, 4734.64m);
+                // this order will be rejected for insufficient funds
+                LimitOrder("BTCUSD", 100m, 4734.64m);
                 LimitOrder("ETHUSD", 1.35505027m, 368.8m);
             }
             else if (UtcTime.Minute == 6)
@@ -90,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             const int expectedOrders = 5;
-            var expectedStatus = new[] { OrderStatus.Invalid, OrderStatus.Filled, OrderStatus.Canceled, OrderStatus.Canceled, OrderStatus.Invalid };
+            var expectedStatus = new[] { OrderStatus.Invalid, OrderStatus.Filled, OrderStatus.Canceled, OrderStatus.Canceled, OrderStatus.Filled };
 
             var orders = Transactions.GetOrders(x => true).ToList();
 

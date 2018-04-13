@@ -42,16 +42,11 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Securities.Security security, Order order)
         {
-            if (order.Type == OrderType.Limit)
+            // marketable limit orders are considered takers
+            if (order.Type == OrderType.Limit && !order.IsMarketable)
             {
-                // marketable limit orders are considered takers
-                var limitPrice = ((LimitOrder) order).LimitPrice;
-                if (order.Direction == OrderDirection.Buy && limitPrice < security.AskPrice ||
-                    order.Direction == OrderDirection.Sell && limitPrice > security.BidPrice)
-                {
-                    // limit order posted to the order book, 0% fee
-                    return 0m;
-                }
+                // limit order posted to the order book, 0% maker fee
+                return 0m;
             }
 
             // currently we do not model daily rebates
@@ -59,7 +54,7 @@ namespace QuantConnect.Orders.Fees
             decimal fee;
             Fees.TryGetValue(security.Symbol.Value, out fee);
 
-            // get order value in account currency, then apply fee factor
+            // get order value in account currency, then apply taker fee factor
             var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
 
