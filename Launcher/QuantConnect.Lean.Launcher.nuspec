@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+  <metadata>
+    <id>QuantConnect.Lean</id>
+    <version>$version$</version>
+    <authors>QuantConnect Team and Community Contributors</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/QuantConnect/Lean/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/QuantConnect/Lean</projectUrl>
+    <iconUrl>https://github.com/QuantConnect/Lean/blob/master/lean.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <copyright>$copyright$</copyright>
+    <tags>algorithm algorithmic-trading-engine bitcoins broker c-sharp cfd crypto finance future forex fxcm gdax hft hft-trading interactive-brokers lean-engine markets nasdaq oanda options python quant quantconnect quantitative-finance stock-indicators trading trading-algorithms trading-bot trading-platform trading-robots trading-strategies</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.5.2">
+        <dependency id="QuantConnect.Queues" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Lean.Engine" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Messaging" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Algorithm.CSharp" version="2.4.0.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="config.json" target="Content" />
+  </files>
+</package>
