@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+  <metadata>
+    <id>QuantConnect.Api</id>
+    <version>$version$</version>
+    <authors>QuantConnect Team and Community Contributors</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/QuantConnect/Lean/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/QuantConnect/Lean</projectUrl>
+    <iconUrl>https://github.com/QuantConnect/Lean/blob/master/lean.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <copyright>$copyright$</copyright>
+    <tags>algorithm algorithmic-trading-engine bitcoins broker c-sharp cfd crypto finance future forex fxcm gdax hft hft-trading interactive-brokers lean-engine markets nasdaq oanda options python quant quantconnect quantitative-finance stock-indicators trading trading-algorithms trading-bot trading-platform trading-robots trading-strategies</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.5.2">
+        <dependency id="CloneExtensions" version="1.3.0" exclude="Build,Analyzers" />
+        <dependency id="DotNetZip" version="1.10.1" exclude="Build,Analyzers" />
+        <dependency id="ICSharpCode.SharpZipLib.dll" version="0.85.4.369" exclude="Build,Analyzers" />
+        <dependency id="MathNet.Filtering" version="0.4.0" exclude="Build,Analyzers" />
+        <dependency id="MathNet.Numerics" version="3.19.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="10.0.3" exclude="Build,Analyzers" />
+        <dependency id="NodaTime" version="1.3.4" exclude="Build,Analyzers" />
+        <dependency id="QLNet" version="1.9.2" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Common" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Configuration" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Logging" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.pythonnet" version="1.0.5.7" exclude="Build,Analyzers" />
+        <dependency id="RestSharp" version="105.2.3" exclude="Build,Analyzers" />
+        <dependency id="SharpZipLib" version="0.86.0" exclude="Build,Analyzers" />
+        <dependency id="WebSocketSharpFork" version="1.0.4" exclude="Build,Analyzers" />
+        <dependency id="fasterflect" version="2.1.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>
