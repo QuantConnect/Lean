@@ -157,7 +157,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                         // Errors in scheduled event should be treated as runtime error
                         // Runtime errors should end Lean execution
-                        _algorithm.RunTimeError = new Exception(errorMessage);
+                        _algorithm.RunTimeError = scheduledEventException;
                     }
                 }
             }
