@@ -159,7 +159,7 @@ namespace QuantConnect.Util
                     line = $" in {line}:{info[1].Trim()}";
 
                     info = info[2].Split(new[] { "\\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    line = $" {info[0].Replace("in", "at")}{line}";
+                    line = $" {info[0].Replace(" in ", " at ")}{line}";
 
                     // If we have the exact statement, add it to the error line
                     if (info.Length > 2) line += $" :: {info[1].Trim()}";
