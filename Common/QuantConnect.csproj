@@ -191,6 +191,7 @@
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Orders\OrderSubmissionData.cs" />
     <Compile Include="Packets\AlphaNodePacket.cs" />
     <Compile Include="Packets\AlphaResultPacket.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
