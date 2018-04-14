@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.IBDownloader
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
+        /// Initializes a new instance of the <see cref="IBDataDownloader"/> class
         /// </summary>
         public IBDataDownloader()
         {
@@ -61,9 +61,6 @@ namespace QuantConnect.ToolBox.IBDownloader
 
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
-
-            var barsTotalInPeriod = new List<QuoteBar>();
-            var barsToSave = new List<QuoteBar>();
 
             var historyRequest = new HistoryRequest(
                 startUtc,

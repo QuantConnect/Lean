@@ -27,14 +27,13 @@ namespace QuantConnect.ToolBox.IBDownloader
     class Program
     {
         /// <summary>
-        /// Primary entry point to the program
+        /// Primary entry point to the program. This program only supports FOREX for now.
         /// </summary>
         static void Main(string[] args)
         {
             if (args.Length != 5)
             {
-                Console.WriteLine("Usage: IBDownloader SECURITY_TYPE SYMBOLS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SECURITY_TYPE = eg Equity/Forex");
+                Console.WriteLine("Usage: QuantConnect.ToolBox SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
                 Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
@@ -44,20 +43,13 @@ namespace QuantConnect.ToolBox.IBDownloader
             try
             {
                 // Load settings from command line
-
-                SecurityType securityType;
-                if (!Enum.TryParse(args[0], out securityType)) { throw new ApplicationException("Can't parse securityType "+ args[0]);}
-
-                if (securityType != SecurityType.Equity && securityType != SecurityType.Forex) { throw new ApplicationException("SECURITY_TYPE = eg Equity/Forex"); }
-
                 var tickers = args[1].Split(',');
                 var allResolutions = args[2].ToLower() == "all";
                 var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[2]);
                 var startDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture).ConvertToUtc(TimeZones.NewYork);
                 var endDate = DateTime.ParseExact(args[4], "yyyyMMdd", CultureInfo.InvariantCulture).ConvertToUtc(TimeZones.NewYork);
 
-                
-                //fix end date 
+                // fix end date 
                 endDate = new DateTime(Math.Min(endDate.Ticks, DateTime.Now.AddDays(-1).Ticks));
 
                 // Max number of histoy days
@@ -84,8 +76,11 @@ namespace QuantConnect.ToolBox.IBDownloader
                 // Create IB Broker Gateway Runner
                 InteractiveBrokersGatewayRunner.StartFromConfiguration();
 
-                // Create an instance of the downloader
-                const string market = Market.FXCM; // new market for IB ?
+                // Only FOREX for now
+                SecurityType securityType = SecurityType.Forex;
+                string market = Market.FXCM; 
+
+
                 using (var downloader = new IBDataDownloader())
                 {
                     foreach (var ticker in tickers)
@@ -142,7 +137,6 @@ namespace QuantConnect.ToolBox.IBDownloader
                 if (InteractiveBrokersGatewayRunner.IsRunning())
                 {
                     InteractiveBrokersGatewayRunner.Stop();
-                    Thread.Sleep(2500);
                 }
             }
 
