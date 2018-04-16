@@ -106,6 +106,13 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            var openInterestTick = data as Tick;
+            if (openInterestTick != null && openInterestTick.TickType == TickType.OpenInterest)
+            {
+                OpenInterest = (long)openInterestTick.Value;
+                return;
+            }
+
             // Only cache non fill-forward data.
             if (data.IsFillForward) return;
 

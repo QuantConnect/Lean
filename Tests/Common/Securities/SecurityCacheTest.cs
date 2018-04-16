@@ -105,6 +105,19 @@ namespace QuantConnect.Tests.Common.Securities
 
         [Test]
         [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataWithSameEndTime_SetsOpenInterestTickValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            var map = new Dictionary<string, string> { { "OpenInterest", "Value" } };
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.OpenInterestTick, new Tick
+            {
+                Value = 101,
+                TickType = TickType.OpenInterest,
+                EndTime = ReferenceTime
+            }, map);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
         public void AddDataWithSameEndTime_SetsQuoteTickValues(SecurityCache cache, SecuritySeedData seedType)
         {
             AddDataAndAssertChanges(cache, seedType, SecuritySeedData.QuoteTick, new Tick
@@ -218,6 +231,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             None,
             OpenInterest,
+            OpenInterestTick,
             TradeTick,
             QuoteTick,
             TradeBar,
@@ -232,6 +246,9 @@ namespace QuantConnect.Tests.Common.Securities
                     return new string[0];
 
                 case SecuritySeedData.OpenInterest:
+                    return new[] { "OpenInterest" };
+
+                case SecuritySeedData.OpenInterestTick:
                     return new[] { "OpenInterest" };
 
                 case SecuritySeedData.TradeTick:
@@ -297,6 +314,21 @@ namespace QuantConnect.Tests.Common.Securities
                 EndTime = ReferenceTime
             });
 
+            var openInterest = new SecurityCache();
+            openInterest.AddData(new OpenInterest
+            {
+                Value = 23,
+                Time = ReferenceTime,
+            });
+
+            var openInterestTick = new SecurityCache();
+            openInterestTick.AddData(new Tick
+            {
+                Value = 24,
+                EndTime = ReferenceTime,
+                TickType = TickType.OpenInterest
+            });
+
             return new[]
             {
                 new TestCaseData(defaultInstance, SecuritySeedData.None).SetName("Default Instance"),
@@ -304,6 +336,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new TestCaseData(quoteTick, SecuritySeedData.QuoteTick).SetName("Seeded w/ Quote Tick"),
                 new TestCaseData(tradeBar, SecuritySeedData.TradeBar).SetName("Seeded w/ TradeBar"),
                 new TestCaseData(quoteBar, SecuritySeedData.QuoteBar).SetName("Seeded w/ QuoteBar"),
+                new TestCaseData(openInterest, SecuritySeedData.OpenInterest).SetName("Seeded w/ OpenInterest"),
+                new TestCaseData(openInterestTick, SecuritySeedData.OpenInterestTick).SetName("Seeded w/ OpenInterest Tick"),
             };
         }
 
