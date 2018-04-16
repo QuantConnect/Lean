@@ -92,6 +92,7 @@
     <Compile Include="QuandlImporterAlgorithm.py" />
     <Compile Include="RegressionAlgorithm.py" />
     <Compile Include="RegressionChannelAlgorithm.py" />
+    <Compile Include="RenkoConsolidatorAlgorithm.py" />
     <Compile Include="RollingWindowAlgorithm.py" />
     <Compile Include="ScheduledEventsAlgorithm.py" />
     <Compile Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
