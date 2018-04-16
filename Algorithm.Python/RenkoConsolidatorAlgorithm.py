@@ -19,6 +19,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 from datetime import timedelta
 
@@ -47,6 +48,14 @@ class RenkoConsolidatorAlgorithm(QCAlgorithm):
         renkoClose.DataConsolidated += self.HandleRenkoClose
         self.SubscriptionManager.AddConsolidator("SPY", renkoClose)
 
+        # this is the full constructor that can accept a value selector and a volume selector
+        # this allows us to perform the renko logic on values other than Close, even computed values!
+
+        # break SPY into (2*o + h + l + 3*c)/7
+        renko7bar = RenkoConsolidator(2.5, lambda x: (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7, lambda x: x.Volume)
+        renko7bar.DataConsolidated += self.HandleRenko7Bar
+        self.SubscriptionManager.AddConsolidator("SPY", renko7bar)
+
 
     # We're doing our analysis in the OnRenkoBar method, but the framework verifies that this method exists, so we define it.
     def OnData(self, data):
@@ -61,3 +70,10 @@ class RenkoConsolidatorAlgorithm(QCAlgorithm):
             self.SetHoldings(data.Symbol, 1)
 
         self.Log("CLOSE - {0} - {1} {2}".format(data.Time, data.Open, data.Close))
+
+
+    def HandleRenko7Bar(self, sender, data):
+        '''This function is called by our renko7bar consolidator defined in Initialize()
+        Args:
+            data: The new renko bar produced by the consolidator'''
+        self.Log("7BAR - {0} - {1} {2}".format(data.Time, data.Open, data.Close))

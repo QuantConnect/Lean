@@ -14,6 +14,7 @@
 */
 
 using System;
+using Python.Runtime;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
@@ -110,6 +111,32 @@ namespace QuantConnect.Data.Consolidators
             _volumeSelector = volumeSelector ?? (x => 0);
 
             Type = RenkoType.Classic;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// </summary>
+        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
+        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
+        /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
+        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
+        /// not aggregate volume per bar.</param>
+        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
+        public RenkoConsolidator(decimal barSize, PyObject selector, PyObject volumeSelector = null, bool evenBars = true)
+            : this(barSize, evenBars)
+        {
+            if (barSize < Extensions.GetDecimalEpsilon())
+            {
+                throw new ArgumentOutOfRangeException("barSize", "RenkoConsolidator bar size must be positve and greater than 1e-28");
+            }
+
+            Func<IBaseData, decimal> selectorWrapper;
+            selector.TryConvertToDelegate(out selectorWrapper);
+            _selector = selectorWrapper ?? (x => x.Value);
+
+            Func<IBaseData, decimal> volumeSelectorWrapper;
+            volumeSelector.TryConvertToDelegate(out volumeSelectorWrapper);
+            _volumeSelector = volumeSelectorWrapper ?? (x => 0);
         }
 
         /// <summary>
