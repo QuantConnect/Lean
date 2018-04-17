@@ -130,13 +130,29 @@ namespace QuantConnect.Data.Consolidators
                 throw new ArgumentOutOfRangeException("barSize", "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
 
-            Func<IBaseData, decimal> selectorWrapper;
-            selector.TryConvertToDelegate(out selectorWrapper);
-            _selector = selectorWrapper ?? (x => x.Value);
+            if (selector != null)
+            {
+                if (!selector.TryConvertToDelegate(out _selector))
+                {
+                    throw new ArgumentException("Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
+                }
+            }
+            else
+            {
+                _selector = (x => x.Value);
+            }
 
-            Func<IBaseData, decimal> volumeSelectorWrapper;
-            volumeSelector.TryConvertToDelegate(out volumeSelectorWrapper);
-            _volumeSelector = volumeSelectorWrapper ?? (x => 0);
+            if (volumeSelector != null)
+            {
+                if (!volumeSelector.TryConvertToDelegate(out _volumeSelector))
+                {
+                    throw new ArgumentException("Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
+                }
+            }
+            else
+            {
+                _volumeSelector = (x => 0);
+            }
         }
 
         /// <summary>
@@ -360,7 +376,11 @@ namespace QuantConnect.Data.Consolidators
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose() => _dataConsolidatedHandler = null;
+        public void Dispose()
+        {
+            DataConsolidated = null;
+            _dataConsolidatedHandler = null;
+        }
     }
 
     /// <summary>
