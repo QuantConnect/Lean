@@ -47,5 +47,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Insight.Price(Symbols.SPY, period, InsightDirection.Up)
             };
         }
+
+        protected override string GetExpectedModelName(IAlphaModel model)
+        {
+            return $"{nameof(MacdAlphaModel)}(12,26,9,Exponential,Daily)";
+        }
     }
 }

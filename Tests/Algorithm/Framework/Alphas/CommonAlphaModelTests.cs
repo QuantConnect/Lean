@@ -32,7 +32,7 @@ using System.Linq;
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Provides a framework for testing alpha models. 
+    /// Provides a framework for testing alpha models.
     /// </summary>
     public abstract class CommonAlphaModelTests
     {
@@ -139,6 +139,22 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(_algorithm, changes));
         }
 
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ModelNameTest(Language language)
+        {
+            IAlphaModel model;
+            if (!TryCreateModel(language, out model))
+            {
+                Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
+            }
+
+            var actual = model.GetModelName();
+            var expected = GetExpectedModelName(model);
+            Assert.AreEqual(expected, actual);
+        }
+
         /// <summary>
         /// Returns a new instance of the alpha model to test
         /// </summary>
@@ -163,6 +179,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// List of securities to be removed to the model
         /// </summary>
         protected virtual IEnumerable<Security> RemovedSecurities => Enumerable.Empty<Security>();
+
+        /// <summary>
+        /// To be override for model types that implement <see cref="INamedModel"/>
+        /// </summary>
+        protected virtual string GetExpectedModelName(IAlphaModel model)
+        {
+            return model.GetType().Name;
+        }
 
         /// <summary>
         /// Creates an enumerable of Slice to update the alpha model

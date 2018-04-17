@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// used to generate up/down insights if it's stronger than the bounce threshold.
     /// If the MACD signal is within the bounce threshold then a flat price insight is returned.
     /// </summary>
-    public class MacdAlphaModel : IAlphaModel
+    public class MacdAlphaModel : IAlphaModel, INamedModel
     {
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
@@ -37,6 +37,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Resolution _resolution;
         private const decimal BounceThresholdPercent = 0.01m;
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
+
+        /// <summary>
+        /// Defines a name for a framework model
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
@@ -60,6 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _movingAverageType = movingAverageType;
             _resolution = resolution;
             _symbolData = new Dictionary<Symbol, SymbolData>();
+            Name = $"{nameof(MacdAlphaModel)}({fastPeriod},{slowPeriod},{signalPeriod},{movingAverageType},{resolution})";
         }
 
         /// <summary>

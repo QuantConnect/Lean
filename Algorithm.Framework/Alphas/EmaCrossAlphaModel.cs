@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -25,13 +24,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Alpha model that uses an EMA cross to create insights
     /// </summary>
-    public class EmaCrossAlphaModel : IAlphaModel
+    public class EmaCrossAlphaModel : IAlphaModel, INamedModel
     {
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
         private readonly Resolution _resolution;
         private readonly int _predictionInterval;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
+
+        /// <summary>
+        /// Defines a name for a framework model
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmaCrossAlphaModel"/> class
@@ -50,6 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _resolution = resolution;
             _predictionInterval = fastPeriod;
             _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
+            Name = $"{nameof(EmaCrossAlphaModel)}({fastPeriod},{slowPeriod},{resolution})";
         }
 
         /// <summary>
