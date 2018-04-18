@@ -220,15 +220,30 @@ namespace QuantConnect.Securities
             _isDynamic = true;
 
             // find the current price in the list of strikes
+            var exactPriceFound = true;
             var index = _uniqueStrikes.BinarySearch(_underlying.Price);
+
+            // Return value of BinarySearch (from MSDN):
+            // The zero-based index of item in the sorted List<T>, if item is found;
+            // otherwise, a negative number that is the bitwise complement of the index of the next element that is larger than item
+            // or, if there is no larger element, the bitwise complement of Count.
             if (index < 0)
             {
                 // exact price not found
+                exactPriceFound = false;
+
+                if (index == ~_uniqueStrikes.Count)
+                {
+                    // there is no greater price, return empty
+                    _allSymbols = Enumerable.Empty<Symbol>();
+                    return this;
+                }
+
                 index = ~index;
 
                 if (index >= _uniqueStrikes.Count)
                 {
-                    // price out of range: should never happen, return empty
+                    // should never happen, return empty
                     _allSymbols = Enumerable.Empty<Symbol>();
                     return this;
                 }
@@ -236,11 +251,37 @@ namespace QuantConnect.Securities
 
             // compute the bounds, no need to worry about rounding and such
             var indexMinPrice = index + minStrike;
+            var indexMaxPrice = index + maxStrike;
+            if (!exactPriceFound)
+            {
+                if (minStrike < 0 && maxStrike > 0)
+                {
+                    indexMaxPrice--;
+                }
+                else if (minStrike > 0)
+                {
+                    indexMinPrice--;
+                    indexMaxPrice--;
+                }
+            }
+
             if (indexMinPrice < 0)
             {
                 indexMinPrice = 0;
             }
-            var indexMaxPrice = index + maxStrike - 1;
+            else if (indexMinPrice >= _uniqueStrikes.Count)
+            {
+                // price out of range: return empty
+                _allSymbols = Enumerable.Empty<Symbol>();
+                return this;
+            }
+
+            if (indexMaxPrice < 0)
+            {
+                // price out of range: return empty
+                _allSymbols = Enumerable.Empty<Symbol>();
+                return this;
+            }
             if (indexMaxPrice >= _uniqueStrikes.Count)
             {
                 indexMaxPrice = _uniqueStrikes.Count - 1;
