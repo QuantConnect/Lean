@@ -886,6 +886,41 @@ namespace QuantConnect.Tests
                 {"Rolling Averaged Population Magnitude", "0%"},
             };
 
+            var compositeAlphaModelFrameworkAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "288"},
+                {"Average Win", "0.07%"},
+                {"Average Loss", "-0.05%"},
+                {"Compounding Annual Return", "-95.659%"},
+                {"Drawdown", "4.100%"},
+                {"Expectancy", "-0.467"},
+                {"Net Profit", "-3.932%"},
+                {"Sharpe Ratio", "-23.357"},
+                {"Loss Rate", "79%"},
+                {"Win Rate", "21%"},
+                {"Profit-Loss Ratio", "1.51"},
+                {"Alpha", "-1.167"},
+                {"Beta", "-76.443"},
+                {"Annual Standard Deviation", "0.086"},
+                {"Annual Variance", "0.007"},
+                {"Information Ratio", "-23.448"},
+                {"Tracking Error", "0.086"},
+                {"Treynor Ratio", "0.026"},
+                {"Total Fees", "$1899.95"},
+                {"Total Insights Generated", "289"},
+                {"Total Insights Closed", "0"},
+                {"Total Insights Analysis Completed", "0"},
+                {"Long Insight Count", "146"},
+                {"Short Insight Count", "143"},
+                {"Long/Short Ratio", "102.10%"},
+                {"Estimated Monthly Alpha Value", "$0"},
+                {"Total Accumulated Estimated Alpha Value", "$0"},
+                {"Mean Population Estimated Insight Value", "$0"},
+                {"Mean Population Direction", "0%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "0%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -894,6 +929,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CompositeAlphaModelFrameworkAlgorithm", compositeAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxUniverseSelectionAlgorithm", dropboxUniverseSelectionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("LimitFillRegressionAlgorithm", limitFillRegressionStatistics, Language.CSharp),
