@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -106,6 +105,13 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            var tick = data as Tick;
+            if (tick?.TickType == TickType.OpenInterest)
+            {
+                OpenInterest = (long)tick.Value;
+                return;
+            }
+
             // Only cache non fill-forward data.
             if (data.IsFillForward) return;
 
@@ -122,8 +128,6 @@ namespace QuantConnect.Securities
                 _lastData = data;
             }
 
-
-            var tick = data as Tick;
             if (tick != null)
             {
                 if (tick.Value != 0) Price = tick.Value;
@@ -138,6 +142,7 @@ namespace QuantConnect.Securities
 
                 return;
             }
+
             var bar = data as IBar;
             if (bar != null)
             {
@@ -158,6 +163,7 @@ namespace QuantConnect.Securities
                 {
                     if (tradeBar.Volume != 0) Volume = tradeBar.Volume;
                 }
+
                 var quoteBar = bar as QuoteBar;
                 if (quoteBar != null)
                 {
