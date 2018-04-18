@@ -240,13 +240,6 @@ namespace QuantConnect.Securities
                 }
 
                 index = ~index;
-
-                if (index >= _uniqueStrikes.Count)
-                {
-                    // should never happen, return empty
-                    _allSymbols = Enumerable.Empty<Symbol>();
-                    return this;
-                }
             }
 
             // compute the bounds, no need to worry about rounding and such
