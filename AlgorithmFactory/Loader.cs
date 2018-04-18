@@ -96,9 +96,6 @@ namespace QuantConnect.AlgorithmFactory
 
             _loaderTimeLimit = loaderTimeLimit;
             _multipleTypeNameResolverFunction = multipleTypeNameResolverFunction;
-
-            //Set the python path for loading python algorithms.
-            Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
         }
 
 
@@ -158,8 +155,15 @@ namespace QuantConnect.AlgorithmFactory
             var pythonFile = new FileInfo(assemblyPath);
             var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
-            //Help python find the module
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonFile.DirectoryName);
+            // Set the python path for loading python algorithms.
+            var pythonPath = new[]
+            {
+                new DirectoryInfo(Environment.CurrentDirectory).FullName,
+                pythonFile.Directory.FullName,
+                Environment.GetEnvironmentVariable("PYTHONPATH")
+            };
+
+            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
 
             try
             {
