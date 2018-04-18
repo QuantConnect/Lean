@@ -53,9 +53,9 @@ class RsiAlphaModel:
 
             if state != previous_state and rsi.IsReady:
                 if state == State.TrippedLow:
-                    insights.append(Insight(symbol, self.insightPeriod, InsightDirection.Up))
+                    insights.append(Insight.Price(symbol, self.insightPeriod, InsightDirection.Up))
                 if state == State.TrippedHigh:
-                    insights.append(Insight(symbol, self.insightPeriod, InsightDirection.Down))
+                    insights.append(Insight.Price(symbol, self.insightPeriod, InsightDirection.Down))
 
             symbolData.State = state
 
