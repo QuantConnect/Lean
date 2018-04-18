@@ -230,10 +230,10 @@ namespace QuantConnect.Tests.Common.Securities
         public enum SecuritySeedData
         {
             None,
-            OpenInterest,
-            OpenInterestTick,
             TradeTick,
             QuoteTick,
+            OpenInterestTick,
+            OpenInterest,
             TradeBar,
             QuoteBar
         }
@@ -277,7 +277,7 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 Value = 5,
                 Quantity = 6,
-                Time = ReferenceTime,
+                EndTime = ReferenceTime,
                 TickType = TickType.Trade
             });
 
@@ -288,8 +288,23 @@ namespace QuantConnect.Tests.Common.Securities
                 AskSize = 2,
                 BidPrice = 3,
                 BidSize = 4,
-                Time = ReferenceTime,
+                EndTime = ReferenceTime,
                 TickType = TickType.Quote
+            });
+
+            var openInterestTick = new SecurityCache();
+            openInterestTick.AddData(new Tick
+            {
+                Value = 24,
+                EndTime = ReferenceTime,
+                TickType = TickType.OpenInterest
+            });
+
+            var openInterest = new SecurityCache();
+            openInterest.AddData(new OpenInterest
+            {
+                Value = 23,
+                EndTime = ReferenceTime,
             });
 
             var tradeBar = new SecurityCache();
@@ -314,30 +329,15 @@ namespace QuantConnect.Tests.Common.Securities
                 EndTime = ReferenceTime
             });
 
-            var openInterest = new SecurityCache();
-            openInterest.AddData(new OpenInterest
-            {
-                Value = 23,
-                Time = ReferenceTime,
-            });
-
-            var openInterestTick = new SecurityCache();
-            openInterestTick.AddData(new Tick
-            {
-                Value = 24,
-                EndTime = ReferenceTime,
-                TickType = TickType.OpenInterest
-            });
-
             return new[]
             {
                 new TestCaseData(defaultInstance, SecuritySeedData.None).SetName("Default Instance"),
                 new TestCaseData(tradeTick, SecuritySeedData.TradeTick).SetName("Seeded w/ Trade Tick"),
                 new TestCaseData(quoteTick, SecuritySeedData.QuoteTick).SetName("Seeded w/ Quote Tick"),
+                new TestCaseData(openInterestTick, SecuritySeedData.OpenInterestTick).SetName("Seeded w/ OpenInterest Tick"),
+                new TestCaseData(openInterest, SecuritySeedData.OpenInterest).SetName("Seeded w/ OpenInterest"),
                 new TestCaseData(tradeBar, SecuritySeedData.TradeBar).SetName("Seeded w/ TradeBar"),
                 new TestCaseData(quoteBar, SecuritySeedData.QuoteBar).SetName("Seeded w/ QuoteBar"),
-                new TestCaseData(openInterest, SecuritySeedData.OpenInterest).SetName("Seeded w/ OpenInterest"),
-                new TestCaseData(openInterestTick, SecuritySeedData.OpenInterestTick).SetName("Seeded w/ OpenInterest Tick"),
             };
         }
 
