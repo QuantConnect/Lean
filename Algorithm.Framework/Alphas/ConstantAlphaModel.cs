@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Provides an implementation of <see cref="IAlphaModel"/> that always returns the same insight for each security
     /// </summary>
-    public class ConstantAlphaModel : IAlphaModel
+    public class ConstantAlphaModel : IAlphaModel, INamedModel
     {
         private readonly InsightType _type;
         private readonly InsightDirection _direction;
@@ -33,6 +33,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly double? _confidence;
         private readonly HashSet<Security> _securities;
         private readonly Dictionary<Symbol, DateTime> _insightsTimeBySymbol;
+
+        /// <summary>
+        /// Defines a name for a framework model
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
@@ -65,6 +70,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             _securities = new HashSet<Security>();
             _insightsTimeBySymbol = new Dictionary<Symbol, DateTime>();
+
+            Name = $"{nameof(ConstantAlphaModel)}({type},{direction},{period}";
+            if (magnitude.HasValue)
+            {
+                Name += $",{magnitude.Value}";
+            }
+
+            if (confidence.HasValue)
+            {
+                Name += $",{confidence.Value}";
+            }
+
+            Name += ")";
         }
 
         /// <summary>

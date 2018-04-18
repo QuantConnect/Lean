@@ -27,12 +27,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// Uses Wilder's RSI to create insights. Using default settings, a cross over below 30 or above 70 will
     /// trigger a new insight.
     /// </summary>
-    public class RsiAlphaModel : IAlphaModel
+    public class RsiAlphaModel : IAlphaModel, INamedModel
     {
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
 
         private readonly int _period;
         private readonly Resolution _resolution;
+
+        /// <summary>
+        /// Defines a name for a framework model
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RsiAlphaModel"/> class
@@ -46,6 +51,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             _period = period;
             _resolution = resolution;
+            Name = $"{nameof(RsiAlphaModel)}({_period},{_resolution})";
         }
 
         /// <summary>

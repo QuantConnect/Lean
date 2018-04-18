@@ -47,5 +47,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         {
             return Enumerable.Range(0, 360).Select(x => new Insight(Symbols.SPY, _period, _type, _direction, _magnitude, _confidence));
         }
+
+        protected override string GetExpectedModelName(IAlphaModel model)
+        {
+            return $"{nameof(ConstantAlphaModel)}({_type},{_direction},{_period},{_magnitude})";
+        }
     }
 }

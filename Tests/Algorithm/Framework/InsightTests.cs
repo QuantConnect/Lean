@@ -50,12 +50,37 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.AreEqual(insight.Id, deserialized.Id);
             Assert.AreEqual(insight.Magnitude, deserialized.Magnitude);
             Assert.AreEqual(insight.Period, deserialized.Period);
+            Assert.AreEqual(insight.SourceModel, deserialized.SourceModel);
             Assert.AreEqual(insight.Score.Direction, deserialized.Score.Direction);
             Assert.AreEqual(insight.Score.Magnitude, deserialized.Score.Magnitude);
             Assert.AreEqual(insight.Score.UpdatedTimeUtc, deserialized.Score.UpdatedTimeUtc);
             Assert.AreEqual(insight.Score.IsFinalScore, deserialized.Score.IsFinalScore);
             Assert.AreEqual(insight.Symbol, deserialized.Symbol);
             Assert.AreEqual(insight.Type, deserialized.Type);
+        }
+
+        [Test]
+        public void SurvivesRoundTripCopy()
+        {
+            var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
+            var original = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2);
+            var copy = original.Clone();
+
+            Assert.AreEqual(original.CloseTimeUtc, copy.CloseTimeUtc);
+            Assert.AreEqual(original.Confidence, copy.Confidence);
+            Assert.AreEqual(original.Direction, copy.Direction);
+            Assert.AreEqual(original.EstimatedValue, copy.EstimatedValue);
+            Assert.AreEqual(original.GeneratedTimeUtc, copy.GeneratedTimeUtc);
+            Assert.AreEqual(original.Id, copy.Id);
+            Assert.AreEqual(original.Magnitude, copy.Magnitude);
+            Assert.AreEqual(original.Period, copy.Period);
+            Assert.AreEqual(original.SourceModel, copy.SourceModel);
+            Assert.AreEqual(original.Score.Direction, copy.Score.Direction);
+            Assert.AreEqual(original.Score.Magnitude, copy.Score.Magnitude);
+            Assert.AreEqual(original.Score.UpdatedTimeUtc, copy.Score.UpdatedTimeUtc);
+            Assert.AreEqual(original.Score.IsFinalScore, copy.Score.IsFinalScore);
+            Assert.AreEqual(original.Symbol, copy.Symbol);
+            Assert.AreEqual(original.Type, copy.Type);
         }
     }
 }

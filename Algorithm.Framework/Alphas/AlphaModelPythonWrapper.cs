@@ -24,9 +24,27 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Provides an implementation of <see cref="IAlphaModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class AlphaModelPythonWrapper : IAlphaModel
+    public class AlphaModelPythonWrapper : IAlphaModel, INamedModel
     {
         private readonly dynamic _model;
+
+        public string Name
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    // if the model defines a Name property then use that
+                    if (_model.HasAttr("Name"))
+                    {
+                        return _model.Name;
+                    }
+
+                    // if the model does not define a name property, use the python type name
+                    return _model.GetPythonType();
+                }
+            }
+        }
 
         /// <summary>
         /// Constructor for initialising the <see cref="IAlphaModel"/> class with wrapped <see cref="PyObject"/> object

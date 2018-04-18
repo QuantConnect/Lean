@@ -54,7 +54,9 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
+    <Compile Include="Alphas\CompositeAlphaModel.cs" />
     <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
+    <Compile Include="Alphas\INamedModel.cs" />
     <Compile Include="Alphas\RsiAlphaModel.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />

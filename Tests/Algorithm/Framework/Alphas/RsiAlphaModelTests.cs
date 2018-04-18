@@ -44,5 +44,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 yield return Insight.Price(Symbols.SPY, period, direction);
             }
         }
+
+        protected override string GetExpectedModelName(IAlphaModel model)
+        {
+            return $"{nameof(RsiAlphaModel)}(14,Daily)";
+        }
     }
 }
