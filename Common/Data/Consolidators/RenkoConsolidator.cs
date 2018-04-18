@@ -14,6 +14,7 @@
 */
 
 using System;
+using Python.Runtime;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
@@ -26,7 +27,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public EventHandler<RenkoBar> DataConsolidated;
+        public event EventHandler<RenkoBar> DataConsolidated;
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -63,10 +64,11 @@ namespace QuantConnect.Data.Consolidators
         public RenkoConsolidator(decimal barSize, RenkoType type)
         {
             if (type != RenkoType.Wicked)
-                throw new ArgumentOutOfRangeException("type");
+            {
+                throw new ArgumentException($"RenkoConsolidator can only be initialized with RenkoType.Wicked. For RenkoType.Classic, please use the other constructor overloads.");
+            }
 
             _barSize = barSize;
-
             Type = type;
         }
 
@@ -112,6 +114,48 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// </summary>
+        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
+        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
+        /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
+        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
+        /// not aggregate volume per bar.</param>
+        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
+        public RenkoConsolidator(decimal barSize, PyObject selector, PyObject volumeSelector = null, bool evenBars = true)
+            : this(barSize, evenBars)
+        {
+            if (barSize < Extensions.GetDecimalEpsilon())
+            {
+                throw new ArgumentOutOfRangeException("barSize", "RenkoConsolidator bar size must be positve and greater than 1e-28");
+            }
+
+            if (selector != null)
+            {
+                if (!selector.TryConvertToDelegate(out _selector))
+                {
+                    throw new ArgumentException("Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
+                }
+            }
+            else
+            {
+                _selector = (x => x.Value);
+            }
+
+            if (volumeSelector != null)
+            {
+                if (!volumeSelector.TryConvertToDelegate(out _volumeSelector))
+                {
+                    throw new ArgumentException("Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
+                }
+            }
+            else
+            {
+                _volumeSelector = (x => 0);
+            }
+        }
+
+        /// <summary>
         /// Gets the kind of the bar
         /// </summary>
         public RenkoType Type { get; private set; }
@@ -119,62 +163,39 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets the bar size used by this consolidator
         /// </summary>
-        public decimal BarSize
-        {
-            get { return _barSize; }
-        }
+        public decimal BarSize => _barSize;
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
-        public IBaseData Consolidated
-        {
-            get; private set;
-        }
+        public IBaseData Consolidated { get; private set; }
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData
-        {
-            get { return _currentBar == null ? null : _currentBar.Clone(); }
-        }
+        public IBaseData WorkingData => _currentBar?.Clone();
 
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType
-        {
-            get { return typeof (IBaseData); }
-        }
+        public Type InputType => typeof(IBaseData);
 
         /// <summary>
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public Type OutputType
-        {
-            get { return typeof(RenkoBar); }
-        }
+        public Type OutputType => typeof(RenkoBar);
 
         // Used for unit tests
-        internal RenkoBar OpenRenkoBar
-        {
-            get
-            {
-                return new RenkoBar(null, _openOn, _closeOn,
-                    BarSize, _openRate, _highRate, _lowRate, _closeRate);
-            }
-        }
+        internal RenkoBar OpenRenkoBar => new RenkoBar(null, _openOn, _closeOn, _barSize, _openRate, _highRate, _lowRate, _closeRate);
 
         private void Rising(IBaseData data)
         {
             decimal limit;
 
-            while (_closeRate > (limit = (_openRate + BarSize)))
+            while (_closeRate > (limit = _openRate + _barSize))
             {
-                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn,
-                    BarSize, _openRate, limit, _lowRate, limit);
+                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _openRate, limit, _lowRate, limit);
 
                 _lastWicko = wicko;
 
@@ -190,10 +211,9 @@ namespace QuantConnect.Data.Consolidators
         {
             decimal limit;
 
-            while (_closeRate < (limit = (_openRate - BarSize)))
+            while (_closeRate < (limit = _openRate - _barSize))
             {
-                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn,
-                    BarSize, _openRate, _highRate, limit, limit);
+                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _openRate, _highRate, limit, limit);
 
                 _lastWicko = wicko;
 
@@ -213,9 +233,13 @@ namespace QuantConnect.Data.Consolidators
         public void Update(IBaseData data)
         {
             if (Type == RenkoType.Classic)
+            {
                 UpdateClassic(data);
+            }
             else
+            {
                 UpdateWicked(data);
+            }
         }
 
         private void UpdateWicked(IBaseData data)
@@ -237,30 +261,25 @@ namespace QuantConnect.Data.Consolidators
             {
                 _closeOn = data.Time;
 
-                if (rate > _highRate)
-                    _highRate = rate;
+                if (rate > _highRate) _highRate = rate;
 
-                if (rate < _lowRate)
-                    _lowRate = rate;
+                if (rate < _lowRate) _lowRate = rate;
 
                 _closeRate = rate;
 
                 if (_closeRate > _openRate)
                 {
-                    if (_lastWicko == null ||
-                        (_lastWicko.Direction == BarDirection.Rising))
+                    if (_lastWicko == null || _lastWicko.Direction == BarDirection.Rising)
                     {
                         Rising(data);
-
                         return;
                     }
 
-                    var limit = (_lastWicko.Open + BarSize);
+                    var limit = _lastWicko.Open + _barSize;
 
                     if (_closeRate > limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn,
-                            BarSize, _lastWicko.Open, limit, _lowRate, limit);
+                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _lastWicko.Open, limit, _lowRate, limit);
 
                         _lastWicko = wicko;
 
@@ -275,20 +294,17 @@ namespace QuantConnect.Data.Consolidators
                 }
                 else if (_closeRate < _openRate)
                 {
-                    if (_lastWicko == null ||
-                        (_lastWicko.Direction == BarDirection.Falling))
+                    if (_lastWicko == null || _lastWicko.Direction == BarDirection.Falling)
                     {
                         Falling(data);
-
                         return;
                     }
 
-                    var limit = (_lastWicko.Open - BarSize);
+                    var limit = _lastWicko.Open - _barSize;
 
                     if (_closeRate < limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn,
-                            BarSize, _lastWicko.Open, _highRate, limit, limit);
+                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _lastWicko.Open, _highRate, limit, limit);
 
                         _lastWicko = wicko;
 
@@ -330,7 +346,7 @@ namespace QuantConnect.Data.Consolidators
                 var open = close ?? currentValue;
                 if (_evenBars && !close.HasValue)
                 {
-                    open = Math.Ceiling(open/_barSize)*_barSize;
+                    open = Math.Ceiling(open / _barSize) * _barSize;
                 }
                 _currentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
             }
@@ -351,11 +367,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="consolidated">The newly consolidated data</param>
         protected virtual void OnDataConsolidated(RenkoBar consolidated)
         {
-            var handler = DataConsolidated;
-            if (handler != null) handler(this, consolidated);
+            DataConsolidated?.Invoke(this, consolidated);
 
-            var explicitHandler = _dataConsolidatedHandler;
-            if (explicitHandler != null) explicitHandler(this, consolidated);
+            _dataConsolidatedHandler?.Invoke(this, consolidated);
 
             Consolidated = consolidated;
         }
@@ -364,6 +378,7 @@ namespace QuantConnect.Data.Consolidators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            DataConsolidated = null;
             _dataConsolidatedHandler = null;
         }
     }
