@@ -176,9 +176,13 @@ namespace QuantConnect.Algorithm.Framework
             // execute on the targets, overriding targets for symbols w/ risk targets
             var riskAdjustedTargets = riskTargetOverrides.Concat(targets).DistinctBy(pt => pt.Symbol).ToArray();
 
-            if (DebugMode && riskAdjustedTargets.Length > 0)
+            if (DebugMode)
             {
-                Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskTargetOverrides.Select(t => t.ToString()).OrderBy(t => t))}");
+                // only log adjusted targets if we've performed an adjustment
+                if (riskTargetOverrides.Length > 0)
+                {
+                    Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskAdjustedTargets.Select(t => t.ToString()).OrderBy(t => t))}");
+                }
             }
 
             Execution.Execute(this, riskAdjustedTargets);
