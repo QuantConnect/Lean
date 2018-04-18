@@ -156,10 +156,14 @@ namespace QuantConnect.AlgorithmFactory
             var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
             // Set the python path for loading python algorithms.
-            // For Unix systems (PlatformID 4 and 6), separator is ":" while it is ";" for Windows
-            var separator = (int)Environment.OSVersion.Platform > 3 ? ":" : ";";
-            var pythonPath = new[] { Environment.CurrentDirectory, pythonFile.DirectoryName, Environment.GetEnvironmentVariable("PYTHONPATH") };
-            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(separator, pythonPath));
+            var pythonPath = new[]
+            {
+                new DirectoryInfo(Environment.CurrentDirectory).FullName,
+                pythonFile.Directory.FullName,
+                Environment.GetEnvironmentVariable("PYTHONPATH")
+            };
+
+            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
 
             try
             {
