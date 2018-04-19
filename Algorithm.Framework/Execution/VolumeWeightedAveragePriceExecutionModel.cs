@@ -140,25 +140,16 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         private bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
-            var vwap = data.VWAP;
             if (unorderedQuantity > 0)
             {
-                var price = data.Security.BidPrice == 0
-                    ? data.Security.Price
-                    : data.Security.BidPrice;
-
-                if (price < vwap)
+                if (data.Security.BidPrice < data.VWAP)
                 {
                     return true;
                 }
             }
             else
             {
-                var price = data.Security.AskPrice == 0
-                    ? data.Security.AskPrice
-                    : data.Security.Price;
-
-                if (price > vwap)
+                if (data.Security.AskPrice > data.VWAP)
                 {
                     return true;
                 }
