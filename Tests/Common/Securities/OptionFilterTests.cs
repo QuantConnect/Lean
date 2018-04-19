@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,12 @@ namespace QuantConnect.Tests.Common.Securities
     public class OptionFilterTests
     {
         [Test]
-        public void FiltersStrikeRange()
+        [TestCase(9.5)]
+        [TestCase(10)]
+        public void FiltersStrikeRange(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
                                 .Strikes(-2, 3)
@@ -55,20 +57,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
-            Assert.AreEqual(5, filtered.Count);
+            Assert.AreEqual(underlyingPrice == 10 ? 6 : 5, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
             Assert.AreEqual(symbols[4], filtered[1]);
             Assert.AreEqual(symbols[5], filtered[2]);
             Assert.AreEqual(symbols[6], filtered[3]);
             Assert.AreEqual(symbols[7], filtered[4]);
+            if (underlyingPrice == 10)
+            {
+                Assert.AreEqual(symbols[8], filtered[5]);
+            }
             Assert.AreEqual(true, filterUniverse.IsDynamic);
         }
 
         [Test]
-        public void FiltersStrikeRangeWithVaryingDistance()
+        [TestCase(7.5)]
+        [TestCase(8)]
+        public void FiltersStrikeRangeWithVaryingDistance(decimal underlyingPrice)
         {
             var expiry = new DateTime(2016, 03, 04);
-            var underlying = new Tick { Value = 7.5m, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
                                 .Strikes(-2, 2)
@@ -94,11 +102,170 @@ namespace QuantConnect.Tests.Common.Securities
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
-            Assert.AreEqual(4, filtered.Count);
+            Assert.AreEqual(underlyingPrice == 8 ? 5 : 4, filtered.Count);
             Assert.AreEqual(symbols[1], filtered[0]);
             Assert.AreEqual(symbols[2], filtered[1]);
             Assert.AreEqual(symbols[3], filtered[2]);
             Assert.AreEqual(symbols[4], filtered[3]);
+            if (underlyingPrice == 8)
+            {
+                Assert.AreEqual(symbols[5], filtered[4]);
+            }
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
+        }
+
+        [Test]
+        [TestCase(14)]
+        [TestCase(15)]
+        public void FiltersStrikeRangeWithNegativeMaxStrike(decimal underlyingPrice)
+        {
+            var expiry = new DateTime(2016, 03, 04);
+            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                .Strikes(-3, -1)
+                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+            };
+
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(3, filtered.Count);
+            Assert.AreEqual(symbols[5], filtered[0]);
+            Assert.AreEqual(symbols[6], filtered[1]);
+            Assert.AreEqual(symbols[7], filtered[2]);
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
+        }
+
+        [Test]
+        [TestCase(14)]
+        [TestCase(15)]
+        public void FiltersStrikeRangeWithNegativeMaxStrikeOutOfRange(decimal underlyingPrice)
+        {
+            var expiry = new DateTime(2016, 03, 04);
+            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                .Strikes(-3, -1)
+                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 0
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 1
+            };
+
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(0, filtered.Count);
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
+        }
+
+        [Test]
+        [TestCase(5)]
+        [TestCase(6)]
+        public void FiltersStrikeRangeWithPositiveMinStrike(decimal underlyingPrice)
+        {
+            var expiry = new DateTime(2016, 03, 04);
+            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                .Strikes(1, 3)
+                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+            };
+
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(3, filtered.Count);
+            Assert.AreEqual(symbols[2], filtered[0]);
+            Assert.AreEqual(symbols[3], filtered[1]);
+            Assert.AreEqual(symbols[4], filtered[2]);
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
+        }
+
+        [Test]
+        [TestCase(20)]
+        [TestCase(21)]
+        public void FiltersStrikeRangeWithPositiveMinStrikeOutOfRange(decimal underlyingPrice)
+        {
+            var expiry = new DateTime(2016, 03, 04);
+            var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                .Strikes(1, 3)
+                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 0
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 1
+            };
+
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(0, filtered.Count);
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
+        }
+
+        [Test]
+        public void FiltersStrikeRangeWhenEmpty()
+        {
+            var underlying = new Tick { Value = 7.5m, Time = new DateTime(2016, 02, 26) };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                .Strikes(-2, 2)
+                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new Symbol[] { };
+
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(0, filtered.Count);
             Assert.AreEqual(true, filterUniverse.IsDynamic);
         }
 
@@ -140,13 +307,12 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(true, filterUniverse.IsDynamic);
         }
 
-
         [Test]
         public void FiltersOutWeeklys()
         {
             var expiry1 = new DateTime(2017, 01, 04);
             var expiry2 = new DateTime(2017, 01, 06);
-            var expiry3 = new DateTime(2017, 01, 11); 
+            var expiry3 = new DateTime(2017, 01, 11);
             var expiry4 = new DateTime(2017, 01, 13);
             var expiry5 = new DateTime(2017, 01, 18);
             var expiry6 = new DateTime(2017, 01, 20); // standard
