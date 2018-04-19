@@ -38,7 +38,8 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripSerializationUsingJsonConvert()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2);
+            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            Insight.Group(insight);
             var serialized = JsonConvert.SerializeObject(insight);
             var deserialized = JsonConvert.DeserializeObject<Insight>(serialized);
 
@@ -47,6 +48,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.AreEqual(insight.Direction, deserialized.Direction);
             Assert.AreEqual(insight.EstimatedValue, deserialized.EstimatedValue);
             Assert.AreEqual(insight.GeneratedTimeUtc, deserialized.GeneratedTimeUtc);
+            Assert.AreEqual(insight.GroupId, deserialized.GroupId);
             Assert.AreEqual(insight.Id, deserialized.Id);
             Assert.AreEqual(insight.Magnitude, deserialized.Magnitude);
             Assert.AreEqual(insight.Period, deserialized.Period);
@@ -63,7 +65,9 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripCopy()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var original = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2);
+            var original = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            Insight.Group(original);
+
             var copy = original.Clone();
 
             Assert.AreEqual(original.CloseTimeUtc, copy.CloseTimeUtc);
@@ -71,6 +75,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.AreEqual(original.Direction, copy.Direction);
             Assert.AreEqual(original.EstimatedValue, copy.EstimatedValue);
             Assert.AreEqual(original.GeneratedTimeUtc, copy.GeneratedTimeUtc);
+            Assert.AreEqual(original.GroupId, copy.GroupId);
             Assert.AreEqual(original.Id, copy.Id);
             Assert.AreEqual(original.Magnitude, copy.Magnitude);
             Assert.AreEqual(original.Period, copy.Period);
@@ -81,6 +86,24 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.AreEqual(original.Score.IsFinalScore, copy.Score.IsFinalScore);
             Assert.AreEqual(original.Symbol, copy.Symbol);
             Assert.AreEqual(original.Type, copy.Type);
+        }
+
+        [Test]
+        public void GroupAssignsGroupId()
+        {
+            var insight1 = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
+            var insight2 = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
+            var groupId = Insight.Group(insight1, insight2);
+            Assert.AreEqual(groupId, insight1.GroupId);
+            Assert.AreEqual(groupId, insight2.GroupId);
+        }
+
+        [Test]
+        public void GroupThrowsExceptionIfInsightAlreadyHasGroupId()
+        {
+            var insight1 = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
+            Insight.Group(insight1);
+            Assert.That(() => Insight.Group(insight1), Throws.InvalidOperationException);
         }
     }
 }
