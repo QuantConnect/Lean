@@ -921,6 +921,43 @@ namespace QuantConnect.Tests
                 {"Rolling Averaged Population Direction", "0%"},
                 {"Rolling Averaged Population Magnitude", "0%"},
             };
+
+            var pairsTradingAlphaModelFrameworkAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "2.18%"},
+                {"Average Loss", "-1.38%"},
+                {"Compounding Annual Return", "75.646%"},
+                {"Drawdown", "0.600%"},
+                {"Expectancy", "0.290"},
+                {"Net Profit", "0.723%"},
+                {"Sharpe Ratio", "7.017"},
+                {"Loss Rate", "50%"},
+                {"Win Rate", "50%"},
+                {"Profit-Loss Ratio", "1.58"},
+                {"Alpha", "0"},
+                {"Beta", "33.003"},
+                {"Annual Standard Deviation", "0.052"},
+                {"Annual Variance", "0.003"},
+                {"Information Ratio", "6.816"},
+                {"Tracking Error", "0.052"},
+                {"Treynor Ratio", "0.011"},
+                {"Total Fees", "$70.58"},
+                {"Total Insights Generated", "4"},
+                {"Total Insights Closed", "4"},
+                {"Total Insights Analysis Completed", "4"},
+                {"Long Insight Count", "2"},
+                {"Short Insight Count", "2"},
+                {"Long/Short Ratio", "100%"},
+                {"Estimated Monthly Alpha Value", "$-1201.722"},
+                {"Total Accumulated Estimated Alpha Value", "$-193.6107"},
+                {"Mean Population Estimated Insight Value", "$-48.40268"},
+                {"Mean Population Direction", "50%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "3.8827%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -962,6 +999,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CancelOpenOrdersRegressionAlgorithm", cancelOpenOrdersRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
