@@ -37,6 +37,9 @@ class RsiAlphaModel:
         self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), period)
         self.symbolDataBySymbol ={}
 
+        resolutionString = Extensions.GetEnumString(resolution, Resolution)
+        self.Name = '{}({},{})'.format(self.__class__.__name__, period, resolutionString)
+
     def Update(self, algorithm, data):
         '''Updates this alpha model with the latest data from the algorithm.
         This is called each time the algorithm receives data for subscribed securities
@@ -53,9 +56,9 @@ class RsiAlphaModel:
 
             if state != previous_state and rsi.IsReady:
                 if state == State.TrippedLow:
-                    insights.append(Insight(symbol, self.insightPeriod, InsightDirection.Up))
+                    insights.append(Insight.Price(symbol, self.insightPeriod, InsightDirection.Up))
                 if state == State.TrippedHigh:
-                    insights.append(Insight(symbol, self.insightPeriod, InsightDirection.Down))
+                    insights.append(Insight.Price(symbol, self.insightPeriod, InsightDirection.Down))
 
             symbolData.State = state
 

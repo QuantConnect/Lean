@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
@@ -41,6 +42,24 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
 
             _alphaModels = alphaModels;
+        }
+
+        public CompositeAlphaModel(PyObject[] alphaModels)
+        {
+            if (alphaModels.IsNullOrEmpty())
+            {
+                throw new ArgumentException("Must specify at least 1 alpha model for the CompositeAlphaModel");
+            }
+
+            _alphaModels = new IAlphaModel[alphaModels.Length];
+
+            for (var i = 0; i < alphaModels.Length; i++)
+            {
+                if (!alphaModels[i].TryConvert(out _alphaModels[i]))
+                {
+                    _alphaModels[i] = new AlphaModelPythonWrapper(alphaModels[i]);
+                }
+            }
         }
 
         /// <summary>

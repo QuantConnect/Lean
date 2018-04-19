@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     }
 
                     // if the model does not define a name property, use the python type name
-                    return _model.GetPythonType();
+                    return _model.__class__.__name__;
                 }
             }
         }

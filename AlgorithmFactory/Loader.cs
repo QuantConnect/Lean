@@ -158,8 +158,8 @@ namespace QuantConnect.AlgorithmFactory
             // Set the python path for loading python algorithms.
             var pythonPath = new[]
             {
-                new DirectoryInfo(Environment.CurrentDirectory).FullName,
                 pythonFile.Directory.FullName,
+                new DirectoryInfo(Environment.CurrentDirectory).FullName,
                 Environment.GetEnvironmentVariable("PYTHONPATH")
             };
 

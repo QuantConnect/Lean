@@ -1115,6 +1115,28 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
+        /// </summary>
+        /// <param name="value">Numeric value</param>
+        /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
+        /// <returns>String that represents the enumerated object</returns>
+        public static string GetEnumString(this int value, PyObject pyObject)
+        {
+            Type type;
+            if (pyObject.TryConvert(out type))
+            {
+                return value.ToString().ConvertTo(type).ToString();
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"GetEnumString(): {pyObject.Repr()} is not a C# Type.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Performs on-line batching of the specified enumerator, emitting chunks of the requested batch size
         /// </summary>
         /// <typeparam name="T">The enumerable item type</typeparam>
