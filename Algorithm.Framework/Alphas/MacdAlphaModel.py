@@ -65,7 +65,7 @@ class MacdAlphaModel:
 
             direction = InsightDirection.Flat
             normalized_signal = sd.MACD.Signal.Current.Value / sd.Security.Price
-            algorithm.Log(str(algorithm.Time) + ":" + str(normalized_signal) + ":" + str(sd.MACD.Signal.Current.Value))
+
             if normalized_signal > self.bounceThresholdPercent:
                 direction = InsightDirection.Up
             elif normalized_signal < -self.bounceThresholdPercent:
