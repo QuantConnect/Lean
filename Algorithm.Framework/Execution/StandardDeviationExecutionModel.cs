@@ -173,22 +173,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
             var deviations = _deviations * data.STD;
             if (unorderedQuantity > 0)
             {
-                var price = data.Security.BidPrice == 0
-                    ? data.Security.Price
-                    : data.Security.BidPrice;
-
-                if (price < data.SMA - deviations)
+                if (data.Security.BidPrice < data.SMA - deviations)
                 {
                     return true;
                 }
             }
             else
             {
-                var price = data.Security.AskPrice == 0
-                    ? data.Security.AskPrice
-                    : data.Security.Price;
-
-                if (price > data.SMA + deviations)
+                if (data.Security.AskPrice > data.SMA + deviations)
                 {
                     return true;
                 }

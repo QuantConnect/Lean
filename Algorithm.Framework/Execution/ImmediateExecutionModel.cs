@@ -22,12 +22,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
 {
     /// <summary>
     /// Provides an implementation of <see cref="IExecutionModel"/> that immediately submits
-    /// market orders to achieve the desired portoflio targets
+    /// market orders to achieve the desired portfolio targets
     /// </summary>
     public class ImmediateExecutionModel : IExecutionModel
     {
         /// <summary>
-        /// Immediately submits orders for the specified portolio targets.
+        /// Immediately submits orders for the specified portfolio targets.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets to be ordered</param>
