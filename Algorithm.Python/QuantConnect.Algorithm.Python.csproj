@@ -140,6 +140,8 @@
     <None Include="CustomSecurityInitializerAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
+    <Content Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.py" />
     <None Include="BasicTemplateCryptoAlgorithm.py" />
     <None Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
     <None Include="RenkoConsolidatorAlgorithm.py" />
