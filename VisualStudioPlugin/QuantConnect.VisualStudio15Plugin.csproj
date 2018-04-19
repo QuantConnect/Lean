@@ -77,11 +77,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AuthorizationManager.cs" />
+    <Compile Include="DataGridItem.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
+    <Compile Include="IBacktestObserver.cs" />
+    <Compile Include="ToolWindow1.cs" />
+    <Compile Include="ToolWindow1Command.cs" />
+    <Compile Include="ToolWindow1Control.xaml.cs">
+      <DependentUpon>ToolWindow1Control.xaml</DependentUpon>
+    </Compile>
     <Compile Include="VSActivityLog.cs" />
     <Compile Include="AuthenticationCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
@@ -111,6 +118,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="ToolWindow1Control.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <VSCTCompile Include="QuantConnectPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
@@ -135,6 +146,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Resources\icon_128x128_resource.png" />
+    <Content Include="Resources\icon_16x16.png" />
     <Content Include="Resources\ToolMenuCommand.png" />
   </ItemGroup>
   <ItemGroup>
@@ -236,6 +248,7 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>

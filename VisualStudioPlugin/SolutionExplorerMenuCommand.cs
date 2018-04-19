@@ -53,6 +53,11 @@ namespace QuantConnect.VisualStudioPlugin
 
         private ProjectFinder _projectFinder;
 
+        /// <summary>
+        /// Observer for the status of backtests launched from the plugin
+        /// </summary>
+        private readonly IBacktestObserver _backtestObserver;
+
         private readonly AuthenticationCommand _authenticationCommand;
 
         /// <summary>
@@ -82,13 +87,14 @@ namespace QuantConnect.VisualStudioPlugin
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private SolutionExplorerMenuCommand(Package package)
+        private SolutionExplorerMenuCommand(Package package, IBacktestObserver backtestObserver)
         {
             if (package == null)
             {
                 throw new ArgumentNullException(nameof(package));
             }
 
+            _backtestObserver = backtestObserver;
             _package = package as QuantConnectPackage;
             _dte2 = _serviceProvider.GetService(typeof(SDTE)) as DTE2;
             _authenticationCommand = new AuthenticationCommand();
@@ -119,58 +125,70 @@ namespace QuantConnect.VisualStudioPlugin
         /// Initializes the singleton instance of the command.
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
+        public static void Initialize(Package package, IBacktestObserver backtestObserver)
         {
-            Instance = new SolutionExplorerMenuCommand(package);
+            Instance = new SolutionExplorerMenuCommand(package, backtestObserver);
         }
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, async (selectedProjectId, selectedProjectName, files) =>
+            try
             {
-                var uploadResult = await System.Threading.Tasks.Task.Run(() =>
-                    UploadFilesToServer(selectedProjectId, files));
-                if (!uploadResult)
+                ExecuteOnProjectAsync(sender, async (selectedProjectId, selectedProjectName, files) =>
                 {
-                    return;
-                }
+                    var uploadResult = await System.Threading.Tasks.Task.Run(() =>
+                        UploadFilesToServer(selectedProjectId, files));
+                    if (!uploadResult)
+                    {
+                        return;
+                    }
 
-                var compilationResult = await System.Threading.Tasks.Task.Run(() =>
-                    CompileProjectOnServer(selectedProjectId));
-                if (!compilationResult.Item1)
-                {
-                    var errorDialog = new ErrorDialog("Compilation Error", compilationResult.Item2);
-                    VsUtils.DisplayDialogWindow(errorDialog);
-                    return;
-                }
+                    var compilationResult = await CompileProjectOnServer(selectedProjectId);
+                    if (!compilationResult.Item1)
+                    {
+                        var errorDialog = new ErrorDialog("Compilation Error", compilationResult.Item2);
+                        VsUtils.DisplayDialogWindow(errorDialog);
+                        return;
+                    }
 
-                var backtestResult = await System.Threading.Tasks.Task.Run(() =>
-                    BacktestProjectOnServer(selectedProjectId, compilationResult.Item2));
-                if (!backtestResult.Item1)
-                {
-                    var errorDialog = new ErrorDialog("Backtest Failed", backtestResult.Item2);
-                    VsUtils.DisplayDialogWindow(errorDialog);
-                    return;
-                }
+                    var backtestResult = await BacktestProjectOnServer(selectedProjectId, compilationResult.Item2);
+                    if (!backtestResult.Item1)
+                    {
+                        var errorDialog = new ErrorDialog("Backtest Failed", backtestResult.Item2);
+                        VsUtils.DisplayDialogWindow(errorDialog);
+                        return;
+                    }
 
-                var projectUrl = string.Format(
-                        CultureInfo.CurrentCulture,
-                        "https://www.quantconnect.com/terminal/#open/{0}",
-                        selectedProjectId
-                    );
-                Process.Start(projectUrl);
-            });
+                    var projectUrl = string.Format(
+                            CultureInfo.CurrentCulture,
+                            "https://www.quantconnect.com/terminal/#open/{0}",
+                            selectedProjectId
+                        );
+                    Process.Start(projectUrl);
+                });
+            }
+            catch (Exception exception)
+            {
+                VsUtils.ShowErrorMessageBox(_serviceProvider, "QuantConnect Exception", exception.ToString());
+            }
         }
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
+            try
             {
-                System.Threading.Tasks.Task.Factory.StartNew(() =>
+                ExecuteOnProjectAsync(sender, (selectedProjectId, selectedProjectName, files) =>
                 {
-                    UploadFilesToServer(selectedProjectId, files);
-                }, CancellationToken.None, TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
-            });
+                    System.Threading.Tasks.Task.Factory.StartNew(() =>
+                    {
+                        UploadFilesToServer(selectedProjectId, files);
+                    }, CancellationToken.None, TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+                });
+            }
+            catch (Exception exception)
+            {
+                VsUtils.ShowErrorMessageBox(_serviceProvider, "QuantConnect Exception", exception.ToString());
+            }
         }
 
         /// <summary>
@@ -230,17 +248,17 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="projectId">Target project Id</param>
         /// <returns>Tuple&lt;bool, string&gt;. Item1 is true if compilation succeeded.
         /// Item2 is compile Id if compilation succeeded else error message.</returns>
-        private Tuple<bool, string> CompileProjectOnServer(int projectId)
+        private async Task<Tuple<bool, string>> CompileProjectOnServer(int projectId)
         {
             VsUtils.DisplayInStatusBar(_serviceProvider, "Compiling project...");
             var api = AuthorizationManager.GetInstance().GetApi();
-            var compileStatus = api.CreateCompile(projectId);
+            var compileStatus = await System.Threading.Tasks.Task.Run(() => api.CreateCompile(projectId));
             var compileId = compileStatus.CompileId;
 
             while (compileStatus.State == Api.CompileState.InQueue)
             {
-                Thread.Sleep(2000);
-                compileStatus = api.ReadCompile(projectId, compileId);
+                compileStatus = await System.Threading.Tasks.Task.Delay(2000).
+                    ContinueWith(_ => api.ReadCompile(projectId, compileId));
             }
 
             if (compileStatus.State == Api.CompileState.BuildError)
@@ -262,20 +280,32 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="compileId">Target compile Id</param>
         /// <returns>Tuple&lt;bool, string&gt;. Item1 is true if backtest succeeded.
         /// Item2 is error message if backtest failed.</returns>
-        private Tuple<bool, string> BacktestProjectOnServer(int projectId, string compileId)
+        private async Task<Tuple<bool, string>> BacktestProjectOnServer(int projectId, string compileId)
         {
             VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project...");
             var api = AuthorizationManager.GetInstance().GetApi();
-            var backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
+            var backtestName = "My New Backtest";
+            var backtestStatus = await System.Threading.Tasks.Task.Run(() => api.CreateBacktest(projectId, compileId, backtestName));
             var backtestId = backtestStatus.BacktestId;
 
-            while (!backtestStatus.Completed)
+            // Notify observer new backtest
+            _backtestObserver.BacktestCreated(projectId, backtestStatus);
+
+            var errorPresent = false;
+            while (backtestStatus.Progress < 1 && !errorPresent)
             {
-                Thread.Sleep(5000);
-                backtestStatus = api.ReadBacktest(projectId, backtestId);
+                backtestStatus = await System.Threading.Tasks.Task.Delay(4000).
+                    ContinueWith(_ => api.ReadBacktest(projectId, backtestId));
+
+                errorPresent = !string.IsNullOrEmpty(backtestStatus.Error) ||
+                               !string.IsNullOrEmpty(backtestStatus.StackTrace);
+                // Notify observer backtest status
+                _backtestObserver.BacktestStatusUpdated(projectId, backtestStatus);
             }
 
-            if (!string.IsNullOrEmpty(backtestStatus.Error))
+            // Notify observer backtest finished
+            _backtestObserver.BacktestFinished(projectId, backtestStatus);
+            if (errorPresent)
             {
                 VsUtils.DisplayInStatusBar(_serviceProvider, "Error when backtesting project");
                 return new Tuple<bool, string>(false, backtestStatus.Error);
@@ -285,12 +315,16 @@ namespace QuantConnect.VisualStudioPlugin
             return new Tuple<bool, string>(true, successMessage);
         }
 
-        private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
+        private async void ExecuteOnProjectAsync(object sender, Action<int, string, List<SelectedItem>> onProject)
         {
-            if (_authenticationCommand.Login(_serviceProvider, false))
+            if (await _authenticationCommand.Login(_serviceProvider, false))
             {
-                var api = AuthorizationManager.GetInstance().GetApi();
-                var projects = api.ListProjects().Projects;
+                var projects = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var api = AuthorizationManager.GetInstance().GetApi();
+                    return api.ListProjects().Projects;
+                });
+
                 var projectNames = projects.Select(p => Tuple.Create(p.ProjectId, p.Name)).ToList();
 
                 var files = GetSelectedFiles(sender);

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Threading.Tasks;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -27,8 +28,9 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="serviceProvider">Visual Studio services provider</param>
         /// <param name="explicitLogin">User explicitly clicked Log In button</param>
+        /// <param name="showLoginDialog">If true LoginDialog will be shown, careful it blocks UI</param>
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
-        public bool Login(IServiceProvider serviceProvider, bool explicitLogin)
+        public async Task<bool> Login(IServiceProvider serviceProvider, bool explicitLogin, bool showLoginDialog = true)
         {
             VSActivityLog.Info("Logging in");
 
@@ -40,13 +42,18 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             var previousCredentials = CredentialsManager.GetLastCredential();
-            if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials))
+            if (!explicitLogin && await LoggedInWithLastStorredPassword(previousCredentials))
             {
                 VSActivityLog.Info("Logged in with previously storred credentials");
                 return true;
             }
 
-            return LoginWithDialog(serviceProvider, previousCredentials);
+            if (showLoginDialog)
+            {
+                return LoginWithDialog(serviceProvider, previousCredentials);
+            }
+            VsUtils.DisplayInStatusBar(serviceProvider, "Please login to QuantConnect");
+            return false;
         }
 
         private bool LoginWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials)
@@ -69,7 +76,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private bool LoggedInWithLastStorredPassword(Credentials? previousCredentials)
+        private async Task<bool> LoggedInWithLastStorredPassword(Credentials? previousCredentials)
         {
             if (!previousCredentials.HasValue)
             {
@@ -77,7 +84,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             var credentials = previousCredentials.Value;
-            return AuthorizationManager.GetInstance().Login(credentials);
+            return await AuthorizationManager.GetInstance().Login(credentials);
         }
 
         /// <summary>

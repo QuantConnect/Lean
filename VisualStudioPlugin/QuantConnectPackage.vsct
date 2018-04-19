@@ -19,7 +19,7 @@
 
     <Menus>
       <Menu guid="guidQuantConnectToolsSet" id="ToolsSubMenu" priority="0x0100" type="Menu">  
-        <Parent guid="guidQuantConnectToolsSet" id="ToolsMenuGroup"/>  
+        <Parent guid="guidQuantConnectToolsSet" id="ToolsMenuGroup" />
         <Strings>  
           <ButtonText>QuantConnect</ButtonText>  
           <CommandName>QuantConnect</CommandName>  
@@ -78,6 +78,13 @@
           <ButtonText>Logout</ButtonText>
         </Strings>
       </Button>
+      <Button guid="guidQuantConnectPackageCmdSet" id="cmdidToolWindow1Command" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
+        <Icon guid="quantConnectIcon" id="icon" />
+        <Strings>
+          <ButtonText>QuantConnect</ButtonText>
+        </Strings>
+      </Button>
     </Buttons>
 
 
@@ -88,6 +95,7 @@
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
       <Bitmap guid="quantConnectImages" href="Resources\ToolMenuCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
+      <Bitmap guid="quantConnectIcon" href="Resources\icon_16x16.png" usedList="icon" />
     </Bitmaps>
   </Commands>
 
@@ -115,7 +123,11 @@
       <IDSymbol name="LogoutCommand" value="512" />
       <IDSymbol name="LoginCommand" value="256" />
     </GuidSymbol>
-  
+
+    <GuidSymbol name="quantConnectIcon" value="{305F90DA-6632-44D9-BCEF-8B125228947A}">
+      <IDSymbol name="icon" value="1"/>
+    </GuidSymbol>
+
     <GuidSymbol name="quantConnectImages" value="{a83a3e3f-83ce-4967-a1b6-0ef707b1830b}">
       <IDSymbol name="bmpPic1" value="1" />
       <IDSymbol name="bmpPic2" value="2" />
@@ -123,6 +135,10 @@
       <IDSymbol name="bmpPicX" value="4" />
       <IDSymbol name="bmpPicArrows" value="5" />
       <IDSymbol name="bmpPicStrikethrough" value="6" />
+    </GuidSymbol>
+
+    <GuidSymbol value="{2ddf6e60-63e9-4a80-9985-a08b1af256cc}" name="guidQuantConnectPackageCmdSet">
+      <IDSymbol value="256" name="cmdidToolWindow1Command" />
     </GuidSymbol>
   </Symbols>
 </CommandTable>

@@ -61,7 +61,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private void Login_Click(object sender, RoutedEventArgs e)
+        private async void Login_Click(object sender, RoutedEventArgs e)
         {
             VSActivityLog.Info("Login button clicked");
             try
@@ -74,7 +74,7 @@ namespace QuantConnect.VisualStudioPlugin
                 var userId = userIdBox.Text;
                 var accessToken = accessTokenBox.Password;
                 var credentials = new Credentials(userId, accessToken);
-                if (_authorizationManager.Login(credentials))
+                if (await _authorizationManager.Login(credentials))
                 {
                     VSActivityLog.Info("Logged in successfully");
                     VsUtils.DisplayInStatusBar(_serviceProvider, "Logged into QuantConnect");
@@ -83,10 +83,10 @@ namespace QuantConnect.VisualStudioPlugin
                     return;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                VsUtils.ShowMessageBox(_serviceProvider, "QuantConnect Login Exception", ex.ToString());
-                VSActivityLog.Error(ex.ToString());
+                VsUtils.ShowErrorMessageBox(_serviceProvider, "QuantConnect Login Exception", exception.ToString());
+                VSActivityLog.Error(exception.ToString());
             }
             VsUtils.DisplayInStatusBar(_serviceProvider, "Failed to login");
             userIdBox.BorderBrush = Brushes.Red;
@@ -100,6 +100,11 @@ namespace QuantConnect.VisualStudioPlugin
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            VsUtils.DisplayInStatusBar(_serviceProvider, "Login cancelled");
         }
 
         /// <summary>

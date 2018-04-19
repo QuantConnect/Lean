@@ -4,14 +4,16 @@
 
 ## Introduction ##
 
-The plugin is a tool which allows a QuantConnect user to integrate with the platform through the Visual Studio IDE. Currently, it can save files to a project, compile and backtest it.
+The plugin is a tool which allows a QuantConnect user to integrate with the platform through the Visual Studio IDE. Currently, it can save files to a project, compile and backtest it. Also, through the tool window, it can delete or open a previous backtest.
 
 ## Installation Instructions ##
+
+Visual Studio 2015 & 2017 are supported.
 
 ### Build
 
 - Select **‘Release’** solution configuration
-- Right click project ‘QuantConnect.VisualStudioPlugin’ and select ‘Rebuild’
+- Right click project ‘QuantConnect.VisualStudioPlugin’ and select **‘Rebuild’**
 - Verify in the Visual Studio ‘Output’ panel compilation succeeded with no errors
 
 ### Install
@@ -26,7 +28,7 @@ The plugin is a tool which allows a QuantConnect user to integrate with the plat
 
 - Login to [https://www.quantconnect.com/][1] and navigate to [‘My Account’][2] page
 - In the Api panel, you will find your a ‘unique access token’ and your ‘user id’ which are required to connect to the API.
-- From the Visual Studio IDE go to ‘Tools’ menu →’QuantConnect’ → ‘Login’. Enter your Api credentials and login.
+- From the Visual Studio IDE go to ‘Tools’ menu → ‘QuantConnect’ → ‘Login’. Enter your Api credentials and login.
 	> ![alt tag](Resources/loginBox.PNG)
 
 >**Manually logging in is only required the first time**. The plugin will automatically login, using previous valid credentials, when required.
@@ -50,7 +52,7 @@ This feature allows the user to upload to QC, one or more files to a target proj
 		> 
 		> ![alt tag](Resources/uploadFailedBox.PNG)
 
-### Send for Backtesting
+### <a name="SendForBacktesting">Send for Backtesting</a>
 
 This feature allows the user to upload to QC one or more files to a target project, compile it and backtest it.
 
@@ -67,6 +69,21 @@ This feature allows the user to upload to QC one or more files to a target proje
 		> If the error is due to a **run-time issue** during the backtest process, popup box will contain error details and the corresponding stack trace.
 		>
 		> ![alt tag](Resources/backtestFailedBox.PNG)
+
+## Tool Window
+
+This utility allows the user to monitor ongoing backtests and perform different actions over previous ones.
+>Given the user selects project ‘BuyTheDip_007’ in the tool windows combo box and launches a backtest using [‘Send For Backtesting’](#SendForBacktesting) for ‘BuyTheDip_007’ project, it will display the backtests progress.
+>
+> ![alt tag](Resources/toolWindow.PNG)
+
+##### How To Open
+- From the Visual Studio IDE go to ‘View’ menu → ‘Other Windows’ → ‘QuantConnect’
+	> If there are previous valid credentials, the tool window will auto login when open or when the user performs an [action](#Actions).
+##### <a name="Actions">Available Actions</a>
+- Delete backtest
+- Open backtest
+- Refresh button: it will to load or reload, available projects
 
 ## Troubleshooting
 
