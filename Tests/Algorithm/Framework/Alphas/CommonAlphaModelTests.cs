@@ -151,10 +151,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             }
 
             var actual = model.GetModelName();
-            var expected = language == Language.CSharp
-                ? GetExpectedModelName(model)
-                : (model as AlphaModelPythonWrapper).Name;
-
+            var expected = GetExpectedModelName(model);
             Assert.AreEqual(expected, actual);
         }
 

@@ -13,8 +13,10 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
+AddReference("QuantConnect.Common")
 
-from QuantConnect.Algorithm.Framework.Alphas import Insight
+from QuantConnect import *
+from QuantConnect.Algorithm.Framework.Alphas import Insight, InsightType, InsightDirection
 
 
 class ConstantAlphaModel:
@@ -35,6 +37,18 @@ class ConstantAlphaModel:
         self.confidence = confidence
         self.securities = []
         self.insightsTimeBySymbol = {}
+
+        typeString = Extensions.GetEnumString(type, InsightType)
+        directionString = Extensions.GetEnumString(direction, InsightDirection)
+        
+        self.Name = '{}({},{},{}'.format(self.__class__.__name__, typeString, directionString, strfdelta(period))
+        if magnitude is not None:
+            self.Name += ',{}'.format(magnitude)
+        if confidence is not None:
+            self.Name += ',{}'.format(confidence)
+
+        self.Name += ')';
+
 
     def Update(self, algorithm, data):
         ''' Creates a constant insight for each security as specified via the constructor
@@ -78,3 +92,9 @@ class ConstantAlphaModel:
         # insight's period has expired, so emit a new insight now for this symbol
         self.insightsTimeBySymbol[symbol] = utcTime
         return True
+
+def strfdelta(tdelta):
+    d = tdelta.days
+    h, rem = divmod(tdelta.seconds, 3600)
+    m, s = divmod(rem, 60)
+    return "{}.{:02d}:{:02d}:{:02d}".format(d,h,m,s)

@@ -47,6 +47,11 @@ class MacdAlphaModel:
         self.bounceThresholdPercent = 0.01
         self.symbolData = {};
 
+        resolutionString = Extensions.GetEnumString(resolution, Resolution)
+        movingAverageTypeString = Extensions.GetEnumString(movingAverageType, MovingAverageType)
+        self.Name = '{}({},{},{},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, signalPeriod, movingAverageTypeString, resolutionString)
+
+
     def Update(self, algorithm, data):
         ''' Determines an insight for each security based on it's current MACD signal
         Args:

@@ -38,6 +38,10 @@ class EmaCrossAlphaModel:
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), fastPeriod)
         self.symbolDataBySymbol = {}
 
+        resolutionString = Extensions.GetEnumString(resolution, Resolution)
+        self.Name = '{}({},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, resolutionString)
+
+
     def Update(self, algorithm, data):
         '''Updates this alpha model with the latest data from the algorithm.
         This is called each time the algorithm receives data for subscribed securities
