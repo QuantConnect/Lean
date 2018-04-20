@@ -37,7 +37,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     public abstract class CommonAlphaModelTests
     {
         private QCAlgorithmFramework _algorithm;
-        private Security _security;
 
         [TestFixtureSetUp]
         public void Initialize()
@@ -48,8 +47,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             _algorithm = new QCAlgorithmFramework();
             _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
             _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
-            _algorithm.SetStartDate(2018, 1, 4);
-            _security = _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);
+            InitializeAlgorithm(_algorithm);
         }
 
         [Test]
@@ -74,22 +72,30 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var expectedInsights = ExpectedInsights().ToList();
 
-            var consolidators = _security.Subscriptions.SelectMany(x => x.Consolidators);
+            var consolidators = _algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
             var slices = CreateSlices();
 
             foreach (var slice in slices.ToList())
             {
                 _algorithm.SetDateTime(slice.Time);
 
-                var data = slice[_security.Symbol];
-                _security.SetMarketPrice(data);
-
-                foreach (var consolidator in consolidators)
+                foreach (var symbol in slice.Keys)
                 {
-                    consolidator.Update(data);
+                    var data = slice[symbol];
+                    _algorithm.Securities[symbol].SetMarketPrice(data);
+
+                    foreach (var consolidator in consolidators)
+                    {
+                        consolidator.Update(data);
+                    }
                 }
 
                 _algorithm.OnFrameworkData(slice);
+            }
+
+            foreach (var insight in actualInsights)
+            {
+                Console.WriteLine(insight);
             }
 
             Assert.AreEqual(actualInsights.Count, expectedInsights.Count);
@@ -189,23 +195,33 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         }
 
         /// <summary>
+        /// Provides derived types a chance to initialize anything special they require
+        /// </summary>
+        protected virtual void InitializeAlgorithm(QCAlgorithmFramework algorithm)
+        {
+            _algorithm.SetStartDate(2018, 1, 4);
+            _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);
+        }
+
+        /// <summary>
         /// Creates an enumerable of Slice to update the alpha model
         /// </summary>
         protected virtual IEnumerable<Slice> CreateSlices()
         {
             var cashBook = new CashBook();
             var changes = SecurityChanges.None;
-            var sliceDateTimes = GetSliceDateTimes(360);
+            var sliceDateTimes = GetSliceDateTimes(MaxSliceCount);
 
             for (var i = 0; i < sliceDateTimes.Count; i++)
             {
                 var utcDateTime = sliceDateTimes[i];
-                var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * i / 180.0));
-                var high = last * 1.005m;
-                var low = last / 1.005m;
 
                 var packets = new List<DataFeedPacket>();
 
+                // TODO : Give securities different values -- will require updating all derived types
+                var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * i / 180.0));
+                var high = last * 1.005m;
+                var low = last / 1.005m;
                 foreach (var kvp in _algorithm.Securities)
                 {
                     var security = kvp.Value;
@@ -229,6 +245,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 }
             }
         }
+
+        /// <summary>
+        /// Gets the maximum number of slice objects to generate
+        /// </summary>
+        protected virtual int MaxSliceCount => 360;
 
         private List<DateTime> GetSliceDateTimes(int maxCount)
         {

@@ -32,6 +32,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             var result = JsonConvert.DeserializeObject<Insight>(jsonNoScore);
             Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToString("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
+            Assert.AreEqual(jObject["group-id"].Value<string>(), result.GroupId?.ToString("N"));
             Assert.AreEqual(jObject["generated-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
             Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
@@ -56,6 +57,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             var result = JsonConvert.DeserializeObject<Insight>(jsonWithScore);
             Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToString("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
+            Assert.AreEqual(jObject["group-id"].Value<string>(), result.GroupId?.ToString("N"));
             Assert.AreEqual(jObject["generated-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
             Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
@@ -79,6 +81,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             {
                 Id = jObject["id"].Value<string>(),
                 SourceModel = jObject["source-model"].Value<string>(),
+                GroupId = jObject["group-id"].Value<string>(),
                 GeneratedTime = jObject["generated-time"].Value<double>(),
                 CloseTime = jObject["close-time"].Value<double>(),
                 Symbol = jObject["symbol"].Value<string>(),
@@ -101,6 +104,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             {
                 Id = jObject["id"].Value<string>(),
                 SourceModel = jObject["source-model"].Value<string>(),
+                GroupId = jObject["group-id"].Value<string>(),
                 GeneratedTime = jObject["generated-time"].Value<double>(),
                 CloseTime = jObject["close-time"].Value<double>(),
                 Symbol = jObject["symbol"].Value<string>(),
@@ -122,6 +126,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         private const string jsonNoScore =
 @"{
   ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
+  ""group-id"": ""a02be50f56a8496b9ba995d19a904ada"",
   ""source-model"": ""mySourceModel-1"",
   ""generated-time"": 1520711961.00055,
   ""close-time"": 1520711961.00055,
@@ -137,6 +142,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         private const string jsonWithScore =
 @"{
   ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
+  ""group-id"": ""a02be50f56a8496b9ba995d19a904ada"",
   ""source-model"": ""mySourceModel-1"",
   ""generated-time"": 1520711961.00055,
   ""close-time"": 1520711961.00055,

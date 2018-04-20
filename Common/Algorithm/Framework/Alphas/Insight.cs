@@ -34,6 +34,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public Guid Id { get; private set; }
 
         /// <summary>
+        /// Gets the group id this insight belongs to, null if not in a group
+        /// </summary>
+        public Guid? GroupId { get; private set; }
+
+        /// <summary>
         /// Gets an identifier for the source model that generated this insight.
         /// </summary>
         public string SourceModel { get; internal set; }
@@ -172,7 +177,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Id = Id,
                 EstimatedValue = EstimatedValue,
                 ReferenceValue = ReferenceValue,
-                SourceModel = SourceModel
+                SourceModel = SourceModel,
+                GroupId = GroupId
             };
         }
 
@@ -189,6 +195,31 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public static Insight Price(Symbol symbol, TimeSpan period, InsightDirection direction, double? magnitude = null, double? confidence = null, string sourceModel = null)
         {
             return new Insight(symbol, period, InsightType.Price, direction, magnitude, confidence, sourceModel);
+        }
+
+        /// <summary>
+        /// Creates a new, unique group id and sets it on each insight
+        /// </summary>
+        /// <param name="insights">The insights to be grouped</param>
+        public static Guid Group(params Insight[] insights)
+        {
+            if (insights == null)
+            {
+                throw new ArgumentNullException(nameof(insights));
+            }
+
+            var groupId = Guid.NewGuid();
+            foreach (var insight in insights)
+            {
+                if (insight.GroupId.HasValue)
+                {
+                    throw new InvalidOperationException($"Unable to set group id on insight {insight} because it has already been assigned to a group.");
+                }
+
+                insight.GroupId = groupId;
+            }
+
+            return groupId;
         }
 
         /// <summary>
@@ -212,7 +243,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Id = Guid.Parse(serializedInsight.Id),
                 CloseTimeUtc = Time.UnixTimeStampToDateTime(serializedInsight.CloseTime),
                 EstimatedValue = serializedInsight.EstimatedValue,
-                ReferenceValue = serializedInsight.ReferenceValue
+                ReferenceValue = serializedInsight.ReferenceValue,
+                GroupId = Guid.Parse(serializedInsight.GroupId)
             };
 
             // only set score values if non-zero or if they're the final scores
