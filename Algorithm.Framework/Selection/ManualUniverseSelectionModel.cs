@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -29,6 +30,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class ManualUniverseSelectionModel : IUniverseSelectionModel
     {
+        private static readonly MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
+
         private readonly IReadOnlyList<Symbol> _symbols;
         private readonly UniverseSettings _universeSettings;
         private readonly ISecurityInitializer _securityInitializer;
@@ -92,10 +95,25 @@ namespace QuantConnect.Algorithm.Framework.Selection
             // universe per security type/market
             foreach (var grp in _symbols.GroupBy(s => new { s.ID.Market, s.SecurityType }))
             {
+                MarketHoursDatabase.Entry entry;
+
                 var market = grp.Key.Market;
                 var securityType = grp.Key.SecurityType;
                 var universeSymbol = Symbol.Create($"manual-portfolio-selection-model-{securityType}-{market}", securityType, market);
-                var entry = MarketHoursDatabase.FromDataFolder().GetEntry(market, (string)null, securityType);
+                if (securityType == SecurityType.Base)
+                {
+                    // add an entry for this custom universe symbol -- we don't really know the time zone for sure,
+                    // but we set it to TimeZones.NewYork in AddData, also, since this is a manual universe, the time
+                    // zone doesn't actually matter since this universe specifically doesn't do anything with data.
+                    var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(universeSymbol);
+                    var alwaysOpen = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+                    entry = MarketHours.SetEntry(market, symbolString, securityType, alwaysOpen, TimeZones.NewYork);
+                }
+                else
+                {
+                    entry = MarketHours.GetEntry(market, (string) null, securityType);
+                }
+
                 var config = new SubscriptionDataConfig(type, universeSymbol, resolution, entry.DataTimeZone, entry.ExchangeHours.TimeZone, false, false, true);
                 yield return new ManualUniverse(config, universeSettings, securityInitializer, grp);
             }
