@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 throw new ArgumentNullException(nameof(symbols));
             }
 
-            _symbols = symbols.ToList();
+            _symbols = symbols.Where(s => !s.IsCanonical()).ToList();
             _universeSettings = universeSettings;
             _securityInitializer = securityInitializer;
 
