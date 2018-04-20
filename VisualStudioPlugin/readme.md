@@ -4,7 +4,7 @@
 
 ## Introduction ##
 
-The plugin is a tool which allows a QuantConnect user to integrate with the platform through the Visual Studio IDE. Currently, it can save files to a project, compile and backtest it. Also, through the tool window, it can delete or open a previous backtest.
+The plugin is a tool which allows a QuantConnect user to integrate with the platform through the Visual Studio IDE. Providing different [features](#Features), it aims to facilitate strategy development.
 
 ## Installation Instructions ##
 
@@ -33,9 +33,9 @@ Visual Studio 2015 & 2017 are supported.
 
 >**Manually logging in is only required the first time**. The plugin will automatically login, using previous valid credentials, when required.
 
-## Features
+## <a name="Features">Features</a>
 
-Currently the plugin can **save files** to a **project**, **compile** and **backtest** it.
+Currently the plugin can **save files** to a **project**, **compile** and **backtest** it. Also, through the [tool window](#ToolWindow), it can **delete**, **rename**, **open** or add a **note** to a previous backtest.
 
 ### Save to QuantConnect
 
@@ -70,9 +70,9 @@ This feature allows the user to upload to QC one or more files to a target proje
 		>
 		> ![alt tag](Resources/backtestFailedBox.PNG)
 
-## Tool Window
+## <a name="ToolWindow">Tool Window</a>
 
-This utility allows the user to monitor ongoing backtests and perform different actions over previous ones.
+This utility allows the user to monitor ongoing backtests and perform different [actions](#Actions) over previous ones.
 >Given the user selects project ‘BuyTheDip_007’ in the tool windows combo box and launches a backtest using [‘Send For Backtesting’](#SendForBacktesting) for ‘BuyTheDip_007’ project, it will display the backtests progress.
 >
 > ![alt tag](Resources/toolWindow.PNG)
@@ -83,7 +83,9 @@ This utility allows the user to monitor ongoing backtests and perform different 
 ##### <a name="Actions">Available Actions</a>
 - Delete backtest
 - Open backtest
-- Refresh button: it will to load or reload, available projects
+- Edit backtest: allows the user to edit the backtests name and note
+	> ![alt tag](Resources/editBacktest.PNG)
+- Refresh: it will load or reload, available projects
 
 ## Troubleshooting
 

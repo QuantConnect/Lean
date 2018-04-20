@@ -104,7 +104,10 @@ namespace QuantConnect.VisualStudioPlugin
 
         protected override void OnClosed(EventArgs e)
         {
-            VsUtils.DisplayInStatusBar(_serviceProvider, "Login cancelled");
+            if (!_credentials.HasValue)
+            {
+                VsUtils.DisplayInStatusBar(_serviceProvider, "Login cancelled");
+            }
         }
 
         /// <summary>

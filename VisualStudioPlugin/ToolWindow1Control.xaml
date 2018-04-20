@@ -1,4 +1,18 @@
-﻿<UserControl
+﻿<!--
+ QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -364,6 +378,12 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -372,14 +392,20 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowTextBrushKey}}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsShell:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
             </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Date" IsReadOnly="True" Binding="{Binding Date}" Width="*" SortDirection="Descending"/>
+                <DataGridTextColumn Header="Date" IsReadOnly="True" Binding="{Binding Date}" Width="135" SortDirection="Descending"/>
                 <DataGridTextColumn Header="Name" IsReadOnly="True" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Status" IsReadOnly="True" Binding="{Binding Status}" Width="80" CanUserResize="False"/>
+                <DataGridTextColumn Header="Status" IsReadOnly="True" Binding="{Binding Status}" Width="73" CanUserResize="False"/>
                 <DataGridTemplateColumn Header="Progress" IsReadOnly="True" Width="80" CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <ItemContainerTemplate>
@@ -389,11 +415,21 @@
                         </ItemContainerTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="" Width="83" IsReadOnly="True" CanUserResize="False">
+                <DataGridTemplateColumn Header="" Width="110" IsReadOnly="True" CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <WrapPanel>
-                                <Button Click="Open_OnClick" Width="40" Height="23"
+                                <Button Click="Edit_OnClick" Width="35" Height="23"
+                                        HorizontalContentAlignment="Stretch" ToolTip="Edit Backtest"
+                                        VerticalContentAlignment="Stretch" Background="Transparent" BorderThickness="0">
+                                    <Path Style="{StaticResource CustomPath}"
+                                          StrokeThickness="0"
+                                          Data="m 54.30751,136.60612 c -4.033074,-0.73246 -7.269314,-3.67076 -8.53575,-7.74993 l -0.277236,-0.89298 -0.03338,-41.363522 c -0.03712,-45.99989 -0.104533,-42.19499 0.785734,-44.348518 1.336775,-3.233617 4.005442,-5.521968 7.471615,-6.406823 0.889322,-0.227029 1.812233,-0.233271 34.488653,-0.233271 h 33.574884 l 0.50786,0.336092 c 0.74353,0.492039 1.1553,1.181399 1.21724,2.037829 0.0959,1.325133 0.18849,1.206625 -5.07779,6.496371 -2.65549,2.667327 -5.02005,4.970039 -5.25459,5.117137 l -0.42643,0.267452 -26.438539,0.06092 -26.43854,0.06092 -0.03066,36.155006 -0.03066,36.155007 h 36.183322 36.183317 l 0.0328,-11.84861 0.0328,-11.848611 0.26533,-0.48734 c 0.14611,-0.26837 2.47279,-2.68617 5.17805,-5.38086 5.1779,-5.157649 5.17669,-5.156647 6.25293,-5.156647 1.11014,0 2.33671,0.897893 2.60926,1.91006 0.0997,0.370386 0.12813,5.653267 0.1038,19.310888 l -0.0335,18.80101 -0.27117,0.95381 c -1.14792,4.03757 -3.80084,6.70165 -7.89104,7.92423 l -0.85285,0.25492 -41.180768,0.0225 c -34.730504,0.019 -41.327053,-0.004 -42.114708,-0.14708 z M 84.786823,114.9153 c -1.185376,-0.31508 -2.180024,-1.15396 -2.807989,-2.36822 C 81.46,111.54383 81.501758,110.85301 82.762537,99.582269 L 83.920219,89.233146 108.69038,64.455105 c 13.62359,-13.627923 24.90912,-24.852086 25.07897,-24.942582 0.50236,-0.26768 1.13924,-0.336631 1.71256,-0.18541 0.4882,0.128773 1.49044,1.093727 10.98797,10.579244 7.05381,7.044881 10.52891,10.598558 10.69116,10.9329 0.30496,0.6284 0.30681,1.397228 0.005,1.976691 -0.13509,0.259165 -10.80475,11.011978 -25.00696,25.20184 l -24.77135,24.749802 -10.660701,1.17435 c -5.863386,0.64589 -10.797768,1.1692 -10.965293,1.16291 -0.167525,-0.006 -0.606137,-0.0916 -0.974693,-0.18955 z M 162.51857,55.581997 c -0.54594,-0.234923 -20.84023,-20.479437 -21.2922,-21.239972 -0.39902,-0.671439 -0.421,-1.452036 -0.0603,-2.142373 0.29664,-0.567772 8.70326,-8.968761 9.53438,-9.527994 1.62415,-1.09283 2.99225,-1.498217 5.05622,-1.498217 2.38937,0 4.04969,0.608709 5.81534,2.132024 1.6618,1.433724 12.09421,12.035239 12.58222,12.78617 1.80738,2.78118 1.86943,6.453328 0.15864,9.388205 -0.39861,0.68383 -1.38119,1.742121 -4.9578,5.339818 -2.45336,2.46783 -4.66408,4.592355 -4.9127,4.721168 -0.53706,0.278264 -1.33319,0.295303 -1.92377,0.04117 z"
+                                          Stretch="Fill"
+                                          Width="14"
+                                          Height="15"/>
+                                </Button>
+                                <Button Click="Open_OnClick" Width="35" Height="23"
                                         HorizontalContentAlignment="Stretch" ToolTip="Open Chart"
                                         VerticalContentAlignment="Stretch" Background="Transparent" BorderThickness="0">
                                     <Path Style="{StaticResource CustomPath}"
@@ -403,7 +439,7 @@
                                           Width="14"
                                           Height="15"/>
                                 </Button>
-                                <Button Click="Delete_OnClick" Width="40" Height="23"
+                                <Button Click="Delete_OnClick" Width="35" Height="23"
                                         HorizontalContentAlignment="Stretch" ToolTip="Delete Backtest"
                                         VerticalContentAlignment="Stretch" Background="Transparent" BorderThickness="0">
                                     <Path Style="{StaticResource CustomPath}"

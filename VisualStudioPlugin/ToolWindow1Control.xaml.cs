@@ -1,8 +1,17 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="ToolWindow1Control.xaml.cs" company="Company">
-//     Copyright (c) Company.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -86,7 +95,8 @@ namespace QuantConnect.VisualStudioPlugin
                                 Date = backtestsList[i].Created,
                                 BacktestId = backtestsList[i].BacktestId,
                                 Status = string.IsNullOrEmpty(backtestsList[i].Error) ?
-                                    DataGridItem.BacktestSucceeded : DataGridItem.BacktestFailed
+                                    DataGridItem.BacktestSucceeded : DataGridItem.BacktestFailed,
+                                Note = backtestsList[i].Note
                             });
                         }
                         VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Successfully loaded backtests");
@@ -285,6 +295,53 @@ namespace QuantConnect.VisualStudioPlugin
         private void RefreshButton_OnClick(object sender, RoutedEventArgs e)
         {
             UpdateAvailableProjects();
+        }
+
+        /// <summary>
+        /// Callback for the edit button. Will show a new popup so the user can edit backtest name and note.
+        /// Will update the server through API.
+        /// </summary>
+        private async void Edit_OnClick(object sender, RoutedEventArgs e)
+        {
+            var obj = ((FrameworkElement)sender).DataContext as DataGridItem;
+            if (obj != null)
+            {
+                var projectId = obj.ProjectId;
+                var backtestId = obj.BacktestId;
+                var backtestNote = obj.Note;
+                var window = new EditBacktestDialog(obj.Name, backtestNote);
+                VsUtils.DisplayDialogWindow(window);
+                if (window.BacktestNameProvided &&
+                    !string.IsNullOrEmpty(window.BacktestName) &&
+                    await _authenticationCommand.Login(ServiceProvider.GlobalProvider, false))
+                {
+                    var result = false;
+                    try
+                    {
+                        result = await System.Threading.Tasks.Task.Run(() =>
+                        {
+                            var api = AuthorizationManager.GetInstance().GetApi();
+                            return api.UpdateBacktest(projectId, backtestId, window.BacktestName, window.BacktestNote).Success;
+                        });
+                    }
+                    catch (Exception exception)
+                    {
+                        VsUtils.ShowErrorMessageBox(ServiceProvider.GlobalProvider,
+                            "QuantConnect Exception", exception.ToString());
+                    }
+                    if (result)
+                    {
+                        // lets update the data grid without having to go to the server again
+                        obj.Name = window.BacktestName;
+                        obj.Note = window.BacktestNote;
+                        VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Successfully edited backtest");
+                    }
+                    else
+                    {
+                        VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Failed to edit backtest");
+                    }
+                }
+            }
         }
     }
 }
