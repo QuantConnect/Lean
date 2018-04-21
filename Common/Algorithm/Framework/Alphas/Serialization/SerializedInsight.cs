@@ -34,13 +34,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.GroupId"/>
         /// </summary>
-        [JsonProperty("group-id")]
+        [JsonProperty("group-id", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string GroupId { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.SourceModel"/>
         /// </summary>
-        [JsonProperty("source-model")]
+        [JsonProperty("source-model", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string SourceModel { get; set; }
 
         /// <summary>
