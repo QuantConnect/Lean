@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -68,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastFileWriteDate = DateTime.MinValue;
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
-            var timerInterval = TimeSpan.FromMilliseconds(100);
+            var timerInterval = TimeSpan.FromMilliseconds(50);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
@@ -94,7 +95,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         // write new local file including only rows up to current date
                         var outputFileName = TestableQuandlFuture.GetLocalFileName(ticker, "test");
 
-                        using (var writer = new StreamWriter(outputFileName))
+                        var sb = new StringBuilder();
                         {
                             using (var reader = new StreamReader(source))
                             {
@@ -104,7 +105,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 {
                                     if (firstLine)
                                     {
-                                        writer.WriteLine(line);
+                                        sb.AppendLine(line);
                                         firstLine = false;
                                         continue;
                                     }
@@ -114,11 +115,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                     if (time.Date >= currentTime.Date)
                                         break;
 
-                                    writer.WriteLine(line);
+                                    sb.AppendLine(line);
                                 }
                             }
                         }
-                        Log.Trace($"Time:{currentTime} - Ticker:{ticker} - Files written:{++_countFilesWritten}");
+
+                        if (currentTime.Date.DayOfWeek != DayOfWeek.Saturday && currentTime.Date.DayOfWeek != DayOfWeek.Sunday)
+                        {
+                            File.WriteAllText(outputFileName, sb.ToString());
+
+                            Log.Trace($"Time:{currentTime} - Ticker:{ticker} - Files written:{++_countFilesWritten}");
+                        }
                     }
 
                     lastFileWriteDate = currentTime;
@@ -127,7 +134,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // 30 minutes is the check interval for daily remote files, so we choose a smaller one to advance time
                 timeProvider.Advance(TimeSpan.FromMinutes(15));
 
-                // Log.Trace($"Time advanced to: {currentTime}");
+                //Log.Trace($"Time advanced to: {timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork)}");
 
                 // restart the timer
                 timer.Value.Change(timerInterval, timerInterval);
@@ -140,7 +147,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     foreach (var dataPoint in timeSlice.Slice.Values)
                     {
-                        Log.Trace($"Data point emitted at {timeSlice.Slice.Time}: {dataPoint.Symbol.Value} {dataPoint.Value}");
+                        Log.Trace($"Data point emitted at {timeSlice.Slice.Time}: {dataPoint.Symbol.Value} {dataPoint.Value} {dataPoint.EndTime}");
                         dataPointsEmitted++;
                     }
                 }
