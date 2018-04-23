@@ -41,8 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 04, 01);
-            SetEndDate(2014, 04, 30);
+            SetStartDate(2014, 03, 24);
+            SetEndDate(2014, 04, 07);
             SetCash(50000);
 
             // this add universe method accepts two parameters:
