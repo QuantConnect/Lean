@@ -244,7 +244,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 CloseTimeUtc = Time.UnixTimeStampToDateTime(serializedInsight.CloseTime),
                 EstimatedValue = serializedInsight.EstimatedValue,
                 ReferenceValue = serializedInsight.ReferenceValue,
-                GroupId = Guid.Parse(serializedInsight.GroupId)
+                GroupId = string.IsNullOrEmpty(serializedInsight.GroupId) ? (Guid?) null : Guid.Parse(serializedInsight.GroupId)
             };
 
             // only set score values if non-zero or if they're the final scores

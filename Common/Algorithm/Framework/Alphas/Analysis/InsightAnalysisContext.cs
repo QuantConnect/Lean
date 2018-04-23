@@ -53,11 +53,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public DateTime AnalysisEndTimeUtc { get; }
 
         /// <summary>
-        /// Gets ending time of the insight, that is, the time it was generated at + the insight period
-        /// </summary>
-        public DateTime InsightPeriodEndTimeUtc { get; }
-
-        /// <summary>
         /// Gets the initial values. These are values of price/volatility at the time the insight was generated
         /// </summary>
         public SecurityValues InitialValues { get; }
@@ -90,7 +85,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="insight">The insight to be analyzed</param>
         /// <param name="initialValues">The initial security values from when the insight was generated</param>
         /// <param name="analysisPeriod">The period over which to perform analysis of the insight. This should be
-        /// greater than or equal to <see cref="Insight.Period"/>. Specify null for default, insight.Period</param>
+        /// greater than or equal to <see cref="Alphas.Insight.Period"/>. Specify null for default, insight.Period</param>
         public InsightAnalysisContext(Insight insight, SecurityValues initialValues, TimeSpan analysisPeriod)
         {
             Insight = insight;
@@ -99,8 +94,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             CurrentValues = InitialValues = initialValues;
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
-
-            InsightPeriodEndTimeUtc = insight.GeneratedTimeUtc + insight.Period;
 
             var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
             var barCount = (int)(insight.Period.Ticks / barSize.Ticks);
@@ -115,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         {
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
 
-            if (values.TimeUtc >= InsightPeriodEndTimeUtc)
+            if (values.TimeUtc >= Insight.CloseTimeUtc)
             {
                 InsightPeriodClosed = true;
             }
