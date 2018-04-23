@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             // frontier value used to prevent emitting duplicate time stamps between refreshed enumerators
             // also provides some immediate fast-forward to handle spooling through remote files quickly
-            var frontier = Ref.Create(DateTime.MinValue);
+            var frontier = Ref.Create(request.StartTimeLocal);
             var lastSourceRefreshTime = DateTime.MinValue;
             var sourceFactory = (BaseData) ObjectActivator.GetActivator(config.Type).Invoke(new object[] {config.Type});
 
@@ -76,8 +76,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
                 if (SourceRequiresFastForward(source))
                 {
+                    // The FastForwardEnumerator implements these two features:
+                    // (1) make sure we never emit past data
+                    // (2) data filtering based on a maximum data age
+                    // For custom data we don't want feature (2) because we would reject data points emitted later
+                    // (e.g. Quandl daily data after a weekend), so we disable it using a huge maximum data age.
+
                     // apply fast forward logic for file transport mediums
-                    var maximumDataAge = GetMaximumDataAge(config.Increment);
+                    var maximumDataAge = GetMaximumDataAge(Time.MaxTimeSpan);
                     enumerator = new FastForwardEnumerator(enumerator, _timeProvider, config.ExchangeTimeZone, maximumDataAge);
                 }
                 else
@@ -120,7 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         yield return datum;
                     }
 
-                    newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);;
+                    newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);
                 }
 
                 localFrontier.Value = newLocalFrontier;
