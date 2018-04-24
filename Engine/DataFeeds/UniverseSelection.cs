@@ -117,20 +117,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     universeData.Data = new List<BaseData>();
                     foreach (var fine in fineCollection.Data.OfType<FineFundamental>())
                     {
-                        var coarse = coarseData[fine.Symbol];
-                        universeData.Data.Add(new Fundamentals
+                        var fundamentals = new Fundamentals
                         {
-                            Symbol = coarse.Symbol,
-                            Time = coarse.Time,
-                            EndTime = coarse.EndTime,
-                            DataType = coarse.DataType,
-                            // coarse properties
-                            Value = coarse.Value,
-                            Market = coarse.Market,
-                            DollarVolume = coarse.DollarVolume,
-                            Volume = coarse.Volume,
-                            HasFundamentalData = coarse.HasFundamentalData,
-                            // fine properties
+                            Symbol = fine.Symbol,
+                            Time = fine.Time,
+                            EndTime = fine.EndTime,
+                            DataType = fine.DataType,
                             CompanyReference = fine.CompanyReference,
                             EarningReports = fine.EarningReports,
                             EarningRatios = fine.EarningRatios,
@@ -138,7 +130,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             OperationRatios = fine.OperationRatios,
                             SecurityReference = fine.SecurityReference,
                             ValuationRatios = fine.ValuationRatios
-                        });
+                        };
+
+                        CoarseFundamental coarse;
+                        if (coarseData.TryGetValue(fine.Symbol, out coarse))
+                        {
+                            // the only time the coarse data won't exist is if the selection function
+                            // doesn't use the data provided, and instead returns a constant list of
+                            // symbols -- coupled with a potential hole in the data
+                            fundamentals.Value = coarse.Value;
+                            fundamentals.Market = coarse.Market;
+                            fundamentals.Volume = coarse.Volume;
+                            fundamentals.DollarVolume = coarse.DollarVolume;
+                            fundamentals.HasFundamentalData = coarse.HasFundamentalData;
+                        }
+
+                        universeData.Data.Add(fundamentals);
                     }
 
                     // END -- HACK ATTACK -- END
