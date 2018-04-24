@@ -44,6 +44,14 @@ namespace QuantConnect.Data.Fundamental
         public bool HasFundamentalData { get; set; }
 
         /// <summary>
+        /// Default constructor
+        /// </summary>
+        public Fundamentals()
+        {
+            DataType = MarketDataType.Auxiliary;
+        }
+
+        /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
