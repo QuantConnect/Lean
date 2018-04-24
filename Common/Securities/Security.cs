@@ -27,6 +27,7 @@ using QuantConnect.Securities.Interfaces;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using Python.Runtime;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Securities
 {
@@ -506,6 +507,11 @@ namespace QuantConnect.Securities
         /// Access to the open interest of the security today
         /// </summary>
         public virtual long OpenInterest => Cache.OpenInterest;
+
+        /// <summary>
+        /// Gets the fundamental data associated with the security if there is any, otherwise null.
+        /// </summary>
+        public Fundamentals Fundamentals => Cache.GetData<Fundamentals>();
 
         /// <summary>
         /// Get the last price update set to the security.
