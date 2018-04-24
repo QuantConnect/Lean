@@ -241,7 +241,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
                 if (packets.Count > 0)
                 {
-                    yield return TimeSlice.Create(utcDateTime, TimeZones.NewYork, cashBook, packets, changes).Slice;
+                    yield return TimeSlice.Create(utcDateTime, TimeZones.NewYork, cashBook, packets, changes, new Dictionary<Universe, BaseDataCollection>()).Slice;
                 }
             }
         }

@@ -97,7 +97,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 i++;
-                yield return TimeSlice.Create(utcDateTime, sliceTimeZone, _cashBook, packets, _securityChanges).Slice;
+                yield return TimeSlice.Create(utcDateTime, sliceTimeZone, _cashBook, packets, _securityChanges, new Dictionary<Universe, BaseDataCollection>()).Slice;
             }
         }
 
@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var barSize = requests.Select(x => x.Resolution.ToTimeSpan()).Min();
             var startUtc = requests.Min(x => x.StartTimeUtc);
             var endUtc = requests.Max(x => x.EndTimeUtc);
-            
+
             for (var utcDateTime = startUtc; utcDateTime < endUtc; utcDateTime += barSize)
             {
                 var securities = new List<Security>();
