@@ -284,7 +284,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project...");
             var api = AuthorizationManager.GetInstance().GetApi();
-            var backtestName = "My New Backtest";
+            var backtestName = BacktestNameProvider.GetNewName();
             var backtestStatus = await System.Threading.Tasks.Task.Run(() => api.CreateBacktest(projectId, compileId, backtestName));
             var backtestId = backtestStatus.BacktestId;
 

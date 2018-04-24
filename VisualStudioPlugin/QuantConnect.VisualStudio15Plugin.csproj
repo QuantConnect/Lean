@@ -77,6 +77,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AuthorizationManager.cs" />
+    <Compile Include="BacktestNameProvider.cs" />
+    <Compile Include="EditBacktestDialog.xaml.cs">
+      <DependentUpon>EditBacktestDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataGridItem.cs" />
     <Compile Include="ErrorDialog.xaml.cs">
       <DependentUpon>ErrorDialog.xaml</DependentUpon>
@@ -110,6 +114,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="EditBacktestDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ErrorDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -147,7 +155,10 @@
     </Content>
     <Resource Include="Resources\icon_128x128_resource.png" />
     <Content Include="Resources\icon_16x16.png" />
-    <Content Include="Resources\ToolMenuCommand.png" />
+    <Content Include="Resources\login.png" />
+    <Content Include="Resources\logout.png" />
+    <Content Include="Resources\saveToQuantConnect.png" />
+    <Content Include="Resources\sendForBacktesting.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CredentialManagement, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">

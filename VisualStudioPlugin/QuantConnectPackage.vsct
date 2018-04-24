@@ -50,28 +50,28 @@
           If you do not want an image next to your command, remove the Icon node /> -->
       <Button guid="guidQuantConnectSolutionExplorerSet" id="SendForBacktesting" priority="0x0100" type="Button">
         <Parent guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" />
-        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Icon guid="quantConnectBacktest" id="sendForBacktesting" />
         <Strings>
           <ButtonText>Send for Backtesting</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidQuantConnectSolutionExplorerSet" id="SaveToQuantConnect" priority="0x0101" type="Button">
         <Parent guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" />
-        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Icon guid="quantConnectSave" id="saveToQuantConnect" />
         <Strings>
           <ButtonText>Save to QuantConnect</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidQuantConnectToolsSet" id="LoginCommand" priority="0x0100" type="Button">
         <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
-        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Icon guid="quantConnectLogin" id="login" />
         <Strings>
           <ButtonText>Login</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidQuantConnectToolsSet" id="LogoutCommand" priority="0x0100" type="Button">
         <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
-        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Icon guid="quantConnectLogout" id="logout" />
         <!-- A user need to log in first to enable logout button -->
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -94,8 +94,11 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="quantConnectImages" href="Resources\ToolMenuCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
       <Bitmap guid="quantConnectIcon" href="Resources\icon_16x16.png" usedList="icon" />
+      <Bitmap guid="quantConnectSave" href="Resources\saveToQuantConnect.png" usedList="saveToQuantConnect" />
+      <Bitmap guid="quantConnectBacktest" href="Resources\sendForBacktesting.png" usedList="sendForBacktesting" />
+      <Bitmap guid="quantConnectLogin" href="Resources\login.png" usedList="login" />
+      <Bitmap guid="quantConnectLogout" href="Resources\logout.png" usedList="logout" />
     </Bitmaps>
   </Commands>
 
@@ -128,13 +131,20 @@
       <IDSymbol name="icon" value="1"/>
     </GuidSymbol>
 
-    <GuidSymbol name="quantConnectImages" value="{a83a3e3f-83ce-4967-a1b6-0ef707b1830b}">
-      <IDSymbol name="bmpPic1" value="1" />
-      <IDSymbol name="bmpPic2" value="2" />
-      <IDSymbol name="bmpPicSearch" value="3" />
-      <IDSymbol name="bmpPicX" value="4" />
-      <IDSymbol name="bmpPicArrows" value="5" />
-      <IDSymbol name="bmpPicStrikethrough" value="6" />
+    <GuidSymbol name="quantConnectSave" value="{5df98113-0fa8-4ebf-9d04-04b7f2873fa6}">
+      <IDSymbol name="saveToQuantConnect" value="1"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="quantConnectBacktest" value="{ce93ed1c-74f8-45b8-86d7-7855963ac7ee}">
+      <IDSymbol name="sendForBacktesting" value="1"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="quantConnectLogin" value="{08e21bb1-0b2f-4c9b-a952-aaeaf61b23c4}">
+      <IDSymbol name="login" value="1"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="quantConnectLogout" value="{abea5de8-1838-4b52-b399-24314db78355}">
+      <IDSymbol name="logout" value="1"/>
     </GuidSymbol>
 
     <GuidSymbol value="{2ddf6e60-63e9-4a80-9985-a08b1af256cc}" name="guidQuantConnectPackageCmdSet">
