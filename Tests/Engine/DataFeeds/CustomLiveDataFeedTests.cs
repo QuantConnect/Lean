@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastFileWriteDate = DateTime.MinValue;
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
-            var timerInterval = TimeSpan.FromMilliseconds(50);
+            var timerInterval = TimeSpan.FromMilliseconds(100);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
