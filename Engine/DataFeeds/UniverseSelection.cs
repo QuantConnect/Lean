@@ -25,6 +25,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -103,6 +104,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // perform the fine fundamental universe selection
                     selectSymbolsResult = fineFiltered.FineFundamentalUniverse.PerformSelection(dateTimeUtc, fineCollection);
+
+                    // WARNING -- HACK ATTACK -- WARNING
+                    // Fine universes are considered special due to their chaining behavior.
+                    // As such, we need a means of piping the fine data read in here back to the data feed
+                    // so that it can be properly emitted via a TimeSlice.Create call. There isn't a mechanism
+                    // in place for this function to return such data. The following lines are tightly coupled
+                    // to the universeData dictionaries in SubscriptionSynchronizer and LiveTradingDataFeed and
+                    // rely on reference semantics to work.
+
+                    var coarseData = universeData.Data.OfType<CoarseFundamental>().ToDictionary(d => d.Symbol);
+                    universeData.Data = new List<BaseData>();
+                    foreach (var fine in fineCollection.Data.OfType<FineFundamental>())
+                    {
+                        var coarse = coarseData[fine.Symbol];
+                        universeData.Data.Add(new Fundamentals
+                        {
+                            Symbol = coarse.Symbol,
+                            Time = coarse.Time,
+                            EndTime = coarse.EndTime,
+                            DataType = coarse.DataType,
+                            // coarse properties
+                            Value = coarse.Value,
+                            Market = coarse.Market,
+                            DollarVolume = coarse.DollarVolume,
+                            Volume = coarse.Volume,
+                            HasFundamentalData = coarse.HasFundamentalData,
+                            // fine properties
+                            CompanyReference = fine.CompanyReference,
+                            EarningReports = fine.EarningReports,
+                            EarningRatios = fine.EarningRatios,
+                            FinancialStatements = fine.FinancialStatements,
+                            OperationRatios = fine.OperationRatios,
+                            SecurityReference = fine.SecurityReference,
+                            ValuationRatios = fine.ValuationRatios
+                        });
+                    }
+
+                    // END -- HACK ATTACK -- END
                 }
             }
             else

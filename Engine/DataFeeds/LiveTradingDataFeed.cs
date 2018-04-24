@@ -275,6 +275,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _frontierTimeProvider.SetCurrentTime(_frontierUtc);
 
                     var data = new List<DataFeedPacket>();
+
+                    // NOTE: Tight coupling in UniverseSelection.ApplyUniverseSelection
                     var universeData = new Dictionary<Universe, BaseDataCollection>();
                     foreach (var subscription in Subscriptions)
                     {

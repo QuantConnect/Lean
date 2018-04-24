@@ -67,6 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             long earlyBirdTicks;
             var changes = SecurityChanges.None;
             var data = new List<DataFeedPacket>();
+            // NOTE: Tight coupling in UniverseSelection.ApplyUniverseSelection
             var universeData = new Dictionary<Universe, BaseDataCollection>();
             var universeDataForTimeSliceCreate = new Dictionary<Universe, BaseDataCollection>();
 
