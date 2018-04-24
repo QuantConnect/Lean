@@ -28,6 +28,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Securities
 {
@@ -511,7 +512,33 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the fundamental data associated with the security if there is any, otherwise null.
         /// </summary>
-        public Fundamentals Fundamentals => Cache.GetData<Fundamentals>();
+        public Fundamentals Fundamentals
+        {
+            get
+            {
+                if (Cache.GetData<Fundamentals>() != null)
+                {
+                    return Cache.GetData<Fundamentals>();
+                }
+
+                var coarse = Cache.GetData<CoarseFundamental>();
+                if (coarse == null)
+                {
+                    return null;
+                }
+
+                return new Fundamentals
+                {
+                    Symbol = Symbol,
+                    Value = coarse.Value,
+                    EndTime = coarse.EndTime,
+                    DollarVolume = coarse.DollarVolume,
+                    DataType = coarse.DataType,
+                    Market = coarse.Market,
+                    Volume = coarse.Volume
+                };
+            }
+        }
 
         /// <summary>
         /// Get the last price update set to the security.
