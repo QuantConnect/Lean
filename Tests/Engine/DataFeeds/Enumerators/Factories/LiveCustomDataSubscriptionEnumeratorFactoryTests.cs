@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -64,7 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RestData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
                 var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
+                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-1), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -132,7 +131,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RestCollectionData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
                 var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
+                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-4), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -207,7 +206,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RemoteFileData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
                 var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
+                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-6), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
@@ -217,15 +216,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public void YieldsDataEachSecondAsTimePasses()
             {
                 // most recent 5 seconds of data
-                for (int i = 5; i >= 0; i--)
+                for (int i = 5; i > 0; i--)
                 {
                     Assert.IsTrue(_enumerator.MoveNext());
                     Assert.IsNotNull(_enumerator.Current);
                     Assert.AreEqual(_referenceLocal.AddSeconds(-i), _enumerator.Current.EndTime);
                 }
 
+                // first data point
                 Assert.IsTrue(_enumerator.MoveNext());
-                Assert.IsNull(_enumerator.Current);
+                Assert.IsNotNull(_enumerator.Current);
+                Assert.AreEqual(_referenceLocal, _enumerator.Current.EndTime);
 
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
@@ -285,7 +286,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
                 var config = new SubscriptionDataConfig(typeof(RemoteFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
                 var security = new Equity(Symbols.SPY, exchangeHours, quoteCurrency, SymbolProperties.GetDefault(CashBook.AccountCurrency));
-                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc, _referenceUtc.AddDays(1));
+                var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddDays(-2), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
