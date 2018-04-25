@@ -63,9 +63,14 @@ namespace QuantConnect.Orders
     public enum TimeInForce
     {
         /// <summary>
-        /// Order active until it is filled or cancelled (GTC).
+        /// Order active until it is filled or cancelled (same as GTC).
         /// </summary>
         GoodTilCancelled,
+
+        /// <summary>
+        /// Order active until it is filled or cancelled (same as GoodTilCancelled).
+        /// </summary>
+        GTC = GoodTilCancelled,
 
         /*
         /// <summary>
