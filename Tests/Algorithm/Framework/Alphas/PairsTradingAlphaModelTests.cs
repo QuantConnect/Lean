@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 
@@ -47,7 +48,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
-            throw new NotImplementedException($"{nameof(PairsTradingAlphaModel)} has not been implemented in python yet.");
+            using (Py.GIL())
+            {
+                dynamic model = Py.Import("PairsTradingAlphaModel").GetAttr("PairsTradingAlphaModel");
+                var instance = model(
+                    Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                    Symbol.Create("AIG", SecurityType.Equity, Market.USA));
+                return new AlphaModelPythonWrapper(instance);
+            }
         }
 
         protected override IEnumerable<Insight> ExpectedInsights()
