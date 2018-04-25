@@ -174,7 +174,7 @@ namespace QuantConnect.Securities
                     if (quoteBar.LastAskSize != 0) AskSize = quoteBar.LastAskSize;
                 }
             }
-            else
+            else if (data.DataType != MarketDataType.Auxiliary)
             {
                 Price = data.Price;
             }

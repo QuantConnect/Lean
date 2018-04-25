@@ -275,6 +275,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _frontierTimeProvider.SetCurrentTime(_frontierUtc);
 
                     var data = new List<DataFeedPacket>();
+
+                    // NOTE: Tight coupling in UniverseSelection.ApplyUniverseSelection
+                    var universeData = new Dictionary<Universe, BaseDataCollection>();
                     foreach (var subscription in Subscriptions)
                     {
                         var config = subscription.Configuration;
@@ -304,6 +307,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // otherwise, load all the the data into a new collection instance
                             var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, config.Symbol, packet.Data);
 
+                            BaseDataCollection existingCollection;
+                            if (universeData.TryGetValue(universe, out existingCollection))
+                            {
+                                existingCollection.Data.AddRange(collection.Data);
+                            }
+                            else
+                            {
+                                universeData[universe] = collection;
+                            }
+
                             _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }
                     }
@@ -314,7 +327,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // emit on data or if we've elapsed a full second since last emit
                     if (data.Count != 0 || _frontierUtc >= nextEmit)
                     {
-                        _bridge.Add(TimeSlice.Create(_frontierUtc, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
+                        _bridge.Add(TimeSlice.Create(_frontierUtc, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes, universeData), _cancellationTokenSource.Token);
 
                         // force emitting every second
                         nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
@@ -341,7 +354,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     _bridge.Add(
-                        TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None),
+                        TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>()),
                         _cancellationTokenSource.Token);
                 }
             }

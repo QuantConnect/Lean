@@ -107,7 +107,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 if (data.Count != 0)
                 {
                     // reuse the slice construction code from TimeSlice.Create
-                    yield return TimeSlice.Create(frontier, sliceTimeZone, cashBook, data, SecurityChanges.None).Slice;
+                    yield return TimeSlice.Create(frontier, sliceTimeZone, cashBook, data, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>()).Slice;
                 }
 
                 frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);

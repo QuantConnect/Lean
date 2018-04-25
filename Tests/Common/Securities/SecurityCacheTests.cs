@@ -19,6 +19,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -182,6 +183,18 @@ namespace QuantConnect.Tests.Common.Securities
             }, map);
         }
 
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void AddDataFundamentals_DoesNotChangeCacheValues(SecurityCache cache, SecuritySeedData seedType)
+        {
+            var map = new Dictionary<string, string>();
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.Fundamentals, new Fundamentals
+            {
+                Value = 111,
+                EndTime = ReferenceTime
+            }, map);
+        }
+
         private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)
         {
             var before = JObject.FromObject(cache);
@@ -235,7 +248,8 @@ namespace QuantConnect.Tests.Common.Securities
             OpenInterestTick,
             OpenInterest,
             TradeBar,
-            QuoteBar
+            QuoteBar,
+            Fundamentals
         }
 
         public string[] GetPropertiesBy(SecuritySeedData type)
@@ -262,6 +276,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 case SecuritySeedData.QuoteBar:
                     return new[] { "Price", "Open", "High", "Low", "Close", "AskPrice", "AskSize", "BidPrice", "BidSize" };
+
+                case SecuritySeedData.Fundamentals:
+                    // fundamentals data does not modify security cache properties
+                    return new string[0];
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
@@ -329,6 +347,12 @@ namespace QuantConnect.Tests.Common.Securities
                 EndTime = ReferenceTime
             });
 
+            var fundamentals = new SecurityCache();
+            fundamentals.AddData(new Fundamentals
+            {
+                Value = 23
+            });
+
             return new[]
             {
                 new TestCaseData(defaultInstance, SecuritySeedData.None).SetName("Default Instance"),
@@ -338,6 +362,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new TestCaseData(openInterest, SecuritySeedData.OpenInterest).SetName("Seeded w/ OpenInterest"),
                 new TestCaseData(tradeBar, SecuritySeedData.TradeBar).SetName("Seeded w/ TradeBar"),
                 new TestCaseData(quoteBar, SecuritySeedData.QuoteBar).SetName("Seeded w/ QuoteBar"),
+                new TestCaseData(fundamentals, SecuritySeedData.Fundamentals).SetName("Seeded w/ Fundamentals")
             };
         }
 

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,19 +36,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesTicks_ExpectInOrderWithNoDuplicates()
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
-                typeof(Tick), 
-                Symbols.EURUSD, 
-                Resolution.Tick, 
-                TimeZones.Utc, 
-                TimeZones.Utc, 
-                true, 
-                true, 
+                typeof(Tick),
+                Symbols.EURUSD,
+                Resolution.Tick,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
                 false);
 
             var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), 
-                subscriptionDataConfig, 
-                new Cash(CashBook.AccountCurrency, 0, 1m), 
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                subscriptionDataConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
                 SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             DateTime refTime = DateTime.UtcNow;
@@ -63,7 +63,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.Utc,
                 new CashBook(),
                 new List<DataFeedPacket> {new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() {t})},
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>())));
+                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                new Dictionary<Universe, BaseDataCollection>()));
 
             Tick[] timeSliceTicks = timeSlices.SelectMany(ts => ts.Slice.Ticks.Values.SelectMany(x => x)).ToArray();
 
@@ -111,7 +112,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new DataFeedPacket(security1, subscriptionDataConfig1, new List<BaseData> {new QuandlFuture { Symbol = symbol1, Time = DateTime.UtcNow.Date, Value = 15 } }),
                     new DataFeedPacket(security2, subscriptionDataConfig2, new List<BaseData> {new QuandlFuture { Symbol = symbol2, Time = DateTime.UtcNow.Date, Value = 20 } }),
                 },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()));
+                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(2, timeSlice.CustomData.Count);
 
@@ -151,7 +153,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         new DailyFx { Symbol = symbol, Time = refTime, Title = "Item 2" },
                     }),
                 },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()));
+                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(1, timeSlice.CustomData.Count);
 
@@ -223,7 +226,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 new TradeBar(time, symbol, 100, 100, 110, 106, volume)
                             }),
                         },
-                        new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()))
+                        new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                        new Dictionary<Universe, BaseDataCollection>())
                         .Slice;
                 });
         }

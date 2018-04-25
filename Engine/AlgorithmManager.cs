@@ -332,6 +332,22 @@ namespace QuantConnect.Lean.Engine
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
                 }
 
+                //Update the securities properties with any universe data
+                if (timeSlice.UniverseData.Count > 0)
+                {
+                    foreach (var kvp in timeSlice.UniverseData)
+                    {
+                        foreach (var data in kvp.Value.Data)
+                        {
+                            Security security;
+                            if (algorithm.Securities.TryGetValue(data.Symbol, out security))
+                            {
+                                security.Cache.AddData(data);
+                            }
+                        }
+                    }
+                }
+
                 // poke each cash object to update from the recent security data
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
@@ -820,7 +836,7 @@ namespace QuantConnect.Lean.Engine
                             paired.Add(new DataFeedPacket(security, config, list));
                         }
 
-                        timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None);
+                        timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
                     }
                     catch (Exception err)
                     {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -68,7 +69,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the changes to the data subscriptions as a result of universe selection
         /// </summary>
-        public SecurityChanges SecurityChanges { get; set; }
+        public SecurityChanges SecurityChanges { get; private set; }
+
+        /// <summary>
+        /// Gets the universe data generated this time step.
+        /// </summary>
+        public Dictionary<Universe, BaseDataCollection> UniverseData { get; private set; }
 
         /// <summary>
         /// Initializes a new <see cref="TimeSlice"/> containing the specified data
@@ -80,7 +86,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<UpdateData<Security>> securitiesUpdateData,
             List<UpdateData<SubscriptionDataConfig>> consolidatorUpdateData,
             List<UpdateData<Security>> customData,
-            SecurityChanges securityChanges)
+            SecurityChanges securityChanges,
+            Dictionary<Universe, BaseDataCollection> universeData)
         {
             Time = time;
             Data = data;
@@ -90,6 +97,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SecuritiesUpdateData = securitiesUpdateData;
             ConsolidatorUpdateData = consolidatorUpdateData;
             SecurityChanges = securityChanges;
+            UniverseData = universeData;
         }
 
         /// <summary>
@@ -100,8 +108,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="cashBook">The algorithm's cash book, required for generating cash update pairs</param>
         /// <param name="data">The data in this <see cref="TimeSlice"/></param>
         /// <param name="changes">The new changes that are seen in this time slice as a result of universe selection</param>
+        /// <param name="universeData"></param>
         /// <returns>A new <see cref="TimeSlice"/> containing the specified data</returns>
-        public static TimeSlice Create(DateTime utcDateTime, DateTimeZone algorithmTimeZone, CashBook cashBook, List<DataFeedPacket> data, SecurityChanges changes)
+        public static TimeSlice Create(DateTime utcDateTime,
+            DateTimeZone algorithmTimeZone,
+            CashBook cashBook,
+            List<DataFeedPacket> data,
+            SecurityChanges changes,
+            Dictionary<Universe, BaseDataCollection> universeData)
         {
             int count = 0;
             var security = new List<UpdateData<Security>>();
@@ -131,6 +145,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var optionChains = new OptionChains(algorithmTime);
             var futuresChains = new FuturesChains(algorithmTime);
             var symbolChanges = new SymbolChangedEvents(algorithmTime);
+
+            if (universeData.Count > 0)
+            {
+                // count universe data
+                foreach (var kvp in universeData)
+                {
+                    count += kvp.Value.Data.Count;
+                }
+            }
 
             // ensure we read equity data before option data, so we can set the current underlying price
             foreach (var packet in data)
@@ -253,7 +276,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, quoteBars, ticks, optionChains, futuresChains, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
-            return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom, changes);
+            return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom, changes, universeData);
         }
 
         /// <summary>
