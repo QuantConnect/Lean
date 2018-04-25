@@ -770,7 +770,7 @@ namespace QuantConnect.Brokerages.Oanda
                 qcOrder.Id = orderByBrokerageId.Id;
             }
 
-            qcOrder.Duration = OrderDuration.Custom;
+            qcOrder.TimeInForce = TimeInForce.Custom;
             qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
 

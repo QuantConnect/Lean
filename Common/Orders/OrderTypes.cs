@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Type of the order: market, limit or stop
     /// </summary>
-    public enum OrderType 
+    public enum OrderType
     {
         /// <summary>
         /// Market Order Type
@@ -58,9 +58,9 @@ namespace QuantConnect.Orders
 
 
     /// <summary>
-    /// Order duration in market
+    /// Time In Force - defines the length of time over which an order will continue working before it is canceled
     /// </summary>
-    public enum OrderDuration
+    public enum TimeInForce
     {
         /// <summary>
         /// Order good until its filled.
@@ -69,7 +69,7 @@ namespace QuantConnect.Orders
 
         /*
         /// <summary>
-        /// Order valid for today only: -- CURRENTLY ONLY GTC ORDER DURATION TYPE IN BACKTESTS.
+        /// Order valid for today only: -- CURRENTLY ONLY GTC ORDER TIME IN FORCE IN BACKTESTS.
         /// </summary>
         Day
         */
@@ -78,7 +78,7 @@ namespace QuantConnect.Orders
         /// Order valid until a custom set date time value.
         /// </summary>
         Custom
-        
+
     }
 
 
@@ -88,7 +88,7 @@ namespace QuantConnect.Orders
     public enum OrderDirection {
 
         /// <summary>
-        /// Buy Order 
+        /// Buy Order
         /// </summary>
         Buy,
 
@@ -112,7 +112,7 @@ namespace QuantConnect.Orders
     /// Fill status of the order class.
     /// </summary>
     public enum OrderStatus {
-        
+
         /// <summary>
         /// New order pre-submission to the order processor.
         /// </summary>

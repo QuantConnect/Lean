@@ -37,6 +37,7 @@ using MarketOrder = QuantConnect.Orders.MarketOrder;
 using Order = QuantConnect.Orders.Order;
 using OandaLimitOrder = Oanda.RestV20.Model.LimitOrder;
 using OrderType = QuantConnect.Orders.OrderType;
+using TimeInForce = QuantConnect.Orders.TimeInForce;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -654,7 +655,7 @@ namespace QuantConnect.Brokerages.Oanda
             var gtdTime = order["gtdTime"];
             if (gtdTime != null)
             {
-                qcOrder.Duration = OrderDuration.Custom;
+                qcOrder.TimeInForce = TimeInForce.Custom;
                 qcOrder.DurationValue = GetTickDateTimeFromString(gtdTime.ToString());
             }
 

@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -86,9 +85,9 @@ namespace QuantConnect.Orders
         public OrderStatus Status { get; internal set; }
 
         /// <summary>
-        /// Order duration - GTC or Day. Day not supported in backtests.
+        /// Order Time In Force - GTC or Day. Day not supported in backtests.
         /// </summary>
-        public OrderDuration Duration { get; internal set; }
+        public TimeInForce TimeInForce { get; internal set; }
 
         /// <summary>
         /// Tag the order with some custom data
@@ -172,7 +171,7 @@ namespace QuantConnect.Orders
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
             Tag = "";
-            Duration = OrderDuration.GTC;
+            TimeInForce = TimeInForce.GTC;
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
@@ -196,7 +195,7 @@ namespace QuantConnect.Orders
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
-            Duration = OrderDuration.GTC;
+            TimeInForce = TimeInForce.GTC;
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
@@ -271,7 +270,7 @@ namespace QuantConnect.Orders
             order.Time = Time;
             order.BrokerId = BrokerId.ToList();
             order.ContingentId = ContingentId;
-            order.Duration = Duration;
+            order.TimeInForce = TimeInForce;
             order.Price = Price;
             order.PriceCurrency = PriceCurrency;
             order.Quantity = Quantity;

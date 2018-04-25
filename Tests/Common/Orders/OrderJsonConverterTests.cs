@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Common.Orders
 'Time':'2010-03-04T14:31:00Z',
 'Quantity':999,
 'Status':3,
-'Duration':0,
+'TimeInForce':0,
 'Tag':'',
 'SecurityType':1,
 'Direction':0,
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Common.Orders
 'Time':'2010-03-04T14:31:00Z',
 'Quantity':999,
 'Status':3,
-'Duration':0,
+'TimeInForce':0,
 'Tag':'',
 'SecurityType':1,
 'Direction':0,
@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Common.Orders
             CollectionAssert.AreEqual(expected.BrokerId, actual.BrokerId);
             Assert.AreEqual(expected.ContingentId, actual.ContingentId);
             Assert.AreEqual(expected.Direction, actual.Direction);
-            Assert.AreEqual(expected.Duration, actual.Duration);
+            Assert.AreEqual(expected.TimeInForce, actual.TimeInForce);
             Assert.AreEqual(expected.DurationValue, actual.DurationValue);
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Price, actual.Price);
