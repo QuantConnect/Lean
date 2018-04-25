@@ -58,14 +58,14 @@ namespace QuantConnect.Orders
 
 
     /// <summary>
-    /// Time In Force - defines the length of time over which an order will continue working before it is canceled
+    /// Time In Force - defines the length of time over which an order will continue working before it is cancelled
     /// </summary>
     public enum TimeInForce
     {
         /// <summary>
-        /// Order good until its filled.
+        /// Order active until it is filled or cancelled (GTC).
         /// </summary>
-        GTC,
+        GoodTilCancelled,
 
         /*
         /// <summary>

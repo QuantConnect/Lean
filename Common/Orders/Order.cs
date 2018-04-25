@@ -171,7 +171,7 @@ namespace QuantConnect.Orders
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
             Tag = "";
-            TimeInForce = TimeInForce.GTC;
+            TimeInForce = TimeInForce.GoodTilCancelled;
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
@@ -195,7 +195,7 @@ namespace QuantConnect.Orders
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
-            TimeInForce = TimeInForce.GTC;
+            TimeInForce = TimeInForce.GoodTilCancelled;
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
