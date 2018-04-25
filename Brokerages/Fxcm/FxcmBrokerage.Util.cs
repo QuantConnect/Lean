@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,22 +69,22 @@ namespace QuantConnect.Brokerages.Fxcm
             order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
             order.BrokerId.Add(fxcmOrder.getOrderID());
-            order.Duration = ConvertDuration(fxcmOrder.getTimeInForce());
+            order.TimeInForce = ConvertTimeInForce(fxcmOrder.getTimeInForce());
             order.Time = FromJavaDate(fxcmOrder.getTransactTime().toDate());
 
             return order;
         }
 
         /// <summary>
-        /// Converts an FXCM order duration to QuantConnect order duration
+        /// Converts an FXCM order time in force to QuantConnect order time in force
         /// </summary>
-        private static OrderDuration ConvertDuration(ITimeInForce timeInForce)
+        private static TimeInForce ConvertTimeInForce(ITimeInForce timeInForce)
         {
             if (timeInForce == TimeInForceFactory.GOOD_TILL_CANCEL)
-                return OrderDuration.GTC;
-            
+                return TimeInForce.GoodTilCancelled;
+
             if (timeInForce == TimeInForceFactory.DAY)
-                return (OrderDuration)1; //.Day;
+                return (TimeInForce)1; //.Day;
 
             throw new ArgumentOutOfRangeException();
         }
@@ -104,10 +104,10 @@ namespace QuantConnect.Brokerages.Fxcm
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
-                Quantity = Convert.ToDecimal(fxcmPosition.getPositionQty().getLongQty() > 0 
-                    ? fxcmPosition.getPositionQty().getLongQty() 
+                Quantity = Convert.ToDecimal(fxcmPosition.getPositionQty().getLongQty() > 0
+                    ? fxcmPosition.getPositionQty().getLongQty()
                     : -fxcmPosition.getPositionQty().getShortQty())
-            };        
+            };
         }
 
         /// <summary>
@@ -244,9 +244,9 @@ namespace QuantConnect.Brokerages.Fxcm
 
         //
         // So it turns out that in order to properly load the QuantConnect.Brokerages
-        // dll we need the IKVM.OpenJdk.Jdbc referenced in other projects that use 
+        // dll we need the IKVM.OpenJdk.Jdbc referenced in other projects that use
         // this. By placing a hard reference to an IKVM.OpenJdk.Jdbc type, the compiler
-        // will properly copy the required dlls into other project bin directories. 
+        // will properly copy the required dlls into other project bin directories.
         // Without this, consuming projects would need to hard refernce the IKVM dlls,
         // which is less than perfect. This seems to be the better of two evils
         //

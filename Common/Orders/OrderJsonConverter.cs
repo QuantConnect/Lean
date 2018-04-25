@@ -105,6 +105,12 @@ namespace QuantConnect.Orders
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
+            var timeInForce = jObject["TimeInForce"] ?? jObject["Duration"];
+            if (timeInForce != null)
+            {
+                order.TimeInForce = (TimeInForce)timeInForce.Value<int>();
+            }
+
             string market = Market.USA;
 
             //does data have market?
@@ -136,6 +142,7 @@ namespace QuantConnect.Orders
                 var tickerstring = jObject["Symbol"].Value<string>();
                 order.Symbol = Symbol.Create(tickerstring, securityType, market);
             }
+
             return order;
         }
 

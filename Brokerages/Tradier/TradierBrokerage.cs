@@ -948,7 +948,7 @@ namespace QuantConnect.Brokerages.Tradier
             // we only want to update the active order, and if successful, we'll update contingents as well in memory
 
             var orderType = ConvertOrderType(order.Type);
-            var orderDuration = GetOrderDuration(order.Duration);
+            var orderDuration = GetOrderDuration(order.TimeInForce);
             var limitPrice = GetLimitPrice(order);
             var stopPrice = GetStopPrice(order);
             var response = ChangeOrder(_accountID, activeOrder.Order.Id,
@@ -1513,7 +1513,7 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id.ToString());
             //qcOrder.ContingentId =
-            qcOrder.Duration = ConvertDuration(order.Duration);
+            qcOrder.TimeInForce = ConvertTimeInForce(order.Duration);
             var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
             if (orderByBrokerageId != null)
             {
@@ -1548,16 +1548,16 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Converts the tradier order duration into a qc order duration
+        /// Converts the tradier order duration into a qc order time in force
         /// </summary>
-        protected OrderDuration ConvertDuration(TradierOrderDuration duration)
+        protected TimeInForce ConvertTimeInForce(TradierOrderDuration duration)
         {
             switch (duration)
             {
                 case TradierOrderDuration.GTC:
-                    return OrderDuration.GTC;
+                    return TimeInForce.GoodTilCancelled;
                 case TradierOrderDuration.Day:
-                    return (OrderDuration) 1; //.Day;
+                    return (TimeInForce) 1; //.Day;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -1752,11 +1752,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Converts the qc order duration into a tradier order duration
         /// </summary>
-        protected static TradierOrderDuration GetOrderDuration(OrderDuration duration)
+        protected static TradierOrderDuration GetOrderDuration(TimeInForce duration)
         {
             switch (duration)
             {
-                case OrderDuration.GTC:
+                case TimeInForce.GoodTilCancelled:
                     return TradierOrderDuration.GTC;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1892,7 +1892,7 @@ namespace QuantConnect.Brokerages.Tradier
                 Price = GetLimitPrice(order);
                 Stop = GetStopPrice(order);
                 Type = ConvertOrderType(order);
-                Duration = GetOrderDuration(order.Duration);
+                Duration = GetOrderDuration(order.TimeInForce);
             }
 
             public void ConvertStopOrderTypes()
