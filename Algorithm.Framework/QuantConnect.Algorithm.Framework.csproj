@@ -111,6 +111,9 @@
     <None Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Portfolio\BlackLittermanPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Alphas\HistoricalReturnsAlphaModel.py">
