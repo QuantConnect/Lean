@@ -86,6 +86,7 @@
     <Compile Include="OptionRenameRegressionAlgorithm.py" />
     <Compile Include="OptionSplitRegressionAlgorithm.py" />
     <Compile Include="OrderTicketDemoAlgorithm.py" />
+    <Compile Include="PairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="ParameterizedAlgorithm.py" />
     <Compile Include="PythonPackageTestAlgorithm.py" />
     <Compile Include="QCUWeatherBasedRebalancing.py" />

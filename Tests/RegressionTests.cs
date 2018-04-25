@@ -1035,6 +1035,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm", volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.Python)
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
