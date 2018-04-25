@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Common.Orders
 'Time':'2010-03-04T14:31:00Z',
 'Quantity':999,
 'Status':3,
-'TimeInForce':0,
+'TimeInForce':1,
 'Tag':'',
 'SecurityType':1,
 'Direction':0,
@@ -201,7 +201,40 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.AreEqual(1, (int)order.TimeInForce);
+        }
 
+        [Test]
+        public void DeserializesOldDurationProperty()
+        {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+
+            // The Duration property has been renamed to TimeInForce,
+            // we still want to deserialize old JSON files containing Duration.
+            const string json = @"{'Type':0,
+'Value':99986.827413672,
+'Id':1,
+'ContingentId':0,
+'BrokerId':[1],
+'Symbol':{'Value':'SPY',
+'Permtick':'SPY'},
+'Price':100.086914328,
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':999,
+'Status':3,
+'Duration':1,
+'Tag':'',
+'SecurityType':1,
+'Direction':0,
+'AbsoluteQuantity':999}";
+
+            var order = JsonConvert.DeserializeObject<Order>(json);
+            Assert.IsInstanceOf<MarketOrder>(order);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.AreEqual(1, (int)order.TimeInForce);
         }
 
         [Test]
