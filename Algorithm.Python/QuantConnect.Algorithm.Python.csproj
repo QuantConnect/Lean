@@ -140,6 +140,7 @@
     <None Include="CustomSecurityInitializerAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="PairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Content Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
     <Content Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.py" />
     <None Include="BasicTemplateCryptoAlgorithm.py" />
