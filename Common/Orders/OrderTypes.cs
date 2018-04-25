@@ -72,12 +72,11 @@ namespace QuantConnect.Orders
         /// </summary>
         GTC = GoodTilCancelled,
 
-        /*
         /// <summary>
-        /// Order valid for today only: -- CURRENTLY ONLY GTC ORDER TIME IN FORCE IN BACKTESTS.
+        /// Order valid only for the current day (DAY).
+        /// The order will be cancelled if not executed before the market close.
         /// </summary>
-        Day
-        */
+        Day,
 
         /// <summary>
         /// Order valid until a custom set date time value.

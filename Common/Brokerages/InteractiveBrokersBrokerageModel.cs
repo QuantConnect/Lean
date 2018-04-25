@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public InteractiveBrokersBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
@@ -62,24 +62,38 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
-            //https://www.interactivebrokers.com/en/?f=%2Fen%2Ftrading%2FforexOrderSize.php
-            switch (order.SecurityType)
+            // validate security type
+            if (security.Type != SecurityType.Equity &&
+                security.Type != SecurityType.Forex &&
+                security.Type != SecurityType.Option &&
+                security.Type != SecurityType.Future)
             {
-                case SecurityType.Base:
-                    return false;
-                case SecurityType.Equity:
-                    return true; // could not find order limits on equities
-                case SecurityType.Option:
-                    return true;
-                case SecurityType.Commodity:
-                    return true;
-                case SecurityType.Forex:
-                    return IsForexWithinOrderSizeLimits(order.Symbol.Value, order.Quantity, out message);
-                case SecurityType.Future:
-                    return true;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + security.Type + " security type."
+                );
+
+                return false;
             }
+
+            // validate order quantity
+            //https://www.interactivebrokers.com/en/?f=%2Fen%2Ftrading%2FforexOrderSize.php
+            if (security.Type == SecurityType.Forex &&
+                !IsForexWithinOrderSizeLimits(order.Symbol.Value, order.Quantity, out message))
+            {
+                return false;
+            }
+
+            // validate time in force
+            if (order.TimeInForce != TimeInForce.GoodTilCancelled && order.TimeInForce != TimeInForce.Day)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + order.TimeInForce + " time in force."
+                );
+
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -104,7 +118,7 @@ namespace QuantConnect.Brokerages
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
-        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// market prices are sufficient for the fill to take place. This is used to emulate the
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
         /// executions during extended market hours. This is not intended to be checking whether or not
         /// the exchange is open, that is handled in the Security.Exchange property.
