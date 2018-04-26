@@ -59,6 +59,8 @@ class MacdAlphaModel:
             data: The new data available
         Returns:
             The new insights generated'''
+        insights = []
+
         for key, sd in self.symbolData.items():
             if sd.Security.Price == 0:
                 continue
@@ -77,7 +79,9 @@ class MacdAlphaModel:
 
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
             sd.PreviousDirection = insight.Direction
-            yield insight
+            insights.append(insight)
+
+        return insights
 
 
     def OnSecuritiesChanged(self, algorithm, changes):
