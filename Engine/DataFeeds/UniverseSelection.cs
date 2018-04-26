@@ -83,7 +83,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     foreach (var symbol in selectSymbolsResult)
                     {
-                        var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { dateTimeUtc });
                         var config = FineFundamentalUniverse.CreateConfiguration(symbol);
 
                         var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
@@ -92,7 +91,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
 
-                        var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), dateTimeUtc, dateTimeUtc);
+                        var localStartTime = dateTimeUtc.ConvertFromUtc(exchangeHours.TimeZone).AddDays(-1);
+                        var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { localStartTime });
+                        var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), localStartTime, localStartTime);
                         using (var enumerator = factory.CreateEnumerator(request, dataProvider))
                         {
                             if (enumerator.MoveNext())
