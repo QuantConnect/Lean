@@ -253,7 +253,6 @@
     <Compile Include="Data\Market\OptionContracts.cs" />
     <Compile Include="Data\Market\QuoteBars.cs" />
     <Compile Include="Data\Market\BarDirection.cs" />
-    <Compile Include="Data\Market\IntraDayDividendSplit.cs" />
     <Compile Include="Data\SubscriptionDataConfigList.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FineFundamentalUniverse.cs" />

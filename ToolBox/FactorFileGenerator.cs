@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,7 +83,7 @@ namespace QuantConnect.ToolBox
             return RecursivlyGenerateFactorFile(orderedDividendSplitQueue, factorFileRows);
         }
         /// <summary>
-        /// If dividend and split occur on the same day, 
+        /// If dividend and split occur on the same day,
         ///   combine them into IntraDayDividendSplit object
         /// </summary>
         /// <param name="splitDividendList">List of split and dividends</param>
@@ -305,6 +305,33 @@ namespace QuantConnect.ToolBox
                 }
             }
             return new List<TradeBar>();
+        }
+
+        /// <summary>
+        /// Pairs split and dividend data into one type
+        /// </summary>
+        private class IntraDayDividendSplit : BaseData
+        {
+            public Split Split { get; }
+            public Dividend Dividend { get; }
+
+            public IntraDayDividendSplit(Split split, Dividend dividend)
+            {
+                if (split == null)
+                {
+                    throw new ArgumentNullException("split");
+                }
+
+                if (dividend == null)
+                {
+                    throw new ArgumentNullException("dividend");
+                }
+
+
+                Split = split;
+                Dividend = dividend;
+                Time = Split.Time;
+            }
         }
     }
 }
