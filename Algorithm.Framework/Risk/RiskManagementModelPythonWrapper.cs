@@ -61,6 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 {
                     yield return target.AsManagedObject(typeof(IPortfolioTarget)) as IPortfolioTarget;
                 }
+                riskTargetOverrides.Destroy();
             }
         }
 

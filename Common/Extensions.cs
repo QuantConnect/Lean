@@ -1137,6 +1137,33 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Destroys a PyObject
+        /// https://docs.python.org/2/reference/datamodel.html#object.__del__
+        /// </summary>
+        /// <param name="pyObject">PyObject to be destroyed</param>
+        public static void Destroy(this PyObject pyObject)
+        {
+            try
+            {
+                if (pyObject.HasAttr("__del__"))
+                {
+                    pyObject.InvokeMethod("__del__");
+                }
+            }
+            catch (PythonException e)
+            {
+                if (string.IsNullOrWhiteSpace(e.StackTrace))
+                {
+                    throw new Exception($"{(pyObject as dynamic).__qualname__} returned a result with an undefined error set.");
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+        }
+
+        /// <summary>
         /// Performs on-line batching of the specified enumerator, emitting chunks of the requested batch size
         /// </summary>
         /// <typeparam name="T">The enumerable item type</typeparam>
