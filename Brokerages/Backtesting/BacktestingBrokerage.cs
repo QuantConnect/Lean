@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -38,6 +39,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
         private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
+        private readonly Dictionary<TimeInForce, ITimeInForceHandler> _timeInForceHandlers = new Dictionary<TimeInForce, ITimeInForceHandler>();
 
         /// <summary>
         /// This is the algorithm under test
@@ -79,6 +81,7 @@ namespace QuantConnect.Brokerages.Backtesting
             MarketSimulation = marketSimulation;
             _pending = new ConcurrentDictionary<int, Order>();
         }
+
         /// <summary>
         /// Gets the connection status
         /// </summary>
@@ -276,6 +279,14 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
+                    var timeInForceHandler = GetTimeInForceHandler(order.TimeInForce);
+
+                    // check if the time in force handler allows fills
+                    if (!timeInForceHandler.HandleOrderPreFill(order))
+                    {
+                        continue;
+                    }
+
                     // check if we would actually be able to fill this
                     if (!Algorithm.BrokerageModel.CanExecuteOrder(security, order))
                     {
@@ -361,6 +372,12 @@ namespace QuantConnect.Brokerages.Backtesting
 
                     foreach (var fill in fills)
                     {
+                        // check if the fill should be emitted
+                        if (!timeInForceHandler.HandleOrderPostFill(order, fill))
+                        {
+                            break;
+                        }
+
                         // change in status or a new fill
                         if (order.Status != fill.Status || fill.FillQuantity != 0)
                         {
@@ -456,6 +473,28 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             // only save off clones!
             _pending[order.Id] = order.Clone();
+        }
+
+        private ITimeInForceHandler GetTimeInForceHandler(TimeInForce timeInForce)
+        {
+            ITimeInForceHandler handler;
+            if (!_timeInForceHandlers.TryGetValue(timeInForce, out handler))
+            {
+                switch (timeInForce)
+                {
+                    case TimeInForce.Day:
+                        handler = new DayTimeInForceHandler(Algorithm, this);
+                        break;
+
+                    default:
+                        handler = new GoodTilCancelledTimeInForceHandler();
+                        break;
+                }
+
+                _timeInForceHandlers[timeInForce] = handler;
+            }
+
+            return handler;
         }
     }
 }
