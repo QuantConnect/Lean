@@ -181,6 +181,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Stores the specified data instance in the cache WITHOUT updating any of the cache properties, such as Price
+        /// </summary>
+        /// <param name="data"></param>
+        public void StoreData(BaseData data)
+        {
+            _dataByType[data.GetType()] = data;
+        }
+
+        /// <summary>
         /// Get last data packet recieved for this security
         /// </summary>
         /// <returns>BaseData type of the security</returns>

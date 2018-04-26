@@ -342,7 +342,7 @@ namespace QuantConnect.Lean.Engine
                             Security security;
                             if (algorithm.Securities.TryGetValue(data.Symbol, out security))
                             {
-                                security.Cache.AddData(data);
+                                security.Cache.StoreData(data);
                             }
                         }
                     }
