@@ -70,9 +70,10 @@ class BlackLittermanPortfolioConstructionModel:
         Returns: 
             An enumerable of portoflio targets to be sent to the execution model
         """
-        
+        targets = []
+
         for symbol in self.pendingRemoval:
-            yield PortfolioTarget.Percent(algorithm, symbol, 0)
+            targets.append(PortfolioTarget.Percent(algorithm, symbol, 0))
         self.pendingRemoval.clear()
         
         # construct the dataframe of historical return
@@ -106,7 +107,9 @@ class BlackLittermanPortfolioConstructionModel:
         # create portfolio targets from the specified insights
         for insight in insights:
             weight = weights[str(insight.Symbol)]
-            yield PortfolioTarget.Percent(algorithm, insight.Symbol, weight)
+            targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, weight))
+
+        return targets
 
 
     def OnSecuritiesChanged(self, algorithm, changes):

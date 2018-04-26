@@ -60,6 +60,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 {
                     yield return universe.AsManagedObject(typeof(Universe)) as Universe;
                 }
+                universers.Destroy();
             }
         }
     }

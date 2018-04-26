@@ -57,9 +57,13 @@ class ConstantAlphaModel:
             data: The new data available
         Returns:
             The new insights generated'''
+        insights = []
+
         for security in self.securities:
             if self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
-                yield Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence)
+                insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence))
+
+        return insights
 
 
     def OnSecuritiesChanged(self, algorithm, changes):

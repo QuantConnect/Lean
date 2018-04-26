@@ -81,6 +81,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     yield return insight.AsManagedObject(typeof(Insight)) as Insight;
                 }
+                insights.Destroy();
             }
         }
 

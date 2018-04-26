@@ -62,6 +62,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     yield return target.AsManagedObject(typeof(IPortfolioTarget)) as IPortfolioTarget;
                 }
+                targets.Destroy();
             }
         }
 
