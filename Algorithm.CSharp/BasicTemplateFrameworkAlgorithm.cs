@@ -14,11 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Orders;
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             Alpha = new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null);
             PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
             Execution = new ImmediateExecutionModel();
-            RiskManagement = new Algorithm.Framework.Risk.NullRiskManagementModel();
+            RiskManagement = new MaximumDrawdownPercentPerSecurity(0.01m);
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
