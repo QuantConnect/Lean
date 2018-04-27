@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 
@@ -225,11 +224,10 @@ namespace QuantConnect.Securities
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
-                    // we currently do not have quote data for Crypto in backtesting, so we subscribe to trades instead of quotes
-                    var objectType = minimumResolution == Resolution.Tick
-                        ? typeof(Tick)
-                        : (securityType == SecurityType.Crypto ? typeof(TradeBar) : typeof(QuoteBar));
-                    var tickType = securityType == SecurityType.Crypto ? TickType.Trade : TickType.Quote;
+                    // use the first subscription defined in the subscription manager
+                    var type = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
+                    var objectType = type.Item1;
+                    var tickType = type.Item2;
 
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
