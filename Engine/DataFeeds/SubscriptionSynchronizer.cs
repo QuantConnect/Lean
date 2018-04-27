@@ -170,6 +170,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     universeDataForTimeSliceCreate[universe] = baseDataCollection;
                     newChanges += _universeSelection.ApplyUniverseSelection(universe, _frontier, baseDataCollection);
                 }
+                universeData.Clear();;
 
                 changes += newChanges;
             }

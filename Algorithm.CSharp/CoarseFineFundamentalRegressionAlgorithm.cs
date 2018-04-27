@@ -58,17 +58,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return new List<Symbol>
                 {
-                    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
-                    QuantConnect.Symbol.Create("AIG", SecurityType.Equity, "usa"),
-                    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa")
+                    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA)
                 };
             }
 
             return new List<Symbol>
             {
-                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, "usa")
+                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
             };
         }
 
