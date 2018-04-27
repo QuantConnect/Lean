@@ -1,273 +1,276 @@
 {
-  // this configuration file works by first loading all top-level
-  // configuration items and then will load the specified environment
-  // on top, this provides a layering affect. environment names can be
-  // anything, and just require definition in this file. There's
-  // two predefined environments, 'backtesting' and 'live', feel free
-  // to add more!
+    // this configuration file works by first loading all top-level
+    // configuration items and then will load the specified environment
+    // on top, this provides a layering affect. environment names can be
+    // anything, and just require definition in this file. There's
+    // two predefined environments, 'backtesting' and 'live', feel free
+    // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+    "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
-  // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+    // algorithm class selector
+    "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
 
-  // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
-  "algorithm-language": "CSharp",
+    // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
+    "algorithm-language": "CSharp",
 
-  //Physical DLL location
-  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
-  //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
-  //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
-  //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
+    //Physical DLL location
+    "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+    //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+    //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
+    //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
+    //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
 
-  // engine
-  "data-folder": "../../../Data/",
+    //Jupyter notebook
+    //"composer-dll-directory": ".",
 
-  // handlers
-  "log-handler": "QuantConnect.Logging.CompositeLogHandler",
-  "messaging-handler": "QuantConnect.Messaging.Messaging",
-  "job-queue-handler": "QuantConnect.Queues.JobQueue",
-  "api-handler": "QuantConnect.Api.Api",
-  "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
-  "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
-  "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
-  "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
+    // engine
+    "data-folder": "../../../Data/",
 
-  // limits on number of symbols to allow
-  "symbol-minute-limit": 10000,
-  "symbol-second-limit": 10000,
-  "symbol-tick-limit": 10000,
+    // handlers
+    "log-handler": "QuantConnect.Logging.CompositeLogHandler",
+    "messaging-handler": "QuantConnect.Messaging.Messaging",
+    "job-queue-handler": "QuantConnect.Queues.JobQueue",
+    "api-handler": "QuantConnect.Api.Api",
+    "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
+    "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
+    "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+    "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
 
-  // if one uses true in following token, market hours will remain open all hours and all days.
-  // if one uses false will make lean operate only during regular market hours.
-  "force-exchange-always-open": false,
+    // limits on number of symbols to allow
+    "symbol-minute-limit": 10000,
+    "symbol-second-limit": 10000,
+    "symbol-tick-limit": 10000,
 
-  // save list of transactions to the specified csv file
-  "transaction-log": "",
+    // if one uses true in following token, market hours will remain open all hours and all days.
+    // if one uses false will make lean operate only during regular market hours.
+    "force-exchange-always-open": false,
 
-  // To get your api access token go to quantconnect.com/account
-  "job-user-id": "0",
-  "api-access-token": "",
+    // save list of transactions to the specified csv file
+    "transaction-log": "",
 
-  // live data configuration
-  "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
-  "live-data-port": 8020,
+    // To get your api access token go to quantconnect.com/account
+    "job-user-id": "0",
+    "api-access-token": "",
 
-  // interactive brokers configuration
-  "ib-account": "",
-  "ib-user-name": "",
-  "ib-password": "",
-  "ib-host": "127.0.0.1",
-  "ib-port": "4002",
-  "ib-agent-description": "Individual",
-  "ib-use-tws": false,
-  "ib-tws-dir": "C:\\Jts",
-  "ib-trading-mode": "paper",
-  "ib-controller-dir": "C:\\IBController",
+    // live data configuration
+    "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
+    "live-data-port": 8020,
 
-  // tradier configuration
-  "tradier-account-id": "",
-  "tradier-access-token": "",
-  "tradier-refresh-token": "",
-  "tradier-issued-at": "",
-  "tradier-lifespan": "",
-  "tradier-refresh-session": true,
+    // interactive brokers configuration
+    "ib-account": "",
+    "ib-user-name": "",
+    "ib-password": "",
+    "ib-host": "127.0.0.1",
+    "ib-port": "4002",
+    "ib-agent-description": "Individual",
+    "ib-use-tws": false,
+    "ib-tws-dir": "C:\\Jts",
+    "ib-trading-mode": "paper",
+    "ib-controller-dir": "C:\\IBController",
 
-  // oanda configuration
-  "oanda-environment": "Practice",
-  "oanda-access-token": "",
-  "oanda-account-id": "",
+    // tradier configuration
+    "tradier-account-id": "",
+    "tradier-access-token": "",
+    "tradier-refresh-token": "",
+    "tradier-issued-at": "",
+    "tradier-lifespan": "",
+    "tradier-refresh-session": true,
 
-  // fxcm configuration
-  "fxcm-server": "http://www.fxcorporate.com/Hosts.jsp",
-  "fxcm-terminal": "Demo", //Real or Demo
-  "fxcm-user-name": "",
-  "fxcm-password": "",
-  "fxcm-account-id": "",
+    // oanda configuration
+    "oanda-environment": "Practice",
+    "oanda-access-token": "",
+    "oanda-account-id": "",
 
-  // iqfeed configuration
-  "iqfeed-username": "",
-  "iqfeed-password": "",
-  "iqfeed-productName": "",
-  "iqfeed-version": "1.0",
+    // fxcm configuration
+    "fxcm-server": "http://www.fxcorporate.com/Hosts.jsp",
+    "fxcm-terminal": "Demo", //Real or Demo
+    "fxcm-user-name": "",
+    "fxcm-password": "",
+    "fxcm-account-id": "",
 
-  // gdax configuration
-  "gdax-api-secret": "",
-  "gdax-api-key": "",
-  "gdax-passphrase": "",
+    // iqfeed configuration
+    "iqfeed-username": "",
+    "iqfeed-password": "",
+    "iqfeed-productName": "",
+    "iqfeed-version": "1.0",
 
-  // Required to access data from Quandl
-  // To get your access token go to https://www.quandl.com/account/api
-  "quandl-auth-token": "",
+    // gdax configuration
+    "gdax-api-secret": "",
+    "gdax-api-key": "",
+    "gdax-passphrase": "",
 
-  // parameters to set in the algorithm (the below are just samples)
-  "parameters": { 
-    // Intrinio account user and password
-    "intrinio-username": "",
-    "intrinio-password": "",
-    
-    "ema-fast": 10,
-    "ema-slow": 20
-  },
+    // Required to access data from Quandl
+    // To get your access token go to https://www.quandl.com/account/api
+    "quandl-auth-token": "",
 
-  "environments": {
+    // parameters to set in the algorithm (the below are just samples)
+    "parameters": {
+        // Intrinio account user and password
+        "intrinio-username": "",
+        "intrinio-password": "",
 
-    // defines the 'backtesting' environment
-    "backtesting": {
-      "live-mode": false,
-
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
-      "history-provider": "QuantConnect.Lean.Engine.HistoricalData.SubscriptionDataReaderHistoryProvider",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+        "ema-fast": 10,
+        "ema-slow": 20
     },
 
-    // defines the 'live-paper' environment
-    "live-paper": {
-      "live-mode": true,
+    "environments": {
 
-      // the paper brokerage requires the BacktestingTransactionHandler
-      "live-mode-brokerage": "PaperBrokerage",
+        // defines the 'backtesting' environment
+        "backtesting": {
+            "live-mode": false,
 
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
-    },
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+            "history-provider": "QuantConnect.Lean.Engine.HistoricalData.SubscriptionDataReaderHistoryProvider",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+        },
 
-    // defines the 'live-tradier' environment
-    "live-tradier": {
-      "live-mode": true,
+        // defines the 'live-paper' environment
+        "live-paper": {
+            "live-mode": true,
 
-      // this setting will save tradier access/refresh tokens to a tradier-tokens.txt file
-      // that can be read in next time, this makes it easier to start/stop a tradier algorithm
-      "tradier-save-tokens": true,
+            // the paper brokerage requires the BacktestingTransactionHandler
+            "live-mode-brokerage": "PaperBrokerage",
 
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "TradierBrokerage",
-      "data-queue-handler": "TradierBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+        },
 
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
-    },
+        // defines the 'live-tradier' environment
+        "live-tradier": {
+            "live-mode": true,
 
-    // defines the 'live-interactive' environment
-    "live-interactive": {
-      "live-mode": true,
+            // this setting will save tradier access/refresh tokens to a tradier-tokens.txt file
+            // that can be read in next time, this makes it easier to start/stop a tradier algorithm
+            "tradier-save-tokens": true,
 
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "InteractiveBrokersBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "BrokerageHistoryProvider"
-    },
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "TradierBrokerage",
+            "data-queue-handler": "TradierBrokerage",
 
-    // defines the 'live-interactive-iqfeed' environment
-    "live-interactive-iqfeed": {
-      "live-mode": true,
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+        },
 
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "InteractiveBrokersBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
-    },
+        // defines the 'live-interactive' environment
+        "live-interactive": {
+            "live-mode": true,
 
-    // defines the 'live-fxcm' environment
-    "live-fxcm": {
-      "live-mode": true,
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "InteractiveBrokersBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "history-provider": "BrokerageHistoryProvider"
+        },
 
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "FxcmBrokerage",
-      "data-queue-handler": "FxcmBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "BrokerageHistoryProvider"
-    },
+        // defines the 'live-interactive-iqfeed' environment
+        "live-interactive-iqfeed": {
+            "live-mode": true,
 
-    // defines the 'live-oanda' environment
-    "live-oanda": {
-      "live-mode": true,
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "InteractiveBrokersBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "data-queue-handler": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "history-provider": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
+        },
 
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "OandaBrokerage",
-      "data-queue-handler": "OandaBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "BrokerageHistoryProvider"
-    },
+        // defines the 'live-fxcm' environment
+        "live-fxcm": {
+            "live-mode": true,
 
-    // defines the 'backtesting-desktop' environment
-    "backtesting-desktop": {
-      "live-mode": false,
-      "send-via-api": true,
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "FxcmBrokerage",
+            "data-queue-handler": "FxcmBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "history-provider": "BrokerageHistoryProvider"
+        },
 
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler",
-      "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
-    },
+        // defines the 'live-oanda' environment
+        "live-oanda": {
+            "live-mode": true,
 
-    // defines the 'live-desktop' environment
-    "live-desktop": {
-      "live-mode": true,
-      "send-via-api": true,
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "OandaBrokerage",
+            "data-queue-handler": "OandaBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "history-provider": "BrokerageHistoryProvider"
+        },
 
-      // Set your own brokerage and data queue handlers here.
-      // Live desktop charting isn't as cool as on quantconnect.com but its pretty neat!
-      "live-mode-brokerage": "FxcmBrokerage",
-      "data-queue-handler": "FxcmBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler",
-      "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
-    },
+        // defines the 'backtesting-desktop' environment
+        "backtesting-desktop": {
+            "live-mode": false,
+            "send-via-api": true,
 
-    "live-gdax": {
-      "live-mode": true,
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
+            "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
+            "log-handler": "QuantConnect.Logging.QueueLogHandler",
+            "desktop-http-port": "1234",
+            "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
+        },
 
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "GDAXBrokerage",
-      "data-queue-handler": "GDAXDataQueueHandler",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "BrokerageHistoryProvider"
+        // defines the 'live-desktop' environment
+        "live-desktop": {
+            "live-mode": true,
+            "send-via-api": true,
+
+            // Set your own brokerage and data queue handlers here.
+            // Live desktop charting isn't as cool as on quantconnect.com but its pretty neat!
+            "live-mode-brokerage": "FxcmBrokerage",
+            "data-queue-handler": "FxcmBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
+            "log-handler": "QuantConnect.Logging.QueueLogHandler",
+            "desktop-http-port": "1234",
+            "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
+        },
+
+        "live-gdax": {
+            "live-mode": true,
+
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "GDAXBrokerage",
+            "data-queue-handler": "GDAXDataQueueHandler",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "history-provider": "BrokerageHistoryProvider"
+        }
+
     }
-
-  }
 }
