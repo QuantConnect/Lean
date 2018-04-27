@@ -29,9 +29,8 @@ namespace QuantConnect.VisualStudioPlugin
         static PathUtils()
         {
             _extensionsDictionary[".cs"] = Language.CSharp;
-            _extensionsDictionary[".java"] = Language.Java;
-            _extensionsDictionary[".vb"] = Language.VisualBasic;
             _extensionsDictionary[".fs"] = Language.FSharp;
+            _extensionsDictionary[".py"] = Language.Python;
         }
 
         /// <summary>

@@ -35,7 +35,9 @@ Visual Studio 2015 & 2017 are supported.
 
 ## <a name="Features">Features</a>
 
-Currently the plugin can **save files** to a **project**, **compile** and **backtest** it. Also, through the [tool window](#ToolWindow), it can **delete**, **rename**, **open** or add a **note** to a previous backtest.
+Currently the plugin can **save files** to a **project**, **compile** and **backtest** it. Also, through the [tool window](#ToolWindow), it can:
+- **Delete**, **rename**, **open** or add a **note** to a previous backtest
+- Create a **new project**.
 
 ### Save to QuantConnect
 
@@ -86,6 +88,8 @@ This utility allows the user to monitor ongoing backtests and perform different 
 - Edit backtest: allows the user to edit the backtests name and note
 	> ![alt tag](Resources/editBacktest.PNG)
 - Refresh: it will load or reload, available projects
+- New Project
+	> ![alt tag](Resources/newProject.PNG)
 
 ## Troubleshooting
 

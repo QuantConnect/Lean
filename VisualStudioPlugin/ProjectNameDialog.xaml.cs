@@ -45,31 +45,39 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="projects">List of projects for a user to select from, a project is represented as a tuple with project id and name.</param>
         /// <param name="suggestedProjectName"></param>
-        public ProjectNameDialog(List<Tuple<int, string>> projects, string suggestedProjectName)
+        public ProjectNameDialog(List<Tuple<int, string, Language>> projects, string suggestedProjectName)
         {
             InitializeComponent();
             SetProjectNames(projects);
             SetSuggestedProjectName(suggestedProjectName);
         }
 
-        private void SetProjectNames(List<Tuple<int, string>> projects)
+        private void SetProjectNames(List<Tuple<int, string, Language>> projects)
         {
-            projects.ForEach(p => projectNameBox.Items.Add(new ComboboxItem(p.Item1, p.Item2)));
+            projects.ForEach(p => projectNameBox.Items.Add(new ComboboxProjectItem(p.Item1, p.Item2, p.Item3)));
         }
 
         private void SetSuggestedProjectName(string suggestedProjectName)
         {
-            projectNameBox.Text = suggestedProjectName;
+            foreach (var item in projectNameBox.Items)
+            {
+                var project = item as ComboboxProjectItem;
+                if (project.Name == suggestedProjectName)
+                {
+                    projectNameBox.SelectedItem = project;
+                    break;
+                }
+            }
         }
 
         private void SelectButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var selectedItem = projectNameBox.SelectedItem as ComboboxItem;
+            var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
 
             if (selectedItem != null)
             {
-                var projectId = selectedItem.ProjectId;
-                var projectName = selectedItem.ProjectName;
+                var projectId = selectedItem.Id;
+                var projectName = selectedItem.Name;
                 SaveSelectedProjectName(projectId, projectName);
                 Close();
             }
@@ -100,25 +108,6 @@ namespace QuantConnect.VisualStudioPlugin
         private void CancelButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             Close();
-        }
-
-        /// <summary>
-        /// Item that represents project name and project id in a combo box
-        /// </summary>
-        internal class ComboboxItem {
-            public int ProjectId { get; }
-            public string ProjectName { get; }
-
-            public ComboboxItem(int projectId, string projectName)
-            {
-                ProjectId = projectId;
-                ProjectName = projectName;
-            }
-
-            public override string ToString()
-            {
-                return ProjectName;
-            }
         }
     }
 }

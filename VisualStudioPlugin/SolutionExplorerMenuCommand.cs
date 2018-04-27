@@ -154,16 +154,17 @@ namespace QuantConnect.VisualStudioPlugin
                     var backtestResult = await BacktestProjectOnServer(selectedProjectId, compilationResult.Item2);
                     if (!backtestResult.Item1)
                     {
-                        var errorDialog = new ErrorDialog("Backtest Failed", backtestResult.Item2);
+                        var errorDialog = new ErrorDialog("Backtest Failed", backtestResult.Item2.Error);
                         VsUtils.DisplayDialogWindow(errorDialog);
                         return;
                     }
 
                     var projectUrl = string.Format(
-                            CultureInfo.CurrentCulture,
-                            "https://www.quantconnect.com/terminal/#open/{0}",
-                            selectedProjectId
-                        );
+                        CultureInfo.CurrentCulture,
+                        "https://www.quantconnect.com/terminal/#open/{0}/{1}",
+                        selectedProjectId,
+                        backtestResult.Item2.BacktestId
+                    );
                     Process.Start(projectUrl);
                 });
             }
@@ -279,8 +280,8 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="projectId">Target project Id</param>
         /// <param name="compileId">Target compile Id</param>
         /// <returns>Tuple&lt;bool, string&gt;. Item1 is true if backtest succeeded.
-        /// Item2 is error message if backtest failed.</returns>
-        private async Task<Tuple<bool, string>> BacktestProjectOnServer(int projectId, string compileId)
+        /// Item2 is the corresponding Api.Backtest instance</returns>
+        private async Task<Tuple<bool, Api.Backtest>> BacktestProjectOnServer(int projectId, string compileId)
         {
             VsUtils.DisplayInStatusBar(_serviceProvider, "Backtesting project...");
             var api = AuthorizationManager.GetInstance().GetApi();
@@ -308,11 +309,11 @@ namespace QuantConnect.VisualStudioPlugin
             if (errorPresent)
             {
                 VsUtils.DisplayInStatusBar(_serviceProvider, "Error when backtesting project");
-                return new Tuple<bool, string>(false, backtestStatus.Error);
+                return new Tuple<bool, Api.Backtest>(false, backtestStatus);
             }
             var successMessage = "Backtest completed successfully";
             VsUtils.DisplayInStatusBar(_serviceProvider, successMessage);
-            return new Tuple<bool, string>(true, successMessage);
+            return new Tuple<bool, Api.Backtest>(true, backtestStatus);
         }
 
         private async void ExecuteOnProjectAsync(object sender, Action<int, string, List<SelectedItem>> onProject)
@@ -325,7 +326,7 @@ namespace QuantConnect.VisualStudioPlugin
                     return api.ListProjects().Projects;
                 });
 
-                var projectNames = projects.Select(p => Tuple.Create(p.ProjectId, p.Name)).ToList();
+                var projectNames = projects.Select(p => Tuple.Create(p.ProjectId, p.Name, p.Language)).ToList();
 
                 var files = GetSelectedFiles(sender);
                 var fileNames = files.Select(tuple => tuple.FileName).ToList();

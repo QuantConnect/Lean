@@ -54,10 +54,10 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         private void ProjectNameBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            var selectedItem = projectNameBox.SelectedItem as ProjectNameDialog.ComboboxItem;
+            var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
             if (selectedItem != null)
             {
-                var projectId = selectedItem.ProjectId;
+                var projectId = selectedItem.Id;
                 UpdateAvailableBacktests(projectId);
             }
         }
@@ -79,9 +79,9 @@ namespace QuantConnect.VisualStudioPlugin
                         var result = api.ListBacktests(projectId);
                         return result.Backtests;
                     });
-                    var selectedItem = projectNameBox.SelectedItem as ProjectNameDialog.ComboboxItem;
+                    var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
                     // Verify the backtest are from the selected project
-                    if (selectedItem?.ProjectId == projectId)
+                    if (selectedItem?.Id == projectId)
                     {
                         _dataGridCollection.Clear();
                         // Setting a limit of _maximumBacktestToShow backtests in the table...
@@ -124,7 +124,7 @@ namespace QuantConnect.VisualStudioPlugin
                     {
                         var api = AuthorizationManager.GetInstance().GetApi();
                         var projects = api.ListProjects().Projects;
-                        return projects.Select(p => Tuple.Create(p.ProjectId, p.Name)).ToList();
+                        return projects.Select(p => Tuple.Create(p.ProjectId, p.Name, p.Language)).ToList();
                     });
                     // Clear available projects
                     projectNameBox.Items.Clear();
@@ -132,8 +132,11 @@ namespace QuantConnect.VisualStudioPlugin
                     _dataGridCollection.Clear();
                     if (projectNames.Count > 0)
                     {
-                        projectNames.ForEach(p => projectNameBox.Items.Add(new ProjectNameDialog.ComboboxItem(p.Item1, p.Item2)));
+                        projectNames.ForEach(p => projectNameBox.Items.Add(new ComboboxProjectItem(p.Item1, p.Item2, p.Item3)));
                         VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Successfully loaded projects");
+                        // Select first project and load available backtest
+                        var project = projectNameBox.Items[0] as ComboboxProjectItem;
+                        projectNameBox.SelectedItem = project;
                     }
                     else
                     {
@@ -197,9 +200,9 @@ namespace QuantConnect.VisualStudioPlugin
                 }
                 if (deleteResult)
                 {
-                    var selectedItem = projectNameBox.SelectedItem as ProjectNameDialog.ComboboxItem;
+                    var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
                     // Verify the backtest is from the selected project
-                    if (selectedItem?.ProjectId == projectId)
+                    if (selectedItem?.Id == projectId)
                     {
                         foreach (DataGridItem item in _dataGridCollection)
                         {
@@ -226,9 +229,9 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="backtestStatus">Backtest current status</param>
         public void BacktestCreated(int projectId, Api.Backtest backtestStatus)
         {
-            var selectedItem = projectNameBox.SelectedItem as ProjectNameDialog.ComboboxItem;
+            var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
             // Verify the backtest is from the selected project
-            if (selectedItem?.ProjectId == projectId)
+            if (selectedItem?.Id == projectId)
             {
                 _dataGridCollection.Insert(0, new DataGridItem
                 {
@@ -249,9 +252,9 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="backtestStatus">Backtest current status</param>
         public void BacktestStatusUpdated(int projectId, Api.Backtest backtestStatus)
         {
-            var selectedItem = projectNameBox.SelectedItem as ProjectNameDialog.ComboboxItem;
+            var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
             // Verify the backtest is from the selected project
-            if (selectedItem?.ProjectId == projectId)
+            if (selectedItem?.Id == projectId)
             {
                 foreach (DataGridItem item in _dataGridCollection)
                 {
@@ -271,9 +274,9 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="backtestStatus">Backtest current status</param>
         public void BacktestFinished(int projectId, Api.Backtest backtestStatus)
         {
-            var selectedItem = projectNameBox.SelectedItem as ProjectNameDialog.ComboboxItem;
+            var selectedItem = projectNameBox.SelectedItem as ComboboxProjectItem;
             // Verify the backtest is from the selected project
-            if (selectedItem?.ProjectId == projectId)
+            if (selectedItem?.Id == projectId)
             {
                 foreach (DataGridItem item in _dataGridCollection)
                 {
@@ -295,6 +298,52 @@ namespace QuantConnect.VisualStudioPlugin
         private void RefreshButton_OnClick(object sender, RoutedEventArgs e)
         {
             UpdateAvailableProjects();
+        }
+
+        /// <summary>
+        /// Callback for the new project button. Will show a new popup so the user can select name and language
+        /// Will create project calling the server through API.
+        /// </summary>
+        private async void NewProjectButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var window = new NewProjectDialog();
+            VsUtils.DisplayDialogWindow(window);
+            if (window.CreateNewProject &&
+                await _authenticationCommand.Login(ServiceProvider.GlobalProvider, false))
+            {
+                var result = false;
+                var projectId = 0;
+                try
+                {
+                    var apiResponse = await System.Threading.Tasks.Task.Run(() =>
+                    {
+                        var api = AuthorizationManager.GetInstance().GetApi();
+                        return api.CreateProject(window.NewProjectName, window.NewProjectLanguage);
+                    });
+                    if (apiResponse.Success && apiResponse.Projects.Count > 0)
+                    {
+                        result = true;
+                        projectId = apiResponse.Projects.First().ProjectId;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    VsUtils.ShowErrorMessageBox(ServiceProvider.GlobalProvider,
+                        "QuantConnect Exception", exception.ToString());
+                }
+                if (result)
+                {
+                    // lets update the combo box without having to go to the server again
+                    var newProject = new ComboboxProjectItem(projectId, window.NewProjectName, window.NewProjectLanguage);
+                    projectNameBox.Items.Add(newProject);
+                    projectNameBox.SelectedItem = newProject;
+                    VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Successfully created a new project");
+                }
+                else
+                {
+                    VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Failed to create a new project");
+                }
+            }
         }
 
         /// <summary>

@@ -46,6 +46,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "modified")]
         public DateTime Modified;
+
+        /// <summary>
+        /// Programming language of the project
+        /// </summary>
+        [JsonProperty(PropertyName = "language")]
+        public Language Language;
     }
 
     /// <summary>
