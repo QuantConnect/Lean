@@ -24,25 +24,22 @@ namespace QuantConnect.Orders.TimeInForces
     public class DayTimeInForceHandler : ITimeInForceHandler
     {
         private readonly IAlgorithm _algorithm;
-        private readonly IBrokerage _brokerage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DayTimeInForceHandler"/> class
         /// </summary>
         /// <param name="algorithm">The instance of the algorithm</param>
-        /// <param name="brokerage">The instance of the backtesting brokerage</param>
-        public DayTimeInForceHandler(IAlgorithm algorithm, IBrokerage brokerage)
+        public DayTimeInForceHandler(IAlgorithm algorithm)
         {
             _algorithm = algorithm;
-            _brokerage = brokerage;
         }
 
         /// <summary>
-        /// Handles the time in force for an order before any order fill is generated
+        /// Checks if an order has expired
         /// </summary>
-        /// <param name="order">The order to be handled</param>
-        /// <returns>Returns true if the order fills can be generated, false otherwise</returns>
-        public bool HandleOrderPreFill(Order order)
+        /// <param name="order">The order to be checked</param>
+        /// <returns>Returns true if the order has expired, false otherwise</returns>
+        public bool HasOrderExpired(Order order)
         {
             var exchangeHours = MarketHoursDatabase
                 .FromDataFolder()
@@ -50,22 +47,16 @@ namespace QuantConnect.Orders.TimeInForces
 
             var time = _algorithm.UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
 
-            if (!exchangeHours.IsOpen(time, false))
-            {
-                _brokerage.CancelOrder(order);
-                return false;
-            }
-
-            return true;
+            return !exchangeHours.IsOpen(time, false);
         }
 
         /// <summary>
-        /// Handles the time in force for an order fill
+        /// Checks if an order fill is valid
         /// </summary>
-        /// <param name="order">The order fill to be handled</param>
-        /// <param name="fill">The order fill to be handled</param>
+        /// <param name="order">The order to be checked</param>
+        /// <param name="fill">The order fill to be checked</param>
         /// <returns>Returns true if the order fill can be emitted, false otherwise</returns>
-        public bool HandleOrderPostFill(Order order, OrderEvent fill)
+        public bool IsFillValid(Order order, OrderEvent fill)
         {
             return true;
         }

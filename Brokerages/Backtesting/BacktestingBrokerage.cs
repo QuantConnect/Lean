@@ -282,8 +282,10 @@ namespace QuantConnect.Brokerages.Backtesting
                     var timeInForceHandler = GetTimeInForceHandler(order.TimeInForce);
 
                     // check if the time in force handler allows fills
-                    if (!timeInForceHandler.HandleOrderPreFill(order))
+                    if (timeInForceHandler.HasOrderExpired(order))
                     {
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m) { Status = OrderStatus.Canceled });
+                        _pending.TryRemove(order.Id, out order);
                         continue;
                     }
 
@@ -373,7 +375,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     foreach (var fill in fills)
                     {
                         // check if the fill should be emitted
-                        if (!timeInForceHandler.HandleOrderPostFill(order, fill))
+                        if (!timeInForceHandler.IsFillValid(order, fill))
                         {
                             break;
                         }
@@ -483,7 +485,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 switch (timeInForce)
                 {
                     case TimeInForce.Day:
-                        handler = new DayTimeInForceHandler(Algorithm, this);
+                        handler = new DayTimeInForceHandler(Algorithm);
                         break;
 
                     default:

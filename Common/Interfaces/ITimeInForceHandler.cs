@@ -23,18 +23,18 @@ namespace QuantConnect.Interfaces
     public interface ITimeInForceHandler
     {
         /// <summary>
-        /// Handles the time in force for an order before any order fill is generated
+        /// Checks if an order has expired
         /// </summary>
-        /// <param name="order">The order to be handled</param>
-        /// <returns>Returns true if the order fills can be generated, false otherwise</returns>
-        bool HandleOrderPreFill(Order order);
+        /// <param name="order">The order to be checked</param>
+        /// <returns>Returns true if the order has expired, false otherwise</returns>
+        bool HasOrderExpired(Order order);
 
         /// <summary>
-        /// Handles the time in force for an order fill
+        /// Checks if an order fill is valid
         /// </summary>
-        /// <param name="order">The order fill to be handled</param>
-        /// <param name="fill">The order fill to be handled</param>
+        /// <param name="order">The order to be checked</param>
+        /// <param name="fill">The order fill to be checked</param>
         /// <returns>Returns true if the order fill can be emitted, false otherwise</returns>
-        bool HandleOrderPostFill(Order order, OrderEvent fill);
+        bool IsFillValid(Order order, OrderEvent fill);
     }
 }
