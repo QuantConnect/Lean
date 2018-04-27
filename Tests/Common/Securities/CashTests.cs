@@ -226,6 +226,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(symbols.Contains(Symbols.EURUSD));
             Assert.IsTrue(symbols.Contains(Symbols.XAGUSD));
             Assert.IsTrue(symbols.Contains(Symbols.XAUUSD));
+
+            foreach (var subscription in subscriptions.Subscriptions)
+            {
+                Assert.AreEqual(
+                    subscription.Symbol.SecurityType == SecurityType.Crypto ? TickType.Trade : TickType.Quote,
+                    subscription.TickType);
+            }
         }
 
         [Test]
