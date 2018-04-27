@@ -53,7 +53,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlgorithmAnalysis.cs" />
     <Compile Include="FutureHistory.cs" />
     <Compile Include="OptionHistory.cs" />
     <Compile Include="QuantBook.cs" />
@@ -98,13 +97,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicAlgorithmAnalysisTemplate.ipynb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="BasicQuantBookTemplate.ipynb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
