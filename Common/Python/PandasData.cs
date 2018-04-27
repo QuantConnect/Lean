@@ -200,7 +200,7 @@ namespace QuantConnect.Python
                     if (tick == null) continue;
 
                     var time = tick.EndTime;
-                    var column = tick.GetType() == typeof(OpenInterest)
+                    var column = tick.TickType == TickType.OpenInterest
                         ? "openinterest"
                         : "lastprice";
 

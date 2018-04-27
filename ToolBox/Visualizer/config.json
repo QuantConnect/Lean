@@ -1,0 +1,5 @@
+{
+  "composer-dll-directory": "../.",
+  "data-folder": "../../../../Data",
+  "default-output-folder": "../output_folder"
+}
