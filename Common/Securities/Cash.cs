@@ -209,7 +209,7 @@ namespace QuantConnect.Securities
                 .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
 
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
-            var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (QuoteBar);
+
             foreach (var symbol in potentials)
             {
                 if (symbol.Value == normal || symbol.Value == invert)
@@ -224,8 +224,15 @@ namespace QuantConnect.Securities
                     }
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+                    // we currently do not have quote data for Crypto in backtesting, so we subscribe to trades instead of quotes
+                    var objectType = minimumResolution == Resolution.Tick
+                        ? typeof(Tick)
+                        : (securityType == SecurityType.Crypto ? typeof(TradeBar) : typeof(QuoteBar));
+                    var tickType = securityType == SecurityType.Crypto ? TickType.Trade : TickType.Quote;
+
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, TickType.Quote, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+                    var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
 
                     Security security;
                     if (securityType == SecurityType.Cfd)
