@@ -114,7 +114,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // to the universeData dictionaries in SubscriptionSynchronizer and LiveTradingDataFeed and
                     // rely on reference semantics to work.
 
-                    var coarseData = universeData.Data.OfType<CoarseFundamental>().ToDictionary(d => d.Symbol);
+                    // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
+                    var coarseData = universeData.Data.OfType<CoarseFundamental>()
+                        .DistinctBy(c => c.Symbol)
+                        .ToDictionary(c => c.Symbol);
+
                     universeData.Data = new List<BaseData>();
                     foreach (var fine in fineCollection.Data.OfType<FineFundamental>())
                     {
