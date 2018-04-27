@@ -16,17 +16,18 @@ and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algor
  3.  Install PythonNet:
  If you haven't installed Git yet you should first setup [git](https://help.github.com/articles/set-up-git/), then install PythonNet.
  ```
-    pip install --egg  git+https://github.com/QuantConnect/pythonnet
+    git clone https://github.com/QuantConnect/pythonnet
+	cd pythonnet
+    python setup.py install
 ```
 **2. Run Jupyter:**
-   1. Update the config.json file in `Lean/Jupyter/` folder
+   1. Update the config.json file in `Lean/Launcher/` folder
  ```
-    "data-folder": "C:\\Users\\...\\Lean\\Data\\",
-    "plugin-directory": "C:\\Users\\...\\Lean\\Launcher\\bin\\Debug",
+    "composer-dll-directory": ".",
  ```
    2. Rebuild the solution to refresh the configuration and binaries.
    3. Run Jupyter from the command line, 
 ```
-    cd Lean/Jupyter/bin/Debug
+    cd Lean/Launcher/bin/Debug
     jupyter notebook
 ```

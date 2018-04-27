@@ -1,9 +1,16 @@
 ﻿#r "/opt/miniconda3/lib/python3.6/site-packages/Python.Runtime.dll"
-#r "/opt/miniconda3/Lean/QuantConnect.Algorithm.dll"
-#r "/opt/miniconda3/Lean/QuantConnect.Algorithm.Framework.dll"
-#r "/opt/miniconda3/Lean/QuantConnect.Common.dll"
-#r "/opt/miniconda3/Lean/QuantConnect.Indicators.dll"
-#r "/opt/miniconda3/Lean/QuantConnect.Jupyter.dll"
+#r "QuantConnect.Algorithm.dll"
+#r "QuantConnect.Algorithm.Framework.dll"
+#r "QuantConnect.Common.dll"
+#r "QuantConnect.Indicators.dll"
+#r "QuantConnect.Jupyter.dll"
+#r "NodaTime.dll"
+#r "Accord.dll"
+#r "Accord.Fuzzy.dll"
+#r "Accord.Math.Core.dll"
+#r "Accord.Math.dll"
+#r "MathNet.Numerics.dll"
+#r "Newtonsoft.Json.dll"
 // Note: #r directives must be in the beggining of the file
 
 /*
