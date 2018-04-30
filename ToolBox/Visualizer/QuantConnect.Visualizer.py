@@ -1,6 +1,6 @@
 """
 Usage:
-    QuantConnect.Visualizer.py DATAFILE [--assembly assembly_path] [--data data_folder] [--output output_folder] [--size height,width]
+    QuantConnect.Visualizer.py DATAFILE [--assembly assembly_path] [--output output_folder] [--size height,width]
 
 Arguments:
     DATAFILE   Absolute or relative path to a zipped data file to plot.
@@ -9,7 +9,6 @@ Arguments:
 Options:
     -h --help                    show this.
     -a --assembly assembly_path  path to the folder with the assemblies dll/exe [default: ../.].
-    -d --data data_folder        path to Lean data folder [default: ../../../../Data].
     -o --output output_folder    path to the output folder, each new plot will be saved there with a random name [default: ./output_folder].
     -s, --size height,width      plot size in pixels [default: 800,400].
 
@@ -34,17 +33,14 @@ from docopt import docopt
 from matplotlib.dates import DateFormatter
 
 
-class VisualizerWrapper:
+class Visualizer:
     """
     Python wrapper for the Lean ToolBox.Visualizer.
 
     This class is instantiated with the dictionary docopt generates from the CLI arguments.
 
-    It contains the methods for set up and load the C# assemblies into Python, in order two folders must be declared,
-    the QuantConnect.ToolBox assembly folder and the Lean's Data folder. Those folders can be declared in the module's
-    CLI.
-
-    Is highly recommended to use absolute paths as CLI arguments.
+    It contains the methods for set up and load the C# assemblies into Python. The QuantConnect.ToolBox assembly folder
+    can be declared in the module's CLI.
     """
     def __init__(self, arguments):
         self.arguments = arguments
@@ -66,16 +62,13 @@ class VisualizerWrapper:
         # Check Lean assemblies are present in the composer-dll-directory key provided.
         assemblies_folder_info = (Path(self.arguments['--assembly']))
         toolbox_assembly = assemblies_folder_info.joinpath('QuantConnect.ToolBox.exe')
-        if not toolbox_assembly.exists():
+        common_assembly = assemblies_folder_info.joinpath('QuantConnect.Common.dll')
+        if not (toolbox_assembly.exists() and common_assembly.exists()):
             raise KeyError("Please set up the '--assembly' option with the path to Lean assemblies.\n" +
                            f"Absolute path provided: {assemblies_folder_info.resolve().absolute()}")
-        # Check Data folder is correctly set up
-        data_folder_info = Path(self.arguments['--data'])
-        if not data_folder_info.joinpath('market-hours', 'market-hours-database.json').exists():
-            raise KeyError("Please set up the '--data' option with the path to Lean data folder.\n" +
-                           f"Absolute path provided: {data_folder_info.resolve().absolute()}\n")
 
         AddReference(str(toolbox_assembly.resolve().absolute()))
+        AddReference(str(common_assembly.resolve().absolute()))
         os.chdir(str(assemblies_folder_info.resolve().absolute()))
         return
 
@@ -94,14 +87,18 @@ class VisualizerWrapper:
 
     def get_data(self):
         """
-        Makes use of the Lean's Toolbox Visualizer to parse the data as pandas.DataFrame from a given zip file and
-        an optional internal filename for option and futures.
+        Makes use of the Lean's Toolbox LeanDataReader plus the PandasConverter to parse the data as pandas.DataFrame
+        from a given zip file and an optional internal filename for option and futures.
 
         :return: a pandas.DataFrame with the data from the file.
         """
-        from QuantConnect.ToolBox.Visualizer import Visualizer
-        vsz = Visualizer(self.arguments['DATAFILE'])
-        df = vsz.ParseDataFrame()
+        from QuantConnect.ToolBox import LeanDataReader
+        from QuantConnect.Python import PandasConverter
+        from QuantConnect.Data import BaseData
+
+        ldr = LeanDataReader(self.arguments['DATAFILE'])
+        pandas_converter = PandasConverter()
+        df = pandas_converter.GetDataFrame[BaseData](ldr.Parse())
         if df.empty:
             raise Exception("Data frame is empty")
         symbol = df.index.levels[0][0]
@@ -110,7 +107,7 @@ class VisualizerWrapper:
     def filter_data(self, df):
         """
         Applies the filters defined in the CLI arguments to the parsed data.
-        Not fully implemented yet, it only select the close columns right now.
+        Not fully implemented yet, it only selects the close columns.
 
         :param df: pandas.DataFrame with all the data form the selected file.
         :return: a filtered pandas.DataFrame.
@@ -148,7 +145,7 @@ class VisualizerWrapper:
 
 if __name__ == "__main__":
     arguments = docopt(__doc__)
-    visualizer = VisualizerWrapper(arguments)
+    visualizer = Visualizer(arguments)
     # Gets the pandas.DataFrame from the data file
     df = visualizer.get_data()
     # Selects the columns you want to plot
