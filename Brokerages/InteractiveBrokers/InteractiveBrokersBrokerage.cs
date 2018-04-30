@@ -1750,7 +1750,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             order.BrokerId.Add(ibOrder.OrderId.ToString());
 
-            order.TimeInForce = ConvertTimeInForce(ibOrder.Tif);
+            order.Properties.TimeInForce = ConvertTimeInForce(ibOrder.Tif);
 
             return order;
         }

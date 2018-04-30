@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.Fxcm
             order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
             order.BrokerId.Add(fxcmOrder.getOrderID());
-            order.TimeInForce = ConvertTimeInForce(fxcmOrder.getTimeInForce());
+            order.Properties.TimeInForce = ConvertTimeInForce(fxcmOrder.getTimeInForce());
             order.Time = FromJavaDate(fxcmOrder.getTransactTime().toDate());
 
             return order;
@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 return TimeInForce.GoodTilCancelled;
 
             if (timeInForce == TimeInForceFactory.DAY)
-                return (TimeInForce)1; //.Day;
+                return TimeInForce.Day;
 
             throw new ArgumentOutOfRangeException();
         }

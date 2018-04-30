@@ -193,6 +193,7 @@
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Orders\OrderProperties.cs" />
     <Compile Include="Orders\OrderSubmissionData.cs" />
     <Compile Include="Orders\TimeInForces\DayTimeInForceHandler.cs" />
     <Compile Include="Orders\TimeInForces\GoodTilCancelledTimeInForceModel.cs" />

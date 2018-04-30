@@ -18,24 +18,29 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Contains additional properties and settings for an order submitted to GDAX brokerage
+    /// Contains additional properties and settings for an order
     /// </summary>
-    public class GDAXOrderProperties : OrderProperties
+    public class OrderProperties : IOrderProperties
     {
         /// <summary>
-        /// This flag will ensure the order executes only as a maker (no fee) order.
-        /// If part of the order results in taking liquidity rather than providing,
-        /// it will be rejected and no part of the order will execute.
-        /// Note: this flag is only applied to Limit orders.
+        /// Defines the length of time over which an order will continue working before it is cancelled
         /// </summary>
-        public bool PostOnly { get; set; }
+        public TimeInForce TimeInForce { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OrderProperties"/> class
+        /// </summary>
+        public OrderProperties()
+        {
+            TimeInForce = TimeInForce.GoodTilCancelled;
+        }
 
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
-        public override IOrderProperties Clone()
+        public virtual IOrderProperties Clone()
         {
-            return (GDAXOrderProperties)MemberwiseClone();
+            return (OrderProperties)MemberwiseClone();
         }
     }
 }

@@ -108,7 +108,7 @@ namespace QuantConnect.Orders
             var timeInForce = jObject["TimeInForce"] ?? jObject["Duration"];
             if (timeInForce != null)
             {
-                order.TimeInForce = (TimeInForce)timeInForce.Value<int>();
+                order.Properties.TimeInForce = (TimeInForce)timeInForce.Value<int>();
             }
 
             string market = Market.USA;

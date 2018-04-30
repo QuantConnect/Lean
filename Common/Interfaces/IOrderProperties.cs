@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders;
+
 namespace QuantConnect.Interfaces
 {
     /// <summary>
@@ -20,6 +22,11 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface IOrderProperties
     {
+        /// <summary>
+        /// Defines the length of time over which an order will continue working before it is cancelled
+        /// </summary>
+        TimeInForce TimeInForce { get; set; }
+
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>

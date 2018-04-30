@@ -1513,7 +1513,7 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id.ToString());
             //qcOrder.ContingentId =
-            qcOrder.TimeInForce = ConvertTimeInForce(order.Duration);
+            qcOrder.Properties.TimeInForce = ConvertTimeInForce(order.Duration);
             var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
             if (orderByBrokerageId != null)
             {

@@ -20,7 +20,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Contains additional properties and settings for an order submitted to Interactive Brokers
     /// </summary>
-    public class InteractiveBrokersOrderProperties : IOrderProperties
+    public class InteractiveBrokersOrderProperties : OrderProperties
     {
         /// <summary>
         /// The linked account for which to submit the order (only used by Financial Advisors)
@@ -51,7 +51,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
-        public IOrderProperties Clone()
+        public override IOrderProperties Clone()
         {
             return (InteractiveBrokersOrderProperties)MemberwiseClone();
         }

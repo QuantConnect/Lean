@@ -655,7 +655,7 @@ namespace QuantConnect.Brokerages.Oanda
             var gtdTime = order["gtdTime"];
             if (gtdTime != null)
             {
-                qcOrder.TimeInForce = TimeInForce.Custom;
+                qcOrder.Properties.TimeInForce = TimeInForce.Custom;
                 qcOrder.DurationValue = GetTickDateTimeFromString(gtdTime.ToString());
             }
 
