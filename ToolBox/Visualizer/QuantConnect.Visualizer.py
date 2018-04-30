@@ -50,6 +50,12 @@ class Visualizer:
         self.palette = ['#f5ae29', '#657584', '#b1b9c3', '#222222']
         # Loads the Toolbox to access Visualizer
         self.setup_and_load_toolbox()
+        # Sets up the Composer
+        from QuantConnect.Data.Auxiliary import LocalDiskMapFileProvider
+        from QuantConnect.Util import Composer
+        from QuantConnect.Interfaces import IMapFileProvider
+        localDiskMapFileProvider = LocalDiskMapFileProvider()
+        Composer.Instance.AddPart[IMapFileProvider](localDiskMapFileProvider)
         # Generate random name for the plot.
         self.plot_filename = self.generate_plot_filename()
 
@@ -96,12 +102,7 @@ class Visualizer:
         from QuantConnect.ToolBox import LeanDataReader
         from QuantConnect.Python import PandasConverter
         from QuantConnect.Data import BaseData
-        from QuantConnect.Data.Auxiliary import LocalDiskMapFileProvider
-        from QuantConnect.Util import Composer
-        from QuantConnect.Interfaces import IMapFileProvider
 
-        localDiskMapFileProvider = LocalDiskMapFileProvider()
-        Composer.Instance.AddPart[IMapFileProvider](localDiskMapFileProvider)
         ldr = LeanDataReader(self.arguments['DATAFILE'])
         pandas_converter = PandasConverter()
         df = pandas_converter.GetDataFrame[BaseData](ldr.Parse())
