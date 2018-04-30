@@ -56,6 +56,11 @@ class Visualizer:
         from QuantConnect.Interfaces import IMapFileProvider
         localDiskMapFileProvider = LocalDiskMapFileProvider()
         Composer.Instance.AddPart[IMapFileProvider](localDiskMapFileProvider)
+        # Initizlize LeanDataReader and PandasConverter
+        from QuantConnect.ToolBox import LeanDataReader
+        from QuantConnect.Python import PandasConverter
+        self.lean_data_reader = LeanDataReader(self.arguments['DATAFILE'])
+        self.pandas_converter = PandasConverter()
         # Generate random name for the plot.
         self.plot_filename = self.generate_plot_filename()
 
@@ -99,13 +104,9 @@ class Visualizer:
 
         :return: a pandas.DataFrame with the data from the file.
         """
-        from QuantConnect.ToolBox import LeanDataReader
-        from QuantConnect.Python import PandasConverter
-        from QuantConnect.Data import BaseData
 
-        ldr = LeanDataReader(self.arguments['DATAFILE'])
-        pandas_converter = PandasConverter()
-        df = pandas_converter.GetDataFrame[BaseData](ldr.Parse())
+        from QuantConnect.Data import BaseData
+        df = self.pandas_converter.GetDataFrame[BaseData](self.lean_data_reader.Parse())
         if df.empty:
             raise Exception("Data frame is empty")
         symbol = df.index.levels[0][0]
