@@ -103,9 +103,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    // perform the fine fundamental universe selection
-                    selectSymbolsResult = fineFiltered.FineFundamentalUniverse.PerformSelection(dateTimeUtc, fineCollection);
-
                     // WARNING -- HACK ATTACK -- WARNING
                     // Fine universes are considered special due to their chaining behavior.
                     // As such, we need a means of piping the fine data read in here back to the data feed
@@ -148,12 +145,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             fundamentals.Volume = coarse.Volume;
                             fundamentals.DollarVolume = coarse.DollarVolume;
                             fundamentals.HasFundamentalData = coarse.HasFundamentalData;
+
+                            // set the fine fundamental price property to yesterday's closing price
+                            fine.Value = coarse.Value;
                         }
 
                         universeData.Data.Add(fundamentals);
                     }
 
                     // END -- HACK ATTACK -- END
+
+                    // perform the fine fundamental universe selection
+                    selectSymbolsResult = fineFiltered.FineFundamentalUniverse.PerformSelection(dateTimeUtc, fineCollection);
                 }
             }
             else
