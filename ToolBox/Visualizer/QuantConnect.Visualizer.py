@@ -1,17 +1,17 @@
 """
 Usage:
-    QuantConnect.Visualizer.py DATAFILE [--output file_path] [--size height,width] [--reset]
+    QuantConnect.Visualizer.py DATAFILE [--assembly assembly_path] [--data data_folder] [--output output_folder] [--size height,width]
 
 Arguments:
     DATAFILE   Absolute or relative path to a zipped data file to plot.
                Optionally the zip entry file can be declared by using '#' as separator.
 
 Options:
-    -h --help                 show this.
-    -o --output file_path     path or filename for the output plot. If not declared, it will save with an
-                              auto-generated name at the default folder defined in the config.json file.
-    -s, --size height,width   plot size in pixels [default: 800,400].
-    -r, --reset               Resets it forces the writing of the config.json file in the assembly folder.
+    -h --help                    show this.
+    -a --assembly assembly_path  path to the folder with the assemblies dll/exe [default: ../.].
+    -d --data data_folder        path to Lean data folder [default: ../../../../Data].
+    -o --output output_folder    path to the output folder, each new plot will be saved there with a random name [default: ./output_folder].
+    -s, --size height,width      plot size in pixels [default: 800,400].
 
 Examples:
     QuantConnect.Visualizer.py ../relative/path/to/file.zip
@@ -38,38 +38,23 @@ class VisualizerWrapper:
     """
     Python wrapper for the Lean ToolBox.Visualizer.
 
-    This class is instantiated with the dictionary docopt generates from the CLS arguments.
+    This class is instantiated with the dictionary docopt generates from the CLI arguments.
 
-    It contains the methods for set up and load the C# assemblies into Python, in order to do that we need to declare
-    two folders in the config.json file, the QuantConnect.ToolBox assembly folder and the Lean's Data folder.
+    It contains the methods for set up and load the C# assemblies into Python, in order two folders must be declared,
+    the QuantConnect.ToolBox assembly folder and the Lean's Data folder. Those folders can be declared in the module's
+    CLI.
 
-    A copy of the config.json file will be written in the QuantConnect.ToolBox assembly folder for use of the Lean
-    Composer. The CRITICAL assumption is that if there is config.json in the QuantConnect.ToolBox assembly folder, it
-    has the correct paths, if not, there is a --reset option for force overwriting the file.
-
-    Is highly recommended to use absolute paths in the config.json.
+    Is highly recommended to use absolute paths as CLI arguments.
     """
     def __init__(self, arguments):
-
-        self.data_file_argument = arguments['DATAFILE']
-        if not Path(self.data_file_argument.split('#')[0]).exists():
+        self.arguments = arguments
+        if not Path(self.arguments['DATAFILE'].split('#')[0]).exists():
             raise NotImplementedError("The zipped data file doesn't exist.")
-
         self.palette = ['#f5ae29', '#657584', '#b1b9c3', '#222222']
-        self.reset = arguments['--reset']
-
-        with open('config.json', 'r') as json_data:
-            self.config = json.load(json_data)
-
         # Loads the Toolbox to access Visualizer
         self.setup_and_load_toolbox()
-
-        # Get plot image name, if not defined, generate one.
-        self.plot_filename = arguments['--output']
-        if self.plot_filename is None:
-            self.plot_filename = self.generate_plot_filename()
-
-        self.size_px = [int(p) for p in arguments['--size'].split(',')]
+        # Generate random name for the plot.
+        self.plot_filename = self.generate_plot_filename()
 
     def setup_and_load_toolbox(self):
         """
@@ -80,31 +65,25 @@ class VisualizerWrapper:
         :raise: NotImplementedError: if the needed assemblies dll are not available.
         """
         # Check Lean assemblies are present in the composer-dll-directory key provided.
-        assemblies_folder_info = (Path(self.config['composer-dll-directory'])
-                                  if 'composer-dll-directory' in self.config else Path('../'))
+        assemblies_folder_info = (Path(self.arguments['--assembly']))
         toolbox_assembly = assemblies_folder_info.joinpath('QuantConnect.ToolBox.exe')
         if not toolbox_assembly.exists():
-            raise KeyError(
-                "Please set up the 'composer-dll-directory' key in config.json with the path to Lean assemblies." +
-                f"Absolute path to 'composer-dll-directory' provided: {assemblies_folder_info.resolve().absolute()}\n" +
-                'If the issue continues even then the folder is correctly declared, please use the --reset option.')
+            raise KeyError("Please set up the '--assembly' option with the path to Lean assemblies.\n" +
+                           f"Absolute path provided: {assemblies_folder_info.resolve().absolute()}")
         # Check Data folder is correctly set up
-        data_folder_info = (
-            Path(self.config['data-folder']) if 'data-folder' in self.config else Path('../../../Data/'))
+        data_folder_info = Path(self.arguments['--data'])
         if not data_folder_info.joinpath('market-hours', 'market-hours-database.json').exists():
-            raise KeyError("Please set up a valid 'data-folder' key in config.json.\n" +
-                           f"Absolute path to 'data-folder' provided: {data_folder_info.resolve().absolute()}\n" +
-                           'If the issue continues even then the folder is correctly declared, please use the --reset option.')
-        assembly_folder_path = str(assemblies_folder_info.resolve().absolute())
-        # Check if config.json exist in the composer-dll-directory, if not creates it.
+            raise KeyError("Please set up the '--data' option with the path to Lean data folder.\n" +
+                           f"Absolute path provided: {data_folder_info.resolve().absolute()}\n")
         config_file = assemblies_folder_info.joinpath('config.json')
-        if not config_file.exists() or self.reset:
-            cfg_content = {'composer-dll-directory': assembly_folder_path,
+        assembly_folder = str(assemblies_folder_info.resolve().absolute())
+        if not config_file.exists():
+            cfg_content = {'composer-dll-directory': assembly_folder,
                            'data-folder': str(data_folder_info.resolve().absolute())}
             with open(str(config_file.resolve().absolute()), 'w') as cfg:
                 json.dump(cfg_content, cfg)
-
         AddReference(str(toolbox_assembly.resolve().absolute()))
+        os.chdir(assembly_folder)
         return
 
     def generate_plot_filename(self):
@@ -112,8 +91,7 @@ class VisualizerWrapper:
         Generates a random name for the output plot image file in the default folder defined in the config.json file.
         :return: an absolute path to the output plot image file.
         """
-        default_output_folder = (Path(self.config['default-output-folder'])
-                                 if 'default-output-folder' in self.config else Path('./output_plots'))
+        default_output_folder = (Path(self.arguments['--output']))
         if not default_output_folder.exists():
             os.makedirs(str(default_output_folder.resolve().absolute()))
         file_name = f'{str(uuid.uuid4())[:8]}.png'
@@ -127,7 +105,7 @@ class VisualizerWrapper:
         :return: a pandas.DataFrame with the data from the file.
         """
         from QuantConnect.ToolBox.Visualizer import Visualizer
-        vsz = Visualizer(self.data_file_argument)
+        vsz = Visualizer(self.arguments['DATAFILE'])
         df = vsz.ParseDataFrame()
         if df.empty:
             raise Exception("Data frame is empty")
@@ -143,11 +121,11 @@ class VisualizerWrapper:
 
         TODO: implement column and time filters.
         """
-        if 'tick' in self.data_file_argument:
+        if 'tick' in self.arguments['DATAFILE']:
             cols_to_plot = [col for col in df.columns if 'price' in col]
         else:
             cols_to_plot = [col for col in df.columns if 'close' in col]
-        if 'openinterest' in self.data_file_argument:
+        if 'openinterest' in self.arguments['DATAFILE']:
             cols_to_plot = ['openinterest']
         cols_to_plot = cols_to_plot[:2] if len(cols_to_plot) == 3 else cols_to_plot
         df = df.loc[:, cols_to_plot]
@@ -161,10 +139,12 @@ class VisualizerWrapper:
         """
         plot = data.plot(grid=True, color=self.palette)
         fig = plot.get_figure()
-        is_low_resolution_data = 'hour' in self.data_file_argument or 'daily' in self.data_file_argument
+        is_low_resolution_data = 'hour' in self.arguments['DATAFILE'] or 'daily' in self.arguments['DATAFILE']
         if not is_low_resolution_data:
             plot.xaxis.set_major_formatter(DateFormatter("%H:%M"))
-        fig.set_size_inches(self.size_px[0] / fig.dpi, self.size_px[1] / fig.dpi)
+
+        size_px = [int(p) for p in self.arguments['--size'].split(',')]
+        fig.set_size_inches(size_px[0] / fig.dpi, size_px[1] / fig.dpi)
         fig.savefig(self.plot_filename, transparent=True, dpi=fig.dpi)
         return
 
