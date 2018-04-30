@@ -96,7 +96,12 @@ class Visualizer:
         from QuantConnect.ToolBox import LeanDataReader
         from QuantConnect.Python import PandasConverter
         from QuantConnect.Data import BaseData
+        from QuantConnect.Data.Auxiliary import LocalDiskMapFileProvider
+        from QuantConnect.Util import Composer
+        from QuantConnect.Interfaces import IMapFileProvider
 
+        localDiskMapFileProvider = LocalDiskMapFileProvider()
+        Composer.Instance.AddPart[IMapFileProvider](localDiskMapFileProvider)
         ldr = LeanDataReader(self.arguments['DATAFILE'])
         pandas_converter = PandasConverter()
         df = pandas_converter.GetDataFrame[BaseData](ldr.Parse())
