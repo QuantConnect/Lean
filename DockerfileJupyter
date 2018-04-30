@@ -30,16 +30,14 @@ RUN git clone https://github.com/QuantConnect/pythonnet && \
     python setup.py install && cd .. && rm -irf pythonnet
 
 # Setting some environment variables
-ENV WORK /root/Lean/Jupyter/bin/Debug
-ENV LEAN /opt/miniconda3/Lean
-ENV PYTHONPATH=${LEAN}:${PYTHONPATH}
+ENV WORK /root/Lean/Launcher/bin/Debug/
+ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
-# Copy Lean files to convinient locations
-COPY ./Jupyter/bin/Debug ${LEAN}
-COPY ./Jupyter/*.ipynb ${WORK}/
-COPY ./Jupyter/config.json ${WORK}
-COPY ./Jupyter/QuantConnect.csx ${WORK}
-RUN rm -irf ${LEAN}/*Python*
+# Copy Lean files to convenient locations
+COPY ./Launcher/bin/Debug/ ${WORK}
+RUN rm -irf ${WORK}/*Python* && \
+    find ${WORK} -type f -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -delete && \
+    echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json 
 
 EXPOSE 8888
 WORKDIR $WORK
@@ -50,4 +48,4 @@ CMD jupyter notebook --ip='*' --port=8888 --no-browser --allow-root
 # Usage:
 # docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
 # docker build -t quantconnect/jupyter -f DockerfileJupyter .
-# docker run -it --rm -p 8888:8888 -v (absolute to your data folder):/root/Lean/Data:ro quantconnect/jupyter
+# docker run -it --rm -p 8888:8888 -v (absolute to your data folder):/home/Data:ro quantconnect/jupyter
