@@ -44,8 +44,9 @@ class Visualizer:
     """
     def __init__(self, arguments):
         self.arguments = arguments
-        if not Path(self.arguments['DATAFILE'].split('#')[0]).exists():
-            raise NotImplementedError("The zipped data file doesn't exist.")
+        zipped_data_file = Path(self.arguments['DATAFILE'].split('#')[0])
+        if not zipped_data_file.exists():
+            raise FileNotFoundError(f'File {zipped_data_file.resolve().absolute()} does not exist')
         self.palette = ['#f5ae29', '#657584', '#b1b9c3', '#222222']
         # Loads the Toolbox to access Visualizer
         self.setup_and_load_toolbox()
