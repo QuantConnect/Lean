@@ -128,7 +128,12 @@
     <Content Include="Execution\StandardDeviationExecutionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Execution\ImmediateExecutionModel.py" />
+    <Content Include="Execution\ImmediateExecutionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Risk\MaximumDrawdownPercentPerSecurity.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Alphas\ConstantAlphaModel.py">
