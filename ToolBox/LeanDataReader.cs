@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.IO;
 using Ionic.Zip;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -65,6 +67,9 @@ namespace QuantConnect.ToolBox
             DateTime date;
             Resolution resolution;
             string zipEntry = null;
+
+            var localDiskMapFileProvider = new LocalDiskMapFileProvider();
+            Composer.Instance.AddPart<IMapFileProvider>(localDiskMapFileProvider);
 
             var isFutureOrOption = filepath.Contains("#");
 

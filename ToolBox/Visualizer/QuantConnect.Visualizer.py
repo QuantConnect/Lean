@@ -58,9 +58,8 @@ class VisualizerWrapper:
 
     def setup_and_load_toolbox(self):
         """
-        Checks if the path given in the config.json file contains the needed assemblies, if so it returns the
-        absolute path to that folder.
-        Also, saves a copy of the config.json with the data needed by the Composer to run.
+        Checks if the path given in the CLI (or its defaults values) contains the needed assemblies.
+
         :return: void.
         :raise: NotImplementedError: if the needed assemblies dll are not available.
         """
@@ -75,20 +74,15 @@ class VisualizerWrapper:
         if not data_folder_info.joinpath('market-hours', 'market-hours-database.json').exists():
             raise KeyError("Please set up the '--data' option with the path to Lean data folder.\n" +
                            f"Absolute path provided: {data_folder_info.resolve().absolute()}\n")
-        config_file = assemblies_folder_info.joinpath('config.json')
-        assembly_folder = str(assemblies_folder_info.resolve().absolute())
-        if not config_file.exists():
-            cfg_content = {'composer-dll-directory': assembly_folder,
-                           'data-folder': str(data_folder_info.resolve().absolute())}
-            with open(str(config_file.resolve().absolute()), 'w') as cfg:
-                json.dump(cfg_content, cfg)
+
         AddReference(str(toolbox_assembly.resolve().absolute()))
-        os.chdir(assembly_folder)
+        os.chdir(str(assemblies_folder_info.resolve().absolute()))
         return
 
     def generate_plot_filename(self):
         """
-        Generates a random name for the output plot image file in the default folder defined in the config.json file.
+        Generates a random name for the output plot image file in the default folder defined in the CLI.
+
         :return: an absolute path to the output plot image file.
         """
         default_output_folder = (Path(self.arguments['--output']))
@@ -102,6 +96,7 @@ class VisualizerWrapper:
         """
         Makes use of the Lean's Toolbox Visualizer to parse the data as pandas.DataFrame from a given zip file and
         an optional internal filename for option and futures.
+
         :return: a pandas.DataFrame with the data from the file.
         """
         from QuantConnect.ToolBox.Visualizer import Visualizer
@@ -116,6 +111,7 @@ class VisualizerWrapper:
         """
         Applies the filters defined in the CLI arguments to the parsed data.
         Not fully implemented yet, it only select the close columns right now.
+
         :param df: pandas.DataFrame with all the data form the selected file.
         :return: a filtered pandas.DataFrame.
 
@@ -134,6 +130,7 @@ class VisualizerWrapper:
     def plot_and_save_image(self, data):
         """
         Plots the data and saves the plot as a png image.
+
         :param data: a pandas.DataFrame with the data to plot.
         :return: void
         """
