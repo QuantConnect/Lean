@@ -55,6 +55,8 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
+
+            InitializeTimeInForceHandlers(algorithm);
         }
 
         /// <summary>
@@ -67,6 +69,8 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
+
+            InitializeTimeInForceHandlers(algorithm);
         }
 
         /// <summary>
@@ -80,6 +84,8 @@ namespace QuantConnect.Brokerages.Backtesting
             Algorithm = algorithm;
             MarketSimulation = marketSimulation;
             _pending = new ConcurrentDictionary<int, Order>();
+
+            InitializeTimeInForceHandlers(algorithm);
         }
 
         /// <summary>
@@ -279,7 +285,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var timeInForceHandler = GetTimeInForceHandler(order.TimeInForce);
+                    var timeInForceHandler = _timeInForceHandlers[order.TimeInForce];
 
                     // check if the time in force handler allows fills
                     if (timeInForceHandler.HasOrderExpired(order))
@@ -481,26 +487,12 @@ namespace QuantConnect.Brokerages.Backtesting
             _pending[order.Id] = order.Clone();
         }
 
-        private ITimeInForceHandler GetTimeInForceHandler(TimeInForce timeInForce)
+        private void InitializeTimeInForceHandlers(IAlgorithm algorithm)
         {
-            ITimeInForceHandler handler;
-            if (!_timeInForceHandlers.TryGetValue(timeInForce, out handler))
-            {
-                switch (timeInForce)
-                {
-                    case TimeInForce.Day:
-                        handler = new DayTimeInForceHandler(Algorithm);
-                        break;
-
-                    default:
-                        handler = new GoodTilCancelledTimeInForceHandler();
-                        break;
-                }
-
-                _timeInForceHandlers[timeInForce] = handler;
-            }
-
-            return handler;
+            _timeInForceHandlers.Add(TimeInForce.GoodTilCancelled, new GoodTilCancelledTimeInForceHandler());
+            _timeInForceHandlers.Add(TimeInForce.Day, new DayTimeInForceHandler(algorithm));
+            // Custom time in force will be renamed to GTD soon and will have its own new handler
+            _timeInForceHandlers.Add(TimeInForce.Custom, new GoodTilCancelledTimeInForceHandler());
         }
     }
 }
