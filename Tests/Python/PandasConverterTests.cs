@@ -26,6 +26,9 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Tests.ToolBox;
+using QuantConnect.ToolBox;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -288,6 +291,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+
+        private static Resolution[] ResolutionCases = { Resolution.Tick, Resolution.Minute, Resolution.Second };
+        private static Symbol[] SymbolCases = {Symbols.Fut_SPY_Feb19_2016, Symbols.Fut_SPY_Mar19_2016, Symbols.SPY_C_192_Feb19_2016, Symbols.SPY_P_192_Feb19_2016};
+
+        [Test]
+        public void HandlesOpenInterestTicks([ValueSource(nameof(ResolutionCases))]Resolution resolution, [ValueSource(nameof(SymbolCases))] Symbol symbol)
+        {
+            // Arrange
+            var converter = new PandasConverter();
+            var tickType = TickType.OpenInterest;
+            var dataType = LeanData.GetDataType(resolution, tickType);
+            var subcriptionDataConfig = new SubscriptionDataConfig(dataType, symbol, resolution,
+                                                                   TimeZones.Chicago, TimeZones.Chicago,
+                                                                   tickType: tickType, fillForward: false,
+                                                                   extendedHours: true, isInternalFeed: true);
+            var openinterest = new List<OpenInterest>();
+            for (int i = 0; i < 10; i++)
+            {
+                var line = $"{1000 * i},{11 * i}";
+                var openInterestTicks = new OpenInterest(subcriptionDataConfig, symbol, line, new DateTime(2017, 10, 10));
+                openinterest.Add(openInterestTicks);
+            }
+
+            // Act
+            dynamic dataFrame = converter.GetDataFrame(openinterest);
+
+            //Assert
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol.Value];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                Assert.IsTrue(subDataFrame.get("openinterest") != null);
+
+                var count = subDataFrame.shape[0].AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].openinterest.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(openinterest[i].Value, value);
+                }
+            }
+
+        }
+
         [Test]
         [TestCase(typeof(Quandl), "yyyy-MM-dd")]
         [TestCase(typeof(FxcmVolume), "yyyyMMdd HH:mm")]
@@ -360,6 +412,63 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
         }
+
+        private object[] SpotMarketCases => LeanDataReaderTests.SpotMarketCases;
+        private object[] OptionAndFuturesCases => LeanDataReaderTests.OptionAndFuturesCases;
+
+        [Test, TestCaseSource(nameof(SpotMarketCases))]
+        public void HandlesLeanDataReaderOutputForSpotMarkets(string securityType, string market, string resolution, string ticker, string fileName, int rowsInfile, double sumValue)
+        {
+            // Arrange
+            var dataFolder = "../../../Data";
+            var filepath = LeanDataReaderTests.GenerateFilepathForTesting(dataFolder, securityType, market, resolution, ticker, fileName);
+            var leanDataReader = new LeanDataReader(filepath);
+            var data = leanDataReader.Parse();
+            var converter = new PandasConverter();
+            // Act
+            dynamic df = converter.GetDataFrame(data);
+            // Assert
+            Assert.AreEqual(df.shape[0].AsManagedObject(typeof(int)), rowsInfile);
+
+            int columnsNumber = df.shape[1].AsManagedObject(typeof(int));
+            if (columnsNumber == 3 || columnsNumber == 6)
+            {
+                Assert.AreEqual(df.get("lastprice").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+            }
+            else
+            {
+                Assert.AreEqual(df.get("close").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+            }
+        }
+
+        [Test, TestCaseSource(nameof(OptionAndFuturesCases))]
+        public void HandlesLeanDataReaderOutputForOptionAndFutures(string composedFilePath, Symbol symbol, int rowsInfile, double sumValue)
+        {
+            // Arrange
+            var leanDataReader = new LeanDataReader(composedFilePath);
+            var data = leanDataReader.Parse();
+            var converter = new PandasConverter();
+            // Act
+            dynamic df = converter.GetDataFrame(data);
+            // Assert
+            Assert.AreEqual(df.shape[0].AsManagedObject(typeof(int)), rowsInfile);
+
+            int columnsNumber = df.shape[1].AsManagedObject(typeof(int));
+            if (columnsNumber == 3 || columnsNumber == 6)
+            {
+                Assert.AreEqual(df.get("lastprice").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+            }
+            else if (columnsNumber == 1)
+            {
+                Assert.AreEqual(df.get("openinterest").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+            }
+            else
+            {
+                Assert.AreEqual(df.get("close").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+            }
+        }
+
+
 
         public IEnumerable<Slice> GetHistory<T>(Symbol symbol, Resolution resolution, IEnumerable<T> data)
             where T : IBaseData

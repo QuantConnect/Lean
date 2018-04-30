@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -816,15 +817,15 @@ namespace QuantConnect.Util
                 resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
                 var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), info[startIndex], true);
 
-                if (securityType == SecurityType.Option || securityType == SecurityType.Future)
-                {
-                    throw new ArgumentException("LeanData.TryParsePath(): Options and futures are not supported by this method.");
-                }
-
                 // If resolution is Daily or Hour, we do not need to set the date and tick type
                 if (resolution < Resolution.Hour)
                 {
                     date = DateTime.ParseExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter, null);
+                }
+
+                if (securityType == SecurityType.Crypto)
+                {
+                    ticker = ticker.Split('_').First();
                 }
 
                 symbol = Symbol.Create(ticker, securityType, market);

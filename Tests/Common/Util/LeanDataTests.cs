@@ -207,12 +207,6 @@ namespace QuantConnect.Tests.Common.Util
 
             var optionsTradePath = "Data/option/u sa/minute/aapl/20140606_trade_american.zip";
             Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out symbol, out date, out resolution));
-
-            var optionsOpenInterestPath = "Data/option/usa/minute/aapl/20140609_openinterest_american.zip";
-            Assert.IsFalse(LeanData.TryParsePath(optionsOpenInterestPath, out symbol, out date, out resolution));
-
-            var optionsQuotePath = "Data/option/usa/minute/aapl/20140609_quote_american.zip";
-            Assert.IsFalse(LeanData.TryParsePath(optionsQuotePath, out symbol, out date, out resolution));
         }
 
         [Test]
@@ -277,6 +271,36 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLower(), "bcousd");
             Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
+        }
+
+        [Test]
+        public void CryptoPaths_CanBeParsedCorrectly()
+        {
+            DateTime date;
+            Symbol symbol;
+            Resolution resolution;
+
+            var cryptoPath = "Data\\crypto\\gdax\\daily\\btcusd_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
+            Assert.AreEqual(symbol.ID.Market, Market.GDAX);
+            Assert.AreEqual(resolution, Resolution.Daily);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "btcusd");
+
+            cryptoPath = "Data\\crypto\\gdax\\hour\\btcusd_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
+            Assert.AreEqual(symbol.ID.Market, Market.GDAX);
+            Assert.AreEqual(resolution, Resolution.Hour);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "btcusd");
+
+            cryptoPath = "Data\\crypto\\gdax\\minute\\btcusd\\20161007_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
+            Assert.AreEqual(symbol.ID.Market, Market.GDAX);
+            Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "btcusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-10-07").Date);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
