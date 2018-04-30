@@ -51,8 +51,11 @@ class VisualizerWrapper:
     """
     def __init__(self, arguments):
 
-        self.palette = ['#f5ae29', '#657584', '#b1b9c3', '#222222']
         self.data_file_argument = arguments['DATAFILE']
+        if not Path(self.data_file_argument.split('#')[0]).exists():
+            raise NotImplementedError("The zipped data file doesn't exist.")
+
+        self.palette = ['#f5ae29', '#657584', '#b1b9c3', '#222222']
         self.reset = arguments['--reset']
 
         with open('config.json', 'r') as json_data:
@@ -79,7 +82,8 @@ class VisualizerWrapper:
         # Check Lean assemblies are present in the composer-dll-directory key provided.
         assemblies_folder_info = (Path(self.config['composer-dll-directory'])
                                   if 'composer-dll-directory' in self.config else Path('../'))
-        if not assemblies_folder_info.joinpath('QuantConnect.ToolBox.exe').exists():
+        toolbox_assembly = assemblies_folder_info.joinpath('QuantConnect.ToolBox.exe')
+        if not toolbox_assembly.exists():
             raise KeyError(
                 "Please set up the 'composer-dll-directory' key in config.json with the path to Lean assemblies." +
                 f"Absolute path to 'composer-dll-directory' provided: {assemblies_folder_info.resolve().absolute()}\n" +
@@ -100,10 +104,7 @@ class VisualizerWrapper:
             with open(str(config_file.resolve().absolute()), 'w') as cfg:
                 json.dump(cfg_content, cfg)
 
-        # Load the visualizer
-        os.chdir(assembly_folder_path)
-        sys.path.append(assembly_folder_path)
-        AddReference("QuantConnect.ToolBox")
+        AddReference(str(toolbox_assembly.resolve().absolute()))
         return
 
     def generate_plot_filename(self):
@@ -130,7 +131,8 @@ class VisualizerWrapper:
         df = vsz.ParseDataFrame()
         if df.empty:
             raise Exception("Data frame is empty")
-        return df
+        symbol = df.index.levels[0][0]
+        return df.loc[symbol]
 
     def filter_data(self, df):
         """
@@ -141,8 +143,6 @@ class VisualizerWrapper:
 
         TODO: implement column and time filters.
         """
-        symbol = df.index.levels[0][0]
-        df = df.loc[symbol]
         if 'tick' in self.data_file_argument:
             cols_to_plot = [col for col in df.columns if 'price' in col]
         else:
