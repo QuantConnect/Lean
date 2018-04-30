@@ -284,7 +284,11 @@ namespace QuantConnect.Brokerages.Backtesting
                     // check if the time in force handler allows fills
                     if (timeInForceHandler.HasOrderExpired(order))
                     {
-                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m) { Status = OrderStatus.Canceled });
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m)
+                        {
+                            Status = OrderStatus.Canceled,
+                            Message = "The order has expired."
+                        });
                         _pending.TryRemove(order.Id, out order);
                         continue;
                     }
