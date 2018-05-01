@@ -219,11 +219,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// false if the security was already in the universe</returns>
         internal virtual bool AddMember(DateTime utcTime, Security security)
         {
-            if (Securities.ContainsKey(security.Symbol))
+            if (Securities.TryAdd(security.Symbol, new Member(utcTime, security)))
             {
-                return false;
+                security.AddUniverse(this);
+                return true;
             }
-            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+
+            return false;
         }
 
         /// <summary>
@@ -240,7 +242,11 @@ namespace QuantConnect.Data.UniverseSelection
             if (CanRemoveMember(utcTime, security))
             {
                 Member member;
-                return Securities.TryRemove(security.Symbol, out member);
+                if (Securities.TryRemove(security.Symbol, out member))
+                {
+                    security.RemoveUniverse(this);
+                    return true;
+                }
             }
             return false;
         }
