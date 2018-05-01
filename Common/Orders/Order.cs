@@ -66,6 +66,26 @@ namespace QuantConnect.Orders
         public DateTime Time { get; internal set; }
 
         /// <summary>
+        /// Gets the utc time this order was created. Alias for <see cref="Time"/>
+        /// </summary>
+        public DateTime CreatedTime => Time;
+
+        /// <summary>
+        /// Gets the utc time the last fill was received, or null if no fills have been received
+        /// </summary>
+        public DateTime? LastFillTime { get; internal set; }
+
+        /// <summary>
+        /// Gets the utc time this order was last updated, or null if the order has not been updated.
+        /// </summary>
+        public DateTime? LastUpdateTime { get; internal set; }
+
+        /// <summary>
+        /// Gets the utc time this order was canceled, or null if the order was not canceled.
+        /// </summary>
+        public DateTime? CanceledTime { get; internal set; }
+
+        /// <summary>
         /// Number of shares to execute.
         /// </summary>
         public decimal Quantity
@@ -268,6 +288,9 @@ namespace QuantConnect.Orders
         {
             order.Id = Id;
             order.Time = Time;
+            order.LastFillTime = LastFillTime;
+            order.LastUpdateTime = LastUpdateTime;
+            order.CanceledTime = CanceledTime;
             order.BrokerId = BrokerId.ToList();
             order.ContingentId = ContingentId;
             order.TimeInForce = TimeInForce;

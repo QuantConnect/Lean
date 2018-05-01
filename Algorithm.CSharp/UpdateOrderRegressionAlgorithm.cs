@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[symbol].High : (1 - LimitPercentage) * data.Bars[symbol].Low;
                 }
-                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, Time, orderType.ToString());
+                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, UtcTime, orderType.ToString());
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
             }
@@ -140,6 +140,26 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            // if the order time isn't equal to the algo time, then the modified time on the order should be updated
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            var ticket = Transactions.GetOrderTicket(orderEvent.OrderId);
+            if (order.Status == OrderStatus.Canceled && order.CanceledTime != orderEvent.UtcTime)
+            {
+                throw new Exception("Expected canceled order CanceledTime to equal canceled order event time.");
+            }
+
+            // fills update LastFillTime
+            if ((order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime != orderEvent.UtcTime)
+            {
+                throw new Exception("Expected filled order LastFillTime to equal fill order event time.");
+            }
+
+            // check the ticket to see if the update was successfully processed
+            if (ticket.UpdateRequests.Any(ur => ur.Response?.IsSuccess == true) && order.CreatedTime != UtcTime && order.LastUpdateTime == null)
+            {
+                throw new Exception("Expected updated order LastUpdateTime to equal submitted update order event time");
+            }
+
             if (orderEvent.Status == OrderStatus.Filled)
             {
                 Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
