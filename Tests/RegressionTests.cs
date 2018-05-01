@@ -691,22 +691,22 @@ namespace QuantConnect.Tests
                 {"Total Trades", "10"},
                 {"Average Win", "0%"},
                 {"Average Loss", "-0.17%"},
-                {"Compounding Annual Return", "-99.993%"},
-                {"Drawdown", "3.800%"},
+                {"Compounding Annual Return", "-99.991%"},
+                {"Drawdown", "3.700%"},
                 {"Expectancy", "-1"},
-                {"Net Profit", "-2.577%"},
-                {"Sharpe Ratio", "-15.89"},
+                {"Net Profit", "-2.511%"},
+                {"Sharpe Ratio", "-16.062"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-5.559"},
-                {"Beta", "333.506"},
-                {"Annual Standard Deviation", "0.205"},
-                {"Annual Variance", "0.042"},
-                {"Information Ratio", "-15.972"},
-                {"Tracking Error", "0.204"},
+                {"Alpha", "-5.392"},
+                {"Beta", "321.486"},
+                {"Annual Standard Deviation", "0.198"},
+                {"Annual Variance", "0.039"},
+                {"Information Ratio", "-16.147"},
+                {"Tracking Error", "0.197"},
                 {"Treynor Ratio", "-0.01"},
-                {"Total Fees", "$96.51"}
+                {"Total Fees", "$75.48"}
             };
 
             var indicatorSuiteAlgorithmStatistics = new Dictionary<string, string>
