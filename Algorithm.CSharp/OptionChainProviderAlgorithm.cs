@@ -37,19 +37,25 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionChainProviderAlgorithm : QCAlgorithm
     {
         private Symbol _equitySymbol;
-     
+        private Symbol _optionContract = string.Empty;
+
         public override void Initialize()
         {
-            SetStartDate(2017, 06, 01);
-            SetEndDate(2017, 07, 01);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
             SetCash(100000);
-            var equity = AddEquity("AMZN", Resolution.Minute);
+            var equity = AddEquity("GOOG", Resolution.Minute);
             _equitySymbol = equity.Symbol;
         }
 
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio[_equitySymbol].Invested)
+            {
+                MarketOrder(_equitySymbol, 100);
+            }
+
+            if (!(Securities.ContainsKey(_optionContract) && Portfolio[_optionContract].Invested))
             {
                 var contracts = OptionChainProvider.GetOptionContractList(_equitySymbol, data.Time);
                 var underlyingPrice = Securities[_equitySymbol].Price;
@@ -62,15 +68,18 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (otmCalls.Count() != 0)
                 {
-                    var contract = otmCalls.OrderBy(x => x.ID.Date)
-                                           .ThenBy(x => (x.ID.StrikePrice - underlyingPrice))
-                                           .FirstOrDefault();
-                    // Before placing the order, use AddOptionContract() to subscribe the requested contract symbol
-                    AddOptionContract(contract, Resolution.Minute);
-                    MarketOrder(contract, -1);
-                    MarketOrder(_equitySymbol, 100);
+                    _optionContract = otmCalls.OrderBy(x => x.ID.Date)
+                                          .ThenBy(x => (x.ID.StrikePrice - underlyingPrice))
+                                          .FirstOrDefault();
+                    // use AddOptionContract() to subscribe the data for specified contract 
+                    AddOptionContract(_optionContract, Resolution.Minute);
                 }
+                else _optionContract = string.Empty;
+            }
+            if (Securities.ContainsKey(_optionContract) && !Portfolio[_optionContract].Invested)
+            {
+                MarketOrder(_optionContract, -1);
             }
         }
-	}
+    }
 }
