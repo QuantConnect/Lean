@@ -42,13 +42,26 @@ namespace QuantConnect.Orders.TimeInForces
             {
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    // expires at 5 PM NewYork time
-                    var expiryTime = new DateTime(orderTime.Date.Year, orderTime.Date.Month, orderTime.Date.Day, 17, 0, 0);
-                    expired = time.Date > orderTime.Date || time.ConvertTo(exchangeHours.TimeZone, TimeZones.NewYork) >= expiryTime;
+                    // With real brokerages (IB, Oanda, FXCM have been verified) FX orders expire at 5 PM NewYork time.
+                    // For now we use this fixed cut-off time, in future we might get this value from brokerage models,
+                    // to support custom brokerage implementations.
+
+                    var cutOffTimeZone = TimeZones.NewYork;
+                    var cutOffTimeSpan = TimeSpan.FromHours(17);
+
+                    orderTime = order.Time.ConvertFromUtc(cutOffTimeZone);
+                    var expiryTime = orderTime.Date.Add(cutOffTimeSpan);
+                    if (orderTime.TimeOfDay > cutOffTimeSpan)
+                    {
+                        // order submitted after 5 PM, expiry on next date
+                        expiryTime = expiryTime.AddDays(1);
+                    }
+
+                    expired = time.ConvertTo(exchangeHours.TimeZone, cutOffTimeZone) >= expiryTime;
                     break;
 
                 case SecurityType.Crypto:
-                    // expires at midnight
+                    // expires at midnight UTC
                     expired = time.Date > orderTime.Date;
                     break;
 

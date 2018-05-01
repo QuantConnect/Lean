@@ -88,8 +88,9 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
         }
 
         [Test]
-        public void DayTimeInForceForexOrderExpiresAt5PM()
+        public void DayTimeInForceForexOrderBefore5PMExpiresAt5PM()
         {
+            // set time to 10:00:00 AM (NY time)
             var utcTime = new DateTime(2018, 4, 27, 10, 0, 0).ConvertToUtc(TimeZones.NewYork);
             var handler = new DayTimeInForceHandler();
 
@@ -112,10 +113,54 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, 0);
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));
 
+            // set time to 4:59:59 PM (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(7).AddSeconds(-1));
             Assert.IsFalse(handler.HasOrderExpired(security, order));
 
+            // set time to 5:00:00 PM (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(7));
+            Assert.IsTrue(handler.HasOrderExpired(security, order));
+
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
+        }
+
+        [Test]
+        public void DayTimeInForceForexOrderAfter5PMExpiresAt5PMNextDay()
+        {
+            // set time to 6:00:00 PM (NY time)
+            var utcTime = new DateTime(2018, 4, 27, 18, 0, 0).ConvertToUtc(TimeZones.NewYork);
+            var handler = new DayTimeInForceHandler();
+
+            var security = new Forex(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new SubscriptionDataConfig(typeof(QuoteBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
+            security.SetLocalTimeKeeper(localTimeKeeper);
+
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
+
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+
+            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, 0);
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
+
+            // set time to midnight (NY time)
+            localTimeKeeper.UpdateTime(utcTime.AddHours(6));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            // set time to 4:59:59 PM next day (NY time)
+            localTimeKeeper.UpdateTime(utcTime.AddHours(23).AddSeconds(-1));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            // set time to 5:00:00 PM next day (NY time)
+            localTimeKeeper.UpdateTime(utcTime.AddHours(23));
             Assert.IsTrue(handler.HasOrderExpired(security, order));
 
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
