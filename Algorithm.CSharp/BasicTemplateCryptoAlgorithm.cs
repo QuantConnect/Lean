@@ -83,10 +83,6 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            // Note: all limit orders in this algorithm will be paying taker fees,
-            // they shouldn't, but they do (for now) because of this issue:
-            // https://github.com/QuantConnect/Lean/issues/1852
-
             if (Time.Hour == 1 && Time.Minute == 0)
             {
                 // Sell all ETH holdings with a limit order at 1% above the current price
@@ -118,8 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // use all of our available USD
                 var quantity = usdAvailable / limitPrice;
 
-                // this order will be rejected (for now) because of this issue:
-                // https://github.com/QuantConnect/Lean/issues/1852
+                // this order will be rejected for insufficient funds
                 LimitOrder("ETHUSD", quantity, limitPrice);
 
                 // use only half of our available USD
