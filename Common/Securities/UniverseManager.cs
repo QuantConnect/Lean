@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -41,6 +42,16 @@ namespace QuantConnect.Securities
         public UniverseManager()
         {
             _universes = new ConcurrentDictionary<Symbol, Universe>();
+        }
+
+        /// <summary>
+        /// Gets the unique set of securities that are currently members of at least one universe
+        /// </summary>
+        /// <returns>Enumerable containing all securities that are currently members of a universe</returns>
+        public IEnumerable<Security> GetSecurities()
+        {
+            return _universes.SelectMany(ukvp => ukvp.Value.Securities.Select(skvp => skvp.Value.Security))
+                .DistinctBy(s => s.Symbol);
         }
 
         #region IDictionary implementation
