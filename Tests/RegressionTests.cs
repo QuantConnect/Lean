@@ -981,6 +981,42 @@ namespace QuantConnect.Tests
                 {"Rolling Averaged Population Magnitude", "0%"},
             };
 
+            var sectorExposureRiskFrameworkAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "18"},
+                {"Average Win", "0.16%"},
+                {"Average Loss", "-0.03%"},
+                {"Compounding Annual Return", "-47.626%"},
+                {"Drawdown", "3.000%"},
+                {"Expectancy", "2.197"},
+                {"Net Profit", "-2.623%"},
+                {"Sharpe Ratio", "-6.139"},
+                {"Loss Rate", "50%"},
+                {"Win Rate", "50%"},
+                {"Profit-Loss Ratio", "5.39"},
+                {"Alpha", "-0.209"},
+                {"Beta", "-19.996"},
+                {"Annual Standard Deviation", "0.09"},
+                {"Annual Variance", "0.008"},
+                {"Information Ratio", "-6.321"},
+                {"Tracking Error", "0.09"},
+                {"Treynor Ratio", "0.028"},
+                {"Total Fees", "$24.90"},
+                {"Total Insights Generated", "33"},
+                {"Total Insights Closed", "30"},
+                {"Total Insights Analysis Completed", "27"},
+                {"Long Insight Count", "33"},
+                {"Short Insight Count", "0"},
+                {"Long/Short Ratio", "100%"},
+                {"Estimated Monthly Alpha Value", "$-8788163"},
+                {"Total Accumulated Estimated Alpha Value", "$-4442904"},
+                {"Mean Population Estimated Insight Value", "$-148096.8"},
+                {"Mean Population Direction", "51.8519%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "78.9332%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
             var timeInForceAlgorithmStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
@@ -1047,7 +1083,6 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("CancelOpenOrdersRegressionAlgorithm", cancelOpenOrdersRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
-                new AlgorithmStatisticsTestParameters("TimeInForceAlgorithm", timeInForceAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
@@ -1084,8 +1119,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm", volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.Python),
-                new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.Python),
-                new AlgorithmStatisticsTestParameters("TimeInForceAlgorithm", timeInForceAlgorithmStatistics, Language.Python)
+                new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.Python)
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
