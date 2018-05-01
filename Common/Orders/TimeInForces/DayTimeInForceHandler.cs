@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -23,40 +24,54 @@ namespace QuantConnect.Orders.TimeInForces
     /// </summary>
     public class DayTimeInForceHandler : ITimeInForceHandler
     {
-        private readonly IAlgorithm _algorithm;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DayTimeInForceHandler"/> class
-        /// </summary>
-        /// <param name="algorithm">The instance of the algorithm</param>
-        public DayTimeInForceHandler(IAlgorithm algorithm)
-        {
-            _algorithm = algorithm;
-        }
-
         /// <summary>
         /// Checks if an order has expired
         /// </summary>
+        /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to be checked</param>
         /// <returns>Returns true if the order has expired, false otherwise</returns>
-        public bool HasOrderExpired(Order order)
+        public bool HasOrderExpired(Security security, Order order)
         {
-            var exchangeHours = MarketHoursDatabase
-                .FromDataFolder()
-                .GetExchangeHours(order.Symbol.ID.Market, order.Symbol, order.Symbol.SecurityType);
+            var exchangeHours = security.Exchange.Hours;
 
-            var time = _algorithm.UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+            var orderTime = order.Time.ConvertFromUtc(exchangeHours.TimeZone);
+            var time = security.LocalTime;
 
-            return !exchangeHours.IsOpen(time, false);
+            bool expired;
+            switch (order.SecurityType)
+            {
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    // expires at 5 PM NewYork time
+                    var expiryTime = new DateTime(orderTime.Date.Year, orderTime.Date.Month, orderTime.Date.Day, 17, 0, 0);
+                    expired = time.Date > orderTime.Date || time.ConvertTo(exchangeHours.TimeZone, TimeZones.NewYork) >= expiryTime;
+                    break;
+
+                case SecurityType.Crypto:
+                    // expires at midnight
+                    expired = time.Date > orderTime.Date;
+                    break;
+
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                case SecurityType.Future:
+                default:
+                    // expires at market close
+                    expired = time.Date > orderTime.Date || !exchangeHours.IsOpen(time, false);
+                    break;
+            }
+
+            return expired;
         }
 
         /// <summary>
         /// Checks if an order fill is valid
         /// </summary>
+        /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to be checked</param>
         /// <param name="fill">The order fill to be checked</param>
         /// <returns>Returns true if the order fill can be emitted, false otherwise</returns>
-        public bool IsFillValid(Order order, OrderEvent fill)
+        public bool IsFillValid(Security security, Order order, OrderEvent fill)
         {
             return true;
         }

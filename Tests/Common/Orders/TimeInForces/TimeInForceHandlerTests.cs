@@ -15,9 +15,15 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.TimeInForces
 {
@@ -27,48 +33,128 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
         [Test]
         public void GtcTimeInForceOrderDoesNotExpire()
         {
-            var handler = new GoodTilCancelledTimeInForceHandler();
+            var handler = new GoodTilCanceledTimeInForceHandler();
+
+            var security = new Equity(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             var order = new LimitOrder(Symbols.SPY, 10, 100, DateTime.UtcNow);
 
-            Assert.IsFalse(handler.HasOrderExpired(order));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
-            Assert.IsTrue(handler.IsFillValid(order, fill1));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
 
             var fill2 = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, 0);
-            Assert.IsTrue(handler.IsFillValid(order, fill2));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
         }
 
         [Test]
-        public void DayTimeInForceOrderExpiresAtMarketClose()
+        public void DayTimeInForceEquityOrderExpiresAtMarketClose()
         {
             var utcTime = new DateTime(2018, 4, 27, 10, 0, 0).ConvertToUtc(TimeZones.NewYork);
-            var algorithm = new QCAlgorithm
-            {
-                DefaultOrderProperties = { TimeInForce = TimeInForce.Day }
-            };
-            var handler = new DayTimeInForceHandler(algorithm);
+            var handler = new DayTimeInForceHandler();
 
-            var order = new LimitOrder(Symbols.SPY, 10, 100, utcTime, "", algorithm.DefaultOrderProperties);
+            var security = new Equity(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
+            security.SetLocalTimeKeeper(localTimeKeeper);
 
-            algorithm.SetDateTime(utcTime);
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var order = new LimitOrder(Symbols.SPY, 10, 100, utcTime, "", orderProperties);
 
-            Assert.IsFalse(handler.HasOrderExpired(order));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
-            Assert.IsTrue(handler.IsFillValid(order, fill1));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
 
             var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, 0);
-            Assert.IsTrue(handler.IsFillValid(order, fill2));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
 
-            algorithm.SetDateTime(utcTime.AddHours(6));
-            Assert.IsTrue(handler.HasOrderExpired(order));
+            localTimeKeeper.UpdateTime(utcTime.AddHours(6).AddSeconds(-1));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
 
-            Assert.IsTrue(handler.IsFillValid(order, fill1));
-            Assert.IsTrue(handler.IsFillValid(order, fill2));
+            localTimeKeeper.UpdateTime(utcTime.AddHours(6));
+            Assert.IsTrue(handler.HasOrderExpired(security, order));
+
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
         }
 
+        [Test]
+        public void DayTimeInForceForexOrderExpiresAt5PM()
+        {
+            var utcTime = new DateTime(2018, 4, 27, 10, 0, 0).ConvertToUtc(TimeZones.NewYork);
+            var handler = new DayTimeInForceHandler();
 
+            var security = new Forex(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new SubscriptionDataConfig(typeof(QuoteBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
+            security.SetLocalTimeKeeper(localTimeKeeper);
+
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
+
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+
+            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, 0);
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
+
+            localTimeKeeper.UpdateTime(utcTime.AddHours(7).AddSeconds(-1));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            localTimeKeeper.UpdateTime(utcTime.AddHours(7));
+            Assert.IsTrue(handler.HasOrderExpired(security, order));
+
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
+        }
+
+        [Test]
+        public void DayTimeInForceCryptoOrderExpiresAtMidnight()
+        {
+            var utcTime = new DateTime(2018, 4, 27, 10, 0, 0);
+            var handler = new DayTimeInForceHandler();
+
+            var security = new Crypto(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new SubscriptionDataConfig(typeof(QuoteBar), Symbols.BTCUSD, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, true, true, true),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
+            security.SetLocalTimeKeeper(localTimeKeeper);
+
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
+
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+
+            var fill2 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.Filled, OrderDirection.Buy, order.LimitPrice, 7, 0);
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
+
+            localTimeKeeper.UpdateTime(utcTime.AddHours(14).AddSeconds(-1));
+            Assert.IsFalse(handler.HasOrderExpired(security, order));
+
+            localTimeKeeper.UpdateTime(utcTime.AddHours(14));
+            Assert.IsTrue(handler.HasOrderExpired(security, order));
+
+            Assert.IsTrue(handler.IsFillValid(security, order, fill1));
+            Assert.IsTrue(handler.IsFillValid(security, order, fill2));
+        }
     }
 }

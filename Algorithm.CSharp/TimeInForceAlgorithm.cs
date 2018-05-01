@@ -55,16 +55,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_gtcOrderTicket == null)
             {
-                // This order has a default time in force of GoodTilCancelled,
-                // it will never expire and will not be cancelled automatically.
+                // This order has a default time in force of GoodTilCanceled,
+                // it will never expire and will not be canceled automatically.
 
+                DefaultOrderProperties.TimeInForce = TimeInForce.GoodTilCanceled;
                 _gtcOrderTicket = LimitOrder(_symbol, 10, 160m);
             }
 
             if (_dayOrderTicket == null)
             {
                 // This order will expire at market close,
-                // if not filled by then it will be cancelled automatically.
+                // if not filled by then it will be canceled automatically.
 
                 DefaultOrderProperties.TimeInForce = TimeInForce.Day;
                 _dayOrderTicket = LimitOrder(_symbol, 10, 160m);

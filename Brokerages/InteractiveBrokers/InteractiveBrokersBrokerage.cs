@@ -1913,7 +1913,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.TimeInForce.MarketOnOpen:
                 case IB.TimeInForce.GoodTillCancel:
                 default:
-                    return TimeInForce.GoodTilCancelled;
+                    return TimeInForce.GoodTilCanceled;
             }
         }
 
@@ -1945,7 +1945,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 //case TimeInForce.ImmediateOrCancel:
                 //    return IB.TimeInForce.ImmediateOrCancel;
 
-                case TimeInForce.GoodTilCancelled:
+                case TimeInForce.GoodTilCanceled:
                 default:
                     return IB.TimeInForce.GoodTillCancel;
             }

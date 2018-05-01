@@ -32,7 +32,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public OrderProperties()
         {
-            TimeInForce = TimeInForce.GoodTilCancelled;
+            TimeInForce = TimeInForce.GoodTilCanceled;
         }
 
         /// <summary>

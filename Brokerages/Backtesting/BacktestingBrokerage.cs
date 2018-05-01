@@ -39,7 +39,14 @@ namespace QuantConnect.Brokerages.Backtesting
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
         private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
-        private readonly Dictionary<TimeInForce, ITimeInForceHandler> _timeInForceHandlers = new Dictionary<TimeInForce, ITimeInForceHandler>();
+
+        private readonly Dictionary<TimeInForce, ITimeInForceHandler> _timeInForceHandlers = new Dictionary<TimeInForce, ITimeInForceHandler>
+        {
+            { TimeInForce.GoodTilCanceled, new GoodTilCanceledTimeInForceHandler() },
+            { TimeInForce.Day, new DayTimeInForceHandler() },
+            // Custom time in force will be renamed to GTD soon and will have its own new handler
+            { TimeInForce.Custom, new GoodTilCanceledTimeInForceHandler() }
+        };
 
         /// <summary>
         /// This is the algorithm under test
@@ -55,8 +62,6 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
-
-            InitializeTimeInForceHandlers(algorithm);
         }
 
         /// <summary>
@@ -69,8 +74,6 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
-
-            InitializeTimeInForceHandlers(algorithm);
         }
 
         /// <summary>
@@ -84,8 +87,6 @@ namespace QuantConnect.Brokerages.Backtesting
             Algorithm = algorithm;
             MarketSimulation = marketSimulation;
             _pending = new ConcurrentDictionary<int, Order>();
-
-            InitializeTimeInForceHandlers(algorithm);
         }
 
         /// <summary>
@@ -288,7 +289,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     var timeInForceHandler = _timeInForceHandlers[order.TimeInForce];
 
                     // check if the time in force handler allows fills
-                    if (timeInForceHandler.HasOrderExpired(order))
+                    if (timeInForceHandler.HasOrderExpired(security, order))
                     {
                         OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m)
                         {
@@ -385,7 +386,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     foreach (var fill in fills)
                     {
                         // check if the fill should be emitted
-                        if (!timeInForceHandler.IsFillValid(order, fill))
+                        if (!timeInForceHandler.IsFillValid(security, order, fill))
                         {
                             break;
                         }
@@ -485,14 +486,6 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             // only save off clones!
             _pending[order.Id] = order.Clone();
-        }
-
-        private void InitializeTimeInForceHandlers(IAlgorithm algorithm)
-        {
-            _timeInForceHandlers.Add(TimeInForce.GoodTilCancelled, new GoodTilCancelledTimeInForceHandler());
-            _timeInForceHandlers.Add(TimeInForce.Day, new DayTimeInForceHandler(algorithm));
-            // Custom time in force will be renamed to GTD soon and will have its own new handler
-            _timeInForceHandlers.Add(TimeInForce.Custom, new GoodTilCancelledTimeInForceHandler());
         }
     }
 }

@@ -14,20 +14,22 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.TimeInForces
 {
     /// <summary>
-    /// Handles the Good-Til-Cancelled time in force for an order (GTC)
+    /// Handles the Good-Til-Canceled time in force for an order (GTC)
     /// </summary>
-    public class GoodTilCancelledTimeInForceHandler : ITimeInForceHandler
+    public class GoodTilCanceledTimeInForceHandler : ITimeInForceHandler
     {
         /// <summary>
         /// Checks if an order has expired
         /// </summary>
+        /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to be checked</param>
         /// <returns>Returns true if the order has expired, false otherwise</returns>
-        public bool HasOrderExpired(Order order)
+        public bool HasOrderExpired(Security security, Order order)
         {
             return false;
         }
@@ -35,10 +37,11 @@ namespace QuantConnect.Orders.TimeInForces
         /// <summary>
         /// Checks if an order fill is valid
         /// </summary>
+        /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to be checked</param>
         /// <param name="fill">The order fill to be checked</param>
         /// <returns>Returns true if the order fill can be emitted, false otherwise</returns>
-        public bool IsFillValid(Order order, OrderEvent fill)
+        public bool IsFillValid(Security security, Order order, OrderEvent fill)
         {
             return true;
         }

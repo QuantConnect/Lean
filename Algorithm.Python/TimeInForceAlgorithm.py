@@ -52,14 +52,15 @@ class TimeInForceAlgorithm(QCAlgorithm):
     def OnData(self, data):
 
         if self.gtcOrderTicket is None:
-            # This order has a default time in force of GoodTilCancelled,
-            # it will never expire and will not be cancelled automatically.
+            # This order has a default time in force of GoodTilCanceled,
+            # it will never expire and will not be canceled automatically.
 
+            self.DefaultOrderProperties.TimeInForce = TimeInForce.GoodTilCanceled
             self.gtcOrderTicket = self.LimitOrder(self.symbol, 10, 160)
 
         if self.dayOrderTicket is None:
             # This order will expire at market close,
-            # if not filled by then it will be cancelled automatically.
+            # if not filled by then it will be canceled automatically.
 
             self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
             self.dayOrderTicket = self.LimitOrder(self.symbol, 10, 160)

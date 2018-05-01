@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private static TimeInForce ConvertTimeInForce(ITimeInForce timeInForce)
         {
             if (timeInForce == TimeInForceFactory.GOOD_TILL_CANCEL)
-                return TimeInForce.GoodTilCancelled;
+                return TimeInForce.GoodTilCanceled;
 
             if (timeInForce == TimeInForceFactory.DAY)
                 return TimeInForce.Day;

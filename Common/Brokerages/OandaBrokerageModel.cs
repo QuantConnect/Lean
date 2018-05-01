@@ -95,7 +95,7 @@ namespace QuantConnect.Brokerages
             }
 
             // validate time in force
-            if (order.TimeInForce != TimeInForce.GoodTilCancelled)
+            if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "This model does not support " + order.TimeInForce + " time in force."
