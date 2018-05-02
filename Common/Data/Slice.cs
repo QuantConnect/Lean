@@ -419,12 +419,12 @@ namespace QuantConnect.Data
             {
                 var data = kvp.Value.GetData();
 
-                var ticks = data as List<Tick>;
-                if (ticks != null)
+                var dataPoints = data as IEnumerable<BaseData>;
+                if (dataPoints != null)
                 {
-                    foreach (var tick in ticks)
+                    foreach (var dataPoint in dataPoints)
                     {
-                        yield return new KeyValuePair<Symbol, BaseData>(kvp.Key, tick);
+                        yield return new KeyValuePair<Symbol, BaseData>(kvp.Key, dataPoint);
                     }
                 }
                 else
