@@ -91,11 +91,11 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
         public void DayTimeInForceForexOrderBefore5PMExpiresAt5PM()
         {
             // set time to 10:00:00 AM (NY time)
-            var utcTime = new DateTime(2018, 4, 27, 10, 0, 0).ConvertToUtc(TimeZones.NewYork);
+            var utcTime = new DateTime(2018, 4, 25, 10, 0, 0).ConvertToUtc(TimeZones.NewYork);
             var handler = new DayTimeInForceHandler();
 
             var security = new Forex(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(CashBook.AccountCurrency, 0, 1m),
                 new SubscriptionDataConfig(typeof(QuoteBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
                 SymbolProperties.GetDefault(CashBook.AccountCurrency));
@@ -129,11 +129,11 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
         public void DayTimeInForceForexOrderAfter5PMExpiresAt5PMNextDay()
         {
             // set time to 6:00:00 PM (NY time)
-            var utcTime = new DateTime(2018, 4, 27, 18, 0, 0).ConvertToUtc(TimeZones.NewYork);
+            var utcTime = new DateTime(2018, 4, 25, 18, 0, 0).ConvertToUtc(TimeZones.NewYork);
             var handler = new DayTimeInForceHandler();
 
             var security = new Forex(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(CashBook.AccountCurrency, 0, 1m),
                 new SubscriptionDataConfig(typeof(QuoteBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
                 SymbolProperties.GetDefault(CashBook.AccountCurrency));
