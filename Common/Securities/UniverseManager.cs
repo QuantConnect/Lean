@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -34,6 +35,14 @@ namespace QuantConnect.Securities
         /// Event fired when a universe is added or removed
         /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        /// <summary>
+        /// Read-only dictionary containing all active securities. An active security is
+        /// a security that is currently selected by the universe or has holdings or open orders.
+        /// </summary>
+        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
+            .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
+            .DistinctBy(s => s.Symbol).ToDictionary(s => s.Symbol);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseManager"/> class
