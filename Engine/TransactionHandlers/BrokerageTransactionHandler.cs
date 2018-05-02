@@ -894,6 +894,34 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // set the status of our order object based on the fill event
             order.Status = fill.Status;
 
+            OrderTicket ticket;
+            if (!_orderTickets.TryGetValue(fill.OrderId, out ticket))
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve ticket: " + fill.OrderId);
+                return;
+            }
+
+            // set the modified time of the order to the fill's timestamp
+            switch (fill.Status)
+            {
+                case OrderStatus.Canceled:
+                    order.CanceledTime = fill.UtcTime;
+                    break;
+
+                case OrderStatus.PartiallyFilled:
+                case OrderStatus.Filled:
+                    order.LastFillTime = fill.UtcTime;
+                    break;
+
+                case OrderStatus.Submitted:
+                    // submit events after the initial submission are all order updates
+                    if (ticket.UpdateRequests.Count > 0)
+                    {
+                        order.LastUpdateTime = fill.UtcTime;
+                    }
+                    break;
+            }
+
             // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
             //these hog memory
             //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
@@ -933,16 +961,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // update the ticket and order after we've processed the fill, but before the event, this way everything is ready for user code
-            OrderTicket ticket;
-            if (_orderTickets.TryGetValue(fill.OrderId, out ticket))
-            {
-                ticket.AddOrderEvent(fill);
-                order.Price = ticket.AverageFillPrice;
-            }
-            else
-            {
-                Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve ticket: " + fill.OrderId);
-            }
+            ticket.AddOrderEvent(fill);
+            order.Price = ticket.AverageFillPrice;
 
             //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
             if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
@@ -1101,3 +1121,4 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
     }
 }
+
