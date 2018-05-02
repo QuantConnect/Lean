@@ -24,12 +24,12 @@ namespace QuantConnect.Interfaces
     public interface ITimeInForceHandler
     {
         /// <summary>
-        /// Checks if an order has expired
+        /// Checks if an order is expired
         /// </summary>
         /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to be checked</param>
         /// <returns>Returns true if the order has expired, false otherwise</returns>
-        bool HasOrderExpired(Security security, Order order);
+        bool IsOrderExpired(Security security, Order order);
 
         /// <summary>
         /// Checks if an order fill is valid

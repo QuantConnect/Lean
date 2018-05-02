@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var order = new LimitOrder(Symbols.SPY, 10, 100, DateTime.UtcNow);
 
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
             var order = new LimitOrder(Symbols.SPY, 10, 100, utcTime, "", orderProperties);
 
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
@@ -78,10 +78,10 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(6).AddSeconds(-1));
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(6));
-            Assert.IsTrue(handler.HasOrderExpired(security, order));
+            Assert.IsTrue(handler.IsOrderExpired(security, order));
 
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
             var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
 
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
@@ -115,11 +115,11 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             // set time to 4:59:59 PM (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(7).AddSeconds(-1));
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             // set time to 5:00:00 PM (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(7));
-            Assert.IsTrue(handler.HasOrderExpired(security, order));
+            Assert.IsTrue(handler.IsOrderExpired(security, order));
 
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
             var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
 
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
@@ -153,15 +153,15 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             // set time to midnight (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(6));
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             // set time to 4:59:59 PM next day (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(23).AddSeconds(-1));
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             // set time to 5:00:00 PM next day (NY time)
             localTimeKeeper.UpdateTime(utcTime.AddHours(23));
-            Assert.IsTrue(handler.HasOrderExpired(security, order));
+            Assert.IsTrue(handler.IsOrderExpired(security, order));
 
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));
@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
             var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
 
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             var fill1 = new OrderEvent(order.Id, order.Symbol, utcTime, OrderStatus.PartiallyFilled, OrderDirection.Buy, order.LimitPrice, 3, 0);
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
@@ -193,10 +193,10 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(14).AddSeconds(-1));
-            Assert.IsFalse(handler.HasOrderExpired(security, order));
+            Assert.IsFalse(handler.IsOrderExpired(security, order));
 
             localTimeKeeper.UpdateTime(utcTime.AddHours(14));
-            Assert.IsTrue(handler.HasOrderExpired(security, order));
+            Assert.IsTrue(handler.IsOrderExpired(security, order));
 
             Assert.IsTrue(handler.IsFillValid(security, order, fill1));
             Assert.IsTrue(handler.IsFillValid(security, order, fill2));

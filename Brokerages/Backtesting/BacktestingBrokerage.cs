@@ -289,7 +289,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     var timeInForceHandler = _timeInForceHandlers[order.TimeInForce];
 
                     // check if the time in force handler allows fills
-                    if (timeInForceHandler.HasOrderExpired(security, order))
+                    if (timeInForceHandler.IsOrderExpired(security, order))
                     {
                         OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m)
                         {
