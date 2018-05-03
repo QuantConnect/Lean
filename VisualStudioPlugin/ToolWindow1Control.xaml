@@ -330,7 +330,7 @@
             <RowDefinition Height="189*"/>
         </Grid.RowDefinitions>
         <Button Grid.Row="0" x:Name="refreshButton" VerticalAlignment="Top" Margin="0,4,2,0"
-                Height="22" Click="RefreshButton_OnClick" Width="25" HorizontalAlignment="Right"
+                Height="22" Click="RefreshButton_OnClick" Width="22" HorizontalAlignment="Right"
                 Background="Transparent" BorderThickness="0" ToolTip="Refresh">
             <Path Style="{StaticResource CustomPath}"
                   StrokeThickness="1"
@@ -339,7 +339,17 @@
                   Width="13"
                   Height="16"/>
         </Button>
-        <ComboBox x:Name="projectNameBox" Grid.Row="0" Margin="2,4,30,0" VerticalAlignment="Top"
+        <Button Grid.Row="0" x:Name="newProjectButton" VerticalAlignment="Top" Margin="0,4,26,0"
+                Height="22" Click="NewProjectButton_OnClick" Width="22" HorizontalAlignment="Right"
+                Background="Transparent" BorderThickness="0" ToolTip="New Project">
+            <Path Style="{StaticResource CustomPath}"
+                  StrokeThickness="0"
+                  Data="m 97.713009,215.97801 c -1.83839,-0.29469 -3.33645,-1.43744 -4.15819,-3.17194 l -0.3889,-0.82089 -0.0614,-16.40639 -0.0615,-16.4064 -16.41283,-0.0615 -16.41282,-0.0615 -0.93306,-0.46116 c -1.68565,-0.83315 -2.814185,-2.38004 -3.047643,-4.17743 -0.157786,-1.2148 -0.153141,-17.73354 0.0053,-18.83423 0.295106,-2.05015 1.636612,-3.71701 3.600023,-4.47314 0.45655,-0.17583 2.25633,-0.2034 16.85608,-0.25829 l 16.34495,-0.0614 0.0615,-16.40639 0.0614,-16.4064 0.38669,-0.81849 c 0.66507,-1.40771 1.78197,-2.42265 3.24889,-2.95229 l 0.78862,-0.28474 h 9.647211 c 9.09326,0 9.68601,0.0132 10.32312,0.22935 1.46667,0.49765 2.68894,1.58995 3.35686,2.99991 l 0.39142,0.82626 0.0615,16.4064 0.0614,16.40639 16.4064,0.0614 16.4064,0.0615 0.82626,0.39141 c 1.40996,0.66793 2.50225,1.89019 2.99991,3.35686 0.21617,0.63711 0.22934,1.22987 0.22934,10.32313 0,9.1333 -0.0123,9.68321 -0.23186,10.32313 -0.52207,1.5219 -1.45459,2.58332 -2.89552,3.29574 l -0.91528,0.45253 -16.41282,0.0615 -16.41283,0.0615 -0.0614,16.4064 -0.0615,16.40639 -0.44565,0.92171 c -0.66984,1.38539 -1.6851,2.30491 -3.16669,2.86806 -0.67933,0.25822 -0.81952,0.26215 -10.02893,0.28172 -5.13699,0.0109 -9.616491,-0.0245 -9.954451,-0.0787 z"
+                  Stretch="Fill"
+                  Width="14"
+                  Height="14"/>
+        </Button>
+        <ComboBox x:Name="projectNameBox" Grid.Row="0" Margin="2,4,53,0" VerticalAlignment="Top"
                   Width="Auto" SelectionChanged="ProjectNameBox_SelectionChanged" IsReadOnly="True"
                   Style="{DynamicResource ComboBoxStyle1}" ToolTip="Project Name">
             <ComboBox.Resources>

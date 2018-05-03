@@ -22,7 +22,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     internal static class BacktestNameProvider
     {
-        private static string[] _animals = { "Horse", "Zebra", "Whale", "Tapir", "Barracuda", "Cow", "Cat",
+        private static readonly string[] _animals = { "Horse", "Zebra", "Whale", "Tapir", "Barracuda", "Cow", "Cat",
            "Wolf", "Hamster", "Monkey", "Pelican", "Snake", "Albatross",
            "Viper", "Guanaco", "Anguilline", "Badger", "Dogfish", "Duck",
            "Butterfly", "Gaur", "Rat", "Termite", "Eagle", "Dinosaur",
@@ -38,18 +38,18 @@ namespace QuantConnect.VisualStudioPlugin
            "Salamander", "Owl", "Bat", "Sheep", "Frog", "Chimpanzee",
            "Bull", "Scorpion", "Lemur", "Camel", "Leopard", "Fish", "Donkey",
            "Manatee", "Shark", "Bear", "kitten", "Fly", "Ant", "Sardine"};
-        private static string[] _colors = { "Red", "Red-Orange", "Orange", "Yellow", "Tan", "Yellow-Green",
+        private static readonly string[] _colors = { "Red", "Red-Orange", "Orange", "Yellow", "Tan", "Yellow-Green",
            "Yellow-Green", "Fluorescent Orange", "Apricot", "Green",
            "Fluorescent Pink", "Sky Blue", "Fluorescent Yellow", "Asparagus",
            "Blue", "Violet", "Light Brown", "Brown", "Magenta", "Black"};
-        private static string[] _verbs = { "Determined", "Pensive", "Adaptable", "Calculating", "Logical",
+        private static readonly string[] _verbs = { "Determined", "Pensive", "Adaptable", "Calculating", "Logical",
            "Energetic", "Creative", "Smooth", "Calm", "Hyper-Active",
            "Measured", "Fat", "Emotional", "Crying", "Jumping",
            "Swimming", "Crawling", "Dancing", "Focused", "Well Dressed",
            "Retrospective", "Hipster", "Square", "Upgraded", "Ugly",
            "Casual", "Formal", "Geeky", "Virtual", "Muscular",
            "Alert", "Sleepy" };
-        private static Random _random = new Random();
+        private static readonly Random _random = new Random();
 
         /// <summary>
         /// Generates a new random backtest name with the format: verb + color + animal

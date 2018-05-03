@@ -17,8 +17,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:QuantConnect.VisualStudioPlugin"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              mc:Ignorable="d" 
              WindowStartupLocation="CenterScreen"
@@ -31,7 +30,7 @@
         </Grid.ColumnDefinitions>
         <Image Grid.Row="0" Source="/QuantConnect.VisualStudioPlugin;component/Resources/icon_128x128_resource.png" Stretch="Fill" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="8,21,9,0"/>
         <ComboBox x:Name="projectNameBox" HorizontalAlignment="Center" Margin="0,40,0,0" VerticalAlignment="Top" Width="290" TabIndex="2" IsEditable="True" Grid.Column="1"/>
-        <Label x:Name="projectNameLabel" Content="Project Name" HorizontalAlignment="Left" Margin="48,10,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <Label x:Name="projectNameLabel" Content="Project Name" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Grid.Column="1" Padding="0,5,5,5"/>
         <Button x:Name="selectButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="85" Margin="105,70,0,0" Height="30" TabIndex="1" Click="SelectButton_Click" Grid.Column="1" IsDefault="True">
             <Grid>
                 <Grid.ColumnDefinitions>

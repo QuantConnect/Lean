@@ -78,6 +78,7 @@
   <ItemGroup>
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="BacktestNameProvider.cs" />
+    <Compile Include="ComboboxProjectItem.cs" />
     <Compile Include="EditBacktestDialog.xaml.cs">
       <DependentUpon>EditBacktestDialog.xaml</DependentUpon>
     </Compile>
@@ -88,6 +89,9 @@
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
     <Compile Include="IBacktestObserver.cs" />
+    <Compile Include="NewProjectDialog.xaml.cs">
+      <DependentUpon>NewProjectDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ToolWindow1.cs" />
     <Compile Include="ToolWindow1Command.cs" />
     <Compile Include="ToolWindow1Control.xaml.cs">
@@ -119,6 +123,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ErrorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NewProjectDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
