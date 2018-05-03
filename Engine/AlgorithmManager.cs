@@ -311,10 +311,20 @@ namespace QuantConnect.Lean.Engine
                 {
                     foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
                     {
+                        security.IsTradable = true;
                         if (!algorithm.Securities.ContainsKey(security.Symbol))
                         {
                             // add the new security
                             algorithm.Securities.Add(security);
+                        }
+                    }
+
+                    var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
+                    foreach (var security in timeSlice.SecurityChanges.RemovedSecurities)
+                    {
+                        if (!activeSecurities.ContainsKey(security.Symbol))
+                        {
+                            security.IsTradable = false;
                         }
                     }
                 }

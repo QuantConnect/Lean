@@ -73,6 +73,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            // can access the current set of active securitie through UniverseManager.ActiveSecurities
+            Log(Time + ": Active Securities: " + string.Join(", ", UniverseManager.ActiveSecurities.Keys));
+
             if (Transactions.OrdersCount == 0)
             {
                 MarketOrder("SPY", 100);

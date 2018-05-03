@@ -29,7 +29,6 @@ using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -45,8 +44,6 @@ namespace QuantConnect.Securities
         private LocalTimeKeeper _localTimeKeeper;
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
-        // defines the universes this security is currently a member of
-        private readonly HashSet<Universe> _universes = new HashSet<Universe>();
 
         /// <summary>
         /// Gets all the subscriptions for this security
@@ -748,46 +745,12 @@ namespace QuantConnect.Securities
             UpdateSubscriptionProperties();
         }
 
-        /// <summary>
-        /// Adds the specified universe to the internal tracking of this security's universe memberships
-        /// </summary>
-        /// <param name="universe">The universe this security was just added to</param>
-        internal void AddUniverse(Universe universe)
-        {
-            if (_universes.Add(universe))
-            {
-                // securities are considered tradable
-                IsTradable = SecurityIsMemberOfUniverseWithNonInternalFeed();
-            }
-        }
-
-        /// <summary>
-        /// Removes the specified universe from the internal tracking of this security's universe memberships
-        /// </summary>
-        /// <param name="universe">The universe this security was just removed from</param>
-        internal void RemoveUniverse(Universe universe)
-        {
-            if (_universes.Remove(universe))
-            {
-                IsTradable = SecurityIsMemberOfUniverseWithNonInternalFeed();
-            }
-        }
-
         private void UpdateSubscriptionProperties()
         {
             Resolution = SubscriptionsBag.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min();
             IsFillDataForward = SubscriptionsBag.Any(x => x.FillDataForward);
             IsExtendedMarketHours = SubscriptionsBag.Any(x => x.ExtendedMarketHours);
             DataNormalizationMode = SubscriptionsBag.Select(x => x.DataNormalizationMode).DefaultIfEmpty(DataNormalizationMode.Adjusted).FirstOrDefault();
-        }
-
-        private bool SecurityIsMemberOfUniverseWithNonInternalFeed()
-        {
-            // security is member of universe producing non-internal feed subscriptions
-            return _universes.Where(u => u.ContainsMember(Symbol))
-                // the dates for this request are simply place holders, we really only need to check the internal feed flag on the generated subscription configuration
-                .SelectMany(u => u.GetSubscriptionRequests(this, new DateTime(2000, 01, 01), new DateTime(2001, 01, 01)))
-                .Any(sr => !sr.Configuration.IsInternalFeed);
         }
     }
 }
