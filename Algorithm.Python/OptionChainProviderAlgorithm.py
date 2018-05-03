@@ -1,5 +1,4 @@
-﻿
-# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,30 +36,42 @@ from datetime import timedelta
 class OptionChainProviderAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2017, 6, 1)
-        self.SetEndDate(2017, 7, 1)
+        self.SetStartDate(2015, 12, 24)
+        self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
-        self.equity = self.AddEquity("AMZN", Resolution.Minute)
+        # add the underlying asset 
+        self.equity = self.AddEquity("GOOG", Resolution.Minute)
+        # initialize the option contract with empty string
+        self.contract = str()
         
-    def OnData(self,data):
+    def OnData(self, data):
         
+        if not self.Portfolio[self.equity.Symbol].Invested:
+            self.MarketOrder(self.equity.Symbol, 100)
+     
+        if not (self.Securities.ContainsKey(self.contract) and self.Portfolio[self.contract].Invested):
+            self.contract = self.OptionsFilter(data)
+        
+        if self.Securities.ContainsKey(self.contract) and not self.Portfolio[self.contract].Invested:
+            self.MarketOrder(self.contract, -1)            
+
+    def OptionsFilter(self, data):
         ''' OptionChainProvider gets a list of option contracts for an underlying symbol at requested date.
             Then you can manually filter the contract list returned by GetOptionContractList.
             The manual filtering will be limited to the information included in the Symbol 
             (strike, expiration, type, style) and/or prices from a History call '''
             
-        if not self.Portfolio.Invested:
-            contracts = self.OptionChainProvider.GetOptionContractList(self.equity.Symbol, data.Time)
-            self.underlyingPrice = self.Securities[self.equity.Symbol].Price
-            # filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
-            otm_calls = [i for i in contracts if i.ID.OptionRight == OptionRight.Call and 
-                                                i.ID.StrikePrice - self.underlyingPrice > 0 and 
-                                                10 < (i.ID.Date - data.Time).days < 30]
-            if len(otm_calls) > 0:
-                contract = sorted(sorted(otm_calls, key = lambda x: x.ID.Date), 
-                                                    key = lambda x: x.ID.StrikePrice - self.underlyingPrice)[0]
-            
-                # Before placing the order, use AddOptionContract() to subscribe the requested contract symbol
-                self.AddOptionContract(contract, Resolution.Minute)
-                self.MarketOrder(contract, -1)
-                self.MarketOrder(self.equity.Symbol, 100)
+        contracts = self.OptionChainProvider.GetOptionContractList(self.equity.Symbol, data.Time)
+        self.underlyingPrice = self.Securities[self.equity.Symbol].Price
+        # filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
+        otm_calls = [i for i in contracts if i.ID.OptionRight == OptionRight.Call and 
+                                            i.ID.StrikePrice - self.underlyingPrice > 0 and 
+                                            10 < (i.ID.Date - data.Time).days < 30]
+        if len(otm_calls) > 0:
+            contract = sorted(sorted(otm_calls, key = lambda x: x.ID.Date), 
+                                                     key = lambda x: x.ID.StrikePrice - self.underlyingPrice)[0]
+            # use AddOptionContract() to subscribe the data for specified contract 
+            self.AddOptionContract(contract, Resolution.Minute)
+            return contract
+        else: 
+            return str()
