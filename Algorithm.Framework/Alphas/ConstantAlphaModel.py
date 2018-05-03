@@ -22,7 +22,7 @@ from QuantConnect.Algorithm.Framework.Alphas import Insight, InsightType, Insigh
 class ConstantAlphaModel:
     ''' Provides an implementation of IAlphaModel that always returns the same insight for each security'''
 
-    def __init__(self, type, direction, period, magnitude, confidence):
+    def __init__(self, type, direction, period, magnitude = None, confidence = None):
         '''Initializes a new instance of the ConstantAlphaModel class
         Args:
             type: The type of insight

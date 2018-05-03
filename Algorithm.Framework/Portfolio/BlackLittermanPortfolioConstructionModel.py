@@ -81,7 +81,7 @@ class BlackLittermanPortfolioConstructionModel:
         for symbol, data in self.symbolDataDict.items():
             price[str(symbol)] = data.PriceSeries()
         df_price = pd.DataFrame(price)[::-1]
-        algorithm.Log(str(df_price))
+
         returns = df_price.pct_change().dropna()
 
         # get view vectors
