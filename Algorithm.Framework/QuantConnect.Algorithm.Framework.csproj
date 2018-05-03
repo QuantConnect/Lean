@@ -84,6 +84,7 @@
     <Compile Include="Selection\FineFundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\FundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\IUniverseSelectionModel.cs" />
+    <Compile Include="Selection\EmaCrossUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Alphas\ConstantAlphaModel.cs" />
