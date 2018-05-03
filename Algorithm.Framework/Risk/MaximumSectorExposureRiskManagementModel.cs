@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     public class MaximumSectorExposureRiskManagementModel : IRiskManagementModel
     {
         private readonly decimal _maximumSectorExposure;
+        private readonly PortfolioTargetCollection _targetsCollection;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MaximumSectorExposureRiskManagementModel"/> class
@@ -39,6 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
             )
         {
             _maximumSectorExposure = Math.Abs(maximumSectorExposure);
+            _targetsCollection = new PortfolioTargetCollection();
         }
 
         /// <summary>
@@ -50,11 +52,10 @@ namespace QuantConnect.Algorithm.Framework.Risk
         {
             var maximumSectorExposureValue = algorithm.Portfolio.TotalPortfolioValue * _maximumSectorExposure;
 
-            var targetCollection = new PortfolioTargetCollection();
-            targetCollection.AddRange(targets);
+            _targetsCollection.AddRange(targets);
 
             // Group the securities by their sector
-            var groupBySector = algorithm.Securities
+            var groupBySector = algorithm.UniverseManager.ActiveSecurities
                 .Where(x => x.Value.Fundamentals.HasFundamentalData)
                 .GroupBy(x => x.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
@@ -70,7 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     var absoluteHoldingsValue = security.Value.Holdings.AbsoluteHoldingsValue;
 
                     IPortfolioTarget target;
-                    if (targetCollection.TryGetValue(security.Value.Symbol, out target))
+                    if (_targetsCollection.TryGetValue(security.Value.Symbol, out target))
                     {
                         absoluteHoldingsValue = security.Value.Price * Math.Abs(target.Quantity) *
                             security.Value.SymbolProperties.ContractMultiplier *
@@ -92,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                         var symbol = security.Value.Symbol;
 
                         IPortfolioTarget target;
-                        if (targetCollection.TryGetValue(symbol, out target))
+                        if (_targetsCollection.TryGetValue(symbol, out target))
                         {
                             quantity = target.Quantity;
                         }

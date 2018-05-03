@@ -27,6 +27,7 @@ class MaximumSectorExposureRiskManagementModel():
         Args:
             maximumDrawdownPercent: The maximum exposure for any sector, defaults to 20% sector exposure.'''
         self.maximumSectorExposure = abs(maximumSectorExposure)
+        self.targetsCollection = PortfolioTargetCollection()
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -34,13 +35,12 @@ class MaximumSectorExposureRiskManagementModel():
             algorithm: The algorithm instance'''
         maximumSectorExposureValue = float(algorithm.Portfolio.TotalPortfolioValue) * self.maximumSectorExposure
 
-        targetCollection = PortfolioTargetCollection()
-        targetCollection.AddRange(targets)
+        self.targetsCollection.AddRange(targets)
 
         risk_targets = list()
 
         # Group the securities by their sector
-        filtered = list(filter(lambda x: x.Value.Fundamentals.HasFundamentalData, algorithm.Securities))
+        filtered = list(filter(lambda x: x.Value.Fundamentals.HasFundamentalData, algorithm.UniverseManager.ActiveSecurities))
         filtered.sort(key = lambda x: x.Value.Fundamentals.CompanyReference.IndustryTemplateCode)
         groupBySector = groupby(filtered, lambda x: x.Value.Fundamentals.CompanyReference.IndustryTemplateCode)
 
@@ -56,8 +56,8 @@ class MaximumSectorExposureRiskManagementModel():
                 quantities[symbol] = security.Value.Holdings.Quantity
                 absoluteHoldingsValue = security.Value.Holdings.AbsoluteHoldingsValue
 
-                if targetCollection.ContainsKey(symbol):
-                    quantities[symbol] = targetCollection[symbol].Quantity
+                if self.targetsCollection.ContainsKey(symbol):
+                    quantities[symbol] = self.targetsCollection[symbol].Quantity
 
                     absoluteHoldingsValue = (security.Value.Price * abs(quantities[symbol]) *
                         security.Value.SymbolProperties.ContractMultiplier *

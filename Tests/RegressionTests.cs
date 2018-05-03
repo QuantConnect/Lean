@@ -1083,6 +1083,8 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("CancelOpenOrdersRegressionAlgorithm", cancelOpenOrdersRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("TimeInForceAlgorithm", timeInForceAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("SectorExposureRiskFrameworkAlgorithm", sectorExposureRiskFrameworkAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
@@ -1119,7 +1121,9 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm", volumeWeightedAveragePriceExecutionModelRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("StandardDeviationExecutionModelRegressionAlgorithm", standardDeviationExecutionModelRegressionAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("ScheduledUniverseSelectionModelRegressionAlgorithm", scheduledUniverseSelectionModelRegressionAlgorithmStatistics, Language.Python),
-                new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.Python)
+                new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("TimeInForceAlgorithm", timeInForceAlgorithmStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("SectorExposureRiskFrameworkAlgorithm", sectorExposureRiskFrameworkAlgorithmStatistics, Language.Python)
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
