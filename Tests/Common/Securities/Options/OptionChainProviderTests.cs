@@ -53,6 +53,15 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.GreaterOrEqual(stopwatch.ElapsedMilliseconds, 1000);
             Assert.AreEqual(2, symbols.Count());
         }
+
+        [Test]
+        public void LiveOptionChainProviderReturnsData()
+        {
+            var provider = new LiveOptionChainProvider();
+            var result = provider.GetOptionContractList(Symbols.AAPL, DateTime.Today);
+
+            Assert.IsTrue(result.Any());
+        }
     }
 
     internal class DelayedOptionChainProvider : IOptionChainProvider
