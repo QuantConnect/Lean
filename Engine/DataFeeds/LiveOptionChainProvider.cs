@@ -28,9 +28,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveOptionChainProvider : IOptionChainProvider
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="LiveOptionChainProvider"/> class
+        /// Static constructor for the <see cref="LiveOptionChainProvider"/> class
         /// </summary>
-        public LiveOptionChainProvider()
+        static LiveOptionChainProvider()
         {
             // The OCC website now requires at least TLS 1.1 for API requests.
             // NET 4.5.2 and below does not enable these more secure protocols by default, so we add them in here
