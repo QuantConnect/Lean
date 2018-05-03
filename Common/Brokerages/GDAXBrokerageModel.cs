@@ -145,6 +145,15 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.TimeInForce != TimeInForce.GoodTilCanceled)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + order.TimeInForce + " time in force."
+                );
+
+                return false;
+            }
+
             return base.CanSubmitOrder(security, order, out message);
         }
 

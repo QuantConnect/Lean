@@ -188,11 +188,15 @@
     <Compile Include="Exceptions\ScheduledEventExceptionInterpreter.cs" />
     <Compile Include="Exceptions\UnsupportedOperandPythonExceptionInterpreter.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
+    <Compile Include="Interfaces\ITimeInForceHandler.cs" />
     <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Orders\OrderProperties.cs" />
     <Compile Include="Orders\OrderSubmissionData.cs" />
+    <Compile Include="Orders\TimeInForces\DayTimeInForceHandler.cs" />
+    <Compile Include="Orders\TimeInForces\GoodTilCanceledTimeInForceHandler.cs" />
     <Compile Include="Packets\AlphaNodePacket.cs" />
     <Compile Include="Packets\AlphaResultPacket.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />

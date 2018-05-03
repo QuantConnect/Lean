@@ -1621,19 +1621,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 TotalQuantity = (int)Math.Abs(order.Quantity),
                 OrderType = ConvertOrderType(order.Type),
                 AllOrNone = false,
-                Tif = IB.TimeInForce.GoodTillCancel,
+                Tif = ConvertTimeInForce(order),
                 Transmit = true,
                 Rule80A = _agentDescription
             };
-
-            if (order.Type == OrderType.MarketOnOpen)
-            {
-                ibOrder.Tif = IB.TimeInForce.MarketOnOpen;
-            }
-            else if (order.Type == OrderType.MarketOnClose)
-            {
-                ibOrder.Tif = IB.TimeInForce.Day;
-            }
 
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
@@ -1758,6 +1749,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             order.BrokerId.Add(ibOrder.OrderId.ToString());
+
+            order.Properties.TimeInForce = ConvertTimeInForce(ibOrder.Tif);
 
             return order;
         }
@@ -1895,6 +1888,66 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 default:
                     throw new ArgumentException(order.OrderType, "order.OrderType");
+            }
+        }
+
+        /// <summary>
+        /// Maps TimeInForce from IB to LEAN
+        /// </summary>
+        private static TimeInForce ConvertTimeInForce(string timeInForce)
+        {
+            switch (timeInForce)
+            {
+                case IB.TimeInForce.Day:
+                    return TimeInForce.Day;
+
+                //case IB.TimeInForce.GoodTillDate:
+                //    return TimeInForce.GoodTilDate;
+
+                //case IB.TimeInForce.FillOrKill:
+                //    return TimeInForce.FillOrKill;
+
+                //case IB.TimeInForce.ImmediateOrCancel:
+                //    return TimeInForce.ImmediateOrCancel;
+
+                case IB.TimeInForce.MarketOnOpen:
+                case IB.TimeInForce.GoodTillCancel:
+                default:
+                    return TimeInForce.GoodTilCanceled;
+            }
+        }
+
+        /// <summary>
+        /// Maps TimeInForce from LEAN to IB
+        /// </summary>
+        private static string ConvertTimeInForce(Order order)
+        {
+            if (order.Type == OrderType.MarketOnOpen)
+            {
+                return IB.TimeInForce.MarketOnOpen;
+            }
+            if (order.Type == OrderType.MarketOnClose)
+            {
+                return IB.TimeInForce.Day;
+            }
+
+            switch (order.TimeInForce)
+            {
+                case TimeInForce.Day:
+                    return IB.TimeInForce.Day;
+
+                //case TimeInForce.GoodTilDate:
+                //    return IB.TimeInForce.GoodTillDate;
+
+                //case TimeInForce.FillOrKill:
+                //    return IB.TimeInForce.FillOrKill;
+
+                //case TimeInForce.ImmediateOrCancel:
+                //    return IB.TimeInForce.ImmediateOrCancel;
+
+                case TimeInForce.GoodTilCanceled:
+                default:
+                    return IB.TimeInForce.GoodTillCancel;
             }
         }
 

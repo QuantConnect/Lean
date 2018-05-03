@@ -116,6 +116,7 @@ namespace QuantConnect.Algorithm
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
 
             Settings = new AlgorithmSettings();
+            DefaultOrderProperties = new OrderProperties();
 
             //Initialise Data Manager
             SubscriptionManager = new SubscriptionManager(Settings, _timeKeeper);

@@ -107,7 +107,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Time In Force - GTC or Day. Day not supported in backtests.
         /// </summary>
-        public TimeInForce TimeInForce { get; internal set; }
+        public TimeInForce TimeInForce => Properties.TimeInForce;
 
         /// <summary>
         /// Tag the order with some custom data
@@ -191,11 +191,10 @@ namespace QuantConnect.Orders
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
             Tag = "";
-            TimeInForce = TimeInForce.GoodTilCancelled;
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
-            Properties = null;
+            Properties = new OrderProperties();
         }
 
         /// <summary>
@@ -215,11 +214,10 @@ namespace QuantConnect.Orders
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
-            TimeInForce = TimeInForce.GoodTilCancelled;
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
-            Properties = properties;
+            Properties = properties ?? new OrderProperties();
         }
 
         /// <summary>
@@ -293,14 +291,13 @@ namespace QuantConnect.Orders
             order.CanceledTime = CanceledTime;
             order.BrokerId = BrokerId.ToList();
             order.ContingentId = ContingentId;
-            order.TimeInForce = TimeInForce;
             order.Price = Price;
             order.PriceCurrency = PriceCurrency;
             order.Quantity = Quantity;
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
-            order.Properties = Properties?.Clone();
+            order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
         }
 

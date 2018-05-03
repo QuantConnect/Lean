@@ -1513,7 +1513,7 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id.ToString());
             //qcOrder.ContingentId =
-            qcOrder.TimeInForce = ConvertTimeInForce(order.Duration);
+            qcOrder.Properties.TimeInForce = ConvertTimeInForce(order.Duration);
             var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
             if (orderByBrokerageId != null)
             {
@@ -1555,7 +1555,7 @@ namespace QuantConnect.Brokerages.Tradier
             switch (duration)
             {
                 case TradierOrderDuration.GTC:
-                    return TimeInForce.GoodTilCancelled;
+                    return TimeInForce.GoodTilCanceled;
                 case TradierOrderDuration.Day:
                     return (TimeInForce) 1; //.Day;
                 default:
@@ -1756,7 +1756,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             switch (duration)
             {
-                case TimeInForce.GoodTilCancelled:
+                case TimeInForce.GoodTilCanceled:
                     return TradierOrderDuration.GTC;
                 default:
                     throw new ArgumentOutOfRangeException();
