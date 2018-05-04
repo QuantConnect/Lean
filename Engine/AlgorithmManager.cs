@@ -1008,6 +1008,21 @@ namespace QuantConnect.Lean.Engine
                 }
                 else
                 {
+                    // mark security as no longer tradable
+                    var security = algorithm.Securities[delisting.Symbol];
+                    security.IsTradable = false;
+                    security.IsDelisted = true;
+
+                    // remove security from all universes
+                    foreach (var ukvp in algorithm.UniverseManager)
+                    {
+                        var universe = ukvp.Value;
+                        if (universe.ContainsMember(security.Symbol))
+                        {
+                            universe.RemoveMember(algorithm.UtcTime, security);
+                        }
+                    }
+
                     Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.Value);
                     var cancelledOrders = algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
                     foreach (var cancelledOrder in cancelledOrders)

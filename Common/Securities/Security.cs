@@ -120,6 +120,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// True if the security has been delisted from exchanges and is no longer tradable
+        /// </summary>
+        public bool IsDelisted { get; set; }
+
+        /// <summary>
         /// Data cache for the security to store previous price information.
         /// </summary>
         /// <seealso cref="EquityCache"/>

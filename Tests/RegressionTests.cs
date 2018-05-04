@@ -1040,6 +1040,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$1.00"}
             };
 
+            var delistingEventsAlgorithm = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-5.59%"},
+                {"Compounding Annual Return", "-87.759%"},
+                {"Drawdown", "5.600%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-5.592%"},
+                {"Sharpe Ratio", "-10.227"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-1.958"},
+                {"Beta", "23.646"},
+                {"Annual Standard Deviation", "0.156"},
+                {"Annual Variance", "0.024"},
+                {"Information Ratio", "-10.33"},
+                {"Tracking Error", "0.156"},
+                {"Treynor Ratio", "-0.067"},
+                {"Total Fees", "$36.79"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -1085,6 +1108,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("PairsTradingAlphaModelFrameworkAlgorithm", pairsTradingAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("TimeInForceAlgorithm", timeInForceAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("SectorExposureRiskFrameworkAlgorithm", sectorExposureRiskFrameworkAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("DelistingEventsAlgorithm", delistingEventsAlgorithm, Language.CSharp),
 
                 // Python
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
