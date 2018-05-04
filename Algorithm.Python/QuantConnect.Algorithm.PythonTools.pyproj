@@ -67,6 +67,7 @@
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <Compile Include="DropboxUniverseSelectionAlgorithm.py" />
     <Compile Include="EmaCrossUniverseSelectionAlgorithm.py" />
+    <Compile Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
     <Compile Include="ETFGlobalRotationAlgorithm.py" />
     <Compile Include="FilteredIdentityAlgorithm.py" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.py" />
