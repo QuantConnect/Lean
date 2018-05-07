@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,6 +83,19 @@ namespace QuantConnect.Util
         public static HashSet<TResult> ToHashSet<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
         {
             return new HashSet<TResult>(enumerable.Select(selector));
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IList{T}"/> from the projected elements in the specified enumerable
+        /// </summary>
+        /// <typeparam name="T">The item type of the source enumerable</typeparam>
+        /// <typeparam name="TResult">The type of the items in the output <see cref="List{T}"/></typeparam>
+        /// <param name="enumerable">The items to be placed into the enumerable</param>
+        /// <param name="selector">Selects items from the enumerable to be placed into the <see cref="List{T}"/></param>
+        /// <returns>A new <see cref="List{T}"/> containing the items in the enumerable</returns>
+        public static List<TResult> ToList<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        {
+            return enumerable.Select(selector).ToList();
         }
 
         /// <summary>
