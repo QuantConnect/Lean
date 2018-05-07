@@ -106,9 +106,18 @@ namespace QuantConnect.Securities.Option
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
         }
 
-
         // save off a strongly typed version of symbol properties
         private readonly OptionSymbolProperties _symbolProperties;
+
+        /// <summary>
+        /// Returns true if this is the option chain security, false if it is a specific option contract
+        /// </summary>
+        public bool IsOptionChain => Symbol.IsCanonical();
+
+        /// <summary>
+        /// Returns true if this is a specific option contract security, false if it is the option chain security
+        /// </summary>
+        public bool IsOptionContract => !Symbol.IsCanonical();
 
         /// <summary>
         /// Gets the strike price
