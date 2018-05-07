@@ -53,11 +53,11 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
             coarse: The coarse fundamental data used to perform filtering</param>
         Returns:
             An enumerable of symbols passing the filter'''
-        filtered = {}
+        filtered = []
 
         for cf in coarse:
             if cf.Symbol not in self.averages:
-                self.averages[cf.Symbol] = self.SelectionData(self.fastPeriod, self.slowPeriod)
+                self.averages[cf.Symbol] = self.SelectionData(cf.Symbol, self.fastPeriod, self.slowPeriod)
 
             # grab th SelectionData instance for this symbol
             avg = self.averages.get(cf.Symbol)
@@ -65,17 +65,18 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
             # Update returns true when the indicators are ready, so don't accept until they are
             # and only pick symbols who have their fastPeriod-day ema over their slowPeriod-day ema
             if avg.Update(cf.EndTime, cf.Price) and avg.Fast > avg.Slow * (1 + self.tolerance):
-                filtered[cf.Symbol] = avg
+                filtered.append(avg)
 
         # prefer symbols with a larger delta by percentage between the two averages
-        filtered = sorted(filtered.items(), key=lambda value: value[1].ScaledDelta, reverse = True)
+        filtered = sorted(filtered, key=lambda avg: avg.ScaledDelta, reverse = True)
 
         # we only need to return the symbol and return 'universeCount' symbols
-        return [x[0] for x in filtered[:self.universeCount]]
+        return [x.Symbol for x in filtered[:self.universeCount]]
 
     # class used to improve readability of the coarse selection function
     class SelectionData:
-        def __init__(self, fastPeriod, slowPeriod):
+        def __init__(self, symbol, fastPeriod, slowPeriod):
+            self.Symbol = symbol
             self.FastEma = ExponentialMovingAverage(fastPeriod)
             self.SlowEma = ExponentialMovingAverage(slowPeriod)
 

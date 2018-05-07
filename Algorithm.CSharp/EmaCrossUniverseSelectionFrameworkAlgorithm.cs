@@ -40,9 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Leverage = 2.0m;
             UniverseSettings.Resolution = Resolution.Daily;
 
-            UniverseSelection = new EmaCrossUniverseSelectionModel(fastPeriod, slowPeriod, count);
-            Alpha = new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, Resolution.Daily.ToTimeSpan());
-            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
+            SetUniverseSelection(new EmaCrossUniverseSelectionModel(fastPeriod, slowPeriod, count));
+            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, Resolution.Daily.ToTimeSpan()));
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
     }
 }
