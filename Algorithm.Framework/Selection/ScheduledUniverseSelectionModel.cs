@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using NodaTime;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
@@ -116,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             yield return new ScheduledUniverse(
                 _timeZone ?? algorithm.TimeZone,

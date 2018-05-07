@@ -17,6 +17,7 @@ using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -51,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             using (Py.GIL())
             {

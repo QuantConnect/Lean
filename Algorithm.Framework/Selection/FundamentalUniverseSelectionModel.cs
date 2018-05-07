@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universe defined by this model</returns>
-        public IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             var universe = CreateCoarseFundamentalUniverse(algorithm);
             if (_filterFineData)
