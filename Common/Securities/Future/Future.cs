@@ -101,9 +101,18 @@ namespace QuantConnect.Securities.Future
             SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
         }
 
-
         // save off a strongly typed version of symbol properties
         private readonly SymbolProperties _symbolProperties;
+
+        /// <summary>
+        /// Returns true if this is the future chain security, false if it is a specific future contract
+        /// </summary>
+        public bool IsFutureChain => Symbol.IsCanonical();
+
+        /// <summary>
+        /// Returns true if this is a specific future contract security, false if it is the future chain security
+        /// </summary>
+        public bool IsFutureContract => !Symbol.IsCanonical();
 
         /// <summary>
         /// Gets the expiration date
@@ -149,7 +158,6 @@ namespace QuantConnect.Securities.Future
         {
             SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
         }
-
 
         /// <summary>
         /// Sets the <see cref="ContractFilter"/> to a new universe selection function
