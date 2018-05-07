@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the EarningRatios class
 	/// </summary>
-	public class EarningRatios : BaseData
+	public class EarningRatios
 	{
 		/// <summary>
 		/// The growth in the company's diluted earnings per share (EPS) on a percentage basis. Morningstar calculates the annualized growth
@@ -84,6 +84,46 @@ namespace QuantConnect.Data.Fundamental
 		public RegressionGrowthofDividends5Years RegressionGrowthofDividends5Years { get; set; }
 
 		/// <summary>
+		/// The growth in the company's free cash flow per share on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the free cash flow divided by average diluted shares outstanding reported in the Financial Statements within the company filings
+		/// or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 13020
+		/// </remarks>
+		[JsonProperty("13020")]
+		public FCFPerShareGrowth FCFPerShareGrowth { get; set; }
+
+		/// <summary>
+		/// The growth in the company's book value per share on a percentage basis. Morningstar calculates the growth percentage based on
+		/// the common shareholder's equity reported in the Balance Sheet divided by the diluted shares outstanding within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 13021
+		/// </remarks>
+		[JsonProperty("13021")]
+		public BookValuePerShareGrowth BookValuePerShareGrowth { get; set; }
+
+		/// <summary>
+		/// The growth in the company's Normalized Diluted EPS on a percentage basis.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 13022
+		/// </remarks>
+		[JsonProperty("13022")]
+		public NormalizedDilutedEPSGrowth NormalizedDilutedEPSGrowth { get; set; }
+
+		/// <summary>
+		/// The growth in the company's Normalized Basic EPS on a percentage basis.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 13023
+		/// </remarks>
+		[JsonProperty("13023")]
+		public NormalizedBasicEPSGrowth NormalizedBasicEPSGrowth { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the EarningRatios class
 		/// </summary>
 		public EarningRatios()
@@ -93,6 +133,10 @@ namespace QuantConnect.Data.Fundamental
 			DPSGrowth = new DPSGrowth();
 			EquityPerShareGrowth = new EquityPerShareGrowth();
 			RegressionGrowthofDividends5Years = new RegressionGrowthofDividends5Years();
+			FCFPerShareGrowth = new FCFPerShareGrowth();
+			BookValuePerShareGrowth = new BookValuePerShareGrowth();
+			NormalizedDilutedEPSGrowth = new NormalizedDilutedEPSGrowth();
+			NormalizedBasicEPSGrowth = new NormalizedBasicEPSGrowth();
 		}
 
 		/// <summary>
@@ -109,6 +153,10 @@ namespace QuantConnect.Data.Fundamental
 			if (DPSGrowth != null) DPSGrowth.UpdateValues(previous.DPSGrowth);
 			if (EquityPerShareGrowth != null) EquityPerShareGrowth.UpdateValues(previous.EquityPerShareGrowth);
 			if (RegressionGrowthofDividends5Years != null) RegressionGrowthofDividends5Years.UpdateValues(previous.RegressionGrowthofDividends5Years);
+			if (FCFPerShareGrowth != null) FCFPerShareGrowth.UpdateValues(previous.FCFPerShareGrowth);
+			if (BookValuePerShareGrowth != null) BookValuePerShareGrowth.UpdateValues(previous.BookValuePerShareGrowth);
+			if (NormalizedDilutedEPSGrowth != null) NormalizedDilutedEPSGrowth.UpdateValues(previous.NormalizedDilutedEPSGrowth);
+			if (NormalizedBasicEPSGrowth != null) NormalizedBasicEPSGrowth.UpdateValues(previous.NormalizedBasicEPSGrowth);
 		}
 	}
 }

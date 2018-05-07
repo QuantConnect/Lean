@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the CompanyReference class
 	/// </summary>
-	public class CompanyReference : BaseData
+	public class CompanyReference
 	{
 		/// <summary>
 		/// 10-digit unique and unchanging Morningstar identifier assigned to every company.
@@ -257,6 +257,25 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("25")]
 		public string YearofEstablishment { get; set; }
+
+		/// <summary>
+		/// Indicator to denote if the company is a limited liability company. 1 denotes it is a LLC; otherwise 0.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26
+		/// </remarks>
+		[JsonProperty("26")]
+		public bool IsLimitedLiabilityCompany { get; set; }
+
+		/// <summary>
+		/// The upcoming expected year end for the company. It is calculated based on current year end (from latest available annual report)
+		/// + 1 year.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 27
+		/// </remarks>
+		[JsonProperty("27")]
+		public DateTime ExpectedFiscalYearEnd { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the CompanyReference class

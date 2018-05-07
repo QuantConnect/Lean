@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the SecurityReference class
 	/// </summary>
-	public class SecurityReference : BaseData
+	public class SecurityReference
 	{
 		/// <summary>
 		/// An arrangement of characters (often letters) representing a particular security listed on an exchange or otherwise traded publicly.
@@ -63,50 +63,12 @@ namespace QuantConnect.Data.Fundamental
 		public string CurrencyId { get; set; }
 
 		/// <summary>
-		/// An identification number assigned to financial instruments in Switzerland. These numbers are similar to the CUSIP numbers that are
-		/// used in Canada and the U.S. A typical valoren number is between six to nine digits in length.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1005
 		/// </remarks>
 		[JsonProperty("1005")]
 		public string Valoren { get; set; }
-
-		/// <summary>
-		/// The acronym for the Committee for Uniform Security Identification Procedures. The Committee is appointed by the National
-		/// Association of Securities Dealers (NASD) to assign identification numbers to nearly all publicly traded stock and bond certificates.
-		/// CUSIPs are 9-digit numbers designed to be unique numerical identifiers for traded securities.
-		/// NOTE: CUSIPS are proprietary to Standard &amp; Poor's CUSIP Service Bureau through an exclusive agreement with American Bankers
-		/// Association.  CUSIP number is provided for matching purposes only; no redistribution rights apply.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 1006
-		/// </remarks>
-		[JsonProperty("1006")]
-		public string CUSIP { get; set; }
-
-		/// <summary>
-		/// The acronym for International Securities Identification Number.  A code that uniquely identifies a specific securities issue. The
-		/// organization that allocates ISINs in any particular country is the country's respective National Numbering Agency (NNA). All
-		/// internationally traded securities issuers are urged to use this numbering scheme, which is now the accepted standard by virtually
-		/// all countries. The United States and Canada primarily use a similar scheme known as a CUSIP number.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 1007
-		/// </remarks>
-		[JsonProperty("1007")]
-		public string ISIN { get; set; }
-
-		/// <summary>
-		/// The acronym for Stock Exchange Daily Official List. An identification code, consisting of at least seven alphanumeric characters,
-		/// that is assigned to all securities trading on the London Stock Exchange and on other smaller exchanges in the U.K....U.K. stocks
-		/// that do not trade in the U.S. can be identified by their SEDOL code.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 1008
-		/// </remarks>
-		[JsonProperty("1008")]
-		public string SEDOL { get; set; }
 
 		/// <summary>
 		/// The initial day that the share begins trading on a public exchange.
@@ -139,6 +101,7 @@ namespace QuantConnect.Data.Fundamental
 		/// Each security will be assigned to one of the below security type classifications;
 		/// - Common Stock (ST00000001)
 		/// - Preferred Stock (ST00000002)
+		/// - Units (ST000000A1)
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1012
@@ -276,6 +239,40 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("1025")]
 		public string ExchangeSubMarketGlobalId { get; set; }
+
+		/// <summary>
+		/// The relationship between the chosen share class and the primary share class.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 1026
+		/// </remarks>
+		[JsonProperty("1026")]
+		public decimal ConversionRatio { get; set; }
+
+		/// <summary>
+		/// Nominal value of a security determined by the issuing company.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 1027
+		/// </remarks>
+		[JsonProperty("1027")]
+		public decimal ParValue { get; set; }
+
+		/// <summary>
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 1028
+		/// </remarks>
+		[JsonProperty("1028")]
+		public bool TradingStatus { get; set; }
+
+		/// <summary>
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 1029
+		/// </remarks>
+		[JsonProperty("1029")]
+		public string MarketDataID { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the SecurityReference class

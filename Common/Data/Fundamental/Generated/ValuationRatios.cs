@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the ValuationRatios class
 	/// </summary>
-	public class ValuationRatios : BaseData
+	public class ValuationRatios
 	{
 		/// <summary>
 		/// Dividend per share / Diluted earnings per share
@@ -206,9 +206,8 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Estimated Earnings Per Share / Price
-		/// Note:
-		/// a) The "Next" Year's EPS Estimate is used; For instance, if today's actual date is March 1, 2009, the "Current" EPS Estimate for
-		/// MSFT is June 2009, and the "Next" EPS Estimate for MSFT is June 2010; the latter is used.
+		/// Note: a) The "Next" Year's EPS Estimate is used; For instance, if today's actual date is March 1, 2009, the "Current" EPS Estimate
+		/// for MSFT is June 2009, and the "Next" EPS Estimate for MSFT is June 2010; the latter is used.
 		/// b) The eps estimated data is sourced from a third party.
 		/// </summary>
 		/// <remarks>
@@ -315,7 +314,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal WorkingCapitalPerShare5YrAvg { get; set; }
 
 		/// <summary>
-		/// This reflects the fair market value of a company, and allows comparability to other companies as this is capital structure-neutral.
+		/// Indicates what is a company being valued per each dollar of EBITDA generated.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14030
@@ -388,6 +387,42 @@ namespace QuantConnect.Data.Fundamental
 		public decimal DivYield5Year { get; set; }
 
 		/// <summary>
+		/// Estimated EPS/Book Value Per Share
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14038
+		/// </remarks>
+		[JsonProperty("14038")]
+		public decimal ForwardROE { get; set; }
+
+		/// <summary>
+		/// Estimated EPS/Total Assets Per Share
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14039
+		/// </remarks>
+		[JsonProperty("14039")]
+		public decimal ForwardROA { get; set; }
+
+		/// <summary>
+		/// 2 Years Forward Estimated EPS / Adjusted Close Price
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14040
+		/// </remarks>
+		[JsonProperty("14040")]
+		public decimal TwoYearsForwardEarningYield { get; set; }
+
+		/// <summary>
+		/// Adjusted Close Price/2 Years Forward Estimated EPS
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14041
+		/// </remarks>
+		[JsonProperty("14041")]
+		public decimal TwoYearsForwardPERatio { get; set; }
+
+		/// <summary>
 		/// Indicates the method used to calculate Forward Dividend. There are three options: Annual, Look-back and Manual.
 		/// </summary>
 		/// <remarks>
@@ -424,6 +459,15 @@ namespace QuantConnect.Data.Fundamental
 		public decimal ActualTrailingDividend { get; set; }
 
 		/// <summary>
+		/// Total Assets / Diluted Shares Outstanding
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14046
+		/// </remarks>
+		[JsonProperty("14046")]
+		public decimal TotalAssetPerShare { get; set; }
+
+		/// <summary>
 		/// The growth rate from the TrailingDividend to the Forward Dividend: {(Forward Dividend/Trailing Dividend) - 1}*100.
 		/// </summary>
 		/// <remarks>
@@ -431,6 +475,845 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("14047")]
 		public decimal ExpectedDividendGrowthRate { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of revenue generated.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14048
+		/// </remarks>
+		[JsonProperty("14048")]
+		public decimal EVtoRevenue { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of Pretax Income generated.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14049
+		/// </remarks>
+		[JsonProperty("14049")]
+		public decimal EVtoPreTaxIncome { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of asset value; should be the default EV multiple used in an asset driven
+		/// business.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14050
+		/// </remarks>
+		[JsonProperty("14050")]
+		public decimal EVtoTotalAssets { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of free cash flow generated.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14051
+		/// </remarks>
+		[JsonProperty("14051")]
+		public decimal EVtoFCF { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of EBIT generated.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14052
+		/// </remarks>
+		[JsonProperty("14052")]
+		public decimal EVtoEBIT { get; set; }
+
+		/// <summary>
+		/// Funds from operations per share; populated only for real estate investment trusts (REITs), defined as the sum of net income,
+		/// gain/loss (realized and unrealized) on investment securities, asset impairment charge, depreciation and amortization and gain/ loss
+		/// on the sale of business and property plant and equipment, divided by shares outstanding.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14053
+		/// </remarks>
+		[JsonProperty("14053")]
+		public decimal FFOPerShare { get; set; }
+
+		/// <summary>
+		/// The ratio of a stock's price to its cash flow per share.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14054
+		/// </remarks>
+		[JsonProperty("14054")]
+		public decimal PricetoCashRatio { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of estimated EBITDA.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14055
+		/// </remarks>
+		[JsonProperty("14055")]
+		public decimal EVToForwardEBITDA { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of estimated revenue.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14056
+		/// </remarks>
+		[JsonProperty("14056")]
+		public decimal EVToForwardRevenue { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of estimated EBIT.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14057
+		/// </remarks>
+		[JsonProperty("14057")]
+		public decimal EVToForwardEBIT { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's EV to EBITDA on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by EBITDA (earnings minus expenses excluding interest, tax, depreciation, and
+		/// amortization expenses) reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14058
+		/// </remarks>
+		[JsonProperty("14058")]
+		public decimal EVToEBITDA1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's EV to free cash flow on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by free cash flow (Cash flow from operations - Capital Expenditures)
+		/// reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14059
+		/// </remarks>
+		[JsonProperty("14059")]
+		public decimal EVToFCF1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's EV to revenue on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by Total Revenue reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14060
+		/// </remarks>
+		[JsonProperty("14060")]
+		public decimal EVToRevenue1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's EV to total assets on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by total assets reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14061
+		/// </remarks>
+		[JsonProperty("14061")]
+		public decimal EVToTotalAssets1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's price to free cash flow ratio on a percentage basis. Morningstar calculates the growth
+		/// percentage based on the adjusted close price divided by the free cash flow reported in the Financial Statements within the
+		/// company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14062
+		/// </remarks>
+		[JsonProperty("14062")]
+		public decimal PFCFRatio1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's price to book ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the book value per share reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14063
+		/// </remarks>
+		[JsonProperty("14063")]
+		public decimal PBRatio1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's PE ratio on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// adjusted close price divided by the earnings per share reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14064
+		/// </remarks>
+		[JsonProperty("14064")]
+		public decimal PERatio1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The one-year growth in the company's price to sales ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the sales per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14065
+		/// </remarks>
+		[JsonProperty("14065")]
+		public decimal PSRatio1YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's EV to EBIT ratio: EV (Market Cap + Preferred stock + Long-Term Debt And Capital Lease
+		/// + Short Term Debt And Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities
+		/// - Securities Purchased with Agreement to Resell - Securities Borrowed) divided by EBIT (earnings minus expenses excluding
+		/// interest and tax expenses) reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14066
+		/// </remarks>
+		[JsonProperty("14066")]
+		public decimal EVToEBIT3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's EV to EBITDA ratio: EV (Market Cap + Preferred stock + Long-Term Debt And Capital
+		/// Lease + Short Term Debt And Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market
+		/// Securities - Securities Purchased with Agreement to Resell - Securities Borrowed) divided by EBITDA (earnings minus expenses
+		/// excluding interest, tax, depreciation, and amortization expenses) reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14067
+		/// </remarks>
+		[JsonProperty("14067")]
+		public decimal EVToEBITDA3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's EV to free cash flow ratio: EV (Market Cap + Preferred stock + Long-Term Debt And
+		/// Capital Lease + Short Term Debt And Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And
+		/// Market Securities - Securities Purchased with Agreement to Resell - Securities Borrowed) divided by free cash flow (Cash Flow
+		/// from Operations - Capital Expenditures) reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14068
+		/// </remarks>
+		[JsonProperty("14068")]
+		public decimal EVToFCF3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's EV to revenue ratio: EV (Market Cap + Preferred stock + Long-Term Debt And Capital
+		/// Lease + Short Term Debt And Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market
+		/// Securities - Securities Purchased with Agreement to Resell - Securities Borrowed) divided by Total Revenue reported in the
+		/// Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14069
+		/// </remarks>
+		[JsonProperty("14069")]
+		public decimal EVToRevenue3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's EV to total assets ratio: EV (Market Cap + Preferred stock + Long-Term Debt And Capital
+		/// Lease + Short Term Debt And Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market
+		/// Securities - Securities Purchased with Agreement to Resell - Securities Borrowed) divided by Total Assets reported in the Financial
+		/// Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14070
+		/// </remarks>
+		[JsonProperty("14070")]
+		public decimal EVToTotalAssets3YrAvg { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's EV to EBIT ratio. Morningstar calculates the growth percentage based on the
+		/// EV to EBIT ratio ((Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital Lease +
+		/// Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with Agreement to
+		/// Resell - Securities Borrowed) divided by EBIT (earnings minus expenses excluding interest and tax expenses) reported in the
+		/// Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14071
+		/// </remarks>
+		[JsonProperty("14071")]
+		public decimal EVToEBIT3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's EV to EBITDA ratio. Morningstar calculates the growth percentage based on
+		/// the EV to EBITDA ratio ((Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by EBITDA (earnings minus expenses excluding interest, tax depreciation and
+		/// amortization expenses) reported in the Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14072
+		/// </remarks>
+		[JsonProperty("14072")]
+		public decimal EVToEBITDA3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's EV to free cash flow ratio. Morningstar calculates the growth percentage
+		/// based on the EV to free cash flow ratio ((Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt
+		/// And Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities
+		/// Purchased with Agreement to Resell - Securities Borrowed) divided by free cash flow (Cash Flow from Operations - Capital
+		/// Expenditures) reported in the Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14073
+		/// </remarks>
+		[JsonProperty("14073")]
+		public decimal EVToFCF3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's EV to revenue ratio. Morningstar calculates the growth percentage based on
+		/// the EV to revenue ratio ((Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by Total Revenue reported in the Financial Statements within the company
+		/// filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14074
+		/// </remarks>
+		[JsonProperty("14074")]
+		public decimal EVToRevenue3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's EV to total assets ratio. Morningstar calculates the growth percentage based
+		/// on the EV to total assets ratio ((Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by total assets reported in the Financial Statements within the company
+		/// filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14075
+		/// </remarks>
+		[JsonProperty("14075")]
+		public decimal EVToTotalAssets3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's price to free cash flow ratio (the adjusted close price divided by the free cash flow per
+		/// share reported in the Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14076
+		/// </remarks>
+		[JsonProperty("14076")]
+		public decimal PFCFRatio3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's price to book ratio (the adjusted close price divided by the book value per share reported in
+		/// the Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14077
+		/// </remarks>
+		[JsonProperty("14077")]
+		public decimal PBRatio3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's price to sales ratio (the adjusted close price divided by the total sales per share reported in
+		/// the Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14078
+		/// </remarks>
+		[JsonProperty("14078")]
+		public decimal PSRatio3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's price to cash ratio (the adjusted close price divided by the cash flow per share reported in
+		/// the Financial Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14079
+		/// </remarks>
+		[JsonProperty("14079")]
+		public decimal PCashRatio3YrAvg { get; set; }
+
+		/// <summary>
+		/// The three-year average for a company's PE ratio (the adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14080
+		/// </remarks>
+		[JsonProperty("14080")]
+		public decimal PERatio3YrAvg { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's price to free cash flow ratio. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the free cash flow per share reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14081
+		/// </remarks>
+		[JsonProperty("14081")]
+		public decimal PFCFRatio3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's price to book ratio. Morningstar calculates the growth percentage based on
+		/// the adjusted close price divided by the book value per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14082
+		/// </remarks>
+		[JsonProperty("14082")]
+		public decimal PBRatio3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's price to sales ratio. Morningstar calculates the growth percentage based on
+		/// the adjusted close price divided by the total sales per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14083
+		/// </remarks>
+		[JsonProperty("14083")]
+		public decimal PSRatio3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The growth in the three-year average for a company's PE ratio. Morningstar calculates the growth percentage based on the
+		/// adjusted close price divided by the earnings per share reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14084
+		/// </remarks>
+		[JsonProperty("14084")]
+		public decimal PERatio3YrAvgChange { get; set; }
+
+		/// <summary>
+		/// The one-year high for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14085
+		/// </remarks>
+		[JsonProperty("14085")]
+		public decimal PERatio1YearHigh { get; set; }
+
+		/// <summary>
+		/// The one-year low for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14086
+		/// </remarks>
+		[JsonProperty("14086")]
+		public decimal PERatio1YearLow { get; set; }
+
+		/// <summary>
+		/// The one-year average for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14087
+		/// </remarks>
+		[JsonProperty("14087")]
+		public decimal PERatio1YearAverage { get; set; }
+
+		/// <summary>
+		/// The five-year high for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14088
+		/// </remarks>
+		[JsonProperty("14088")]
+		public decimal PERatio5YearHigh { get; set; }
+
+		/// <summary>
+		/// The five-year low for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14089
+		/// </remarks>
+		[JsonProperty("14089")]
+		public decimal PERatio5YearLow { get; set; }
+
+		/// <summary>
+		/// The five-year average for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14090
+		/// </remarks>
+		[JsonProperty("14090")]
+		public decimal PERatio5YearAverage { get; set; }
+
+		/// <summary>
+		/// The ten-year high for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14091
+		/// </remarks>
+		[JsonProperty("14091")]
+		public decimal PERatio10YearHigh { get; set; }
+
+		/// <summary>
+		/// The ten-year low for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14092
+		/// </remarks>
+		[JsonProperty("14092")]
+		public decimal PERatio10YearLow { get; set; }
+
+		/// <summary>
+		/// The ten-year average for a company's PE ratio (adjusted close price divided by the earnings per share reported in the Financial
+		/// Statements within the company filings or reports).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14093
+		/// </remarks>
+		[JsonProperty("14093")]
+		public decimal PERatio10YearAverage { get; set; }
+
+		/// <summary>
+		/// The cyclically adjusted PE ratio for a company; adjusted close price divided by earnings per share. If the result is negative, zero,
+		/// &gt;10,000 or &lt;0.001, then null. Morningstar uses the CPI index for US companies and Indexes from the World Bank for the rest of
+		/// the global markets.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14094
+		/// </remarks>
+		[JsonProperty("14094")]
+		public decimal CAPERatio { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's EV to EBITDA on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by EBITDA (earnings minus expenses excluding interest, tax, depreciation, and
+		/// amortization expenses) reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14095
+		/// </remarks>
+		[JsonProperty("14095")]
+		public decimal EVToEBITDA3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's EV to free cash flow on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by free cash flow (Cash flow from operations - Capital Expenditures)
+		/// reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14096
+		/// </remarks>
+		[JsonProperty("14096")]
+		public decimal EVToFCF3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's EV to revenue on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by Total Revenue reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14097
+		/// </remarks>
+		[JsonProperty("14097")]
+		public decimal EVToRevenue3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's EV to total assets on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by total assets reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14098
+		/// </remarks>
+		[JsonProperty("14098")]
+		public decimal EVToTotalAssets3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's price to free cash flow ratio on a percentage basis. Morningstar calculates the growth
+		/// percentage based on the adjusted close price divided by the free cash flow reported in the Financial Statements within the
+		/// company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14099
+		/// </remarks>
+		[JsonProperty("14099")]
+		public decimal PFCFRatio3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's price to book ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the book value per share reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14100
+		/// </remarks>
+		[JsonProperty("14100")]
+		public decimal PBRatio3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's PE ratio on a percentage basis. Morningstar calculates the growth percentage based on
+		/// the adjusted close price divided by the earnings per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14101
+		/// </remarks>
+		[JsonProperty("14101")]
+		public decimal PERatio3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The three-year growth in the company's price to sales ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the sales per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14102
+		/// </remarks>
+		[JsonProperty("14102")]
+		public decimal PSRatio3YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's EV to EBITDA on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by EBITDA (earnings minus expenses excluding interest, tax, depreciation, and
+		/// amortization expenses) reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14103
+		/// </remarks>
+		[JsonProperty("14103")]
+		public decimal EVToEBITDA5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's EV to free cash flow on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by free cash flow (Cash flow from operations - Capital Expenditures)
+		/// reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14104
+		/// </remarks>
+		[JsonProperty("14104")]
+		public decimal EVToFCF5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's EV to revenue on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by Total Revenue reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14105
+		/// </remarks>
+		[JsonProperty("14105")]
+		public decimal EVToRevenue5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's EV to total assets on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by total assets reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14106
+		/// </remarks>
+		[JsonProperty("14106")]
+		public decimal EVToTotalAssets5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's price to free cash flow ratio on a percentage basis. Morningstar calculates the growth
+		/// percentage based on the adjusted close price divided by the free cash flow reported in the Financial Statements within the
+		/// company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14107
+		/// </remarks>
+		[JsonProperty("14107")]
+		public decimal PFCFRatio5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's price to book ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the book value per share reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14108
+		/// </remarks>
+		[JsonProperty("14108")]
+		public decimal PBRatio5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's PE ratio on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// adjusted close price divided by the earnings per share reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14109
+		/// </remarks>
+		[JsonProperty("14109")]
+		public decimal PERatio5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The five-year growth in the company's price to sales ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the sales per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14110
+		/// </remarks>
+		[JsonProperty("14110")]
+		public decimal PSRatio5YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's EV to EBITDA on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by EBITDA (earnings minus expenses excluding interest, tax, depreciation, and
+		/// amortization expenses) reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14111
+		/// </remarks>
+		[JsonProperty("14111")]
+		public decimal EVToEBITDA10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's EV to free cash flow on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by free cash flow (Cash flow from operations - Capital Expenditures)
+		/// reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14112
+		/// </remarks>
+		[JsonProperty("14112")]
+		public decimal EVToFCF10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's EV to revenue on a percentage basis. Morningstar calculates the growth percentage based
+		/// on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital
+		/// Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased with
+		/// Agreement to Resell - Securities Borrowed) divided by Total Revenue reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14113
+		/// </remarks>
+		[JsonProperty("14113")]
+		public decimal EVToRevenue10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's EV to total assets on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the enterprise value (Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And
+		/// Capital Lease + Securities Sold But Not Yet Repurchased  - Cash, Cash Equivalent And Market Securities - Securities Purchased
+		/// with Agreement to Resell - Securities Borrowed) divided by total assets reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14114
+		/// </remarks>
+		[JsonProperty("14114")]
+		public decimal EVToTotalAssets10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's price to free cash flow ratio on a percentage basis. Morningstar calculates the growth
+		/// percentage based on the adjusted close price divided by the free cash flow reported in the Financial Statements within the
+		/// company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14115
+		/// </remarks>
+		[JsonProperty("14115")]
+		public decimal PFCFRatio10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's price to book ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the book value per share reported in the Financial Statements within the company
+		/// filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14116
+		/// </remarks>
+		[JsonProperty("14116")]
+		public decimal PBRatio10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's PE ratio on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// adjusted close price divided by the earnings per share reported in the Financial Statements within the company filings or reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14117
+		/// </remarks>
+		[JsonProperty("14117")]
+		public decimal PERatio10YearGrowth { get; set; }
+
+		/// <summary>
+		/// The ten-year growth in the company's price to sales ratio on a percentage basis. Morningstar calculates the growth percentage
+		/// based on the adjusted close price divided by the sales per share reported in the Financial Statements within the company filings or
+		/// reports.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14118
+		/// </remarks>
+		[JsonProperty("14118")]
+		public decimal PSRatio10YearGrowth { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of estimated EBIT in year 2.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14119
+		/// </remarks>
+		[JsonProperty("14119")]
+		public decimal TwoYrsEVToForwardEBIT { get; set; }
+
+		/// <summary>
+		/// Indicates what is a company being valued per each dollar of estimated EBITDA in year 2.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14120
+		/// </remarks>
+		[JsonProperty("14120")]
+		public decimal TwoYrsEVToForwardEBITDA { get; set; }
+
+		/// <summary>
+		/// EPS Growth Ratio: (Estimated EPS Year 1) / (TTM Normalized diluted EPS
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14121
+		/// </remarks>
+		[JsonProperty("14121")]
+		public decimal FirstYearEstimatedEPSGrowth { get; set; }
+
+		/// <summary>
+		/// EPS Growth Ratio: (Estimated EPS Year 2) / (Estimated EPS Year 1)
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14122
+		/// </remarks>
+		[JsonProperty("14122")]
+		public decimal SecondYearEstimatedEPSGrowth { get; set; }
+
+		/// <summary>
+		/// Normalized ForwardPERatio / Long-term Average Normalized Earnings Growth Rate
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14123
+		/// </remarks>
+		[JsonProperty("14123")]
+		public decimal NormalizedPEGatio { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the ValuationRatios class

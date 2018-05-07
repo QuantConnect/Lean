@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the EarningReports class
 	/// </summary>
-	public class EarningReports : BaseData
+	public class EarningReports
 	{
 		/// <summary>
 		/// The exact date that is given in the financial statements for each quarter's end.
@@ -286,13 +286,40 @@ namespace QuantConnect.Data.Fundamental
 		public NormalizedDilutedEPS NormalizedDilutedEPS { get; set; }
 
 		/// <summary>
-		/// Total Dividend Per Share is cash dividends and special cash dividends paid per share over a certain period of time
+		/// Total Dividend Per Share is cash dividends and special cash dividends paid per share over a certain period of time.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 29021
 		/// </remarks>
 		[JsonProperty("29021")]
 		public TotalDividendPerShare TotalDividendPerShare { get; set; }
+
+		/// <summary>
+		/// Normalized Basic EPS as reported by the company in the financial statements.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 29022
+		/// </remarks>
+		[JsonProperty("29022")]
+		public ReportedNormalizedBasicEPS ReportedNormalizedBasicEPS { get; set; }
+
+		/// <summary>
+		/// Normalized Diluted EPS as reported by the company in the financial statements.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 29023
+		/// </remarks>
+		[JsonProperty("29023")]
+		public ReportedNormalizedDilutedEPS ReportedNormalizedDilutedEPS { get; set; }
+
+		/// <summary>
+		/// Reflects a firm's capacity to pay a dividend, and is defined as Earnings Per Share / Dividend Per Share
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 29024
+		/// </remarks>
+		[JsonProperty("29024")]
+		public DividendCoverageRatio DividendCoverageRatio { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the EarningReports class
@@ -321,6 +348,9 @@ namespace QuantConnect.Data.Fundamental
 			NormalizedBasicEPS = new NormalizedBasicEPS();
 			NormalizedDilutedEPS = new NormalizedDilutedEPS();
 			TotalDividendPerShare = new TotalDividendPerShare();
+			ReportedNormalizedBasicEPS = new ReportedNormalizedBasicEPS();
+			ReportedNormalizedDilutedEPS = new ReportedNormalizedDilutedEPS();
+			DividendCoverageRatio = new DividendCoverageRatio();
 		}
 
 		/// <summary>
@@ -354,6 +384,9 @@ namespace QuantConnect.Data.Fundamental
 			if (NormalizedBasicEPS != null) NormalizedBasicEPS.UpdateValues(previous.NormalizedBasicEPS);
 			if (NormalizedDilutedEPS != null) NormalizedDilutedEPS.UpdateValues(previous.NormalizedDilutedEPS);
 			if (TotalDividendPerShare != null) TotalDividendPerShare.UpdateValues(previous.TotalDividendPerShare);
+			if (ReportedNormalizedBasicEPS != null) ReportedNormalizedBasicEPS.UpdateValues(previous.ReportedNormalizedBasicEPS);
+			if (ReportedNormalizedDilutedEPS != null) ReportedNormalizedDilutedEPS.UpdateValues(previous.ReportedNormalizedDilutedEPS);
+			if (DividendCoverageRatio != null) DividendCoverageRatio.UpdateValues(previous.DividendCoverageRatio);
 		}
 	}
 }
