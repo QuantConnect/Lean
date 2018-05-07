@@ -312,6 +312,19 @@ namespace QuantConnect.Securities.Option
         /// Sets the <see cref="ContractFilter"/> to a new instance of the filter
         /// using the specified min and max strike and expiration range values
         /// </summary>
+        /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in less than 10 days</param>
+        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in more than 10 days</param>
+        public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
+        {
+            SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
+        }
+
+        /// <summary>
+        /// Sets the <see cref="ContractFilter"/> to a new instance of the filter
+        /// using the specified min and max strike and expiration range values
+        /// </summary>
         /// <param name="minStrike">The min strike rank relative to market price, for example, -1 would put
         /// a lower bound of one strike under market price, where a +1 would put a lower bound of one strike
         /// over market price</param>
@@ -325,8 +338,8 @@ namespace QuantConnect.Securities.Option
         public void SetFilter(int minStrike, int maxStrike, TimeSpan minExpiry, TimeSpan maxExpiry)
         {
             SetFilter(universe => universe
-                                .Strikes(minStrike, maxStrike)
-                                .Expiration(minExpiry, maxExpiry));
+                .Strikes(minStrike, maxStrike)
+                .Expiration(minExpiry, maxExpiry));
         }
 
         /// <summary>

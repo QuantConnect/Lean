@@ -77,7 +77,6 @@ namespace QuantConnect.Securities
             return this;
         }
 
-
         /// <summary>
         /// Returns a list of back month contracts
         /// </summary>
