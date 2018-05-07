@@ -20,6 +20,7 @@ using NodaTime;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
 using System.Linq;
+using Python.Runtime;
 
 namespace QuantConnect.Scheduling
 {
@@ -137,6 +138,17 @@ namespace QuantConnect.Scheduling
         /// <param name="dateRule">Specifies what dates the event should run</param>
         /// <param name="timeRule">Specifies the times on those dates the event should run</param>
         /// <param name="callback">The callback to be invoked</param>
+        public ScheduledEvent On(IDateRule dateRule, ITimeRule timeRule, PyObject callback)
+        {
+            return On(dateRule, timeRule, (name, time) => { using (Py.GIL()) callback.Invoke(); });
+        }
+
+        /// <summary>
+        /// Schedules the callback to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
         public ScheduledEvent On(IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
         {
             var name = dateRule.Name + ": " + timeRule.Name;
@@ -153,6 +165,18 @@ namespace QuantConnect.Scheduling
         public ScheduledEvent On(string name, IDateRule dateRule, ITimeRule timeRule, Action callback)
         {
             return On(name, dateRule, timeRule, (n, d) => callback());
+        }
+
+        /// <summary>
+        /// Schedules the callback to run using the specified date and time rules
+        /// </summary>
+        /// <param name="name">The event's unique name</param>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
+        public ScheduledEvent On(string name, IDateRule dateRule, ITimeRule timeRule, PyObject callback)
+        {
+            return On(name, dateRule, timeRule, (n, d) => { using (Py.GIL()) callback.Invoke(); });
         }
 
         /// <summary>
