@@ -62,8 +62,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             using (var client = new WebClient())
             {
+                // use QC url to bypass TLS issues with Mono pre-4.8 version
+                var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol;
+
                 // download the text file
-                var url = "https://www.theocc.com/webapps/series-search?symbolType=U&symbol=" + underlyingSymbol;
                 var fileContent = client.DownloadString(url);
 
                 // read the lines, skipping the headers
