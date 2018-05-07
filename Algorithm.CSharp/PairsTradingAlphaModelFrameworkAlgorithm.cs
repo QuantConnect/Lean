@@ -37,11 +37,11 @@ namespace QuantConnect.Algorithm.CSharp
             var bac = AddEquity("BAC");
             var aig = AddEquity("AIG");
 
-            UniverseSelection = new ManualUniverseSelectionModel(Securities.Keys);
-            Alpha = new PairsTradingAlphaModel(bac.Symbol, aig.Symbol);
-            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
-            Execution = new ImmediateExecutionModel();
-            RiskManagement = new NullRiskManagementModel();
+            SetUniverseSelection(new ManualUniverseSelectionModel(Securities.Keys));
+            SetAlpha(new PairsTradingAlphaModel(bac.Symbol, aig.Symbol));
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            SetExecution(new ImmediateExecutionModel());
+            SetRiskManagement(new NullRiskManagementModel());
         }
     }
 }

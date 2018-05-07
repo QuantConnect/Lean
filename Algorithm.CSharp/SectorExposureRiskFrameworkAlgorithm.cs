@@ -42,10 +42,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 04, 07);
             SetCash(100000);
 
-            UniverseSelection = new FineFundamentalUniverseSelectionModel(SelectCoarse, SelectFine);
-            Alpha = new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, QuantConnect.Time.OneDay);
-            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
-            RiskManagement = new MaximumSectorExposureRiskManagementModel();
+            SetUniverseSelection(new FineFundamentalUniverseSelectionModel(SelectCoarse, SelectFine));
+            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, QuantConnect.Time.OneDay));
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            SetRiskManagement(new MaximumSectorExposureRiskManagementModel());
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
