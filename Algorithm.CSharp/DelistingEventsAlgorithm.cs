@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -58,10 +59,20 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var symbol = kvp.Key;
                 var tradeBar = kvp.Value;
-                Debug(string.Format("OnData(Slice): {0}: {1}: {2}", Time, symbol, tradeBar.Close.ToString("0.00")));
+                Debug($"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToString("0.00")}");
             }
 
             // the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
+
+            var aaa = Securities["AAA"];
+            if (aaa.IsDelisted && aaa.IsTradable)
+            {
+                throw new Exception("Delisted security must NOT be tradable");
+            }
+            if (!aaa.IsDelisted && !aaa.IsTradable)
+            {
+                throw new Exception("Securities must be marked as tradable until they're delisted or removed from the universe");
+            }
         }
 
         public void OnData(Delistings data)
@@ -72,18 +83,24 @@ namespace QuantConnect.Algorithm.CSharp
                 var delisting = kvp.Value;
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    Debug(string.Format("OnData(Delistings): {0}: {1} will be delisted at end of day today.", Time, symbol));
+                    Debug($"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today.");
+
+                    // liquidate on delisting warning
+                    SetHoldings(symbol, 0);
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    Debug(string.Format("OnData(Delistings): {0}: {1} has been delisted.", Time, symbol));
+                    Debug($"OnData(Delistings): {Time}: {symbol} has been delisted.");
+
+                    // fails because the security has already been delisted and is no longer tradable
+                    SetHoldings(symbol, 1);
                 }
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug(string.Format("OnOrderEvent(OrderEvent): {0}: {1}", Time, orderEvent));
+            Debug($"OnOrderEvent(OrderEvent): {Time}: {orderEvent}");
         }
     }
 }

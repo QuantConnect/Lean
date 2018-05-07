@@ -119,6 +119,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if we can remove the security, false otherwise</returns>
         public virtual bool CanRemoveMember(DateTime utcTime, Security security)
         {
+            // can always remove delisted securities from the universe
+            if (security.IsDelisted)
+            {
+                return true;
+            }
+
             Member member;
             if (Securities.TryGetValue(security.Symbol, out member))
             {
@@ -219,6 +225,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// false if the security was already in the universe</returns>
         internal virtual bool AddMember(DateTime utcTime, Security security)
         {
+            if (security.IsDelisted)
+            {
+                return false;
+            }
+
             return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
         }
 
