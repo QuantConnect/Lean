@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
@@ -72,6 +74,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth.OneYear);
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth);
             Assert.AreEqual(parameters.PeRatio, row.ValuationRatios.PERatio);
+        }
+
+        [Test]
+        public void DeserializesUpdatedFileFormat()
+        {
+            var json = File.ReadAllText("./TestData/aapl_fine_fundamental.json");
+            Assert.DoesNotThrow(() =>
+            {
+                var obj = JsonConvert.DeserializeObject<FineFundamental>(json);
+            });
         }
 
         // This test reports higher memory usage when ran with Travis, so we exclude it for now

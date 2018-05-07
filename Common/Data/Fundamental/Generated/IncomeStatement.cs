@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Fundamental
 	public class IncomeStatement
 	{
 		/// <summary>
-		/// Used to reduce the value of intangible fixed assets.
+		/// The non-cash expense recognized on intangible assets over the benefit period of the asset.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20007
@@ -63,18 +63,7 @@ namespace QuantConnect.Data.Fundamental
 		public CostOfRevenueIncomeStatement CostOfRevenue { get; set; }
 
 		/// <summary>
-		/// Any cumulative gains or losses from change in accounting principles. A change in accounting principle constitutes a change from
-		/// one generally accepted accounting principle to another generally accepted accounting principle. This may also include a change in
-		/// the method of applying an accounting principle, such as depreciation or inventory methods.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20016
-		/// </remarks>
-		[JsonProperty("20016")]
-		public CumulativeEffectOfAccountingChangeIncomeStatement CumulativeEffectOfAccountingChange { get; set; }
-
-		/// <summary>
-		/// Used to reduce the value of natural resource.
+		/// The non-cash expense recognized on natural resources (eg. Oil and mineral deposits) over the benefit period of the asset.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20017
@@ -83,7 +72,8 @@ namespace QuantConnect.Data.Fundamental
 		public DepletionIncomeStatement Depletion { get; set; }
 
 		/// <summary>
-		/// Used to reduce the value of tangible fixed assets.
+		/// The current period non-cash expense recognized on tangible assets used in the normal course of business, by allocating the cost of
+		/// assets over their useful lives, in the Income Statement. Examples of tangible asset include buildings, production and equipment.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20018
@@ -92,9 +82,10 @@ namespace QuantConnect.Data.Fundamental
 		public DepreciationIncomeStatement Depreciation { get; set; }
 
 		/// <summary>
-		/// The current period expense charged against earnings on long-lived, physical assets used in the normal conduct of business and not
-		/// intended for resale to allocate or recognize the cost of assets over their useful lives; or to record the reduction in book value of an
-		/// intangible asset over the benefit period of such asset. Examples include buildings, production and equipment.
+		/// The sum of depreciation and amortization expense in the Income Statement.
+		/// Depreciation is the non-cash expense recognized on tangible assets used in the normal course of business, by allocating the cost of
+		/// assets over their useful lives
+		/// Amortization is the non-cash expense recognized on intangible assets over the benefit period of the asset.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20019
@@ -103,8 +94,12 @@ namespace QuantConnect.Data.Fundamental
 		public DepreciationAndAmortizationIncomeStatement DepreciationAndAmortization { get; set; }
 
 		/// <summary>
-		/// It is a non-cash charge that represents a reduction in the value of fixed assets due to wear, age, or obsolescence. This figure also
-		/// includes amortization of leased property, intangibles, and goodwill, and depletion.
+		/// The sum of depreciation, amortization and depletion expense in the Income Statement.
+		/// Depreciation is the non-cash expense recognized on tangible assets used in the normal course of business, by allocating the cost of
+		/// assets over their useful lives
+		/// Amortization is the non-cash expense recognized on intangible assets over the benefit period of the asset.
+		/// Depletion is the non-cash expense recognized on natural resources (eg. Oil and mineral deposits) over the benefit period of the
+		/// asset.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20020
@@ -199,15 +194,6 @@ namespace QuantConnect.Data.Fundamental
 		public InterestExpenseNonOperatingIncomeStatement InterestExpenseNonOperating { get; set; }
 
 		/// <summary>
-		/// Interest expense caused by normal operating activities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20065
-		/// </remarks>
-		[JsonProperty("20065")]
-		public InterestExpenseOperatingIncomeStatement InterestExpenseOperating { get; set; }
-
-		/// <summary>
 		/// Net interest and dividend income or expense, including any amortization and accretion (as applicable) of discounts and premiums,
 		/// including consideration of the provisions for loan, lease, credit, and other related losses, if any.
 		/// </summary>
@@ -227,15 +213,6 @@ namespace QuantConnect.Data.Fundamental
 		public InterestIncomeNonOperatingIncomeStatement InterestIncomeNonOperating { get; set; }
 
 		/// <summary>
-		/// Interest income earned by normal operating activities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20076
-		/// </remarks>
-		[JsonProperty("20076")]
-		public InterestIncomeOperatingIncomeStatement InterestIncomeOperating { get; set; }
-
-		/// <summary>
 		/// Net-Non Operating interest income or expenses caused by financing activities.
 		/// </summary>
 		/// <remarks>
@@ -243,15 +220,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20077")]
 		public NetNonOperatingInterestIncomeExpenseIncomeStatement NetNonOperatingInterestIncomeExpense { get; set; }
-
-		/// <summary>
-		/// Net operating interest income or expense caused by normal operating activities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20078
-		/// </remarks>
-		[JsonProperty("20078")]
-		public NetOperatingInterestIncomeExpenseIncomeStatement NetOperatingInterestIncomeExpense { get; set; }
 
 		/// <summary>
 		/// Losses generally refer to (1) the amount of reduction in the value of an insured's property caused by an insured peril, (2) the amount
@@ -330,9 +298,11 @@ namespace QuantConnect.Data.Fundamental
 		public NetInvestmentIncomeIncomeStatement NetInvestmentIncome { get; set; }
 
 		/// <summary>
-		/// All revenues, sales and income that the company deems as a total sum of all of their income as reported in the company's income
-		/// statement.
-		/// Bank:  Total Revenue = Net Interest Income + Non-Interest Income.
+		/// All sales, business revenues and income that the company makes from its business operations, net of excise taxes. This applies for
+		/// all companies and can be used as comparison for all industries.
+		/// For Normal, Mining, Transportation and Utility templates companies, this is the sum of Operating Revenues, Excise Taxes and Fees.
+		/// For Bank template companies, this is the sum of Net Interest Income and Non-Interest Income.
+		/// For Insurance template companies, this is the sum of Premiums, Interest Income, Fees, Investment and Other Income.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20100
@@ -353,8 +323,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The total amount of non-interest income which may be derived from: (1) fees and commissions; (2) premiums earned; (3) equity
-		/// investment; (4) the sale or disposal of assets; and (5) other sources not otherwise
-		/// specified.
+		/// investment; (4) the sale or disposal of assets; and (5) other sources not otherwise specified.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20106
@@ -383,8 +352,9 @@ namespace QuantConnect.Data.Fundamental
 		public OperatingIncomeIncomeStatement OperatingIncome { get; set; }
 
 		/// <summary>
-		/// The operating revenue for transportation industry can be divided into three parts: revenue-passenger, revenue-cargo, and other
-		/// operating revenue.
+		/// Sales and income that the company makes from its business operations. This applies only to non-bank and insurance companies.
+		/// For Utility template companies, this is the sum of revenue from electric, gas, transportation and other operating revenue.
+		/// For Transportation template companies, this is the sum of revenue-passenger, revenue-cargo, and other operating revenue.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20112
@@ -474,7 +444,7 @@ namespace QuantConnect.Data.Fundamental
 		public CreditLossesProvisionIncomeStatement CreditLossesProvision { get; set; }
 
 		/// <summary>
-		/// The aggregate amount of research and development expenses.
+		/// The aggregate amount of research and development expenses during the year.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20151
@@ -524,18 +494,6 @@ namespace QuantConnect.Data.Fundamental
 		public TotalExpensesIncomeStatement TotalExpenses { get; set; }
 
 		/// <summary>
-		/// Financial Accounting Standard (FAS) requires that expenses associated with the sale or acquisition of an insurance policy should be
-		/// deferred to future periods to match the premium income stream from that policy over its lifetime. Hence, the acquisition costs
-		/// incurred in the year of sale is capitalized in order to create the deferred acquisition costs asset and be amortized over the life of the
-		/// policy.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20176
-		/// </remarks>
-		[JsonProperty("20176")]
-		public AmortizationOfDeferredAcquisitionCostsIncomeStatement AmortizationOfDeferredAcquisitionCosts { get; set; }
-
-		/// <summary>
 		/// Income generated from interest-bearing deposits or accounts.
 		/// </summary>
 		/// <remarks>
@@ -543,15 +501,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20177")]
 		public InterestIncomeIncomeStatement InterestIncome { get; set; }
-
-		/// <summary>
-		/// The claims made under the liability insurance in order to protect the assets of a business when it is caused by an injury or damage.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20186
-		/// </remarks>
-		[JsonProperty("20186")]
-		public PropertyLiabilityInsuranceClaimsIncomeStatement PropertyLiabilityInsuranceClaims { get; set; }
 
 		/// <summary>
 		/// Earnings minus expenses (excluding interest and tax expenses).
@@ -583,96 +532,6 @@ namespace QuantConnect.Data.Fundamental
 		public NetIncomeContinuousOperationsNetMinorityInterestIncomeStatement NetIncomeContinuousOperationsNetMinorityInterest { get; set; }
 
 		/// <summary>
-		/// Two situations may lead to accretion on a preferred stock - accretion related redemption premium and interest-like returns on
-		/// accrued, but unpaid dividends that accumulated from accumulated preferred stock.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20192
-		/// </remarks>
-		[JsonProperty("20192")]
-		public AccretionOnPreferredStockIncomeStatement AccretionOnPreferredStock { get; set; }
-
-		/// <summary>
-		/// An accrued preferred stock dividend is remuneration owed by a company to its preferred stock holders. Forms of accrued preferred
-		/// stock dividends can be either cash or additional shares of preferred stock.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20193
-		/// </remarks>
-		[JsonProperty("20193")]
-		public AccruedPreferredStockDividendsIncomeStatement AccruedPreferredStockDividends { get; set; }
-
-		/// <summary>
-		/// In-process research and development that is acquired through a merger or acquisition during the period.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20194
-		/// </remarks>
-		[JsonProperty("20194")]
-		public AcquiredInProcessRnDIncomeStatement AcquiredInProcessRnD { get; set; }
-
-		/// <summary>
-		/// Costs that vary with and are primarily related to the acquisition of new and renewal insurance contracts. Also referred to as
-		/// underwriting expenses. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20195
-		/// </remarks>
-		[JsonProperty("20195")]
-		public AcquisitionExpenseIncomeStatement AcquisitionExpense { get; set; }
-
-		/// <summary>
-		/// The expenses that an organization incurs not directly tied to a specific function such as manufacturing/production or sales. These
-		/// expenses are related to the organization as a whole as opposed to an individual department
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20196
-		/// </remarks>
-		[JsonProperty("20196")]
-		public AdministrativeExpenseIncomeStatement AdministrativeExpense { get; set; }
-
-		/// <summary>
-		/// Fees earned during the period for providing insurance service as an agent. This item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20197
-		/// </remarks>
-		[JsonProperty("20197")]
-		public AgencyFeesIncomeStatement AgencyFees { get; set; }
-
-		/// <summary>
-		/// Total agency fees and commissions collected by the insurance company as a part of revenue. This item is usually only available for
-		/// insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20198
-		/// </remarks>
-		[JsonProperty("20198")]
-		public AgencyFeesAndCommissionsIncomeStatement AgencyFeesAndCommissions { get; set; }
-
-		/// <summary>
-		/// The establishment of allowances in construction contracts is a convenient method of allocating construction funds to portions of
-		/// the work that cannot be specified with sufficient particularity for competitive bidding at the time of contracting. This item is usually
-		/// not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20199
-		/// </remarks>
-		[JsonProperty("20199")]
-		public AllowancesForConstructionIncomeStatement AllowancesForConstruction { get; set; }
-
-		/// <summary>
-		/// A tax imposed in some countries on the severance and production of coal, oil or gas from the earth or water for sale, transport,
-		/// storage, profit or commercial use. Exemptions from the tax are provided for specific circumstances. This item is usually only
-		/// available for mining industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20200
-		/// </remarks>
-		[JsonProperty("20200")]
-		public CapitalnBusinessTaxesIncomeStatement CapitalnBusinessTaxes { get; set; }
-
-		/// <summary>
 		/// The amount of premiums paid and payable to another insurer as a result of reinsurance arrangements in order to exchange for that
 		/// company accepting all or part of insurance on a risk or exposure. This item is usually only available for insurance industry.
 		/// </summary>
@@ -683,23 +542,12 @@ namespace QuantConnect.Data.Fundamental
 		public CededPremiumsIncomeStatement CededPremiums { get; set; }
 
 		/// <summary>
-		/// Fees paid to another entity or agent based on commission contracts.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20202
 		/// </remarks>
 		[JsonProperty("20202")]
 		public CommissionExpensesIncomeStatement CommissionExpenses { get; set; }
-
-		/// <summary>
-		/// The service charge by the insurance company in return for providing advice and handling investment. This item is usually only
-		/// available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20203
-		/// </remarks>
-		[JsonProperty("20203")]
-		public CommissionRevenueIncomeStatement CommissionRevenue { get; set; }
 
 		/// <summary>
 		/// Income earned from credit card services including late, over limit, and annual fees. This item is usually only available for bank
@@ -712,15 +560,6 @@ namespace QuantConnect.Data.Fundamental
 		public CreditCardIncomeStatement CreditCard { get; set; }
 
 		/// <summary>
-		/// The costs associated with transitioning research to a commercially useful and marketable stage.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20205
-		/// </remarks>
-		[JsonProperty("20205")]
-		public DevelopmentExpenseIncomeStatement DevelopmentExpense { get; set; }
-
-		/// <summary>
 		/// Dividends earned from equity investment securities. This item is usually only available for bank industry.
 		/// </summary>
 		/// <remarks>
@@ -728,16 +567,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20206")]
 		public DividendIncomeIncomeStatement DividendIncome { get; set; }
-
-		/// <summary>
-		/// The earning or loss resulting from the proportional part of the associated company's net income. This item is usually only available
-		/// for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20207
-		/// </remarks>
-		[JsonProperty("20207")]
-		public EarningLossOfEquityInvestmentsIncomeStatement EarningLossOfEquityInvestments { get; set; }
 
 		/// <summary>
 		/// The earnings from equity interest can be a result of any of the following: Income from earnings distribution of the business, either
@@ -749,17 +578,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20208")]
 		public EarningsFromEquityInterestIncomeStatement EarningsFromEquityInterest { get; set; }
-
-		/// <summary>
-		/// Revenue from operations of public electric power supply systems, such as sale of electricity to residential, commercial, and
-		/// industrial customers (including electricity for resale by other private or public electric utilities). This item is usually only available for
-		/// utility industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20209
-		/// </remarks>
-		[JsonProperty("20209")]
-		public ElectricRevenueIncomeStatement ElectricRevenue { get; set; }
 
 		/// <summary>
 		/// Equipment expenses include depreciation, repairs, rentals, and service contract costs. This also includes equipment purchases
@@ -785,15 +603,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20211")]
 		public ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement ExplorationDevelopmentAndMineralPropertyLeaseExpenses { get; set; }
-
-		/// <summary>
-		/// Total fees earned from providing services. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20212
-		/// </remarks>
-		[JsonProperty("20212")]
-		public FeesIncomeStatement Fees { get; set; }
 
 		/// <summary>
 		/// Total fees and commissions earned from providing services such as leasing of space or maintaining: (1) depositor accounts; (2)
@@ -865,46 +674,6 @@ namespace QuantConnect.Data.Fundamental
 		public GainOnSaleOfSecurityIncomeStatement GainOnSaleOfSecurity { get; set; }
 
 		/// <summary>
-		/// Any gain or loss recognized on disposal of discontinued operations, which is the difference between the carrying value of the
-		/// division and its fair value less costs to sell.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20220
-		/// </remarks>
-		[JsonProperty("20220")]
-		public GainsLossOnDisposalOfDiscontinuedOperationsIncomeStatement GainsLossOnDisposalOfDiscontinuedOperations { get; set; }
-
-		/// <summary>
-		/// Revenue from operations of public gas supply systems, such as sale of natural gas to residential, commercial, and industrial
-		/// customers (including natural gas for resale by other private or public gas supply utilities); connection fees; and other operations
-		/// revenues. This item is usually only available for utility industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20221
-		/// </remarks>
-		[JsonProperty("20221")]
-		public GasRevenueIncomeStatement GasRevenue { get; set; }
-
-		/// <summary>
-		/// An undivided investment account in which insurers maintain funds that support contractual obligations for guaranteed insurance
-		/// products such as whole life insurance or fixed-rate annuities. This item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20222
-		/// </remarks>
-		[JsonProperty("20222")]
-		public GeneralAccountAssetsIncomeStatement GeneralAccountAssets { get; set; }
-
-		/// <summary>
-		/// Expense incurred for operations other than selling, administrative, or cost of goods sold
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20223
-		/// </remarks>
-		[JsonProperty("20223")]
-		public GeneralExpenseIncomeStatement GeneralExpense { get; set; }
-
-		/// <summary>
 		/// Total premiums generated from all policies written by an insurance company within a given period of time. This item is usually only
 		/// available for insurance industry.
 		/// </summary>
@@ -927,50 +696,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20225")]
 		public ImpairmentOfCapitalAssetsIncomeStatement ImpairmentOfCapitalAssets { get; set; }
-
-		/// <summary>
-		/// Impairments are considered to be permanent, which is a downward revaluation of fixed assets. If the sum of all estimated future
-		/// cash flows is less than the carrying value of the asset, then the asset would be considered impaired and would have to be written
-		/// down to its fair value. Once an asset is written down, it may only be written back up under very few circumstances. Usually the
-		/// company uses the sum of undiscounted future cash flows to determine if the impairment should occur, and uses the sum of
-		/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets' future
-		/// profit collection ability; This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20226
-		/// </remarks>
-		[JsonProperty("20226")]
-		public OtherImpairmentOfCapitalAssetsIncomeStatement OtherImpairmentOfCapitalAssets { get; set; }
-
-		/// <summary>
-		/// Company will report the income earned on the investment on its income statement and the reported value is based on the firm's
-		/// share of the company assets. The reported profit is proportional to the size of the equity investment. This is the standard technique
-		/// used when one company has significant influence over another.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20227
-		/// </remarks>
-		[JsonProperty("20227")]
-		public IncomeFromEquityMethodInvestmentsIncomeStatement IncomeFromEquityMethodInvestments { get; set; }
-
-		/// <summary>
-		/// The in-process research and development acquired through a merger or acquisition during the period, which is related to non-
-		/// operating activity. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20228
-		/// </remarks>
-		[JsonProperty("20228")]
-		public AcquiredInProcessRnDIncomeIncomeStatement AcquiredInProcessRnDIncome { get; set; }
-
-		/// <summary>
-		/// Income related to restructuring, merger, or acquisitions. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20229
-		/// </remarks>
-		[JsonProperty("20229")]
-		public RestructringAndMnAIncomeIncomeStatement RestructringAndMnAIncome { get; set; }
 
 		/// <summary>
 		/// Premium might contain a portion of the amount that has been paid in advance for insurance that has not yet been provided, which
@@ -996,34 +721,6 @@ namespace QuantConnect.Data.Fundamental
 		public InsuranceAndClaimsIncomeStatement InsuranceAndClaims { get; set; }
 
 		/// <summary>
-		/// Premiums and Income / Loss from Insurance Activities
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20232
-		/// </remarks>
-		[JsonProperty("20232")]
-		public InsuranceAndPremiumsIncomeStatement InsuranceAndPremiums { get; set; }
-
-		/// <summary>
-		/// This includes Checking account; Savings account; Deposit in foreign offices; Money Market Certificates &amp; Deposit Accounts. This
-		/// item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20233
-		/// </remarks>
-		[JsonProperty("20233")]
-		public InterestIncomeFromInterestBearingDepositsIncomeStatement InterestIncomeFromInterestBearingDeposits { get; set; }
-
-		/// <summary>
-		/// Aggregate interest expenses incurred on long-term capital lease obligation. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20234
-		/// </remarks>
-		[JsonProperty("20234")]
-		public InterestExpenseForCapitalizedLeaseObligationsIncomeStatement InterestExpenseForCapitalizedLeaseObligations { get; set; }
-
-		/// <summary>
 		/// Includes interest expense on the following deposit accounts: Interest-bearing Demand deposit; Checking account; Savings account;
 		/// Deposit in foreign offices; Money Market Certificates &amp; Deposit Accounts. This item is usually only available for bank industry.
 		/// </summary>
@@ -1042,16 +739,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20236")]
 		public InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell { get; set; }
-
-		/// <summary>
-		/// The aggregate interest expenses incurred on long-term borrowings and any interest expenses on fixed assets (property, plant,
-		/// equipment) that are leased for more than one year. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20237
-		/// </remarks>
-		[JsonProperty("20237")]
-		public InterestExpenseForLongTermDebtIncomeStatement InterestExpenseForLongTermDebt { get; set; }
 
 		/// <summary>
 		/// The aggregate interest expenses incurred on long-term borrowings and any interest expenses on fixed assets (property, plant,
@@ -1096,16 +783,6 @@ namespace QuantConnect.Data.Fundamental
 		public InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell { get; set; }
 
 		/// <summary>
-		/// Includes any interest and dividends on investment securities that are not part of money market investments. This item is usually
-		/// only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20242
-		/// </remarks>
-		[JsonProperty("20242")]
-		public InterestIncomeFromInvestmentSecuritiesIncomeStatement InterestIncomeFromInvestmentSecurities { get; set; }
-
-		/// <summary>
 		/// Includes interest and fee income generated by direct lease financing. This item is usually only available for bank industry.
 		/// </summary>
 		/// <remarks>
@@ -1147,15 +824,6 @@ namespace QuantConnect.Data.Fundamental
 		public InterestIncomeFromSecuritiesIncomeStatement InterestIncomeFromSecurities { get; set; }
 
 		/// <summary>
-		/// Interest income from assets held in trading accounts. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20247
-		/// </remarks>
-		[JsonProperty("20247")]
-		public InterestIncomeFromTradingAccountSecuritiesIncomeStatement InterestIncomeFromTradingAccountSecurities { get; set; }
-
-		/// <summary>
 		/// Includes (1) underwriting revenue (the spread between the resale price received and the cost of the securities and related
 		/// expenses) generated through the purchasing, distributing and reselling of new issues of securities (alternatively, could be a
 		/// secondary offering of a large block of previously issued securities); and (2) fees earned for mergers, acquisitions, divestitures,
@@ -1168,34 +836,6 @@ namespace QuantConnect.Data.Fundamental
 		public InvestmentBankingProfitIncomeStatement InvestmentBankingProfit { get; set; }
 
 		/// <summary>
-		/// Premiums earned from life and annuity insurance. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20249
-		/// </remarks>
-		[JsonProperty("20249")]
-		public LifeAnnuityPremiumsIncomeStatement LifeAnnuityPremiums { get; set; }
-
-		/// <summary>
-		/// Includes the loans that the bank is going to sell at a discount. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20250
-		/// </remarks>
-		[JsonProperty("20250")]
-		public LoansHeldForResellIncomeStatement LoansHeldForResell { get; set; }
-
-		/// <summary>
-		/// Expenses incurred in the course of investigating and settling claims. This item is usually not available for bank and insurance
-		/// industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20251
-		/// </remarks>
-		[JsonProperty("20251")]
-		public LossAndLossAdjustmentExpectedIncurredIncomeStatement LossAndLossAdjustmentExpectedIncurred { get; set; }
-
-		/// <summary>
 		/// The aggregate amount of maintenance and repair expenses in the current period associated with the revenue generation. Mainly
 		/// for fixed assets. This item is usually only available for transportation industry.
 		/// </summary>
@@ -1204,24 +844,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20252")]
 		public MaintenanceAndRepairsIncomeStatement MaintenanceAndRepairs { get; set; }
-
-		/// <summary>
-		/// Expenditures for planning and executing the conception, pricing, promotion, and distribution of ideas, goods, and services.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20253
-		/// </remarks>
-		[JsonProperty("20253")]
-		public MarketingExpenseIncomeStatement MarketingExpense { get; set; }
-
-		/// <summary>
-		/// Includes any interest income collects from money market investments. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20254
-		/// </remarks>
-		[JsonProperty("20254")]
-		public InterestIncomeFromOtherMoneyMarketInvestmentsIncomeStatement InterestIncomeFromOtherMoneyMarketInvestments { get; set; }
 
 		/// <summary>
 		/// The aggregate foreign currency translation gain or loss (both realized and unrealized) included as part of revenue. This item is
@@ -1263,15 +885,6 @@ namespace QuantConnect.Data.Fundamental
 		public NetRealizedGainLossOnInvestmentsIncomeStatement NetRealizedGainLossOnInvestments { get; set; }
 
 		/// <summary>
-		/// A one-time change expense that the company does not expect to encounter again.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20259
-		/// </remarks>
-		[JsonProperty("20259")]
-		public NonRecurringOperationExpenseIncomeStatement NonRecurringOperationExpense { get; set; }
-
-		/// <summary>
 		/// Includes total expenses of occupancy and equipment. This item is usually only available for bank industry.
 		/// </summary>
 		/// <remarks>
@@ -1279,16 +892,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20260")]
 		public OccupancyAndEquipmentIncomeStatement OccupancyAndEquipment { get; set; }
-
-		/// <summary>
-		/// Taxes and licenses expenses incurred and are directly related to goods produced and sold and services rendered during the
-		/// reporting period. This item is usually only available for transportation industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20261
-		/// </remarks>
-		[JsonProperty("20261")]
-		public OperatingTaxesnLicensesIncomeStatement OperatingTaxesnLicenses { get; set; }
 
 		/// <summary>
 		/// The aggregate amount of operation and maintenance expenses, which is the one important operating expense for the utility
@@ -1309,15 +912,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20263")]
 		public OtherCustomerServicesIncomeStatement OtherCustomerServices { get; set; }
-
-		/// <summary>
-		/// All other gain/loss from disposition of discontinued operations that are not otherwise classified
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20264
-		/// </remarks>
-		[JsonProperty("20264")]
-		public OtherGainLossFromDispositionOfDiscontinuedOperationsIncomeStatement OtherGainLossFromDispositionOfDiscontinuedOperations { get; set; }
 
 		/// <summary>
 		/// All other interest expense that is not otherwise classified
@@ -1347,17 +941,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherNonInterestExpenseIncomeStatement OtherNonInterestExpense { get; set; }
 
 		/// <summary>
-		/// For transportation industry, this represents revenue from operation business excluding revenue of cargo and passengers. For utility
-		/// industry, this represents any revenue generated other than electric, gas, and transportation. This item is usually available for
-		/// transportation and utility industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20268
-		/// </remarks>
-		[JsonProperty("20268")]
-		public OtherOperatingRevenueIncomeStatement OtherOperatingRevenue { get; set; }
-
-		/// <summary>
 		/// All other special charges that are not otherwise classified
 		/// </summary>
 		/// <remarks>
@@ -1367,15 +950,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherSpecialChargesIncomeStatement OtherSpecialCharges { get; set; }
 
 		/// <summary>
-		/// All other miscellaneous special charges that are not otherwise classified
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20270
-		/// </remarks>
-		[JsonProperty("20270")]
-		public MiscOtherSpecialChargesIncomeStatement MiscOtherSpecialCharges { get; set; }
-
-		/// <summary>
 		/// Any taxes that are not part of income taxes. This item is usually not available for bank and insurance industries.
 		/// </summary>
 		/// <remarks>
@@ -1383,15 +957,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20271")]
 		public OtherTaxesIncomeStatement OtherTaxes { get; set; }
-
-		/// <summary>
-		/// Fees generated from issuing or renewing an auto insurance policy. This item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20272
-		/// </remarks>
-		[JsonProperty("20272")]
-		public PolicyFeesIncomeStatement PolicyFees { get; set; }
 
 		/// <summary>
 		/// The provision in current period for future policy benefits, claims, and claims settlement, which is under reinsurance arrangements.
@@ -1435,36 +1000,6 @@ namespace QuantConnect.Data.Fundamental
 		public PolicyholderInterestIncomeStatement PolicyholderInterest { get; set; }
 
 		/// <summary>
-		/// The aggregate amount of investment income comes from policyholder account and ceded insurance agreements. This item is
-		/// usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20277
-		/// </remarks>
-		[JsonProperty("20277")]
-		public PolicyholderAndReinsurerAccountsIncomeStatement PolicyholderAndReinsurerAccounts { get; set; }
-
-		/// <summary>
-		/// This relates to any distributions and earning adjustments due to Trust Preferred Securities issued by the company and its
-		/// subsidiaries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20278
-		/// </remarks>
-		[JsonProperty("20278")]
-		public TrustPreferredSecuritiesIncomeStatement TrustPreferredSecurities { get; set; }
-
-		/// <summary>
-		/// Schedule of revenue by reporting categories or types of financial instruments, including derivatives but excluding dividends and
-		/// interests, from trading for own account by broker dealers. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20279
-		/// </remarks>
-		[JsonProperty("20279")]
-		public PrincipleTransactionRevenueIncomeStatement PrincipleTransactionRevenue { get; set; }
-
-		/// <summary>
 		/// Professional and contract service expense includes cost reimbursements for support services related to contracted projects,
 		/// outsourced management, technical and staff support. This item is usually only available for bank industry.
 		/// </summary>
@@ -1473,26 +1008,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20280")]
 		public ProfessionalExpenseAndContractServicesExpenseIncomeStatement ProfessionalExpenseAndContractServicesExpense { get; set; }
-
-		/// <summary>
-		/// Costs associated with publicizing a good or need for sale. This category includes only expenses, which are specific as promotion, or
-		/// advertising expenses.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20281
-		/// </remarks>
-		[JsonProperty("20281")]
-		public PromotionAndAdvertisingIncomeStatement PromotionAndAdvertising { get; set; }
-
-		/// <summary>
-		/// Premiums earned for all property and casualty insurance assumed from other insurers as a result of reinsurance arrangements. This
-		/// item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20282
-		/// </remarks>
-		[JsonProperty("20282")]
-		public PropertyCasualtyPremiumsIncomeStatement PropertyCasualtyPremiums { get; set; }
 
 		/// <summary>
 		/// Amount of the current period expense charged against operations, the offset which is generally to the allowance for doubtful
@@ -1507,35 +1022,6 @@ namespace QuantConnect.Data.Fundamental
 		public ProvisionForDoubtfulAccountsIncomeStatement ProvisionForDoubtfulAccounts { get; set; }
 
 		/// <summary>
-		/// The amount of current expense charged in order to prepare for the disposal of discontinued operations.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20284
-		/// </remarks>
-		[JsonProperty("20284")]
-		public ProvisionForGainLossOnDisposalIncomeStatement ProvisionForGainLossOnDisposal { get; set; }
-
-		/// <summary>
-		/// Represents the payment or accrual (net of fare revenues) to other transit agencies, public or private, for providing transportation
-		/// service and purchased transportation (PT) fare revenues. This item is usually only available for transportation industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20285
-		/// </remarks>
-		[JsonProperty("20285")]
-		public PurchasedTransportationServicesIncomeStatement PurchasedTransportationServices { get; set; }
-
-		/// <summary>
-		/// The amount by which an asset's selling price exceeds its initial purchase price is called capital gain. A realized capital gain is when
-		/// it has been sold at a profit. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20286
-		/// </remarks>
-		[JsonProperty("20286")]
-		public RealizedCapitalGainIncomeStatement RealizedCapitalGain { get; set; }
-
-		/// <summary>
 		/// Rent fees are the cost of occupying space during the accounting period. Landing fees are a change paid to an airport company for
 		/// landing at a particular airport. This item is not available for insurance industry.
 		/// </summary>
@@ -1544,17 +1030,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20287")]
 		public RentAndLandingFeesIncomeStatement RentAndLandingFees { get; set; }
-
-		/// <summary>
-		/// Expenses that may be directed toward the discovery of new facts, natural laws, or phenomena without regard to the immediate
-		/// commercial application to which the results may be put or as costs directed toward more specific goals such as product
-		/// improvement or the perfection and improvement of processes or techniques of production.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20288
-		/// </remarks>
-		[JsonProperty("20288")]
-		public ResearchExpenseIncomeStatement ResearchExpense { get; set; }
 
 		/// <summary>
 		/// Expenses are related to restructuring, merger, or acquisitions. Restructuring expenses are charges associated with the
@@ -1567,25 +1042,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20289")]
 		public RestructuringAndMergernAcquisitionIncomeStatement RestructuringAndMergernAcquisition { get; set; }
-
-		/// <summary>
-		/// Revenue is from transporting cargo and freight between locations. This item is usually only available for transportation industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20290
-		/// </remarks>
-		[JsonProperty("20290")]
-		public RevenuesCargoIncomeStatement RevenuesCargo { get; set; }
-
-		/// <summary>
-		/// A transportation carrier's fare revenue is recognized in the period from carrying passengers between destinations. This item is
-		/// usually only available for transportation industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20291
-		/// </remarks>
-		[JsonProperty("20291")]
-		public RevenuesPassengerIncomeStatement RevenuesPassenger { get; set; }
 
 		/// <summary>
 		/// All salary, wages, compensation, management fees, and employee benefit expenses.
@@ -1606,15 +1062,6 @@ namespace QuantConnect.Data.Fundamental
 		public SecuritiesActivitiesIncomeStatement SecuritiesActivities { get; set; }
 
 		/// <summary>
-		/// Expenses recognized in the period that are directly related to the selling and distribution of products or services.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20294
-		/// </remarks>
-		[JsonProperty("20294")]
-		public SellingExpenseIncomeStatement SellingExpense { get; set; }
-
-		/// <summary>
 		/// Includes any service charges on following accounts: Demand Deposit; Checking account; Savings account; Deposit in foreign
 		/// offices; ESCROW accounts; Money Market Certificates &amp; Deposit accounts, CDs (Negotiable Certificates of Deposits); NOW
 		/// Accounts (Negotiable Order of Withdrawal); IRAs (Individual Retirement Accounts). This item is usually only available for bank
@@ -1625,28 +1072,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20295")]
 		public ServiceChargeOnDepositorAccountsIncomeStatement ServiceChargeOnDepositorAccounts { get; set; }
-
-		/// <summary>
-		/// On the Income Statement; The portion of a firm that is either directly or indirectly controlled by the parent, but not consolidated
-		/// with the parent for purposes of the financial statements.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20296
-		/// </remarks>
-		[JsonProperty("20296")]
-		public ShareInNetIncomeOfUnconsolidatedEntitiesIncomeStatement ShareInNetIncomeOfUnconsolidatedEntities { get; set; }
-
-		/// <summary>
-		/// This item is typically available for bank industry. On the balance sheet, the aggregate amount of time deposits, including certificates
-		/// of deposits, individual retirement accounts and open accounts. On the income statement, it represents interest earned on deposits
-		/// that have to stay in the bank for a certain period of time before they can be collected without sustaining a penalty. Usually includes
-		/// certificates of deposits, individual retirement accounts and open accounts.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20297
-		/// </remarks>
-		[JsonProperty("20297")]
-		public TimeDepositsPlacedIncomeStatement TimeDepositsPlaced { get; set; }
 
 		/// <summary>
 		/// A broker-dealer or other financial entity may buy and sell securities exclusively for its own account, sometimes referred to as
@@ -1660,16 +1085,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20298")]
 		public TradingGainLossIncomeStatement TradingGainLoss { get; set; }
-
-		/// <summary>
-		/// Revenue from operations of public mass transportation systems (rapid transit, subway, bus, street railway, and commuter rail
-		/// services), such as fares, charter fees, advertising income, and other operations revenues.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20299
-		/// </remarks>
-		[JsonProperty("20299")]
-		public TransportationRevenueIncomeStatement TransportationRevenue { get; set; }
 
 		/// <summary>
 		/// Bank manages funds on behalf of its customers through the operation of various trust accounts. Any fees earned through managing
@@ -1694,24 +1109,6 @@ namespace QuantConnect.Data.Fundamental
 		public UnderwritingExpensesIncomeStatement UnderwritingExpenses { get; set; }
 
 		/// <summary>
-		/// Reducing the book value of an asset because it is overvalued compared to the current market value.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20302
-		/// </remarks>
-		[JsonProperty("20302")]
-		public WriteDownIncomeStatement WriteDown { get; set; }
-
-		/// <summary>
-		/// Reducing the book value of an asset because it is overvalued compared to the current market value.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20303
-		/// </remarks>
-		[JsonProperty("20303")]
-		public OtherWriteDownIncomeStatement OtherWriteDown { get; set; }
-
-		/// <summary>
 		/// A reduction in the value of an asset or earnings by the amount of an expense or loss.
 		/// </summary>
 		/// <remarks>
@@ -1721,15 +1118,6 @@ namespace QuantConnect.Data.Fundamental
 		public WriteOffIncomeStatement WriteOff { get; set; }
 
 		/// <summary>
-		/// A reduction in the value of an asset or earnings by the amount of an expense or loss.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20305
-		/// </remarks>
-		[JsonProperty("20305")]
-		public OtherWriteOffIncomeStatement OtherWriteOff { get; set; }
-
-		/// <summary>
 		/// Usually available for the banking industry.  This is Non-Interest Income that is not otherwise classified.
 		/// </summary>
 		/// <remarks>
@@ -1737,16 +1125,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20306")]
 		public OtherNonInterestIncomeIncomeStatement OtherNonInterestIncome { get; set; }
-
-		/// <summary>
-		/// Insurance premium tax is a tax paid by some insurance companies and insurance brokers that sell taxable insurance within the
-		/// united kingdom. This item is typically available for the insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20307
-		/// </remarks>
-		[JsonProperty("20307")]
-		public PremiumTaxesCreditIncomeStatement PremiumTaxesCredit { get; set; }
 
 		/// <summary>
 		/// The aggregate expense charged against earnings to allocate the cost of intangible assets (nonphysical assets not used in
@@ -1766,16 +1144,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20309")]
 		public NetIncomeFromContinuingAndDiscontinuedOperationIncomeStatement NetIncomeFromContinuingAndDiscontinuedOperation { get; set; }
-
-		/// <summary>
-		/// Any gains or loss not otherwise attributable to Continuing Operations, Discontinued Operations, Extraordinary Items, Accumulated
-		/// Effects of Accounting Changes or Income from Tax Loss Carryforward.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20310
-		/// </remarks>
-		[JsonProperty("20310")]
-		public NetIncomeFromOtherGainsLossesIncomeStatement NetIncomeFromOtherGainsLosses { get; set; }
 
 		/// <summary>
 		/// Occurs if a company has had a net loss from operations on a previous year that can be carried forward to reduce net income for tax
@@ -1826,35 +1194,15 @@ namespace QuantConnect.Data.Fundamental
 		public ReconciledDepreciationIncomeStatement ReconciledDepreciation { get; set; }
 
 		/// <summary>
-		/// This is calculation that reverses the effects of extraordinary income or charges on Net Income, by adding back (extraordinary
-		/// expense) or subtracting (extraordinary income) the value from Net Income.
+		/// This calculation represents earnings adjusted for items that are irregular or unusual in nature, and/or are non-recurring. This can be
+		/// used to fairly measure a company's profitability. This is calculated using Net Income from Continuing Operations plus/minus any tax
+		/// affected unusual Items and Goodwill Impairments/Write Offs.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20316
 		/// </remarks>
 		[JsonProperty("20316")]
 		public NormalizedIncomeIncomeStatement NormalizedIncome { get; set; }
-
-		/// <summary>
-		/// Expenses incurred in performance of activities not directly related to the main business of a firm, such as for the insurance or
-		/// maintenance of the assets.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20317
-		/// </remarks>
-		[JsonProperty("20317")]
-		public NonOperatingExpensesIncomeStatement NonOperatingExpenses { get; set; }
-
-		/// <summary>
-		/// The portion of an organization's income that is derived from activities not related to its core operations; such as as dividend income,
-		/// profits (and losses) from investments, gains (or losses) incurred due to foreign exchange, asset write-downs and other non-
-		/// operating revenues and expenses.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20318
-		/// </remarks>
-		[JsonProperty("20318")]
-		public NonOperatingIncomeIncomeStatement NonOperatingIncome { get; set; }
 
 		/// <summary>
 		/// Revenue less expenses and taxes from the entity's ongoing operations net of minority interest and before income (loss) from:
@@ -1866,15 +1214,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20331")]
 		public NetIncomeFromContinuingOperationNetMinorityInterestIncomeStatement NetIncomeFromContinuingOperationNetMinorityInterest { get; set; }
-
-		/// <summary>
-		/// Gain/Loss on the disposal of the investment.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20332
-		/// </remarks>
-		[JsonProperty("20332")]
-		public PrincipleInvestmentGainLossIncomeStatement PrincipleInvestmentGainLoss { get; set; }
 
 		/// <summary>
 		/// Any gain (loss) recognized on the sale of assets or a sale which generates profit or loss, which is a difference between sales price
@@ -1903,68 +1242,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20335")]
 		public GainonSaleofInvestmentPropertyIncomeStatement GainonSaleofInvestmentProperty { get; set; }
-
-		/// <summary>
-		/// Special income that is either infrequent or unusual.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20336
-		/// </remarks>
-		[JsonProperty("20336")]
-		public SpecialIncomeIncomeStatement SpecialIncome { get; set; }
-
-		/// <summary>
-		/// Income earned through R&amp;D department. This data point applies to the bank and insurance industry only.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20337
-		/// </remarks>
-		[JsonProperty("20337")]
-		public AcquiredinProcessRnDIncomeBanksIncomeStatement AcquiredinProcessRnDIncomeBanks { get; set; }
-
-		/// <summary>
-		/// Relates to restructuring, merger, or acquisitions for non-operating activities. A restructuring charge might be incurred in the process
-		/// of laying off employees, closing manufacturing plants, or shifting production to a new location.
-		/// Merger - When two firms, often of about the same size, agree to go forward as a single new company rather than remain
-		/// separately owned and operated.
-		/// Acquisition - When one company takes over another and clearly establishes itself as the new owner.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20338
-		/// </remarks>
-		[JsonProperty("20338")]
-		public RestructuringAndMergerAndAcquisitionIncomeIncomeStatement RestructuringAndMergerAndAcquisitionIncome { get; set; }
-
-		/// <summary>
-		/// Downward revaluation of fixed assets. Any impairment related with Fixed Assets &amp; Fixed Asset Investments comes under this
-		/// exceptional data item.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20339
-		/// </remarks>
-		[JsonProperty("20339")]
-		public ImpairmentofCapitalAssetsIncomeIncomeStatement ImpairmentofCapitalAssetsIncome { get; set; }
-
-		/// <summary>
-		/// Gain on extinguishment of debt is the accounting gain that results from a debt extinguishment. A debt shall be accounted for as
-		/// having been extinguished in a number of circumstances, including when it has been settled through repayment or replacement by
-		/// another liability. It generally results in an accounting gain or loss. Amount represents the difference between the fair value of the
-		/// payments made and the carrying amount of the debt at the time of its extinguishment.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20340
-		/// </remarks>
-		[JsonProperty("20340")]
-		public GainonExtinguishmentofDebtIncomeStatement GainonExtinguishmentofDebt { get; set; }
-
-		/// <summary>
-		/// Special expenses that are either infrequent or unusual.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20342
-		/// </remarks>
-		[JsonProperty("20342")]
-		public SpecialChargeIncomeStatement SpecialCharge { get; set; }
 
 		/// <summary>
 		/// Loss on extinguishment of debt is the accounting loss that results from a debt extinguishment. A debt shall be accounted for as
@@ -2006,106 +1283,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherunderPreferredStockDividendIncomeStatement OtherunderPreferredStockDividend { get; set; }
 
 		/// <summary>
-		/// Earnings from equity interest, accounted for in the Revenue section. An equity interest is a proportion of ownership, typically
-		/// through the investment in a business.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20348
-		/// </remarks>
-		[JsonProperty("20348")]
-		public EarningsfromEquityInterestRevenueIncomeStatement EarningsfromEquityInterestRevenue { get; set; }
-
-		/// <summary>
-		/// Gain/loss on the disposal of assets.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20349
-		/// </remarks>
-		[JsonProperty("20349")]
-		public GainLossfromDisposalSaleofAssetsIncomeStatement GainLossfromDisposalSaleofAssets { get; set; }
-
-		/// <summary>
-		/// Gain/loss on the disposal of assets in the Non-Operating section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20350
-		/// </remarks>
-		[JsonProperty("20350")]
-		public GainLossfromDisposalSaleofAssetsOtherIncomeStatement GainLossfromDisposalSaleofAssetsOther { get; set; }
-
-		/// <summary>
-		/// Gain on disposal of real estate by the bank.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20351
-		/// </remarks>
-		[JsonProperty("20351")]
-		public GainonSaleofOtherRealEstateOwnedIncomeStatement GainonSaleofOtherRealEstateOwned { get; set; }
-
-		/// <summary>
-		/// Interest income, accounted for in the Revenue section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20352
-		/// </remarks>
-		[JsonProperty("20352")]
-		public InterestIncomeRevenueIncomeStatement InterestIncomeRevenue { get; set; }
-
-		/// <summary>
-		/// Expenses incurred by the company in relation to legal matters.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20353
-		/// </remarks>
-		[JsonProperty("20353")]
-		public LitigationExpenseIncomeStatement LitigationExpense { get; set; }
-
-		/// <summary>
-		/// Adjustments to the value of investments, excluding temporary write-downs.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20354
-		/// </remarks>
-		[JsonProperty("20354")]
-		public OtherthanTemporaryImpairmentLossesInvestmentsIncomeStatement OtherthanTemporaryImpairmentLossesInvestments { get; set; }
-
-		/// <summary>
-		/// Unrealized gains/losses incurred by the company in the Non-Operating section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20355
-		/// </remarks>
-		[JsonProperty("20355")]
-		public UnrealizedGainorLossIncomeStatement UnrealizedGainorLoss { get; set; }
-
-		/// <summary>
-		/// Income/expense due to changes between periods in inventory.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20356
-		/// </remarks>
-		[JsonProperty("20356")]
-		public ChangesinInventoriesofFinishedGoodsandWorkinProgressIncomeStatement ChangesinInventoriesofFinishedGoodsandWorkinProgress { get; set; }
-
-		/// <summary>
-		/// An amount paid in respect of work performed by entity.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20357
-		/// </remarks>
-		[JsonProperty("20357")]
-		public WorkPerformedbyEntityandCapitalizedIncomeStatement WorkPerformedbyEntityandCapitalized { get; set; }
-
-		/// <summary>
-		/// Expenditures occurred on the distribution of the products.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20358
-		/// </remarks>
-		[JsonProperty("20358")]
-		public DistributionCostsIncomeStatement DistributionCosts { get; set; }
-
-		/// <summary>
 		/// Total staff cost which is paid to the employees that is not part of Selling, General, and Administration expense.
 		/// </summary>
 		/// <remarks>
@@ -2143,33 +1320,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherOperatingIncomeTotalIncomeStatement OtherOperatingIncomeTotal { get; set; }
 
 		/// <summary>
-		/// Share of profit from joint ventures and associates, accounted for in the Operating section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20364
-		/// </remarks>
-		[JsonProperty("20364")]
-		public ShareofOperatingProfitLossfromJointVenturesAndAssociatesIncomeStatement ShareofOperatingProfitLossfromJointVenturesAndAssociates { get; set; }
-
-		/// <summary>
-		/// Total value of non-recurring items in the Non-Operating section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20365
-		/// </remarks>
-		[JsonProperty("20365")]
-		public ExceptionalItemsIncomeStatement ExceptionalItems { get; set; }
-
-		/// <summary>
-		/// Income from the related companies- subsidiaries and other equity holdings, accounted for in the Non-Operating section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20366
-		/// </remarks>
-		[JsonProperty("20366")]
-		public IncomefromSharesinSubsidiariesGroupUndertakingsIncomeStatement IncomefromSharesinSubsidiariesGroupUndertakings { get; set; }
-
-		/// <summary>
 		/// Total income from the associates and joint venture via investment, accounted for in the Non-Operating section.
 		/// </summary>
 		/// <remarks>
@@ -2195,16 +1345,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20371")]
 		public GrossDividendPaymentIncomeStatement GrossDividendPayment { get; set; }
-
-		/// <summary>
-		/// Income from cash and cash equivalents, short-term securities, debt securities, mortgage and loans, derivative investments, policy
-		/// loans and other interest income.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20376
-		/// </remarks>
-		[JsonProperty("20376")]
-		public InterestandSimilarIncomeIncomeStatement InterestandSimilarIncome { get; set; }
 
 		/// <summary>
 		/// Fees and commission income earned by bank and insurance companies on the rendering services.
@@ -2234,15 +1374,6 @@ namespace QuantConnect.Data.Fundamental
 		public NetTradingIncomeIncomeStatement NetTradingIncome { get; set; }
 
 		/// <summary>
-		/// Payment of reinsurance premium.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20380
-		/// </remarks>
-		[JsonProperty("20380")]
-		public OutwardReinsurancePremiumsIncomeStatement OutwardReinsurancePremiums { get; set; }
-
-		/// <summary>
 		/// Other costs in incurred in lieu of the employees that cannot be identified by other specific items in the Staff Costs section.
 		/// </summary>
 		/// <remarks>
@@ -2250,15 +1381,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20381")]
 		public OtherStaffCostsIncomeStatement OtherStaffCosts { get; set; }
-
-		/// <summary>
-		/// Stock based expenses that occur in normal activities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20382
-		/// </remarks>
-		[JsonProperty("20382")]
-		public ShareBasedPaymentsIncomeStatement ShareBasedPayments { get; set; }
 
 		/// <summary>
 		/// Gain on disposal and change in fair value of investment properties.
@@ -2281,24 +1403,6 @@ namespace QuantConnect.Data.Fundamental
 		public AverageDilutionEarningsIncomeStatement AverageDilutionEarnings { get; set; }
 
 		/// <summary>
-		/// Gain on the redemption of the loan or repayment of the loan.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20389
-		/// </remarks>
-		[JsonProperty("20389")]
-		public GainonRedemptionandExtinguishmentofDebtIncomeStatement GainonRedemptionandExtinguishmentofDebt { get; set; }
-
-		/// <summary>
-		/// Other income of the company that cannot be identified by other specific items in the Operating Income section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20390
-		/// </remarks>
-		[JsonProperty("20390")]
-		public MiscellaneousOtherOperatingIncomeIncomeStatement MiscellaneousOtherOperatingIncome { get; set; }
-
-		/// <summary>
 		/// Gain/Loss through hedging activities.
 		/// </summary>
 		/// <remarks>
@@ -2315,15 +1419,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20392")]
 		public GainLossonDerecognitionofAvailableForSaleFinancialAssetsIncomeStatement GainLossonDerecognitionofAvailableForSaleFinancialAssets { get; set; }
-
-		/// <summary>
-		/// Gain/loss on the write-off of any non-current assets.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20393
-		/// </remarks>
-		[JsonProperty("20393")]
-		public GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotalIncomeStatement GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotal { get; set; }
 
 		/// <summary>
 		/// Negative Goodwill recognized in the Income Statement. Negative Goodwill arises where the net assets at the date of acquisition,
@@ -2353,15 +1448,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20396")]
 		public ImpairmentLossesReversalsFinancialInstrumentsNetIncomeStatement ImpairmentLossesReversalsFinancialInstrumentsNet { get; set; }
-
-		/// <summary>
-		/// Income from equity investments in the Non-Operating section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20397
-		/// </remarks>
-		[JsonProperty("20397")]
-		public ShareofProfitLossfromEquityAccountedInvestmentsIncomeStatement ShareofProfitLossfromEquityAccountedInvestments { get; set; }
 
 		/// <summary>
 		/// All reported claims arising out of incidents in that year are considered incurred grouped with claims paid out.
@@ -2400,15 +1486,6 @@ namespace QuantConnect.Data.Fundamental
 		public ChangeinInvestmentContractIncomeStatement ChangeinInvestmentContract { get; set; }
 
 		/// <summary>
-		/// Income/Expense due to changes between periods in Reinsurance Assets.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20408
-		/// </remarks>
-		[JsonProperty("20408")]
-		public ChangeinReinsuranceAssetsIncomeStatement ChangeinReinsuranceAssets { get; set; }
-
-		/// <summary>
 		/// Provision for the risk of loss of principal or loss of a financial reward stemming from a borrower's failure to repay a loan or otherwise
 		/// meet a contractual obligation. Credit risk arises whenever a borrower is expecting to use future cash flows to pay a current debt.
 		/// Investors are compensated for assuming credit risk by way of interest payments from the borrower or issuer of a debt obligation.
@@ -2437,15 +1514,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20412")]
 		public OtherNonOperatingIncomeExpensesIncomeStatement OtherNonOperatingIncomeExpenses { get; set; }
-
-		/// <summary>
-		/// Interest income earned by normal operating activities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20413
-		/// </remarks>
-		[JsonProperty("20413")]
-		public InterestIncomeOtherOperatingIncomeIncomeStatement InterestIncomeOtherOperatingIncome { get; set; }
 
 		/// <summary>
 		/// Other income of the company that cannot be identified by other specific items in the Non-Operating section.
@@ -2509,16 +1577,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20420")]
 		public NormalizedEBITDAIncomeStatement NormalizedEBITDA { get; set; }
-
-		/// <summary>
-		/// Gain or loss resulting from an appreciation or devaluation of the non-local currency from borrowings related interest income or
-		/// expenses.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 20421
-		/// </remarks>
-		[JsonProperty("20421")]
-		public GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCostsIncomeStatement GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts { get; set; }
 
 		/// <summary>
 		/// The cost to the company for granting stock options to reward employees.
@@ -2621,6 +1679,103 @@ namespace QuantConnect.Data.Fundamental
 		public ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement ReinsuranceRecoveriesofInsuranceLiabilities { get; set; }
 
 		/// <summary>
+		/// Operating profit/loss what the company reported, may be the same or not the same as Morningstar definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20435
+		/// </remarks>
+		[JsonProperty("20435")]
+		public TotalOperatingIncomeAsReportedIncomeStatement TotalOperatingIncomeAsReported { get; set; }
+
+		/// <summary>
+		/// Other General and Administrative Expenses not categorized that the company incurs that are not directly tied to a specific function
+		/// such as manufacturing, production, or sales.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20436
+		/// </remarks>
+		[JsonProperty("20436")]
+		public OtherGAIncomeStatement OtherGA { get; set; }
+
+		/// <summary>
+		/// Other costs associated with the revenue-generating activities of the company not categorized above.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20437
+		/// </remarks>
+		[JsonProperty("20437")]
+		public OtherCostofRevenueIncomeStatement OtherCostofRevenue { get; set; }
+
+		/// <summary>
+		/// Costs paid to use the facilities necessary to generate revenue during the accounting period.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20438
+		/// </remarks>
+		[JsonProperty("20438")]
+		public RentandLandingFeesCostofRevenueIncomeStatement RentandLandingFeesCostofRevenue { get; set; }
+
+		/// <summary>
+		/// Costs of depreciation and amortization on assets used for the revenue-generating activities during the accounting period
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20439
+		/// </remarks>
+		[JsonProperty("20439")]
+		public DDACostofRevenueIncomeStatement DDACostofRevenue { get; set; }
+
+		/// <summary>
+		/// The sum of all rent expenses incurred by the company for operating leases during the year, it is a supplemental value which would
+		/// be reported outside consolidated statements or consolidated statement's footnotes.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20440
+		/// </remarks>
+		[JsonProperty("20440")]
+		public RentExpenseSupplementalIncomeStatement RentExpenseSupplemental { get; set; }
+
+		/// <summary>
+		/// This calculation represents pre-tax earnings adjusted for items that are irregular or unusual in nature, and/or are non-recurring. This
+		/// can be used to fairly measure a company's profitability. This is calculated using Pre-Tax Income plus/minus any unusual Items and
+		/// Goodwill Impairments/Write Offs.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20441
+		/// </remarks>
+		[JsonProperty("20441")]
+		public NormalizedPreTaxIncomeIncomeStatement NormalizedPreTaxIncome { get; set; }
+
+		/// <summary>
+		/// The aggregate amount of research and development expenses during the year. It is a supplemental value which would be reported
+		/// outside consolidated statements.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20442
+		/// </remarks>
+		[JsonProperty("20442")]
+		public ResearchAndDevelopmentExpensesSupplementalIncomeStatement ResearchAndDevelopmentExpensesSupplemental { get; set; }
+
+		/// <summary>
+		/// The current period expense charged against earnings on tangible asset over its useful life. It is a supplemental value which would
+		/// be reported outside consolidated statements.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20443
+		/// </remarks>
+		[JsonProperty("20443")]
+		public DepreciationSupplementalIncomeStatement DepreciationSupplemental { get; set; }
+
+		/// <summary>
+		/// The current period expense charged against earnings on intangible asset over its useful life. It is a supplemental value which would
+		/// be reported outside consolidated statements.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20444
+		/// </remarks>
+		[JsonProperty("20444")]
+		public AmortizationSupplementalIncomeStatement AmortizationSupplemental { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the IncomeStatement class
 		/// </summary>
 		public IncomeStatement()
@@ -2628,7 +1783,6 @@ namespace QuantConnect.Data.Fundamental
 			Amortization = new AmortizationIncomeStatement();
 			SecuritiesAmortization = new SecuritiesAmortizationIncomeStatement();
 			CostOfRevenue = new CostOfRevenueIncomeStatement();
-			CumulativeEffectOfAccountingChange = new CumulativeEffectOfAccountingChangeIncomeStatement();
 			Depletion = new DepletionIncomeStatement();
 			Depreciation = new DepreciationIncomeStatement();
 			DepreciationAndAmortization = new DepreciationAndAmortizationIncomeStatement();
@@ -2641,12 +1795,9 @@ namespace QuantConnect.Data.Fundamental
 			GrossProfit = new GrossProfitIncomeStatement();
 			InterestExpense = new InterestExpenseIncomeStatement();
 			InterestExpenseNonOperating = new InterestExpenseNonOperatingIncomeStatement();
-			InterestExpenseOperating = new InterestExpenseOperatingIncomeStatement();
 			InterestIncomeAfterProvisionForLoanLoss = new InterestIncomeAfterProvisionForLoanLossIncomeStatement();
 			InterestIncomeNonOperating = new InterestIncomeNonOperatingIncomeStatement();
-			InterestIncomeOperating = new InterestIncomeOperatingIncomeStatement();
 			NetNonOperatingInterestIncomeExpense = new NetNonOperatingInterestIncomeExpenseIncomeStatement();
-			NetOperatingInterestIncomeExpense = new NetOperatingInterestIncomeExpenseIncomeStatement();
 			LossAdjustmentExpense = new LossAdjustmentExpenseIncomeStatement();
 			MinorityInterests = new MinorityInterestsIncomeStatement();
 			NetIncome = new NetIncomeIncomeStatement();
@@ -2673,33 +1824,17 @@ namespace QuantConnect.Data.Fundamental
 			SellingGeneralAndAdministration = new SellingGeneralAndAdministrationIncomeStatement();
 			SpecialIncomeCharges = new SpecialIncomeChargesIncomeStatement();
 			TotalExpenses = new TotalExpensesIncomeStatement();
-			AmortizationOfDeferredAcquisitionCosts = new AmortizationOfDeferredAcquisitionCostsIncomeStatement();
 			InterestIncome = new InterestIncomeIncomeStatement();
-			PropertyLiabilityInsuranceClaims = new PropertyLiabilityInsuranceClaimsIncomeStatement();
 			EBIT = new EBITIncomeStatement();
 			EBITDA = new EBITDAIncomeStatement();
 			NetIncomeContinuousOperationsNetMinorityInterest = new NetIncomeContinuousOperationsNetMinorityInterestIncomeStatement();
-			AccretionOnPreferredStock = new AccretionOnPreferredStockIncomeStatement();
-			AccruedPreferredStockDividends = new AccruedPreferredStockDividendsIncomeStatement();
-			AcquiredInProcessRnD = new AcquiredInProcessRnDIncomeStatement();
-			AcquisitionExpense = new AcquisitionExpenseIncomeStatement();
-			AdministrativeExpense = new AdministrativeExpenseIncomeStatement();
-			AgencyFees = new AgencyFeesIncomeStatement();
-			AgencyFeesAndCommissions = new AgencyFeesAndCommissionsIncomeStatement();
-			AllowancesForConstruction = new AllowancesForConstructionIncomeStatement();
-			CapitalnBusinessTaxes = new CapitalnBusinessTaxesIncomeStatement();
 			CededPremiums = new CededPremiumsIncomeStatement();
 			CommissionExpenses = new CommissionExpensesIncomeStatement();
-			CommissionRevenue = new CommissionRevenueIncomeStatement();
 			CreditCard = new CreditCardIncomeStatement();
-			DevelopmentExpense = new DevelopmentExpenseIncomeStatement();
 			DividendIncome = new DividendIncomeIncomeStatement();
-			EarningLossOfEquityInvestments = new EarningLossOfEquityInvestmentsIncomeStatement();
 			EarningsFromEquityInterest = new EarningsFromEquityInterestIncomeStatement();
-			ElectricRevenue = new ElectricRevenueIncomeStatement();
 			Equipment = new EquipmentIncomeStatement();
 			ExplorationDevelopmentAndMineralPropertyLeaseExpenses = new ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement();
-			Fees = new FeesIncomeStatement();
 			FeesAndCommissions = new FeesAndCommissionsIncomeStatement();
 			ForeignExchangeTradingGains = new ForeignExchangeTradingGainsIncomeStatement();
 			Fuel = new FuelIncomeStatement();
@@ -2707,168 +1842,91 @@ namespace QuantConnect.Data.Fundamental
 			GainOnSaleOfBusiness = new GainOnSaleOfBusinessIncomeStatement();
 			GainOnSaleOfPPE = new GainOnSaleOfPPEIncomeStatement();
 			GainOnSaleOfSecurity = new GainOnSaleOfSecurityIncomeStatement();
-			GainsLossOnDisposalOfDiscontinuedOperations = new GainsLossOnDisposalOfDiscontinuedOperationsIncomeStatement();
-			GasRevenue = new GasRevenueIncomeStatement();
-			GeneralAccountAssets = new GeneralAccountAssetsIncomeStatement();
-			GeneralExpense = new GeneralExpenseIncomeStatement();
 			GrossPremiumsWritten = new GrossPremiumsWrittenIncomeStatement();
 			ImpairmentOfCapitalAssets = new ImpairmentOfCapitalAssetsIncomeStatement();
-			OtherImpairmentOfCapitalAssets = new OtherImpairmentOfCapitalAssetsIncomeStatement();
-			IncomeFromEquityMethodInvestments = new IncomeFromEquityMethodInvestmentsIncomeStatement();
-			AcquiredInProcessRnDIncome = new AcquiredInProcessRnDIncomeIncomeStatement();
-			RestructringAndMnAIncome = new RestructringAndMnAIncomeIncomeStatement();
 			IncreaseDecreaseInNetUnearnedPremiumReserves = new IncreaseDecreaseInNetUnearnedPremiumReservesIncomeStatement();
 			InsuranceAndClaims = new InsuranceAndClaimsIncomeStatement();
-			InsuranceAndPremiums = new InsuranceAndPremiumsIncomeStatement();
-			InterestIncomeFromInterestBearingDeposits = new InterestIncomeFromInterestBearingDepositsIncomeStatement();
-			InterestExpenseForCapitalizedLeaseObligations = new InterestExpenseForCapitalizedLeaseObligationsIncomeStatement();
 			InterestExpenseForDeposit = new InterestExpenseForDepositIncomeStatement();
 			InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell = new InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement();
-			InterestExpenseForLongTermDebt = new InterestExpenseForLongTermDebtIncomeStatement();
 			InterestExpenseForLongTermDebtAndCapitalSecurities = new InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement();
 			InterestExpenseForShortTermDebt = new InterestExpenseForShortTermDebtIncomeStatement();
 			InterestIncomeFromDeposits = new InterestIncomeFromDepositsIncomeStatement();
 			InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell = new InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement();
-			InterestIncomeFromInvestmentSecurities = new InterestIncomeFromInvestmentSecuritiesIncomeStatement();
 			InterestIncomeFromLeases = new InterestIncomeFromLeasesIncomeStatement();
 			InterestIncomeFromLoans = new InterestIncomeFromLoansIncomeStatement();
 			InterestIncomeFromLoansAndLease = new InterestIncomeFromLoansAndLeaseIncomeStatement();
 			InterestIncomeFromSecurities = new InterestIncomeFromSecuritiesIncomeStatement();
-			InterestIncomeFromTradingAccountSecurities = new InterestIncomeFromTradingAccountSecuritiesIncomeStatement();
 			InvestmentBankingProfit = new InvestmentBankingProfitIncomeStatement();
-			LifeAnnuityPremiums = new LifeAnnuityPremiumsIncomeStatement();
-			LoansHeldForResell = new LoansHeldForResellIncomeStatement();
-			LossAndLossAdjustmentExpectedIncurred = new LossAndLossAdjustmentExpectedIncurredIncomeStatement();
 			MaintenanceAndRepairs = new MaintenanceAndRepairsIncomeStatement();
-			MarketingExpense = new MarketingExpenseIncomeStatement();
-			InterestIncomeFromOtherMoneyMarketInvestments = new InterestIncomeFromOtherMoneyMarketInvestmentsIncomeStatement();
 			NetForeignExchangeGainLoss = new NetForeignExchangeGainLossIncomeStatement();
 			NetOccupancyExpense = new NetOccupancyExpenseIncomeStatement();
 			NetPremiumsWritten = new NetPremiumsWrittenIncomeStatement();
 			NetRealizedGainLossOnInvestments = new NetRealizedGainLossOnInvestmentsIncomeStatement();
-			NonRecurringOperationExpense = new NonRecurringOperationExpenseIncomeStatement();
 			OccupancyAndEquipment = new OccupancyAndEquipmentIncomeStatement();
-			OperatingTaxesnLicenses = new OperatingTaxesnLicensesIncomeStatement();
 			OperationAndMaintenance = new OperationAndMaintenanceIncomeStatement();
 			OtherCustomerServices = new OtherCustomerServicesIncomeStatement();
-			OtherGainLossFromDispositionOfDiscontinuedOperations = new OtherGainLossFromDispositionOfDiscontinuedOperationsIncomeStatement();
 			OtherInterestExpense = new OtherInterestExpenseIncomeStatement();
 			OtherInterestIncome = new OtherInterestIncomeIncomeStatement();
 			OtherNonInterestExpense = new OtherNonInterestExpenseIncomeStatement();
-			OtherOperatingRevenue = new OtherOperatingRevenueIncomeStatement();
 			OtherSpecialCharges = new OtherSpecialChargesIncomeStatement();
-			MiscOtherSpecialCharges = new MiscOtherSpecialChargesIncomeStatement();
 			OtherTaxes = new OtherTaxesIncomeStatement();
-			PolicyFees = new PolicyFeesIncomeStatement();
 			PolicyholderBenefitsCeded = new PolicyholderBenefitsCededIncomeStatement();
 			PolicyholderBenefitsGross = new PolicyholderBenefitsGrossIncomeStatement();
 			PolicyholderDividends = new PolicyholderDividendsIncomeStatement();
 			PolicyholderInterest = new PolicyholderInterestIncomeStatement();
-			PolicyholderAndReinsurerAccounts = new PolicyholderAndReinsurerAccountsIncomeStatement();
-			TrustPreferredSecurities = new TrustPreferredSecuritiesIncomeStatement();
-			PrincipleTransactionRevenue = new PrincipleTransactionRevenueIncomeStatement();
 			ProfessionalExpenseAndContractServicesExpense = new ProfessionalExpenseAndContractServicesExpenseIncomeStatement();
-			PromotionAndAdvertising = new PromotionAndAdvertisingIncomeStatement();
-			PropertyCasualtyPremiums = new PropertyCasualtyPremiumsIncomeStatement();
 			ProvisionForDoubtfulAccounts = new ProvisionForDoubtfulAccountsIncomeStatement();
-			ProvisionForGainLossOnDisposal = new ProvisionForGainLossOnDisposalIncomeStatement();
-			PurchasedTransportationServices = new PurchasedTransportationServicesIncomeStatement();
-			RealizedCapitalGain = new RealizedCapitalGainIncomeStatement();
 			RentAndLandingFees = new RentAndLandingFeesIncomeStatement();
-			ResearchExpense = new ResearchExpenseIncomeStatement();
 			RestructuringAndMergernAcquisition = new RestructuringAndMergernAcquisitionIncomeStatement();
-			RevenuesCargo = new RevenuesCargoIncomeStatement();
-			RevenuesPassenger = new RevenuesPassengerIncomeStatement();
 			SalariesAndWages = new SalariesAndWagesIncomeStatement();
 			SecuritiesActivities = new SecuritiesActivitiesIncomeStatement();
-			SellingExpense = new SellingExpenseIncomeStatement();
 			ServiceChargeOnDepositorAccounts = new ServiceChargeOnDepositorAccountsIncomeStatement();
-			ShareInNetIncomeOfUnconsolidatedEntities = new ShareInNetIncomeOfUnconsolidatedEntitiesIncomeStatement();
-			TimeDepositsPlaced = new TimeDepositsPlacedIncomeStatement();
 			TradingGainLoss = new TradingGainLossIncomeStatement();
-			TransportationRevenue = new TransportationRevenueIncomeStatement();
 			TrustFeesbyCommissions = new TrustFeesbyCommissionsIncomeStatement();
 			UnderwritingExpenses = new UnderwritingExpensesIncomeStatement();
-			WriteDown = new WriteDownIncomeStatement();
-			OtherWriteDown = new OtherWriteDownIncomeStatement();
 			WriteOff = new WriteOffIncomeStatement();
-			OtherWriteOff = new OtherWriteOffIncomeStatement();
 			OtherNonInterestIncome = new OtherNonInterestIncomeIncomeStatement();
-			PremiumTaxesCredit = new PremiumTaxesCreditIncomeStatement();
 			AmortizationOfIntangibles = new AmortizationOfIntangiblesIncomeStatement();
 			NetIncomeFromContinuingAndDiscontinuedOperation = new NetIncomeFromContinuingAndDiscontinuedOperationIncomeStatement();
-			NetIncomeFromOtherGainsLosses = new NetIncomeFromOtherGainsLossesIncomeStatement();
 			NetIncomeFromTaxLossCarryforward = new NetIncomeFromTaxLossCarryforwardIncomeStatement();
 			OtherOperatingExpenses = new OtherOperatingExpensesIncomeStatement();
 			TotalMoneyMarketInvestments = new TotalMoneyMarketInvestmentsIncomeStatement();
 			ReconciledCostOfRevenue = new ReconciledCostOfRevenueIncomeStatement();
 			ReconciledDepreciation = new ReconciledDepreciationIncomeStatement();
 			NormalizedIncome = new NormalizedIncomeIncomeStatement();
-			NonOperatingExpenses = new NonOperatingExpensesIncomeStatement();
-			NonOperatingIncome = new NonOperatingIncomeIncomeStatement();
 			NetIncomeFromContinuingOperationNetMinorityInterest = new NetIncomeFromContinuingOperationNetMinorityInterestIncomeStatement();
-			PrincipleInvestmentGainLoss = new PrincipleInvestmentGainLossIncomeStatement();
 			GainLossonSaleofAssets = new GainLossonSaleofAssetsIncomeStatement();
 			GainonSaleofLoans = new GainonSaleofLoansIncomeStatement();
 			GainonSaleofInvestmentProperty = new GainonSaleofInvestmentPropertyIncomeStatement();
-			SpecialIncome = new SpecialIncomeIncomeStatement();
-			AcquiredinProcessRnDIncomeBanks = new AcquiredinProcessRnDIncomeBanksIncomeStatement();
-			RestructuringAndMergerAndAcquisitionIncome = new RestructuringAndMergerAndAcquisitionIncomeIncomeStatement();
-			ImpairmentofCapitalAssetsIncome = new ImpairmentofCapitalAssetsIncomeIncomeStatement();
-			GainonExtinguishmentofDebt = new GainonExtinguishmentofDebtIncomeStatement();
-			SpecialCharge = new SpecialChargeIncomeStatement();
 			LossonExtinguishmentofDebt = new LossonExtinguishmentofDebtIncomeStatement();
 			EarningsfromEquityInterestNetOfTax = new EarningsfromEquityInterestNetOfTaxIncomeStatement();
 			NetIncomeIncludingNoncontrollingInterests = new NetIncomeIncludingNoncontrollingInterestsIncomeStatement();
 			OtherunderPreferredStockDividend = new OtherunderPreferredStockDividendIncomeStatement();
-			EarningsfromEquityInterestRevenue = new EarningsfromEquityInterestRevenueIncomeStatement();
-			GainLossfromDisposalSaleofAssets = new GainLossfromDisposalSaleofAssetsIncomeStatement();
-			GainLossfromDisposalSaleofAssetsOther = new GainLossfromDisposalSaleofAssetsOtherIncomeStatement();
-			GainonSaleofOtherRealEstateOwned = new GainonSaleofOtherRealEstateOwnedIncomeStatement();
-			InterestIncomeRevenue = new InterestIncomeRevenueIncomeStatement();
-			LitigationExpense = new LitigationExpenseIncomeStatement();
-			OtherthanTemporaryImpairmentLossesInvestments = new OtherthanTemporaryImpairmentLossesInvestmentsIncomeStatement();
-			UnrealizedGainorLoss = new UnrealizedGainorLossIncomeStatement();
-			ChangesinInventoriesofFinishedGoodsandWorkinProgress = new ChangesinInventoriesofFinishedGoodsandWorkinProgressIncomeStatement();
-			WorkPerformedbyEntityandCapitalized = new WorkPerformedbyEntityandCapitalizedIncomeStatement();
-			DistributionCosts = new DistributionCostsIncomeStatement();
 			StaffCosts = new StaffCostsIncomeStatement();
 			SocialSecurityCosts = new SocialSecurityCostsIncomeStatement();
 			PensionCosts = new PensionCostsIncomeStatement();
 			OtherOperatingIncomeTotal = new OtherOperatingIncomeTotalIncomeStatement();
-			ShareofOperatingProfitLossfromJointVenturesAndAssociates = new ShareofOperatingProfitLossfromJointVenturesAndAssociatesIncomeStatement();
-			ExceptionalItems = new ExceptionalItemsIncomeStatement();
-			IncomefromSharesinSubsidiariesGroupUndertakings = new IncomefromSharesinSubsidiariesGroupUndertakingsIncomeStatement();
 			IncomefromAssociatesandOtherParticipatingInterests = new IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement();
 			TotalOtherFinanceCost = new TotalOtherFinanceCostIncomeStatement();
 			GrossDividendPayment = new GrossDividendPaymentIncomeStatement();
-			InterestandSimilarIncome = new InterestandSimilarIncomeIncomeStatement();
 			FeesandCommissionIncome = new FeesandCommissionIncomeIncomeStatement();
 			FeesandCommissionExpense = new FeesandCommissionExpenseIncomeStatement();
 			NetTradingIncome = new NetTradingIncomeIncomeStatement();
-			OutwardReinsurancePremiums = new OutwardReinsurancePremiumsIncomeStatement();
 			OtherStaffCosts = new OtherStaffCostsIncomeStatement();
-			ShareBasedPayments = new ShareBasedPaymentsIncomeStatement();
 			GainonInvestmentProperties = new GainonInvestmentPropertiesIncomeStatement();
 			AverageDilutionEarnings = new AverageDilutionEarningsIncomeStatement();
-			GainonRedemptionandExtinguishmentofDebt = new GainonRedemptionandExtinguishmentofDebtIncomeStatement();
-			MiscellaneousOtherOperatingIncome = new MiscellaneousOtherOperatingIncomeIncomeStatement();
 			GainLossonFinancialInstrumentsDesignatedasCashFlowHedges = new GainLossonFinancialInstrumentsDesignatedasCashFlowHedgesIncomeStatement();
 			GainLossonDerecognitionofAvailableForSaleFinancialAssets = new GainLossonDerecognitionofAvailableForSaleFinancialAssetsIncomeStatement();
-			GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotal = new GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotalIncomeStatement();
 			NegativeGoodwillImmediatelyRecognized = new NegativeGoodwillImmediatelyRecognizedIncomeStatement();
 			GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotal = new GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotalIncomeStatement();
 			ImpairmentLossesReversalsFinancialInstrumentsNet = new ImpairmentLossesReversalsFinancialInstrumentsNetIncomeStatement();
-			ShareofProfitLossfromEquityAccountedInvestments = new ShareofProfitLossfromEquityAccountedInvestmentsIncomeStatement();
 			ClaimsandPaidIncurred = new ClaimsandPaidIncurredIncomeStatement();
 			ReinsuranceRecoveriesClaimsandBenefits = new ReinsuranceRecoveriesClaimsandBenefitsIncomeStatement();
 			ChangeinInsuranceLiabilitiesNetofReinsurance = new ChangeinInsuranceLiabilitiesNetofReinsuranceIncomeStatement();
 			ChangeinInvestmentContract = new ChangeinInvestmentContractIncomeStatement();
-			ChangeinReinsuranceAssets = new ChangeinReinsuranceAssetsIncomeStatement();
 			CreditRiskProvisions = new CreditRiskProvisionsIncomeStatement();
 			WagesandSalaries = new WagesandSalariesIncomeStatement();
 			OtherNonOperatingIncomeExpenses = new OtherNonOperatingIncomeExpensesIncomeStatement();
-			InterestIncomeOtherOperatingIncome = new InterestIncomeOtherOperatingIncomeIncomeStatement();
 			OtherNonOperatingIncome = new OtherNonOperatingIncomeIncomeStatement();
 			OtherNonOperatingExpenses = new OtherNonOperatingExpensesIncomeStatement();
 			TotalUnusualItems = new TotalUnusualItemsIncomeStatement();
@@ -2876,7 +1934,6 @@ namespace QuantConnect.Data.Fundamental
 			TaxRateForCalcs = new TaxRateForCalcsIncomeStatement();
 			TaxEffectOfUnusualItems = new TaxEffectOfUnusualItemsIncomeStatement();
 			NormalizedEBITDA = new NormalizedEBITDAIncomeStatement();
-			GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts = new GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCostsIncomeStatement();
 			StockBasedCompensation = new StockBasedCompensationIncomeStatement();
 			DilutedNIAvailtoComStockholders = new DilutedNIAvailtoComStockholdersIncomeStatement();
 			InvestmentContractLiabilitiesIncurred = new InvestmentContractLiabilitiesIncurredIncomeStatement();
@@ -2887,6 +1944,16 @@ namespace QuantConnect.Data.Fundamental
 			ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare = new ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement();
 			ClaimsandChangeinInsuranceLiabilities = new ClaimsandChangeinInsuranceLiabilitiesIncomeStatement();
 			ReinsuranceRecoveriesofInsuranceLiabilities = new ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement();
+			TotalOperatingIncomeAsReported = new TotalOperatingIncomeAsReportedIncomeStatement();
+			OtherGA = new OtherGAIncomeStatement();
+			OtherCostofRevenue = new OtherCostofRevenueIncomeStatement();
+			RentandLandingFeesCostofRevenue = new RentandLandingFeesCostofRevenueIncomeStatement();
+			DDACostofRevenue = new DDACostofRevenueIncomeStatement();
+			RentExpenseSupplemental = new RentExpenseSupplementalIncomeStatement();
+			NormalizedPreTaxIncome = new NormalizedPreTaxIncomeIncomeStatement();
+			ResearchAndDevelopmentExpensesSupplemental = new ResearchAndDevelopmentExpensesSupplementalIncomeStatement();
+			DepreciationSupplemental = new DepreciationSupplementalIncomeStatement();
+			AmortizationSupplemental = new AmortizationSupplementalIncomeStatement();
 		}
 
 		/// <summary>
@@ -2901,7 +1968,6 @@ namespace QuantConnect.Data.Fundamental
 			if (Amortization != null) Amortization.UpdateValues(previous.Amortization);
 			if (SecuritiesAmortization != null) SecuritiesAmortization.UpdateValues(previous.SecuritiesAmortization);
 			if (CostOfRevenue != null) CostOfRevenue.UpdateValues(previous.CostOfRevenue);
-			if (CumulativeEffectOfAccountingChange != null) CumulativeEffectOfAccountingChange.UpdateValues(previous.CumulativeEffectOfAccountingChange);
 			if (Depletion != null) Depletion.UpdateValues(previous.Depletion);
 			if (Depreciation != null) Depreciation.UpdateValues(previous.Depreciation);
 			if (DepreciationAndAmortization != null) DepreciationAndAmortization.UpdateValues(previous.DepreciationAndAmortization);
@@ -2914,12 +1980,9 @@ namespace QuantConnect.Data.Fundamental
 			if (GrossProfit != null) GrossProfit.UpdateValues(previous.GrossProfit);
 			if (InterestExpense != null) InterestExpense.UpdateValues(previous.InterestExpense);
 			if (InterestExpenseNonOperating != null) InterestExpenseNonOperating.UpdateValues(previous.InterestExpenseNonOperating);
-			if (InterestExpenseOperating != null) InterestExpenseOperating.UpdateValues(previous.InterestExpenseOperating);
 			if (InterestIncomeAfterProvisionForLoanLoss != null) InterestIncomeAfterProvisionForLoanLoss.UpdateValues(previous.InterestIncomeAfterProvisionForLoanLoss);
 			if (InterestIncomeNonOperating != null) InterestIncomeNonOperating.UpdateValues(previous.InterestIncomeNonOperating);
-			if (InterestIncomeOperating != null) InterestIncomeOperating.UpdateValues(previous.InterestIncomeOperating);
 			if (NetNonOperatingInterestIncomeExpense != null) NetNonOperatingInterestIncomeExpense.UpdateValues(previous.NetNonOperatingInterestIncomeExpense);
-			if (NetOperatingInterestIncomeExpense != null) NetOperatingInterestIncomeExpense.UpdateValues(previous.NetOperatingInterestIncomeExpense);
 			if (LossAdjustmentExpense != null) LossAdjustmentExpense.UpdateValues(previous.LossAdjustmentExpense);
 			if (MinorityInterests != null) MinorityInterests.UpdateValues(previous.MinorityInterests);
 			if (NetIncome != null) NetIncome.UpdateValues(previous.NetIncome);
@@ -2946,33 +2009,17 @@ namespace QuantConnect.Data.Fundamental
 			if (SellingGeneralAndAdministration != null) SellingGeneralAndAdministration.UpdateValues(previous.SellingGeneralAndAdministration);
 			if (SpecialIncomeCharges != null) SpecialIncomeCharges.UpdateValues(previous.SpecialIncomeCharges);
 			if (TotalExpenses != null) TotalExpenses.UpdateValues(previous.TotalExpenses);
-			if (AmortizationOfDeferredAcquisitionCosts != null) AmortizationOfDeferredAcquisitionCosts.UpdateValues(previous.AmortizationOfDeferredAcquisitionCosts);
 			if (InterestIncome != null) InterestIncome.UpdateValues(previous.InterestIncome);
-			if (PropertyLiabilityInsuranceClaims != null) PropertyLiabilityInsuranceClaims.UpdateValues(previous.PropertyLiabilityInsuranceClaims);
 			if (EBIT != null) EBIT.UpdateValues(previous.EBIT);
 			if (EBITDA != null) EBITDA.UpdateValues(previous.EBITDA);
 			if (NetIncomeContinuousOperationsNetMinorityInterest != null) NetIncomeContinuousOperationsNetMinorityInterest.UpdateValues(previous.NetIncomeContinuousOperationsNetMinorityInterest);
-			if (AccretionOnPreferredStock != null) AccretionOnPreferredStock.UpdateValues(previous.AccretionOnPreferredStock);
-			if (AccruedPreferredStockDividends != null) AccruedPreferredStockDividends.UpdateValues(previous.AccruedPreferredStockDividends);
-			if (AcquiredInProcessRnD != null) AcquiredInProcessRnD.UpdateValues(previous.AcquiredInProcessRnD);
-			if (AcquisitionExpense != null) AcquisitionExpense.UpdateValues(previous.AcquisitionExpense);
-			if (AdministrativeExpense != null) AdministrativeExpense.UpdateValues(previous.AdministrativeExpense);
-			if (AgencyFees != null) AgencyFees.UpdateValues(previous.AgencyFees);
-			if (AgencyFeesAndCommissions != null) AgencyFeesAndCommissions.UpdateValues(previous.AgencyFeesAndCommissions);
-			if (AllowancesForConstruction != null) AllowancesForConstruction.UpdateValues(previous.AllowancesForConstruction);
-			if (CapitalnBusinessTaxes != null) CapitalnBusinessTaxes.UpdateValues(previous.CapitalnBusinessTaxes);
 			if (CededPremiums != null) CededPremiums.UpdateValues(previous.CededPremiums);
 			if (CommissionExpenses != null) CommissionExpenses.UpdateValues(previous.CommissionExpenses);
-			if (CommissionRevenue != null) CommissionRevenue.UpdateValues(previous.CommissionRevenue);
 			if (CreditCard != null) CreditCard.UpdateValues(previous.CreditCard);
-			if (DevelopmentExpense != null) DevelopmentExpense.UpdateValues(previous.DevelopmentExpense);
 			if (DividendIncome != null) DividendIncome.UpdateValues(previous.DividendIncome);
-			if (EarningLossOfEquityInvestments != null) EarningLossOfEquityInvestments.UpdateValues(previous.EarningLossOfEquityInvestments);
 			if (EarningsFromEquityInterest != null) EarningsFromEquityInterest.UpdateValues(previous.EarningsFromEquityInterest);
-			if (ElectricRevenue != null) ElectricRevenue.UpdateValues(previous.ElectricRevenue);
 			if (Equipment != null) Equipment.UpdateValues(previous.Equipment);
 			if (ExplorationDevelopmentAndMineralPropertyLeaseExpenses != null) ExplorationDevelopmentAndMineralPropertyLeaseExpenses.UpdateValues(previous.ExplorationDevelopmentAndMineralPropertyLeaseExpenses);
-			if (Fees != null) Fees.UpdateValues(previous.Fees);
 			if (FeesAndCommissions != null) FeesAndCommissions.UpdateValues(previous.FeesAndCommissions);
 			if (ForeignExchangeTradingGains != null) ForeignExchangeTradingGains.UpdateValues(previous.ForeignExchangeTradingGains);
 			if (Fuel != null) Fuel.UpdateValues(previous.Fuel);
@@ -2980,168 +2027,91 @@ namespace QuantConnect.Data.Fundamental
 			if (GainOnSaleOfBusiness != null) GainOnSaleOfBusiness.UpdateValues(previous.GainOnSaleOfBusiness);
 			if (GainOnSaleOfPPE != null) GainOnSaleOfPPE.UpdateValues(previous.GainOnSaleOfPPE);
 			if (GainOnSaleOfSecurity != null) GainOnSaleOfSecurity.UpdateValues(previous.GainOnSaleOfSecurity);
-			if (GainsLossOnDisposalOfDiscontinuedOperations != null) GainsLossOnDisposalOfDiscontinuedOperations.UpdateValues(previous.GainsLossOnDisposalOfDiscontinuedOperations);
-			if (GasRevenue != null) GasRevenue.UpdateValues(previous.GasRevenue);
-			if (GeneralAccountAssets != null) GeneralAccountAssets.UpdateValues(previous.GeneralAccountAssets);
-			if (GeneralExpense != null) GeneralExpense.UpdateValues(previous.GeneralExpense);
 			if (GrossPremiumsWritten != null) GrossPremiumsWritten.UpdateValues(previous.GrossPremiumsWritten);
 			if (ImpairmentOfCapitalAssets != null) ImpairmentOfCapitalAssets.UpdateValues(previous.ImpairmentOfCapitalAssets);
-			if (OtherImpairmentOfCapitalAssets != null) OtherImpairmentOfCapitalAssets.UpdateValues(previous.OtherImpairmentOfCapitalAssets);
-			if (IncomeFromEquityMethodInvestments != null) IncomeFromEquityMethodInvestments.UpdateValues(previous.IncomeFromEquityMethodInvestments);
-			if (AcquiredInProcessRnDIncome != null) AcquiredInProcessRnDIncome.UpdateValues(previous.AcquiredInProcessRnDIncome);
-			if (RestructringAndMnAIncome != null) RestructringAndMnAIncome.UpdateValues(previous.RestructringAndMnAIncome);
 			if (IncreaseDecreaseInNetUnearnedPremiumReserves != null) IncreaseDecreaseInNetUnearnedPremiumReserves.UpdateValues(previous.IncreaseDecreaseInNetUnearnedPremiumReserves);
 			if (InsuranceAndClaims != null) InsuranceAndClaims.UpdateValues(previous.InsuranceAndClaims);
-			if (InsuranceAndPremiums != null) InsuranceAndPremiums.UpdateValues(previous.InsuranceAndPremiums);
-			if (InterestIncomeFromInterestBearingDeposits != null) InterestIncomeFromInterestBearingDeposits.UpdateValues(previous.InterestIncomeFromInterestBearingDeposits);
-			if (InterestExpenseForCapitalizedLeaseObligations != null) InterestExpenseForCapitalizedLeaseObligations.UpdateValues(previous.InterestExpenseForCapitalizedLeaseObligations);
 			if (InterestExpenseForDeposit != null) InterestExpenseForDeposit.UpdateValues(previous.InterestExpenseForDeposit);
 			if (InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell != null) InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell.UpdateValues(previous.InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell);
-			if (InterestExpenseForLongTermDebt != null) InterestExpenseForLongTermDebt.UpdateValues(previous.InterestExpenseForLongTermDebt);
 			if (InterestExpenseForLongTermDebtAndCapitalSecurities != null) InterestExpenseForLongTermDebtAndCapitalSecurities.UpdateValues(previous.InterestExpenseForLongTermDebtAndCapitalSecurities);
 			if (InterestExpenseForShortTermDebt != null) InterestExpenseForShortTermDebt.UpdateValues(previous.InterestExpenseForShortTermDebt);
 			if (InterestIncomeFromDeposits != null) InterestIncomeFromDeposits.UpdateValues(previous.InterestIncomeFromDeposits);
 			if (InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell != null) InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell.UpdateValues(previous.InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell);
-			if (InterestIncomeFromInvestmentSecurities != null) InterestIncomeFromInvestmentSecurities.UpdateValues(previous.InterestIncomeFromInvestmentSecurities);
 			if (InterestIncomeFromLeases != null) InterestIncomeFromLeases.UpdateValues(previous.InterestIncomeFromLeases);
 			if (InterestIncomeFromLoans != null) InterestIncomeFromLoans.UpdateValues(previous.InterestIncomeFromLoans);
 			if (InterestIncomeFromLoansAndLease != null) InterestIncomeFromLoansAndLease.UpdateValues(previous.InterestIncomeFromLoansAndLease);
 			if (InterestIncomeFromSecurities != null) InterestIncomeFromSecurities.UpdateValues(previous.InterestIncomeFromSecurities);
-			if (InterestIncomeFromTradingAccountSecurities != null) InterestIncomeFromTradingAccountSecurities.UpdateValues(previous.InterestIncomeFromTradingAccountSecurities);
 			if (InvestmentBankingProfit != null) InvestmentBankingProfit.UpdateValues(previous.InvestmentBankingProfit);
-			if (LifeAnnuityPremiums != null) LifeAnnuityPremiums.UpdateValues(previous.LifeAnnuityPremiums);
-			if (LoansHeldForResell != null) LoansHeldForResell.UpdateValues(previous.LoansHeldForResell);
-			if (LossAndLossAdjustmentExpectedIncurred != null) LossAndLossAdjustmentExpectedIncurred.UpdateValues(previous.LossAndLossAdjustmentExpectedIncurred);
 			if (MaintenanceAndRepairs != null) MaintenanceAndRepairs.UpdateValues(previous.MaintenanceAndRepairs);
-			if (MarketingExpense != null) MarketingExpense.UpdateValues(previous.MarketingExpense);
-			if (InterestIncomeFromOtherMoneyMarketInvestments != null) InterestIncomeFromOtherMoneyMarketInvestments.UpdateValues(previous.InterestIncomeFromOtherMoneyMarketInvestments);
 			if (NetForeignExchangeGainLoss != null) NetForeignExchangeGainLoss.UpdateValues(previous.NetForeignExchangeGainLoss);
 			if (NetOccupancyExpense != null) NetOccupancyExpense.UpdateValues(previous.NetOccupancyExpense);
 			if (NetPremiumsWritten != null) NetPremiumsWritten.UpdateValues(previous.NetPremiumsWritten);
 			if (NetRealizedGainLossOnInvestments != null) NetRealizedGainLossOnInvestments.UpdateValues(previous.NetRealizedGainLossOnInvestments);
-			if (NonRecurringOperationExpense != null) NonRecurringOperationExpense.UpdateValues(previous.NonRecurringOperationExpense);
 			if (OccupancyAndEquipment != null) OccupancyAndEquipment.UpdateValues(previous.OccupancyAndEquipment);
-			if (OperatingTaxesnLicenses != null) OperatingTaxesnLicenses.UpdateValues(previous.OperatingTaxesnLicenses);
 			if (OperationAndMaintenance != null) OperationAndMaintenance.UpdateValues(previous.OperationAndMaintenance);
 			if (OtherCustomerServices != null) OtherCustomerServices.UpdateValues(previous.OtherCustomerServices);
-			if (OtherGainLossFromDispositionOfDiscontinuedOperations != null) OtherGainLossFromDispositionOfDiscontinuedOperations.UpdateValues(previous.OtherGainLossFromDispositionOfDiscontinuedOperations);
 			if (OtherInterestExpense != null) OtherInterestExpense.UpdateValues(previous.OtherInterestExpense);
 			if (OtherInterestIncome != null) OtherInterestIncome.UpdateValues(previous.OtherInterestIncome);
 			if (OtherNonInterestExpense != null) OtherNonInterestExpense.UpdateValues(previous.OtherNonInterestExpense);
-			if (OtherOperatingRevenue != null) OtherOperatingRevenue.UpdateValues(previous.OtherOperatingRevenue);
 			if (OtherSpecialCharges != null) OtherSpecialCharges.UpdateValues(previous.OtherSpecialCharges);
-			if (MiscOtherSpecialCharges != null) MiscOtherSpecialCharges.UpdateValues(previous.MiscOtherSpecialCharges);
 			if (OtherTaxes != null) OtherTaxes.UpdateValues(previous.OtherTaxes);
-			if (PolicyFees != null) PolicyFees.UpdateValues(previous.PolicyFees);
 			if (PolicyholderBenefitsCeded != null) PolicyholderBenefitsCeded.UpdateValues(previous.PolicyholderBenefitsCeded);
 			if (PolicyholderBenefitsGross != null) PolicyholderBenefitsGross.UpdateValues(previous.PolicyholderBenefitsGross);
 			if (PolicyholderDividends != null) PolicyholderDividends.UpdateValues(previous.PolicyholderDividends);
 			if (PolicyholderInterest != null) PolicyholderInterest.UpdateValues(previous.PolicyholderInterest);
-			if (PolicyholderAndReinsurerAccounts != null) PolicyholderAndReinsurerAccounts.UpdateValues(previous.PolicyholderAndReinsurerAccounts);
-			if (TrustPreferredSecurities != null) TrustPreferredSecurities.UpdateValues(previous.TrustPreferredSecurities);
-			if (PrincipleTransactionRevenue != null) PrincipleTransactionRevenue.UpdateValues(previous.PrincipleTransactionRevenue);
 			if (ProfessionalExpenseAndContractServicesExpense != null) ProfessionalExpenseAndContractServicesExpense.UpdateValues(previous.ProfessionalExpenseAndContractServicesExpense);
-			if (PromotionAndAdvertising != null) PromotionAndAdvertising.UpdateValues(previous.PromotionAndAdvertising);
-			if (PropertyCasualtyPremiums != null) PropertyCasualtyPremiums.UpdateValues(previous.PropertyCasualtyPremiums);
 			if (ProvisionForDoubtfulAccounts != null) ProvisionForDoubtfulAccounts.UpdateValues(previous.ProvisionForDoubtfulAccounts);
-			if (ProvisionForGainLossOnDisposal != null) ProvisionForGainLossOnDisposal.UpdateValues(previous.ProvisionForGainLossOnDisposal);
-			if (PurchasedTransportationServices != null) PurchasedTransportationServices.UpdateValues(previous.PurchasedTransportationServices);
-			if (RealizedCapitalGain != null) RealizedCapitalGain.UpdateValues(previous.RealizedCapitalGain);
 			if (RentAndLandingFees != null) RentAndLandingFees.UpdateValues(previous.RentAndLandingFees);
-			if (ResearchExpense != null) ResearchExpense.UpdateValues(previous.ResearchExpense);
 			if (RestructuringAndMergernAcquisition != null) RestructuringAndMergernAcquisition.UpdateValues(previous.RestructuringAndMergernAcquisition);
-			if (RevenuesCargo != null) RevenuesCargo.UpdateValues(previous.RevenuesCargo);
-			if (RevenuesPassenger != null) RevenuesPassenger.UpdateValues(previous.RevenuesPassenger);
 			if (SalariesAndWages != null) SalariesAndWages.UpdateValues(previous.SalariesAndWages);
 			if (SecuritiesActivities != null) SecuritiesActivities.UpdateValues(previous.SecuritiesActivities);
-			if (SellingExpense != null) SellingExpense.UpdateValues(previous.SellingExpense);
 			if (ServiceChargeOnDepositorAccounts != null) ServiceChargeOnDepositorAccounts.UpdateValues(previous.ServiceChargeOnDepositorAccounts);
-			if (ShareInNetIncomeOfUnconsolidatedEntities != null) ShareInNetIncomeOfUnconsolidatedEntities.UpdateValues(previous.ShareInNetIncomeOfUnconsolidatedEntities);
-			if (TimeDepositsPlaced != null) TimeDepositsPlaced.UpdateValues(previous.TimeDepositsPlaced);
 			if (TradingGainLoss != null) TradingGainLoss.UpdateValues(previous.TradingGainLoss);
-			if (TransportationRevenue != null) TransportationRevenue.UpdateValues(previous.TransportationRevenue);
 			if (TrustFeesbyCommissions != null) TrustFeesbyCommissions.UpdateValues(previous.TrustFeesbyCommissions);
 			if (UnderwritingExpenses != null) UnderwritingExpenses.UpdateValues(previous.UnderwritingExpenses);
-			if (WriteDown != null) WriteDown.UpdateValues(previous.WriteDown);
-			if (OtherWriteDown != null) OtherWriteDown.UpdateValues(previous.OtherWriteDown);
 			if (WriteOff != null) WriteOff.UpdateValues(previous.WriteOff);
-			if (OtherWriteOff != null) OtherWriteOff.UpdateValues(previous.OtherWriteOff);
 			if (OtherNonInterestIncome != null) OtherNonInterestIncome.UpdateValues(previous.OtherNonInterestIncome);
-			if (PremiumTaxesCredit != null) PremiumTaxesCredit.UpdateValues(previous.PremiumTaxesCredit);
 			if (AmortizationOfIntangibles != null) AmortizationOfIntangibles.UpdateValues(previous.AmortizationOfIntangibles);
 			if (NetIncomeFromContinuingAndDiscontinuedOperation != null) NetIncomeFromContinuingAndDiscontinuedOperation.UpdateValues(previous.NetIncomeFromContinuingAndDiscontinuedOperation);
-			if (NetIncomeFromOtherGainsLosses != null) NetIncomeFromOtherGainsLosses.UpdateValues(previous.NetIncomeFromOtherGainsLosses);
 			if (NetIncomeFromTaxLossCarryforward != null) NetIncomeFromTaxLossCarryforward.UpdateValues(previous.NetIncomeFromTaxLossCarryforward);
 			if (OtherOperatingExpenses != null) OtherOperatingExpenses.UpdateValues(previous.OtherOperatingExpenses);
 			if (TotalMoneyMarketInvestments != null) TotalMoneyMarketInvestments.UpdateValues(previous.TotalMoneyMarketInvestments);
 			if (ReconciledCostOfRevenue != null) ReconciledCostOfRevenue.UpdateValues(previous.ReconciledCostOfRevenue);
 			if (ReconciledDepreciation != null) ReconciledDepreciation.UpdateValues(previous.ReconciledDepreciation);
 			if (NormalizedIncome != null) NormalizedIncome.UpdateValues(previous.NormalizedIncome);
-			if (NonOperatingExpenses != null) NonOperatingExpenses.UpdateValues(previous.NonOperatingExpenses);
-			if (NonOperatingIncome != null) NonOperatingIncome.UpdateValues(previous.NonOperatingIncome);
 			if (NetIncomeFromContinuingOperationNetMinorityInterest != null) NetIncomeFromContinuingOperationNetMinorityInterest.UpdateValues(previous.NetIncomeFromContinuingOperationNetMinorityInterest);
-			if (PrincipleInvestmentGainLoss != null) PrincipleInvestmentGainLoss.UpdateValues(previous.PrincipleInvestmentGainLoss);
 			if (GainLossonSaleofAssets != null) GainLossonSaleofAssets.UpdateValues(previous.GainLossonSaleofAssets);
 			if (GainonSaleofLoans != null) GainonSaleofLoans.UpdateValues(previous.GainonSaleofLoans);
 			if (GainonSaleofInvestmentProperty != null) GainonSaleofInvestmentProperty.UpdateValues(previous.GainonSaleofInvestmentProperty);
-			if (SpecialIncome != null) SpecialIncome.UpdateValues(previous.SpecialIncome);
-			if (AcquiredinProcessRnDIncomeBanks != null) AcquiredinProcessRnDIncomeBanks.UpdateValues(previous.AcquiredinProcessRnDIncomeBanks);
-			if (RestructuringAndMergerAndAcquisitionIncome != null) RestructuringAndMergerAndAcquisitionIncome.UpdateValues(previous.RestructuringAndMergerAndAcquisitionIncome);
-			if (ImpairmentofCapitalAssetsIncome != null) ImpairmentofCapitalAssetsIncome.UpdateValues(previous.ImpairmentofCapitalAssetsIncome);
-			if (GainonExtinguishmentofDebt != null) GainonExtinguishmentofDebt.UpdateValues(previous.GainonExtinguishmentofDebt);
-			if (SpecialCharge != null) SpecialCharge.UpdateValues(previous.SpecialCharge);
 			if (LossonExtinguishmentofDebt != null) LossonExtinguishmentofDebt.UpdateValues(previous.LossonExtinguishmentofDebt);
 			if (EarningsfromEquityInterestNetOfTax != null) EarningsfromEquityInterestNetOfTax.UpdateValues(previous.EarningsfromEquityInterestNetOfTax);
 			if (NetIncomeIncludingNoncontrollingInterests != null) NetIncomeIncludingNoncontrollingInterests.UpdateValues(previous.NetIncomeIncludingNoncontrollingInterests);
 			if (OtherunderPreferredStockDividend != null) OtherunderPreferredStockDividend.UpdateValues(previous.OtherunderPreferredStockDividend);
-			if (EarningsfromEquityInterestRevenue != null) EarningsfromEquityInterestRevenue.UpdateValues(previous.EarningsfromEquityInterestRevenue);
-			if (GainLossfromDisposalSaleofAssets != null) GainLossfromDisposalSaleofAssets.UpdateValues(previous.GainLossfromDisposalSaleofAssets);
-			if (GainLossfromDisposalSaleofAssetsOther != null) GainLossfromDisposalSaleofAssetsOther.UpdateValues(previous.GainLossfromDisposalSaleofAssetsOther);
-			if (GainonSaleofOtherRealEstateOwned != null) GainonSaleofOtherRealEstateOwned.UpdateValues(previous.GainonSaleofOtherRealEstateOwned);
-			if (InterestIncomeRevenue != null) InterestIncomeRevenue.UpdateValues(previous.InterestIncomeRevenue);
-			if (LitigationExpense != null) LitigationExpense.UpdateValues(previous.LitigationExpense);
-			if (OtherthanTemporaryImpairmentLossesInvestments != null) OtherthanTemporaryImpairmentLossesInvestments.UpdateValues(previous.OtherthanTemporaryImpairmentLossesInvestments);
-			if (UnrealizedGainorLoss != null) UnrealizedGainorLoss.UpdateValues(previous.UnrealizedGainorLoss);
-			if (ChangesinInventoriesofFinishedGoodsandWorkinProgress != null) ChangesinInventoriesofFinishedGoodsandWorkinProgress.UpdateValues(previous.ChangesinInventoriesofFinishedGoodsandWorkinProgress);
-			if (WorkPerformedbyEntityandCapitalized != null) WorkPerformedbyEntityandCapitalized.UpdateValues(previous.WorkPerformedbyEntityandCapitalized);
-			if (DistributionCosts != null) DistributionCosts.UpdateValues(previous.DistributionCosts);
 			if (StaffCosts != null) StaffCosts.UpdateValues(previous.StaffCosts);
 			if (SocialSecurityCosts != null) SocialSecurityCosts.UpdateValues(previous.SocialSecurityCosts);
 			if (PensionCosts != null) PensionCosts.UpdateValues(previous.PensionCosts);
 			if (OtherOperatingIncomeTotal != null) OtherOperatingIncomeTotal.UpdateValues(previous.OtherOperatingIncomeTotal);
-			if (ShareofOperatingProfitLossfromJointVenturesAndAssociates != null) ShareofOperatingProfitLossfromJointVenturesAndAssociates.UpdateValues(previous.ShareofOperatingProfitLossfromJointVenturesAndAssociates);
-			if (ExceptionalItems != null) ExceptionalItems.UpdateValues(previous.ExceptionalItems);
-			if (IncomefromSharesinSubsidiariesGroupUndertakings != null) IncomefromSharesinSubsidiariesGroupUndertakings.UpdateValues(previous.IncomefromSharesinSubsidiariesGroupUndertakings);
 			if (IncomefromAssociatesandOtherParticipatingInterests != null) IncomefromAssociatesandOtherParticipatingInterests.UpdateValues(previous.IncomefromAssociatesandOtherParticipatingInterests);
 			if (TotalOtherFinanceCost != null) TotalOtherFinanceCost.UpdateValues(previous.TotalOtherFinanceCost);
 			if (GrossDividendPayment != null) GrossDividendPayment.UpdateValues(previous.GrossDividendPayment);
-			if (InterestandSimilarIncome != null) InterestandSimilarIncome.UpdateValues(previous.InterestandSimilarIncome);
 			if (FeesandCommissionIncome != null) FeesandCommissionIncome.UpdateValues(previous.FeesandCommissionIncome);
 			if (FeesandCommissionExpense != null) FeesandCommissionExpense.UpdateValues(previous.FeesandCommissionExpense);
 			if (NetTradingIncome != null) NetTradingIncome.UpdateValues(previous.NetTradingIncome);
-			if (OutwardReinsurancePremiums != null) OutwardReinsurancePremiums.UpdateValues(previous.OutwardReinsurancePremiums);
 			if (OtherStaffCosts != null) OtherStaffCosts.UpdateValues(previous.OtherStaffCosts);
-			if (ShareBasedPayments != null) ShareBasedPayments.UpdateValues(previous.ShareBasedPayments);
 			if (GainonInvestmentProperties != null) GainonInvestmentProperties.UpdateValues(previous.GainonInvestmentProperties);
 			if (AverageDilutionEarnings != null) AverageDilutionEarnings.UpdateValues(previous.AverageDilutionEarnings);
-			if (GainonRedemptionandExtinguishmentofDebt != null) GainonRedemptionandExtinguishmentofDebt.UpdateValues(previous.GainonRedemptionandExtinguishmentofDebt);
-			if (MiscellaneousOtherOperatingIncome != null) MiscellaneousOtherOperatingIncome.UpdateValues(previous.MiscellaneousOtherOperatingIncome);
 			if (GainLossonFinancialInstrumentsDesignatedasCashFlowHedges != null) GainLossonFinancialInstrumentsDesignatedasCashFlowHedges.UpdateValues(previous.GainLossonFinancialInstrumentsDesignatedasCashFlowHedges);
 			if (GainLossonDerecognitionofAvailableForSaleFinancialAssets != null) GainLossonDerecognitionofAvailableForSaleFinancialAssets.UpdateValues(previous.GainLossonDerecognitionofAvailableForSaleFinancialAssets);
-			if (GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotal != null) GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotal.UpdateValues(previous.GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotal);
 			if (NegativeGoodwillImmediatelyRecognized != null) NegativeGoodwillImmediatelyRecognized.UpdateValues(previous.NegativeGoodwillImmediatelyRecognized);
 			if (GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotal != null) GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotal.UpdateValues(previous.GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotal);
 			if (ImpairmentLossesReversalsFinancialInstrumentsNet != null) ImpairmentLossesReversalsFinancialInstrumentsNet.UpdateValues(previous.ImpairmentLossesReversalsFinancialInstrumentsNet);
-			if (ShareofProfitLossfromEquityAccountedInvestments != null) ShareofProfitLossfromEquityAccountedInvestments.UpdateValues(previous.ShareofProfitLossfromEquityAccountedInvestments);
 			if (ClaimsandPaidIncurred != null) ClaimsandPaidIncurred.UpdateValues(previous.ClaimsandPaidIncurred);
 			if (ReinsuranceRecoveriesClaimsandBenefits != null) ReinsuranceRecoveriesClaimsandBenefits.UpdateValues(previous.ReinsuranceRecoveriesClaimsandBenefits);
 			if (ChangeinInsuranceLiabilitiesNetofReinsurance != null) ChangeinInsuranceLiabilitiesNetofReinsurance.UpdateValues(previous.ChangeinInsuranceLiabilitiesNetofReinsurance);
 			if (ChangeinInvestmentContract != null) ChangeinInvestmentContract.UpdateValues(previous.ChangeinInvestmentContract);
-			if (ChangeinReinsuranceAssets != null) ChangeinReinsuranceAssets.UpdateValues(previous.ChangeinReinsuranceAssets);
 			if (CreditRiskProvisions != null) CreditRiskProvisions.UpdateValues(previous.CreditRiskProvisions);
 			if (WagesandSalaries != null) WagesandSalaries.UpdateValues(previous.WagesandSalaries);
 			if (OtherNonOperatingIncomeExpenses != null) OtherNonOperatingIncomeExpenses.UpdateValues(previous.OtherNonOperatingIncomeExpenses);
-			if (InterestIncomeOtherOperatingIncome != null) InterestIncomeOtherOperatingIncome.UpdateValues(previous.InterestIncomeOtherOperatingIncome);
 			if (OtherNonOperatingIncome != null) OtherNonOperatingIncome.UpdateValues(previous.OtherNonOperatingIncome);
 			if (OtherNonOperatingExpenses != null) OtherNonOperatingExpenses.UpdateValues(previous.OtherNonOperatingExpenses);
 			if (TotalUnusualItems != null) TotalUnusualItems.UpdateValues(previous.TotalUnusualItems);
@@ -3149,7 +2119,6 @@ namespace QuantConnect.Data.Fundamental
 			if (TaxRateForCalcs != null) TaxRateForCalcs.UpdateValues(previous.TaxRateForCalcs);
 			if (TaxEffectOfUnusualItems != null) TaxEffectOfUnusualItems.UpdateValues(previous.TaxEffectOfUnusualItems);
 			if (NormalizedEBITDA != null) NormalizedEBITDA.UpdateValues(previous.NormalizedEBITDA);
-			if (GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts != null) GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts.UpdateValues(previous.GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts);
 			if (StockBasedCompensation != null) StockBasedCompensation.UpdateValues(previous.StockBasedCompensation);
 			if (DilutedNIAvailtoComStockholders != null) DilutedNIAvailtoComStockholders.UpdateValues(previous.DilutedNIAvailtoComStockholders);
 			if (InvestmentContractLiabilitiesIncurred != null) InvestmentContractLiabilitiesIncurred.UpdateValues(previous.InvestmentContractLiabilitiesIncurred);
@@ -3160,6 +2129,16 @@ namespace QuantConnect.Data.Fundamental
 			if (ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare != null) ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare.UpdateValues(previous.ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare);
 			if (ClaimsandChangeinInsuranceLiabilities != null) ClaimsandChangeinInsuranceLiabilities.UpdateValues(previous.ClaimsandChangeinInsuranceLiabilities);
 			if (ReinsuranceRecoveriesofInsuranceLiabilities != null) ReinsuranceRecoveriesofInsuranceLiabilities.UpdateValues(previous.ReinsuranceRecoveriesofInsuranceLiabilities);
+			if (TotalOperatingIncomeAsReported != null) TotalOperatingIncomeAsReported.UpdateValues(previous.TotalOperatingIncomeAsReported);
+			if (OtherGA != null) OtherGA.UpdateValues(previous.OtherGA);
+			if (OtherCostofRevenue != null) OtherCostofRevenue.UpdateValues(previous.OtherCostofRevenue);
+			if (RentandLandingFeesCostofRevenue != null) RentandLandingFeesCostofRevenue.UpdateValues(previous.RentandLandingFeesCostofRevenue);
+			if (DDACostofRevenue != null) DDACostofRevenue.UpdateValues(previous.DDACostofRevenue);
+			if (RentExpenseSupplemental != null) RentExpenseSupplemental.UpdateValues(previous.RentExpenseSupplemental);
+			if (NormalizedPreTaxIncome != null) NormalizedPreTaxIncome.UpdateValues(previous.NormalizedPreTaxIncome);
+			if (ResearchAndDevelopmentExpensesSupplemental != null) ResearchAndDevelopmentExpensesSupplemental.UpdateValues(previous.ResearchAndDevelopmentExpensesSupplemental);
+			if (DepreciationSupplemental != null) DepreciationSupplemental.UpdateValues(previous.DepreciationSupplemental);
+			if (AmortizationSupplemental != null) AmortizationSupplemental.UpdateValues(previous.AmortizationSupplemental);
 		}
 	}
 }

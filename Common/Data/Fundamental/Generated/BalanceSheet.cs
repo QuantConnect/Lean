@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -418,37 +418,6 @@ namespace QuantConnect.Data.Fundamental
 		public FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellBalanceSheet FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell { get; set; }
 
 		/// <summary>
-		/// This asset refers to the fair value of investments in debt securities that are deemed to be available for sale that are allocated to the
-		/// segregated group of participating or dividend-paying policies and contracts identified as the closed block. Change in fair value of
-		/// such securities is a component of change in other comprehensive income in the period, which is reflected in the closed block
-		/// disclosure.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23086
-		/// </remarks>
-		[JsonProperty("23086")]
-		public FixedMaturitiesAvailableForSaleBalanceSheet FixedMaturitiesAvailableForSale { get; set; }
-
-		/// <summary>
-		/// This asset represents the total of all debt securities grouped by maturity dates, at fair value, which are categorized as held-to-
-		/// maturity.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23087
-		/// </remarks>
-		[JsonProperty("23087")]
-		public FixedMaturitiesHeldToMaturityBalanceSheet FixedMaturitiesHeldToMaturity { get; set; }
-
-		/// <summary>
-		/// This asset refers the total of all debt securities grouped by maturity dates, at fair value, which are categorized as trading.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23088
-		/// </remarks>
-		[JsonProperty("23088")]
-		public FixedMaturitiesTradingBalanceSheet FixedMaturitiesTrading { get; set; }
-
-		/// <summary>
 		/// This asset refers to types of investments that may be contained within the fixed maturity category which securities are having a
 		/// stated final repayment date. Examples of items within this category may include bonds, including convertibles and bonds with
 		/// warrants, and redeemable preferred stocks.
@@ -710,7 +679,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// An amount representing an agreement for an unconditional promise by the maker to pay the entity (holder) a definite sum of money
-		/// at a future date(s) , excluding the portion that is expected to be received within one year of the balance sheet date or the normal
+		/// at a future date(s), excluding the portion that is expected to be received within one year of the balance sheet date or the normal
 		/// operating cycle, whichever is longer.
 		/// </summary>
 		/// <remarks>
@@ -720,8 +689,8 @@ namespace QuantConnect.Data.Fundamental
 		public NonCurrentNoteReceivablesBalanceSheet NonCurrentNoteReceivables { get; set; }
 
 		/// <summary>
-		/// Other current liabilities = Total current liabilities - Payables and accrued Expenses - Current debt and capital lease obligaton -
-		/// provisions, current - deferred liabilities, current
+		/// Other current liabilities = Total current liabilities - Payables and accrued Expenses - Current debt and capital lease obligation -
+		/// provisions, current - deferred liabilities, current.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23151
@@ -807,15 +776,6 @@ namespace QuantConnect.Data.Fundamental
 		public PreferredStockBalanceSheet PreferredStock { get; set; }
 
 		/// <summary>
-		/// The carrying amount as of the balance sheet date due the entity from agents insures, uncollected premiums and others.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23178
-		/// </remarks>
-		[JsonProperty("23178")]
-		public PremiumsReceivableBalanceSheet PremiumsReceivable { get; set; }
-
-		/// <summary>
 		/// Sum of the carrying amounts that are paid in advance for expenses, which will be charged against earnings in subsequent periods.
 		/// </summary>
 		/// <remarks>
@@ -843,15 +803,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23189")]
 		public ReceivablesBalanceSheet Receivables { get; set; }
-
-		/// <summary>
-		/// Type of preferred stock which may be bought back by the issuing company on a specified date or after a specified period of notice.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23191
-		/// </remarks>
-		[JsonProperty("23191")]
-		public RedeemablePreferredStockBalanceSheet RedeemablePreferredStock { get; set; }
 
 		/// <summary>
 		/// The amount of benefits the ceding insurer expects to recover on insurance policies ceded to other insurance entities as of the
@@ -898,7 +849,8 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Represent obligations of the company to deliver the specified security at the contracted price and, thereby, create a liability to
-		/// purchase the security in the market at prevailing prices.
+		/// .
+		/// purchase the security in the market at prevailing prices
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23208
@@ -1003,16 +955,6 @@ namespace QuantConnect.Data.Fundamental
 		public TotalInvestmentsBalanceSheet TotalInvestments { get; set; }
 
 		/// <summary>
-		/// Probable future sacrifices of economic benefits arising from present obligations of an enterprise to transfer assets or provide
-		/// services to others in the future as a result of past transactions or events.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23225
-		/// </remarks>
-		[JsonProperty("23225")]
-		public TotalLiabilitiesBalanceSheet TotalLiabilities { get; set; }
-
-		/// <summary>
 		/// Sum of the carrying amounts as of the balance sheet date of all assets that are expected to be realized in cash, sold or consumed
 		/// after one year or beyond the normal operating cycle, if longer.
 		/// </summary>
@@ -1021,16 +963,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23226")]
 		public TotalNonCurrentAssetsBalanceSheet TotalNonCurrentAssets { get; set; }
-
-		/// <summary>
-		/// Total obligations incurred as part of normal operations that is expected to be repaid beyond the following twelve months or one
-		/// business cycle.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23227
-		/// </remarks>
-		[JsonProperty("23227")]
-		public TotalNonCurrentLiabilitiesBalanceSheet TotalNonCurrentLiabilities { get; set; }
 
 		/// <summary>
 		/// Ownership interest of different classes of partners in the publicly listed limited partnership or master limited partnership. Partners
@@ -1164,7 +1096,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Total obligations, net minority interest, incurred as part of normal operations that is expected to be repaid beyond the following
-		/// twelve months or one business cycle.
+		/// twelve months or one business cycle; excludes minority interest.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23260
@@ -1173,7 +1105,7 @@ namespace QuantConnect.Data.Fundamental
 		public TotalNonCurrentLiabilitiesNetMinorityInterestBalanceSheet TotalNonCurrentLiabilitiesNetMinorityInterest { get; set; }
 
 		/// <summary>
-		/// Residual interest, gross of minority interest, that remains in the assets of the enterprise after deducting its liabilities. Equity is
+		/// Residual interest, including minority interest, that remains in the assets of the enterprise after deducting its liabilities. Equity is
 		/// increased by owners' investments and by comprehensive income, and it is reduced by distributions to the owners.
 		/// </summary>
 		/// <remarks>
@@ -1260,17 +1192,7 @@ namespace QuantConnect.Data.Fundamental
 		public AssetsOfDiscontinuedOperationsBalanceSheet AssetsOfDiscontinuedOperations { get; set; }
 
 		/// <summary>
-		/// This item is typically available for bank industry.  It is the carrying amount as of the balance sheet date of drafts and bills of
-		/// exchange that have been accepted by the reporting bank or by others for its own account, as its liability to holders of the drafts.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23270
-		/// </remarks>
-		[JsonProperty("23270")]
-		public BankAcceptanceExecutedAndOutstandingBalanceSheet BankAcceptanceExecutedAndOutstanding { get; set; }
-
-		/// <summary>
-		/// It means all indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation
+		/// All indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation
 		/// reimbursement and other obligations with respect to surety bonds and letters of credit, all obligations evidenced by notes, bonds
 		/// debentures or similar instruments, all capital lease obligations and all contingent obligations. 
 		/// </summary>
@@ -1281,17 +1203,8 @@ namespace QuantConnect.Data.Fundamental
 		public BankIndebtednessBalanceSheet BankIndebtedness { get; set; }
 
 		/// <summary>
-		/// It means an amount of money lent at interest by a bank to a borrower, usually on collateral security, for a certain period of time.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23272
-		/// </remarks>
-		[JsonProperty("23272")]
-		public BankLoanBalanceSheet BankLoan { get; set; }
-
-		/// <summary>
-		/// It means the carrying amount of a life insurance policy on an officer, executive or employee for which the reporting entity (a bank) is
-		/// entitled to proceeds from the policy upon death of the insured or surrender of the insurance policy.
+		/// The carrying amount of a life insurance policy on an officer, executive or employee for which the reporting entity (a bank) is entitled
+		/// to proceeds from the policy upon death of the insured or surrender of the insurance policy.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23273
@@ -1317,25 +1230,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23275")]
 		public BuildingsAndImprovementsBalanceSheet BuildingsAndImprovements { get; set; }
-
-		/// <summary>
-		/// The aggregate amount of claims made by the company under its casualty insurance policy.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23276
-		/// </remarks>
-		[JsonProperty("23276")]
-		public CasualtyClaimsBalanceSheet CasualtyClaims { get; set; }
-
-		/// <summary>
-		/// The amount of unearned premiums paid and payable to another insurer as a result of reinsurance arrangements in order to
-		/// exchange for that company accepting all or part of insurance on a risk or exposure.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23277
-		/// </remarks>
-		[JsonProperty("23277")]
-		public CededUnearnedPremiumsBalanceSheet CededUnearnedPremiums { get; set; }
 
 		/// <summary>
 		/// Short-term loan, typically 90 days, used by a company to finance seasonal working capital needs.
@@ -1365,15 +1259,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23280")]
 		public CommonStockEquityBalanceSheet CommonStockEquity { get; set; }
-
-		/// <summary>
-		/// Stock, other than an entity's own stock, held and available for sale.  This item is usally available for the insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23281
-		/// </remarks>
-		[JsonProperty("23281")]
-		public CommonStocksAvailableForSaleBalanceSheet CommonStocksAvailableForSale { get; set; }
 
 		/// <summary>
 		/// It represents carrying amount of long-lived asset under construction that includes construction costs to date on capital projects.
@@ -1416,26 +1301,6 @@ namespace QuantConnect.Data.Fundamental
 		public CustomerAcceptancesBalanceSheet CustomerAcceptances { get; set; }
 
 		/// <summary>
-		/// When a company defers the sales costs that are associated with acquiring a new customer over the term of the insurance
-		/// contract.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23286
-		/// </remarks>
-		[JsonProperty("23286")]
-		public DeferredAcquisitionCostsBalanceSheet DeferredAcquisitionCosts { get; set; }
-
-		/// <summary>
-		/// Deferred Finance is created where the purchaser agrees with the vendor to pay some of the purchase price at a future date, as
-		/// opposed to paying the full purchase price in cash on day one.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23287
-		/// </remarks>
-		[JsonProperty("23287")]
-		public DeferredFinancingCostsBalanceSheet DeferredFinancingCosts { get; set; }
-
-		/// <summary>
 		/// The recognition of an asset where pension fund assets exceed promised benefits.
 		/// </summary>
 		/// <remarks>
@@ -1475,16 +1340,6 @@ namespace QuantConnect.Data.Fundamental
 		public DividendsPayableBalanceSheet DividendsPayable { get; set; }
 
 		/// <summary>
-		/// ESOP Debt Guarantee represents all transactions related to a company's Employee Stock Ownership Plan (ESOP), such as
-		/// shares/debt/loans owned by ESOP.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23292
-		/// </remarks>
-		[JsonProperty("23292")]
-		public ESOPDebtGuaranteeBalanceSheet ESOPDebtGuarantee { get; set; }
-
-		/// <summary>
 		/// Carrying amount as of the balance sheet date of the portion of the obligations recognized for the various benefits provided to former
 		/// or inactive employees, their beneficiaries, and covered dependents after employment but before retirement.
 		/// </summary>
@@ -1493,16 +1348,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23293")]
 		public EmployeeBenefitsBalanceSheet EmployeeBenefits { get; set; }
-
-		/// <summary>
-		/// An installation, contrivance, or other facilitates which service for transportation, such as Medical facility; Telecommunications
-		/// facility; Post-production facility. This item is typically available for transportation industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23294
-		/// </remarks>
-		[JsonProperty("23294")]
-		public FacilitiesAndOtherBalanceSheet FacilitiesAndOther { get; set; }
 
 		/// <summary>
 		/// The amount borrowed by a bank, at the federal funds rate, from another bank to meet its reserve requirements.  This item is
@@ -1587,15 +1432,6 @@ namespace QuantConnect.Data.Fundamental
 		public ForeclosedAssetsBalanceSheet ForeclosedAssets { get; set; }
 
 		/// <summary>
-		/// Loans related to foreign countries.  This item is typically available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23303
-		/// </remarks>
-		[JsonProperty("23303")]
-		public ForeignComponentBalanceSheet ForeignComponent { get; set; }
-
-		/// <summary>
 		/// Changes to accumulated comprehensive income that results from the process of translating subsidiary financial statements and
 		/// foreign equity investments into functional currency of the reporting company.
 		/// </summary>
@@ -1604,25 +1440,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23304")]
 		public ForeignCurrencyTranslationAdjustmentsBalanceSheet ForeignCurrencyTranslationAdjustments { get; set; }
-
-		/// <summary>
-		/// This item discloses the period end balance sheet amount of fuel and natural gas. It is typically available for the utility industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23305
-		/// </remarks>
-		[JsonProperty("23305")]
-		public FuelAndNaturalGasBalanceSheet FuelAndNaturalGas { get; set; }
-
-		/// <summary>
-		/// Contracts held by defined benefit pension plans generally provide for a specified return on principal invested over a specified period.
-		/// This item is typically available for the insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23306
-		/// </remarks>
-		[JsonProperty("23306")]
-		public GuaranteedInvestmentContractBalanceSheet GuaranteedInvestmentContract { get; set; }
 
 		/// <summary>
 		/// This item represents certain charges made in the current period in inventory resulting from such factors as breakage, spoilage,
@@ -1635,27 +1452,6 @@ namespace QuantConnect.Data.Fundamental
 		public InventoriesAdjustmentsAllowancesBalanceSheet InventoriesAdjustmentsAllowances { get; set; }
 
 		/// <summary>
-		/// A specified percentage of the amount of certain new investment that a company can deduct as a credit against its income tax bill.
-		/// This item is typically available for the utility industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23308
-		/// </remarks>
-		[JsonProperty("23308")]
-		public InvestmentTaxCreditsBalanceSheet InvestmentTaxCredits { get; set; }
-
-		/// <summary>
-		/// The investments in (1) an entity in which the entity has significant influence, but does not have control; (2) subsidiaries that are
-		/// required to be consolidated and are accounted for using the equity and or cost method; and (3) an entity in which the reporting
-		/// entity shares control of the entity with another party or group.  This item is typically available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23309
-		/// </remarks>
-		[JsonProperty("23309")]
-		public InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVenturesBalanceSheet InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures { get; set; }
-
-		/// <summary>
 		/// This item represents the carrying amount on the company's balance sheet of its investments in common stock of an equity method.
 		/// This item is typically available for the insurance industry.
 		/// </summary>
@@ -1664,16 +1460,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23310")]
 		public InvestmentsInOtherVenturesUnderEquityMethodBalanceSheet InvestmentsInOtherVenturesUnderEquityMethod { get; set; }
-
-		/// <summary>
-		/// This item is typically available for bank industry. It means invest in an entity in which the investor holds a controlling interest that is
-		/// not based on the majority of voting rights.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23311
-		/// </remarks>
-		[JsonProperty("23311")]
-		public InvestmentsInVariableInterestEntityBalanceSheet InvestmentsInVariableInterestEntity { get; set; }
 
 		/// <summary>
 		/// Fixed Assets that specifically deal with land a company owns. Includes the improvements associated with land. This excludes land
@@ -1704,17 +1490,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23314")]
 		public LiabilitiesOfDiscontinuedOperationsBalanceSheet LiabilitiesOfDiscontinuedOperations { get; set; }
-
-		/// <summary>
-		/// Two or more partners united to conduct a business jointly, and in which one or more of the partners is liable only to the extent of
-		/// the amount of money that partner has invested. Limited partners do not receive dividends, but enjoy direct access to the flow of
-		/// income and expenses.  This item is typically available for the insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23315
-		/// </remarks>
-		[JsonProperty("23315")]
-		public LimitedPartnershipBalanceSheet LimitedPartnership { get; set; }
 
 		/// <summary>
 		/// The carrying value as of the balance sheet date of obligations drawn from a line of credit, which is a bank's commitment to make
@@ -1793,43 +1568,6 @@ namespace QuantConnect.Data.Fundamental
 		public MortgageAndConsumerloansBalanceSheet MortgageAndConsumerloans { get; set; }
 
 		/// <summary>
-		/// It means a material source of wealth, such as timber, fresh water, or a mineral deposit, that occurs in a natural state and has
-		/// economic value.  This item is typically available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23324
-		/// </remarks>
-		[JsonProperty("23324")]
-		public NaturalResourceAssetsBalanceSheet NaturalResourceAssets { get; set; }
-
-		/// <summary>
-		/// The amount of net unrealized gain or loss related to the change in fair value, not otherwise classified.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23325
-		/// </remarks>
-		[JsonProperty("23325")]
-		public NetOtherUnrealizedGainLossBalanceSheet NetOtherUnrealizedGainLoss { get; set; }
-
-		/// <summary>
-		/// The amount of net unrealized gain or loss related to the change in fair value of foreign currency exchange rate.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23326
-		/// </remarks>
-		[JsonProperty("23326")]
-		public NetUnrealizedGainLossForeignCurrencyBalanceSheet NetUnrealizedGainLossForeignCurrency { get; set; }
-
-		/// <summary>
-		/// The aggregate increase (decrease) in the market value of unsold investments at the end of an accounting period.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23327
-		/// </remarks>
-		[JsonProperty("23327")]
-		public NetUnrealizedGainLossInvestmentsBalanceSheet NetUnrealizedGainLossInvestments { get; set; }
-
-		/// <summary>
 		/// An amount representing an agreement for an unconditional promise by the maker to pay the entity (holder) a definite sum of money
 		/// at a future date(s) within one year of the balance sheet date or the normal operating cycle. Such amount may include accrued
 		/// interest receivable in accordance with the terms of the note. The note also may contain provisions including a discount or premium,
@@ -1879,40 +1617,13 @@ namespace QuantConnect.Data.Fundamental
 		public OtherCurrentBorrowingsBalanceSheet OtherCurrentBorrowings { get; set; }
 
 		/// <summary>
-		/// A cost that occurred in a transaction, but will not be expensed until a future accounting period.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23333
-		/// </remarks>
-		[JsonProperty("23333")]
-		public OtherDeferredCostsBalanceSheet OtherDeferredCosts { get; set; }
-
-		/// <summary>
-		/// Other deposits that are not otherwise classified.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23334
-		/// </remarks>
-		[JsonProperty("23334")]
-		public OtherDepositsBalanceSheet OtherDeposits { get; set; }
-
-		/// <summary>
-		/// Other adjustments to stockholders' equity that is not otherwise classified.
+		/// Other adjustments to stockholders' equity that is not otherwise classified, including other reserves.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23335
 		/// </remarks>
 		[JsonProperty("23335")]
 		public OtherEquityAdjustmentsBalanceSheet OtherEquityAdjustments { get; set; }
-
-		/// <summary>
-		/// Other investment assets that from which interest is earned, not otherwise classified.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23336
-		/// </remarks>
-		[JsonProperty("23336")]
-		public OtherInterestEarningAssetsBalanceSheet OtherInterestEarningAssets { get; set; }
 
 		/// <summary>
 		/// Other non-current inventories not otherwise classified.
@@ -1973,15 +1684,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherReceivablesBalanceSheet OtherReceivables { get; set; }
 
 		/// <summary>
-		/// A type of intangible asset, it provides an exclusive right to the patent holder to product or sell new inventions.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23343
-		/// </remarks>
-		[JsonProperty("23343")]
-		public PatentsBalanceSheet Patents { get; set; }
-
-		/// <summary>
 		/// A loan issued by an insurance company that uses the cash value of a person's life insurance policy as collateral.  This item is usually
 		/// only available in the insurance industry.
 		/// </summary>
@@ -2011,34 +1713,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23347")]
 		public PreferredStockEquityBalanceSheet PreferredStockEquity { get; set; }
-
-		/// <summary>
-		/// This is preferred stock of a subsidiary, which belongs to the company's equity. This item is usually only available for utility industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23348
-		/// </remarks>
-		[JsonProperty("23348")]
-		public PreferredStockOfSubsidiaryBalanceSheet PreferredStockOfSubsidiary { get; set; }
-
-		/// <summary>
-		/// This item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23349
-		/// </remarks>
-		[JsonProperty("23349")]
-		public PreferredStocksAvailableForSaleBalanceSheet PreferredStocksAvailableForSale { get; set; }
-
-		/// <summary>
-		/// The unexpired portion of premiums paid to another insurer as a result of reinsurance arrangement as of the balance sheet date. This
-		/// item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23350
-		/// </remarks>
-		[JsonProperty("23350")]
-		public PrepaidReinsurancePremiumsBalanceSheet PrepaidReinsurancePremiums { get; set; }
 
 		/// <summary>
 		/// Tangible assets that are held by an entity for use in the production or supply of goods and services, for rental to others, or for
@@ -2072,15 +1746,6 @@ namespace QuantConnect.Data.Fundamental
 		public LongTermProvisionsBalanceSheet LongTermProvisions { get; set; }
 
 		/// <summary>
-		/// Individual parts purchased in order to complete a finished product.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23354
-		/// </remarks>
-		[JsonProperty("23354")]
-		public PurchasedComponentsBalanceSheet PurchasedComponents { get; set; }
-
-		/// <summary>
 		/// Carrying amount as of the balance sheet data of unprocessed items to be consumed in the manufacturing or production process.
 		/// This item is available for manufacturing and mining industries.
 		/// </summary>
@@ -2089,26 +1754,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23355")]
 		public RawMaterialsBalanceSheet RawMaterials { get; set; }
-
-		/// <summary>
-		/// Held real estate investments with the purpose of being sold.  This includes direct and indirect investments.  This item is usually only
-		/// available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23356
-		/// </remarks>
-		[JsonProperty("23356")]
-		public RealEstateHeldForSaleBalanceSheet RealEstateHeldForSale { get; set; }
-
-		/// <summary>
-		/// The book value of investments in real estate joint ventures including direct and indirect investments.  This item is usually only
-		/// available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23357
-		/// </remarks>
-		[JsonProperty("23357")]
-		public RealEstateAndRealEstateJointVenturesHeldForInvestmentBalanceSheet RealEstateAndRealEstateJointVenturesHeldForInvestment { get; set; }
 
 		/// <summary>
 		/// A provision relating to a written agreement to receive money at a specified future date(s) (within one year from the reporting date
@@ -2150,36 +1795,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23361")]
 		public ReinsuranceBalancesPayableBalanceSheet ReinsuranceBalancesPayable { get; set; }
-
-		/// <summary>
-		/// The sum for all reinsurance arrangements of the known and estimated amount receivable as of the balance sheet date from a given
-		/// reinsurers for claims paid or incurred by the ceding insurer and associated claims settlement expenses for each reinsurance
-		/// arrangement (or, the sum of all cases determined individually, likely applying different assumptions to each arrangement). This item
-		/// is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23362
-		/// </remarks>
-		[JsonProperty("23362")]
-		public ReinsuranceReceivablesBalanceSheet ReinsuranceReceivables { get; set; }
-
-		/// <summary>
-		/// The recoverable currently due from reinsurers for ceded paid losses. This item is usually only available for the insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23363
-		/// </remarks>
-		[JsonProperty("23363")]
-		public ReinsuranceRecoverableForPaidLossesBalanceSheet ReinsuranceRecoverableForPaidLosses { get; set; }
-
-		/// <summary>
-		/// The recoverable currently due from reinsurers for unpaid losses. This item is usually only available for the insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23364
-		/// </remarks>
-		[JsonProperty("23364")]
-		public ReinsuranceRecoverableForUnpaidLossesBalanceSheet ReinsuranceRecoverableForUnpaidLosses { get; set; }
 
 		/// <summary>
 		/// The carrying amounts of cash and cash equivalent items, which are restricted as to withdrawal or usage. Restrictions may include
@@ -2238,25 +1853,6 @@ namespace QuantConnect.Data.Fundamental
 		public RestrictedInvestmentsBalanceSheet RestrictedInvestments { get; set; }
 
 		/// <summary>
-		/// The amount payable for lending securities.  This item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23370
-		/// </remarks>
-		[JsonProperty("23370")]
-		public SecuritiesLendingPayableBalanceSheet SecuritiesLendingPayable { get; set; }
-
-		/// <summary>
-		/// Loans made, insured, or guaranteed under any program authorized by the Higher Education Act. This loan is used for education
-		/// purposes. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23371
-		/// </remarks>
-		[JsonProperty("23371")]
-		public StudentLoanBalanceSheet StudentLoan { get; set; }
-
-		/// <summary>
 		/// Carrying amount due within one year of the balance sheet date (or one operating cycle, if longer) from tax authorities as of the
 		/// balance sheet date representing refunds of overpayments or recoveries based on agreed-upon resolutions of disputes. This item is
 		/// usually not available for bank industry.
@@ -2266,18 +1862,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23372")]
 		public TaxesReceivableBalanceSheet TaxesReceivable { get; set; }
-
-		/// <summary>
-		/// In balance sheet, it means the aggregate amount of time deposits, including certificates of deposits, individual retirement accounts
-		/// and open accounts. In income statement, it represents interest earned on deposits that have to stay in the bank for a certain period
-		/// of time before they can be collected without sustaining a penalty. Usually includes certificates of deposits, individual retirement
-		/// accounts and open accounts. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23373
-		/// </remarks>
-		[JsonProperty("23373")]
-		public TimeDepositsPlacedBalanceSheet TimeDepositsPlaced { get; set; }
 
 		/// <summary>
 		/// Stockholder's Equity plus Long Term Debt.
@@ -2400,16 +1984,6 @@ namespace QuantConnect.Data.Fundamental
 		public TotalDebtBalanceSheet TotalDebt { get; set; }
 
 		/// <summary>
-		/// The carrying amount as of the balance sheet date of amounts, which could be received based on the terms of the insurance
-		/// contract upon surrendering life policies owned by the company. This item is usually only available for bank industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23387
-		/// </remarks>
-		[JsonProperty("23387")]
-		public CashValueOfLifeInsuranceBalanceSheet CashValueOfLifeInsurance { get; set; }
-
-		/// <summary>
 		/// The amount for the other plant related to the utility industry fix assets.
 		/// </summary>
 		/// <remarks>
@@ -2496,8 +2070,6 @@ namespace QuantConnect.Data.Fundamental
 		public TradingAndOtherReceivableBalanceSheet TradingAndOtherReceivable { get; set; }
 
 		/// <summary>
-		/// This item applies only to Non-US companies. It refers to the residual interest in the assets of the enterprise that remains after
-		/// deducting its liabilities and minority interest.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23400
@@ -2514,16 +2086,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23401")]
 		public SecuritiesLoanedBalanceSheet SecuritiesLoaned { get; set; }
-
-		/// <summary>
-		/// The sum of money an insurance company will pay to the policyholder or annuity holder in the event his or her policy is voluntarily
-		/// terminated before its maturity or the insured event occurs.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23402
-		/// </remarks>
-		[JsonProperty("23402")]
-		public ParticipatingPolicyholderEquityBalanceSheet ParticipatingPolicyholderEquity { get; set; }
 
 		/// <summary>
 		/// Net assets in physical form. This is calculated using Stockholders' Equity less Intangible Assets (including Goodwill).
@@ -2578,15 +2140,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23408")]
 		public DuetoRelatedPartiesNonCurrentBalanceSheet DuetoRelatedPartiesNonCurrent { get; set; }
-
-		/// <summary>
-		/// Total assets less total liabilities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23409
-		/// </remarks>
-		[JsonProperty("23409")]
-		public NetAssetsBalanceSheet NetAssets { get; set; }
 
 		/// <summary>
 		/// Company's investments in properties net of accumulated depreciation, which generate a return.
@@ -2836,33 +2389,6 @@ namespace QuantConnect.Data.Fundamental
 		public ClaimsOutstandingBalanceSheet ClaimsOutstanding { get; set; }
 
 		/// <summary>
-		/// A supply contract in the physical market covering energy deliveries of more than 18 months, accounted for as part of Inventories.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23447
-		/// </remarks>
-		[JsonProperty("23447")]
-		public LongTermContractsBalanceSheet LongTermContracts { get; set; }
-
-		/// <summary>
-		/// Land and buildings which are held as inventory, normally by real estate companies or income trusts.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23448
-		/// </remarks>
-		[JsonProperty("23448")]
-		public RealEstateBalanceSheet RealEstate { get; set; }
-
-		/// <summary>
-		/// A bill or invoice is a document requesting payment for an order previously supplied.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23451
-		/// </remarks>
-		[JsonProperty("23451")]
-		public PaymentofBillsBalanceSheet PaymentofBills { get; set; }
-
-		/// <summary>
 		/// Liabilities due within the next 12 months related from an asset classified as Held for Sale.
 		/// </summary>
 		/// <remarks>
@@ -2879,15 +2405,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23453")]
 		public LiabilitiesHeldforSaleNonCurrentBalanceSheet LiabilitiesHeldforSaleNonCurrent { get; set; }
-
-		/// <summary>
-		/// Other current assets owned by the company that cannot be identified by other specific items in the Current Assets section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23454
-		/// </remarks>
-		[JsonProperty("23454")]
-		public UnclassifiedCurrentAssetsBalanceSheet UnclassifiedCurrentAssets { get; set; }
 
 		/// <summary>
 		/// Debt securities held as investments.
@@ -3026,15 +2543,6 @@ namespace QuantConnect.Data.Fundamental
 		public TradeandOtherPayablesNonCurrentBalanceSheet TradeandOtherPayablesNonCurrent { get; set; }
 
 		/// <summary>
-		/// Carrying amount of any interest-bearing loan.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23473
-		/// </remarks>
-		[JsonProperty("23473")]
-		public InterestBearingBorrowingsCurrentBalanceSheet InterestBearingBorrowingsCurrent { get; set; }
-
-		/// <summary>
 		/// Non-interest bearing deposits in other financial institutions for short periods of time, usually less than 12 months.
 		/// </summary>
 		/// <remarks>
@@ -3054,25 +2562,6 @@ namespace QuantConnect.Data.Fundamental
 		public PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet PensionandOtherPostRetirementBenefitPlansCurrent { get; set; }
 
 		/// <summary>
-		/// The sum of cash and cash equivalents plus Federal Funds Sold. Including cash, petty cash/revolving funds/demand deposits with
-		/// central banks and other kinds of accounts that have the general characteristics of demand deposits.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23476
-		/// </remarks>
-		[JsonProperty("23476")]
-		public CashandBalanceswithCentralBanksBalanceSheet CashandBalanceswithCentralBanks { get; set; }
-
-		/// <summary>
-		/// Deposit accounts and placements that are deposited in a bank or other financial institution.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23477
-		/// </remarks>
-		[JsonProperty("23477")]
-		public PlacementwithBanksandOtherFinancialInstitutionsBalanceSheet PlacementwithBanksandOtherFinancialInstitutions { get; set; }
-
-		/// <summary>
 		/// Reflects the carrying amount of any other unpaid loans, an asset of the bank.
 		/// </summary>
 		/// <remarks>
@@ -3080,16 +2569,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23478")]
 		public OtherLoanAssetsBalanceSheet OtherLoanAssets { get; set; }
-
-		/// <summary>
-		/// An investment that is used to reduce the risk of adverse price movements in an asset, in a Non-Differentiated Balance Sheet.
-		/// Normally, a hedge consists of taking an offsetting position in a related security, such as a futures contract.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23479
-		/// </remarks>
-		[JsonProperty("23479")]
-		public HedgingAssetsTotalBalanceSheet HedgingAssetsTotal { get; set; }
 
 		/// <summary>
 		/// Total value collateral assets pledged to the bank that can be sold or used as collateral for other loans.
@@ -3120,16 +2599,6 @@ namespace QuantConnect.Data.Fundamental
 		public AdvancesfromCentralBanksBalanceSheet AdvancesfromCentralBanks { get; set; }
 
 		/// <summary>
-		/// The carrying value as of the balance sheet date of all interest bearing promissory notes and certificates issued by a financial
-		/// institution.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23483
-		/// </remarks>
-		[JsonProperty("23483")]
-		public CertificatesofDepositsandOtherDebtSecuritiesIssuedBalanceSheet CertificatesofDepositsandOtherDebtSecuritiesIssued { get; set; }
-
-		/// <summary>
 		/// A savings certificate entitling the bearer to receive interest. A CD bears a maturity date, a specified fixed interest rate and can be
 		/// issued in any denomination.
 		/// </summary>
@@ -3138,25 +2607,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23484")]
 		public DepositCertificatesBalanceSheet DepositCertificates { get; set; }
-
-		/// <summary>
-		/// Instruments that are not secured by any collateral and are backed only by the creditworthiness and reputation of the financial
-		/// institution.  Debentures and debt certificates usually have terms last longer than a year.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23485
-		/// </remarks>
-		[JsonProperty("23485")]
-		public DebenturesandDebtCertificatesBalanceSheet DebenturesandDebtCertificates { get; set; }
-
-		/// <summary>
-		/// Carrying amount of total borrowings on which enterprise paid the interest; on a Non-Differentiated Balance Sheet.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23486
-		/// </remarks>
-		[JsonProperty("23486")]
-		public InterestBearingBorrowingsTotalBalanceSheet InterestBearingBorrowingsTotal { get; set; }
 
 		/// <summary>
 		/// Non-interest bearing deposits in other financial institutions for relatively short periods of time; on a Non-Differentiated Balance
@@ -3194,33 +2644,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23491")]
 		public FinancialLiabilitiesMeasuredatAmortizedCostTotalBalanceSheet FinancialLiabilitiesMeasuredatAmortizedCostTotal { get; set; }
-
-		/// <summary>
-		/// Subordinated loan capital to be repaid at a later date on a Non-Differentiated Balance Sheet.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23492
-		/// </remarks>
-		[JsonProperty("23492")]
-		public LoanCapitalBalanceSheet LoanCapital { get; set; }
-
-		/// <summary>
-		/// A liability derived from hedging instruments on a Non-Differentiated Balance Sheet.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23493
-		/// </remarks>
-		[JsonProperty("23493")]
-		public HedgingLiabilitiesTotalBalanceSheet HedgingLiabilitiesTotal { get; set; }
-
-		/// <summary>
-		/// Liabilities recognized on hedge.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23494
-		/// </remarks>
-		[JsonProperty("23494")]
-		public LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRiskBalanceSheet LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRisk { get; set; }
 
 		/// <summary>
 		/// Liabilities which have occurred, but have not been paid or logged under accounts payable during an accounting period. In other
@@ -3264,24 +2687,6 @@ namespace QuantConnect.Data.Fundamental
 		public ReinsuranceAssetsBalanceSheet ReinsuranceAssets { get; set; }
 
 		/// <summary>
-		/// Accumulated share of insurance contract of reinsurance.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23500
-		/// </remarks>
-		[JsonProperty("23500")]
-		public ReinsuranceShareofInsuranceContractBalanceSheet ReinsuranceShareofInsuranceContract { get; set; }
-
-		/// <summary>
-		/// Accrued claims with reinsurance companies.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23501
-		/// </remarks>
-		[JsonProperty("23501")]
-		public ReinsuranceShareofAccruedPolicyholderClaimsBalanceSheet ReinsuranceShareofAccruedPolicyholderClaims { get; set; }
-
-		/// <summary>
 		/// Deposits made under reinsurance.
 		/// </summary>
 		/// <remarks>
@@ -3302,16 +2707,6 @@ namespace QuantConnect.Data.Fundamental
 		public InsuranceContractAssetsBalanceSheet InsuranceContractAssets { get; set; }
 
 		/// <summary>
-		/// Receivables from policyholders, agencies, and other operating parties in insurance companies, but excludes receivables from
-		/// reinsurers.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23504
-		/// </remarks>
-		[JsonProperty("23504")]
-		public InsuranceReceivablesBalanceSheet InsuranceReceivables { get; set; }
-
-		/// <summary>
 		/// Any type of insurance policy that protects an individual or business from the risk that they may be sued and held legally liable for
 		/// something such as malpractice, injury or negligence. Liability insurance policies cover both legal costs and any legal payouts for
 		/// which the insured would be responsible if found legally liable. Intentional damage and contractual liabilities are typically not covered
@@ -3322,16 +2717,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23505")]
 		public InsuranceContractLiabilitiesBalanceSheet InsuranceContractLiabilities { get; set; }
-
-		/// <summary>
-		/// The carrying amount as of the balance sheet date of the known and estimated amounts owed to parties under insurance policies or
-		/// other arrangements.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23506
-		/// </remarks>
-		[JsonProperty("23506")]
-		public InsurancePayablesBalanceSheet InsurancePayables { get; set; }
 
 		/// <summary>
 		/// Deposit received through ceded insurance contract.
@@ -3352,26 +2737,6 @@ namespace QuantConnect.Data.Fundamental
 		public InvestmentContractLiabilitiesBalanceSheet InvestmentContractLiabilities { get; set; }
 
 		/// <summary>
-		/// Government grants awarded to the company for its construction projects. They are capitalized by the company as part of the
-		/// Property, Plant and Equipment.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23511
-		/// </remarks>
-		[JsonProperty("23511")]
-		public ConstructionGrantsBalanceSheet ConstructionGrants { get; set; }
-
-		/// <summary>
-		/// Payments that will be assigned as expenses with one accounting period, but that are paid in advance and temporarily set up as
-		/// current assets on the balance sheet.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23514
-		/// </remarks>
-		[JsonProperty("23514")]
-		public DeferredCostCurrentBalanceSheet DeferredCostCurrent { get; set; }
-
-		/// <summary>
 		/// Total of the carrying values as of the balance sheet date of obligations incurred through that date and payable for obligations related
 		/// to services received from employees, such as accrued salaries and bonuses, payroll taxes and fringe benefits. Used to reflect the
 		/// current portion of the liabilities (due within one year or within the normal operating cycle if longer).
@@ -3390,15 +2755,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23516")]
 		public LiabilitiesHeldforSaleTotalBalanceSheet LiabilitiesHeldforSaleTotal { get; set; }
-
-		/// <summary>
-		/// An asset that is used to reduce the risk of adverse price movements in another asset.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23517
-		/// </remarks>
-		[JsonProperty("23517")]
-		public HedgingAssetsNonCurrentBalanceSheet HedgingAssetsNonCurrent { get; set; }
 
 		/// <summary>
 		/// A security transaction which expires within a 12 month period that reduces the risk on an existing investment position.
@@ -3440,24 +2796,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherLoansTotalBalanceSheet OtherLoansTotal { get; set; }
 
 		/// <summary>
-		/// A liability derived from hedging instruments. The amount due is outside of the next 12 months or operating cycle.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23522
-		/// </remarks>
-		[JsonProperty("23522")]
-		public HedgingLiabilitiesNonCurrentBalanceSheet HedgingLiabilitiesNonCurrent { get; set; }
-
-		/// <summary>
-		/// A liability derived from hedging instruments. The amount is due within the next 12 months or operating cycle.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23523
-		/// </remarks>
-		[JsonProperty("23523")]
-		public HedgingLiabilitiesCurrentBalanceSheet HedgingLiabilitiesCurrent { get; set; }
-
-		/// <summary>
 		/// Liabilities related to insurance funds that are dissolved after one year.
 		/// </summary>
 		/// <remarks>
@@ -3465,15 +2803,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("23524")]
 		public InsuranceFundsNonCurrentBalanceSheet InsuranceFundsNonCurrent { get; set; }
-
-		/// <summary>
-		/// Liabilities related to insurance funds that are dissolved within the year.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23525
-		/// </remarks>
-		[JsonProperty("23525")]
-		public InsuranceFundsCurrentBalanceSheet InsuranceFundsCurrent { get; set; }
 
 		/// <summary>
 		/// The total aggregate of all written promises and/or agreements to repay a stated amount of borrowed funds at a specified date in
@@ -3587,15 +2916,6 @@ namespace QuantConnect.Data.Fundamental
 		public FinancialOrDerivativeInvestmentCurrentLiabilitiesBalanceSheet FinancialOrDerivativeInvestmentCurrentLiabilities { get; set; }
 
 		/// <summary>
-		/// An asset account in a bank's general ledger that indicates the amounts owed by borrowers to the bank as of a given date.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23539
-		/// </remarks>
-		[JsonProperty("23539")]
-		public LoanAndLoanReceivablesBalanceSheet LoanAndLoanReceivables { get; set; }
-
-		/// <summary>
 		/// Investments that are neither Investment in Financial Assets nor Long term equity investment, not expected to be cashed within a
 		/// year.
 		/// </summary>
@@ -3634,29 +2954,98 @@ namespace QuantConnect.Data.Fundamental
 		public DueFromRelatedPartiesBalanceSheet DueFromRelatedParties { get; set; }
 
 		/// <summary>
-		/// Preferred security issued by a trust created by the company, that is treated as a long-term liability.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23544
-		/// </remarks>
-		[JsonProperty("23544")]
-		public TrustPreferredSecuritiesBalanceSheet TrustPreferredSecurities { get; set; }
-
-		/// <summary>
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 23545
-		/// </remarks>
-		[JsonProperty("23545")]
-		public CooperativesShareCapitalRepayableonDemandBalanceSheet CooperativesShareCapitalRepayableonDemand { get; set; }
-
-		/// <summary>
+		/// The amount of surplus from insurance contracts which has not been allocated at the balance sheet date. This is represented as a
+		/// liability to policyholders, as it pertains to cumulative income arising from the with-profits business.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23546
 		/// </remarks>
 		[JsonProperty("23546")]
 		public UnallocatedSurplusBalanceSheet UnallocatedSurplus { get; set; }
+
+		/// <summary>
+		/// Debt due under 1 year according to the debt maturity schedule reported by the company.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23547
+		/// </remarks>
+		[JsonProperty("23547")]
+		public DebtDueInYear1BalanceSheet DebtDueInYear1 { get; set; }
+
+		/// <summary>
+		/// Debt due under 2 years according to the debt maturity schedule reported by the company.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23548
+		/// </remarks>
+		[JsonProperty("23548")]
+		public DebtDueInYear2BalanceSheet DebtDueInYear2 { get; set; }
+
+		/// <summary>
+		/// Debt due within 5 year if the company provide maturity schedule in range e.g. 1-5 years, 2-5 years. Debt due under 5 years
+		/// according to the debt maturity schedule reported by the company. If a range is reported by the company, the value will be collected
+		/// under the maximum number of years (eg. 1-5 years, 3-5 years or 5 years will all be collected under this data point.)
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23549
+		/// </remarks>
+		[JsonProperty("23549")]
+		public DebtDueInYear5BalanceSheet DebtDueInYear5 { get; set; }
+
+		/// <summary>
+		/// Debt maturing beyond 5 years (eg. 5-10 years) or with no specified maturity, according to the debt maturity schedule reported by
+		/// the company.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23550
+		/// </remarks>
+		[JsonProperty("23550")]
+		public DebtDueBeyondBalanceSheet DebtDueBeyond { get; set; }
+
+		/// <summary>
+		/// Total Debt in Maturity Schedule is the sum of Debt details above.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23551
+		/// </remarks>
+		[JsonProperty("23551")]
+		public TotalDebtInMaturityScheduleBalanceSheet TotalDebtInMaturitySchedule { get; set; }
+
+		/// <summary>
+		/// Reserves created by revaluation of assets.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23552
+		/// </remarks>
+		[JsonProperty("23552")]
+		public FixedAssetsRevaluationReserveBalanceSheet FixedAssetsRevaluationReserve { get; set; }
+
+		/// <summary>
+		/// Other short term financial liabilities not categorized and due within one year or a normal operating cycle (whichever is longer).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23553
+		/// </remarks>
+		[JsonProperty("23553")]
+		public CurrentOtherFinancialLiabilitiesBalanceSheet CurrentOtherFinancialLiabilities { get; set; }
+
+		/// <summary>
+		/// Other long term financial liabilities not categorized and due over one year or a normal operating cycle (whichever is longer).
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23554
+		/// </remarks>
+		[JsonProperty("23554")]
+		public NonCurrentOtherFinancialLiabilitiesBalanceSheet NonCurrentOtherFinancialLiabilities { get; set; }
+
+		/// <summary>
+		/// Other financial liabilities not categorized.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23555
+		/// </remarks>
+		[JsonProperty("23555")]
+		public OtherFinancialLiabilitiesBalanceSheet OtherFinancialLiabilities { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the BalanceSheet class
@@ -3701,9 +3090,6 @@ namespace QuantConnect.Data.Fundamental
 			EquityInvestments = new EquityInvestmentsBalanceSheet();
 			FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase = new FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet();
 			FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell = new FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellBalanceSheet();
-			FixedMaturitiesAvailableForSale = new FixedMaturitiesAvailableForSaleBalanceSheet();
-			FixedMaturitiesHeldToMaturity = new FixedMaturitiesHeldToMaturityBalanceSheet();
-			FixedMaturitiesTrading = new FixedMaturitiesTradingBalanceSheet();
 			FixedMaturityInvestments = new FixedMaturityInvestmentsBalanceSheet();
 			FuturePolicyBenefits = new FuturePolicyBenefitsBalanceSheet();
 			GeneralPartnershipCapital = new GeneralPartnershipCapitalBalanceSheet();
@@ -3740,11 +3126,9 @@ namespace QuantConnect.Data.Fundamental
 			PolicyholderFunds = new PolicyholderFundsBalanceSheet();
 			PreferredSecuritiesOutsideStockEquity = new PreferredSecuritiesOutsideStockEquityBalanceSheet();
 			PreferredStock = new PreferredStockBalanceSheet();
-			PremiumsReceivable = new PremiumsReceivableBalanceSheet();
 			PrepaidAssets = new PrepaidAssetsBalanceSheet();
 			NonCurrentPrepaidAssets = new NonCurrentPrepaidAssetsBalanceSheet();
 			Receivables = new ReceivablesBalanceSheet();
-			RedeemablePreferredStock = new RedeemablePreferredStockBalanceSheet();
 			ReinsuranceRecoverable = new ReinsuranceRecoverableBalanceSheet();
 			RetainedEarnings = new RetainedEarningsBalanceSheet();
 			SecuritiesLendingCollateral = new SecuritiesLendingCollateralBalanceSheet();
@@ -3760,9 +3144,7 @@ namespace QuantConnect.Data.Fundamental
 			TotalAssets = new TotalAssetsBalanceSheet();
 			TotalDeposits = new TotalDepositsBalanceSheet();
 			TotalInvestments = new TotalInvestmentsBalanceSheet();
-			TotalLiabilities = new TotalLiabilitiesBalanceSheet();
 			TotalNonCurrentAssets = new TotalNonCurrentAssetsBalanceSheet();
-			TotalNonCurrentLiabilities = new TotalNonCurrentLiabilitiesBalanceSheet();
 			TotalPartnershipCapital = new TotalPartnershipCapitalBalanceSheet();
 			TradingAssets = new TradingAssetsBalanceSheet();
 			TradingLiabilities = new TradingLiabilitiesBalanceSheet();
@@ -3786,31 +3168,22 @@ namespace QuantConnect.Data.Fundamental
 			AllowanceForNotesReceivable = new AllowanceForNotesReceivableBalanceSheet();
 			AssetsHeldForSale = new AssetsHeldForSaleBalanceSheet();
 			AssetsOfDiscontinuedOperations = new AssetsOfDiscontinuedOperationsBalanceSheet();
-			BankAcceptanceExecutedAndOutstanding = new BankAcceptanceExecutedAndOutstandingBalanceSheet();
 			BankIndebtedness = new BankIndebtednessBalanceSheet();
-			BankLoan = new BankLoanBalanceSheet();
 			BankOwnedLifeInsurance = new BankOwnedLifeInsuranceBalanceSheet();
 			SecurityBorrowed = new SecurityBorrowedBalanceSheet();
 			BuildingsAndImprovements = new BuildingsAndImprovementsBalanceSheet();
-			CasualtyClaims = new CasualtyClaimsBalanceSheet();
-			CededUnearnedPremiums = new CededUnearnedPremiumsBalanceSheet();
 			CommercialLoan = new CommercialLoanBalanceSheet();
 			CommercialPaper = new CommercialPaperBalanceSheet();
 			CommonStockEquity = new CommonStockEquityBalanceSheet();
-			CommonStocksAvailableForSale = new CommonStocksAvailableForSaleBalanceSheet();
 			ConstructionInProgress = new ConstructionInProgressBalanceSheet();
 			ConsumerLoan = new ConsumerLoanBalanceSheet();
 			MinimumPensionLiabilities = new MinimumPensionLiabilitiesBalanceSheet();
 			CustomerAcceptances = new CustomerAcceptancesBalanceSheet();
-			DeferredAcquisitionCosts = new DeferredAcquisitionCostsBalanceSheet();
-			DeferredFinancingCosts = new DeferredFinancingCostsBalanceSheet();
 			DefinedPensionBenefit = new DefinedPensionBenefitBalanceSheet();
 			DerivativeProductLiabilities = new DerivativeProductLiabilitiesBalanceSheet();
 			DerivativeAssets = new DerivativeAssetsBalanceSheet();
 			DividendsPayable = new DividendsPayableBalanceSheet();
-			ESOPDebtGuarantee = new ESOPDebtGuaranteeBalanceSheet();
 			EmployeeBenefits = new EmployeeBenefitsBalanceSheet();
-			FacilitiesAndOther = new FacilitiesAndOtherBalanceSheet();
 			FederalFundsPurchased = new FederalFundsPurchasedBalanceSheet();
 			FederalFundsSold = new FederalFundsSoldBalanceSheet();
 			FederalHomeLoanBankStock = new FederalHomeLoanBankStockBalanceSheet();
@@ -3819,19 +3192,12 @@ namespace QuantConnect.Data.Fundamental
 			FinishedGoods = new FinishedGoodsBalanceSheet();
 			FlightFleetVehicleAndRelatedEquipments = new FlightFleetVehicleAndRelatedEquipmentsBalanceSheet();
 			ForeclosedAssets = new ForeclosedAssetsBalanceSheet();
-			ForeignComponent = new ForeignComponentBalanceSheet();
 			ForeignCurrencyTranslationAdjustments = new ForeignCurrencyTranslationAdjustmentsBalanceSheet();
-			FuelAndNaturalGas = new FuelAndNaturalGasBalanceSheet();
-			GuaranteedInvestmentContract = new GuaranteedInvestmentContractBalanceSheet();
 			InventoriesAdjustmentsAllowances = new InventoriesAdjustmentsAllowancesBalanceSheet();
-			InvestmentTaxCredits = new InvestmentTaxCreditsBalanceSheet();
-			InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures = new InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVenturesBalanceSheet();
 			InvestmentsInOtherVenturesUnderEquityMethod = new InvestmentsInOtherVenturesUnderEquityMethodBalanceSheet();
-			InvestmentsInVariableInterestEntity = new InvestmentsInVariableInterestEntityBalanceSheet();
 			LandAndImprovements = new LandAndImprovementsBalanceSheet();
 			Leases = new LeasesBalanceSheet();
 			LiabilitiesOfDiscontinuedOperations = new LiabilitiesOfDiscontinuedOperationsBalanceSheet();
-			LimitedPartnership = new LimitedPartnershipBalanceSheet();
 			LineOfCredit = new LineOfCreditBalanceSheet();
 			LoansHeldForSale = new LoansHeldForSaleBalanceSheet();
 			LoansReceivable = new LoansReceivableBalanceSheet();
@@ -3840,55 +3206,35 @@ namespace QuantConnect.Data.Fundamental
 			MineralProperties = new MineralPropertiesBalanceSheet();
 			MortgageLoan = new MortgageLoanBalanceSheet();
 			MortgageAndConsumerloans = new MortgageAndConsumerloansBalanceSheet();
-			NaturalResourceAssets = new NaturalResourceAssetsBalanceSheet();
-			NetOtherUnrealizedGainLoss = new NetOtherUnrealizedGainLossBalanceSheet();
-			NetUnrealizedGainLossForeignCurrency = new NetUnrealizedGainLossForeignCurrencyBalanceSheet();
-			NetUnrealizedGainLossInvestments = new NetUnrealizedGainLossInvestmentsBalanceSheet();
 			GrossNotesReceivable = new GrossNotesReceivableBalanceSheet();
 			OtherAssets = new OtherAssetsBalanceSheet();
 			OtherCapitalStock = new OtherCapitalStockBalanceSheet();
 			OtherCurrentAssets = new OtherCurrentAssetsBalanceSheet();
 			OtherCurrentBorrowings = new OtherCurrentBorrowingsBalanceSheet();
-			OtherDeferredCosts = new OtherDeferredCostsBalanceSheet();
-			OtherDeposits = new OtherDepositsBalanceSheet();
 			OtherEquityAdjustments = new OtherEquityAdjustmentsBalanceSheet();
-			OtherInterestEarningAssets = new OtherInterestEarningAssetsBalanceSheet();
 			OtherInventories = new OtherInventoriesBalanceSheet();
 			OtherInvestedAssets = new OtherInvestedAssetsBalanceSheet();
 			OtherNonCurrentAssets = new OtherNonCurrentAssetsBalanceSheet();
 			OtherProperties = new OtherPropertiesBalanceSheet();
 			OtherRealEstateOwned = new OtherRealEstateOwnedBalanceSheet();
 			OtherReceivables = new OtherReceivablesBalanceSheet();
-			Patents = new PatentsBalanceSheet();
 			NonCurrentPensionAndOtherPostretirementBenefitPlans = new NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet();
 			PolicyLoans = new PolicyLoansBalanceSheet();
 			PreferredStockEquity = new PreferredStockEquityBalanceSheet();
-			PreferredStockOfSubsidiary = new PreferredStockOfSubsidiaryBalanceSheet();
-			PreferredStocksAvailableForSale = new PreferredStocksAvailableForSaleBalanceSheet();
-			PrepaidReinsurancePremiums = new PrepaidReinsurancePremiumsBalanceSheet();
 			Properties = new PropertiesBalanceSheet();
 			CurrentProvisions = new CurrentProvisionsBalanceSheet();
 			LongTermProvisions = new LongTermProvisionsBalanceSheet();
-			PurchasedComponents = new PurchasedComponentsBalanceSheet();
 			RawMaterials = new RawMaterialsBalanceSheet();
-			RealEstateHeldForSale = new RealEstateHeldForSaleBalanceSheet();
-			RealEstateAndRealEstateJointVenturesHeldForInvestment = new RealEstateAndRealEstateJointVenturesHeldForInvestmentBalanceSheet();
 			ReceivablesAdjustmentsAllowances = new ReceivablesAdjustmentsAllowancesBalanceSheet();
 			RegulatoryAssets = new RegulatoryAssetsBalanceSheet();
 			RegulatoryLiabilities = new RegulatoryLiabilitiesBalanceSheet();
 			ReinsuranceBalancesPayable = new ReinsuranceBalancesPayableBalanceSheet();
-			ReinsuranceReceivables = new ReinsuranceReceivablesBalanceSheet();
-			ReinsuranceRecoverableForPaidLosses = new ReinsuranceRecoverableForPaidLossesBalanceSheet();
-			ReinsuranceRecoverableForUnpaidLosses = new ReinsuranceRecoverableForUnpaidLossesBalanceSheet();
 			RestrictedCash = new RestrictedCashBalanceSheet();
 			RestrictedCashAndCashEquivalents = new RestrictedCashAndCashEquivalentsBalanceSheet();
 			RestrictedCashAndInvestments = new RestrictedCashAndInvestmentsBalanceSheet();
 			RestrictedCommonStock = new RestrictedCommonStockBalanceSheet();
 			RestrictedInvestments = new RestrictedInvestmentsBalanceSheet();
-			SecuritiesLendingPayable = new SecuritiesLendingPayableBalanceSheet();
-			StudentLoan = new StudentLoanBalanceSheet();
 			TaxesReceivable = new TaxesReceivableBalanceSheet();
-			TimeDepositsPlaced = new TimeDepositsPlacedBalanceSheet();
 			TotalCapitalization = new TotalCapitalizationBalanceSheet();
 			TotalDeferredCreditsAndOtherNonCurrentLiabilities = new TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet();
 			UnbilledReceivables = new UnbilledReceivablesBalanceSheet();
@@ -3902,7 +3248,6 @@ namespace QuantConnect.Data.Fundamental
 			TotalEquity = new TotalEquityBalanceSheet();
 			WorkingCapital = new WorkingCapitalBalanceSheet();
 			TotalDebt = new TotalDebtBalanceSheet();
-			CashValueOfLifeInsurance = new CashValueOfLifeInsuranceBalanceSheet();
 			CommonUtilityPlant = new CommonUtilityPlantBalanceSheet();
 			ElectricUtilityPlant = new ElectricUtilityPlantBalanceSheet();
 			NaturalGasFuelAndOther = new NaturalGasFuelAndOtherBalanceSheet();
@@ -3914,14 +3259,12 @@ namespace QuantConnect.Data.Fundamental
 			TradingAndOtherReceivable = new TradingAndOtherReceivableBalanceSheet();
 			EquityAttributableToOwnersOfParent = new EquityAttributableToOwnersOfParentBalanceSheet();
 			SecuritiesLoaned = new SecuritiesLoanedBalanceSheet();
-			ParticipatingPolicyholderEquity = new ParticipatingPolicyholderEquityBalanceSheet();
 			NetTangibleAssets = new NetTangibleAssetsBalanceSheet();
 			DuefromRelatedPartiesCurrent = new DuefromRelatedPartiesCurrentBalanceSheet();
 			DuefromRelatedPartiesNonCurrent = new DuefromRelatedPartiesNonCurrentBalanceSheet();
 			DuetoRelatedParties = new DuetoRelatedPartiesBalanceSheet();
 			DuetoRelatedPartiesCurrent = new DuetoRelatedPartiesCurrentBalanceSheet();
 			DuetoRelatedPartiesNonCurrent = new DuetoRelatedPartiesNonCurrentBalanceSheet();
-			NetAssets = new NetAssetsBalanceSheet();
 			InvestmentProperties = new InvestmentPropertiesBalanceSheet();
 			InvestmentsinSubsidiariesatCost = new InvestmentsinSubsidiariesatCostBalanceSheet();
 			InvestmentsinAssociatesatCost = new InvestmentsinAssociatesatCostBalanceSheet();
@@ -3948,12 +3291,8 @@ namespace QuantConnect.Data.Fundamental
 			ProvisionsTotal = new ProvisionsTotalBalanceSheet();
 			OperatingLeaseAssets = new OperatingLeaseAssetsBalanceSheet();
 			ClaimsOutstanding = new ClaimsOutstandingBalanceSheet();
-			LongTermContracts = new LongTermContractsBalanceSheet();
-			RealEstate = new RealEstateBalanceSheet();
-			PaymentofBills = new PaymentofBillsBalanceSheet();
 			LiabilitiesHeldforSaleCurrent = new LiabilitiesHeldforSaleCurrentBalanceSheet();
 			LiabilitiesHeldforSaleNonCurrent = new LiabilitiesHeldforSaleNonCurrentBalanceSheet();
-			UnclassifiedCurrentAssets = new UnclassifiedCurrentAssetsBalanceSheet();
 			DebtSecurities = new DebtSecuritiesBalanceSheet();
 			TotalFinancialLeaseObligations = new TotalFinancialLeaseObligationsBalanceSheet();
 			AccruedandDeferredIncomeCurrent = new AccruedandDeferredIncomeCurrentBalanceSheet();
@@ -3968,53 +3307,33 @@ namespace QuantConnect.Data.Fundamental
 			InterestBearingBorrowingsNonCurrent = new InterestBearingBorrowingsNonCurrentBalanceSheet();
 			NonInterestBearingBorrowingsNonCurrent = new NonInterestBearingBorrowingsNonCurrentBalanceSheet();
 			TradeandOtherPayablesNonCurrent = new TradeandOtherPayablesNonCurrentBalanceSheet();
-			InterestBearingBorrowingsCurrent = new InterestBearingBorrowingsCurrentBalanceSheet();
 			NonInterestBearingBorrowingsCurrent = new NonInterestBearingBorrowingsCurrentBalanceSheet();
 			PensionandOtherPostRetirementBenefitPlansCurrent = new PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet();
-			CashandBalanceswithCentralBanks = new CashandBalanceswithCentralBanksBalanceSheet();
-			PlacementwithBanksandOtherFinancialInstitutions = new PlacementwithBanksandOtherFinancialInstitutionsBalanceSheet();
 			OtherLoanAssets = new OtherLoanAssetsBalanceSheet();
-			HedgingAssetsTotal = new HedgingAssetsTotalBalanceSheet();
 			AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal = new AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotalBalanceSheet();
 			TaxAssetsTotal = new TaxAssetsTotalBalanceSheet();
 			AdvancesfromCentralBanks = new AdvancesfromCentralBanksBalanceSheet();
-			CertificatesofDepositsandOtherDebtSecuritiesIssued = new CertificatesofDepositsandOtherDebtSecuritiesIssuedBalanceSheet();
 			DepositCertificates = new DepositCertificatesBalanceSheet();
-			DebenturesandDebtCertificates = new DebenturesandDebtCertificatesBalanceSheet();
-			InterestBearingBorrowingsTotal = new InterestBearingBorrowingsTotalBalanceSheet();
 			NonInterestBearingBorrowingsTotal = new NonInterestBearingBorrowingsTotalBalanceSheet();
 			OtherBorrowedFunds = new OtherBorrowedFundsBalanceSheet();
 			FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal = new FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotalBalanceSheet();
 			FinancialLiabilitiesMeasuredatAmortizedCostTotal = new FinancialLiabilitiesMeasuredatAmortizedCostTotalBalanceSheet();
-			LoanCapital = new LoanCapitalBalanceSheet();
-			HedgingLiabilitiesTotal = new HedgingLiabilitiesTotalBalanceSheet();
-			LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRisk = new LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRiskBalanceSheet();
 			AccruedLiabilitiesTotal = new AccruedLiabilitiesTotalBalanceSheet();
 			DeferredIncomeTotal = new DeferredIncomeTotalBalanceSheet();
 			DeferredTaxLiabilitiesTotal = new DeferredTaxLiabilitiesTotalBalanceSheet();
 			ReinsuranceAssets = new ReinsuranceAssetsBalanceSheet();
-			ReinsuranceShareofInsuranceContract = new ReinsuranceShareofInsuranceContractBalanceSheet();
-			ReinsuranceShareofAccruedPolicyholderClaims = new ReinsuranceShareofAccruedPolicyholderClaimsBalanceSheet();
 			DepositsMadeunderAssumedReinsuranceContract = new DepositsMadeunderAssumedReinsuranceContractBalanceSheet();
 			InsuranceContractAssets = new InsuranceContractAssetsBalanceSheet();
-			InsuranceReceivables = new InsuranceReceivablesBalanceSheet();
 			InsuranceContractLiabilities = new InsuranceContractLiabilitiesBalanceSheet();
-			InsurancePayables = new InsurancePayablesBalanceSheet();
 			DepositsReceivedunderCededInsuranceContract = new DepositsReceivedunderCededInsuranceContractBalanceSheet();
 			InvestmentContractLiabilities = new InvestmentContractLiabilitiesBalanceSheet();
-			ConstructionGrants = new ConstructionGrantsBalanceSheet();
-			DeferredCostCurrent = new DeferredCostCurrentBalanceSheet();
 			PensionAndOtherPostretirementBenefitPlansTotal = new PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet();
 			LiabilitiesHeldforSaleTotal = new LiabilitiesHeldforSaleTotalBalanceSheet();
-			HedgingAssetsNonCurrent = new HedgingAssetsNonCurrentBalanceSheet();
 			HedgingAssetsCurrent = new HedgingAssetsCurrentBalanceSheet();
 			ConvertibleLoansTotal = new ConvertibleLoansTotalBalanceSheet();
 			BankLoansTotal = new BankLoansTotalBalanceSheet();
 			OtherLoansTotal = new OtherLoansTotalBalanceSheet();
-			HedgingLiabilitiesNonCurrent = new HedgingLiabilitiesNonCurrentBalanceSheet();
-			HedgingLiabilitiesCurrent = new HedgingLiabilitiesCurrentBalanceSheet();
 			InsuranceFundsNonCurrent = new InsuranceFundsNonCurrentBalanceSheet();
-			InsuranceFundsCurrent = new InsuranceFundsCurrentBalanceSheet();
 			DebtTotal = new DebtTotalBalanceSheet();
 			ComTreShaNum = new ComTreShaNumBalanceSheet();
 			PreTreShaNum = new PreTreShaNumBalanceSheet();
@@ -4026,13 +3345,19 @@ namespace QuantConnect.Data.Fundamental
 			CashRestrictedOrPledged = new CashRestrictedOrPledgedBalanceSheet();
 			ConvertibleLoansNonCurrent = new ConvertibleLoansNonCurrentBalanceSheet();
 			FinancialOrDerivativeInvestmentCurrentLiabilities = new FinancialOrDerivativeInvestmentCurrentLiabilitiesBalanceSheet();
-			LoanAndLoanReceivables = new LoanAndLoanReceivablesBalanceSheet();
 			OtherInvestments = new OtherInvestmentsBalanceSheet();
 			TradeAndOtherReceivablesNonCurrent = new TradeAndOtherReceivablesNonCurrentBalanceSheet();
 			DueFromRelatedParties = new DueFromRelatedPartiesBalanceSheet();
-			TrustPreferredSecurities = new TrustPreferredSecuritiesBalanceSheet();
-			CooperativesShareCapitalRepayableonDemand = new CooperativesShareCapitalRepayableonDemandBalanceSheet();
 			UnallocatedSurplus = new UnallocatedSurplusBalanceSheet();
+			DebtDueInYear1 = new DebtDueInYear1BalanceSheet();
+			DebtDueInYear2 = new DebtDueInYear2BalanceSheet();
+			DebtDueInYear5 = new DebtDueInYear5BalanceSheet();
+			DebtDueBeyond = new DebtDueBeyondBalanceSheet();
+			TotalDebtInMaturitySchedule = new TotalDebtInMaturityScheduleBalanceSheet();
+			FixedAssetsRevaluationReserve = new FixedAssetsRevaluationReserveBalanceSheet();
+			CurrentOtherFinancialLiabilities = new CurrentOtherFinancialLiabilitiesBalanceSheet();
+			NonCurrentOtherFinancialLiabilities = new NonCurrentOtherFinancialLiabilitiesBalanceSheet();
+			OtherFinancialLiabilities = new OtherFinancialLiabilitiesBalanceSheet();
 		}
 
 		/// <summary>
@@ -4082,9 +3407,6 @@ namespace QuantConnect.Data.Fundamental
 			if (EquityInvestments != null) EquityInvestments.UpdateValues(previous.EquityInvestments);
 			if (FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase != null) FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase.UpdateValues(previous.FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase);
 			if (FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell != null) FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell.UpdateValues(previous.FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell);
-			if (FixedMaturitiesAvailableForSale != null) FixedMaturitiesAvailableForSale.UpdateValues(previous.FixedMaturitiesAvailableForSale);
-			if (FixedMaturitiesHeldToMaturity != null) FixedMaturitiesHeldToMaturity.UpdateValues(previous.FixedMaturitiesHeldToMaturity);
-			if (FixedMaturitiesTrading != null) FixedMaturitiesTrading.UpdateValues(previous.FixedMaturitiesTrading);
 			if (FixedMaturityInvestments != null) FixedMaturityInvestments.UpdateValues(previous.FixedMaturityInvestments);
 			if (FuturePolicyBenefits != null) FuturePolicyBenefits.UpdateValues(previous.FuturePolicyBenefits);
 			if (GeneralPartnershipCapital != null) GeneralPartnershipCapital.UpdateValues(previous.GeneralPartnershipCapital);
@@ -4121,11 +3443,9 @@ namespace QuantConnect.Data.Fundamental
 			if (PolicyholderFunds != null) PolicyholderFunds.UpdateValues(previous.PolicyholderFunds);
 			if (PreferredSecuritiesOutsideStockEquity != null) PreferredSecuritiesOutsideStockEquity.UpdateValues(previous.PreferredSecuritiesOutsideStockEquity);
 			if (PreferredStock != null) PreferredStock.UpdateValues(previous.PreferredStock);
-			if (PremiumsReceivable != null) PremiumsReceivable.UpdateValues(previous.PremiumsReceivable);
 			if (PrepaidAssets != null) PrepaidAssets.UpdateValues(previous.PrepaidAssets);
 			if (NonCurrentPrepaidAssets != null) NonCurrentPrepaidAssets.UpdateValues(previous.NonCurrentPrepaidAssets);
 			if (Receivables != null) Receivables.UpdateValues(previous.Receivables);
-			if (RedeemablePreferredStock != null) RedeemablePreferredStock.UpdateValues(previous.RedeemablePreferredStock);
 			if (ReinsuranceRecoverable != null) ReinsuranceRecoverable.UpdateValues(previous.ReinsuranceRecoverable);
 			if (RetainedEarnings != null) RetainedEarnings.UpdateValues(previous.RetainedEarnings);
 			if (SecuritiesLendingCollateral != null) SecuritiesLendingCollateral.UpdateValues(previous.SecuritiesLendingCollateral);
@@ -4141,9 +3461,7 @@ namespace QuantConnect.Data.Fundamental
 			if (TotalAssets != null) TotalAssets.UpdateValues(previous.TotalAssets);
 			if (TotalDeposits != null) TotalDeposits.UpdateValues(previous.TotalDeposits);
 			if (TotalInvestments != null) TotalInvestments.UpdateValues(previous.TotalInvestments);
-			if (TotalLiabilities != null) TotalLiabilities.UpdateValues(previous.TotalLiabilities);
 			if (TotalNonCurrentAssets != null) TotalNonCurrentAssets.UpdateValues(previous.TotalNonCurrentAssets);
-			if (TotalNonCurrentLiabilities != null) TotalNonCurrentLiabilities.UpdateValues(previous.TotalNonCurrentLiabilities);
 			if (TotalPartnershipCapital != null) TotalPartnershipCapital.UpdateValues(previous.TotalPartnershipCapital);
 			if (TradingAssets != null) TradingAssets.UpdateValues(previous.TradingAssets);
 			if (TradingLiabilities != null) TradingLiabilities.UpdateValues(previous.TradingLiabilities);
@@ -4167,31 +3485,22 @@ namespace QuantConnect.Data.Fundamental
 			if (AllowanceForNotesReceivable != null) AllowanceForNotesReceivable.UpdateValues(previous.AllowanceForNotesReceivable);
 			if (AssetsHeldForSale != null) AssetsHeldForSale.UpdateValues(previous.AssetsHeldForSale);
 			if (AssetsOfDiscontinuedOperations != null) AssetsOfDiscontinuedOperations.UpdateValues(previous.AssetsOfDiscontinuedOperations);
-			if (BankAcceptanceExecutedAndOutstanding != null) BankAcceptanceExecutedAndOutstanding.UpdateValues(previous.BankAcceptanceExecutedAndOutstanding);
 			if (BankIndebtedness != null) BankIndebtedness.UpdateValues(previous.BankIndebtedness);
-			if (BankLoan != null) BankLoan.UpdateValues(previous.BankLoan);
 			if (BankOwnedLifeInsurance != null) BankOwnedLifeInsurance.UpdateValues(previous.BankOwnedLifeInsurance);
 			if (SecurityBorrowed != null) SecurityBorrowed.UpdateValues(previous.SecurityBorrowed);
 			if (BuildingsAndImprovements != null) BuildingsAndImprovements.UpdateValues(previous.BuildingsAndImprovements);
-			if (CasualtyClaims != null) CasualtyClaims.UpdateValues(previous.CasualtyClaims);
-			if (CededUnearnedPremiums != null) CededUnearnedPremiums.UpdateValues(previous.CededUnearnedPremiums);
 			if (CommercialLoan != null) CommercialLoan.UpdateValues(previous.CommercialLoan);
 			if (CommercialPaper != null) CommercialPaper.UpdateValues(previous.CommercialPaper);
 			if (CommonStockEquity != null) CommonStockEquity.UpdateValues(previous.CommonStockEquity);
-			if (CommonStocksAvailableForSale != null) CommonStocksAvailableForSale.UpdateValues(previous.CommonStocksAvailableForSale);
 			if (ConstructionInProgress != null) ConstructionInProgress.UpdateValues(previous.ConstructionInProgress);
 			if (ConsumerLoan != null) ConsumerLoan.UpdateValues(previous.ConsumerLoan);
 			if (MinimumPensionLiabilities != null) MinimumPensionLiabilities.UpdateValues(previous.MinimumPensionLiabilities);
 			if (CustomerAcceptances != null) CustomerAcceptances.UpdateValues(previous.CustomerAcceptances);
-			if (DeferredAcquisitionCosts != null) DeferredAcquisitionCosts.UpdateValues(previous.DeferredAcquisitionCosts);
-			if (DeferredFinancingCosts != null) DeferredFinancingCosts.UpdateValues(previous.DeferredFinancingCosts);
 			if (DefinedPensionBenefit != null) DefinedPensionBenefit.UpdateValues(previous.DefinedPensionBenefit);
 			if (DerivativeProductLiabilities != null) DerivativeProductLiabilities.UpdateValues(previous.DerivativeProductLiabilities);
 			if (DerivativeAssets != null) DerivativeAssets.UpdateValues(previous.DerivativeAssets);
 			if (DividendsPayable != null) DividendsPayable.UpdateValues(previous.DividendsPayable);
-			if (ESOPDebtGuarantee != null) ESOPDebtGuarantee.UpdateValues(previous.ESOPDebtGuarantee);
 			if (EmployeeBenefits != null) EmployeeBenefits.UpdateValues(previous.EmployeeBenefits);
-			if (FacilitiesAndOther != null) FacilitiesAndOther.UpdateValues(previous.FacilitiesAndOther);
 			if (FederalFundsPurchased != null) FederalFundsPurchased.UpdateValues(previous.FederalFundsPurchased);
 			if (FederalFundsSold != null) FederalFundsSold.UpdateValues(previous.FederalFundsSold);
 			if (FederalHomeLoanBankStock != null) FederalHomeLoanBankStock.UpdateValues(previous.FederalHomeLoanBankStock);
@@ -4200,19 +3509,12 @@ namespace QuantConnect.Data.Fundamental
 			if (FinishedGoods != null) FinishedGoods.UpdateValues(previous.FinishedGoods);
 			if (FlightFleetVehicleAndRelatedEquipments != null) FlightFleetVehicleAndRelatedEquipments.UpdateValues(previous.FlightFleetVehicleAndRelatedEquipments);
 			if (ForeclosedAssets != null) ForeclosedAssets.UpdateValues(previous.ForeclosedAssets);
-			if (ForeignComponent != null) ForeignComponent.UpdateValues(previous.ForeignComponent);
 			if (ForeignCurrencyTranslationAdjustments != null) ForeignCurrencyTranslationAdjustments.UpdateValues(previous.ForeignCurrencyTranslationAdjustments);
-			if (FuelAndNaturalGas != null) FuelAndNaturalGas.UpdateValues(previous.FuelAndNaturalGas);
-			if (GuaranteedInvestmentContract != null) GuaranteedInvestmentContract.UpdateValues(previous.GuaranteedInvestmentContract);
 			if (InventoriesAdjustmentsAllowances != null) InventoriesAdjustmentsAllowances.UpdateValues(previous.InventoriesAdjustmentsAllowances);
-			if (InvestmentTaxCredits != null) InvestmentTaxCredits.UpdateValues(previous.InvestmentTaxCredits);
-			if (InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures != null) InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures.UpdateValues(previous.InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures);
 			if (InvestmentsInOtherVenturesUnderEquityMethod != null) InvestmentsInOtherVenturesUnderEquityMethod.UpdateValues(previous.InvestmentsInOtherVenturesUnderEquityMethod);
-			if (InvestmentsInVariableInterestEntity != null) InvestmentsInVariableInterestEntity.UpdateValues(previous.InvestmentsInVariableInterestEntity);
 			if (LandAndImprovements != null) LandAndImprovements.UpdateValues(previous.LandAndImprovements);
 			if (Leases != null) Leases.UpdateValues(previous.Leases);
 			if (LiabilitiesOfDiscontinuedOperations != null) LiabilitiesOfDiscontinuedOperations.UpdateValues(previous.LiabilitiesOfDiscontinuedOperations);
-			if (LimitedPartnership != null) LimitedPartnership.UpdateValues(previous.LimitedPartnership);
 			if (LineOfCredit != null) LineOfCredit.UpdateValues(previous.LineOfCredit);
 			if (LoansHeldForSale != null) LoansHeldForSale.UpdateValues(previous.LoansHeldForSale);
 			if (LoansReceivable != null) LoansReceivable.UpdateValues(previous.LoansReceivable);
@@ -4221,55 +3523,35 @@ namespace QuantConnect.Data.Fundamental
 			if (MineralProperties != null) MineralProperties.UpdateValues(previous.MineralProperties);
 			if (MortgageLoan != null) MortgageLoan.UpdateValues(previous.MortgageLoan);
 			if (MortgageAndConsumerloans != null) MortgageAndConsumerloans.UpdateValues(previous.MortgageAndConsumerloans);
-			if (NaturalResourceAssets != null) NaturalResourceAssets.UpdateValues(previous.NaturalResourceAssets);
-			if (NetOtherUnrealizedGainLoss != null) NetOtherUnrealizedGainLoss.UpdateValues(previous.NetOtherUnrealizedGainLoss);
-			if (NetUnrealizedGainLossForeignCurrency != null) NetUnrealizedGainLossForeignCurrency.UpdateValues(previous.NetUnrealizedGainLossForeignCurrency);
-			if (NetUnrealizedGainLossInvestments != null) NetUnrealizedGainLossInvestments.UpdateValues(previous.NetUnrealizedGainLossInvestments);
 			if (GrossNotesReceivable != null) GrossNotesReceivable.UpdateValues(previous.GrossNotesReceivable);
 			if (OtherAssets != null) OtherAssets.UpdateValues(previous.OtherAssets);
 			if (OtherCapitalStock != null) OtherCapitalStock.UpdateValues(previous.OtherCapitalStock);
 			if (OtherCurrentAssets != null) OtherCurrentAssets.UpdateValues(previous.OtherCurrentAssets);
 			if (OtherCurrentBorrowings != null) OtherCurrentBorrowings.UpdateValues(previous.OtherCurrentBorrowings);
-			if (OtherDeferredCosts != null) OtherDeferredCosts.UpdateValues(previous.OtherDeferredCosts);
-			if (OtherDeposits != null) OtherDeposits.UpdateValues(previous.OtherDeposits);
 			if (OtherEquityAdjustments != null) OtherEquityAdjustments.UpdateValues(previous.OtherEquityAdjustments);
-			if (OtherInterestEarningAssets != null) OtherInterestEarningAssets.UpdateValues(previous.OtherInterestEarningAssets);
 			if (OtherInventories != null) OtherInventories.UpdateValues(previous.OtherInventories);
 			if (OtherInvestedAssets != null) OtherInvestedAssets.UpdateValues(previous.OtherInvestedAssets);
 			if (OtherNonCurrentAssets != null) OtherNonCurrentAssets.UpdateValues(previous.OtherNonCurrentAssets);
 			if (OtherProperties != null) OtherProperties.UpdateValues(previous.OtherProperties);
 			if (OtherRealEstateOwned != null) OtherRealEstateOwned.UpdateValues(previous.OtherRealEstateOwned);
 			if (OtherReceivables != null) OtherReceivables.UpdateValues(previous.OtherReceivables);
-			if (Patents != null) Patents.UpdateValues(previous.Patents);
 			if (NonCurrentPensionAndOtherPostretirementBenefitPlans != null) NonCurrentPensionAndOtherPostretirementBenefitPlans.UpdateValues(previous.NonCurrentPensionAndOtherPostretirementBenefitPlans);
 			if (PolicyLoans != null) PolicyLoans.UpdateValues(previous.PolicyLoans);
 			if (PreferredStockEquity != null) PreferredStockEquity.UpdateValues(previous.PreferredStockEquity);
-			if (PreferredStockOfSubsidiary != null) PreferredStockOfSubsidiary.UpdateValues(previous.PreferredStockOfSubsidiary);
-			if (PreferredStocksAvailableForSale != null) PreferredStocksAvailableForSale.UpdateValues(previous.PreferredStocksAvailableForSale);
-			if (PrepaidReinsurancePremiums != null) PrepaidReinsurancePremiums.UpdateValues(previous.PrepaidReinsurancePremiums);
 			if (Properties != null) Properties.UpdateValues(previous.Properties);
 			if (CurrentProvisions != null) CurrentProvisions.UpdateValues(previous.CurrentProvisions);
 			if (LongTermProvisions != null) LongTermProvisions.UpdateValues(previous.LongTermProvisions);
-			if (PurchasedComponents != null) PurchasedComponents.UpdateValues(previous.PurchasedComponents);
 			if (RawMaterials != null) RawMaterials.UpdateValues(previous.RawMaterials);
-			if (RealEstateHeldForSale != null) RealEstateHeldForSale.UpdateValues(previous.RealEstateHeldForSale);
-			if (RealEstateAndRealEstateJointVenturesHeldForInvestment != null) RealEstateAndRealEstateJointVenturesHeldForInvestment.UpdateValues(previous.RealEstateAndRealEstateJointVenturesHeldForInvestment);
 			if (ReceivablesAdjustmentsAllowances != null) ReceivablesAdjustmentsAllowances.UpdateValues(previous.ReceivablesAdjustmentsAllowances);
 			if (RegulatoryAssets != null) RegulatoryAssets.UpdateValues(previous.RegulatoryAssets);
 			if (RegulatoryLiabilities != null) RegulatoryLiabilities.UpdateValues(previous.RegulatoryLiabilities);
 			if (ReinsuranceBalancesPayable != null) ReinsuranceBalancesPayable.UpdateValues(previous.ReinsuranceBalancesPayable);
-			if (ReinsuranceReceivables != null) ReinsuranceReceivables.UpdateValues(previous.ReinsuranceReceivables);
-			if (ReinsuranceRecoverableForPaidLosses != null) ReinsuranceRecoverableForPaidLosses.UpdateValues(previous.ReinsuranceRecoverableForPaidLosses);
-			if (ReinsuranceRecoverableForUnpaidLosses != null) ReinsuranceRecoverableForUnpaidLosses.UpdateValues(previous.ReinsuranceRecoverableForUnpaidLosses);
 			if (RestrictedCash != null) RestrictedCash.UpdateValues(previous.RestrictedCash);
 			if (RestrictedCashAndCashEquivalents != null) RestrictedCashAndCashEquivalents.UpdateValues(previous.RestrictedCashAndCashEquivalents);
 			if (RestrictedCashAndInvestments != null) RestrictedCashAndInvestments.UpdateValues(previous.RestrictedCashAndInvestments);
 			if (RestrictedCommonStock != null) RestrictedCommonStock.UpdateValues(previous.RestrictedCommonStock);
 			if (RestrictedInvestments != null) RestrictedInvestments.UpdateValues(previous.RestrictedInvestments);
-			if (SecuritiesLendingPayable != null) SecuritiesLendingPayable.UpdateValues(previous.SecuritiesLendingPayable);
-			if (StudentLoan != null) StudentLoan.UpdateValues(previous.StudentLoan);
 			if (TaxesReceivable != null) TaxesReceivable.UpdateValues(previous.TaxesReceivable);
-			if (TimeDepositsPlaced != null) TimeDepositsPlaced.UpdateValues(previous.TimeDepositsPlaced);
 			if (TotalCapitalization != null) TotalCapitalization.UpdateValues(previous.TotalCapitalization);
 			if (TotalDeferredCreditsAndOtherNonCurrentLiabilities != null) TotalDeferredCreditsAndOtherNonCurrentLiabilities.UpdateValues(previous.TotalDeferredCreditsAndOtherNonCurrentLiabilities);
 			if (UnbilledReceivables != null) UnbilledReceivables.UpdateValues(previous.UnbilledReceivables);
@@ -4283,7 +3565,6 @@ namespace QuantConnect.Data.Fundamental
 			if (TotalEquity != null) TotalEquity.UpdateValues(previous.TotalEquity);
 			if (WorkingCapital != null) WorkingCapital.UpdateValues(previous.WorkingCapital);
 			if (TotalDebt != null) TotalDebt.UpdateValues(previous.TotalDebt);
-			if (CashValueOfLifeInsurance != null) CashValueOfLifeInsurance.UpdateValues(previous.CashValueOfLifeInsurance);
 			if (CommonUtilityPlant != null) CommonUtilityPlant.UpdateValues(previous.CommonUtilityPlant);
 			if (ElectricUtilityPlant != null) ElectricUtilityPlant.UpdateValues(previous.ElectricUtilityPlant);
 			if (NaturalGasFuelAndOther != null) NaturalGasFuelAndOther.UpdateValues(previous.NaturalGasFuelAndOther);
@@ -4295,14 +3576,12 @@ namespace QuantConnect.Data.Fundamental
 			if (TradingAndOtherReceivable != null) TradingAndOtherReceivable.UpdateValues(previous.TradingAndOtherReceivable);
 			if (EquityAttributableToOwnersOfParent != null) EquityAttributableToOwnersOfParent.UpdateValues(previous.EquityAttributableToOwnersOfParent);
 			if (SecuritiesLoaned != null) SecuritiesLoaned.UpdateValues(previous.SecuritiesLoaned);
-			if (ParticipatingPolicyholderEquity != null) ParticipatingPolicyholderEquity.UpdateValues(previous.ParticipatingPolicyholderEquity);
 			if (NetTangibleAssets != null) NetTangibleAssets.UpdateValues(previous.NetTangibleAssets);
 			if (DuefromRelatedPartiesCurrent != null) DuefromRelatedPartiesCurrent.UpdateValues(previous.DuefromRelatedPartiesCurrent);
 			if (DuefromRelatedPartiesNonCurrent != null) DuefromRelatedPartiesNonCurrent.UpdateValues(previous.DuefromRelatedPartiesNonCurrent);
 			if (DuetoRelatedParties != null) DuetoRelatedParties.UpdateValues(previous.DuetoRelatedParties);
 			if (DuetoRelatedPartiesCurrent != null) DuetoRelatedPartiesCurrent.UpdateValues(previous.DuetoRelatedPartiesCurrent);
 			if (DuetoRelatedPartiesNonCurrent != null) DuetoRelatedPartiesNonCurrent.UpdateValues(previous.DuetoRelatedPartiesNonCurrent);
-			if (NetAssets != null) NetAssets.UpdateValues(previous.NetAssets);
 			if (InvestmentProperties != null) InvestmentProperties.UpdateValues(previous.InvestmentProperties);
 			if (InvestmentsinSubsidiariesatCost != null) InvestmentsinSubsidiariesatCost.UpdateValues(previous.InvestmentsinSubsidiariesatCost);
 			if (InvestmentsinAssociatesatCost != null) InvestmentsinAssociatesatCost.UpdateValues(previous.InvestmentsinAssociatesatCost);
@@ -4329,12 +3608,8 @@ namespace QuantConnect.Data.Fundamental
 			if (ProvisionsTotal != null) ProvisionsTotal.UpdateValues(previous.ProvisionsTotal);
 			if (OperatingLeaseAssets != null) OperatingLeaseAssets.UpdateValues(previous.OperatingLeaseAssets);
 			if (ClaimsOutstanding != null) ClaimsOutstanding.UpdateValues(previous.ClaimsOutstanding);
-			if (LongTermContracts != null) LongTermContracts.UpdateValues(previous.LongTermContracts);
-			if (RealEstate != null) RealEstate.UpdateValues(previous.RealEstate);
-			if (PaymentofBills != null) PaymentofBills.UpdateValues(previous.PaymentofBills);
 			if (LiabilitiesHeldforSaleCurrent != null) LiabilitiesHeldforSaleCurrent.UpdateValues(previous.LiabilitiesHeldforSaleCurrent);
 			if (LiabilitiesHeldforSaleNonCurrent != null) LiabilitiesHeldforSaleNonCurrent.UpdateValues(previous.LiabilitiesHeldforSaleNonCurrent);
-			if (UnclassifiedCurrentAssets != null) UnclassifiedCurrentAssets.UpdateValues(previous.UnclassifiedCurrentAssets);
 			if (DebtSecurities != null) DebtSecurities.UpdateValues(previous.DebtSecurities);
 			if (TotalFinancialLeaseObligations != null) TotalFinancialLeaseObligations.UpdateValues(previous.TotalFinancialLeaseObligations);
 			if (AccruedandDeferredIncomeCurrent != null) AccruedandDeferredIncomeCurrent.UpdateValues(previous.AccruedandDeferredIncomeCurrent);
@@ -4349,53 +3624,33 @@ namespace QuantConnect.Data.Fundamental
 			if (InterestBearingBorrowingsNonCurrent != null) InterestBearingBorrowingsNonCurrent.UpdateValues(previous.InterestBearingBorrowingsNonCurrent);
 			if (NonInterestBearingBorrowingsNonCurrent != null) NonInterestBearingBorrowingsNonCurrent.UpdateValues(previous.NonInterestBearingBorrowingsNonCurrent);
 			if (TradeandOtherPayablesNonCurrent != null) TradeandOtherPayablesNonCurrent.UpdateValues(previous.TradeandOtherPayablesNonCurrent);
-			if (InterestBearingBorrowingsCurrent != null) InterestBearingBorrowingsCurrent.UpdateValues(previous.InterestBearingBorrowingsCurrent);
 			if (NonInterestBearingBorrowingsCurrent != null) NonInterestBearingBorrowingsCurrent.UpdateValues(previous.NonInterestBearingBorrowingsCurrent);
 			if (PensionandOtherPostRetirementBenefitPlansCurrent != null) PensionandOtherPostRetirementBenefitPlansCurrent.UpdateValues(previous.PensionandOtherPostRetirementBenefitPlansCurrent);
-			if (CashandBalanceswithCentralBanks != null) CashandBalanceswithCentralBanks.UpdateValues(previous.CashandBalanceswithCentralBanks);
-			if (PlacementwithBanksandOtherFinancialInstitutions != null) PlacementwithBanksandOtherFinancialInstitutions.UpdateValues(previous.PlacementwithBanksandOtherFinancialInstitutions);
 			if (OtherLoanAssets != null) OtherLoanAssets.UpdateValues(previous.OtherLoanAssets);
-			if (HedgingAssetsTotal != null) HedgingAssetsTotal.UpdateValues(previous.HedgingAssetsTotal);
 			if (AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal != null) AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal.UpdateValues(previous.AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal);
 			if (TaxAssetsTotal != null) TaxAssetsTotal.UpdateValues(previous.TaxAssetsTotal);
 			if (AdvancesfromCentralBanks != null) AdvancesfromCentralBanks.UpdateValues(previous.AdvancesfromCentralBanks);
-			if (CertificatesofDepositsandOtherDebtSecuritiesIssued != null) CertificatesofDepositsandOtherDebtSecuritiesIssued.UpdateValues(previous.CertificatesofDepositsandOtherDebtSecuritiesIssued);
 			if (DepositCertificates != null) DepositCertificates.UpdateValues(previous.DepositCertificates);
-			if (DebenturesandDebtCertificates != null) DebenturesandDebtCertificates.UpdateValues(previous.DebenturesandDebtCertificates);
-			if (InterestBearingBorrowingsTotal != null) InterestBearingBorrowingsTotal.UpdateValues(previous.InterestBearingBorrowingsTotal);
 			if (NonInterestBearingBorrowingsTotal != null) NonInterestBearingBorrowingsTotal.UpdateValues(previous.NonInterestBearingBorrowingsTotal);
 			if (OtherBorrowedFunds != null) OtherBorrowedFunds.UpdateValues(previous.OtherBorrowedFunds);
 			if (FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal != null) FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal.UpdateValues(previous.FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal);
 			if (FinancialLiabilitiesMeasuredatAmortizedCostTotal != null) FinancialLiabilitiesMeasuredatAmortizedCostTotal.UpdateValues(previous.FinancialLiabilitiesMeasuredatAmortizedCostTotal);
-			if (LoanCapital != null) LoanCapital.UpdateValues(previous.LoanCapital);
-			if (HedgingLiabilitiesTotal != null) HedgingLiabilitiesTotal.UpdateValues(previous.HedgingLiabilitiesTotal);
-			if (LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRisk != null) LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRisk.UpdateValues(previous.LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRisk);
 			if (AccruedLiabilitiesTotal != null) AccruedLiabilitiesTotal.UpdateValues(previous.AccruedLiabilitiesTotal);
 			if (DeferredIncomeTotal != null) DeferredIncomeTotal.UpdateValues(previous.DeferredIncomeTotal);
 			if (DeferredTaxLiabilitiesTotal != null) DeferredTaxLiabilitiesTotal.UpdateValues(previous.DeferredTaxLiabilitiesTotal);
 			if (ReinsuranceAssets != null) ReinsuranceAssets.UpdateValues(previous.ReinsuranceAssets);
-			if (ReinsuranceShareofInsuranceContract != null) ReinsuranceShareofInsuranceContract.UpdateValues(previous.ReinsuranceShareofInsuranceContract);
-			if (ReinsuranceShareofAccruedPolicyholderClaims != null) ReinsuranceShareofAccruedPolicyholderClaims.UpdateValues(previous.ReinsuranceShareofAccruedPolicyholderClaims);
 			if (DepositsMadeunderAssumedReinsuranceContract != null) DepositsMadeunderAssumedReinsuranceContract.UpdateValues(previous.DepositsMadeunderAssumedReinsuranceContract);
 			if (InsuranceContractAssets != null) InsuranceContractAssets.UpdateValues(previous.InsuranceContractAssets);
-			if (InsuranceReceivables != null) InsuranceReceivables.UpdateValues(previous.InsuranceReceivables);
 			if (InsuranceContractLiabilities != null) InsuranceContractLiabilities.UpdateValues(previous.InsuranceContractLiabilities);
-			if (InsurancePayables != null) InsurancePayables.UpdateValues(previous.InsurancePayables);
 			if (DepositsReceivedunderCededInsuranceContract != null) DepositsReceivedunderCededInsuranceContract.UpdateValues(previous.DepositsReceivedunderCededInsuranceContract);
 			if (InvestmentContractLiabilities != null) InvestmentContractLiabilities.UpdateValues(previous.InvestmentContractLiabilities);
-			if (ConstructionGrants != null) ConstructionGrants.UpdateValues(previous.ConstructionGrants);
-			if (DeferredCostCurrent != null) DeferredCostCurrent.UpdateValues(previous.DeferredCostCurrent);
 			if (PensionAndOtherPostretirementBenefitPlansTotal != null) PensionAndOtherPostretirementBenefitPlansTotal.UpdateValues(previous.PensionAndOtherPostretirementBenefitPlansTotal);
 			if (LiabilitiesHeldforSaleTotal != null) LiabilitiesHeldforSaleTotal.UpdateValues(previous.LiabilitiesHeldforSaleTotal);
-			if (HedgingAssetsNonCurrent != null) HedgingAssetsNonCurrent.UpdateValues(previous.HedgingAssetsNonCurrent);
 			if (HedgingAssetsCurrent != null) HedgingAssetsCurrent.UpdateValues(previous.HedgingAssetsCurrent);
 			if (ConvertibleLoansTotal != null) ConvertibleLoansTotal.UpdateValues(previous.ConvertibleLoansTotal);
 			if (BankLoansTotal != null) BankLoansTotal.UpdateValues(previous.BankLoansTotal);
 			if (OtherLoansTotal != null) OtherLoansTotal.UpdateValues(previous.OtherLoansTotal);
-			if (HedgingLiabilitiesNonCurrent != null) HedgingLiabilitiesNonCurrent.UpdateValues(previous.HedgingLiabilitiesNonCurrent);
-			if (HedgingLiabilitiesCurrent != null) HedgingLiabilitiesCurrent.UpdateValues(previous.HedgingLiabilitiesCurrent);
 			if (InsuranceFundsNonCurrent != null) InsuranceFundsNonCurrent.UpdateValues(previous.InsuranceFundsNonCurrent);
-			if (InsuranceFundsCurrent != null) InsuranceFundsCurrent.UpdateValues(previous.InsuranceFundsCurrent);
 			if (DebtTotal != null) DebtTotal.UpdateValues(previous.DebtTotal);
 			if (ComTreShaNum != null) ComTreShaNum.UpdateValues(previous.ComTreShaNum);
 			if (PreTreShaNum != null) PreTreShaNum.UpdateValues(previous.PreTreShaNum);
@@ -4407,13 +3662,19 @@ namespace QuantConnect.Data.Fundamental
 			if (CashRestrictedOrPledged != null) CashRestrictedOrPledged.UpdateValues(previous.CashRestrictedOrPledged);
 			if (ConvertibleLoansNonCurrent != null) ConvertibleLoansNonCurrent.UpdateValues(previous.ConvertibleLoansNonCurrent);
 			if (FinancialOrDerivativeInvestmentCurrentLiabilities != null) FinancialOrDerivativeInvestmentCurrentLiabilities.UpdateValues(previous.FinancialOrDerivativeInvestmentCurrentLiabilities);
-			if (LoanAndLoanReceivables != null) LoanAndLoanReceivables.UpdateValues(previous.LoanAndLoanReceivables);
 			if (OtherInvestments != null) OtherInvestments.UpdateValues(previous.OtherInvestments);
 			if (TradeAndOtherReceivablesNonCurrent != null) TradeAndOtherReceivablesNonCurrent.UpdateValues(previous.TradeAndOtherReceivablesNonCurrent);
 			if (DueFromRelatedParties != null) DueFromRelatedParties.UpdateValues(previous.DueFromRelatedParties);
-			if (TrustPreferredSecurities != null) TrustPreferredSecurities.UpdateValues(previous.TrustPreferredSecurities);
-			if (CooperativesShareCapitalRepayableonDemand != null) CooperativesShareCapitalRepayableonDemand.UpdateValues(previous.CooperativesShareCapitalRepayableonDemand);
 			if (UnallocatedSurplus != null) UnallocatedSurplus.UpdateValues(previous.UnallocatedSurplus);
+			if (DebtDueInYear1 != null) DebtDueInYear1.UpdateValues(previous.DebtDueInYear1);
+			if (DebtDueInYear2 != null) DebtDueInYear2.UpdateValues(previous.DebtDueInYear2);
+			if (DebtDueInYear5 != null) DebtDueInYear5.UpdateValues(previous.DebtDueInYear5);
+			if (DebtDueBeyond != null) DebtDueBeyond.UpdateValues(previous.DebtDueBeyond);
+			if (TotalDebtInMaturitySchedule != null) TotalDebtInMaturitySchedule.UpdateValues(previous.TotalDebtInMaturitySchedule);
+			if (FixedAssetsRevaluationReserve != null) FixedAssetsRevaluationReserve.UpdateValues(previous.FixedAssetsRevaluationReserve);
+			if (CurrentOtherFinancialLiabilities != null) CurrentOtherFinancialLiabilities.UpdateValues(previous.CurrentOtherFinancialLiabilities);
+			if (NonCurrentOtherFinancialLiabilities != null) NonCurrentOtherFinancialLiabilities.UpdateValues(previous.NonCurrentOtherFinancialLiabilities);
+			if (OtherFinancialLiabilities != null) OtherFinancialLiabilities.UpdateValues(previous.OtherFinancialLiabilities);
 		}
 	}
 }

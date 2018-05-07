@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,15 +43,6 @@ namespace QuantConnect.Data.Fundamental
 		public AmortizationCashFlowStatement Amortization { get; set; }
 
 		/// <summary>
-		/// The aggregate amount of cash flow from securities calls, maturities, and redemption.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26004
-		/// </remarks>
-		[JsonProperty("26004")]
-		public CallsMaturitiesOfMaturitySecuritiesCashFlowStatement CallsMaturitiesOfMaturitySecurities { get; set; }
-
-		/// <summary>
 		/// Funds used by a company to acquire or upgrade physical assets such as property, industrial buildings or equipment. This
 		/// type of outlay is made by companies to maintain or increase the scope of their operations. Capital expenditures are generally
 		/// depreciated or depleted over their useful life, as distinguished from repairs, which are subtracted from the income of the current
@@ -62,16 +53,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26005")]
 		public CapitalExpenditureCashFlowStatement CapitalExpenditure { get; set; }
-
-		/// <summary>
-		/// Funds used to (collect from) acquire or upgrade (disposal) physical assets such as property, industrial buildings or equipment.
-		/// Refers to only those transactions which are specifically a capital expenditure or disposal.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26006
-		/// </remarks>
-		[JsonProperty("26006")]
-		public NetCapitalExpenditureDisposalsCashFlowStatement NetCapitalExpenditureDisposals { get; set; }
 
 		/// <summary>
 		/// Payments for the cash dividends declared by an entity to shareholders during the period. This element includes paid and unpaid
@@ -362,15 +343,6 @@ namespace QuantConnect.Data.Fundamental
 		public ChangeInPayablesAndAccruedExpenseCashFlowStatement ChangeInPayablesAndAccruedExpense { get; set; }
 
 		/// <summary>
-		/// The increase or decrease between periods of the premium receivables.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26042
-		/// </remarks>
-		[JsonProperty("26042")]
-		public ChangeInPremiumsReceivableCashFlowStatement ChangeInPremiumsReceivable { get; set; }
-
-		/// <summary>
 		/// The increase or decrease between periods of the prepaid assets.
 		/// </summary>
 		/// <remarks>
@@ -429,16 +401,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26053")]
 		public ChangeInWorkingCapitalCashFlowStatement ChangeInWorkingCapital { get; set; }
-
-		/// <summary>
-		/// The effect on net income, net of income taxes, of a change in accounting principle reported on the income statement in the period,
-		/// which occurred before previously adjustments were required.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26055
-		/// </remarks>
-		[JsonProperty("26055")]
-		public CumulativeEffectOfAccountingChangeCashFlowStatement CumulativeEffectOfAccountingChange { get; set; }
 
 		/// <summary>
 		/// The component of income tax expense for the period representing the net change in the entities deferred tax assets and liabilities
@@ -592,18 +554,9 @@ namespace QuantConnect.Data.Fundamental
 		public NetForeignCurrencyExchangeGainLossCashFlowStatement NetForeignCurrencyExchangeGainLoss { get; set; }
 
 		/// <summary>
-		/// The profit or loss of the entity net of income taxes for the reporting period calculated and presented in the income statement in
-		/// accordance with GAAP.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26079
-		/// </remarks>
-		[JsonProperty("26079")]
-		public NetIncomeCashFlowStatement NetIncome { get; set; }
-
-		/// <summary>
 		/// Revenue less expenses and taxes from the entity's ongoing operations and before income (loss) from discontinued operations,
-		/// extraordinary items, impact of changes in accounting principles, minority interest, and various other reconciling adjustments.
+		/// extraordinary items, impact of changes in accounting principles, minority interest, and various other reconciling adjustments;
+		/// represents the starting line for Operating Cash Flow.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26080
@@ -612,7 +565,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetIncomeFromContinuingOperationsCashFlowStatement NetIncomeFromContinuingOperations { get; set; }
 
 		/// <summary>
-		/// Payment from a bank or insurance company  to the lender who lends money or property based on the agreement, along with
+		/// Payment from a bank or insurance company to the lender who lends money or property based on the agreement, along with
 		/// interest, at a predetermined date in the future.
 		/// </summary>
 		/// <remarks>
@@ -656,15 +609,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26091")]
 		public ShortTermDebtPaymentsCashFlowStatement ShortTermDebtPayments { get; set; }
-
-		/// <summary>
-		/// The cash inflow from issuance of warrants.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26094
-		/// </remarks>
-		[JsonProperty("26094")]
-		public ProceedsFromIssuanceOfWarrantsCashFlowStatement ProceedsFromIssuanceOfWarrants { get; set; }
 
 		/// <summary>
 		/// The cash inflow from borrowing money or property for a bank or insurance company.
@@ -740,27 +684,6 @@ namespace QuantConnect.Data.Fundamental
 		public ProceedsPaymentInInterestBearingDepositsInBankCashFlowStatement ProceedsPaymentInInterestBearingDepositsInBank { get; set; }
 
 		/// <summary>
-		/// Refers to all purchases of equity securities; equity securities includes information about ownership interests or the right to acquire
-		/// ownership interests in corporations and other legal entities. The ownership interest is represented by shares of common or
-		/// preferred stock, convertible securities, stock rights, or stock warrants.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26106
-		/// </remarks>
-		[JsonProperty("26106")]
-		public PurchaseOfEquitySecuritiesCashFlowStatement PurchaseOfEquitySecurities { get; set; }
-
-		/// <summary>
-		/// All purchases of fixed maturity securities. Fixed maturity securities represent investments in debt securities having predetermined
-		/// or determinable maturity dates.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26107
-		/// </remarks>
-		[JsonProperty("26107")]
-		public PurchaseOfFixedMaturitySecuritiesCashFlowStatement PurchaseOfFixedMaturitySecurities { get; set; }
-
-		/// <summary>
 		/// The amount of capital outlays undertaken to increase, construct or improve intangible assets.
 		/// </summary>
 		/// <remarks>
@@ -779,16 +702,6 @@ namespace QuantConnect.Data.Fundamental
 		public PurchaseOfInvestmentCashFlowStatement PurchaseOfInvestment { get; set; }
 
 		/// <summary>
-		/// All purchases of long-term investments that a company intends to hold for more than a year, which may include stocks, bonds, and
-		/// real estate.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26111
-		/// </remarks>
-		[JsonProperty("26111")]
-		public PurchaseOfLongTermInvestmentsCashFlowStatement PurchaseOfLongTermInvestments { get; set; }
-
-		/// <summary>
 		/// The amount of capital outlays undertaken to increase, construct or improve capital assets. This category includes property, plant
 		/// equipment, furniture, fixed assets, buildings, and improvement.
 		/// </summary>
@@ -797,25 +710,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26112")]
 		public PurchaseOfPPECashFlowStatement PurchaseOfPPE { get; set; }
-
-		/// <summary>
-		/// All purchases of short-term investments that a company has made that will expire within one year. Examples include marketable
-		/// securities, commodities, money market instruments, and options.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26113
-		/// </remarks>
-		[JsonProperty("26113")]
-		public PurchaseOfShortTermInvestmentsCashFlowStatement PurchaseOfShortTermInvestments { get; set; }
-
-		/// <summary>
-		/// The amount of capital outlays undertaken to increase, construct or improve technology.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26114
-		/// </remarks>
-		[JsonProperty("26114")]
-		public PurchaseOfTechnologyCashFlowStatement PurchaseOfTechnology { get; set; }
 
 		/// <summary>
 		/// All the purchases of business including business acquisitions, investment in subsidiary; investing in affiliated companies, and join
@@ -864,15 +758,6 @@ namespace QuantConnect.Data.Fundamental
 		public NetPPEPurchaseAndSaleCashFlowStatement NetPPEPurchaseAndSale { get; set; }
 
 		/// <summary>
-		/// The net change between Purchases/Sales of Technology.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26121
-		/// </remarks>
-		[JsonProperty("26121")]
-		public NetTechnologyPurchaseAndSaleCashFlowStatement NetTechnologyPurchaseAndSale { get; set; }
-
-		/// <summary>
 		/// Proceeds received from selling a business including proceeds from a subsidiary, and proceeds from an affiliated company.
 		/// </summary>
 		/// <remarks>
@@ -900,15 +785,6 @@ namespace QuantConnect.Data.Fundamental
 		public SaleOfInvestmentCashFlowStatement SaleOfInvestment { get; set; }
 
 		/// <summary>
-		/// Proceeds received from selling long-term investments.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26126
-		/// </remarks>
-		[JsonProperty("26126")]
-		public SaleOfLongTermInvestmentsCashFlowStatement SaleOfLongTermInvestments { get; set; }
-
-		/// <summary>
 		/// Proceeds from selling any fixed assets such as property, plant and equipment, which also includes retirement of equipment.
 		/// </summary>
 		/// <remarks>
@@ -916,46 +792,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26127")]
 		public SaleOfPPECashFlowStatement SaleOfPPE { get; set; }
-
-		/// <summary>
-		/// Proceeds received from selling short-term investments; such as marketable securities, treasury bills; certificates of deposit,
-		/// banker's acceptances, money market investments, commercial paper, Eurodollars, repurchase agreements, collateral investments,
-		/// temporary investments.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26128
-		/// </remarks>
-		[JsonProperty("26128")]
-		public SaleOfShortTermInvestmentsCashFlowStatement SaleOfShortTermInvestments { get; set; }
-
-		/// <summary>
-		/// The amount of capital inflow from the sale of technology.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26129
-		/// </remarks>
-		[JsonProperty("26129")]
-		public SaleOfTechnologyCashFlowStatement SaleOfTechnology { get; set; }
-
-		/// <summary>
-		/// Proceeds from the sale of all equity securities, which represent investments in common and preferred stocks and other forms of
-		/// securities that provide ownership interests in a corporation.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26130
-		/// </remarks>
-		[JsonProperty("26130")]
-		public SalesOfEquitySecuritiesCashFlowStatement SalesOfEquitySecurities { get; set; }
-
-		/// <summary>
-		/// Proceeds from the sale of fixed maturity securities, which represent investments in debt securities having predetermined or
-		/// determinable maturity dates.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26131
-		/// </remarks>
-		[JsonProperty("26131")]
-		public SalesOfFixedMaturitySecuritiesCashFlowStatement SalesOfFixedMaturitySecurities { get; set; }
 
 		/// <summary>
 		/// The increase or decrease between periods of the accounts receivables.
@@ -1046,35 +882,6 @@ namespace QuantConnect.Data.Fundamental
 		public ChangeInOtherWorkingCapitalCashFlowStatement ChangeInOtherWorkingCapital { get; set; }
 
 		/// <summary>
-		/// The net cash inflow (outflow) for the net change associated with the unexpired portion of premiums ceded on policies in force as of
-		/// the balance sheet date. This item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26149
-		/// </remarks>
-		[JsonProperty("26149")]
-		public ChangeInPrepaidReinsurancePremiumsCashFlowStatement ChangeInPrepaidReinsurancePremiums { get; set; }
-
-		/// <summary>
-		/// The net change during the reporting period associated with receivables currently due from reinsurers for ceded paid losses.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26150
-		/// </remarks>
-		[JsonProperty("26150")]
-		public ChangeInReinsuranceReceivableOnPaidLossesCashFlowStatement ChangeInReinsuranceReceivableOnPaidLosses { get; set; }
-
-		/// <summary>
-		/// The net change during the reporting period associated with receivables currently due from reinsurers for ceded unpaid losses. This
-		/// item is usually only available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26151
-		/// </remarks>
-		[JsonProperty("26151")]
-		public ChangeInReinsuranceRecoverableOnUnpaidLossesCashFlowStatement ChangeInReinsuranceRecoverableOnUnpaidLosses { get; set; }
-
-		/// <summary>
 		/// The change during the period in the unearned portion of premiums written, excluding the portion amortized into income. This item is
 		/// usually only available for insurance industry.
 		/// </summary>
@@ -1083,16 +890,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26152")]
 		public ChangeInUnearnedPremiumsCashFlowStatement ChangeInUnearnedPremiums { get; set; }
-
-		/// <summary>
-		/// The change during the period for unearned premiums pursuant to terms of reinsurance arrangements. This item is usually only
-		/// available for insurance industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26153
-		/// </remarks>
-		[JsonProperty("26153")]
-		public ChangeInUnearnedPremiumsCededCashFlowStatement ChangeInUnearnedPremiumsCeded { get; set; }
 
 		/// <summary>
 		/// The cash outflow from the distribution of an entity's earnings in the form of dividends to common shareholders.
@@ -1123,20 +920,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26156")]
 		public ExcessTaxBenefitFromStockBasedCompensationCashFlowStatement ExcessTaxBenefitFromStockBasedCompensation { get; set; }
-
-		/// <summary>
-		/// Gains (losses), after tax, arising from an event or transaction that is both unusual in nature and infrequent in occurrence when
-		/// considered in relation to the environment in which the entity operates. This amount should be the same as the amount disclosed on
-		/// the income statement. The effect of an extraordinary event or transaction should be classified separately in the income statement if
-		/// it is material in relation to income before extraordinary items or to the trend of annual earnings before extraordinary items, or is
-		/// material by other appropriate criteria. Items should be considered individually and not in the aggregate in determining whether an
-		/// extraordinary event or transaction is material.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26157
-		/// </remarks>
-		[JsonProperty("26157")]
-		public ExtraordinaryItemsCashFlowStatement ExtraordinaryItems { get; set; }
 
 		/// <summary>
 		/// This item represents the net total realized gain (loss) included in earnings for the period as a result of selling or holding marketable
@@ -1324,36 +1107,6 @@ namespace QuantConnect.Data.Fundamental
 		public AmortizationOfIntangiblesCashFlowStatement AmortizationOfIntangibles { get; set; }
 
 		/// <summary>
-		/// This represents cash inflow due to change during the period in the allowance for other funds used during construction classified as
-		/// an investing activity. This item is usually only available for utility industry.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26176
-		/// </remarks>
-		[JsonProperty("26176")]
-		public AllowanceForFundsConstructionCashFlowStatement AllowanceForFundsConstruction { get; set; }
-
-		/// <summary>
-		/// This represents sales attributed to customers who reside inside of the country where the company has its principal executive
-		/// offices. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26177
-		/// </remarks>
-		[JsonProperty("26177")]
-		public DomesticSalesCashFlowStatement DomesticSales { get; set; }
-
-		/// <summary>
-		/// This represents sales attributed to customers who reside outside of the country where the company has its principal executive
-		/// offices. This item is usually not available for bank and insurance industries.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26178
-		/// </remarks>
-		[JsonProperty("26178")]
-		public ForeignSalesCashFlowStatement ForeignSales { get; set; }
-
-		/// <summary>
 		/// The amount of cash paid during the current period to foreign, federal state and local authorities as taxes on income.
 		/// </summary>
 		/// <remarks>
@@ -1434,15 +1187,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26189")]
 		public IncreaseinInterestBearingDepositsinBankCashFlowStatement IncreaseinInterestBearingDepositsinBank { get; set; }
-
-		/// <summary>
-		/// Adjustment of geographical and segment income/expenses.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26190
-		/// </remarks>
-		[JsonProperty("26190")]
-		public AdjustedGeographySegmentDataCashFlowStatement AdjustedGeographySegmentData { get; set; }
 
 		/// <summary>
 		/// Interest received by the company, in the Operating Cash Flow section.
@@ -1554,15 +1298,6 @@ namespace QuantConnect.Data.Fundamental
 		public ReorganizationOtherCostsCashFlowStatement ReorganizationOtherCosts { get; set; }
 
 		/// <summary>
-		/// Other cash flows relating to financing activities in the Operating Cash Flow section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26206
-		/// </remarks>
-		[JsonProperty("26206")]
-		public OtherFinancingCashFlowStatement OtherFinancing { get; set; }
-
-		/// <summary>
 		/// Adjustments due to net loans to/from outsiders in the Investing Cash Flow section.
 		/// </summary>
 		/// <remarks>
@@ -1573,85 +1308,13 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Cost associated with issuance of debt/equity capital in the Financing Cash Flow section.
+		/// The increase or decrease between periods of the investment properties.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26208
 		/// </remarks>
 		[JsonProperty("26208")]
 		public IssueExpensesCashFlowStatement IssueExpenses { get; set; }
-
-		/// <summary>
-		/// The increase or decrease between periods of the Certificates of Deposits and Debt Securities Issued.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26211
-		/// </remarks>
-		[JsonProperty("26211")]
-		public ChangeinCertificatesofDepositsandDebtSecuritiesIssuedCashFlowStatement ChangeinCertificatesofDepositsandDebtSecuritiesIssued { get; set; }
-
-		/// <summary>
-		/// Cash outlay for purchase of held-to-maturity investments.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26212
-		/// </remarks>
-		[JsonProperty("26212")]
-		public PaymentstoAcquireHeldToMaturityInvestmentsCashFlowStatement PaymentstoAcquireHeldToMaturityInvestments { get; set; }
-
-		/// <summary>
-		/// Cash outlay for purchase of available-for-sale assets.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26213
-		/// </remarks>
-		[JsonProperty("26213")]
-		public PaymentstoAcquireAvailableForSaleFinancialAssetsCashFlowStatement PaymentstoAcquireAvailableForSaleFinancialAssets { get; set; }
-
-		/// <summary>
-		/// Cash outlay for purchase of financial assets designated at fair value.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26214
-		/// </remarks>
-		[JsonProperty("26214")]
-		public PaymentstoAcquireFinancialAssetsDesignatedasFairValueCashFlowStatement PaymentstoAcquireFinancialAssetsDesignatedasFairValue { get; set; }
-
-		/// <summary>
-		/// Cash inflow from sale of held-to-maturity investment securities.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26215
-		/// </remarks>
-		[JsonProperty("26215")]
-		public ProceedsfromDisposalofHeldToMaturityInvestmentsCashFlowStatement ProceedsfromDisposalofHeldToMaturityInvestments { get; set; }
-
-		/// <summary>
-		/// Cash inflow from sale of available-for-sale financial assets.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26216
-		/// </remarks>
-		[JsonProperty("26216")]
-		public ProceedsfromDisposalofAvailableForSaleFinancialAssetsCashFlowStatement ProceedsfromDisposalofAvailableForSaleFinancialAssets { get; set; }
-
-		/// <summary>
-		/// Cash inflow from sale of financial assets designated at fair value.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26217
-		/// </remarks>
-		[JsonProperty("26217")]
-		public ProceedsfromDisposalofFinancialAssetsDesignatedasFairValueCashFlowStatement ProceedsfromDisposalofFinancialAssetsDesignatedasFairValue { get; set; }
-
-		/// <summary>
-		/// The increase or decrease between periods of the investment properties
-		/// .
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26218
-		/// </remarks>
-		[JsonProperty("26218")]
-		public ChangeinFairValueofInvestmentPropertiesCashFlowStatement ChangeinFairValueofInvestmentProperties { get; set; }
 
 		/// <summary>
 		/// The increase or decrease between periods of the deposits by banks and customers.
@@ -1709,15 +1372,6 @@ namespace QuantConnect.Data.Fundamental
 		public PaymentstoSuppliersforGoodsandServicesCashFlowStatement PaymentstoSuppliersforGoodsandServices { get; set; }
 
 		/// <summary>
-		/// Cash received from dealing/trading contacts when the selling price is greater than the book value, in the direct cash flow.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26225
-		/// </remarks>
-		[JsonProperty("26225")]
-		public PaymentsfromContractsHeldforDealingorTradingPurposeCashFlowStatement PaymentsfromContractsHeldforDealingorTradingPurpose { get; set; }
-
-		/// <summary>
 		/// Cash paid in a form of salaries or other benefits to employees of the company, in the direct cash flow.
 		/// </summary>
 		/// <remarks>
@@ -1725,16 +1379,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26226")]
 		public PaymentsonBehalfofEmployeesCashFlowStatement PaymentsonBehalfofEmployees { get; set; }
-
-		/// <summary>
-		/// Cash paid for insurance and claims, streams of fixed payments over a specified period of time and other policy benefits, in the
-		/// direct cash flow.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26227
-		/// </remarks>
-		[JsonProperty("26227")]
-		public PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefitsCashFlowStatement PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefits { get; set; }
 
 		/// <summary>
 		/// Other cash payments for the direct cash flow.
@@ -1810,24 +1454,6 @@ namespace QuantConnect.Data.Fundamental
 		public ImpairmentLossReversalRecognizedinProfitorLossCashFlowStatement ImpairmentLossReversalRecognizedinProfitorLoss { get; set; }
 
 		/// <summary>
-		/// Income earned from associates investment.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26236
-		/// </remarks>
-		[JsonProperty("26236")]
-		public AdjustmentsforUndistributedProfitsofAssociatesCashFlowStatement AdjustmentsforUndistributedProfitsofAssociates { get; set; }
-
-		/// <summary>
-		/// Other increase or decrease relating to investing or financing activities, in the Operating Cash Flow section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26237
-		/// </remarks>
-		[JsonProperty("26237")]
-		public OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlowCashFlowStatement OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlow { get; set; }
-
-		/// <summary>
 		/// Dividend paid to the investors, in the Operating Cash Flow section.
 		/// </summary>
 		/// <remarks>
@@ -1864,15 +1490,6 @@ namespace QuantConnect.Data.Fundamental
 		public OtherOperatingInflowsOutflowsofCashCashFlowStatement OtherOperatingInflowsOutflowsofCash { get; set; }
 
 		/// <summary>
-		/// Any cash received from government in relation to grants, in the Investing Cash Flow section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26242
-		/// </remarks>
-		[JsonProperty("26242")]
-		public ProceedsfromGovernmentGrantsCFICashFlowStatement ProceedsfromGovernmentGrantsCFI { get; set; }
-
-		/// <summary>
 		/// Cash outlay for cash advances and loans made to other parties.
 		/// </summary>
 		/// <remarks>
@@ -1889,15 +1506,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26244")]
 		public CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherPartiesCashFlowStatement CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherParties { get; set; }
-
-		/// <summary>
-		/// Cash flow associated with the purchase/sale of financial derivative contracts, in the Investing Cash Flow section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26245
-		/// </remarks>
-		[JsonProperty("26245")]
-		public CashReceiptsfromPaymentsforFinancialDerivativeContractsCashFlowStatement CashReceiptsfromPaymentsforFinancialDerivativeContracts { get; set; }
 
 		/// <summary>
 		/// Dividend received on investment, in the Investing Cash Flow section.
@@ -1918,51 +1526,6 @@ namespace QuantConnect.Data.Fundamental
 		public InterestReceivedCFICashFlowStatement InterestReceivedCFI { get; set; }
 
 		/// <summary>
-		/// Amount of income taxes received as refund or paid related to an investing activity, in the Investing Cash Flow section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26248
-		/// </remarks>
-		[JsonProperty("26248")]
-		public IncomeTaxesRefundPaidCFICashFlowStatement IncomeTaxesRefundPaidCFI { get; set; }
-
-		/// <summary>
-		/// The net cash inflow or outflow resulting from the investment.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26249
-		/// </remarks>
-		[JsonProperty("26249")]
-		public IssuancePaymentofOtherEquityInstrumentsNetCashFlowStatement IssuancePaymentofOtherEquityInstrumentsNet { get; set; }
-
-		/// <summary>
-		/// Cash paid for other equity instruments.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26250
-		/// </remarks>
-		[JsonProperty("26250")]
-		public PaymentsofOtherEquityInstrumentsCashFlowStatement PaymentsofOtherEquityInstruments { get; set; }
-
-		/// <summary>
-		/// Cash inflow from the issuance of other equity instruments (like common limited partners units) during the financial period.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26251
-		/// </remarks>
-		[JsonProperty("26251")]
-		public ProceedsfromIssuingOtherEquityInstrumentsCashFlowStatement ProceedsfromIssuingOtherEquityInstruments { get; set; }
-
-		/// <summary>
-		/// Any cash received from government in relation to grants, in the Financing Cash Flow section.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26252
-		/// </remarks>
-		[JsonProperty("26252")]
-		public ProceedsfromGovernmentGrantsCFFCashFlowStatement ProceedsfromGovernmentGrantsCFF { get; set; }
-
-		/// <summary>
 		/// Interest paid on loans, debt or borrowings, in the Financing Cash Flow section.
 		/// </summary>
 		/// <remarks>
@@ -1970,15 +1533,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26253")]
 		public InterestPaidCFFCashFlowStatement InterestPaidCFF { get; set; }
-
-		/// <summary>
-		/// Amount of income taxes received as refund or paid related to a financing activity.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26254
-		/// </remarks>
-		[JsonProperty("26254")]
-		public IncomeTaxesRefundPaidCFFCashFlowStatement IncomeTaxesRefundPaidCFF { get; set; }
 
 		/// <summary>
 		/// The increase or decrease between periods in the amount of outstanding money owed by a customer for goods or services provided
@@ -1989,15 +1543,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26255")]
 		public ChangeinAccruedIncomeCashFlowStatement ChangeinAccruedIncome { get; set; }
-
-		/// <summary>
-		/// The increase or decrease between periods of the deferred expenses.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26256
-		/// </remarks>
-		[JsonProperty("26256")]
-		public ChangeinDeferredIncomeCashFlowStatement ChangeinDeferredIncome { get; set; }
 
 		/// <summary>
 		/// The increase or decrease between periods of the financial assets.
@@ -2061,15 +1606,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26264")]
 		public ChangeinInsuranceFundsCashFlowStatement ChangeinInsuranceFunds { get; set; }
-
-		/// <summary>
-		/// The increase or decrease between periods of the reinsurance payables.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26265
-		/// </remarks>
-		[JsonProperty("26265")]
-		public ChangeinReinsurancePayablesCashFlowStatement ChangeinReinsurancePayables { get; set; }
 
 		/// <summary>
 		/// The increase or decrease between periods of the investment contract liabilities.
@@ -2145,17 +1681,8 @@ namespace QuantConnect.Data.Fundamental
 		public CashReceiptsfromTaxRefundsCashFlowStatement CashReceiptsfromTaxRefunds { get; set; }
 
 		/// <summary>
-		/// Cash received from borrowings in operating cash flow, using the direct method. This item is usually only available for bank industry
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26275
-		/// </remarks>
-		[JsonProperty("26275")]
-		public CashReceiptsfromBorrowingsCashFlowStatement CashReceiptsfromBorrowings { get; set; }
-
-		/// <summary>
-		/// Cash received from banks and customers deposits in operating cash flow, using the direct method. This item is usually only
-		/// available for bank industry
+		/// Cash received from banks and customer deposits in operating cash flow, using the direct method. This item is usually only available
+		/// for bank industry
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26276
@@ -2183,16 +1710,6 @@ namespace QuantConnect.Data.Fundamental
 		public CashReceiptsfromSecuritiesRelatedActivitiesCashFlowStatement CashReceiptsfromSecuritiesRelatedActivities { get; set; }
 
 		/// <summary>
-		/// Cash received from assets reduction (usually from sale or disposal) in operating cash flow, using the direct method. This item is
-		/// usually available for bank and insurance industries
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26279
-		/// </remarks>
-		[JsonProperty("26279")]
-		public CashReceiptsfromDecreaseinAssetsCashFlowStatement CashReceiptsfromDecreaseinAssets { get; set; }
-
-		/// <summary>
 		/// Cash received from agency fees and commissions in operating cash flow, using the direct method. This item is usually available for
 		/// bank and insurance industries
 		/// </summary>
@@ -2201,16 +1718,6 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("26280")]
 		public CashReceiptsfromFeesandCommissionsCashFlowStatement CashReceiptsfromFeesandCommissions { get; set; }
-
-		/// <summary>
-		/// Cash paid for borrowing money from other parties in operating cash flow, using the direct method. This item is usually only available
-		/// for bank industry
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26281
-		/// </remarks>
-		[JsonProperty("26281")]
-		public CashPaymentsforBorrowingsCashFlowStatement CashPaymentsforBorrowings { get; set; }
 
 		/// <summary>
 		/// Cash paid for deposits by banks and customers in operating cash flow, using the direct method. This item is usually only available
@@ -2356,15 +1863,6 @@ namespace QuantConnect.Data.Fundamental
 		public DateTime CFFileDate { get; set; }
 
 		/// <summary>
-		/// The profit or loss of the entity from discontinued operations, represeted as a cash inflow/outflow within operating cashflow.
-		/// </summary>
-		/// <remarks>
-		/// Morningstar DataId: 26297
-		/// </remarks>
-		[JsonProperty("26297")]
-		public NetIncomeFromDiscontinuedOperationsCashFlowStatement NetIncomeFromDiscontinuedOperations { get; set; }
-
-		/// <summary>
 		/// The net cash from an entity's operating activities before real cash inflow or outflow for Dividend, Interest, Tax, or other unclassified
 		/// operating activities.
 		/// </summary>
@@ -2375,14 +1873,68 @@ namespace QuantConnect.Data.Fundamental
 		public CashGeneratedfromOperatingActivitiesCashFlowStatement CashGeneratedfromOperatingActivities { get; set; }
 
 		/// <summary>
+		/// Funds from operations; populated only for real estate investment trusts (REITs), defined as the sum of net income, gain/loss
+		/// (realized and unrealized) on investment securities, asset impairment charge, depreciation and amortization and gain/ loss on the
+		/// sale of business and property plant and equipment.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26299
+		/// </remarks>
+		[JsonProperty("26299")]
+		public FundFromOperationCashFlowStatement FundFromOperation { get; set; }
+
+		/// <summary>
+		/// Net increase or decrease in cash due to purchases or sales of investment properties during the accounting period.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26300
+		/// </remarks>
+		[JsonProperty("26300")]
+		public NetInvestmentPropertiesPurchaseAndSaleCashFlowStatement NetInvestmentPropertiesPurchaseAndSale { get; set; }
+
+		/// <summary>
+		/// Cash outflow for purchases of investment properties during the accounting period.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26301
+		/// </remarks>
+		[JsonProperty("26301")]
+		public PurchaseOfInvestmentPropertiesCashFlowStatement PurchaseOfInvestmentProperties { get; set; }
+
+		/// <summary>
+		/// Cash inflow from sale of investment properties during the accounting period.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26302
+		/// </remarks>
+		[JsonProperty("26302")]
+		public SaleOfInvestmentPropertiesCashFlowStatement SaleOfInvestmentProperties { get; set; }
+
+		/// <summary>
+		/// Other cash adjustments included in change in cash not categorized above.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26303
+		/// </remarks>
+		[JsonProperty("26303")]
+		public OtherCashAdjustIncludedIntoChangeinCashCashFlowStatement OtherCashAdjustIncludedIntoChangeinCash { get; set; }
+
+		/// <summary>
+		/// Other changes to cash and cash equivalents during the accounting period.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26304
+		/// </remarks>
+		[JsonProperty("26304")]
+		public OtherCashAdjustExcludeFromChangeinCashCashFlowStatement OtherCashAdjustExcludeFromChangeinCash { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the CashFlowStatement class
 		/// </summary>
 		public CashFlowStatement()
 		{
 			Amortization = new AmortizationCashFlowStatement();
-			CallsMaturitiesOfMaturitySecurities = new CallsMaturitiesOfMaturitySecuritiesCashFlowStatement();
 			CapitalExpenditure = new CapitalExpenditureCashFlowStatement();
-			NetCapitalExpenditureDisposals = new NetCapitalExpenditureDisposalsCashFlowStatement();
 			CashDividendsPaid = new CashDividendsPaidCashFlowStatement();
 			CashFlowFromContinuingFinancingActivities = new CashFlowFromContinuingFinancingActivitiesCashFlowStatement();
 			CashFlowFromContinuingInvestingActivities = new CashFlowFromContinuingInvestingActivitiesCashFlowStatement();
@@ -2413,14 +1965,12 @@ namespace QuantConnect.Data.Fundamental
 			ChangeInLossAndLossAdjustmentExpenseReserves = new ChangeInLossAndLossAdjustmentExpenseReservesCashFlowStatement();
 			ChangeInPayable = new ChangeInPayableCashFlowStatement();
 			ChangeInPayablesAndAccruedExpense = new ChangeInPayablesAndAccruedExpenseCashFlowStatement();
-			ChangeInPremiumsReceivable = new ChangeInPremiumsReceivableCashFlowStatement();
 			ChangeInPrepaidAssets = new ChangeInPrepaidAssetsCashFlowStatement();
 			ChangeInReceivables = new ChangeInReceivablesCashFlowStatement();
 			ChangeInReinsuranceRecoverableOnPaidAndUnpaidLosses = new ChangeInReinsuranceRecoverableOnPaidAndUnpaidLossesCashFlowStatement();
 			ChangeInRestrictedCash = new ChangeInRestrictedCashCashFlowStatement();
 			ChangeInTradingAccountSecurities = new ChangeInTradingAccountSecuritiesCashFlowStatement();
 			ChangeInWorkingCapital = new ChangeInWorkingCapitalCashFlowStatement();
-			CumulativeEffectOfAccountingChange = new CumulativeEffectOfAccountingChangeCashFlowStatement();
 			DeferredIncomeTax = new DeferredIncomeTaxCashFlowStatement();
 			DeferredTax = new DeferredTaxCashFlowStatement();
 			Depletion = new DepletionCashFlowStatement();
@@ -2436,14 +1986,12 @@ namespace QuantConnect.Data.Fundamental
 			NetShortTermDebtIssuance = new NetShortTermDebtIssuanceCashFlowStatement();
 			NetCashFromDiscontinuedOperations = new NetCashFromDiscontinuedOperationsCashFlowStatement();
 			NetForeignCurrencyExchangeGainLoss = new NetForeignCurrencyExchangeGainLossCashFlowStatement();
-			NetIncome = new NetIncomeCashFlowStatement();
 			NetIncomeFromContinuingOperations = new NetIncomeFromContinuingOperationsCashFlowStatement();
 			PaymentForLoans = new PaymentForLoansCashFlowStatement();
 			CommonStockPayments = new CommonStockPaymentsCashFlowStatement();
 			PreferredStockPayments = new PreferredStockPaymentsCashFlowStatement();
 			LongTermDebtPayments = new LongTermDebtPaymentsCashFlowStatement();
 			ShortTermDebtPayments = new ShortTermDebtPaymentsCashFlowStatement();
-			ProceedsFromIssuanceOfWarrants = new ProceedsFromIssuanceOfWarrantsCashFlowStatement();
 			ProceedsFromLoans = new ProceedsFromLoansCashFlowStatement();
 			ProceedsFromStockOptionExercised = new ProceedsFromStockOptionExercisedCashFlowStatement();
 			CommonStockIssuance = new CommonStockIssuanceCashFlowStatement();
@@ -2452,29 +2000,18 @@ namespace QuantConnect.Data.Fundamental
 			ShortTermDebtIssuance = new ShortTermDebtIssuanceCashFlowStatement();
 			NetProceedsPaymentForLoan = new NetProceedsPaymentForLoanCashFlowStatement();
 			ProceedsPaymentInInterestBearingDepositsInBank = new ProceedsPaymentInInterestBearingDepositsInBankCashFlowStatement();
-			PurchaseOfEquitySecurities = new PurchaseOfEquitySecuritiesCashFlowStatement();
-			PurchaseOfFixedMaturitySecurities = new PurchaseOfFixedMaturitySecuritiesCashFlowStatement();
 			PurchaseOfIntangibles = new PurchaseOfIntangiblesCashFlowStatement();
 			PurchaseOfInvestment = new PurchaseOfInvestmentCashFlowStatement();
-			PurchaseOfLongTermInvestments = new PurchaseOfLongTermInvestmentsCashFlowStatement();
 			PurchaseOfPPE = new PurchaseOfPPECashFlowStatement();
-			PurchaseOfShortTermInvestments = new PurchaseOfShortTermInvestmentsCashFlowStatement();
-			PurchaseOfTechnology = new PurchaseOfTechnologyCashFlowStatement();
 			PurchaseOfBusiness = new PurchaseOfBusinessCashFlowStatement();
 			NetBusinessPurchaseAndSale = new NetBusinessPurchaseAndSaleCashFlowStatement();
 			NetIntangiblesPurchaseAndSale = new NetIntangiblesPurchaseAndSaleCashFlowStatement();
 			NetInvestmentPurchaseAndSale = new NetInvestmentPurchaseAndSaleCashFlowStatement();
 			NetPPEPurchaseAndSale = new NetPPEPurchaseAndSaleCashFlowStatement();
-			NetTechnologyPurchaseAndSale = new NetTechnologyPurchaseAndSaleCashFlowStatement();
 			SaleOfBusiness = new SaleOfBusinessCashFlowStatement();
 			SaleOfIntangibles = new SaleOfIntangiblesCashFlowStatement();
 			SaleOfInvestment = new SaleOfInvestmentCashFlowStatement();
-			SaleOfLongTermInvestments = new SaleOfLongTermInvestmentsCashFlowStatement();
 			SaleOfPPE = new SaleOfPPECashFlowStatement();
-			SaleOfShortTermInvestments = new SaleOfShortTermInvestmentsCashFlowStatement();
-			SaleOfTechnology = new SaleOfTechnologyCashFlowStatement();
-			SalesOfEquitySecurities = new SalesOfEquitySecuritiesCashFlowStatement();
-			SalesOfFixedMaturitySecurities = new SalesOfFixedMaturitySecuritiesCashFlowStatement();
 			ChangesInAccountReceivables = new ChangesInAccountReceivablesCashFlowStatement();
 			AmortizationOfFinancingCostsAndDiscounts = new AmortizationOfFinancingCostsAndDiscountsCashFlowStatement();
 			AmortizationOfSecurities = new AmortizationOfSecuritiesCashFlowStatement();
@@ -2484,15 +2021,10 @@ namespace QuantConnect.Data.Fundamental
 			ChangeInOtherCurrentAssets = new ChangeInOtherCurrentAssetsCashFlowStatement();
 			ChangeInOtherCurrentLiabilities = new ChangeInOtherCurrentLiabilitiesCashFlowStatement();
 			ChangeInOtherWorkingCapital = new ChangeInOtherWorkingCapitalCashFlowStatement();
-			ChangeInPrepaidReinsurancePremiums = new ChangeInPrepaidReinsurancePremiumsCashFlowStatement();
-			ChangeInReinsuranceReceivableOnPaidLosses = new ChangeInReinsuranceReceivableOnPaidLossesCashFlowStatement();
-			ChangeInReinsuranceRecoverableOnUnpaidLosses = new ChangeInReinsuranceRecoverableOnUnpaidLossesCashFlowStatement();
 			ChangeInUnearnedPremiums = new ChangeInUnearnedPremiumsCashFlowStatement();
-			ChangeInUnearnedPremiumsCeded = new ChangeInUnearnedPremiumsCededCashFlowStatement();
 			CommonStockDividendPaid = new CommonStockDividendPaidCashFlowStatement();
 			EarningsLossesFromEquityInvestments = new EarningsLossesFromEquityInvestmentsCashFlowStatement();
 			ExcessTaxBenefitFromStockBasedCompensation = new ExcessTaxBenefitFromStockBasedCompensationCashFlowStatement();
-			ExtraordinaryItems = new ExtraordinaryItemsCashFlowStatement();
 			GainLossOnInvestmentSecurities = new GainLossOnInvestmentSecuritiesCashFlowStatement();
 			GainLossOnSaleOfBusiness = new GainLossOnSaleOfBusinessCashFlowStatement();
 			GainLossOnSaleOfPPE = new GainLossOnSaleOfPPECashFlowStatement();
@@ -2511,9 +2043,6 @@ namespace QuantConnect.Data.Fundamental
 			UnrealizedGainLossOnInvestmentSecurities = new UnrealizedGainLossOnInvestmentSecuritiesCashFlowStatement();
 			UnrealizedGainsLossesOnDerivatives = new UnrealizedGainsLossesOnDerivativesCashFlowStatement();
 			AmortizationOfIntangibles = new AmortizationOfIntangiblesCashFlowStatement();
-			AllowanceForFundsConstruction = new AllowanceForFundsConstructionCashFlowStatement();
-			DomesticSales = new DomesticSalesCashFlowStatement();
-			ForeignSales = new ForeignSalesCashFlowStatement();
 			IncomeTaxPaidSupplementalData = new IncomeTaxPaidSupplementalDataCashFlowStatement();
 			InterestPaidSupplementalData = new InterestPaidSupplementalDataCashFlowStatement();
 			IssuanceOfCapitalStock = new IssuanceOfCapitalStockCashFlowStatement();
@@ -2523,7 +2052,6 @@ namespace QuantConnect.Data.Fundamental
 			FreeCashFlow = new FreeCashFlowCashFlowStatement();
 			DecreaseinInterestBearingDepositsinBank = new DecreaseinInterestBearingDepositsinBankCashFlowStatement();
 			IncreaseinInterestBearingDepositsinBank = new IncreaseinInterestBearingDepositsinBankCashFlowStatement();
-			AdjustedGeographySegmentData = new AdjustedGeographySegmentDataCashFlowStatement();
 			InterestReceivedCFO = new InterestReceivedCFOCashFlowStatement();
 			InterestPaidCFO = new InterestPaidCFOCashFlowStatement();
 			PurchaseofSubsidiaries = new PurchaseofSubsidiariesCashFlowStatement();
@@ -2536,26 +2064,15 @@ namespace QuantConnect.Data.Fundamental
 			ShareofAssociates = new ShareofAssociatesCashFlowStatement();
 			ProfitonDisposals = new ProfitonDisposalsCashFlowStatement();
 			ReorganizationOtherCosts = new ReorganizationOtherCostsCashFlowStatement();
-			OtherFinancing = new OtherFinancingCashFlowStatement();
 			NetOutwardLoans = new NetOutwardLoansCashFlowStatement();
 			IssueExpenses = new IssueExpensesCashFlowStatement();
-			ChangeinCertificatesofDepositsandDebtSecuritiesIssued = new ChangeinCertificatesofDepositsandDebtSecuritiesIssuedCashFlowStatement();
-			PaymentstoAcquireHeldToMaturityInvestments = new PaymentstoAcquireHeldToMaturityInvestmentsCashFlowStatement();
-			PaymentstoAcquireAvailableForSaleFinancialAssets = new PaymentstoAcquireAvailableForSaleFinancialAssetsCashFlowStatement();
-			PaymentstoAcquireFinancialAssetsDesignatedasFairValue = new PaymentstoAcquireFinancialAssetsDesignatedasFairValueCashFlowStatement();
-			ProceedsfromDisposalofHeldToMaturityInvestments = new ProceedsfromDisposalofHeldToMaturityInvestmentsCashFlowStatement();
-			ProceedsfromDisposalofAvailableForSaleFinancialAssets = new ProceedsfromDisposalofAvailableForSaleFinancialAssetsCashFlowStatement();
-			ProceedsfromDisposalofFinancialAssetsDesignatedasFairValue = new ProceedsfromDisposalofFinancialAssetsDesignatedasFairValueCashFlowStatement();
-			ChangeinFairValueofInvestmentProperties = new ChangeinFairValueofInvestmentPropertiesCashFlowStatement();
 			ChangeinDepositsbyBanksandCustomers = new ChangeinDepositsbyBanksandCustomersCashFlowStatement();
 			CashFlowsfromusedinOperatingActivitiesDirect = new CashFlowsfromusedinOperatingActivitiesDirectCashFlowStatement();
 			ClassesofCashReceiptsfromOperatingActivities = new ClassesofCashReceiptsfromOperatingActivitiesCashFlowStatement();
 			OtherCashReceiptsfromOperatingActivities = new OtherCashReceiptsfromOperatingActivitiesCashFlowStatement();
 			ClassesofCashPayments = new ClassesofCashPaymentsCashFlowStatement();
 			PaymentstoSuppliersforGoodsandServices = new PaymentstoSuppliersforGoodsandServicesCashFlowStatement();
-			PaymentsfromContractsHeldforDealingorTradingPurpose = new PaymentsfromContractsHeldforDealingorTradingPurposeCashFlowStatement();
 			PaymentsonBehalfofEmployees = new PaymentsonBehalfofEmployeesCashFlowStatement();
-			PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefits = new PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefitsCashFlowStatement();
 			OtherCashPaymentsfromOperatingActivities = new OtherCashPaymentsfromOperatingActivitiesCashFlowStatement();
 			DividendsPaidDirect = new DividendsPaidDirectCashFlowStatement();
 			DividendsReceivedDirect = new DividendsReceivedDirectCashFlowStatement();
@@ -2564,27 +2081,16 @@ namespace QuantConnect.Data.Fundamental
 			TaxesRefundPaidDirect = new TaxesRefundPaidDirectCashFlowStatement();
 			TotalAdjustmentsforNonCashItems = new TotalAdjustmentsforNonCashItemsCashFlowStatement();
 			ImpairmentLossReversalRecognizedinProfitorLoss = new ImpairmentLossReversalRecognizedinProfitorLossCashFlowStatement();
-			AdjustmentsforUndistributedProfitsofAssociates = new AdjustmentsforUndistributedProfitsofAssociatesCashFlowStatement();
-			OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlow = new OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlowCashFlowStatement();
 			DividendPaidCFO = new DividendPaidCFOCashFlowStatement();
 			DividendReceivedCFO = new DividendReceivedCFOCashFlowStatement();
 			TaxesRefundPaid = new TaxesRefundPaidCashFlowStatement();
 			OtherOperatingInflowsOutflowsofCash = new OtherOperatingInflowsOutflowsofCashCashFlowStatement();
-			ProceedsfromGovernmentGrantsCFI = new ProceedsfromGovernmentGrantsCFICashFlowStatement();
 			CashAdvancesandLoansMadetoOtherParties = new CashAdvancesandLoansMadetoOtherPartiesCashFlowStatement();
 			CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherParties = new CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherPartiesCashFlowStatement();
-			CashReceiptsfromPaymentsforFinancialDerivativeContracts = new CashReceiptsfromPaymentsforFinancialDerivativeContractsCashFlowStatement();
 			DividendsReceivedCFI = new DividendsReceivedCFICashFlowStatement();
 			InterestReceivedCFI = new InterestReceivedCFICashFlowStatement();
-			IncomeTaxesRefundPaidCFI = new IncomeTaxesRefundPaidCFICashFlowStatement();
-			IssuancePaymentofOtherEquityInstrumentsNet = new IssuancePaymentofOtherEquityInstrumentsNetCashFlowStatement();
-			PaymentsofOtherEquityInstruments = new PaymentsofOtherEquityInstrumentsCashFlowStatement();
-			ProceedsfromIssuingOtherEquityInstruments = new ProceedsfromIssuingOtherEquityInstrumentsCashFlowStatement();
-			ProceedsfromGovernmentGrantsCFF = new ProceedsfromGovernmentGrantsCFFCashFlowStatement();
 			InterestPaidCFF = new InterestPaidCFFCashFlowStatement();
-			IncomeTaxesRefundPaidCFF = new IncomeTaxesRefundPaidCFFCashFlowStatement();
 			ChangeinAccruedIncome = new ChangeinAccruedIncomeCashFlowStatement();
-			ChangeinDeferredIncome = new ChangeinDeferredIncomeCashFlowStatement();
 			ChangeinFinancialAssets = new ChangeinFinancialAssetsCashFlowStatement();
 			ChangeinAdvancesfromCentralBanks = new ChangeinAdvancesfromCentralBanksCashFlowStatement();
 			ChangeinFinancialLiabilities = new ChangeinFinancialLiabilitiesCashFlowStatement();
@@ -2592,7 +2098,6 @@ namespace QuantConnect.Data.Fundamental
 			ChangeinReinsuranceReceivables = new ChangeinReinsuranceReceivablesCashFlowStatement();
 			ChangeinDeferredAcquisitionCostsNet = new ChangeinDeferredAcquisitionCostsNetCashFlowStatement();
 			ChangeinInsuranceFunds = new ChangeinInsuranceFundsCashFlowStatement();
-			ChangeinReinsurancePayables = new ChangeinReinsurancePayablesCashFlowStatement();
 			ChangeinInvestmentContractLiabilities = new ChangeinInvestmentContractLiabilitiesCashFlowStatement();
 			ChangeinInsuranceContractLiabilities = new ChangeinInsuranceContractLiabilitiesCashFlowStatement();
 			ProvisionandWriteOffofAssets = new ProvisionandWriteOffofAssetsCashFlowStatement();
@@ -2601,13 +2106,10 @@ namespace QuantConnect.Data.Fundamental
 			MinorityInterest = new MinorityInterestCashFlowStatement();
 			CapExReported = new CapExReportedCashFlowStatement();
 			CashReceiptsfromTaxRefunds = new CashReceiptsfromTaxRefundsCashFlowStatement();
-			CashReceiptsfromBorrowings = new CashReceiptsfromBorrowingsCashFlowStatement();
 			CashReceiptsfromDepositsbyBanksandCustomers = new CashReceiptsfromDepositsbyBanksandCustomersCashFlowStatement();
 			CashReceiptsfromLoans = new CashReceiptsfromLoansCashFlowStatement();
 			CashReceiptsfromSecuritiesRelatedActivities = new CashReceiptsfromSecuritiesRelatedActivitiesCashFlowStatement();
-			CashReceiptsfromDecreaseinAssets = new CashReceiptsfromDecreaseinAssetsCashFlowStatement();
 			CashReceiptsfromFeesandCommissions = new CashReceiptsfromFeesandCommissionsCashFlowStatement();
-			CashPaymentsforBorrowings = new CashPaymentsforBorrowingsCashFlowStatement();
 			CashPaymentsforDepositsbyBanksandCustomers = new CashPaymentsforDepositsbyBanksandCustomersCashFlowStatement();
 			CashPaymentsforLoans = new CashPaymentsforLoansCashFlowStatement();
 			InterestandCommissionPaid = new InterestandCommissionPaidCashFlowStatement();
@@ -2622,8 +2124,13 @@ namespace QuantConnect.Data.Fundamental
 			CashPaidtoReinsurers = new CashPaidtoReinsurersCashFlowStatement();
 			OtherUnderwritingExpensesPaid = new OtherUnderwritingExpensesPaidCashFlowStatement();
 			CashDividendsForMinorities = new CashDividendsForMinoritiesCashFlowStatement();
-			NetIncomeFromDiscontinuedOperations = new NetIncomeFromDiscontinuedOperationsCashFlowStatement();
 			CashGeneratedfromOperatingActivities = new CashGeneratedfromOperatingActivitiesCashFlowStatement();
+			FundFromOperation = new FundFromOperationCashFlowStatement();
+			NetInvestmentPropertiesPurchaseAndSale = new NetInvestmentPropertiesPurchaseAndSaleCashFlowStatement();
+			PurchaseOfInvestmentProperties = new PurchaseOfInvestmentPropertiesCashFlowStatement();
+			SaleOfInvestmentProperties = new SaleOfInvestmentPropertiesCashFlowStatement();
+			OtherCashAdjustIncludedIntoChangeinCash = new OtherCashAdjustIncludedIntoChangeinCashCashFlowStatement();
+			OtherCashAdjustExcludeFromChangeinCash = new OtherCashAdjustExcludeFromChangeinCashCashFlowStatement();
 		}
 
 		/// <summary>
@@ -2636,9 +2143,7 @@ namespace QuantConnect.Data.Fundamental
 			if (previous == null) return;
 
 			if (Amortization != null) Amortization.UpdateValues(previous.Amortization);
-			if (CallsMaturitiesOfMaturitySecurities != null) CallsMaturitiesOfMaturitySecurities.UpdateValues(previous.CallsMaturitiesOfMaturitySecurities);
 			if (CapitalExpenditure != null) CapitalExpenditure.UpdateValues(previous.CapitalExpenditure);
-			if (NetCapitalExpenditureDisposals != null) NetCapitalExpenditureDisposals.UpdateValues(previous.NetCapitalExpenditureDisposals);
 			if (CashDividendsPaid != null) CashDividendsPaid.UpdateValues(previous.CashDividendsPaid);
 			if (CashFlowFromContinuingFinancingActivities != null) CashFlowFromContinuingFinancingActivities.UpdateValues(previous.CashFlowFromContinuingFinancingActivities);
 			if (CashFlowFromContinuingInvestingActivities != null) CashFlowFromContinuingInvestingActivities.UpdateValues(previous.CashFlowFromContinuingInvestingActivities);
@@ -2669,14 +2174,12 @@ namespace QuantConnect.Data.Fundamental
 			if (ChangeInLossAndLossAdjustmentExpenseReserves != null) ChangeInLossAndLossAdjustmentExpenseReserves.UpdateValues(previous.ChangeInLossAndLossAdjustmentExpenseReserves);
 			if (ChangeInPayable != null) ChangeInPayable.UpdateValues(previous.ChangeInPayable);
 			if (ChangeInPayablesAndAccruedExpense != null) ChangeInPayablesAndAccruedExpense.UpdateValues(previous.ChangeInPayablesAndAccruedExpense);
-			if (ChangeInPremiumsReceivable != null) ChangeInPremiumsReceivable.UpdateValues(previous.ChangeInPremiumsReceivable);
 			if (ChangeInPrepaidAssets != null) ChangeInPrepaidAssets.UpdateValues(previous.ChangeInPrepaidAssets);
 			if (ChangeInReceivables != null) ChangeInReceivables.UpdateValues(previous.ChangeInReceivables);
 			if (ChangeInReinsuranceRecoverableOnPaidAndUnpaidLosses != null) ChangeInReinsuranceRecoverableOnPaidAndUnpaidLosses.UpdateValues(previous.ChangeInReinsuranceRecoverableOnPaidAndUnpaidLosses);
 			if (ChangeInRestrictedCash != null) ChangeInRestrictedCash.UpdateValues(previous.ChangeInRestrictedCash);
 			if (ChangeInTradingAccountSecurities != null) ChangeInTradingAccountSecurities.UpdateValues(previous.ChangeInTradingAccountSecurities);
 			if (ChangeInWorkingCapital != null) ChangeInWorkingCapital.UpdateValues(previous.ChangeInWorkingCapital);
-			if (CumulativeEffectOfAccountingChange != null) CumulativeEffectOfAccountingChange.UpdateValues(previous.CumulativeEffectOfAccountingChange);
 			if (DeferredIncomeTax != null) DeferredIncomeTax.UpdateValues(previous.DeferredIncomeTax);
 			if (DeferredTax != null) DeferredTax.UpdateValues(previous.DeferredTax);
 			if (Depletion != null) Depletion.UpdateValues(previous.Depletion);
@@ -2692,14 +2195,12 @@ namespace QuantConnect.Data.Fundamental
 			if (NetShortTermDebtIssuance != null) NetShortTermDebtIssuance.UpdateValues(previous.NetShortTermDebtIssuance);
 			if (NetCashFromDiscontinuedOperations != null) NetCashFromDiscontinuedOperations.UpdateValues(previous.NetCashFromDiscontinuedOperations);
 			if (NetForeignCurrencyExchangeGainLoss != null) NetForeignCurrencyExchangeGainLoss.UpdateValues(previous.NetForeignCurrencyExchangeGainLoss);
-			if (NetIncome != null) NetIncome.UpdateValues(previous.NetIncome);
 			if (NetIncomeFromContinuingOperations != null) NetIncomeFromContinuingOperations.UpdateValues(previous.NetIncomeFromContinuingOperations);
 			if (PaymentForLoans != null) PaymentForLoans.UpdateValues(previous.PaymentForLoans);
 			if (CommonStockPayments != null) CommonStockPayments.UpdateValues(previous.CommonStockPayments);
 			if (PreferredStockPayments != null) PreferredStockPayments.UpdateValues(previous.PreferredStockPayments);
 			if (LongTermDebtPayments != null) LongTermDebtPayments.UpdateValues(previous.LongTermDebtPayments);
 			if (ShortTermDebtPayments != null) ShortTermDebtPayments.UpdateValues(previous.ShortTermDebtPayments);
-			if (ProceedsFromIssuanceOfWarrants != null) ProceedsFromIssuanceOfWarrants.UpdateValues(previous.ProceedsFromIssuanceOfWarrants);
 			if (ProceedsFromLoans != null) ProceedsFromLoans.UpdateValues(previous.ProceedsFromLoans);
 			if (ProceedsFromStockOptionExercised != null) ProceedsFromStockOptionExercised.UpdateValues(previous.ProceedsFromStockOptionExercised);
 			if (CommonStockIssuance != null) CommonStockIssuance.UpdateValues(previous.CommonStockIssuance);
@@ -2708,29 +2209,18 @@ namespace QuantConnect.Data.Fundamental
 			if (ShortTermDebtIssuance != null) ShortTermDebtIssuance.UpdateValues(previous.ShortTermDebtIssuance);
 			if (NetProceedsPaymentForLoan != null) NetProceedsPaymentForLoan.UpdateValues(previous.NetProceedsPaymentForLoan);
 			if (ProceedsPaymentInInterestBearingDepositsInBank != null) ProceedsPaymentInInterestBearingDepositsInBank.UpdateValues(previous.ProceedsPaymentInInterestBearingDepositsInBank);
-			if (PurchaseOfEquitySecurities != null) PurchaseOfEquitySecurities.UpdateValues(previous.PurchaseOfEquitySecurities);
-			if (PurchaseOfFixedMaturitySecurities != null) PurchaseOfFixedMaturitySecurities.UpdateValues(previous.PurchaseOfFixedMaturitySecurities);
 			if (PurchaseOfIntangibles != null) PurchaseOfIntangibles.UpdateValues(previous.PurchaseOfIntangibles);
 			if (PurchaseOfInvestment != null) PurchaseOfInvestment.UpdateValues(previous.PurchaseOfInvestment);
-			if (PurchaseOfLongTermInvestments != null) PurchaseOfLongTermInvestments.UpdateValues(previous.PurchaseOfLongTermInvestments);
 			if (PurchaseOfPPE != null) PurchaseOfPPE.UpdateValues(previous.PurchaseOfPPE);
-			if (PurchaseOfShortTermInvestments != null) PurchaseOfShortTermInvestments.UpdateValues(previous.PurchaseOfShortTermInvestments);
-			if (PurchaseOfTechnology != null) PurchaseOfTechnology.UpdateValues(previous.PurchaseOfTechnology);
 			if (PurchaseOfBusiness != null) PurchaseOfBusiness.UpdateValues(previous.PurchaseOfBusiness);
 			if (NetBusinessPurchaseAndSale != null) NetBusinessPurchaseAndSale.UpdateValues(previous.NetBusinessPurchaseAndSale);
 			if (NetIntangiblesPurchaseAndSale != null) NetIntangiblesPurchaseAndSale.UpdateValues(previous.NetIntangiblesPurchaseAndSale);
 			if (NetInvestmentPurchaseAndSale != null) NetInvestmentPurchaseAndSale.UpdateValues(previous.NetInvestmentPurchaseAndSale);
 			if (NetPPEPurchaseAndSale != null) NetPPEPurchaseAndSale.UpdateValues(previous.NetPPEPurchaseAndSale);
-			if (NetTechnologyPurchaseAndSale != null) NetTechnologyPurchaseAndSale.UpdateValues(previous.NetTechnologyPurchaseAndSale);
 			if (SaleOfBusiness != null) SaleOfBusiness.UpdateValues(previous.SaleOfBusiness);
 			if (SaleOfIntangibles != null) SaleOfIntangibles.UpdateValues(previous.SaleOfIntangibles);
 			if (SaleOfInvestment != null) SaleOfInvestment.UpdateValues(previous.SaleOfInvestment);
-			if (SaleOfLongTermInvestments != null) SaleOfLongTermInvestments.UpdateValues(previous.SaleOfLongTermInvestments);
 			if (SaleOfPPE != null) SaleOfPPE.UpdateValues(previous.SaleOfPPE);
-			if (SaleOfShortTermInvestments != null) SaleOfShortTermInvestments.UpdateValues(previous.SaleOfShortTermInvestments);
-			if (SaleOfTechnology != null) SaleOfTechnology.UpdateValues(previous.SaleOfTechnology);
-			if (SalesOfEquitySecurities != null) SalesOfEquitySecurities.UpdateValues(previous.SalesOfEquitySecurities);
-			if (SalesOfFixedMaturitySecurities != null) SalesOfFixedMaturitySecurities.UpdateValues(previous.SalesOfFixedMaturitySecurities);
 			if (ChangesInAccountReceivables != null) ChangesInAccountReceivables.UpdateValues(previous.ChangesInAccountReceivables);
 			if (AmortizationOfFinancingCostsAndDiscounts != null) AmortizationOfFinancingCostsAndDiscounts.UpdateValues(previous.AmortizationOfFinancingCostsAndDiscounts);
 			if (AmortizationOfSecurities != null) AmortizationOfSecurities.UpdateValues(previous.AmortizationOfSecurities);
@@ -2740,15 +2230,10 @@ namespace QuantConnect.Data.Fundamental
 			if (ChangeInOtherCurrentAssets != null) ChangeInOtherCurrentAssets.UpdateValues(previous.ChangeInOtherCurrentAssets);
 			if (ChangeInOtherCurrentLiabilities != null) ChangeInOtherCurrentLiabilities.UpdateValues(previous.ChangeInOtherCurrentLiabilities);
 			if (ChangeInOtherWorkingCapital != null) ChangeInOtherWorkingCapital.UpdateValues(previous.ChangeInOtherWorkingCapital);
-			if (ChangeInPrepaidReinsurancePremiums != null) ChangeInPrepaidReinsurancePremiums.UpdateValues(previous.ChangeInPrepaidReinsurancePremiums);
-			if (ChangeInReinsuranceReceivableOnPaidLosses != null) ChangeInReinsuranceReceivableOnPaidLosses.UpdateValues(previous.ChangeInReinsuranceReceivableOnPaidLosses);
-			if (ChangeInReinsuranceRecoverableOnUnpaidLosses != null) ChangeInReinsuranceRecoverableOnUnpaidLosses.UpdateValues(previous.ChangeInReinsuranceRecoverableOnUnpaidLosses);
 			if (ChangeInUnearnedPremiums != null) ChangeInUnearnedPremiums.UpdateValues(previous.ChangeInUnearnedPremiums);
-			if (ChangeInUnearnedPremiumsCeded != null) ChangeInUnearnedPremiumsCeded.UpdateValues(previous.ChangeInUnearnedPremiumsCeded);
 			if (CommonStockDividendPaid != null) CommonStockDividendPaid.UpdateValues(previous.CommonStockDividendPaid);
 			if (EarningsLossesFromEquityInvestments != null) EarningsLossesFromEquityInvestments.UpdateValues(previous.EarningsLossesFromEquityInvestments);
 			if (ExcessTaxBenefitFromStockBasedCompensation != null) ExcessTaxBenefitFromStockBasedCompensation.UpdateValues(previous.ExcessTaxBenefitFromStockBasedCompensation);
-			if (ExtraordinaryItems != null) ExtraordinaryItems.UpdateValues(previous.ExtraordinaryItems);
 			if (GainLossOnInvestmentSecurities != null) GainLossOnInvestmentSecurities.UpdateValues(previous.GainLossOnInvestmentSecurities);
 			if (GainLossOnSaleOfBusiness != null) GainLossOnSaleOfBusiness.UpdateValues(previous.GainLossOnSaleOfBusiness);
 			if (GainLossOnSaleOfPPE != null) GainLossOnSaleOfPPE.UpdateValues(previous.GainLossOnSaleOfPPE);
@@ -2767,9 +2252,6 @@ namespace QuantConnect.Data.Fundamental
 			if (UnrealizedGainLossOnInvestmentSecurities != null) UnrealizedGainLossOnInvestmentSecurities.UpdateValues(previous.UnrealizedGainLossOnInvestmentSecurities);
 			if (UnrealizedGainsLossesOnDerivatives != null) UnrealizedGainsLossesOnDerivatives.UpdateValues(previous.UnrealizedGainsLossesOnDerivatives);
 			if (AmortizationOfIntangibles != null) AmortizationOfIntangibles.UpdateValues(previous.AmortizationOfIntangibles);
-			if (AllowanceForFundsConstruction != null) AllowanceForFundsConstruction.UpdateValues(previous.AllowanceForFundsConstruction);
-			if (DomesticSales != null) DomesticSales.UpdateValues(previous.DomesticSales);
-			if (ForeignSales != null) ForeignSales.UpdateValues(previous.ForeignSales);
 			if (IncomeTaxPaidSupplementalData != null) IncomeTaxPaidSupplementalData.UpdateValues(previous.IncomeTaxPaidSupplementalData);
 			if (InterestPaidSupplementalData != null) InterestPaidSupplementalData.UpdateValues(previous.InterestPaidSupplementalData);
 			if (IssuanceOfCapitalStock != null) IssuanceOfCapitalStock.UpdateValues(previous.IssuanceOfCapitalStock);
@@ -2779,7 +2261,6 @@ namespace QuantConnect.Data.Fundamental
 			if (FreeCashFlow != null) FreeCashFlow.UpdateValues(previous.FreeCashFlow);
 			if (DecreaseinInterestBearingDepositsinBank != null) DecreaseinInterestBearingDepositsinBank.UpdateValues(previous.DecreaseinInterestBearingDepositsinBank);
 			if (IncreaseinInterestBearingDepositsinBank != null) IncreaseinInterestBearingDepositsinBank.UpdateValues(previous.IncreaseinInterestBearingDepositsinBank);
-			if (AdjustedGeographySegmentData != null) AdjustedGeographySegmentData.UpdateValues(previous.AdjustedGeographySegmentData);
 			if (InterestReceivedCFO != null) InterestReceivedCFO.UpdateValues(previous.InterestReceivedCFO);
 			if (InterestPaidCFO != null) InterestPaidCFO.UpdateValues(previous.InterestPaidCFO);
 			if (PurchaseofSubsidiaries != null) PurchaseofSubsidiaries.UpdateValues(previous.PurchaseofSubsidiaries);
@@ -2792,26 +2273,15 @@ namespace QuantConnect.Data.Fundamental
 			if (ShareofAssociates != null) ShareofAssociates.UpdateValues(previous.ShareofAssociates);
 			if (ProfitonDisposals != null) ProfitonDisposals.UpdateValues(previous.ProfitonDisposals);
 			if (ReorganizationOtherCosts != null) ReorganizationOtherCosts.UpdateValues(previous.ReorganizationOtherCosts);
-			if (OtherFinancing != null) OtherFinancing.UpdateValues(previous.OtherFinancing);
 			if (NetOutwardLoans != null) NetOutwardLoans.UpdateValues(previous.NetOutwardLoans);
 			if (IssueExpenses != null) IssueExpenses.UpdateValues(previous.IssueExpenses);
-			if (ChangeinCertificatesofDepositsandDebtSecuritiesIssued != null) ChangeinCertificatesofDepositsandDebtSecuritiesIssued.UpdateValues(previous.ChangeinCertificatesofDepositsandDebtSecuritiesIssued);
-			if (PaymentstoAcquireHeldToMaturityInvestments != null) PaymentstoAcquireHeldToMaturityInvestments.UpdateValues(previous.PaymentstoAcquireHeldToMaturityInvestments);
-			if (PaymentstoAcquireAvailableForSaleFinancialAssets != null) PaymentstoAcquireAvailableForSaleFinancialAssets.UpdateValues(previous.PaymentstoAcquireAvailableForSaleFinancialAssets);
-			if (PaymentstoAcquireFinancialAssetsDesignatedasFairValue != null) PaymentstoAcquireFinancialAssetsDesignatedasFairValue.UpdateValues(previous.PaymentstoAcquireFinancialAssetsDesignatedasFairValue);
-			if (ProceedsfromDisposalofHeldToMaturityInvestments != null) ProceedsfromDisposalofHeldToMaturityInvestments.UpdateValues(previous.ProceedsfromDisposalofHeldToMaturityInvestments);
-			if (ProceedsfromDisposalofAvailableForSaleFinancialAssets != null) ProceedsfromDisposalofAvailableForSaleFinancialAssets.UpdateValues(previous.ProceedsfromDisposalofAvailableForSaleFinancialAssets);
-			if (ProceedsfromDisposalofFinancialAssetsDesignatedasFairValue != null) ProceedsfromDisposalofFinancialAssetsDesignatedasFairValue.UpdateValues(previous.ProceedsfromDisposalofFinancialAssetsDesignatedasFairValue);
-			if (ChangeinFairValueofInvestmentProperties != null) ChangeinFairValueofInvestmentProperties.UpdateValues(previous.ChangeinFairValueofInvestmentProperties);
 			if (ChangeinDepositsbyBanksandCustomers != null) ChangeinDepositsbyBanksandCustomers.UpdateValues(previous.ChangeinDepositsbyBanksandCustomers);
 			if (CashFlowsfromusedinOperatingActivitiesDirect != null) CashFlowsfromusedinOperatingActivitiesDirect.UpdateValues(previous.CashFlowsfromusedinOperatingActivitiesDirect);
 			if (ClassesofCashReceiptsfromOperatingActivities != null) ClassesofCashReceiptsfromOperatingActivities.UpdateValues(previous.ClassesofCashReceiptsfromOperatingActivities);
 			if (OtherCashReceiptsfromOperatingActivities != null) OtherCashReceiptsfromOperatingActivities.UpdateValues(previous.OtherCashReceiptsfromOperatingActivities);
 			if (ClassesofCashPayments != null) ClassesofCashPayments.UpdateValues(previous.ClassesofCashPayments);
 			if (PaymentstoSuppliersforGoodsandServices != null) PaymentstoSuppliersforGoodsandServices.UpdateValues(previous.PaymentstoSuppliersforGoodsandServices);
-			if (PaymentsfromContractsHeldforDealingorTradingPurpose != null) PaymentsfromContractsHeldforDealingorTradingPurpose.UpdateValues(previous.PaymentsfromContractsHeldforDealingorTradingPurpose);
 			if (PaymentsonBehalfofEmployees != null) PaymentsonBehalfofEmployees.UpdateValues(previous.PaymentsonBehalfofEmployees);
-			if (PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefits != null) PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefits.UpdateValues(previous.PaymentsforPremiumsandClaimsAnnuitiesandOtherPolicyBenefits);
 			if (OtherCashPaymentsfromOperatingActivities != null) OtherCashPaymentsfromOperatingActivities.UpdateValues(previous.OtherCashPaymentsfromOperatingActivities);
 			if (DividendsPaidDirect != null) DividendsPaidDirect.UpdateValues(previous.DividendsPaidDirect);
 			if (DividendsReceivedDirect != null) DividendsReceivedDirect.UpdateValues(previous.DividendsReceivedDirect);
@@ -2820,27 +2290,16 @@ namespace QuantConnect.Data.Fundamental
 			if (TaxesRefundPaidDirect != null) TaxesRefundPaidDirect.UpdateValues(previous.TaxesRefundPaidDirect);
 			if (TotalAdjustmentsforNonCashItems != null) TotalAdjustmentsforNonCashItems.UpdateValues(previous.TotalAdjustmentsforNonCashItems);
 			if (ImpairmentLossReversalRecognizedinProfitorLoss != null) ImpairmentLossReversalRecognizedinProfitorLoss.UpdateValues(previous.ImpairmentLossReversalRecognizedinProfitorLoss);
-			if (AdjustmentsforUndistributedProfitsofAssociates != null) AdjustmentsforUndistributedProfitsofAssociates.UpdateValues(previous.AdjustmentsforUndistributedProfitsofAssociates);
-			if (OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlow != null) OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlow.UpdateValues(previous.OtherAdjustmentsforWhichCashEffectsAreInvestingorFinancingCashFlow);
 			if (DividendPaidCFO != null) DividendPaidCFO.UpdateValues(previous.DividendPaidCFO);
 			if (DividendReceivedCFO != null) DividendReceivedCFO.UpdateValues(previous.DividendReceivedCFO);
 			if (TaxesRefundPaid != null) TaxesRefundPaid.UpdateValues(previous.TaxesRefundPaid);
 			if (OtherOperatingInflowsOutflowsofCash != null) OtherOperatingInflowsOutflowsofCash.UpdateValues(previous.OtherOperatingInflowsOutflowsofCash);
-			if (ProceedsfromGovernmentGrantsCFI != null) ProceedsfromGovernmentGrantsCFI.UpdateValues(previous.ProceedsfromGovernmentGrantsCFI);
 			if (CashAdvancesandLoansMadetoOtherParties != null) CashAdvancesandLoansMadetoOtherParties.UpdateValues(previous.CashAdvancesandLoansMadetoOtherParties);
 			if (CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherParties != null) CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherParties.UpdateValues(previous.CashReceiptsfromRepaymentofAdvancesandLoansMadetoOtherParties);
-			if (CashReceiptsfromPaymentsforFinancialDerivativeContracts != null) CashReceiptsfromPaymentsforFinancialDerivativeContracts.UpdateValues(previous.CashReceiptsfromPaymentsforFinancialDerivativeContracts);
 			if (DividendsReceivedCFI != null) DividendsReceivedCFI.UpdateValues(previous.DividendsReceivedCFI);
 			if (InterestReceivedCFI != null) InterestReceivedCFI.UpdateValues(previous.InterestReceivedCFI);
-			if (IncomeTaxesRefundPaidCFI != null) IncomeTaxesRefundPaidCFI.UpdateValues(previous.IncomeTaxesRefundPaidCFI);
-			if (IssuancePaymentofOtherEquityInstrumentsNet != null) IssuancePaymentofOtherEquityInstrumentsNet.UpdateValues(previous.IssuancePaymentofOtherEquityInstrumentsNet);
-			if (PaymentsofOtherEquityInstruments != null) PaymentsofOtherEquityInstruments.UpdateValues(previous.PaymentsofOtherEquityInstruments);
-			if (ProceedsfromIssuingOtherEquityInstruments != null) ProceedsfromIssuingOtherEquityInstruments.UpdateValues(previous.ProceedsfromIssuingOtherEquityInstruments);
-			if (ProceedsfromGovernmentGrantsCFF != null) ProceedsfromGovernmentGrantsCFF.UpdateValues(previous.ProceedsfromGovernmentGrantsCFF);
 			if (InterestPaidCFF != null) InterestPaidCFF.UpdateValues(previous.InterestPaidCFF);
-			if (IncomeTaxesRefundPaidCFF != null) IncomeTaxesRefundPaidCFF.UpdateValues(previous.IncomeTaxesRefundPaidCFF);
 			if (ChangeinAccruedIncome != null) ChangeinAccruedIncome.UpdateValues(previous.ChangeinAccruedIncome);
-			if (ChangeinDeferredIncome != null) ChangeinDeferredIncome.UpdateValues(previous.ChangeinDeferredIncome);
 			if (ChangeinFinancialAssets != null) ChangeinFinancialAssets.UpdateValues(previous.ChangeinFinancialAssets);
 			if (ChangeinAdvancesfromCentralBanks != null) ChangeinAdvancesfromCentralBanks.UpdateValues(previous.ChangeinAdvancesfromCentralBanks);
 			if (ChangeinFinancialLiabilities != null) ChangeinFinancialLiabilities.UpdateValues(previous.ChangeinFinancialLiabilities);
@@ -2848,7 +2307,6 @@ namespace QuantConnect.Data.Fundamental
 			if (ChangeinReinsuranceReceivables != null) ChangeinReinsuranceReceivables.UpdateValues(previous.ChangeinReinsuranceReceivables);
 			if (ChangeinDeferredAcquisitionCostsNet != null) ChangeinDeferredAcquisitionCostsNet.UpdateValues(previous.ChangeinDeferredAcquisitionCostsNet);
 			if (ChangeinInsuranceFunds != null) ChangeinInsuranceFunds.UpdateValues(previous.ChangeinInsuranceFunds);
-			if (ChangeinReinsurancePayables != null) ChangeinReinsurancePayables.UpdateValues(previous.ChangeinReinsurancePayables);
 			if (ChangeinInvestmentContractLiabilities != null) ChangeinInvestmentContractLiabilities.UpdateValues(previous.ChangeinInvestmentContractLiabilities);
 			if (ChangeinInsuranceContractLiabilities != null) ChangeinInsuranceContractLiabilities.UpdateValues(previous.ChangeinInsuranceContractLiabilities);
 			if (ProvisionandWriteOffofAssets != null) ProvisionandWriteOffofAssets.UpdateValues(previous.ProvisionandWriteOffofAssets);
@@ -2857,13 +2315,10 @@ namespace QuantConnect.Data.Fundamental
 			if (MinorityInterest != null) MinorityInterest.UpdateValues(previous.MinorityInterest);
 			if (CapExReported != null) CapExReported.UpdateValues(previous.CapExReported);
 			if (CashReceiptsfromTaxRefunds != null) CashReceiptsfromTaxRefunds.UpdateValues(previous.CashReceiptsfromTaxRefunds);
-			if (CashReceiptsfromBorrowings != null) CashReceiptsfromBorrowings.UpdateValues(previous.CashReceiptsfromBorrowings);
 			if (CashReceiptsfromDepositsbyBanksandCustomers != null) CashReceiptsfromDepositsbyBanksandCustomers.UpdateValues(previous.CashReceiptsfromDepositsbyBanksandCustomers);
 			if (CashReceiptsfromLoans != null) CashReceiptsfromLoans.UpdateValues(previous.CashReceiptsfromLoans);
 			if (CashReceiptsfromSecuritiesRelatedActivities != null) CashReceiptsfromSecuritiesRelatedActivities.UpdateValues(previous.CashReceiptsfromSecuritiesRelatedActivities);
-			if (CashReceiptsfromDecreaseinAssets != null) CashReceiptsfromDecreaseinAssets.UpdateValues(previous.CashReceiptsfromDecreaseinAssets);
 			if (CashReceiptsfromFeesandCommissions != null) CashReceiptsfromFeesandCommissions.UpdateValues(previous.CashReceiptsfromFeesandCommissions);
-			if (CashPaymentsforBorrowings != null) CashPaymentsforBorrowings.UpdateValues(previous.CashPaymentsforBorrowings);
 			if (CashPaymentsforDepositsbyBanksandCustomers != null) CashPaymentsforDepositsbyBanksandCustomers.UpdateValues(previous.CashPaymentsforDepositsbyBanksandCustomers);
 			if (CashPaymentsforLoans != null) CashPaymentsforLoans.UpdateValues(previous.CashPaymentsforLoans);
 			if (InterestandCommissionPaid != null) InterestandCommissionPaid.UpdateValues(previous.InterestandCommissionPaid);
@@ -2878,8 +2333,13 @@ namespace QuantConnect.Data.Fundamental
 			if (CashPaidtoReinsurers != null) CashPaidtoReinsurers.UpdateValues(previous.CashPaidtoReinsurers);
 			if (OtherUnderwritingExpensesPaid != null) OtherUnderwritingExpensesPaid.UpdateValues(previous.OtherUnderwritingExpensesPaid);
 			if (CashDividendsForMinorities != null) CashDividendsForMinorities.UpdateValues(previous.CashDividendsForMinorities);
-			if (NetIncomeFromDiscontinuedOperations != null) NetIncomeFromDiscontinuedOperations.UpdateValues(previous.NetIncomeFromDiscontinuedOperations);
 			if (CashGeneratedfromOperatingActivities != null) CashGeneratedfromOperatingActivities.UpdateValues(previous.CashGeneratedfromOperatingActivities);
+			if (FundFromOperation != null) FundFromOperation.UpdateValues(previous.FundFromOperation);
+			if (NetInvestmentPropertiesPurchaseAndSale != null) NetInvestmentPropertiesPurchaseAndSale.UpdateValues(previous.NetInvestmentPropertiesPurchaseAndSale);
+			if (PurchaseOfInvestmentProperties != null) PurchaseOfInvestmentProperties.UpdateValues(previous.PurchaseOfInvestmentProperties);
+			if (SaleOfInvestmentProperties != null) SaleOfInvestmentProperties.UpdateValues(previous.SaleOfInvestmentProperties);
+			if (OtherCashAdjustIncludedIntoChangeinCash != null) OtherCashAdjustIncludedIntoChangeinCash.UpdateValues(previous.OtherCashAdjustIncludedIntoChangeinCash);
+			if (OtherCashAdjustExcludeFromChangeinCash != null) OtherCashAdjustExcludeFromChangeinCash.UpdateValues(previous.OtherCashAdjustExcludeFromChangeinCash);
 		}
 	}
 }

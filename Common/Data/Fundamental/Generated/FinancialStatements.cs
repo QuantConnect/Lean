@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the FinancialStatements class
 	/// </summary>
-	public class FinancialStatements : BaseData
+	public class FinancialStatements
 	{
 		/// <summary>
 		/// The exact date that is given in the financial statements for each quarter's end.
@@ -79,6 +79,15 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Auditor opinion code will be one of the following for each annual period:
+		/// Code Meaning
+		/// UQ Unqualified Opinion
+		/// UE Unqualified Opinion with Explanation
+		/// QM Qualified - Due to change in accounting method
+		/// QL Qualified - Due to litigation
+		/// OT Qualified Opinion - Other
+		/// AO Adverse Opinion
+		/// DS Disclaim an opinion
+		/// UA Unaudited
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 28001
@@ -109,7 +118,7 @@ namespace QuantConnect.Data.Fundamental
 		/// The sum of Tier 1 and Tier 2 Capital. Tier 1 capital consists of common shareholders equity, perpetual preferred shareholders equity
 		/// with non-cumulative dividends, retained earnings, and minority interests in the equity accounts of consolidated subsidiaries. Tier 2
 		/// capital consists of subordinated debt, intermediate-term preferred stock, cumulative and long-term preferred stock, and a portion of
-		/// a banks allowance for loan and lease losses.
+		/// a bank's allowance for loan and lease losses.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 28004
