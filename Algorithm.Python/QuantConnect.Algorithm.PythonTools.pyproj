@@ -23,7 +23,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Compile Include="BasicTemplateCryptoAlgorithm.py" />
+    <Compile Include="BasicTemplateIntrinioEconomicData.py" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.py" />
+    <Compile Include="ConstituentsQC500GeneratorAlgorithm.py" />
+    <Compile Include="CustomDataIndicatorExtensionsAlgorithm.py" />
+    <Compile Include="CustomFrameworkModelsAlgorithm.py" />
     <Compile Include="CustomIndicatorAlgorithm.py" />
     <Compile Include="CustomVolatilityModelAlgorithm.py" />
     <Compile Include="BasicTemplateAlgorithm.py" />
@@ -57,6 +62,7 @@
     <Compile Include="DailyFxAlgorithm.py" />
     <Compile Include="DataConsolidationAlgorithm.py" />
     <Compile Include="DelistingEventsAlgorithm.py" />
+    <Compile Include="DisplacedMovingAverageRibbon.py" />
     <Compile Include="DividendAlgorithm.py" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <Compile Include="DropboxUniverseSelectionAlgorithm.py" />
@@ -100,6 +106,7 @@
     <Compile Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
     <Compile Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
+    <Compile Include="TimeInForceAlgorithm.py" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Compile Include="UniverseSelectionRegressionAlgorithm.py" />
     <Compile Include="UpdateOrderRegressionAlgorithm.py" />

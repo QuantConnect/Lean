@@ -42,14 +42,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            UniverseSelection = new CustomFundamentalUniverseSelectionModel();
-            Alpha = new MacdAlphaModel(
+            SetUniverseSelection(new CustomFundamentalUniverseSelectionModel());
+            SetAlpha(new MacdAlphaModel(
                 fastPeriod: 10,
                 slowPeriod: 30,
                 signalPeriod: 12,
                 movingAverageType: MovingAverageType.Simple
-            );
-            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
+            ));
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

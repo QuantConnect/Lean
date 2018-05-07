@@ -41,18 +41,18 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("AIG");
 
             // define a manual universe of all the securities we manually registered
-            UniverseSelection = new ManualUniverseSelectionModel(Securities.Keys);
+            SetUniverseSelection(new ManualUniverseSelectionModel(Securities.Keys));
 
             // define alpha model as a composite of the rsi and ema cross models
-            Alpha = new CompositeAlphaModel(
+            SetAlpha(new CompositeAlphaModel(
                 new RsiAlphaModel(),
                 new EmaCrossAlphaModel()
-            );
+            ));
 
             // default models for the rest
-            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
-            Execution = new ImmediateExecutionModel();
-            RiskManagement = new NullRiskManagementModel();
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            SetExecution(new ImmediateExecutionModel());
+            SetRiskManagement(new NullRiskManagementModel());
         }
     }
 }

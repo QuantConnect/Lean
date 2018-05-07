@@ -38,17 +38,17 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(1000000);
 
-            UniverseSelection = new ManualUniverseSelectionModel(
+            SetUniverseSelection(new ManualUniverseSelectionModel(
                 QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-            );
+            ));
 
             // using hourly rsi to generate more insights
-            Alpha = new RsiAlphaModel(14, Resolution.Hour);
-            PortfolioConstruction = new EqualWeightingPortfolioConstructionModel();
-            Execution = new StandardDeviationExecutionModel();
+            SetAlpha(new RsiAlphaModel(14, Resolution.Hour));
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            SetExecution(new StandardDeviationExecutionModel());
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
