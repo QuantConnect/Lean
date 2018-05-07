@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ namespace QuantConnect.Securities
 {
     /// <summary>
     /// Represents futures symbols universe used in filtering.
-    /// </summary> 
+    /// </summary>
     public class FutureFilterUniverse : IDerivativeSecurityFilterUniverse
     {
         internal IEnumerable<Symbol> _allSymbols;
@@ -102,7 +102,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies filter selecting futures contracts based on a range of expiration dates relative to the current day 
+        /// Applies filter selecting futures contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in less than 10 days</param>
@@ -133,7 +133,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies filter selecting futures contracts based on expiration cycles. See <see cref="FutureExpirationCycles"/> for details 
+        /// Applies filter selecting futures contracts based on expiration cycles. See <see cref="FutureExpirationCycles"/> for details
         /// </summary>
         /// <param name="months"></param>
         /// <returns></returns>
@@ -141,6 +141,29 @@ namespace QuantConnect.Securities
         {
             var monthHashSet = months.ToHashSet();
             return this.Where(x => monthHashSet.Contains(x.ID.Date.Month));
+        }
+
+        /// <summary>
+        /// Explicitly sets the selected contract symbols for this universe.
+        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// </summary>
+        /// <param name="contracts">The future contract symbol objects to select</param>
+        public FutureFilterUniverse Contracts(IEnumerable<Symbol> contracts)
+        {
+            _allSymbols = contracts.ToList();
+            return this;
+        }
+
+        /// <summary>
+        /// Sets a function used to filter the set of available contract filters. The input to the 'contractSelector'
+        /// function will be the already filtered list if any other filters have already been applied.
+        /// </summary>
+        /// <param name="contractSelector">The future contract symbol objects to select</param>
+        public FutureFilterUniverse Contracts(Func<IEnumerable<Symbol>, IEnumerable<Symbol>> contractSelector)
+        {
+            // force materialization using ToList
+            _allSymbols = contractSelector(_allSymbols).ToList();
+            return this;
         }
 
         /// <summary>
@@ -166,7 +189,7 @@ namespace QuantConnect.Securities
     public static class FutureFilterUniverseEx
     {
         /// <summary>
-        /// Filters universe 
+        /// Filters universe
         /// </summary>
         /// <param name="universe"></param>
         /// <param name="predicate"></param>
@@ -179,7 +202,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Maps universe 
+        /// Maps universe
         /// </summary>
         public static FutureFilterUniverse Select(this FutureFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
@@ -189,7 +212,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Binds universe 
+        /// Binds universe
         /// </summary>
         public static FutureFilterUniverse SelectMany(this FutureFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {
