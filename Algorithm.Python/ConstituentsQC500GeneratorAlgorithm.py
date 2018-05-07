@@ -52,7 +52,7 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
         self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
 
         self.spy = self.AddEquity("SPY", Resolution.Daily)
-        self.Schedule.On(self.DateRules.MonthStart("SPY"), self.TimeRules.At(0, 0), Action(self.monthly_rebalance))
+        self.Schedule.On(self.DateRules.MonthStart("SPY"), self.TimeRules.At(0, 0), self.monthly_rebalance)
         self.num_coarse = 1000
         self.num_fine = 500
         self.dollar_volume = {}
@@ -86,10 +86,13 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
                                         and ((self.Time - x.SecurityReference.IPODate).days > 180)
                                         and x.EarningReports.BasicAverageShares.ThreeMonths * (x.EarningReports.BasicEPS.TwelveMonths*x.ValuationRatios.PERatio) > 5e8]
 
+        count = len(filtered_fine)
+        if count == 0: return []
+        
         # select stocks with top dollar volume in every single sector
         for i in filtered_fine:
             i.DollarVolume = self.dollar_volume[i.Symbol.Value]
-        percent = float(self.num_fine/len(filtered_fine))
+        percent = float(self.num_fine/count)
         group_by_code = {}
         top_list = []
         for code in ["N", "M", "U", "T", "B", "I"]:

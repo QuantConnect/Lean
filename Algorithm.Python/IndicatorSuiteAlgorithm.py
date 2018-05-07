@@ -49,7 +49,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data
 
         self.AddEquity(self.symbol, Resolution.Daily)
-        self.AddData[Quandl](self.customSymbol, Resolution.Daily)
+        self.AddData(Quandl, self.customSymbol, Resolution.Daily)
 
         # Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
         self.indicators = {
@@ -119,7 +119,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         Chart('MACD')
         Chart('Averages')
         # Here we make use of the Schelude method to update the plots once per day at market close.
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.BeforeMarketClose(self.symbol), Action(self.update_plots))
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.BeforeMarketClose(self.symbol), self.update_plots)
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
