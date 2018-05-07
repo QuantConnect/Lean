@@ -349,6 +349,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Instructs the engine to only filter options contracts on the first time step of each market day.
+        /// </summary>
+        public OptionFilterUniverse OnlyApplyFilterAtMarketOpen()
+        {
+            _isDynamic = false;
+            return this;
+        }
+
+        /// <summary>
         /// IEnumerable interface method implementation
         /// </summary>
         public IEnumerator<Symbol> GetEnumerator()
