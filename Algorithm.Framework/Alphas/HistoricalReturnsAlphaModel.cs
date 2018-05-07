@@ -107,20 +107,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     _symbolDataBySymbol[added.Symbol] = symbolData;
                     addedSymbols.Add(symbolData.Security.Symbol);
                 }
+            }
 
-                if (_symbolDataBySymbol.Count > 0)
+            if (_symbolDataBySymbol.Count > 0)
+            {
+                // warmup our indicators by pushing history through the consolidators
+                algorithm.History(addedSymbols, _lookback, _resolution)
+                .PushThrough(bar =>
                 {
-                    // warmup our indicators by pushing history through the consolidators
-                    algorithm.History(addedSymbols, _lookback, _resolution)
-                    .PushThrough(bar =>
+                    SymbolData symbolData;
+                    if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
                     {
-                        SymbolData symbolData;
-                        if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
-                        {
-                            symbolData.ROC.Update(bar.EndTime, bar.Value);
-                        }
-                    });
-                }
+                        symbolData.ROC.Update(bar.EndTime, bar.Value);
+                    }
+                });
             }
         }
 
