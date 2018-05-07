@@ -98,13 +98,28 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
 
             // initialize data for added securities
+            var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
                 if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                 {
                     var symbolData = new SymbolData(algorithm, added, _lookback, _resolution);
-                    _symbolDataBySymbol.Add(added.Symbol, symbolData);
-                    symbolData.WarmUpIndicators(algorithm, added, _lookback, _resolution);
+                    _symbolDataBySymbol[added.Symbol] = symbolData;
+                    addedSymbols.Add(symbolData.Security.Symbol);
+                }
+
+                if (_symbolDataBySymbol.Count > 0)
+                {
+                    // warmup our indicators by pushing history through the consolidators
+                    algorithm.History(addedSymbols, _lookback, _resolution)
+                    .PushThrough(bar =>
+                    {
+                        SymbolData symbolData;
+                        if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
+                        {
+                            symbolData.ROC.Update(bar.EndTime, bar.Value);
+                        }
+                    });
                 }
             }
         }
@@ -126,15 +141,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
                 ROC = new RateOfChange(security.Symbol, lookback);
                 algorithm.RegisterIndicator(security.Symbol, ROC, Consolidator);
-            }
-
-            public void WarmUpIndicators(QCAlgorithmFramework algorithm, Security security, int lookback, Resolution resolution)
-            {
-                var history = algorithm.History(security.Symbol, lookback, resolution);
-                foreach (var bar in history)
-                {
-                    ROC.Update(bar.EndTime, bar.Close);
-                }
             }
 
             public bool CanEmit()
