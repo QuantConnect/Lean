@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Provides an implementation of <see cref="IUniverseSelectionModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class UniverseSelectionModelPythonWrapper : IUniverseSelectionModel
+    public class UniverseSelectionModelPythonWrapper : UniverseSelectionModel
     {
         private readonly dynamic _model;
 
@@ -56,12 +56,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             using (Py.GIL())
             {
-                var universers = _model.CreateUniverses(algorithm) as PyObject;
-                foreach (PyObject universe in universers)
+                var universes = _model.CreateUniverses(algorithm) as PyObject;
+                foreach (PyObject universe in universes)
                 {
                     yield return universe.AsManagedObject(typeof(Universe)) as Universe;
                 }
-                universers.Destroy();
+                universes.Destroy();
             }
         }
     }

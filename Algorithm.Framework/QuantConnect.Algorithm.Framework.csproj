@@ -91,6 +91,7 @@
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
+    <Compile Include="Selection\UniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
     <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />

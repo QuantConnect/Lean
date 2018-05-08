@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// Provides an implementation of <see cref="IUniverseSelectionModel"/> that simply
     /// subscribes to the specified set of symbols
     /// </summary>
-    public class ManualUniverseSelectionModel : IUniverseSelectionModel
+    public class ManualUniverseSelectionModel : UniverseSelectionModel
     {
         private static readonly MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
 
@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Called at algorithm start.
         /// </summary>
         /// <returns>The universes defined by this model</returns>
-        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
             var securityInitializer = _securityInitializer ?? algorithm.SecurityInitializer;
