@@ -88,6 +88,7 @@
     <None Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <None Include="DropboxUniverseSelectionAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
+    <None Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
     <None Include="ETFGlobalRotationAlgorithm.py" />
     <None Include="FilteredIdentityAlgorithm.py" />
     <None Include="FinancialAdvisorDemoAlgorithm.py" />
