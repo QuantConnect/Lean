@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
             }
 
-            if (_symbolDataBySymbol.Count > 0)
+            if (addedSymbols.Count > 0)
             {
                 // warmup our indicators by pushing history through the consolidators
                 algorithm.History(addedSymbols, _lookback, _resolution)
