@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// Execution model that submits orders while the current market prices is at least the configured number of standard
     /// deviations away from the mean in the favorable direction (below/above for buy/sell respectively)
     /// </summary>
-    public class StandardDeviationExecutionModel : IExecutionModel
+    public class StandardDeviationExecutionModel : ExecutionModel
     {
         private readonly int _period;
         private readonly decimal _deviations;
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets</param>
-        public virtual void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             _targetsCollection.AddRange(targets);
 
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)

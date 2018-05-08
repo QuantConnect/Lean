@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
@@ -29,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// <summary>
     /// Execution model that submits orders while the current market price is more favorable that the current volume weighted average price.
     /// </summary>
-    public class VolumeWeightedAveragePriceExecutionModel : IExecutionModel
+    public class VolumeWeightedAveragePriceExecutionModel : ExecutionModel
     {
         private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
         private readonly Dictionary<Symbol, SymbolData> _symbolData = new Dictionary<Symbol, SymbolData>();
@@ -47,7 +46,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets to be ordered</param>
-        public virtual void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             // update the complete set of portfolio targets with the new targets
             _targetsCollection.AddRange(targets);
@@ -101,7 +100,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
             {
