@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -25,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the drawdown
     /// per holding to the specified percentage
     /// </summary>
-    public class MaximumDrawdownPercentPerSecurity : IRiskManagementModel
+    public class MaximumDrawdownPercentPerSecurity : RiskManagementModel
     {
         private readonly decimal _maximumDrawdownPercent;
 
@@ -45,7 +44,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public virtual IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             foreach (var kvp in algorithm.Securities)
             {
@@ -63,15 +62,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     yield return new PortfolioTarget(security.Symbol, 0);
                 }
             }
-        }
-
-        /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
-        /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-        {
         }
     }
 }

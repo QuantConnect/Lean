@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -22,8 +22,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class NullExecutionModel : ExecutionModel
     {
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
+            // NOP
         }
     }
 }

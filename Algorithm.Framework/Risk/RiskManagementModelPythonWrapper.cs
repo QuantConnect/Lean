@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// <summary>
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class RiskManagementModelPythonWrapper : IRiskManagementModel
+    public class RiskManagementModelPythonWrapper : RiskManagementModel
     {
         private readonly dynamic _model;
 
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public virtual IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             using (Py.GIL())
             {
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             using (Py.GIL())
             {

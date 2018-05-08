@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -26,7 +25,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits
     /// the sector exposure to the specified percentage
     /// </summary>
-    public class MaximumSectorExposureRiskManagementModel : IRiskManagementModel
+    public class MaximumSectorExposureRiskManagementModel : RiskManagementModel
     {
         private readonly decimal _maximumSectorExposure;
         private readonly PortfolioTargetCollection _targetsCollection;
@@ -48,7 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public virtual IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
             var maximumSectorExposureValue = algorithm.Portfolio.TotalPortfolioValue * _maximumSectorExposure;
 
@@ -105,15 +104,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
-        /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-        {
         }
     }
 }
