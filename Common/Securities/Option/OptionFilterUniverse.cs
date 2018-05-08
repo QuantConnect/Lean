@@ -112,7 +112,6 @@ namespace QuantConnect.Securities
             return this;
         }
 
-
         /// <summary>
         /// Returns universe, filtered by option type
         /// </summary>
@@ -166,7 +165,6 @@ namespace QuantConnect.Securities
             _allSymbols = frontMonth.ToList();
             return this;
         }
-
 
         /// <summary>
         /// Returns a list of back month contracts
@@ -324,6 +322,38 @@ namespace QuantConnect.Securities
 
             _allSymbols = filtered.ToList();
 
+            return this;
+        }
+
+        /// <summary>
+        /// Explicitly sets the selected contract symbols for this universe.
+        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// </summary>
+        /// <param name="contracts">The option contract symbol objects to select</param>
+        public OptionFilterUniverse Contracts(IEnumerable<Symbol> contracts)
+        {
+            _allSymbols = contracts.ToList();
+            return this;
+        }
+
+        /// <summary>
+        /// Sets a function used to filter the set of available contract filters. The input to the 'contractSelector'
+        /// function will be the already filtered list if any other filters have already been applied.
+        /// </summary>
+        /// <param name="contractSelector">The option contract symbol objects to select</param>
+        public OptionFilterUniverse Contracts(Func<IEnumerable<Symbol>, IEnumerable<Symbol>> contractSelector)
+        {
+            // force materialization using ToList
+            _allSymbols = contractSelector(_allSymbols).ToList();
+            return this;
+        }
+
+        /// <summary>
+        /// Instructs the engine to only filter options contracts on the first time step of each market day.
+        /// </summary>
+        public OptionFilterUniverse OnlyApplyFilterAtMarketOpen()
+        {
+            _isDynamic = false;
             return this;
         }
 
