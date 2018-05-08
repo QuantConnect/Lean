@@ -37,7 +37,7 @@ class EmaCrossUniverseSelectionFrameworkAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
  
-        self.SetStartDate(2010,1,1)
+        self.SetStartDate(2013,1,1)
         self.SetEndDate(2015,1,1)
         self.SetCash(100000)
 

@@ -28,7 +28,7 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
     def __init__(self,
                  fastPeriod = 100,
                  slowPeriod = 300,
-                 universeCount = 10000,
+                 universeCount = 500,
                  universeSettings = None, 
                  securityInitializer = None):
         '''Initializes a new instance of the EmaCrossUniverseSelectionModel class
@@ -95,4 +95,4 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
         # updates the EMAFast and EMASlow indicators, returning true when they're both ready
         def Update(self, time, value):
-            return self.FastEma.Update(time, value) and self.SlowEma.Update(time, value)
+            return self.SlowEma.Update(time, value) & self.FastEma.Update(time, value)

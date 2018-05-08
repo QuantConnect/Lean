@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public EmaCrossUniverseSelectionModel(
             int fastPeriod = 100,
             int slowPeriod = 300,
-            int universeCount = 10000,
+            int universeCount = 500,
             UniverseSettings universeSettings = null, 
             ISecurityInitializer securityInitializer = null)
             : base(false, universeSettings, securityInitializer)
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             public decimal ScaledDelta => (Fast - Slow) / ((Fast + Slow) / 2m);
 
             // updates the EMAFast and EMASlow indicators, returning true when they're both ready
-            public bool Update(DateTime time, decimal value) => Fast.Update(time, value) && Slow.Update(time, value);
+            public bool Update(DateTime time, decimal value) => Fast.Update(time, value) & Slow.Update(time, value);
         }
     }
 }
