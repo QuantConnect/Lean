@@ -13,23 +13,25 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using QuantConnect.Data;
-
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Algorithm framework model that produces insights
+    /// Provides extension methods for alpha models
     /// </summary>
-    public interface IAlphaModel : INotifiedSecurityChanges
+    public static class AlphaModelExtensions
     {
         /// <summary>
-        /// Updates this alpha model with the latest data from the algorithm.
-        /// This is called each time the algorithm receives data for subscribed securities
+        /// Gets the name of the alpha model
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="data">The new data available</param>
-        /// <returns>The new insights generated</returns>
-        IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data);
+        public static string GetModelName(this IAlphaModel model)
+        {
+            var namedModel = model as INamedModel;
+            if (namedModel != null)
+            {
+                return namedModel.Name;
+            }
+
+            return model.GetType().Name;
+        }
     }
 }
