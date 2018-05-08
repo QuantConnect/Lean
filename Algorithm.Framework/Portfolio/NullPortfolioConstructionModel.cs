@@ -16,20 +16,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
     /// Provides an implementation of <see cref="IPortfolioConstructionModel"/> that does nothing
     /// </summary>
-    public class NullPortfolioConstructionModel : IPortfolioConstructionModel
+    public class NullPortfolioConstructionModel : PortfolioConstructionModel
     {
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-        {
-        }
-
-        public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
         {
             return Enumerable.Empty<IPortfolioTarget>();
         }
