@@ -84,6 +84,7 @@
     <Compile Include="Selection\FineFundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\FundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\IUniverseSelectionModel.cs" />
+    <Compile Include="Selection\EmaCrossUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Alphas\ConstantAlphaModel.cs" />
@@ -139,6 +140,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Risk\MaximumSectorExposureRiskManagementModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selection\EmaCrossUniverseSelectionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selection\FundamentalUniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

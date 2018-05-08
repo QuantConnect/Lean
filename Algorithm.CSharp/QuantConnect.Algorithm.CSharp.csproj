@@ -100,6 +100,7 @@
     <Compile Include="Benchmarks\BasicTemplateBenchmark.cs" />
     <Compile Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.cs" />
     <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
+    <Compile Include="EmaCrossUniverseSelectionFrameworkAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataSameResolutionRegressionAlgorithm.cs" />
