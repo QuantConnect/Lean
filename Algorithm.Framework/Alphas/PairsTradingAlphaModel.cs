@@ -11,7 +11,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// This alpha model is designed to work against a single, predefined pair.
     /// This model generates alternating long ratio/short ratio insights emitted as a group
     /// </summary>
-    public class PairsTradingAlphaModel : IAlphaModel, INamedModel
+    public class PairsTradingAlphaModel : AlphaModel
     {
         private enum State
         {
@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
-        public string Name => $"{nameof(PairsTradingAlphaModel)}({_asset1},{_asset2},{_threshold.Normalize()})";
+        public override string Name => $"{nameof(PairsTradingAlphaModel)}({_asset1},{_asset2},{_threshold.Normalize()})";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PairsTradingAlphaModel"/> class
@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             if (_mean?.IsReady != true)
             {
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
             {

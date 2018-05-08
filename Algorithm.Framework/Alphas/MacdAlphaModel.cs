@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -28,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// used to generate up/down insights if it's stronger than the bounce threshold.
     /// If the MACD signal is within the bounce threshold then a flat price insight is returned.
     /// </summary>
-    public class MacdAlphaModel : IAlphaModel, INamedModel
+    public class MacdAlphaModel : AlphaModel
     {
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
@@ -41,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
-        public string Name { get; }
+        public override string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
@@ -74,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var sd in _symbolData.Values)
             {
@@ -113,7 +112,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
             {

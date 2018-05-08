@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Alpha model that uses an EMA cross to create insights
     /// </summary>
-    public class EmaCrossAlphaModel : IAlphaModel, INamedModel
+    public class EmaCrossAlphaModel : AlphaModel
     {
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
-        public string Name { get; }
+        public override string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmaCrossAlphaModel"/> class
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             var insights = new List<Insight>();
             foreach (var symbolData in _symbolDataBySymbol.Values)
@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
             {

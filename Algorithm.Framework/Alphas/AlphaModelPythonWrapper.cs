@@ -24,11 +24,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Provides an implementation of <see cref="IAlphaModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class AlphaModelPythonWrapper : IAlphaModel, INamedModel
+    public class AlphaModelPythonWrapper : AlphaModel
     {
         private readonly dynamic _model;
 
-        public string Name
+        /// <summary>
+        /// Defines a name for a framework model
+        /// </summary>
+        public override string Name
         {
             get
             {
@@ -72,7 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             using (Py.GIL())
             {
@@ -90,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             using (Py.GIL())
             {

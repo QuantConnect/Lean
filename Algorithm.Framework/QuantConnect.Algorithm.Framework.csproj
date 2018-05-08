@@ -53,6 +53,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Alphas\AlphaModel.cs" />
     <Compile Include="Alphas\AlphaModelExtensions.cs" />
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
     <Compile Include="Alphas\CompositeAlphaModel.cs" />
