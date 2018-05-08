@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var sd in _symbolData.Values)
             {
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
             {

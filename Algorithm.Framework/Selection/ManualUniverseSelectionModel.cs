@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Called at algorithm start.
         /// </summary>
         /// <returns>The universes defined by this model</returns>
-        public IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
             var securityInitializer = _securityInitializer ?? algorithm.SecurityInitializer;

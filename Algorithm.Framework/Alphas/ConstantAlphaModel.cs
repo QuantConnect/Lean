@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
-        private bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
+        protected virtual bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
         {
             DateTime generatedTimeUtc;
             if (_insightsTimeBySymbol.TryGetValue(symbol, out generatedTimeUtc))

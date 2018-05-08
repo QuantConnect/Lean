@@ -25,11 +25,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class NullPortfolioConstructionModel : IPortfolioConstructionModel
     {
-        public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
         }
 
-        public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+        public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
         {
             return Enumerable.Empty<IPortfolioTarget>();
         }

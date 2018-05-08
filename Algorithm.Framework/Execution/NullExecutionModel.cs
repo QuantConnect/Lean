@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 
@@ -24,11 +23,11 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class NullExecutionModel : IExecutionModel
     {
-        public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
         }
 
-        public void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public virtual void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
         }
     }
