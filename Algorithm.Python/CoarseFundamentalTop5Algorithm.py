@@ -58,6 +58,9 @@ class CoarseFundamentalTop5Algorithm(QCAlgorithm):
 
 
     def OnData(self, data):
+
+        self.Log(f"OnData({self.UtcTime}): Keys: {', '.join([key.Value for key in data.Keys])}")
+
         # if we have no changes, do nothing
         if self._changes == None: return
 
@@ -76,3 +79,6 @@ class CoarseFundamentalTop5Algorithm(QCAlgorithm):
     # this event fires whenever we have changes to our universe
     def OnSecuritiesChanged(self, changes):
         self._changes = changes
+
+    def OnOrderEvent(self, fill):
+        self.Log(f"OnOrderEvent({self.UtcTime}):: {fill}")

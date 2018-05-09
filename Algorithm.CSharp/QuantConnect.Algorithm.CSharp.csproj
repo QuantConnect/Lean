@@ -134,7 +134,7 @@
     <Compile Include="BasicTemplateForexAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsAlgorithm.cs" />
-    <Compile Include="CoarseUniverseTop5DollarVolumeAlgorithm.cs" />
+    <Compile Include="CoarseFundamentalTop5Algorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="FractionalQuantityRegressionAlgorithm.cs" />
