@@ -55,7 +55,7 @@ class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetUniverseSelection(ManualUniverseSelectionModel(self.Securities.Keys))
 
         # define alpha model as a composite of the rsi and ema cross models
-        self.SetAlpha(CompositeAlphaModel([RsiAlphaModel(), EmaCrossAlphaModel()]))
+        self.SetAlpha(CompositeAlphaModel(RsiAlphaModel(), EmaCrossAlphaModel()))
 
         # default models for the rest
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
