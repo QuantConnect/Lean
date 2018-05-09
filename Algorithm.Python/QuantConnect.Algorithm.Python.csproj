@@ -122,6 +122,7 @@
     <None Include="QuandlFuturesDataAlgorithm.py" />
     <None Include="QuandlImporterAlgorithm.py" />
     <None Include="readme.md" />
+    <None Include="RawPricesCoarseUniverseAlgorithm.py" />
     <None Include="RegressionAlgorithm.py" />
     <None Include="RegressionChannelAlgorithm.py" />
     <None Include="RenkoConsolidatorAlgorithm.py" />
