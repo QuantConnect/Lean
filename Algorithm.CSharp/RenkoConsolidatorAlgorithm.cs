@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2012, 01, 01);
             SetEndDate(2013, 01, 01);
 
-            AddSecurity(SecurityType.Equity, "SPY");
+            AddEquity("SPY", Resolution.Daily);
 
             // this is the simple constructor that will perform the renko logic to the Value
             // property of the data it receives.
@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings(data.Symbol, 1.0);
             }
-            Console.WriteLine("CLOSE - {0} - {1} {2}", data.Time.ToString("o"), data.Open, data.Close);
+            Log($"CLOSE - {data.Time.ToString("o")} - {data.Open} {data.Close}");
         }
 
         /// <summary>
@@ -93,7 +93,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">The new renko bar produced by the consolidator</param>
         public void HandleRenko7Bar(RenkoBar data)
         {
-            Console.WriteLine("7BAR  - {0} - {1} {2}", data.Time.ToString("o"), data.Open, data.Close);
+            if (Portfolio.Invested)
+            {
+                Liquidate(data.Symbol);
+            }
+            Log($"7BAR - {data.Time.ToString("o")} - {data.Open} {data.Close}");
         }
     }
 }

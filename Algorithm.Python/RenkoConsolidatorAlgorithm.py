@@ -38,7 +38,7 @@ class RenkoConsolidatorAlgorithm(QCAlgorithm):
         self.SetStartDate(2012, 1, 1)
         self.SetEndDate(2013, 1, 1)
 
-        self.AddEquity("SPY")
+        self.AddEquity("SPY", Resolution.Daily)
 
         # this is the simple constructor that will perform the
         # renko logic to the Value property of the data it receives.
@@ -69,11 +69,13 @@ class RenkoConsolidatorAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             self.SetHoldings(data.Symbol, 1)
 
-        self.Log("CLOSE - {0} - {1} {2}".format(data.Time, data.Open, data.Close))
+        self.Log(f"CLOSE - {data.Time} - {data.Open} {data.Close}")
 
 
     def HandleRenko7Bar(self, sender, data):
         '''This function is called by our renko7bar consolidator defined in Initialize()
         Args:
             data: The new renko bar produced by the consolidator'''
-        self.Log("7BAR - {0} - {1} {2}".format(data.Time, data.Open, data.Close))
+        if self.Portfolio.Invested:
+            self.Liquidate(data.Symbol)
+        self.Log(f"7BAR - {data.Time} - {data.Open} {data.Close}")
