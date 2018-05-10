@@ -44,7 +44,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _alphaModels = alphaModels;
         }
 
-        public CompositeAlphaModel(PyObject[] alphaModels)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositeAlphaModel"/> class
+        /// </summary>
+        /// <param name="alphaModels">The individual alpha models defining this composite model</param>
+        public CompositeAlphaModel(params PyObject[] alphaModels)
         {
             if (alphaModels.IsNullOrEmpty())
             {
@@ -60,6 +64,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     _alphaModels[i] = new AlphaModelPythonWrapper(alphaModels[i]);
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositeAlphaModel"/> class
+        /// </summary>
+        /// <param name="alphaModel">The individual alpha model defining this composite model</param>
+        public CompositeAlphaModel(PyObject alphaModel)
+            : this(new[] { alphaModel} )
+        {
+
         }
 
         /// <summary>
