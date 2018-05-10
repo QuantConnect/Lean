@@ -18,6 +18,7 @@ using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Forex 
 {
@@ -101,19 +102,91 @@ namespace QuantConnect.Securities.Forex
         public string BaseCurrencySymbol { get; private set; }
 
         /// <summary>
-        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
+        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters.
+        /// Requires symbols in Currencies.CurrencySymbols dictionary to make accurate splits, important for crypto-currency symbols.
         /// </summary>
         /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
+        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency) 
         {
-            if (currencyPair == null || currencyPair.Length != 6)
+
+            if (currencyPair == null || currencyPair.Length < 6 || currencyPair.Length > 8)
             {
-                throw new ArgumentException("Currency pairs must be exactly 6 characters: " + currencyPair);
+                throw new ArgumentException("Currency pairs must not be null, length minimum of 6 and maximum of 8.");
             }
-            baseCurrency = currencyPair.Substring(0, 3);
-            quoteCurrency = currencyPair.Substring(3);
+
+            //Debug.Log($"Splitting {currencyPair}");
+
+            if (currencyPair.Length == 6) {
+
+                // Old-code part for Forex (non-crypto) markets only. 
+                baseCurrency  = currencyPair.Substring(0, 3);
+                quoteCurrency = currencyPair.Substring(3);
+                return;               
+            }
+
+            baseCurrency  = null;
+            quoteCurrency = null;
+
+            List<string> bases  = new List<string>();
+            List<string> quotes = new List<string>();
+
+            // Find bases
+            foreach (var symbol in Currencies.CurrencySymbols.Keys) 
+            {
+                if (currencyPair.IndexOf(symbol) == 0) 
+                {
+                    bases.Add(symbol);
+                    //Debug.Log($"Added base {symbol}");
+                }   
+            }
+
+            // Find quotes
+            foreach (var symbol in Currencies.CurrencySymbols.Keys) 
+            {               
+                if (currencyPair.Contains(symbol)) 
+                {
+                    int start = currencyPair.IndexOf(symbol, 3);
+                    
+                    if (start == 3 || start == 4)
+                    {   
+                        quotes.Add(symbol);
+                        //Debug.Log($"Added quote {symbol}");
+                    }
+                }
+            }
+
+            // Make combinations (combined) and compare to currencyPair
+            // When 100% match found, break the loop.
+            foreach(string b in bases) 
+            {
+                foreach(string q in quotes) 
+                {
+
+                    string combined = b + q;
+
+                    // Debug.Log($"Combination: {combined}");
+                    if (combined.Equals(currencyPair)) 
+                    {
+                        baseCurrency = b;
+                        quoteCurrency = q;
+                        // Return, since if we came to this point, there was found atleast 1 base and 1 count, that matches original currencyPair
+                        return;
+                    }
+                }
+            }
+
+            if(bases.Count == 0) 
+            {
+                throw new ArgumentException("No base currency found.");
+            }
+            else
+            if (quotes.Count == 0) 
+            {
+                throw new ArgumentException("No quote currency found.");
+            }
+            
         }
     }
 }

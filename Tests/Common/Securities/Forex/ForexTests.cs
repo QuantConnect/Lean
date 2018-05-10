@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
     public class ForexTests
     {
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of 8.")]
         public void DecomposeThrowsOnSymbolTooShort()
         {
             string symbol = "12345";
@@ -35,17 +35,17 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of 8.")]
         public void DecomposeThrowsOnSymbolTooLong()
         {
-            string symbol = "1234567";
-            Assert.AreEqual(7, symbol.Length);
+            string symbol = "123456789";
+            Assert.AreEqual(9, symbol.Length);
             string basec, quotec;
             QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of 8.")]
         public void DecomposeThrowsOnNullSymbol()
         {
             string symbol = null;

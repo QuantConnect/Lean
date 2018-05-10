@@ -29,8 +29,8 @@ namespace QuantConnect
         /// <remarks>
         /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
         /// </remarks>
-        public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>
-        {
+        public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>(
+            new HashSet<string> {
             "BTCUSD",
             "BCHUSD",
             "LTCUSD",
@@ -38,8 +38,15 @@ namespace QuantConnect
             "BTCEUR",
             "BCHEUR",
             "LTCEUR",
-            "ETHEUR"
-        };
+            "ETHEUR",
+            "EOSETH",
+            "EOSEUR",
+            "EOSUSD",
+            "EOSBTC",
+            "ICNETH",
+            "ICNBTC",
+            "USDTUSD",
+        });
 
         /// <summary>
         /// Gets the listing of cfds used for currency conversion rates
@@ -261,38 +268,45 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
-            {"USD", "$"},
-            {"GBP", "₤"},
-            {"JPY", "¥"},
-            {"EUR", "€"},
-            {"NZD", "$"},
-            {"AUD", "$"},
-            {"CAD", "$"},
-            {"CHF", "Fr"},
-            {"HKD", "$"},
-            {"SGD", "$"},
-            {"XAG", "Ag"},
-            {"XAU", "Au"},
-            {"CNH", "¥"},
-            {"CNY", "¥"},
-            {"CZK", "Kč"},
-            {"DKK", "kr"},
-            {"HUF", "Ft"},
-            {"INR", "₹"},
-            {"MXN", "$"},
-            {"NOK", "kr"},
-            {"PLN", "zł"},
-            {"SAR", "﷼"},
-            {"SEK", "kr"},
-            {"THB", "฿"},
-            {"TRY", "₺"},
-            {"TWD", "NT$"},
-            {"ZAR", "R"},
 
-            {"BTC", "฿"},
-            {"BCH", "฿"},
-            {"LTC", "Ł"},
-            {"ETH", "Ξ"}
+            {"USD", "$"  },
+            {"GBP", "₤"  },
+            {"JPY", "¥"  },
+            {"EUR", "€"  },
+            {"NZD", "$"  },
+            {"AUD", "$"  },
+            {"CAD", "$"  },
+            {"CHF", "Fr" },
+            {"HKD", "$"  },
+            {"SGD", "$"  },
+            {"XAG", "Ag" },
+            {"XAU", "Au" },
+            {"CNH", "¥"  },
+            {"CNY", "¥"  },
+            {"CZK", "Kč" },
+            {"DKK", "kr" },
+            {"HUF", "Ft" },
+            {"INR", "₹"  },
+            {"MXN", "$"  },
+            {"NOK", "kr" },
+            {"PLN", "zł" },
+            {"SAR", "﷼"  },
+            {"SEK", "kr" },
+            {"THB", "฿"  },
+            {"TRY", "₺"  },
+            {"TWD", "NT$"},
+            {"ZAR", "R"  },
+
+            // alt symbol for BTC Ƀ
+            {"BTC",  "฿" },
+            {"BCH",  "฿" },
+            {"LTC",  "Ł" },
+            {"ETH",  "Ξ" },
+            {"EOS",  "Ȅ" },
+            {"DASH", "Đ" },
+            {"ICN",  "i" },
+            {"USDT", "T" }, //tether
+            
         };
 
         /// <summary>
@@ -303,7 +317,7 @@ namespace QuantConnect
         public static string GetCurrencySymbol(string currency)
         {
             string currencySymbol;
-            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
+            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "?";
         }
     }
 }
