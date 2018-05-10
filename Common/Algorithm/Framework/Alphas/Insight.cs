@@ -218,9 +218,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 insight.GroupId = groupId;
-
-                yield return insight;
             }
+            return insights;
         }
 
         /// <summary>

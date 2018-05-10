@@ -71,9 +71,8 @@ class PairsTradingAlphaModel:
             longAsset2 = Insight.Price(self.asset2, timedelta(minutes = 15), InsightDirection.Up)
 
             # creates a group id and set the GroupId property on each insight object
-            Insight.Group(shortAsset1, longAsset2)
-            return [shortAsset1, longAsset2]
-        
+            return Insight.Group(shortAsset1, longAsset2)
+
         # don't re-emit the same direction
         if self.state is not self.State.ShortRatio and self.ratio < self.lowerThreshold:
             self.state = self.State.ShortRatio
@@ -83,8 +82,7 @@ class PairsTradingAlphaModel:
             shortAsset2 = Insight.Price(self.asset2, timedelta(minutes = 15), InsightDirection.Down)
 
             # creates a group id and set the GroupId property on each insight object
-            Insight.Group(longAsset1, shortAsset2)
-            return [longAsset1, shortAsset2]
+            return Insight.Group(longAsset1, shortAsset2)
 
         return []
 

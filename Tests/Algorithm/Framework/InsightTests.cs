@@ -110,8 +110,8 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void GroupThrowsExceptionIfInsightAlreadyHasGroupId()
         {
             var insight1 = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
-            Insight.Group(insight1).ToList();
-            Assert.That(() => Insight.Group(insight1).ToList(), Throws.InvalidOperationException);
+            Insight.Group(insight1);
+            Assert.That(() => Insight.Group(insight1), Throws.InvalidOperationException);
         }
     }
 }

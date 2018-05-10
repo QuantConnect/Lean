@@ -74,8 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 var longAsset2 = Insight.Price(_asset2, TimeSpan.FromMinutes(15), InsightDirection.Up);
 
                 // creates a group id and set the GroupId property on each insight object
-                Insight.Group(shortAsset1, longAsset2);
-                return new[] {shortAsset1, longAsset2};
+                return Insight.Group(shortAsset1, longAsset2);
             }
 
             // don't re-emit the same direction
@@ -88,8 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 var shortAsset2 = Insight.Price(_asset2, TimeSpan.FromMinutes(15), InsightDirection.Down);
 
                 // creates a group id and set the GroupId property on each insight object
-                Insight.Group(longAsset1, shortAsset2);
-                return new[] {longAsset1, shortAsset2};
+                return Insight.Group(longAsset1, shortAsset2);
             }
 
             return Enumerable.Empty<Insight>();
