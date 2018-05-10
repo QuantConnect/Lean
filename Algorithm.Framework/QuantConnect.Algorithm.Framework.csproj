@@ -93,6 +93,7 @@
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
+    <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
