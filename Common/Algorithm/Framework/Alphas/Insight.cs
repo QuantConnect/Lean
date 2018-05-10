@@ -224,6 +224,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
+        /// Creates a new, unique group id and sets it on each insight
+        /// </summary>
+        /// <param name="insight">The insight to be grouped</param>
+        public static IEnumerable<Insight> Group(Insight insight) => Group(new[] { insight });
+
+        /// <summary>
         /// Creates a new <see cref="Insight"/> object from the specified serialized form
         /// </summary>
         /// <param name="serializedInsight">The insight DTO</param>
