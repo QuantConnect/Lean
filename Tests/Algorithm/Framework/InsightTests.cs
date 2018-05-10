@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -93,9 +94,16 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             var insight1 = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
             var insight2 = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
-            var groupId = Insight.Group(insight1, insight2);
-            Assert.AreEqual(groupId, insight1.GroupId);
-            Assert.AreEqual(groupId, insight2.GroupId);
+            var group = Insight.Group(insight1, insight2).ToList();
+            foreach (var member in group)
+            {
+                Assert.IsTrue(member.GroupId.HasValue);
+            }
+            var groupId = insight1.GroupId.Value;
+            foreach (var member in group)
+            {
+                Assert.AreEqual(groupId, member.GroupId);
+            }
         }
 
         [Test]

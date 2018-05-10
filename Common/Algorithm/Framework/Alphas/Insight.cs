@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas.Serialization;
 
@@ -201,7 +202,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Creates a new, unique group id and sets it on each insight
         /// </summary>
         /// <param name="insights">The insights to be grouped</param>
-        public static Guid Group(params Insight[] insights)
+        public static IEnumerable<Insight> Group(params Insight[] insights)
         {
             if (insights == null)
             {
@@ -218,9 +219,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 insight.GroupId = groupId;
             }
-
-            return groupId;
+            return insights;
         }
+
+        /// <summary>
+        /// Creates a new, unique group id and sets it on each insight
+        /// </summary>
+        /// <param name="insight">The insight to be grouped</param>
+        public static IEnumerable<Insight> Group(Insight insight) => Group(new[] { insight });
 
         /// <summary>
         /// Creates a new <see cref="Insight"/> object from the specified serialized form
