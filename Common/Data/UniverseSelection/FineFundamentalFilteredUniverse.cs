@@ -49,11 +49,8 @@ namespace QuantConnect.Data.UniverseSelection
         public FineFundamentalFilteredUniverse(Universe universe, PyObject fineSelector)
             : base(universe, universe.SelectSymbols)
         {
-            Func<IEnumerable<FineFundamental>, Symbol[]> func;
-            if (fineSelector.TryConvertToDelegate(out func))
-            {
-                FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, universe.SecurityInitializer, func);
-            }
+            var func = fineSelector.ConvertToDelegate<Func< IEnumerable<FineFundamental>, Symbol[]>>();
+            FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, universe.SecurityInitializer, func);
         }
     }
 }

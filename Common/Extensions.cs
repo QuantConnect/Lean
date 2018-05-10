@@ -1115,6 +1115,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Convert a <see cref="PyObject"/> into a managed object
+        /// </summary>
+        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
+        /// <param name="pyObject">PyObject to be converted</param>
+        /// <returns>Instance of type T</returns>
+        public static T ConvertToDelegate<T>(this PyObject pyObject)
+        {
+            T result;
+            if (pyObject.TryConvertToDelegate(out result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new ArgumentException($"ConvertToDelegate cannot be used to convert a PyObject into {typeof(T)}.");
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>
