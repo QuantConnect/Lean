@@ -35,12 +35,12 @@ class RawPricesCoarseUniverseAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
+        # what resolution should the data *added* to the universe be?
+        self.UniverseSettings.Resolution = Resolution.Daily
+
         self.SetStartDate(2014,1,1)    #Set Start Date
         self.SetEndDate(2015,1,1)      #Set End Date
         self.SetCash(50000)            #Set Strategy Cash
-
-        # what resolution should the data *added* to the universe be?
-        self.UniverseSettings.Resolution = Resolution.Daily
 
         # Set the security initializer with the characteristics defined in CustomSecurityInitializer
         self.SetSecurityInitializer(self.CustomSecurityInitializer)

@@ -37,12 +37,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
+            // what resolution should the data *added* to the universe be?
+            UniverseSettings.Resolution = Resolution.Daily;
+
             SetStartDate(2014, 01, 01);
             SetEndDate(2015, 01, 01);
             SetCash(50000);
-
-            // what resolution should the data *added* to the universe be?
-            UniverseSettings.Resolution = Resolution.Daily;
 
             // Set the security initializer with the characteristics defined in CustomSecurityInitializer
             SetSecurityInitializer(CustomSecurityInitializer);
