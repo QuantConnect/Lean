@@ -950,9 +950,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             var message = "New Order Event: " + newEvent;
             DebugMessage(message);
-
-            //Add the order event message to the log:
-            LogMessage(message);
         }
 
         /// <summary>
