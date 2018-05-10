@@ -21,6 +21,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Orders import OrderStatus
+from QuantConnect.Orders.Fees import ConstantFeeModel
 
 ### <summary>
 ### In this algorithm we demonstrate how to use the coarse fundamental data to define a universe as the top dollar volume and set the algorithm to use raw prices
@@ -41,8 +42,8 @@ class RawPricesCoarseUniverseAlgorithm(QCAlgorithm):
         # what resolution should the data *added* to the universe be?
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        # Set the security initializer to set the data normalization mode to raw
-        self.SetSecurityInitializer(lambda x: x.SetDataNormalizationMode(DataNormalizationMode.Raw))
+        # Set the security initializer with the characteristics defined in CustomSecurityInitializer
+        self.SetSecurityInitializer(self.CustomSecurityInitializer)
 
         # this add universe method accepts a single parameter that is a function that
         # accepts an IEnumerable<CoarseFundamental> and returns IEnumerable<Symbol>
@@ -50,6 +51,12 @@ class RawPricesCoarseUniverseAlgorithm(QCAlgorithm):
 
         self.__numberOfSymbols = 5
 
+    def CustomSecurityInitializer(self, security):
+        '''Initialize the security with raw prices and zero fees 
+        Args:
+            security: Security which characteristics we want to change'''
+        security.SetDataNormalizationMode(DataNormalizationMode.Raw)
+        security.SetFeeModel(ConstantFeeModel(0))
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
     def CoarseSelectionFunction(self, coarse):

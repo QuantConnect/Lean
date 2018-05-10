@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,12 +44,22 @@ namespace QuantConnect.Algorithm.CSharp
             // what resolution should the data *added* to the universe be?
             UniverseSettings.Resolution = Resolution.Daily;
 
-            // Set the security initializer to set the data normalization mode to raw
-            SetSecurityInitializer(x => x.SetDataNormalizationMode(DataNormalizationMode.Raw));
+            // Set the security initializer with the characteristics defined in CustomSecurityInitializer
+            SetSecurityInitializer(CustomSecurityInitializer);
 
             // this add universe method accepts a single parameter that is a function that
             // accepts an IEnumerable<CoarseFundamental> and returns IEnumerable<Symbol>
             AddUniverse(CoarseSelectionFunction);
+        }
+
+        /// <summary>
+        /// Initialize the security with raw prices and zero fees 
+        /// </summary>
+        /// <param name="security">Security which characteristics we want to change</param>
+        private void CustomSecurityInitializer(Security security)
+        {
+            security.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            security.SetFeeModel(new ConstantFeeModel(0));
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbols'
