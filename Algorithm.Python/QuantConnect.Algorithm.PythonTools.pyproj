@@ -99,6 +99,7 @@
     <Compile Include="QCUWeatherBasedRebalancing.py" />
     <Compile Include="QuandlFuturesDataAlgorithm.py" />
     <Compile Include="QuandlImporterAlgorithm.py" />
+    <Compile Include="RawPricesCoarseUniverseAlgorithm.py" />
     <Compile Include="RegressionAlgorithm.py" />
     <Compile Include="RegressionChannelAlgorithm.py" />
     <Compile Include="RenkoConsolidatorAlgorithm.py" />
