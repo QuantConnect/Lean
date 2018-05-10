@@ -24,6 +24,7 @@ import sys
 import uuid
 from clr import AddReference
 from pathlib import Path
+from numpy import NaN
 
 import matplotlib as mpl
 
@@ -139,12 +140,27 @@ class Visualizer:
         :param data: a pandas.DataFrame with the data to plot.
         :return: void
         """
+        is_future_tick = ('future' in self.arguments['DATAFILE'] and 'tick' in self.arguments['DATAFILE']
+                          and 'quote' in self.arguments['DATAFILE'])
+        if is_future_tick:
+            data = data.replace(0, NaN)
+
         plot = data.plot(grid=True, color=self.palette)
-        fig = plot.get_figure()
+
         is_low_resolution_data = 'hour' in self.arguments['DATAFILE'] or 'daily' in self.arguments['DATAFILE']
         if not is_low_resolution_data:
             plot.xaxis.set_major_formatter(DateFormatter("%H:%M"))
 
+        is_forex = 'forex' in self.arguments['DATAFILE']
+        is_open_interest = 'openinterest' in self.arguments['DATAFILE']
+        if is_forex:
+            plot.set_ylabel('exchange rate')
+        elif is_open_interest:
+            plot.set_ylabel('open contracts')
+        else:
+            plot.set_ylabel('price (USD)')
+
+        fig = plot.get_figure()
         size_px = [int(p) for p in self.arguments['--size'].split(',')]
         fig.set_size_inches(size_px[0] / fig.dpi, size_px[1] / fig.dpi)
         fig.savefig(self.plot_filename, transparent=True, dpi=fig.dpi)
