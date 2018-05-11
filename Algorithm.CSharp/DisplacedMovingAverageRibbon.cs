@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2009, 01, 01);
             SetEndDate(2015, 01, 01);
 
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
             const int count = 6;
             const int offset = 5;

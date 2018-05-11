@@ -43,7 +43,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2009, 1, 1)  #Set Start Date
         self.SetEndDate(2015, 1, 1)    #Set End Date
-        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
+        self.spy = self.AddEquity("SPY", Resolution.Daily).Symbol
         count = 6
         offset = 5
         period = 15

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
         public void OnData(TradeBars data)
         {
-            Console.WriteLine($"OnData({UtcTime:o}): Keys: {string.Join(", ", data.Keys.OrderBy(x => x))}");
+            Log($"OnData({UtcTime:o}): Keys: {string.Join(", ", data.Keys.OrderBy(x => x))}");
 
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None) return;
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent fill)
         {
-            Console.WriteLine($"OnOrderEvent({UtcTime:o}):: {fill}");
+            Log($"OnOrderEvent({UtcTime:o}):: {fill}");
         }
     }
 }
