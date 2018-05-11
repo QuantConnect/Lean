@@ -152,6 +152,9 @@
     <Content Include="Selection\EmaCrossUniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Selection\QC500UniverseSelectionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Selection\FundamentalUniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

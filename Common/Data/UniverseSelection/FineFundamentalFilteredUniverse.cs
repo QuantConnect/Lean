@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -38,6 +39,18 @@ namespace QuantConnect.Data.UniverseSelection
             : base(universe, universe.SelectSymbols)
         {
             FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, universe.SecurityInitializer, fineSelector);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FineFundamentalFilteredUniverse"/> class
+        /// </summary>
+        /// <param name="universe">The universe to be filtered</param>
+        /// <param name="fineSelector">The fine selection function</param>
+        public FineFundamentalFilteredUniverse(Universe universe, PyObject fineSelector)
+            : base(universe, universe.SelectSymbols)
+        {
+            var func = fineSelector.ConvertToDelegate<Func< IEnumerable<FineFundamental>, Symbol[]>>();
+            FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, universe.SecurityInitializer, func);
         }
     }
 }
