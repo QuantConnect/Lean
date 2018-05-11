@@ -340,7 +340,7 @@ namespace QuantConnect
         public static string GetCurrencySymbol(string currency)
         {
             string currencySymbol;
-            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "?";
+            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
         }
     }
 }
