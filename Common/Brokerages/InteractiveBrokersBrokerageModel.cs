@@ -84,6 +84,47 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            // validate guaranteed VWAP order
+            if (order.Type == OrderType.Vwap)
+            {
+                // only supported with equities
+                if (security.Type != SecurityType.Equity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        "This model does not support " + order.Type + " order type with " + security.Type + " security type."
+                    );
+
+                    return false;
+                }
+
+                // IB will only accept Guaranteed VWAP orders at or before 9.29 AM,
+                // so LEAN requires them to be submitted at least one minute earlier.
+                var orderTime = order.Time.ConvertFromUtc(security.Exchange.TimeZone);
+                if (orderTime > orderTime.Date.Add(new TimeSpan(9, 28, 0)))
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        "Guaranteed VWAP orders must be submitted at or before 9.28 AM."
+                    );
+
+                    return false;
+                }
+
+                // maximum order size
+                if (order.GetValue(security) > 10000000m)
+                {
+                    // VWAP order size limits are the lesser of 8% of the average daily volume of the symbol, or 10 million.
+                    // The limit is applied against the accumulated order size for a symbol during the trading day.
+                    // Long and short executions will be netted.
+
+                    // For now we only perform the 10M check
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        "Guaranteed VWAP maximum order size is 10 million USD."
+                    );
+
+                    return false;
+                }
+            }
+
             // validate order quantity
             //https://www.interactivebrokers.com/en/?f=%2Fen%2Ftrading%2FforexOrderSize.php
             if (security.Type == SecurityType.Forex &&
@@ -120,6 +161,30 @@ namespace QuantConnect.Brokerages
             if (order.SecurityType == SecurityType.Forex && request.Quantity != null)
             {
                 return IsForexWithinOrderSizeLimits(order.Symbol.Value, request.Quantity.Value, out message);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if the brokerage would allow canceling the order as specified by the request
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be cancelled</param>
+        /// <param name="request">The order cancellation request</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be cancelled</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
+        public override bool CanCancelOrder(Security security, Order order, CancelOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            if (order.Type == OrderType.Vwap)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "Guaranteed VWAP orders cannot be cancelled."
+                );
+
+                return false;
             }
 
             return true;
@@ -182,8 +247,8 @@ namespace QuantConnect.Brokerages
             if (!orderIsWithinForexSizeLimits)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSizeLimit",
-                    string.Format("The maximum allowable order size is {0}{1}.", max, baseCurrency)
-                    );
+                    $"The maximum allowable order size is {max}{baseCurrency}."
+                );
             }
             return orderIsWithinForexSizeLimits;
         }

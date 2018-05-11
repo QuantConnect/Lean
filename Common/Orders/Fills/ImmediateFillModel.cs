@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -26,6 +26,10 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class ImmediateFillModel : IFillModel
     {
+        // map order id to VWAP
+        private readonly Dictionary<int, VwapData> _vwapDataByOrderId = new Dictionary<int, VwapData>();
+        private readonly object _vwapLocker = new object();
+
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
@@ -380,6 +384,59 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// Volume Weighted Average Price Fill Model. Return an order event with the fill details
+        /// </summary>
+        /// <param name="asset">Asset we're trading with this order</param>
+        /// <param name="order">Order to be filled</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public OrderEvent VwapFill(Security asset, VwapOrder order)
+        {
+            decimal vwap;
+
+            lock (_vwapLocker)
+            {
+                VwapData vwapData;
+                if (!_vwapDataByOrderId.TryGetValue(order.Id, out vwapData))
+                {
+                    vwapData = new VwapData();
+                    _vwapDataByOrderId.Add(order.Id, vwapData);
+                }
+
+                vwapData.Update(asset.LocalTime, asset.Price, asset.Volume);
+                vwap = vwapData.Vwap;
+            }
+
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, 0);
+
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
+            var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
+
+            // wait until market closes after the order time
+            if (asset.LocalTime < nextMarketClose)
+            {
+                return fill;
+            }
+
+            // use current VWAP as fill price
+            fill.FillPrice = vwap;
+
+            fill.Status = OrderStatus.Filled;
+            fill.FillQuantity = order.Quantity;
+            fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
+
+            lock (_vwapLocker)
+            {
+                // clear VWAP data for the filled order
+                _vwapDataByOrderId.Remove(order.Id);
+            }
+
+            return fill;
+        }
+
+        /// <summary>
         /// Get the minimum and maximum price for this security in the last bar:
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
@@ -477,6 +534,34 @@ namespace QuantConnect.Orders.Fills
                 High = high == 0 ? current : high;
                 Low = low == 0 ? current : low;
                 Close = close == 0 ? current : close;
+            }
+        }
+
+        private class VwapData
+        {
+            private decimal _sumOfVolume;
+            private DateTime _lastUpdateTime;
+
+            public decimal Vwap { get; private set; }
+
+            public void Update(DateTime time, decimal price, decimal volume)
+            {
+                // this check is needed because fill models are called more than once per time step
+                if (time <= _lastUpdateTime)
+                {
+                    return;
+                }
+
+                _lastUpdateTime = time;
+                _sumOfVolume += volume;
+
+                if (_sumOfVolume == 0)
+                {
+                    return;
+                }
+
+                // update VWAP with current price and volume
+                Vwap += volume / _sumOfVolume * (price - Vwap);
             }
         }
     }

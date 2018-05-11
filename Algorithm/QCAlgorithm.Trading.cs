@@ -473,6 +473,51 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a guaranteed VWAP order to the transaction handler
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for VWAP order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public OrderTicket VwapOrder(Symbol symbol, int quantity, string tag = "")
+        {
+            return VwapOrder(symbol, (decimal)quantity, tag);
+        }
+
+        /// <summary>
+        /// Send a guaranteed VWAP order to the transaction handler
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for VWAP order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public OrderTicket VwapOrder(Symbol symbol, double quantity, string tag = "")
+        {
+            return VwapOrder(symbol, (decimal)quantity, tag);
+        }
+
+        /// <summary>
+        /// Send a guaranteed VWAP order to the transaction handler
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for VWAP order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public OrderTicket VwapOrder(Symbol symbol, decimal quantity, string tag = "")
+        {
+            var security = Securities[symbol];
+            var request = CreateSubmitOrderRequest(OrderType.Vwap, security, quantity, tag, properties: DefaultOrderProperties?.Clone());
+            var response = PreOrderChecks(request);
+            if (response.IsError)
+            {
+                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
+            }
+
+            //Add the order and create a new order Id.
+            return Transactions.AddOrder(request);
+        }
+
+        /// <summary>
         /// Send an exercise order to the transaction handler
         /// </summary>
         /// <param name="optionSymbol">String symbol for the option position</param>

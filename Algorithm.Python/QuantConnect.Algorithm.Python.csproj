@@ -176,6 +176,9 @@
   <ItemGroup>
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="GuaranteedVwapRegressionAlgorithm.py" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">

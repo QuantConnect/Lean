@@ -119,5 +119,19 @@ namespace QuantConnect.Python
                 return _model.StopMarketFill(asset, order);
             }
         }
+
+        /// <summary>
+        /// Volume Weighted Average Price Fill Model. Return an order event with the fill details
+        /// </summary>
+        /// <param name="asset">Asset we're trading with this order</param>
+        /// <param name="order">Order to be filled</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public OrderEvent VwapFill(Security asset, VwapOrder order)
+        {
+            using (Py.GIL())
+            {
+                return _model.VwapFill(asset, order);
+            }
+        }
     }
 }

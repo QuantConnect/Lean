@@ -50,19 +50,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
-        public virtual AccountType AccountType
-        {
-            get;
-            private set;
-        }
+        public virtual AccountType AccountType { get; }
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets
-        {
-            get { return DefaultMarketMap; }
-        }
+        public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
@@ -88,6 +81,19 @@ namespace QuantConnect.Brokerages
         public virtual bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
+
+            // validate order type
+            if (order.Type == OrderType.Vwap)
+            {
+                // not supported
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + order.Type + " order type. " +
+                    "Please use the IB brokerage model: SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage)."
+                );
+
+                return false;
+            }
+
             return true;
         }
 
@@ -100,6 +106,20 @@ namespace QuantConnect.Brokerages
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public virtual bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if the brokerage would allow canceling the order as specified by the request
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be cancelled</param>
+        /// <param name="request">The order cancellation request</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be cancelled</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
+        public virtual bool CanCancelOrder(Security security, Order order, CancelOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
             return true;

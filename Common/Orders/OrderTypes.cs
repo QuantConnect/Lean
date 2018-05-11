@@ -53,7 +53,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Option Exercise Order Type
         /// </summary>
-        OptionExercise
+        OptionExercise,
+
+        /// <summary>
+        /// Volume Weighted Average Price order type - guaranteed VWAP fill at market close
+        /// </summary>
+        Vwap
     }
 
     /// <summary>

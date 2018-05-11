@@ -352,6 +352,10 @@ namespace QuantConnect.Brokerages.Backtesting
                                     var option = (Option)security;
                                     fills = option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder).ToArray();
                                     break;
+
+                                case OrderType.Vwap:
+                                    fills = new[] { model.VwapFill(security, order as VwapOrder) };
+                                    break;
                             }
                         }
                         catch (Exception err)
