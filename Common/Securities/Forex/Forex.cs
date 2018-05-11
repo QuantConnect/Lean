@@ -115,8 +115,6 @@ namespace QuantConnect.Securities.Forex
                 throw new ArgumentException($"Currency pairs must not be null, length minimum of 6 and maximum of 8. Problematic pair: {currencyPair}");
             }
 
-            //Debug.Log($"Splitting {currencyPair}");
-
             if (currencyPair.Length == 6) {
 
                 // Old-code part for Forex (non-crypto) markets only. 
@@ -137,7 +135,6 @@ namespace QuantConnect.Securities.Forex
                 if (currencyPair.IndexOf(symbol) == 0) 
                 {
                     bases.Add(symbol);
-                    //Debug.Log($"Added base {symbol}");
                 }   
             }
 
@@ -151,7 +148,6 @@ namespace QuantConnect.Securities.Forex
                     if (start == 3 || start == 4)
                     {   
                         quotes.Add(symbol);
-                        //Debug.Log($"Added quote {symbol}");
                     }
                 }
             }
@@ -162,10 +158,8 @@ namespace QuantConnect.Securities.Forex
             {
                 foreach(string q in quotes) 
                 {
-
                     string combined = b + q;
 
-                    // Debug.Log($"Combination: {combined}");
                     if (combined.Equals(currencyPair)) 
                     {
                         baseCurrency = b;
