@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Defines a universe selection model that invokes a selector function on a specific scheduled given by an <see cref="IDateRule"/> and an <see cref="ITimeRule"/>
     /// </summary>
-    public class ScheduledUniverseSelectionModel : IUniverseSelectionModel
+    public class ScheduledUniverseSelectionModel : UniverseSelectionModel
     {
         private readonly IDateRule _dateRule;
         private readonly ITimeRule _timeRule;
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             yield return new ScheduledUniverse(
                 _timeZone ?? algorithm.TimeZone,

@@ -13,35 +13,26 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IExecutionModel"/> that immediately submits
-    /// market orders to achieve the desired portfolio targets
+    /// Provides a base class for execution models
     /// </summary>
-    public class ImmediateExecutionModel : ExecutionModel
+    public class ExecutionModel : IExecutionModel
     {
         /// <summary>
-        /// Immediately submits orders for the specified portfolio targets.
+        /// Submit orders for the specified portolio targets.
+        /// This model is free to delay or spread out these orders as it sees fit
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="targets">The portfolio targets to be ordered</param>
-        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        /// <param name="targets">The portfolio targets just emitted by the portfolio construction model.
+        /// These are always just the new/updated targets and not a complete set of targets</param>
+        public virtual void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
-            foreach (var target in targets)
-            {
-                var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
-                    + algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
-                var quantity = target.Quantity - existing;
-                if (quantity != 0)
-                {
-                    algorithm.MarketOrder(target.Symbol, quantity);
-                }
-            }
+            throw new System.NotImplementedException("Types deriving from 'ExecutionModel' must implement the 'void Execute(QCAlgorithmFramework, IPortfolioTarget[]) method.");
         }
 
         /// <summary>
@@ -49,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
         }
     }

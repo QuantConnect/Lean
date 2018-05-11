@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Provides an implementation of <see cref="IAlphaModel"/> that always returns the same insight for each security
     /// </summary>
-    public class ConstantAlphaModel : IAlphaModel, INamedModel
+    public class ConstantAlphaModel : AlphaModel
     {
         private readonly InsightType _type;
         private readonly InsightDirection _direction;
@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
-        public string Name { get; }
+        public override string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var security in _securities)
             {
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             NotifiedSecurityChanges.UpdateCollection(_securities, changes);
 

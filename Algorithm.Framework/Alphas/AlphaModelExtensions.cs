@@ -13,20 +13,25 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Algorithm.Framework.Alphas;
-
-namespace QuantConnect.Algorithm.Framework.Portfolio
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IPortfolioConstructionModel"/> that does nothing
+    /// Provides extension methods for alpha models
     /// </summary>
-    public class NullPortfolioConstructionModel : PortfolioConstructionModel
+    public static class AlphaModelExtensions
     {
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+        /// <summary>
+        /// Gets the name of the alpha model
+        /// </summary>
+        public static string GetModelName(this IAlphaModel model)
         {
-            return Enumerable.Empty<IPortfolioTarget>();
+            var namedModel = model as INamedModel;
+            if (namedModel != null)
+            {
+                return namedModel.Name;
+            }
+
+            return model.GetType().Name;
         }
     }
 }

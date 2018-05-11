@@ -12,36 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
-using System.Linq;
-using QuantConnect.Algorithm.Framework.Portfolio;
+using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 
-namespace QuantConnect.Algorithm.Framework.Execution
+namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IExecutionModel"/> that immediately submits
-    /// market orders to achieve the desired portfolio targets
+    /// Provides a base class for portoflio construction models
     /// </summary>
-    public class ImmediateExecutionModel : ExecutionModel
+    public class PortfolioConstructionModel : IPortfolioConstructionModel
     {
         /// <summary>
-        /// Immediately submits orders for the specified portfolio targets.
+        /// Create portfolio targets from the specified insights
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="targets">The portfolio targets to be ordered</param>
-        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        /// <param name="insights">The insights to create portoflio targets from</param>
+        /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
+        public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
         {
-            foreach (var target in targets)
-            {
-                var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
-                    + algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
-                var quantity = target.Quantity - existing;
-                if (quantity != 0)
-                {
-                    algorithm.MarketOrder(target.Symbol, quantity);
-                }
-            }
+            throw new System.NotImplementedException("Types deriving from 'PortfolioConstructionModel' must implement the 'IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework, Insight[]) method.");
         }
 
         /// <summary>
@@ -49,7 +39,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
         }
     }

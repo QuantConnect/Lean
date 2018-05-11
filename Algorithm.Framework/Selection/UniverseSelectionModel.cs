@@ -14,22 +14,24 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.Algorithm.Framework.Alphas
+namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
-    /// Algorithm framework model that produces insights
+    /// Provides a base class for universe selection models.
     /// </summary>
-    public interface IAlphaModel : INotifiedSecurityChanges
+    public class UniverseSelectionModel : IUniverseSelectionModel
     {
         /// <summary>
-        /// Updates this alpha model with the latest data from the algorithm.
-        /// This is called each time the algorithm receives data for subscribed securities
+        /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="data">The new data available</param>
-        /// <returns>The new insights generated</returns>
-        IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data);
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <returns>The universes to be used by the algorithm</returns>
+        public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        {
+            throw new System.NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework) method.");
+        }
     }
 }

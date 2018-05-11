@@ -53,12 +53,15 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Alphas\AlphaModel.cs" />
+    <Compile Include="Alphas\AlphaModelExtensions.cs" />
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
     <Compile Include="Alphas\CompositeAlphaModel.cs" />
     <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
     <Compile Include="Alphas\INamedModel.cs" />
     <Compile Include="Alphas\PairsTradingAlphaModel.cs" />
     <Compile Include="Alphas\RsiAlphaModel.cs" />
+    <Compile Include="Execution\ExecutionModel.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="Execution\NullExecutionModel.cs" />
@@ -70,6 +73,7 @@
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,6 +83,7 @@
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\MaximumSectorExposureRiskManagementModel.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
+    <Compile Include="Risk\RiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />
     <Compile Include="Selection\CoarseFundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\FineFundamentalUniverseSelectionModel.cs" />
@@ -91,6 +96,7 @@
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
+    <Compile Include="Selection\UniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
     <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />

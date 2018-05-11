@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// Provides an implementation of <see cref="IAlphaModel"/> that combines multiple alpha
     /// models into a single alpha model and properly sets each insights 'SourceModel' property.
     /// </summary>
-    public class CompositeAlphaModel : IAlphaModel
+    public class CompositeAlphaModel : AlphaModel
     {
         private readonly IAlphaModel[] _alphaModels;
 
@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public virtual IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
         {
             foreach (var model in _alphaModels)
             {
@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
             foreach (var model in _alphaModels)
             {
