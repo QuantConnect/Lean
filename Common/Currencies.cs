@@ -276,7 +276,7 @@ namespace QuantConnect
         };
 
         /// <summary>
-        /// A mapping of currency codes to their display symbols
+        /// A mapping of currency codes to their display symbols.
         /// </summary>
         /// <remarks>
         /// Now used by Forex and CFD, should probably be moved out into its own class
@@ -311,17 +311,25 @@ namespace QuantConnect
             {"TRY", "₺"  },
             {"TWD", "NT$"},
             {"ZAR", "R"  },
-
-            // alt symbol for BTC Ƀ
-            {"BTC",  "฿" },
-            {"BCH",  "฿" },
-            {"LTC",  "Ł" },
-            {"ETH",  "Ξ" },
-            {"EOS",  "Ȅ" },
-            {"DASH", "Đ" },
-            {"ICN",  "i" },
-            {"USDT", "T" }, //tether
             
+            // crypto display symbols
+            {"BTC",  "฿"  },
+            {"BCH",  "฿"  },
+            {"LTC",  "Ł"  },
+            {"ETH",  "Ξ"  }, 
+            {"EOS",  "Ȅ"  },
+            {"DASH", "Đ"  },
+            {"ICN",  "i"  },
+            {"USDT", "₸"  },
+            {"ZRX",  "0x" },
+            {"REQ",  "Հ"  },
+            {"OMG",  "Ꝺ"  },
+            {"REN",  "░▓" },
+            {"TRX",  "▶"  },
+            {"SENT", "⌂"  },
+            {"WAN",  "Ẅ"  },
+            {"RHOC", "₪"  },
+
         };
 
         /// <summary>
