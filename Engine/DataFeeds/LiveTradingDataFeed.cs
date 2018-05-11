@@ -239,6 +239,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _exchange.RemoveDataHandler(security.Symbol);
             }
 
+            // if the security is no longer a member of the universe, then mark the subscription properly
+            if (!subscription.Universe.Members.ContainsKey(configuration.Symbol))
+            {
+                subscription.MarkAsRemovedFromUniverse();
+            }
             subscription.Dispose();
 
             // keep track of security changes, we emit these to the algorithm
@@ -281,7 +286,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     foreach (var subscription in Subscriptions)
                     {
                         var config = subscription.Configuration;
-                        var packet = new DataFeedPacket(subscription.Security, config);
+                        var packet = new DataFeedPacket(subscription.Security, config, subscription.RemovedFromUniverse);
 
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)

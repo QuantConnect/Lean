@@ -256,6 +256,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return false;
                 }
 
+                // if the security is no longer a member of the universe, then mark the subscription properly
+                if (!subscription.Universe.Members.ContainsKey(configuration.Symbol))
+                {
+                    subscription.MarkAsRemovedFromUniverse();
+                }
                 subscription.Dispose();
                 Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
 
@@ -464,7 +469,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 RemoveSubscription(subscription.Configuration);
-                Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Configuration, _algorithm.UtcTime));
+                Log.Debug($"FileSystemDataFeed.GetEnumerator(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
             };
 
             while (!_cancellationTokenSource.IsCancellationRequested)
