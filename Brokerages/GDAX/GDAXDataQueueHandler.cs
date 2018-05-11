@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns>IEnumerable list of ticks since the last update.</returns>
         public IEnumerable<BaseData> GetNextTicks()
         {
-            lock (Ticks)
+            lock (TickLocker)
             {
                 var copy = Ticks.ToArray();
                 Ticks.Clear();
