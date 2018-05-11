@@ -21,7 +21,8 @@ namespace QuantConnect
     /// <summary>
     /// Provides commonly used currency pairs and symbols
     /// </summary>
-    public static class Currencies {
+    public static class Currencies
+    {
         /// <summary>
         /// Gets the listing of crypto pairs used for currency conversion rates
         /// </summary>
