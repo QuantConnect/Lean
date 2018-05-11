@@ -33,5 +33,5 @@ CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
 
 # Usage: 
 # docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
-# docker build -t quantconnect/lean:algorithm -f DockerfileLeanAlgorithm .
+# docker build -t quantconnect/lean:algorithm -f Dockerfile .
 # docker run -v "(absolute to your data folder):/root/Lean/Data" quantconnect/lean:algorithm 

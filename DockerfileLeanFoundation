@@ -1,7 +1,7 @@
 #
 #	LEAN Foundation Docker Container 20180205
 #	Cross platform deployment for multiple brokerages
-#	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
+#	Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
 
 # Use base system for cleaning up wayward processes
