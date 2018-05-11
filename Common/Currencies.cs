@@ -28,7 +28,8 @@ namespace QuantConnect
         /// <remarks>
         /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
         /// </remarks>
-        public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>() {
+        public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>() 
+        {
 
             "BTCUSD",
             "BCHUSD",
@@ -313,6 +314,7 @@ namespace QuantConnect
             {"ZAR", "R"  },
             
             // crypto display symbols
+            // lots of those display symbols are un-official and may be replaced in future
             {"BTC",  "฿"  },
             {"BCH",  "฿"  },
             {"LTC",  "Ł"  },
@@ -324,6 +326,7 @@ namespace QuantConnect
             {"ZRX",  "0x" },
             {"REQ",  "Հ"  },
             {"OMG",  "Ꝺ"  },
+
             {"REN",  "░▓" },
             {"TRX",  "▶"  },
             {"SENT", "⌂"  },
