@@ -135,6 +135,10 @@
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageAdditionalTests.cs" />
+    <Compile Include="Brokerages\Kraken\KrakenBrokerageAdditionalTests.cs" />
+    <Compile Include="Brokerages\Kraken\KrakenBrokerageIntegrationTests.cs" />
+    <Compile Include="Brokerages\Kraken\KrakenBrokerageTests.cs" />
+    <Compile Include="Brokerages\Kraken\KrakenTestHelpers.cs" />
     <Compile Include="Common\Brokerages\GDAXBrokerageModelTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageIntegrationTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageTests.cs" />
