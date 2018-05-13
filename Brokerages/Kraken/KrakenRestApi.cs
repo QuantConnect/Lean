@@ -42,11 +42,12 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Brokerages.Kraken {
+namespace QuantConnect.Brokerages.Kraken
+{
     using DataType;
 
-     public class KrakenRestApi
-     {
+    public class KrakenRestApi
+    {
         private readonly string _url;
         private readonly int _version;
         private readonly string _key;
@@ -452,8 +453,8 @@ namespace QuantConnect.Brokerages.Kraken {
                         trade.Add(new SpreadItem()
                         {
                             Time = a[0].Value<int>(),
-                            Bid  = a[1].Value<decimal>(),
-                            Ask  = a[2].Value<decimal>()
+                            Bid = a[1].Value<decimal>(),
+                            Ask = a[2].Value<decimal>()
                         });
                     }
 
@@ -808,8 +809,8 @@ namespace QuantConnect.Brokerages.Kraken {
             if (order.Close != null)
             {
                 param.Add("close[ordertype]", order.Close["ordertype"]);
-                param.Add("close[price]",     order.Close["price"]);
-                param.Add("close[price2]",    order.Close["price2"]);
+                param.Add("close[price]", order.Close["price"]);
+                param.Add("close[price2]", order.Close["price2"]);
             }
 
             var res = QueryPrivate("AddOrder", param);

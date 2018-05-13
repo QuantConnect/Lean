@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
 
-    public class PositionInfo {
+    public class PositionInfo
+    {
         /// <summary>
         /// Order responsible for execution of trade.
         /// </summary>

@@ -30,7 +30,7 @@ namespace QuantConnect.Orders.Fees
             { "ETHBTC", 0.003m  }, { "ETHEUR", 0.003m  }, { "ETHUSD", 0.003m  },
             { "LTCBTC", 0.003m  }, { "LTCEUR", 0.003m  }, { "LTCUSD", 0.003m  }
         };
-        
+
         /// <summary>
         /// Get the fee for this order in units of the account currency
         /// </summary>

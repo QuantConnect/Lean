@@ -27,7 +27,8 @@ using QuantConnect.Securities;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
-namespace QuantConnect.Brokerages.Kraken {
+namespace QuantConnect.Brokerages.Kraken
+{
     /// <summary>
     /// Kraken Brokerage implementation
     /// </summary>
@@ -65,8 +66,7 @@ namespace QuantConnect.Brokerages.Kraken {
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected
-        {
+        public override bool IsConnected {
             get { return _api.IsConnected; }
         }
 
@@ -105,7 +105,7 @@ namespace QuantConnect.Brokerages.Kraken {
         public override List<Holding> GetAccountHoldings()
         {
             return new List<Holding>();
-            
+
             // Set MarketPrice in each Holding
             /*
             var KrakenSymbols = holdings
@@ -274,7 +274,8 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        public Tick GetTick(Symbol symbol) {
+        public Tick GetTick(Symbol symbol)
+        {
 
             return _api.GetTick(symbol);
         }

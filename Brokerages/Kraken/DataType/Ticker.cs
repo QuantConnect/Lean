@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
 
-    public class Ticker {
+    public class Ticker
+    {
 
         /// <summary>
         /// Ask array(<price>, <whole lot volume>, <lot volume>).
@@ -26,7 +28,7 @@ namespace QuantConnect.Brokerages.Kraken.DataType {
         /// </summary>
         [JsonProperty(PropertyName = "c")]
         public decimal[] Closed;
-        
+
         /// <summary>
         /// Volume array(<today>, <last 24 hours>).
         /// </summary>

@@ -18,11 +18,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 //https://api.kraken.com/0/public/AssetPairs // API FOR ASSET PAIRS
-namespace QuantConnect.Brokerages.Kraken {
+namespace QuantConnect.Brokerages.Kraken
+{
     /// <summary>
     /// Provides the mapping between Lean symbols and Kraken symbols.
     /// </summary>
-    public class KrakenSymbolMapper : ISymbolMapper {
+    public class KrakenSymbolMapper : ISymbolMapper
+    {
         private bool HasLoadedSymbolsFromApi = false;
         private KrakenRestApi _restApi = null;
 
@@ -56,7 +58,7 @@ namespace QuantConnect.Brokerages.Kraken {
 
 
         private static readonly Dictionary<string, string> ToKrakenSymbol = new Dictionary<string, string>() {
-            
+
             { "ETHBTC", "XETHXXBT" },
             { "ETHEUR", "XETHZEUR" },
             { "ETHUSD", "XETHZUSD" },
@@ -71,8 +73,9 @@ namespace QuantConnect.Brokerages.Kraken {
             { "XLMBTC", "XXLMXXBT" },
             { "XLMUSD", "XXLMZUSD" },
         };
-        
-        static KrakenSymbolMapper() {
+
+        static KrakenSymbolMapper()
+        {
 
             foreach (var pair in ToKrakenSymbol)
                 ToLeanSymbol.Add(pair.Value, pair.Key);
@@ -85,9 +88,10 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="symbolString">Source symbol</param>
         /// <returns></returns>
-        private static string[] SplitSymbol(string symbolString) {
+        private static string[] SplitSymbol(string symbolString)
+        {
 
-            int halfLength = (int) Math.Ceiling(symbolString.Length / 2f);
+            int halfLength = (int)Math.Ceiling(symbolString.Length / 2f);
 
             return new string[] {
 
@@ -150,20 +154,23 @@ namespace QuantConnect.Brokerages.Kraken {
         /// <param name="currencyA">First currency</param>
         /// <param name="currencyB">Second currency</param>
         /// <returns>Returns pair (string: pair, bool: is currencyA first) </pair></returns>
-        public KeyValuePair<string, bool> GetPair(string currencyA, string currencyB) {
+        public KeyValuePair<string, bool> GetPair(string currencyA, string currencyB)
+        {
 
             if (currencyA.Length == 0 || currencyB.Length == 0)
                 throw new DataType.KrakenException("No emtpy strings!");
 
-            foreach (string krakenPair in ToLeanSymbol.Keys) {
+            foreach (string krakenPair in ToLeanSymbol.Keys)
+            {
 
                 int A = krakenPair.IndexOf(currencyA);
                 int B = krakenPair.IndexOf(currencyB);
 
-                if (A >= 0 && B >= 0) {
+                if (A >= 0 && B >= 0)
+                {
 
                     return new KeyValuePair<string, bool>(krakenPair, A < B);
-                }    
+                }
             }
 
             throw new DataType.KrakenException("Pair not found!");
@@ -173,7 +180,8 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="brokerageSymbol">The Kraken symbol</param>
         /// <returns>True if Kraken supports the symbol</returns>
-        public bool IsKnownBrokerageSymbol(string brokerageSymbol) {
+        public bool IsKnownBrokerageSymbol(string brokerageSymbol)
+        {
             return ToLeanSymbol.ContainsKey(brokerageSymbol);
         }
 
@@ -182,7 +190,8 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="symbol">The Lean symbol</param>
         /// <returns>True if Kraken supports the symbol</returns>
-        public bool IsKnownLeanSymbol(Symbol symbol) {
+        public bool IsKnownLeanSymbol(Symbol symbol)
+        {
             return ToKrakenSymbol.ContainsKey(symbol.ID.Symbol);
         }
 
@@ -191,10 +200,12 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         private static string ConvertKrakenSymbolToLeanSymbol(string krakenSymbol)
         {
-            try {
+            try
+            {
                 return ToLeanSymbol[krakenSymbol];
             }
-            catch {
+            catch
+            {
                 throw new DataType.KrakenException("Unknown Kraken Symbol");
             }
         }
@@ -205,10 +216,12 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         private static string ConvertLeanSymbolToKrakenSymbol(string leanSymbol)
         {
-            try {
+            try
+            {
                 return ToKrakenSymbol[leanSymbol];
             }
-            catch {
+            catch
+            {
                 throw new DataType.KrakenException("Unknown Lean Symbol - unsupported by Kraken");
             }
 

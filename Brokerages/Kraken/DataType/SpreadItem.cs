@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
 
-    public class SpreadItem {
+    public class SpreadItem
+    {
         public int Time;
         public decimal Bid;
         public decimal Ask;

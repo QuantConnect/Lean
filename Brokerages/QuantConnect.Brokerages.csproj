@@ -213,7 +213,6 @@
     <Compile Include="Kraken\KrakenBrokerageFactory.cs" />
     <Compile Include="Kraken\KrakenRestApi.cs" />
     <Compile Include="Kraken\KrakenSymbolMapper.cs" />
-    <Compile Include="Kraken\Server.cs" />
     <Compile Include="WebSocketError.cs" />
     <Compile Include="WebSocketMessage.cs" />
     <Compile Include="WebSocketWrapper.cs" />

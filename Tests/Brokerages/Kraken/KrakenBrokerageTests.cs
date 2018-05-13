@@ -28,6 +28,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+
+//commented because it causes compile errors. This test was copied from GDAX unit tests and had 0 work done on. It's here for a future reminder of "TODO"
 /*
 namespace QuantConnect.Tests.Brokerages.Kraken
 {

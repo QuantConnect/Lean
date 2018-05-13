@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
-    public class OrderInfo {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
+    public class OrderInfo
+    {
         /// <summary>
         /// Referral order transaction id that created this order
         /// </summary>

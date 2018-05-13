@@ -5,35 +5,43 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
 
-    public class ResponseBase {
+    public class ResponseBase
+    {
         public List<string> Error;
     }
 
-    public class GetServerTimeResult {
+    public class GetServerTimeResult
+    {
         public int UnixTime;
         public string Rfc1123;
     }
 
-    public class GetServerTimeResponse : ResponseBase {
+    public class GetServerTimeResponse : ResponseBase
+    {
         public GetServerTimeResult Result;
     }
 
 
-    public class GetAssetInfoResponse : ResponseBase {
+    public class GetAssetInfoResponse : ResponseBase
+    {
         public Dictionary<string, AssetInfo> Result;
     }
 
-    public class GetAssetPairsResponse : ResponseBase {
+    public class GetAssetPairsResponse : ResponseBase
+    {
         public Dictionary<string, AssetPair> Result;
     }
 
-    public class GetTickerResponse : ResponseBase {
+    public class GetTickerResponse : ResponseBase
+    {
         public Dictionary<string, Ticker> Result;
     }
 
-    public class GetOHLCResult {
+    public class GetOHLCResult
+    {
         public Dictionary<string, List<OHLC>> Pairs;
 
         // <summary>
@@ -42,15 +50,18 @@ namespace QuantConnect.Brokerages.Kraken.DataType {
         public long Last;
     }
 
-    public class GetOHLCResponse : ResponseBase {
+    public class GetOHLCResponse : ResponseBase
+    {
         public GetOHLCResult Result;
     }
 
-    public class GetOrderBookResponse : ResponseBase {
+    public class GetOrderBookResponse : ResponseBase
+    {
         public Dictionary<string, OrderBook> Result;
     }
 
-    public class GetRecentTradesResult {
+    public class GetRecentTradesResult
+    {
         public Dictionary<string, List<Trade>> Trades;
 
         /// <summary>
@@ -59,7 +70,8 @@ namespace QuantConnect.Brokerages.Kraken.DataType {
         public long Last;
     }
 
-    public class GetRecentSpreadResult {
+    public class GetRecentSpreadResult
+    {
         public Dictionary<string, List<SpreadItem>> Spread;
 
         /// <summary>
@@ -68,49 +80,60 @@ namespace QuantConnect.Brokerages.Kraken.DataType {
         public long Last;
     }
 
-    public class GetBalanceResponse : ResponseBase {
+    public class GetBalanceResponse : ResponseBase
+    {
         public Dictionary<string, decimal> Result;
     }
 
-    public class GetTradeBalanceResponse : ResponseBase {
+    public class GetTradeBalanceResponse : ResponseBase
+    {
         public TradeBalanceInfo Result;
     }
 
-    public class QueryOrdersResponse : ResponseBase {
+    public class QueryOrdersResponse : ResponseBase
+    {
         public Dictionary<string, OrderInfo> Result;
     }
 
-    public class GetTradesHistoryResult {
+    public class GetTradesHistoryResult
+    {
         public Dictionary<string, TradeInfo> Trades;
         public int Count;
     }
 
-    public class GetTradesHistoryResponse : ResponseBase {
+    public class GetTradesHistoryResponse : ResponseBase
+    {
         public GetTradesHistoryResult Result;
     }
 
-    public class QueryTradesResponse : ResponseBase {
+    public class QueryTradesResponse : ResponseBase
+    {
         public Dictionary<string, TradeInfo> Result;
     }
 
-    public class GetOpenPositionsResponse : ResponseBase {
+    public class GetOpenPositionsResponse : ResponseBase
+    {
         public Dictionary<string, PositionInfo> Result;
     }
 
-    public class GetLedgerResult {
+    public class GetLedgerResult
+    {
         public Dictionary<string, LedgerInfo> Ledger;
         public int Count;
     }
 
-    public class GetLedgerResponse : ResponseBase {
+    public class GetLedgerResponse : ResponseBase
+    {
         public GetLedgerResult Result;
     }
 
-    public class QueryLedgersResponse : ResponseBase {
+    public class QueryLedgersResponse : ResponseBase
+    {
         public Dictionary<string, LedgerInfo> Result;
     }
 
-    public class GetTradeVolumeResult {
+    public class GetTradeVolumeResult
+    {
         /// <summary>
         /// Volume currency.
         /// </summary>
@@ -133,7 +156,8 @@ namespace QuantConnect.Brokerages.Kraken.DataType {
         public Dictionary<string, FeeInfo> FeesMaker;
     }
 
-    public class GetTradeVolumeResponse : ResponseBase {
+    public class GetTradeVolumeResponse : ResponseBase
+    {
         public GetTradeVolumeResult Result;
     }
     public class AddOrderDescr

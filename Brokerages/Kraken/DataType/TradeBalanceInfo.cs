@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
 
-    public class TradeBalanceInfo {
+    public class TradeBalanceInfo
+    {
         /// <summary>
         /// Equivalent balance(combined balance of all currencies).
         /// </summary>

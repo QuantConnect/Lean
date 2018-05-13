@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Brokerages.Kraken.DataType {
+namespace QuantConnect.Brokerages.Kraken.DataType
+{
 
-    public class OrderBook {
+    public class OrderBook
+    {
 
         /// <summary>
         /// Ask side array of array entries(<price>, <volume>, <timestamp>)

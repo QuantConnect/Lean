@@ -45,13 +45,15 @@ using QuantConnect.Orders;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
-namespace QuantConnect.Brokerages.Kraken {
+namespace QuantConnect.Brokerages.Kraken
+{
     using DataType;
 
-    public class KrakenApi : Brokerage, IDataQueueHandler {
+    public class KrakenApi : Brokerage, IDataQueueHandler
+    {
 
         KrakenRestApi _restApi;
-        
+
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
         private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
         private bool _subscriptionsPending;
@@ -66,7 +68,7 @@ namespace QuantConnect.Brokerages.Kraken {
         /// The UTC time of the last received heartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime;
-        
+
         /// <summary>
         /// A lock object used to synchronize access to LastHeartbeatUtcTime
         /// </summary>
@@ -92,7 +94,7 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         protected KrakenSymbolMapper SymbolMapper;
 
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Kraken"/> class.
         /// </summary>
@@ -100,8 +102,9 @@ namespace QuantConnect.Brokerages.Kraken {
         /// <param name="secret">The API secret.</param>
         /// <param name="rateLimitMilliseconds">The rate limit in milliseconds.</param>
         public KrakenApi(KrakenSymbolMapper symbolMapper, string key, string secret, int rateLimitMilliseconds = 5000)
-            : base("Kraken Brokerage") {
-            
+            : base("Kraken Brokerage")
+        {
+
             _restApi = new KrakenRestApi(key, secret, rateLimitMilliseconds);
 
             this.SymbolMapper = symbolMapper;
@@ -113,11 +116,13 @@ namespace QuantConnect.Brokerages.Kraken {
 
         StringBuilder tickerStringbuilder = new StringBuilder();
         //! IMPLEMENT IDATAQUEUEHANDLER methods
-        public IEnumerable<BaseData> GetNextTicks() {
-        
+        public IEnumerable<BaseData> GetNextTicks()
+        {
+
             tickerStringbuilder.Clear();
 
-            foreach(Symbol symbol in SubscribedSymbols) {
+            foreach (Symbol symbol in SubscribedSymbols)
+            {
 
                 string krakenSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
 
@@ -126,13 +131,14 @@ namespace QuantConnect.Brokerages.Kraken {
             }
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(tickerStringbuilder.ToString());
-            
-            foreach(KeyValuePair<string, Ticker> pair in ticks)
+
+            foreach (KeyValuePair<string, Ticker> pair in ticks)
                 yield return KrakenTickToLeanTick(pair);
-            
+
         }
 
-        public Tick GetTick(Symbol symbol) {
+        public Tick GetTick(Symbol symbol)
+        {
 
             string krakenSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
 
@@ -143,7 +149,8 @@ namespace QuantConnect.Brokerages.Kraken {
             return KrakenTickToLeanTick(new KeyValuePair<string, Ticker>(krakenSymbol, krakenTick));
         }
 
-        Tick KrakenTickToLeanTick(KeyValuePair<string, Ticker> pair) {
+        Tick KrakenTickToLeanTick(KeyValuePair<string, Ticker> pair)
+        {
 
             Symbol symbol = SymbolMapper.GetLeanSymbol(pair.Key, SecurityType.Crypto, Market.Kraken);
 
@@ -168,16 +175,18 @@ namespace QuantConnect.Brokerages.Kraken {
             leanTick.DataType = MarketDataType.Tick;
 
             return leanTick;
-            
+
         }
 
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols) {
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        {
 
-            foreach(Symbol symbol in symbols)
+            foreach (Symbol symbol in symbols)
                 SubscribedSymbols.Add(symbol);
         }
 
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols) {
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        {
 
             foreach (Symbol symbol in symbols)
                 SubscribedSymbols.Remove(symbol);
@@ -213,7 +222,8 @@ namespace QuantConnect.Brokerages.Kraken {
         public override bool IsConnected { get; }
 
         #region TRANSLATORS
-        private string TranslateDirectionToKraken(OrderDirection direction) {
+        private string TranslateDirectionToKraken(OrderDirection direction)
+        {
 
             if (direction == OrderDirection.Buy)
                 return "buy";
@@ -227,28 +237,31 @@ namespace QuantConnect.Brokerages.Kraken {
         private string TranslateOrderTypeToKraken(OrderType orderType)
         {
 
-            switch(orderType) {
+            switch (orderType)
+            {
 
                 case OrderType.Limit:
                     return "limit";
-                
+
                 case OrderType.Market:
                     return "market";
-                
+
                 case OrderType.StopLimit:
                     break; // return "stop-loss-limit";
-                
+
                 case OrderType.StopMarket:
                     break; // return "stop-loss-"
-                
+
             }
 
             throw new KrakenException("Unsupported order type");
         }
 
-        private OrderType TranslateOrderTypeToLean(string type) {
+        private OrderType TranslateOrderTypeToLean(string type)
+        {
 
-            switch(type) {
+            switch (type)
+            {
 
                 case "limit":
                     return OrderType.Limit;
@@ -261,9 +274,11 @@ namespace QuantConnect.Brokerages.Kraken {
         }
 
 
-        int ResolutionToInterval(Resolution res) {
+        int ResolutionToInterval(Resolution res)
+        {
 
-            switch (res) {
+            switch (res)
+            {
 
                 case Resolution.Daily:
                     return 1440;
@@ -282,12 +297,14 @@ namespace QuantConnect.Brokerages.Kraken {
             }
         }
 
-        DateTime FromUnix(long unixTime) {
-            return DateTimeOffset.FromUnixTimeSeconds(unixTime).DateTime;
+        DateTime FromUnix(int unixTime)
+        {
+            return Time.UnixTimeStampToDateTime(checked((double)unixTime));
         }
 
-        long ToUnix(DateTime dateTime) {
-            return ((DateTimeOffset) dateTime).ToUnixTimeSeconds();
+        long ToUnix(DateTime dateTime)
+        {
+            return checked((long)Time.DateTimeToUnixTimeStamp(dateTime));
         }
 
         #endregion
@@ -296,7 +313,8 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="order">The order to be placed</param>
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
-        public override bool PlaceOrder(Order order) {
+        public override bool PlaceOrder(Order order)
+        {
 
             KrakenOrder krakenOrder = new KrakenOrder();
 
@@ -307,14 +325,15 @@ namespace QuantConnect.Brokerages.Kraken {
             krakenOrder.OrderType = TranslateOrderTypeToKraken(order.Type);
             krakenOrder.Volume = order.AbsoluteQuantity;
 
-            if(order.Type == OrderType.Limit)
+            if (order.Type == OrderType.Limit)
                 krakenOrder.Price = order.Price;
 
             // krakenOrder.Leverage = ?
 
             var result = _restApi.AddOrder(krakenOrder);
 
-            if(result.Txid != null & result.Txid.Length != 0) {
+            if (result.Txid != null & result.Txid.Length != 0)
+            {
 
                 order.BrokerId.AddRange(result.Txid);
 
@@ -329,33 +348,41 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="order">The new order information</param>
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-        public override bool UpdateOrder(Order order) {
-        
+        public override bool UpdateOrder(Order order)
+        {
+
             //! UPDATE ORDER           
             //todo: maybe make it so, that this broker doesn't support updating orders (because it doesnt)
             bool success = false;
-            
-            if(CancelOrder(order)) {
-            
-                order.BrokerId.Clear();    
 
-                if(PlaceOrder(order)) {
+            if (CancelOrder(order))
+            {
+
+                order.BrokerId.Clear();
+
+                if (PlaceOrder(order))
+                {
 
                     return true;
-                } else {
+                }
+                else
+                {
 
                     // try again
-                    if(PlaceOrder(order)) {
+                    if (PlaceOrder(order))
+                    {
 
                         return true;
-                    } else {
+                    }
+                    else
+                    {
                         throw new KrakenException("The update failed! Order was canceled but not placed again");
                     }
                 }
             }
 
             return false;
-            
+
         }
 
         /// <summary>
@@ -363,11 +390,13 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
-        public override bool CancelOrder(Order order) {
+        public override bool CancelOrder(Order order)
+        {
 
             int sum = 0;
 
-            foreach(string txid in order.BrokerId) {
+            foreach (string txid in order.BrokerId)
+            {
 
                 var result = _restApi.CancelOrder(txid);
                 sum += result.Count;
@@ -380,17 +409,17 @@ namespace QuantConnect.Brokerages.Kraken {
         /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
-        public override void Connect() {
-
+        public override void Connect()
+        {
             // NOP
-            //
+            // Maybe should do implement "ping" functionality to check if Kraken API is online
         }
 
         /// <summary>
         /// Disconnects the client from the broker's remote servers
         /// </summary>
-        public override void Disconnect() {
-
+        public override void Disconnect()
+        {
             // NOP
         }
 
@@ -399,16 +428,7 @@ namespace QuantConnect.Brokerages.Kraken {
         /// </summary>
         public override void Dispose()
         {
-            
             // NOP
-        }
-
-        public DateTime UnixTimeStampToDateTime(double unixTimeStamp) {
-
-            // Unix timestamp is seconds past epoch
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
-            return dtDateTime;
         }
 
         /// <summary>
@@ -416,21 +436,21 @@ namespace QuantConnect.Brokerages.Kraken {
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from IB</returns>
-        public override List<Order> GetOpenOrders() {
-
+        public override List<Order> GetOpenOrders()
+        {
             List<Order> list = new List<Order>();
 
             Dictionary<string, OrderInfo> orders = _restApi.GetOpenOrders();
-            
-            foreach(KeyValuePair<string, OrderInfo> pair in orders) {
 
+            foreach (KeyValuePair<string, OrderInfo> pair in orders)
+            {
                 OrderInfo info = pair.Value;
 
                 OrderDescription desc = info.Descr;
 
-                // check for debug purposes here
+                // This is for error-caching purposes here, will get removed in final release
                 if (pair.Key != desc.Pair)
-                    throw new KrakenException("this doesn't match, please inspect!!");
+                    throw new KrakenException($"Pair strings {pair.Key} and {desc.Pair} don't match, please inspect!");
 
                 var SOR = new SubmitOrderRequest(
 
@@ -440,7 +460,7 @@ namespace QuantConnect.Brokerages.Kraken {
                     info.Volume - info.VolumeExecuted,
                     info.StopPrice.HasValue ? info.StopPrice.Value : 0m,
                     info.LimitPrice.HasValue ? info.LimitPrice.Value : 0m,
-                    UnixTimeStampToDateTime(info.OpenTm),
+                    Time.UnixTimeStampToDateTime(info.OpenTm),
                     ""
                 );
 
@@ -455,59 +475,11 @@ namespace QuantConnect.Brokerages.Kraken {
         /// Gets all holdings for the account
         /// </summary>
         /// <returns>The current holdings from the account</returns>
-        public override List<Holding> GetAccountHoldings() {
-        
+        public override List<Holding> GetAccountHoldings()
+        {
+
             var list = new List<Holding>();
 
-            /*
-            private Holding ConvertHolding(Position position) {
-
-                var securityType = SymbolMapper.GetBrokerageSecurityType(position.instrument);
-
-                return new Holding {
-
-                    Symbol = SymbolMapper.GetLeanSymbol(position.instrument, securityType, Market.Oanda),
-                    Type = securityType,
-                    AveragePrice = (decimal) position.avgPrice,
-                    ConversionRate = 1.0m,
-                    CurrencySymbol = "$",
-                    Quantity = position.side == "sell" ? -position.units : position.units
-                };
-            }*/
-
-            /*
-            Dictionary<string, decimal> krakenBalance = _restApi.GetAccountBalance();
-
-            foreach(KeyValuePair<string, decimal> pair in krakenBalance) {
-
-                string  asset  = pair.Key;
-                decimal amount = pair.Value;
-
-                var leanSymbol = this.SymbolMapper.GetLeanSymbol(pair.Key, SecurityType.Crypto, Market.Kraken);
-
-                Cash cash = new Cash("ETH", 0M, 0M);
-
-                Holding h = new Holding();
-                
-                h.Type = SecurityType.Crypto;
-
-                h.CurrencySymbol = Currencies.CurrencySymbols[asset];
-
-                h.AveragePrice = ?;
-
-                h.Quantity = amount;
-
-                h.MarketPrice = ?;
-
-                h.ConversionRate = ?;
-
-                h.MarketValue = ?;
-
-                h.UnrealizedPnL = ?;
-
-                list.Add(h);
-            }
-            */
             return list;
         }
 
@@ -515,7 +487,13 @@ namespace QuantConnect.Brokerages.Kraken {
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance() {
+        public override List<Cash> GetCashBalance()
+        {
+            // WARNING!
+            // Requires
+            // CashBook.AccountCurrency = "ETH";
+            // 
+            // TODO: Make it work for any CashBook.AccountCurrency
 
             var list = new List<Cash>();
 
@@ -523,36 +501,37 @@ namespace QuantConnect.Brokerages.Kraken {
 
             Dictionary<string, decimal> balance = _restApi.GetAccountBalance();
 
-            //CashBook.AccountCurrency == "ETH"
-
             List<string> pairs = new List<string>();
 
             StringBuilder b = new StringBuilder();
-            
+
             Dictionary<string, string> pairToAsset = new Dictionary<string, string>();
 
-            foreach(KeyValuePair<string,decimal> currency_ammount in balance) {
-
+            foreach (KeyValuePair<string, decimal> currency_ammount in balance)
+            {
                 string asset = currency_ammount.Key;
                 decimal ammount = currency_ammount.Value;
 
-                if (asset == "ETH" || asset == "XETH") {
+                if (asset == "ETH" || asset == "XETH")
+                {
 
                     list.Add(new Cash("ETH", ammount, 1));
                 }
-                else {
+                else
+                {
 
                     KeyValuePair<string, bool> pair = SymbolMapper.GetPair(asset, "ETH");
                     // build 
                     b.Append(pair.Key);
                     b.Append(", ");
                     pairToAsset[pair.Key] = asset;
-                }    
+                }
             }
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(b.ToString());
 
-            foreach (KeyValuePair<string, Ticker> t in ticks) {
+            foreach (KeyValuePair<string, Ticker> t in ticks)
+            {
 
                 string asset = pairToAsset[t.Key];
 
@@ -569,8 +548,7 @@ namespace QuantConnect.Brokerages.Kraken {
         /// <summary>
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
-        public override bool AccountInstantlyUpdated
-        {
+        public override bool AccountInstantlyUpdated {
             get { return false; }
         }
 
@@ -586,10 +564,10 @@ namespace QuantConnect.Brokerages.Kraken {
             Symbol leanSymbol = request.Symbol;
 
             string krakenSymbol = SymbolMapper.GetBrokerageSymbol(leanSymbol);
-            
-            long startTime = ((DateTimeOffset)request.StartTimeUtc).ToUnixTimeSeconds();
-            
-            long endTime = ((DateTimeOffset) request.EndTimeUtc).ToUnixTimeSeconds();
+
+            long startTime = checked((long) Time.DateTimeToUnixTimeStamp(request.StartTimeUtc));
+            long endTime   = checked((long) Time.DateTimeToUnixTimeStamp(request.EndTimeUtc  ));
+
             TickType tickType = request.TickType;
 
             Resolution resolution = request.Resolution;
@@ -599,19 +577,21 @@ namespace QuantConnect.Brokerages.Kraken {
             DateTimeZone zone = request.DataTimeZone;
 
             Type dataType = request.DataType;
-            
-            while(startTime > endTime) {
 
-                GetOHLCResult result = _restApi.GetOHLC(krakenSymbol, interval,  (int)startTime);
+            while (startTime > endTime)
+            {
+
+                GetOHLCResult result = _restApi.GetOHLC(krakenSymbol, interval, (int)startTime);
 
                 startTime = result.Last;
-                
-                Dictionary<string, List<OHLC>> dict = result.Pairs;               
+
+                Dictionary<string, List<OHLC>> dict = result.Pairs;
                 List<OHLC> list = dict[krakenSymbol];
 
-                foreach(OHLC candle in list) {
+                foreach (OHLC candle in list)
+                {
 
-                    if(candle.Time <= endTime)
+                    if (candle.Time <= endTime)
                         yield return new TradeBar(FromUnix(candle.Time), leanSymbol, candle.Open, candle.High, candle.Low, candle.Close, candle.Volume, TimeSpan.FromMinutes(interval));
                 }
             }
@@ -619,21 +599,20 @@ namespace QuantConnect.Brokerages.Kraken {
             yield return null;
         }
 
-       
-        public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone) {
-
+        public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
+        {
             string krakenSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
 
             int interval = ResolutionToInterval(resolution);
 
-            GetOHLCResult result = _restApi.GetOHLC(krakenSymbol, interval, (int)ToUnix(startTimeUtc));
+            GetOHLCResult result = _restApi.GetOHLC(krakenSymbol, interval, checked((int)ToUnix(startTimeUtc)));
 
             Dictionary<string, List<OHLC>> dict = result.Pairs;
 
             List<OHLC> list = dict[krakenSymbol];
 
             foreach (OHLC candle in list)
-                yield return new TradeBar(DateTimeOffset.FromUnixTimeSeconds(candle.Time).DateTime, symbol, candle.Open, candle.High, candle.Low, candle.Close, candle.Volume, TimeSpan.FromMinutes(interval));
+                yield return new TradeBar(Time.UnixTimeStampToDateTime(checked((double)candle.Time)), symbol, candle.Open, candle.High, candle.Low, candle.Close, candle.Volume, TimeSpan.FromMinutes(interval));
 
         }
         #endregion

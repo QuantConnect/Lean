@@ -55,11 +55,11 @@ namespace QuantConnect.Tests.Brokerages.Kraken
 
         private static KrakenBrokerage GetBrokerage()
         {
-            var apiKey    = Config.Get("kraken-api-key");
+            var apiKey = Config.Get("kraken-api-key");
             var apiSecret = Config.Get("kraken-api-secret");
-            
+
             var brokerage = new KrakenBrokerage(apiKey, apiSecret);
-            
+
             // NOP
             brokerage.Connect();
 
