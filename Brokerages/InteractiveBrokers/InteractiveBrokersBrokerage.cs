@@ -1931,21 +1931,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return IB.TimeInForce.Day;
             }
 
-            switch (order.TimeInForce)
+            switch (order.TimeInForce.Type)
             {
-                case TimeInForce.Day:
+                case TimeInForceType.Day:
                     return IB.TimeInForce.Day;
 
-                //case TimeInForce.GoodTilDate:
+                //case TimeInForceType.GoodTilDate:
                 //    return IB.TimeInForce.GoodTillDate;
 
-                //case TimeInForce.FillOrKill:
+                //case TimeInForceType.FillOrKill:
                 //    return IB.TimeInForce.FillOrKill;
 
-                //case TimeInForce.ImmediateOrCancel:
+                //case TimeInForceType.ImmediateOrCancel:
                 //    return IB.TimeInForce.ImmediateOrCancel;
 
-                case TimeInForce.GoodTilCanceled:
+                case TimeInForceType.GoodTilCanceled:
                 default:
                     return IB.TimeInForce.GoodTillCancel;
             }

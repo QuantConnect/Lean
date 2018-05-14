@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(1, (int)order.TimeInForce);
+            Assert.AreEqual(1, (int)order.TimeInForce.Type);
         }
 
         [Test]
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(1, (int)order.TimeInForce);
+            Assert.AreEqual(1, (int)order.TimeInForce.Type);
         }
 
         [Test]

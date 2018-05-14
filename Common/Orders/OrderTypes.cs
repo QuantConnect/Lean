@@ -56,11 +56,10 @@ namespace QuantConnect.Orders
         OptionExercise
     }
 
-
     /// <summary>
-    /// Time In Force - defines the length of time over which an order will continue working before it is canceled
+    /// Time In Force Type - defines the length of time over which an order will continue working before it is canceled
     /// </summary>
-    public enum TimeInForce
+    public enum TimeInForceType
     {
         /// <summary>
         /// Order active until it is filled or canceled (same as GTC).
@@ -84,12 +83,11 @@ namespace QuantConnect.Orders
         Custom
     }
 
-
     /// <summary>
     /// Direction of the order
     /// </summary>
-    public enum OrderDirection {
-
+    public enum OrderDirection
+    {
         /// <summary>
         /// Buy Order
         /// </summary>
@@ -110,12 +108,11 @@ namespace QuantConnect.Orders
         Hold
     }
 
-
     /// <summary>
     /// Fill status of the order class.
     /// </summary>
-    public enum OrderStatus {
-
+    public enum OrderStatus
+    {
         /// <summary>
         /// New order pre-submission to the order processor.
         /// </summary>
@@ -156,5 +153,4 @@ namespace QuantConnect.Orders
         /// </summary>
         CancelPending = 8
     }
-
-} // End QC Namespace:
+}

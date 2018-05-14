@@ -1556,8 +1556,10 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 case TradierOrderDuration.GTC:
                     return TimeInForce.GoodTilCanceled;
+
                 case TradierOrderDuration.Day:
-                    return (TimeInForce) 1; //.Day;
+                    return TimeInForce.Day;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -1752,12 +1754,16 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Converts the qc order duration into a tradier order duration
         /// </summary>
-        protected static TradierOrderDuration GetOrderDuration(TimeInForce duration)
+        protected static TradierOrderDuration GetOrderDuration(TimeInForce timeInForce)
         {
-            switch (duration)
+            switch (timeInForce.Type)
             {
-                case TimeInForce.GoodTilCanceled:
+                case TimeInForceType.GoodTilCanceled:
                     return TradierOrderDuration.GTC;
+
+                case TimeInForceType.Day:
+                    return TradierOrderDuration.Day;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
