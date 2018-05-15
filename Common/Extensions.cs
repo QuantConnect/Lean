@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1051,7 +1052,7 @@ namespace QuantConnect
                 {
                     result = pyObject.AsManagedObject(typeof(T)) as T;
 
-                    if (typeof(T) == typeof(Type))
+                    if (typeof(T) == typeof(Type) || result is IEnumerable)
                     {
                         return true;
                     }
