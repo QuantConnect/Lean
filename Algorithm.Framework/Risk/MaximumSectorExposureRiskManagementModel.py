@@ -17,9 +17,10 @@ AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, PortfolioTargetCollection
+from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 from itertools import groupby
 
-class MaximumSectorExposureRiskManagementModel():
+class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that that limits the sector exposure to the specified percentage'''
 
     def __init__(self, maximumSectorExposure = 0.20):
@@ -76,11 +77,3 @@ class MaximumSectorExposureRiskManagementModel():
                         risk_targets.append(PortfolioTarget(symbol, float(quantity) / ratio))
 
         return risk_targets
-
-
-    def OnSecuritiesChanged(self, algorithm, changes):
-        '''Event fired each time the we add/remove securities from the data feed
-        Args:
-            algorithm: The algorithm instance that experienced the change in securities
-            changes: The security additions and removals from the algorithm'''
-        pass
