@@ -49,6 +49,27 @@ namespace QuantConnect.Configuration
             }
         }
 
+        /// <summary>
+        /// Merge CLI arguments with configuration file + load custom config file via CLI arg
+        /// </summary>
+        /// <param name="cliArguments"></param>
+        public static void MergeCommandLineArgumentsWithConfiguration(Dictionary<string, object> cliArguments)
+        {
+            if (cliArguments.ContainsKey("config"))
+            {
+                SetConfigurationFile(cliArguments["config"] as string);
+            }
+
+            var jsonArguments = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(cliArguments));
+            
+            Settings.Value.Merge(jsonArguments, new JsonMergeSettings
+            {
+                MergeArrayHandling = MergeArrayHandling.Union
+            });
+            
+            Log.Trace(Settings.Value.ToString());
+        }
+
         private static readonly Lazy<JObject> Settings = new Lazy<JObject>(() =>
         {
             // initialize settings inside a lazy for free thread-safe, one-time initialization

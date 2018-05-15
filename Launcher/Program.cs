@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Launcher
             // expect first argument to be config file name
             if (args.Length > 0)
             {
-                Config.SetConfigurationFile(args[0]);
+                Config.MergeCommandLineArgumentsWithConfiguration(LeanArgumentParser.ParseArguments(args));
             }
 
             var environment = Config.Get("environment");
