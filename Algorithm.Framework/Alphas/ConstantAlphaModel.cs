@@ -35,11 +35,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Dictionary<Symbol, DateTime> _insightsTimeBySymbol;
 
         /// <summary>
-        /// Defines a name for a framework model
-        /// </summary>
-        public override string Name { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
         /// </summary>
         /// <param name="type">The type of insight</param>

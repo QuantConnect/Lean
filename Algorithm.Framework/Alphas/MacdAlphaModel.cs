@@ -38,11 +38,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Dictionary<Symbol, SymbolData> _symbolData;
 
         /// <summary>
-        /// Defines a name for a framework model
-        /// </summary>
-        public override string Name { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
         /// </summary>
         /// <param name="fastPeriod">The MACD fast period</param>

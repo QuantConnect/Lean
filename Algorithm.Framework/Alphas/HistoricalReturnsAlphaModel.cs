@@ -26,17 +26,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Alpha model that uses historical returns to create insights
     /// </summary>
-    public class HistoricalReturnsAlphaModel : IAlphaModel, INamedModel
+    public class HistoricalReturnsAlphaModel : AlphaModel
     {
         private readonly int _lookback;
         private readonly Resolution _resolution;
         private readonly TimeSpan _predictionInterval;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
-
-        /// <summary>
-        /// Defines a name for a framework model
-        /// </summary>
-        public string Name { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoricalReturnsAlphaModel"/> class
