@@ -22,7 +22,7 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta
 from enum import Enum
 
-class RsiAlphaModel:
+class RsiAlphaModel(AlphaModel):
     '''Uses Wilder's RSI to create insights. 
     Using default settings, a cross over below 30 or above 70 will trigger a new insight.'''
 

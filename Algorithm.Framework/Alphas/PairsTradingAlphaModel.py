@@ -22,7 +22,7 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta
 from enum import Enum
 
-class PairsTradingAlphaModel:
+class PairsTradingAlphaModel(AlphaModel):
     '''This alpha model is designed to work against a single, predefined pair.
     This model generates alternating long ratio/short ratio insights emitted as a group'''
 

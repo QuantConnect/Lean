@@ -21,7 +21,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 
 
-class MacdAlphaModel:
+class MacdAlphaModel(AlphaModel):
     '''Defines a custom alpha model that uses MACD crossovers. The MACD signal line
     is used to generate up/down insights if it's stronger than the bounce threshold.
     If the MACD signal is within the bounce threshold then a flat price insight is returned.'''

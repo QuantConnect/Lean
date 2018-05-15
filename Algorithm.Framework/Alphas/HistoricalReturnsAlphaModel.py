@@ -21,7 +21,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta
 
-class HistoricalReturnsAlphaModel:
+class HistoricalReturnsAlphaModel(AlphaModel):
     '''Uses Historical returns to create insights.'''
 
     def __init__(self, *args, **kwargs):
