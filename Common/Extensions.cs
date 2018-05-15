@@ -1044,13 +1044,23 @@ namespace QuantConnect
             {
                 return true;
             }
-
+            
             using (Py.GIL())
             {
                 try
                 {
                     result = pyObject.AsManagedObject(typeof(T)) as T;
-                    return true;
+
+                    if (typeof(T) == typeof(Type))
+                    {
+                        return true;
+                    }
+
+                    // If the PyObject type and the managed object names are the same,
+                    // pyObject is a C# object wrapped in PyObject, in this case return true
+                    // Otherwise, pyObject is a python object that subclass a C# class.
+                    string name = (pyObject.GetPythonType() as dynamic).__name__;
+                    return name == result.GetType().Name;
                 }
                 catch
                 {
