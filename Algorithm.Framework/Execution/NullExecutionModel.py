@@ -13,9 +13,9 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Execution import ExecutionModel
 
-class NullPortfolioConstructionModel(PortfolioConstructionModel):
-    '''Provides an implementation of IPortfolioConstructionModel that does nothing'''
-    def CreateTargets(self, algorithm, insights):
+class NullExecutionModel(ExecutionModel):
+    '''Provides an implementation of IExecutionModel that does nothing'''
+    def Execute(self, algorithm, targets):
         return []

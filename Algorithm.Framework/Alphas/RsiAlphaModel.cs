@@ -33,11 +33,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Resolution _resolution;
 
         /// <summary>
-        /// Defines a name for a framework model
-        /// </summary>
-        public override string Name { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="RsiAlphaModel"/> class
         /// </summary>
         /// <param name="period">The RSI indicator period</param>

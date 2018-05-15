@@ -16,10 +16,10 @@ AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from QuantConnect import *
-from QuantConnect.Algorithm.Framework.Alphas import Insight, InsightType, InsightDirection
+from QuantConnect.Algorithm.Framework.Alphas import AlphaModel, Insight, InsightType, InsightDirection
 
 
-class ConstantAlphaModel:
+class ConstantAlphaModel(AlphaModel):
     ''' Provides an implementation of IAlphaModel that always returns the same insight for each security'''
 
     def __init__(self, type, direction, period, magnitude = None, confidence = None):

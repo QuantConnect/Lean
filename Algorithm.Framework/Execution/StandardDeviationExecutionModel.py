@@ -22,12 +22,12 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import TradeBar
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm.Framework.Execution import OrderSizing
+from QuantConnect.Algorithm.Framework.Execution import ExecutionModel, OrderSizing
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTargetCollection
 import numpy as np
 
 
-class StandardDeviationExecutionModel:
+class StandardDeviationExecutionModel(ExecutionModel):
     '''Execution model that submits orders while the current market prices is at least the configured number of standard
      deviations away from the mean in the favorable direction (below/above for buy/sell respectively)'''
 

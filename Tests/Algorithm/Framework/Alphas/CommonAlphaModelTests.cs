@@ -189,10 +189,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// <summary>
         /// To be override for model types that implement <see cref="INamedModel"/>
         /// </summary>
-        protected virtual string GetExpectedModelName(IAlphaModel model)
-        {
-            return model.GetType().Name;
-        }
+        protected abstract string GetExpectedModelName(IAlphaModel model);
 
         /// <summary>
         /// Provides derived types a chance to initialize anything special they require

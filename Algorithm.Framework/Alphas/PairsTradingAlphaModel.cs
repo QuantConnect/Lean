@@ -33,11 +33,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private IndicatorBase<IndicatorDataPoint> _lowerThreshold;
 
         /// <summary>
-        /// Defines a name for a framework model
-        /// </summary>
-        public override string Name => $"{nameof(PairsTradingAlphaModel)}({_asset1},{_asset2},{_threshold.Normalize()})";
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="PairsTradingAlphaModel"/> class
         /// </summary>
         /// <param name="asset1">The first asset's symbol in the pair</param>
@@ -48,6 +43,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _asset1 = asset1;
             _asset2 = asset2;
             _threshold = threshold;
+            Name = $"{nameof(PairsTradingAlphaModel)}({_asset1},{_asset2},{_threshold.Normalize()})";
         }
 
         /// <summary>

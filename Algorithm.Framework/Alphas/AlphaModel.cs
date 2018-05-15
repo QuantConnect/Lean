@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -27,7 +28,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
-        public virtual string Name => GetType().Name;
+        public virtual string Name { get; set; }
+
+        public AlphaModel()
+        {
+            Name = Guid.NewGuid().ToString();
+        }
 
         /// <summary>
         /// Updates this alpha model with the latest data from the algorithm.

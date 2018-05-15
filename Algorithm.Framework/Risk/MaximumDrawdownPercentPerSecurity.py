@@ -17,8 +17,9 @@ AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
+from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 
-class MaximumDrawdownPercentPerSecurity():
+class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the drawdown per holding to the specified percentage'''
 
     def __init__(self, maximumDrawdownPercent = 0.05):
@@ -44,10 +45,3 @@ class MaximumDrawdownPercentPerSecurity():
                 targets.append(PortfolioTarget(security.Symbol, 0))
 
         return targets
-
-    def OnSecuritiesChanged(self, algorithm, changes):
-        '''Event fired each time the we add/remove securities from the data feed
-        Args:
-            algorithm: The algorithm instance that experienced the change in securities
-            changes: The security additions and removals from the algorithm'''
-        pass

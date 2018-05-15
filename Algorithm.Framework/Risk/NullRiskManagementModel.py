@@ -13,9 +13,9 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 
-class NullPortfolioConstructionModel(PortfolioConstructionModel):
-    '''Provides an implementation of IPortfolioConstructionModel that does nothing'''
-    def CreateTargets(self, algorithm, insights):
+class NullRiskManagementModel(RiskManagementModel):
+    '''Provides an implementation of IRiskManagementModel that does nothing'''
+    def ManageRisk(self, algorithm, targets):
         return []

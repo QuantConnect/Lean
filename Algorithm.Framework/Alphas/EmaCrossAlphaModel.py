@@ -21,7 +21,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 
 
-class EmaCrossAlphaModel:
+class EmaCrossAlphaModel(AlphaModel):
     '''Alpha model that uses an EMA cross to create insights'''
 
     def __init__(self,

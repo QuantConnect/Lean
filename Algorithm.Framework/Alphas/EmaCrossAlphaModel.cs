@@ -33,11 +33,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
 
         /// <summary>
-        /// Defines a name for a framework model
-        /// </summary>
-        public override string Name { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="EmaCrossAlphaModel"/> class
         /// </summary>
         /// <param name="fastPeriod">The fast EMA period</param>

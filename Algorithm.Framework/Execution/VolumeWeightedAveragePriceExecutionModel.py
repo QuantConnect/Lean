@@ -22,13 +22,13 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import Tick, TradeBar
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm.Framework.Execution import OrderSizing
+from QuantConnect.Algorithm.Framework.Execution import ExecutionModel, OrderSizing
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTargetCollection
 import numpy as np
 from datetime import datetime
 
 
-class VolumeWeightedAveragePriceExecutionModel:
+class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
     '''Execution model that submits orders while the current market price is more favorable that the current volume weighted average price.'''
 
     def __init__(self):
