@@ -216,7 +216,8 @@ namespace QuantConnect.Configuration
                 return value == "true";
             }
 
-            if (double.TryParse(value, out var numericValue))
+            double numericValue;
+            if (double.TryParse(value, out numericValue))
             {
                 return numericValue;
             }
