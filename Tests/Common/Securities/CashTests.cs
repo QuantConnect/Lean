@@ -45,14 +45,14 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must be exactly 3 characters")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must have atleast 3 characters and at most 4 characters.")]
         public void ConstructorThrowsOnSymbolTooLong()
         {
             var cash = new Cash("too long", 0, 0);
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must be exactly 3 characters")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must have atleast 3 characters and at most 4 characters.")]
         public void ConstructorThrowsOnSymbolTooShort()
         {
             var cash = new Cash("s", 0, 0);
