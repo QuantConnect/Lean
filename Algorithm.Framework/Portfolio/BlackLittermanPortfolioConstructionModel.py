@@ -23,7 +23,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
 from datetime import timedelta
 import numpy as np
 import pandas as pd
@@ -41,7 +41,7 @@ from numpy.linalg import inv
 ### The default model uses the 0.0025 as weight-on-views scalar parameter tau. The optimization method 
 ### maximizes the Sharpe ratio with the weight range from -1 to 1.
 ### </summary>
-class BlackLittermanPortfolioConstructionModel:
+class BlackLittermanPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self, *args, **kwargs):
         """Initialize the model
         Args:

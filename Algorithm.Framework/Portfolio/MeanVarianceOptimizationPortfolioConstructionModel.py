@@ -23,7 +23,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
 from datetime import timedelta
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ from scipy.optimize import minimize
 ### The default model uses the last three months daily price to calculate the optimal weight 
 ### with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
 ### </summary>
-class MeanVarianceOptimizationPortfolioConstructionModel:
+class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self, *args, **kwargs):
         """Initialize the model
         Args:

@@ -15,11 +15,7 @@ from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel
 
-
-class NullPortfolioConstructionModel:
+class NullPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that does nothing'''
     def CreateTargets(self, algorithm, insights):
         return []
-
-    def OnSecuritiesChanged(self, algorithm, changes):
-        pass

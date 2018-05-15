@@ -13,10 +13,10 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
 
 
-class EqualWeightingPortfolioConstructionModel:
+class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
     The target percent holdings of each security is 1/N where N is the number of securities. 
     For insights of direction InsightDirection.Up, long targets are returned and
