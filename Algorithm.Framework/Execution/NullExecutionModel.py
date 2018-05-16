@@ -18,4 +18,4 @@ from QuantConnect.Algorithm.Framework.Execution import ExecutionModel
 class NullExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that does nothing'''
     def Execute(self, algorithm, targets):
-        return []
+        pass
