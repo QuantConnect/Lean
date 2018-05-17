@@ -1,154 +1,170 @@
-# Lean-Report-Creator
+![alt tag](Documentation/logo.white.small.png)
+Lean Algorithmic Trading Engine
+=========
 
-Create beautiful HTML/PDF reports for sharing your LEAN backtest results in Python.
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
-## Instruction on installing and running the program
 
-Dear users, please refer to the following instructions to generate your strategy report!
+[Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
 
-### 1. Install Python3.
+----------
 
-You are strongly recommended to use Anaconda (or Miniconda) to install Python3 and its dependencies. 
+## Introduction ##
 
-After downloading Anaconda (or Miniconda), open Anaconda Prompt and run "conda install python=3.6". Use the same method to install all its dependencies.
+Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
 
-### 2. Prepare input files
+The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web based algorithmic trading platform [QuantConnect][4].
 
-(1) The first input file is the .json file which you can download once you finish your backtesting. You could put this file into a convenient directory, such as ./json/sample.json.
+## System Overview ##
 
-(2) Then please replace the file "AuthorProfile.jpg" with your own profile image, but do not change the file name.
+![alt tag](Documentation/2-Overview-Detailed-New.png)
 
-### 3. Generate report
+The Engine is broken into many modular pieces which can be extended without touching other files. The modules are configured in config.json as set "environments". Through these environments you can control LEAN to operate in the mode required. 
 
-Execute the following command to generate your strategy report:
+The most important plugins are:
 
-lrc = LeanReportCreator("./json/sample.json")
-lrc.genearte_report()
+ - **Result Processing** (IResultHandler)
+   > Handle all messages from the algorithmic trading engine. Decide what should be sent, and where the messages should go. The result processing system can send messages to a local GUI, or the web interface.
 
-### 4. Get the outputs
+ - **Datafeed Sourcing** (IDataFeed)
+   > Connect and download data required for the algorithmic trading engine. For backtesting this sources files from the disk, for live trading it connects to a stream and generates the data objects.
 
-(1) Report.html
+ - **Transaction Processing** (ITransactionHandler)
+   > Process new order requests; either using the fill models provided by the algorithm, or with an actual brokerage. Send the processed orders back to the algorithm's portfolio to be filled.
 
-(2) all the individual images in the directory "./outputs"
+ - **Realtime Event Management** (IRealtimeHandler)
+   > Generate real time events - such as end of day events. Trigger callbacks to real time event handlers. For backtesting this is mocked-up an works on simulated time. 
+ 
+ - **Algorithm State Setup** (ISetupHandler)
+   > Configure the algorithm cash, portfolio and data requested. Initialize all state parameters required.
 
-## Explaination on the meaning of the charts
+For more information on the system design and contributing please see the Lean Website Documentation.
 
-Here I am going to give you a detailed explaination on the meaning of each chart.
+## Installation Instructions ##
 
-### 1. Cumulative Return
+Download the zip file with the [lastest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
 
-![GitHub Logo](/outputs/cumulative-return.png)
-This chart shows the cumulative returns for both your strategy (in orange) and the benchmark (in grey).
+Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
+```
+git clone https://github.com/QuantConnect/Lean.git
+cd Lean
+```
 
-The backtest version of this chart is calculated based on daily data. If the original price series in json file is not daily, we will first convert them into daily data.
+### macOS 
 
-The live version of this chart is calculated based on miniute data. Icons on the chart will show when the live trading started, stopped, or had runtime errors.
+- Install [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/)
+- Open `QuantConnect.Lean.sln` in Visual Studio
 
-### 2. Daily Return
+Visual Studio will automatically start to restore the Nuget packages. If not, in the menu bar, click `Project > Restore NuGet Packages`.
 
-![GitHub Logo](/outputs/daily-returns.png)
-This chart shows the daily returns for your strategy.
+- In the menu bar, click `Run > Start Debugging`.
 
-When the return is positive, a orange bar will show above the horizontal line; when the return is negative, a grey bar will show below the horizontal line.
+Alternatively, run the compiled `exe` file. First, in the menu bar, click `Build > Build All`, then:
+```
+cd Lean/Launcher/bin/Debug
+mono QuantConnect.Lean.Launcher.exe
+```
 
-### 3. Top 5 Drawdown Periods
+### Linux (Debian, Ubuntu)
 
-![GitHub Logo](/outputs/drawdowns.png)
-This chart shows the drawdown of each day.
+- Install [Mono](http://www.mono-project.com/download/#download-lin):
+```
+sudo apt-get update && sudo rm -rf /var/lib/apt/lists/*
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > sudo /etc/apt/sources.list.d/mono-xamarin.list
+```
+If you get this error on the last command:
+ 
+**Unable to locate package referenceassemblies-pcl**,
+ 
+run the following command (it works on current version of Ubuntu - 17.10):
+```
+echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-official.list
+```
 
-A certain day's drawdown is defined as the percentage of loss compared to the maximum value prior to this day. The drawdowns are calculated based on daily data.
+```
+sudo apt-get update
+sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
+```
+- Install Nuget
+```
+sudo apt-get update && sudo apt-get install -y nuget
+```
+- Restore NuGet packages then compile:
+```
+nuget restore QuantConnect.Lean.sln
+xbuild QuantConnect.Lean.sln
+```
+If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
 
-By this defination, we can infer that when cerntain day's value is the maximum so far, its drawdown is 0.
+If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
 
-The top 5 drawdown periods are marked in the chart with different colors.
+If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
 
-### 4. Monthly Returns
+- Run the compiled `exe` file:
+```
+cd Lean/Launcher/bin/Debug
+mono ./QuantConnect.Lean.Launcher.exe
+```
+- Interactive Brokers set up details
 
-![GitHub Logo](/outputs/monthly-returns.png)
-This chart shows the return of each month.
+Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
 
-We convert original price series into monthly series, and calculate the returns of each month. 
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001 to match the settings in your IBGateway/TWS.
 
-The green color indicates positive return, the red color indicates negative return, and the greater the loss is, the darker the color is; the yellow color means the gain or loss is rather small; the white color means the month is not included in the backtest period.
+### Windows
 
-The values in the cells are in percentage.
+- Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
+- Open `QuantConnect.Lean.sln` in Visual Studio
+- Build the solution by clicking Build Menu -> Build Solution (this should trigger the Nuget package restore)
+- Press `F5` to run
 
-### 5. Annual Returns
+Nuget packages not being restored is the most common build issue. By default Visual Studio includes NuGet, if your installation of Visual Studio (or your IDE) cannot find DLL references, install [Nuget](https://www.nuget.org/), run nuget on the solution and re-build the Solution again. 
 
-![GitHub Logo](/outputs/annual-returns.png)
-This chart shows the return of each year.
+### Python Support
 
-We calculate the total return within each year, shown by the blue bars. The red dotted line represents the average of the annual returns.
+A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
 
-One thing needs mentioning: if the backtest covers less than 12 month of a certain year, then the value in the chart is the actual return which is not annualized.
+### R Support
 
-### 5. Distribution of Monthly Returns
+- Install R-base if you need to call R in your algorithm.
+For Linux users:
+```
+sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
+```
+For Windows and macOs users:
+Please visit the official [R website](https://www.r-project.org/) to download R. 
 
-![GitHub Logo](/outputs/distribution-of-monthly-returns.png)
-This chart shows the distribution of monthly returns.
+### QuantConnect Visual Studio Plugin
 
-The x-axis represents the value of return. The y-axis is the number of months which have a certain return. The red dotted line represents mean value of montly returns.
+For more information please see the QuantConnect Visual Studio Plugin [Documentation][8]
 
-### 6. Crisis Events
+## Issues and Feature Requests ##
 
-9/11
-![GitHub Logo](/outputs/crisis-9-11.png)
-Lehman Brothers
-![GitHub Logo](/outputs/crisis-lehman-brothers.png)
-Us Downgrade/European Debt Crisis
-![GitHub Logo](/outputs/crisis-us-downgrade-european-debt-crisis.png)
-This group of charts shows the behaviors of both your strategy and the benchmark during a certain historical period. 
+Please submit bugs and feature requests as an issue to the [Lean Repository][5]. Before submitting an issue please read others to ensure it is not a duplicate.
 
-We set the value of your strategy the same as the benchmark at the beginning of each crisis event, and the lines represent the cumulative returns of your strategy and benchmark from the beginning of this crisis event.
+## Mailing List ## 
 
-We won't draw the crisis event charts whose time periods are not covered by your strategy.
+The mailing list for the project can be found on [Google Groups][6]. Please use this to request assistance with your installations and setup questions.
 
-### 7. Rolling Portfolio Beta to Equity
+## Contributors and Pull Requests ##
 
-![GitHub Logo](/outputs/rolling-portfolio-beta-to-equity.png)
-This chart shows the rolling portfolio beta to the benchmark.
+Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
-This chart is drawn based on daily data. Every day, we calculate the beta of your portfolio to the benchmark over the past 6 months (grey line) or 12 months (blue line). 
+All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
-A beta close to 1 means the strategy has a risk exposure similar to the benchmark; a beta higher than 1 means the strategy is riskier than the benchmark; a beta close to 0 means the strategy is "market neutral", which isn't much affected by market situation. Beta could also be negative, under which the strategy has opposite risk expousure to the benchmark.
+## Acknowledgements ##
 
-We won't draw this chart when your backtest period is less than 12 months.
+The open sourcing of QuantConnect would not have been possible without the support of the Pioneers. The Pioneers formed the core 100 early adopters of QuantConnect who subscribed and allowed us to launch the project into open source.
 
-### 8. Rolling Sharpe Ratio
+Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan, Paul R, Nik M, Scott Y, BinaryExecutor.com, Tadas T, Matt B, Binumon P, Zyron, Mike O, TC, Luigi, Lester Z, Andreas H, Eugene K, Hugo P, Robert N, Christofer O, Ramesh L, Nicholas S, Jonathan E, Marc R, Raghav N, Marcus, Hakan D, Sergey M, Peter McE, Jim M, INTJCapital.com, Richard E, Dominik, John L, H. Orlandella, Stephen L, Risto K, E.Subasi, Peter W, Hui Z, Ross F, Archibald112, MooMooForex.com, Jae S, Eric S, Marco D, Jerome B, James B. Crocker, David Lypka, Edward T, Charlie Guse, Thomas D, Jordan I, Mark S, Bengt K, Marc D, Al C, Jan W, Ero C, Eranmn, Mitchell S, Helmuth V, Michael M, Jeremy P, PVS78, Ross D, Sergey K, John Grover, Fahiz Y, George L.Z., Craig E, Sean S, Brad G, Dennis H, Camila C, Egor U, David T, Cameron W, Napoleon Hernandez, Keeshen A, Daniel E, Daniel H, M.Patterson, Asen K, Virgil J, Balazs Trader, Stan L, Con L, Will D, Scott K, Barry K, Pawel D, S Ray, Richard C, Peter L, Thomas L., Wang H, Oliver Lee, Christian L.
 
-![GitHub Logo](/outputs/rolling-sharpe-ratio(6-month).png)
-This chart shows the rolling sharpe ratio of your strategy.
 
-The rolling sharpe ratio is calculated on daily data, and annualized. Every day, we calculate the sharpe ratio of your portfolio over the past 6 months, and connect the sharpe ratios into a line. The red dotted line represents the mean value of the total sharpe ratios.
-
-We won't draw this chart when your backtest period is less than 6 months.
-
-### 9. Net Holdings
-
-![GitHub Logo](/outputs/net-holdings.png)
-This chart shows the net holdings of your portfolio.
-
-The net holding is the aggregated weight of risky assets in your portfolio. It could be either positive (when your total position is long), negative (when your total position is short) or 0 (when you only hold cash). The net holding changes only if new order is fired.
-
-The chart is drawn based on minute data, which means we aggregate all the risky positions in every minute together.
-
-### 10. Leverage
-
-![GitHub Logo](/outputs/leverage.png)
-This chart shows the leverage of your portfolio.
-
-The value of the leverage is always non-negative. When you only hold cash, the leverage is 0; a leverage smaller than 1 means you either long assets with money less than your portfolio value or short assets with total value less than your portfolio value; a leverage larger than 1 means you either borrow money to buy assets or short assets whose value is larger than your portfolio value. The leverage changes only if new order is fired.
-
-The chart is drawn based on minute data, which means we aggregate all the risky positions in every minute together.
-
-### 11. Asset Allocations
-
-![GitHub Logo](/outputs/asset-allocation-all.png)
-![GitHub Logo](/outputs/asset-allocation-equity.png)
-This group of charts show your asset allocations.
-
-It is a time-weighted average of each class of asset to your portfolio. 
-
-The first chart shows the percentages of all the assets together. The sum of the percentages is 100%. When a certain asset has very small percentage and is too small to be shown in the pie chart, it will be incorporated into "others" class. The value of the percentage could be either positive or negative. 
-
-The rest of the pie charts shows the percentages of some more specific asset classes, for example, stocks, foreign exchanges, etc. We won't draw the chart if your portfolio doesn't include any asset within this class.
+  [1]: https://www.quantconnect.com/lean "Lean Open Source Home Page"
+  [2]: https://www.quantconnect.com/lean/docs "Lean Documentation"
+  [3]: https://github.com/QuantConnect/Lean/archive/master.zip
+  [4]: https://www.quantconnect.com "QuantConnect"
+  [5]: https://github.com/QuantConnect/Lean/issues
+  [6]: https://groups.google.com/forum/#!forum/lean-engine
+  [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
+  [8]: https://github.com/QuantConnect/Lean/blob/master/VisualStudioPlugin/readme.md
