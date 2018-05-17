@@ -24,8 +24,13 @@ namespace QuantConnect.Tests.Common.Securities.Forex
     [TestFixture]
     public class ForexTests
     {
+        /// <summary>
+        /// String version of Currency.MaxCharactersPerCurrencyPair, multiplied by 2. It needs to be string so that it's compile time const.
+        /// </summary>
+        private const string MaxCharactersPerCurrencyPair = "12";
+
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of 8.")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of " + MaxCharactersPerCurrencyPair + ".")]
         public void DecomposeThrowsOnSymbolTooShort()
         {
             string symbol = "12345";
@@ -35,17 +40,22 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of 8.")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of " + MaxCharactersPerCurrencyPair + ".")]
         public void DecomposeThrowsOnSymbolTooLong()
         {
-            string symbol = "123456789";
-            Assert.AreEqual(9, symbol.Length);
+            string symbol = "";
+
+            for(int i = 0 ; i < Currencies.MaxCharactersPerCurrencyPair + 2; i++)
+                symbol += "X";
+
+            Assert.AreEqual(symbol.Length, Currencies.MaxCharactersPerCurrencyPair + 2);
+
             string basec, quotec;
             QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of 8.")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of " + MaxCharactersPerCurrencyPair + ".")]
         public void DecomposeThrowsOnNullSymbol()
         {
             string symbol = null;

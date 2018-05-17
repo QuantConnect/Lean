@@ -37,6 +37,12 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly AlgorithmSettings AlgorithmSettings = new AlgorithmSettings();
         private static readonly MarketHoursDatabase AlwaysOpenMarketHoursDatabase = MarketHoursDatabase.AlwaysOpen;
 
+        /// <summary>
+        /// String version of Currency.MaxCharactersPerCurrencyCode, multiplied by 2. It needs to be string so that it's compile time const.
+        /// </summary>
+        private const string MaxCharactersPerCurrencyCode = "6";
+
+
         [Test]
         public void ConstructorCapitalizedSymbol()
         {
@@ -45,14 +51,19 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must have atleast 3 characters and at most 4 characters.")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must have atleast 3 characters and at most " + MaxCharactersPerCurrencyCode + " characters.")]
         public void ConstructorThrowsOnSymbolTooLong()
         {
+            string tooLongString = "";
+
+            for (int i = 0; i < Currencies.MaxCharactersPerCurrencyCode + 2; i++)
+                tooLongString += "X";
+
             var cash = new Cash("too long", 0, 0);
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must have atleast 3 characters and at most 4 characters.")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must have atleast 3 characters and at most " + MaxCharactersPerCurrencyCode + " characters.")]
         public void ConstructorThrowsOnSymbolTooShort()
         {
             var cash = new Cash("s", 0, 0);
@@ -203,14 +214,14 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var book = new CashBook
             {
-                {"USD", new Cash("USD", 100, 1) },
-                {"BTC", new Cash("BTC", 100, 6000) },
-                {"LTC", new Cash("LTC", 100, 55) },
-                {"ETH", new Cash("ETH", 100, 290) },
-                {"EUR", new Cash("EUR", 100, 1.2m) },
-                {"JPY", new Cash("JPY", 100, 0.0088m) },
-                {"XAG", new Cash("XAG", 100, 1275) },
-                {"XAU", new Cash("XAU", 100, 17) }
+                {"USD",  new Cash("USD",  100, 1) },
+                {"BTC",  new Cash("BTC",  100, 6000) },
+                {"LTC",  new Cash("LTC",  100, 55) },
+                {"ETH",  new Cash("ETH",  100, 290) },
+                {"EUR",  new Cash("EUR",  100, 1.2m) },
+                {"JPY",  new Cash("JPY",  100, 0.0088m) },
+                {"XAG",  new Cash("XAG",  100, 1275) },
+                {"XAU",  new Cash("XAU",  100, 17) },
             };
 
             var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper);

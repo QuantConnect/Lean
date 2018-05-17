@@ -24,6 +24,20 @@ namespace QuantConnect
     public static class Currencies
     {
         /// <summary>
+        /// Maximum chars currency code can contain.
+        /// If you modify this, MaxCharactersPerCurrencyPair gets modified too.
+        /// If you modify this, you must modify const with same name in CashTests.cs!
+        /// </summary>
+        public const int MaxCharactersPerCurrencyCode = 6;
+
+        /// <summary>
+        /// Maximum chars currency pair can contain
+        /// If you modify this, you must modify const with same name in ForexTests.cs!
+        /// </summary>
+        public const int MaxCharactersPerCurrencyPair = 2*MaxCharactersPerCurrencyCode;
+
+
+        /// <summary>
         /// Gets the listing of crypto pairs used for currency conversion rates
         /// </summary>
         /// <remarks>
@@ -62,7 +76,7 @@ namespace QuantConnect
             "TRXBTC",
             "TRXETH",
             "OMGBTC",
-            "OMGETH"
+            "OMGETH",
         };
 
         /// <summary>

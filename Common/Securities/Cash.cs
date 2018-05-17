@@ -80,10 +80,11 @@ namespace QuantConnect.Securities
         /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.AccountCurrency"/></param>
         public Cash(string symbol, decimal amount, decimal conversionRate)
         {
-            if (symbol == null || symbol.Length < 3 || symbol.Length > 4)
+            if (symbol == null || symbol.Length < 3 || symbol.Length > Currencies.MaxCharactersPerCurrencyCode)
             {
-                throw new ArgumentException("Cash symbols must have atleast 3 characters and at most 4 characters.");
+                throw new ArgumentException($"Cash symbols must have atleast 3 characters and at most {Currencies.MaxCharactersPerCurrencyCode} characters.");
             }
+
             Amount = amount;
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();

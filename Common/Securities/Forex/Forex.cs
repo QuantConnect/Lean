@@ -110,9 +110,9 @@ namespace QuantConnect.Securities.Forex
         /// <param name="quoteCurrency">The output quote currency</param>
         public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
         {
-            if (currencyPair == null || currencyPair.Length < 6 || currencyPair.Length > 8)
+            if (currencyPair == null || currencyPair.Length < 6 || currencyPair.Length > Currencies.MaxCharactersPerCurrencyPair)
             {
-                throw new ArgumentException($"Currency pairs must not be null, length minimum of 6 and maximum of 8. Problematic pair: {currencyPair}");
+                throw new ArgumentException($"Currency pairs must not be null, length minimum of 6 and maximum of {Currencies.MaxCharactersPerCurrencyPair}. Problematic pair: {currencyPair}");
             }
 
             if (currencyPair.Length == 6)
@@ -146,7 +146,7 @@ namespace QuantConnect.Securities.Forex
                 {
                     int start = currencyPair.IndexOf(symbol, 3);
 
-                    if (start == 3 || start == 4)
+                    if (start >= 3 && start <= Currencies.MaxCharactersPerCurrencyCode)
                     {
                         quotes.Add(symbol);
                     }
