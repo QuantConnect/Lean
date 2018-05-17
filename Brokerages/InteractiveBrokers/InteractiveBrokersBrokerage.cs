@@ -785,11 +785,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 exchange = Market.CBOE.ToUpper();
             }
 
-            if (order.Type == OrderType.Vwap)
-            {
-                exchange = "VWAP";
-            }
-
             var contract = CreateContract(order.Symbol, exchange);
 
             int ibOrderId;
