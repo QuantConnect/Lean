@@ -66,8 +66,6 @@ namespace QuantConnect.Configuration
             {
                 MergeArrayHandling = MergeArrayHandling.Union
             });
-            
-            Log.Trace(Settings.Value.ToString());
         }
 
         private static readonly Lazy<JObject> Settings = new Lazy<JObject>(() =>
