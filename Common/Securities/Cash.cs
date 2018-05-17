@@ -101,7 +101,7 @@ namespace QuantConnect.Securities
             var rate = data.Value;
             if (_invertRealTimePrice)
             {
-                rate = 1/rate;
+                rate = 1 / rate;
             }
             ConversionRate = rate;
         }
@@ -250,6 +250,74 @@ namespace QuantConnect.Securities
                     securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
                     return security;
+                }
+
+
+            }
+
+
+            // No direct conversion rate pair is found, check for secondary conversion pair
+            // Common to cryptocurrencies where there are no direct pairings with USD, but there is intermediary such as BTC or ETH
+            // Example #1: RENUSD doesn't exist, but there is RENETH  and ETHUSD,  from which we can calculate RENUSD
+            // Example #2: RENUSD doesn't exist, but there is RENUSDT and USDTUSD, from which we can calculate RENUSD
+
+            // Finds pairs that contain REN such as RENBTC and RENETH
+            var secondaryPotentials = Currencies.CryptoCurrencyPairs
+            .Where(cryptoPair => cryptoPair.Contains(this.Symbol));
+
+            // Order secondaryPotentials by whenever they are already contained in securities.
+            // This is must; if you add RENETH, it will use ETHUSD as a conversion pair for USD, and not BTCUSD
+            secondaryPotentials = secondaryPotentials
+            .OrderByDescending(cryptoPair =>
+            {
+                foreach (var s in securities.Keys)
+                    if (cryptoPair == s.Value)
+                        return 1;
+
+                return 0;
+            });
+
+            foreach (var secondaryPair in secondaryPotentials)
+            {
+                string SecondarySymbol = Forex.Forex.CurrencyPairDual(secondaryPair, this.Symbol);
+
+                string secondaryNormal = SecondarySymbol + CashBook.AccountCurrency;
+                string secondaryInvert = CashBook.AccountCurrency + SecondarySymbol;
+
+                // Check in list of markets for any match
+                foreach (var symbol in potentials)
+                {
+                    if (symbol.Value == secondaryNormal || symbol.Value == secondaryInvert)
+                    {
+
+                        _invertRealTimePrice = symbol.Value == invert;
+                        var securityType = SecurityType.Crypto;
+                        var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
+                        Cash quoteCash;
+                        if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
+                        {
+                            throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
+                        }
+                        var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+                        var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+                        // use the first subscription defined in the subscription manager
+                        var type = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
+                        var objectType = type.Item1;
+                        var tickType = type.Item2;
+
+                        // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
+                        var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+
+                        Security security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+
+                        ConversionRateSecurity = security;
+                        securities.Add(config.Symbol, security);
+                        Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+
+
+                        return security;
+                    }
                 }
             }
 

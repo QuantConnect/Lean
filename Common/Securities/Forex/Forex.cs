@@ -20,7 +20,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using System.Collections.Generic;
 
-namespace QuantConnect.Securities.Forex 
+namespace QuantConnect.Securities.Forex
 {
     /// <summary>
     /// FOREX Security Object Implementation for FOREX Assets
@@ -108,45 +108,46 @@ namespace QuantConnect.Securities.Forex
         /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency) 
+        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
         {
             if (currencyPair == null || currencyPair.Length < 6 || currencyPair.Length > 8)
             {
                 throw new ArgumentException($"Currency pairs must not be null, length minimum of 6 and maximum of 8. Problematic pair: {currencyPair}");
             }
 
-            if (currencyPair.Length == 6) {
+            if (currencyPair.Length == 6)
+            {
 
                 // Old-code part for Forex (non-crypto) markets only. 
-                baseCurrency  = currencyPair.Substring(0, 3);
+                baseCurrency = currencyPair.Substring(0, 3);
                 quoteCurrency = currencyPair.Substring(3);
-                return;               
+                return;
             }
 
-            baseCurrency  = null;
+            baseCurrency = null;
             quoteCurrency = null;
 
-            List<string> bases  = new List<string>();
+            List<string> bases = new List<string>();
             List<string> quotes = new List<string>();
 
             // Find bases
-            foreach (var symbol in Currencies.CurrencySymbols.Keys) 
+            foreach (var symbol in Currencies.CurrencySymbols.Keys)
             {
-                if (currencyPair.IndexOf(symbol) == 0) 
+                if (currencyPair.IndexOf(symbol) == 0)
                 {
                     bases.Add(symbol);
-                }   
+                }
             }
 
             // Find quotes
-            foreach (var symbol in Currencies.CurrencySymbols.Keys) 
-            {               
-                if (currencyPair.Contains(symbol)) 
+            foreach (var symbol in Currencies.CurrencySymbols.Keys)
+            {
+                if (currencyPair.Contains(symbol))
                 {
                     int start = currencyPair.IndexOf(symbol, 3);
-                    
+
                     if (start == 3 || start == 4)
-                    {   
+                    {
                         quotes.Add(symbol);
                     }
                 }
@@ -154,13 +155,13 @@ namespace QuantConnect.Securities.Forex
 
             // Make combinations (combined) and compare to currencyPair
             // When 100% match found, break the loop.
-            foreach(string b in bases) 
+            foreach (string b in bases)
             {
-                foreach(string q in quotes) 
+                foreach (string q in quotes)
                 {
                     string combined = b + q;
 
-                    if (combined.Equals(currencyPair)) 
+                    if (combined.Equals(currencyPair))
                     {
                         baseCurrency = b;
                         quoteCurrency = q;
@@ -170,16 +171,44 @@ namespace QuantConnect.Securities.Forex
                 }
             }
 
-            if(bases.Count == 0) 
+            if (bases.Count == 0)
             {
                 throw new ArgumentException($"No base currency found for the pair: {currencyPair}");
             }
             else
-            if (quotes.Count == 0) 
+            if (quotes.Count == 0)
             {
                 throw new ArgumentException($"No quote currency found for the pair: {currencyPair}");
             }
-            
+
+        }
+
+        /// <summary>
+        /// You have currencyPair AB and one known symbol (A or B). This function returns another one (B or A).
+        /// </summary>
+        /// <param name="currencyPair">Currency pair AB</param>
+        /// <param name="knownSymbol">Known part of the currencyPair (either A or B)</param>
+        /// <returns>Returns other part of currencyPair (either B or A)</returns>
+        public static string CurrencyPairDual(string currencyPair, string knownSymbol)
+        {
+            string CurrencyA = null;
+            string CurrencyB = null;
+
+            DecomposeCurrencyPair(currencyPair, out CurrencyA, out CurrencyB);
+
+            if (CurrencyA == knownSymbol)
+            {
+                return CurrencyB;
+            }
+            else
+            if (CurrencyB == knownSymbol)
+            {
+                return CurrencyA;
+            }
+            else
+            {
+                throw new ArgumentException($"The knownSymbol {knownSymbol} isn't contained in currencyPair {currencyPair}.");
+            }
         }
     }
 }

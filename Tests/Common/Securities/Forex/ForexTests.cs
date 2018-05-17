@@ -61,5 +61,32 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual("EUR", forex.BaseCurrencySymbol);
             Assert.AreEqual("USD", forex.QuoteCurrency.Symbol);
         }
+
+        [Test]
+        public void CurrencyPairDualForex()
+        {
+            string currencyPair = "EURUSD";
+
+            Assert.AreEqual(QuantConnect.Securities.Forex.Forex.CurrencyPairDual(currencyPair, "EUR"), "USD");
+            Assert.AreEqual(QuantConnect.Securities.Forex.Forex.CurrencyPairDual(currencyPair, "USD"), "EUR");
+        }
+
+        [Test]
+        public void CurrencyPairDualCrypto()
+        {
+            string currencyPair = "ETHBTC";
+
+            Assert.AreEqual(QuantConnect.Securities.Forex.Forex.CurrencyPairDual(currencyPair, "ETH"), "BTC");
+            Assert.AreEqual(QuantConnect.Securities.Forex.Forex.CurrencyPairDual(currencyPair, "BTC"), "ETH");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "The knownSymbol ZRX isn't contained in currencyPair ETHBTC.")]
+        public void CurrencyPairDualThrowsOnWrongKnownSymbol()
+        {
+            string currencyPair = "ETHBTC";
+
+            QuantConnect.Securities.Forex.Forex.CurrencyPairDual(currencyPair, "ZRX");
+        }
     }
 }
