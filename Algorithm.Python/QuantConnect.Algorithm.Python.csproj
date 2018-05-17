@@ -140,6 +140,7 @@
     <None Include="WarmupAlgorithm.py" />
     <None Include="WarmupHistoryAlgorithm.py" />
     <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+    <None Include="BasicTemplateFxcmVolumeAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

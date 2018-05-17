@@ -157,6 +157,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$0.50"},
             };
 
+            var basicTemplateFxcmVolumeStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "12"},
+                {"Average Win", "0.06%"},
+                {"Average Loss", "-0.35%"},
+                {"Compounding Annual Return", "-24.309%"},
+                {"Drawdown", "3.400%"},
+                {"Expectancy", "-0.892"},
+                {"Net Profit", "-2.189%"},
+                {"Sharpe Ratio", "-4.504"},
+                {"Loss Rate", "91%"},
+                {"Win Rate", "9%"},
+                {"Profit-Loss Ratio", "0.18"},
+                {"Alpha", "-0.535"},
+                {"Beta", "20.906"},
+                {"Annual Standard Deviation", "0.047"},
+                {"Annual Variance", "0.002"},
+                {"Information Ratio", "-4.835"},
+                {"Tracking Error", "0.047"},
+                {"Treynor Ratio", "-0.01"},
+                {"Total Fees", "$0.00"},
+            };
+
             var limitFillRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "34"},
@@ -1116,6 +1139,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateFxcmVolumeAlgorithm", basicTemplateFxcmVolumeStatistics, Language.CSharp),  
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CompositeAlphaModelFrameworkAlgorithm", compositeAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
@@ -1163,6 +1187,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("BasicTemplateFxcmVolumeAlgorithm", basicTemplateFxcmVolumeStatistics, Language.Python),  
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CompositeAlphaModelFrameworkAlgorithm", compositeAlphaModelFrameworkAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.Python),
