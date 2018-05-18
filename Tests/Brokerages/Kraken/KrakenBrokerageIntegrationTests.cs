@@ -35,43 +35,32 @@ namespace QuantConnect.Tests.Brokerages.Kraken
     public class KrakenBrokerageIntegrationTests : BrokerageTests
     {
         #region Properties
-        protected override Symbol Symbol {
-            get { return Symbol.Create("ETHBTC", SecurityType, Market.Kraken); }
-        }
+        protected override Symbol Symbol { get { return Symbol.Create("ETHBTC", SecurityType, Market.Kraken); } }
 
         /// <summary>
         ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType {
-            get { return SecurityType.Crypto; }
-        }
+        protected override SecurityType SecurityType { get { return SecurityType.Crypto; } }
 
         /// <summary>
-        ///     Gets a high price for the specified symbol so a limit sell won't fill
+        /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice {
-            get { return 0.2m; }
-        }
+        protected override decimal HighPrice { get { return 0.5m; } }
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice {
-            get { return 0.0001m; }
-        }
+        protected override decimal LowPrice { get { return 0.0001m; } }
 
         protected override decimal GetDefaultQuantity()
         {
-            return 0.1m;
+            return 0.05m;
         }
         #endregion
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            /* var algorithm = new Mock<IAlgorithm>();
-               algorithm.Setup(a => a.BrokerageModel).Returns(new KrakenBrokerageModel(AccountType.Cash)); */
-
-            string apiKey = Config.Get("Kraken-api-key");
+            string apiKey    = Config.Get("Kraken-api-key");
             string apiSecret = Config.Get("Kraken-api-secret");
 
             return new KrakenBrokerage(apiKey, apiSecret);
@@ -89,7 +78,8 @@ namespace QuantConnect.Tests.Brokerages.Kraken
         }
 
         // no stop limit support
-        public override TestCaseData[] OrderParameters {
+        public override TestCaseData[] OrderParameters
+        {
             get
             {
                 return new[]
@@ -100,6 +90,5 @@ namespace QuantConnect.Tests.Brokerages.Kraken
                 };
             }
         }
-
     }
 }

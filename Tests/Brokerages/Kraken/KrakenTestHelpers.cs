@@ -41,15 +41,10 @@ namespace QuantConnect.Tests.Brokerages.Kraken
         public static void AddOrder(KrakenBrokerage unit, int id, string brokerId, decimal quantity)
         {
             var order = new Orders.MarketOrder { BrokerId = new List<string> { brokerId }, Symbol = Btcusd, Quantity = quantity, Id = id };
-            //TODO: finish it
-            //unit.CachedOrderIDs.TryAdd(1, order);
-            //unit.FillSplit.TryAdd(id, new Fill(order));
 
+            unit.PlaceOrder(order);
+            
         }
 
-        public static WebSocketMessage GetArgs(string json)
-        {
-            return new WebSocketMessage(json);
-        }
     }
 }

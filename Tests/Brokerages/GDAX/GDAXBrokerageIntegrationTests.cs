@@ -76,6 +76,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         protected override void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90)
         {
+
             Assert.Pass("Order update not supported");
         }
 

@@ -50,7 +50,6 @@ namespace QuantConnect.Brokerages.Kraken
         public KrakenBrokerage(string key, string secret)
             : base("Kraken Brokerage")
         {
-
             _symbolMapper = new KrakenSymbolMapper();
 
             _api = new KrakenApi(_symbolMapper, key, secret);
@@ -276,7 +275,6 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
-
             return _api.GetTick(symbol);
         }
     }

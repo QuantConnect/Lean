@@ -139,7 +139,6 @@ namespace QuantConnect.Brokerages.Kraken
 
         public Tick GetTick(Symbol symbol)
         {
-
             string krakenSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(krakenSymbol);

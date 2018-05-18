@@ -62,8 +62,6 @@ namespace QuantConnect.Brokerages.Kraken
         /// <param name="rateLimitMilliseconds">The rate limit in milliseconds.</param>
         public KrakenRestApi(string key, string secret, int rateLimitMilliseconds = 5000)
         {
-            Configuration.Config.Get("kraken-api-key", "https://api.kraken.com");
-
             _url = "https://api.kraken.com";
             _version = 0;
             _key = key;
