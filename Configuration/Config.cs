@@ -30,7 +30,43 @@ namespace QuantConnect.Configuration
     public static class Config
     {
         //Location of the configuration file.
-        private const string ConfigurationFileName = "config.json";
+        private static string ConfigurationFileName = "config.json";
+
+        /// <summary>
+        /// Set configuration file on-fly
+        /// </summary>
+        /// <param name="fileName"></param>
+        public static void SetConfigurationFile(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                Log.Trace($"Using {fileName} as configuration file");
+                ConfigurationFileName = fileName;
+            }
+            else
+            {
+                Log.Error($"Configuration file {fileName} does not exist, using {ConfigurationFileName}");
+            }
+        }
+
+        /// <summary>
+        /// Merge CLI arguments with configuration file + load custom config file via CLI arg
+        /// </summary>
+        /// <param name="cliArguments"></param>
+        public static void MergeCommandLineArgumentsWithConfiguration(Dictionary<string, object> cliArguments)
+        {
+            if (cliArguments.ContainsKey("config"))
+            {
+                SetConfigurationFile(cliArguments["config"] as string);
+            }
+
+            var jsonArguments = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(cliArguments));
+            
+            Settings.Value.Merge(jsonArguments, new JsonMergeSettings
+            {
+                MergeArrayHandling = MergeArrayHandling.Union
+            });
+        }
 
         private static readonly Lazy<JObject> Settings = new Lazy<JObject>(() =>
         {

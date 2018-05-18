@@ -46,6 +46,12 @@ namespace QuantConnect.Lean.Launcher
                 Console.OutputEncoding = System.Text.Encoding.Unicode;
             }
 
+            // expect first argument to be config file name
+            if (args.Length > 0)
+            {
+                Config.MergeCommandLineArgumentsWithConfiguration(LeanArgumentParser.ParseArguments(args));
+            }
+
             var environment = Config.Get("environment");
             var liveMode = Config.GetBool("live-mode");
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
