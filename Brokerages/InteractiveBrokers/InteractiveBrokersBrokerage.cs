@@ -2007,7 +2007,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 return IB.TimeInForce.MarketOnOpen;
             }
-            if (order.Type == OrderType.MarketOnClose)
+
+            if (order.Type == OrderType.MarketOnClose || order.Type == OrderType.Vwap)
             {
                 return IB.TimeInForce.Day;
             }
