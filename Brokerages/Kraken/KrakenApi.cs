@@ -313,10 +313,10 @@ namespace QuantConnect.Brokerages.Kraken
         /// </summary>
         /// <param name="order">The order to be placed</param>
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
-        public override bool PlaceOrder(Order order)
+        public override bool PlaceOrder(Orders.Order order)
         {
 
-            KrakenOrder krakenOrder = new KrakenOrder();
+            Order krakenOrder = new Order();
 
             krakenOrder.Pair = SymbolMapper.GetBrokerageSymbol(order.Symbol);
 
@@ -348,7 +348,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// </summary>
         /// <param name="order">The new order information</param>
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-        public override bool UpdateOrder(Order order)
+        public override bool UpdateOrder(Orders.Order order)
         {
 
             //! UPDATE ORDER           
@@ -390,7 +390,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// </summary>
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
-        public override bool CancelOrder(Order order)
+        public override bool CancelOrder(Orders.Order order)
         {
 
             int sum = 0;
@@ -436,9 +436,9 @@ namespace QuantConnect.Brokerages.Kraken
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from IB</returns>
-        public override List<Order> GetOpenOrders()
+        public override List<Orders.Order> GetOpenOrders()
         {
-            List<Order> list = new List<Order>();
+            List<Orders.Order> list = new List<Orders.Order>();
 
             Dictionary<string, OrderInfo> orders = _restApi.GetOpenOrders();
 
@@ -464,7 +464,7 @@ namespace QuantConnect.Brokerages.Kraken
                     ""
                 );
 
-                var order = Order.CreateOrder(SOR);
+                var order = Orders.Order.CreateOrder(SOR);
                 list.Add(order);
             }
 

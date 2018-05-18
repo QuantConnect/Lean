@@ -782,7 +782,7 @@ namespace QuantConnect.Brokerages.Kraken
 
         #region Private User Trading
 
-        public AddOrderResult AddOrder(KrakenOrder order)
+        public AddOrderResult AddOrder(Order order)
         {
             var param = new Dictionary<string, string>();
             param.Add("pair", order.Pair);

@@ -60,8 +60,7 @@ namespace QuantConnect.Brokerages
         public KrakenBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
         {
-
-            //! KRAKEN DOES SUPPORT MARGIN BUT LETS DISABLE IT FOR NOW
+            //! Kraken support margin trading but it's disabled for now
             if (accountType == AccountType.Margin)
             {
                 throw new Exception("The Kraken brokerage does not currently support Margin trading.");
