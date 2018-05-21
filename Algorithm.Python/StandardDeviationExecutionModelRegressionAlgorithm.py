@@ -21,9 +21,9 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.StandardDeviationExecutionModel import StandardDeviationExecutionModel
 from datetime import timedelta
 
@@ -62,4 +62,4 @@ class StandardDeviationExecutionModelRegressionAlgorithm(QCAlgorithmFramework):
         self.SetExecution(StandardDeviationExecutionModel())
 
     def OnOrderEvent(self, orderEvent):
-        self.Log("{}: {}".format(self.Time, orderEvent))
+        self.Log(f"{self.Time}: {orderEvent}")

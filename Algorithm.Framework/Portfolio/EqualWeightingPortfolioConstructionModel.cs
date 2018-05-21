@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
         private List<Symbol> _removedSymbols;
-        private readonly HashSet<Security> _securities = new HashSet<Security>();
+        private readonly InsightCollection _insightCollection = new InsightCollection();
 
         /// <summary>
         /// Create portfolio targets from the specified insights
@@ -40,6 +40,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
         {
+            _insightCollection.AddRange(insights);
+
             var targets = new List<IPortfolioTarget>();
             if (_removedSymbols != null)
             {
@@ -48,16 +50,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 _removedSymbols = null;
             }
 
-            if (_securities.Count == 0)
+            if (insights.Length == 0)
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
+            
+            // Get symbols that have emit insights and still in the universe
+            var symbols = _insightCollection.Select(x => x.Symbol).Distinct().ToList();
 
             // give equal weighting to each security
-            var percent = 1m / _securities.Count;
-            foreach (var insight in insights)
+            var percent = 1m / symbols.Count;
+            foreach (var symbol in symbols)
             {
-                targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent));
+                List<Insight> activeInsights;
+                if (_insightCollection.TryGetValue(symbol, out activeInsights))
+                {
+                    var direction = activeInsights.Last().Direction;
+                    targets.Add(PortfolioTarget.Percent(algorithm, symbol, (int)direction * percent));
+                }
             }
 
             return targets;
@@ -73,7 +83,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // save securities removed so we can zero out our holdings
             _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
 
-            NotifiedSecurityChanges.UpdateCollection(_securities, changes);
+            // remove the insights of the removed symbol from the collection 
+            foreach (var removedSymbol in _removedSymbols)
+            {
+                List<Insight> insights;
+                if (_insightCollection.TryGetValue(removedSymbol, out insights))
+                {
+                    foreach (var insight in insights.ToList())
+                    {
+                        _insightCollection.Remove(insight);
+                    }
+                }
+            }
         }
     }
 }

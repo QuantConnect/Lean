@@ -21,9 +21,9 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.VolumeWeightedAveragePriceExecutionModel import VolumeWeightedAveragePriceExecutionModel
 from datetime import timedelta
 
@@ -63,7 +63,7 @@ class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm(QCAlgorithmFra
         self.InsightsGenerated += self.OnInsightsGenerated
 
     def OnInsightsGenerated(self, algorithm, data):
-        self.Log('{}: {}'.format(self.Time, ', '.join(str(x) for x in data.Insights)))
+        self.Log(f"{self.Time}: {', '.join(str(x) for x in data.Insights)}")
 
     def OnOrderEvent(self, orderEvent):
-        self.Log("{}: {}".format(self.Time, orderEvent))
+        self.Log(f"{self.Time}: {orderEvent}")
