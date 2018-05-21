@@ -56,10 +56,10 @@ namespace QuantConnect.Tests.Common.Securities
         {
             string tooLongString = "";
 
-            for (int i = 0; i < Currencies.MaxCharactersPerCurrencyCode + 2; i++)
+            for (int i = 0; i < Currencies.MaxCharactersPerCurrencyCode + 1; i++)
                 tooLongString += "X";
 
-            var cash = new Cash("too long", 0, 0);
+            var cash = new Cash(tooLongString, 0, 0);
         }
 
         [Test]
