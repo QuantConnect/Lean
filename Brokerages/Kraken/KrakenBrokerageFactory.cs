@@ -54,10 +54,8 @@ namespace QuantConnect.Brokerages.Kraken
             {
                 return new Dictionary<string, string>
                 {
-                    { "kraken-environment", Config.Get("kraken-environment") },
-                    { "kraken-access-token", Config.Get("kraken-access-token") },
-                    { "kraken-account-id", Config.Get("kraken-account-id") },
-                    { "kraken-agent", Config.Get("kraken-agent", "kraken-default-agent") }
+                    { "kraken-api-key", Config.Get("kraken-api-key") },
+                    { "kraken-api-secret", Config.Get("kraken-api-secret") }
                 };
             }
         }
@@ -78,7 +76,7 @@ namespace QuantConnect.Brokerages.Kraken
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
 
-            var required = new[] { "kraken-access-token", "kraken-account-id" };
+            var required = new[] { "kraken-api-key", "kraken-api-secret" };
 
             foreach (var item in required)
             {
@@ -88,8 +86,8 @@ namespace QuantConnect.Brokerages.Kraken
 
             var errors = new List<string>();
 
-            var accessToken = Read<string>(job.BrokerageData, "kraken-access-token", errors);
-            var accountId = Read<string>(job.BrokerageData, "kraken-account-id", errors);
+            var apiKey = Read<string>(job.BrokerageData, "kraken-api-key", errors);
+            var apiSecret = Read<string>(job.BrokerageData, "kraken-api-secret", errors);
 
             if (errors.Count != 0)
             {
@@ -98,7 +96,7 @@ namespace QuantConnect.Brokerages.Kraken
             }
 
             //var brokerage = new KrakenBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId, agent);
-            var brokerage = new KrakenBrokerage(accessToken, accountId);
+            var brokerage = new KrakenBrokerage(apiKey, apiSecret);
 
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 

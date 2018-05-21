@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.Kraken
         }
 
         /// <summary>
-        /// Converts a Lean symbol instance to an Oanda symbol
+        /// Converts a Lean symbol instance to an Kraken symbol
         /// </summary>
         /// <param name="symbol">A Lean symbol instance</param>
         /// <returns>The Kraken symbol</returns>
@@ -110,7 +110,7 @@ namespace QuantConnect.Brokerages.Kraken
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
-            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
+            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Crypto)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
             var brokerageSymbol = ConvertLeanSymbolToKrakenSymbol(symbol.Value);
@@ -206,7 +206,7 @@ namespace QuantConnect.Brokerages.Kraken
             }
             catch
             {
-                throw new DataType.KrakenException("Unknown Kraken Symbol");
+                throw new DataType.KrakenException($"Unknown Kraken Symbol: {krakenSymbol}");
             }
         }
 
@@ -222,7 +222,7 @@ namespace QuantConnect.Brokerages.Kraken
             }
             catch
             {
-                throw new DataType.KrakenException("Unknown Lean Symbol - unsupported by Kraken");
+                throw new DataType.KrakenException($"Unknown Lean Symbol {leanSymbol}, unsupported by Kraken");
             }
 
         }

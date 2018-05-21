@@ -29,11 +29,10 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 
-//commented because it causes compile errors. This test was copied from GDAX unit tests and had 0 work done on. It's here for a future reminder of "TODO"
-/*
-namespace QuantConnect.Tests.Brokerages.Kraken
+// commented because it causes compile errors. This test was copied from GDAX unit tests and had 0 work done on. It's here for a future reminder of "TODO"
+/*namespace QuantConnect.Tests.Brokerages.Kraken
 {
-
+    
     [TestFixture]
     public class KrakenBrokerageTests
     {
@@ -68,26 +67,26 @@ namespace QuantConnect.Tests.Brokerages.Kraken
             _unit = new KrakenBrokerage(apiKey, apiSecret);
 
             // kraken responses
-            _orderData      = File.ReadAllText("TestData//gdax_order.txt");
-            _matchData      = File.ReadAllText("TestData//gdax_match.txt");
-            _openOrderData  = File.ReadAllText("TestData//gdax_openOrders.txt");
-            _accountsData   = File.ReadAllText("TestData//gdax_accounts.txt");
-            _holdingData    = File.ReadAllText("TestData//gdax_holding.txt");
-            _orderByIdData  = File.ReadAllText("TestData//gdax_orderById.txt");
-            _tickerData     = File.ReadAllText("TestData//gdax_ticker.txt");
+            _orderData      = File.ReadAllText("TestData//kraken_order.txt");
+            _matchData      = File.ReadAllText("TestData//kraken_match.txt");
+            _openOrderData  = File.ReadAllText("TestData//kraken_openOrders.txt");
+            _accountsData   = File.ReadAllText("TestData//kraken_accounts.txt");
+            _holdingData    = File.ReadAllText("TestData//kraken_holding.txt");
+            _orderByIdData  = File.ReadAllText("TestData//kraken_orderById.txt");
+            _tickerData     = File.ReadAllText("TestData//kraken_ticker.txt");
 
-            _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            _symbol = Symbol.Create("ETHEUR", SecurityType.Crypto, Market.Kraken);
 
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
             {
-                Content = File.ReadAllText("TestData//gdax_tick.txt"),
+                Content = File.ReadAllText("TestData//kraken_tick.txt"),
                 StatusCode = HttpStatusCode.OK
             });
 
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/orders/" + _brokerId) || r.Resource.StartsWith("/orders/" + _matchBrokerId))))           
             .Returns(new RestSharp.RestResponse
             {
-                Content = File.ReadAllText("TestData//gdax_orderById.txt"),
+                Content = File.ReadAllText("TestData//kraken_orderById.txt"),
                 StatusCode = HttpStatusCode.OK
             });
 
@@ -116,13 +115,16 @@ namespace QuantConnect.Tests.Brokerages.Kraken
         [Test]
         public void IsConnectedTest()
         {
+            // kraken API is rest based, so being connected is dependant on API being online
+            
             _wss.Setup(w => w.IsOpen).Returns(true);
             Assert.IsTrue(_unit.IsConnected);
+
             _wss.Setup(w => w.IsOpen).Returns(false);
             Assert.IsFalse(_unit.IsConnected);
         }
 
-        [Test]
+       /* [Test]
         public void ConnectTest()
         {
             _wss.Setup(m => m.Connect()).Callback(() => { _wss.Setup(m => m.IsOpen).Returns(true); }).Verifiable();

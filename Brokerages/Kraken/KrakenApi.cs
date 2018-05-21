@@ -218,7 +218,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected { get; }
+        public override bool IsConnected { get { return true; } }
 
         #region TRANSLATORS
         private string TranslateDirectionToKraken(OrderDirection direction)
@@ -488,6 +488,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
+            Log.Trace("GetCashBalance()");
             // WARNING!
             // Requires
             // CashBook.AccountCurrency = "ETH";

@@ -52,7 +52,145 @@ namespace QuantConnect.Brokerages.Kraken
         private readonly int _version;
         private readonly string _key;
         private readonly string _secret;
-        private readonly int _rateLimitMilliseconds = 5000;
+        private readonly int _rateLimitMilliseconds = 4000;
+
+        /*class InnerRestClient
+        {*/
+            RateGate LimitGate { get; set; }
+
+            private string BuildPostData(Dictionary<string, string> param)
+            {
+                if (param == null)
+                    return "";
+
+                StringBuilder b = new StringBuilder();
+                foreach (var item in param)
+                    b.Append(string.Format("&{0}={1}", item.Key, item.Value));
+
+                try { return b.ToString().Substring(1); }
+                catch (Exception) { return ""; }
+            }
+
+            public string QueryPublic(string method, Dictionary<string, string> param = null)
+            {
+                LimitGate.WaitToProceed();
+
+                string address = string.Format(CultureInfo.InvariantCulture, "{0}/{1}/public/{2}", _url, _version, method);
+
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(new Uri(address));
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+                webRequest.Method = "POST";
+
+                string postData = BuildPostData(param);
+
+                if (!String.IsNullOrEmpty(postData))
+                {
+                    using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+                        writer.Write(postData);
+                }
+
+                try
+                {
+                    using (WebResponse webResponse = webRequest.GetResponse())
+                    {
+                        Stream str = webResponse.GetResponseStream();
+                        using (StreamReader sr = new StreamReader(str))
+                            return sr.ReadToEnd();
+                    }
+                }
+                catch (WebException wex)
+                {
+                    using (HttpWebResponse response = (HttpWebResponse)wex.Response)
+                    {
+                        if (response == null)
+                            throw;
+
+                        Stream str = response.GetResponseStream();
+                        using (StreamReader sr = new StreamReader(str))
+                        {
+                            if (response.StatusCode != HttpStatusCode.InternalServerError)
+                                throw;
+                            return sr.ReadToEnd();
+                        }
+                    }
+                }
+            }
+
+            private string QueryPrivate(string method, Dictionary<string, string> param = null)
+            {
+                LimitGate.WaitToProceed();
+
+                // generate a 64 bit nonce using a timestamp at tick resolution
+                Int64 nonce = DateTime.UtcNow.Ticks;
+
+                string postData = BuildPostData(param);
+                if (!String.IsNullOrEmpty(postData))
+                    postData = "&" + postData;
+                postData = "nonce=" + nonce + postData;
+
+                string path = string.Format(CultureInfo.InvariantCulture, "/{0}/private/{1}", _version, method);
+                string address = _url + path;
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(address);
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+                webRequest.Method = "POST";
+
+                AddHeaders(webRequest, nonce, postData, path);
+
+                if (postData != null)
+                {
+                    using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+                        writer.Write(postData);
+                }
+
+                //Make the request
+                try
+                {
+                    using (WebResponse webResponse = webRequest.GetResponse())
+                    {
+                        Stream str = webResponse.GetResponseStream();
+                        using (StreamReader sr = new StreamReader(str))
+                            return sr.ReadToEnd();
+                    }
+                }
+                catch (WebException wex)
+                {
+                    using (HttpWebResponse response = (HttpWebResponse)wex.Response)
+                    {
+                        Stream str = response.GetResponseStream();
+                        if (str == null)
+                            throw;
+
+                        using (StreamReader sr = new StreamReader(str))
+                        {
+                            if (response.StatusCode != HttpStatusCode.InternalServerError)
+                                throw;
+                            return sr.ReadToEnd();
+                        }
+                    }
+                }
+            }
+
+            private void AddHeaders(HttpWebRequest webRequest, Int64 nonce, string postData, string path)
+            {
+                webRequest.Headers.Add("API-Key", _key);
+
+                byte[] base64DecodedSecred = Convert.FromBase64String(_secret);
+
+                var np = nonce + Convert.ToChar(0) + postData;
+
+                var pathBytes = Encoding.UTF8.GetBytes(path);
+                var hash256Bytes = sha256_hash(np);
+                var z = new byte[pathBytes.Count() + hash256Bytes.Count()];
+                pathBytes.CopyTo(z, 0);
+                hash256Bytes.CopyTo(z, pathBytes.Count());
+
+                var signature = getHash(base64DecodedSecred, z);
+
+                webRequest.Headers.Add("API-Sign", Convert.ToBase64String(signature));
+            }
+        /*
+        }
+        */
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Kraken"/> class.
@@ -67,137 +205,10 @@ namespace QuantConnect.Brokerages.Kraken
             _key = key;
             _secret = secret;
             _rateLimitMilliseconds = rateLimitMilliseconds;
+
+            LimitGate = new RateGate(1, TimeSpan.FromMilliseconds(_rateLimitMilliseconds));
         }
 
-        private string BuildPostData(Dictionary<string, string> param)
-        {
-            if (param == null)
-                return "";
-
-            StringBuilder b = new StringBuilder();
-            foreach (var item in param)
-                b.Append(string.Format("&{0}={1}", item.Key, item.Value));
-
-            try { return b.ToString().Substring(1); }
-            catch (Exception) { return ""; }
-        }
-
-        public string QueryPublic(string method, Dictionary<string, string> param = null)
-        {
-            RateLimit();
-
-            string address = string.Format(CultureInfo.InvariantCulture, "{0}/{1}/public/{2}", _url, _version, method);
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(new Uri(address));
-            webRequest.ContentType = "application/x-www-form-urlencoded";
-            webRequest.Method = "POST";
-
-            string postData = BuildPostData(param);
-
-            if (!String.IsNullOrEmpty(postData))
-            {
-                using (var writer = new StreamWriter(webRequest.GetRequestStream()))
-                    writer.Write(postData);
-            }
-
-            try
-            {
-                using (WebResponse webResponse = webRequest.GetResponse())
-                {
-                    Stream str = webResponse.GetResponseStream();
-                    using (StreamReader sr = new StreamReader(str))
-                        return sr.ReadToEnd();
-                }
-            }
-            catch (WebException wex)
-            {
-                using (HttpWebResponse response = (HttpWebResponse)wex.Response)
-                {
-                    if (response == null)
-                        throw;
-
-                    Stream str = response.GetResponseStream();
-                    using (StreamReader sr = new StreamReader(str))
-                    {
-                        if (response.StatusCode != HttpStatusCode.InternalServerError)
-                            throw;
-                        return sr.ReadToEnd();
-                    }
-                }
-            }
-        }
-
-        private string QueryPrivate(string method, Dictionary<string, string> param = null)
-        {
-            RateLimit();
-
-            // generate a 64 bit nonce using a timestamp at tick resolution
-            Int64 nonce = DateTime.UtcNow.Ticks;
-
-            string postData = BuildPostData(param);
-            if (!String.IsNullOrEmpty(postData))
-                postData = "&" + postData;
-            postData = "nonce=" + nonce + postData;
-
-            string path = string.Format(CultureInfo.InvariantCulture, "/{0}/private/{1}", _version, method);
-            string address = _url + path;
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(address);
-            webRequest.ContentType = "application/x-www-form-urlencoded";
-            webRequest.Method = "POST";
-
-            AddHeaders(webRequest, nonce, postData, path);
-
-            if (postData != null)
-            {
-                using (var writer = new StreamWriter(webRequest.GetRequestStream()))
-                    writer.Write(postData);
-            }
-
-            //Make the request
-            try
-            {
-                using (WebResponse webResponse = webRequest.GetResponse())
-                {
-                    Stream str = webResponse.GetResponseStream();
-                    using (StreamReader sr = new StreamReader(str))
-                        return sr.ReadToEnd();
-                }
-            }
-            catch (WebException wex)
-            {
-                using (HttpWebResponse response = (HttpWebResponse)wex.Response)
-                {
-                    Stream str = response.GetResponseStream();
-                    if (str == null)
-                        throw;
-
-                    using (StreamReader sr = new StreamReader(str))
-                    {
-                        if (response.StatusCode != HttpStatusCode.InternalServerError)
-                            throw;
-                        return sr.ReadToEnd();
-                    }
-                }
-            }
-        }
-
-        private void AddHeaders(HttpWebRequest webRequest, Int64 nonce, string postData, string path)
-        {
-            webRequest.Headers.Add("API-Key", _key);
-
-            byte[] base64DecodedSecred = Convert.FromBase64String(_secret);
-
-            var np = nonce + Convert.ToChar(0) + postData;
-
-            var pathBytes = Encoding.UTF8.GetBytes(path);
-            var hash256Bytes = sha256_hash(np);
-            var z = new byte[pathBytes.Count() + hash256Bytes.Count()];
-            pathBytes.CopyTo(z, 0);
-            hash256Bytes.CopyTo(z, pathBytes.Count());
-
-            var signature = getHash(base64DecodedSecred, z);
-
-            webRequest.Headers.Add("API-Sign", Convert.ToBase64String(signature));
-        }
 
         #region Public Market Data
 
@@ -256,7 +267,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <exception cref="KrakenException"></exception>
         public Dictionary<string, AssetPair> GetAssetPairs(string info = null, string pair = null)
         {
-
+            Log.Trace($"KrakenRestApi.GetAssetPairs({info}, {pair})");
             var param = new Dictionary<string, string>();
 
             if (info != null)
@@ -277,6 +288,11 @@ namespace QuantConnect.Brokerages.Kraken
         /// <param name="pair">Comma delimited list of asset pairs to get info on</param>
         public Dictionary<string, Ticker> GetTicker(string pair)
         {
+            if(pair == "")
+                return new Dictionary<string, Ticker>();
+            
+            Log.Trace($"KrakenRestApi.GetTicker({pair})");
+
             var param = new Dictionary<string, string>();
             param.Add("pair", pair);
 
@@ -391,12 +407,12 @@ namespace QuantConnect.Brokerages.Kraken
 
                         trade.Add(new Trade()
                         {
-                            Price = a[0].Value<decimal>(),
+                            Price  = a[0].Value<decimal>(),
                             Volume = a[1].Value<decimal>(),
-                            Time = a[2].Value<int>(),
-                            Side = a[3].Value<string>(),
-                            Type = a[4].Value<string>(),
-                            Misc = a[5].Value<string>()
+                            Time   = a[2].Value<int>(),
+                            Side   = a[3].Value<string>(),
+                            Type   = a[4].Value<string>(),
+                            Misc   = a[5].Value<string>()
                         });
                     }
 
@@ -473,6 +489,8 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns></returns>
         public Dictionary<string, decimal> GetAccountBalance()
         {
+            Log.Trace("KrakenRestApi.GetAccountBalance()");
+
             var res = QueryPrivate("Balance");
             var ret = JsonConvert.DeserializeObject<GetBalanceResponse>(res);
             if (ret.Error.Count != 0)
@@ -1032,24 +1050,11 @@ namespace QuantConnect.Brokerages.Kraken
 
         #endregion Helper methods
 
-        #region Rate limiter
+        #region Testing
 
-        private long lastTicks = 0;
-        private object thisLock = new object();
 
-        private void RateLimit()
-        {
 
-            lock (thisLock)
-            {
-                long elapsedTicks = DateTime.Now.Ticks - lastTicks;
-                TimeSpan elapsedSpan = new TimeSpan(elapsedTicks);
-                if (elapsedSpan.TotalMilliseconds < _rateLimitMilliseconds)
-                    Thread.Sleep(_rateLimitMilliseconds - (int)elapsedSpan.TotalMilliseconds);
-                lastTicks = DateTime.Now.Ticks;
-            }
-        }
 
-        #endregion Rate limiter
+        #endregion
     }
 }

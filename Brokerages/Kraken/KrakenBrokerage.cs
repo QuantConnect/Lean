@@ -113,8 +113,8 @@ namespace QuantConnect.Brokerages.Kraken
 
             if (KrakenSymbols.Count > 0)
             {
-
                 var quotes = _api.GetRates(KrakenSymbols);
+                
                 foreach (var holding in holdings)
                 {
                     var KrakenSymbol = _symbolMapper.GetBrokerageSymbol(holding.Symbol);
