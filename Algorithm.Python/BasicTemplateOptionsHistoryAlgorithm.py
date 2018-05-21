@@ -41,13 +41,19 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
         self.SetCash(1000000)
 
         option = self.AddOption("GOOG")
-
-        option.PriceModel = OptionPriceModels.CrankNicolsonFD()
+        # add the initial contract filter 
         option.SetFilter(-2,2, timedelta(0), timedelta(180))
 
+        # set the pricing model for Greeks and volatility
+        # find more pricing models https://www.quantconnect.com/lean/documentation/topic27704.html
+        option.PriceModel = OptionPriceModels.CrankNicolsonFD()
+        # set the warm-up period for the pricing model
+        self.SetWarmUp(TimeSpan.FromDays(4))
+        # set the benchmark to be the initial cash
         self.SetBenchmark(lambda x: 1000000)
 
     def OnData(self,slice):
+        if self.IsWarmingUp: return
         if not self.Portfolio.Invested:
             for chain in slice.OptionChains:
                 volatility = self.Securities[chain.Key.Underlying].VolatilityModel.Volatility
