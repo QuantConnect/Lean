@@ -39,10 +39,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             var option = AddOption("GOOG");
-
-            option.PriceModel = OptionPriceModels.CrankNicolsonFD();
+            // add the initial contract filter 
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
+            // set the pricing model for Greeks and volatility
+            // find more pricing models https://www.quantconnect.com/lean/documentation/topic27704.html
+            option.PriceModel = OptionPriceModels.CrankNicolsonFD();
+            // set the warm-up period for the pricing model
+            SetWarmup(TimeSpan.FromDays(4));
+            // set the benchmark to be the initial cash
             SetBenchmark(d => 1000000);
         }
 
@@ -52,6 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            if (IsWarmingUp) return;
             if (!Portfolio.Invested)
             {
                 foreach (var chain in slice.OptionChains)
