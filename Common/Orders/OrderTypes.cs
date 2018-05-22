@@ -78,9 +78,14 @@ namespace QuantConnect.Orders
         Day,
 
         /// <summary>
-        /// Order valid until a custom set date time value.
+        /// Order valid until a specific date/time value (same as GTD).
         /// </summary>
-        Custom
+        GoodTilDate,
+
+        /// <summary>
+        /// Order valid until a specific date/time value (same as GoodTilDate).
+        /// </summary>
+        GTD = GoodTilDate
     }
 
     /// <summary>

@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using QuantConnect.Brokerages;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Orders
 {
@@ -106,17 +107,9 @@ namespace QuantConnect.Orders
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
             var timeInForce = jObject["TimeInForce"] ?? jObject["Duration"];
-            if (timeInForce != null)
-            {
-                if (timeInForce is JValue)
-                {
-                    order.Properties.TimeInForce = (TimeInForceType)timeInForce.Value<int>();
-                }
-                else
-                {
-                    order.Properties.TimeInForce = timeInForce.ToObject<TimeInForce>();
-                }
-            }
+            order.Properties.TimeInForce = timeInForce != null
+                ? CreateTimeInForce(timeInForce, jObject)
+                : TimeInForce.GoodTilCanceled;
 
             string market = Market.USA;
 
@@ -200,6 +193,34 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException();
             }
             return order;
+        }
+
+        /// <summary>
+        /// Creates a Time In Force of the correct type
+        /// </summary>
+        private static TimeInForce CreateTimeInForce(JToken timeInForce, JObject jObject)
+        {
+            if (timeInForce is JValue)
+            {
+                return (TimeInForceType)timeInForce.Value<int>();
+            }
+
+            var timeInForceType = (TimeInForceType)timeInForce["Type"].Value<int>();
+            switch (timeInForceType)
+            {
+                case TimeInForceType.GoodTilCanceled:
+                    return new GoodTilCanceledTimeInForce();
+
+                case TimeInForceType.Day:
+                    return new DayTimeInForce();
+
+                case TimeInForceType.GoodTilDate:
+                    var expiry = timeInForce["Expiry"].Value<DateTime>();
+                    return new GoodTilDateTimeInForce(expiry);
+
+                default:
+                    throw new ArgumentOutOfRangeException("Unsupported TimeInForce type: " + timeInForceType);
+            }
         }
     }
 }

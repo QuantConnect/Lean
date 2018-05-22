@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -39,14 +38,6 @@ namespace QuantConnect.Brokerages.Backtesting
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
         private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
-
-        private readonly Dictionary<TimeInForce, ITimeInForceHandler> _timeInForceHandlers = new Dictionary<TimeInForce, ITimeInForceHandler>
-        {
-            { TimeInForce.GoodTilCanceled, new GoodTilCanceledTimeInForceHandler() },
-            { TimeInForce.Day, new DayTimeInForceHandler() },
-            // Custom time in force will be renamed to GTD soon and will have its own new handler
-            { TimeInForce.Custom, new GoodTilCanceledTimeInForceHandler() }
-        };
 
         /// <summary>
         /// This is the algorithm under test
@@ -286,10 +277,8 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var timeInForceHandler = _timeInForceHandlers[order.TimeInForce];
-
                     // check if the time in force handler allows fills
-                    if (timeInForceHandler.IsOrderExpired(security, order))
+                    if (order.TimeInForce.IsOrderExpired(security, order))
                     {
                         OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m)
                         {
@@ -386,7 +375,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     foreach (var fill in fills)
                     {
                         // check if the fill should be emitted
-                        if (!timeInForceHandler.IsFillValid(security, order, fill))
+                        if (!order.TimeInForce.IsFillValid(security, order, fill))
                         {
                             break;
                         }

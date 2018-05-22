@@ -14,64 +14,27 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Orders
+namespace QuantConnect.Orders.TimeInForces
 {
     /// <summary>
-    /// Time In Force - defines the length of time over which an order will continue working before it is canceled
+    /// Good Til Date Time In Force - order expires and will be cancelled on a fixed date/time
     /// </summary>
-    public abstract class TimeInForce : IEquatable<TimeInForce>, ITimeInForceHandler
+    public class GoodTilDateTimeInForce : TimeInForce
     {
         /// <summary>
-        /// Gets a <see cref="TimeInForce"/> instance with <see cref="TimeInForceType.GoodTilCanceled"/> type
+        /// The date/time on which the order will expire and will be cancelled
         /// </summary>
-        public static readonly TimeInForce GoodTilCanceled = new GoodTilCanceledTimeInForce();
+        public DateTime Expiry { get; }
 
         /// <summary>
-        /// Gets a <see cref="TimeInForce"/> instance with <see cref="TimeInForceType.Day"/> type
+        /// Initializes a new instance of the <see cref="GoodTilDateTimeInForce"/> class
         /// </summary>
-        public static readonly TimeInForce Day = new DayTimeInForce();
-
-        /// <summary>
-        /// The type of Time In Force
-        /// </summary>
-        public TimeInForceType Type { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimeInForce"/> class
-        /// </summary>
-        protected TimeInForce(TimeInForceType type)
+        public GoodTilDateTimeInForce(DateTime expiry)
+            : base(TimeInForceType.GoodTilDate)
         {
-            Type = type;
-        }
-
-        /// <summary>
-        /// Converts a <see cref="TimeInForceType"/> value to a new <see cref="TimeInForce"/> instance.
-        /// </summary>
-        public static implicit operator TimeInForce(TimeInForceType type)
-        {
-            switch (type)
-            {
-                case TimeInForceType.GoodTilCanceled:
-                    return new GoodTilCanceledTimeInForce();
-
-                case TimeInForceType.Day:
-                    return new DayTimeInForce();
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, $"Implicit conversion from TimeInForceType.{type} to TimeInForce not supported.");
-            }
-        }
-
-        /// <summary>
-        /// Returns a <see cref="TimeInForceType"/> value from a <see cref="TimeInForce"/> instance.
-        /// </summary>
-        public static implicit operator TimeInForceType(TimeInForce timeInForce)
-        {
-            return timeInForce.Type;
+            Expiry = expiry;
         }
 
         /// <summary>
@@ -80,13 +43,13 @@ namespace QuantConnect.Orders
         /// <param name="left">The left operand</param>
         /// <param name="right">The right operand</param>
         /// <returns>True if both symbols are equal, otherwise false</returns>
-        public static bool operator ==(TimeInForce left, TimeInForce right)
+        public static bool operator ==(GoodTilDateTimeInForce left, GoodTilDateTimeInForce right)
         {
             if (ReferenceEquals(left, right)) return true;
             if (ReferenceEquals(left, null)) return false;
             if (ReferenceEquals(right, null)) return false;
 
-            return left.Type == right.Type;
+            return left.Equals(right);
         }
 
         /// <summary>
@@ -95,22 +58,22 @@ namespace QuantConnect.Orders
         /// <param name="left">The left operand</param>
         /// <param name="right">The right operand</param>
         /// <returns>True if both symbols are not equal, otherwise false</returns>
-        public static bool operator !=(TimeInForce left, TimeInForce right)
+        public static bool operator !=(GoodTilDateTimeInForce left, GoodTilDateTimeInForce right)
         {
             return !(left == right);
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="TimeInForce"/> is equal to the current <see cref="TimeInForce"/>.
+        /// Determines whether the specified <see cref="GoodTilDateTimeInForce"/> is equal to the current <see cref="GoodTilDateTimeInForce"/>.
         /// </summary>
         /// <param name="obj">The object to compare with the current object. </param>
         /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
-        public bool Equals(TimeInForce obj)
+        public bool Equals(GoodTilDateTimeInForce obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
 
-            return Type.Equals(obj.Type);
+            return Type.Equals(obj.Type) && Expiry.Equals(obj.Expiry);
         }
 
         /// <summary>
@@ -124,10 +87,13 @@ namespace QuantConnect.Orders
             if (ReferenceEquals(this, obj)) return true;
 
             if (obj is TimeInForceType)
-                return (TimeInForceType) obj == Type;
+                return (TimeInForceType)obj == Type;
 
-            var other = obj as TimeInForce;
-            return other != null && Type.Equals(other.Type);
+            var gtd = obj as GoodTilDateTimeInForce;
+            if (gtd != null)
+                return Type.Equals(gtd.Type) && Expiry.Equals(gtd.Expiry);
+
+            return false;
         }
 
         /// <summary>
@@ -136,7 +102,7 @@ namespace QuantConnect.Orders
         /// <returns>A hash code for the current <see cref="TimeInForce"/>.</returns>
         public override int GetHashCode()
         {
-            return Type.GetHashCode();
+            return (Type.GetHashCode() * 397) ^ Expiry.GetHashCode();
         }
 
         /// <summary>
@@ -145,7 +111,11 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to be checked</param>
         /// <returns>Returns true if the order has expired, false otherwise</returns>
-        public abstract bool IsOrderExpired(Security security, Order order);
+        public override bool IsOrderExpired(Security security, Order order)
+        {
+            // TODO:
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Checks if an order fill is valid
@@ -154,6 +124,9 @@ namespace QuantConnect.Orders
         /// <param name="order">The order to be checked</param>
         /// <param name="fill">The order fill to be checked</param>
         /// <returns>Returns true if the order fill can be emitted, false otherwise</returns>
-        public abstract bool IsFillValid(Security security, Order order, OrderEvent fill);
+        public override bool IsFillValid(Security security, Order order, OrderEvent fill)
+        {
+            return true;
+        }
     }
 }

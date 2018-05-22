@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ using QuantConnect.Brokerages.Oanda.RestV1.Session;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using Order = QuantConnect.Orders.Order;
 
@@ -71,7 +72,7 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from Oanda</returns>
@@ -770,8 +771,9 @@ namespace QuantConnect.Brokerages.Oanda
                 qcOrder.Id = orderByBrokerageId.Id;
             }
 
-            qcOrder.Properties.TimeInForce = TimeInForce.Custom;
-            qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
+            var expiry = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
+            qcOrder.Properties.TimeInForce = new GoodTilDateTimeInForce(expiry);
+            qcOrder.DurationValue = expiry;
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
 
             return qcOrder;
@@ -842,13 +844,13 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     case OrderDirection.Buy:
                         //Limit Order Does not like Lower Bound Values == Limit Price value
-                        //Don't set bounds when placing limit orders. 
+                        //Don't set bounds when placing limit orders.
                         //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
                         break;
 
                     case OrderDirection.Sell:
                         //Limit Order Does not like Lower Bound Values == Limit Price value
-                        //Don't set bounds when placing limit orders. 
+                        //Don't set bounds when placing limit orders.
                         //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
                         break;
                 }

@@ -105,7 +105,7 @@ namespace QuantConnect.Orders
         public OrderStatus Status { get; internal set; }
 
         /// <summary>
-        /// Order Time In Force - GTC or Day. Day not supported in backtests.
+        /// Order Time In Force
         /// </summary>
         public TimeInForce TimeInForce => Properties.TimeInForce;
 
