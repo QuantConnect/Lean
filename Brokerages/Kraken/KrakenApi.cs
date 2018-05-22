@@ -41,7 +41,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Orders;
-
+using RestSharp;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// </summary>
         protected KrakenSymbolMapper SymbolMapper;
 
-
+        protected IRestClient RateClient;
         /// <summary>
         /// Initializes a new instance of the <see cref="Kraken"/> class.
         /// </summary>
@@ -104,12 +104,15 @@ namespace QuantConnect.Brokerages.Kraken
         public KrakenApi(KrakenSymbolMapper symbolMapper, string key, string secret, int rateLimitMilliseconds = 5000)
             : base("Kraken Brokerage")
         {
+            // copied from GDAX
+            RateClient = new RestClient("http://api.fixer.io/latest?base=usd");
 
             _restApi = new KrakenRestApi(key, secret, rateLimitMilliseconds);
 
             this.SymbolMapper = symbolMapper;
 
-            // symbolMapper.UpdateSymbols(_restApi);
+            // Updates known symbols
+            symbolMapper.UpdateSymbols(_restApi);
         }
 
         #region IDataQueueHandler
@@ -180,15 +183,22 @@ namespace QuantConnect.Brokerages.Kraken
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
 
+
             foreach (Symbol symbol in symbols)
+            {
+                if (symbol.Value.Contains("UNIVERSE") || symbol.SecurityType != SecurityType.Forex && symbol.SecurityType != SecurityType.Crypto)
+                {
+                    continue;
+                }
+
                 SubscribedSymbols.Add(symbol);
+            }
         }
 
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-
             foreach (Symbol symbol in symbols)
-                SubscribedSymbols.Remove(symbol);
+                SubscribedSymbols.RemoveWhere(subscribedSymbol => subscribedSymbol.Value == symbol.Value);
         }
 
         #endregion
@@ -223,7 +233,6 @@ namespace QuantConnect.Brokerages.Kraken
         #region TRANSLATORS
         private string TranslateDirectionToKraken(OrderDirection direction)
         {
-
             if (direction == OrderDirection.Buy)
                 return "buy";
 
@@ -235,10 +244,8 @@ namespace QuantConnect.Brokerages.Kraken
 
         private string TranslateOrderTypeToKraken(OrderType orderType)
         {
-
             switch (orderType)
             {
-
                 case OrderType.Limit:
                     return "limit";
 
@@ -250,7 +257,6 @@ namespace QuantConnect.Brokerages.Kraken
 
                 case OrderType.StopMarket:
                     break; // return "stop-loss-"
-
             }
 
             throw new KrakenException("Unsupported order type");
@@ -482,6 +488,28 @@ namespace QuantConnect.Brokerages.Kraken
             return list;
         }
 
+        private decimal GetConversionRate(string currency)
+        {
+            Log.Trace($"GetConversionRate({currency})");
+
+            var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: error returned from conversion rate service."));
+                return 0;
+            }
+
+            var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
+            var rate = raw.SelectToken("rates." + currency).Value<decimal>();
+            if (rate == 0)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: zero value returned from conversion rate service."));
+                return 0;
+            }
+
+            return 1m / rate;
+        }
+
         /// <summary>
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
@@ -489,55 +517,114 @@ namespace QuantConnect.Brokerages.Kraken
         public override List<Cash> GetCashBalance()
         {
             Log.Trace("GetCashBalance()");
-            // WARNING!
-            // Requires
-            // CashBook.AccountCurrency = "ETH";
-            // 
-            // TODO: Make it work for any CashBook.AccountCurrency
-
+            
+            // CashBook.AccountCurrency = "USD";
+            
             var list = new List<Cash>();
 
-            Dictionary<string, AssetPair> assetInfo = _restApi.GetAssetPairs();
+            Dictionary<string, decimal> balance   = _restApi.GetAccountBalance();
 
-            Dictionary<string, decimal> balance = _restApi.GetAccountBalance();
+
+            foreach(var KVPair in balance)
+            {
+                Log.Trace($"{KVPair.Key}, {KVPair.Value}");
+            }
 
             List<string> pairs = new List<string>();
 
-            StringBuilder b = new StringBuilder();
 
-            Dictionary<string, string> pairToAsset = new Dictionary<string, string>();
+            HashSet<string> wantedPairs = new HashSet<string>();
+
+            Dictionary<string, List<string>> assetToPairs = new Dictionary<string, List<string>>();
 
             foreach (KeyValuePair<string, decimal> currency_ammount in balance)
             {
                 string asset = currency_ammount.Key;
-                decimal ammount = currency_ammount.Value;
+                decimal amount = currency_ammount.Value;
 
-                if (asset == "ETH" || asset == "XETH")
+                Log.Trace($"Currency; asset name {asset}, amount: {amount}");
+
+                //! TODO THIS DOESNT WORK AS EXPECTED, WANTS XRPETH PAIR WHICH DOES NOT EXIST
+                if (asset == "ZUSD")
                 {
+                    list.Add(new Cash("USD", amount, 1));
+                }
+                else if (new [] {"ZEUR", "ZJPY", "ZGBP", "ZKRW", "ZCAD"}.Contains(asset))
+                {
+                    string leanSymbol = SymbolMapper.KrakenToLeanCode(asset);
 
-                    list.Add(new Cash("ETH", ammount, 1));
+                    decimal price = GetConversionRate(leanSymbol);
+
+                    Cash cash = new Cash(leanSymbol, amount, price);
                 }
                 else
                 {
+                    try
+                    {
+                        string pair = SymbolMapper.GetPair(asset, "USD"); //! <-- GetPair might not work properly
+                        // build 
 
-                    KeyValuePair<string, bool> pair = SymbolMapper.GetPair(asset, "ETH");
-                    // build 
-                    b.Append(pair.Key);
-                    b.Append(", ");
-                    pairToAsset[pair.Key] = asset;
+                        wantedPairs.Add(pair);
+
+                        assetToPairs[asset] = new List<string>() { pair };
+                    }
+                    catch(Exception e)
+                    {
+                        Log.Trace($"Catched exception in GetCashBalance(), with message: {e}");
+
+                        string pair = SymbolMapper.GetPair(asset, "XBT"); //! <-- GetPair might not work properly
+                        // build 
+
+                        wantedPairs.Add(pair);
+                        wantedPairs.Add("XXBTZUSD");
+                        assetToPairs[asset] = new List<string>() { pair, "XXBTZUSD" };
+                    }
                 }
+            }
+
+            StringBuilder b = new StringBuilder();
+
+            List<string> wantedPairsList = wantedPairs.ToList();
+
+            for (int i = 0; i < wantedPairsList.Count;i++)
+            {
+                b.Append(wantedPairsList[i]);
+
+                if(i != wantedPairsList.Count-1)
+                    b.Append(", ");
             }
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(b.ToString());
 
-            foreach (KeyValuePair<string, Ticker> t in ticks)
+            /* It works but it very slow
+             
+            Dictionary<string, Ticker> ticks =  new Dictionary<string, Ticker>();
+
+            foreach(string pair in wantedPairs)
             {
+                var dict = _restApi.GetTicker(pair);
 
-                string asset = pairToAsset[t.Key];
+                foreach(var KVPair in dict)
+                    ticks[KVPair.Key] = KVPair.Value;
+            }*/
 
-                decimal conversionRate = (t.Value.Ask[0] + t.Value.Bid[0]) / 2m;
 
-                Cash cash = new Cash(asset, balance[asset], conversionRate);
+            foreach (KeyValuePair<string, List<string>> KVPair in assetToPairs)
+            {
+                string asset = KVPair.Key;
+
+                decimal price = 1;
+
+                foreach(string pair in KVPair.Value)
+                {
+                    Ticker t = ticks[pair];
+                    
+                    decimal conversionRate = (t.Ask[0] + t.Bid[0]) / 2m;
+
+                    price *= conversionRate;
+                }
+
+                Cash cash = new Cash(SymbolMapper.KrakenToLeanCode(asset), balance[asset], price);
 
                 list.Add(cash);
             }

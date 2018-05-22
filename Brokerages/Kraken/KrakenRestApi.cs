@@ -285,16 +285,16 @@ namespace QuantConnect.Brokerages.Kraken
         /// <summary>
         /// Gets the ticker info.
         /// </summary>
-        /// <param name="pair">Comma delimited list of asset pairs to get info on</param>
-        public Dictionary<string, Ticker> GetTicker(string pair)
+        /// <param name="pairs">Comma delimited list of asset pairs to get info on</param>
+        public Dictionary<string, Ticker> GetTicker(string pairs)
         {
-            if(pair == "")
+            if(pairs == "")
                 return new Dictionary<string, Ticker>();
             
-            Log.Trace($"KrakenRestApi.GetTicker({pair})");
+            Log.Trace($"KrakenRestApi.GetTicker({pairs})");
 
             var param = new Dictionary<string, string>();
-            param.Add("pair", pair);
+            param.Add("pair", pairs);
 
             var res = QueryPublic("Ticker", param);
             var ret = JsonConvert.DeserializeObject<GetTickerResponse>(res);

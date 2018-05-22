@@ -25,79 +25,163 @@ namespace QuantConnect.Brokerages.Kraken
     /// </summary>
     public class KrakenSymbolMapper : ISymbolMapper
     {
-        private bool HasLoadedSymbolsFromApi = false;
-        private KrakenRestApi _restApi = null;
+        class KrakenAsset
+        {   // currency code
+            public string Code;   
+            public string CodeAlt;
+        }
+
+        List<KrakenAsset> KnownAssets = new List<KrakenAsset>();
+
+        List<string> KnownPairs = new List<string>();
+        List<DataType.AssetPair> KnownPairsWhole = new List<DataType.AssetPair>();
+
+        static List<string> Prefixes = new List<string>() { "", "Z", "X" };
 
         /// <summary>
         /// Updates all Kraken Symbols
         /// </summary>
         /// <param name="restApi">Existing KrakenRestApi object</param>
-        /*public void UpdateSymbols(KrakenRestApi restApi) {
+        public void UpdateSymbols(KrakenRestApi restApi)
+        {
+            Logging.Log.Trace("UpdateSymbols(restApi)");
 
-            Dictionary<string, DataType.AssetPair> dict = restApi.GetAssetPairs();
+            Dictionary<string, DataType.AssetInfo> assetInfoDict = restApi.GetAssetInfo();
+            Dictionary<string, DataType.AssetPair> assetPairDict = restApi.GetAssetPairs();
 
-            foreach (KeyValuePair<string, DataType.AssetPair> pair in dict) {
+            KnownAssets.Clear();
 
-                // clear previous symbols
-                KnownSymbolStrings.Clear();
-                KrakenCurrencies.Clear();
+            foreach (KeyValuePair<string, DataType.AssetInfo> KVPair in assetInfoDict)
+            {
+                if (KVPair.Key == "KFEE")
+                    continue;
 
-                string currencyPair = pair.Key;
+                KrakenAsset krakenAsset = new KrakenAsset() { Code = KVPair.Key, CodeAlt = KVPair.Value.Altname };
 
-                DataType.AssetPair assetPair = pair.Value;
+                KnownAssets.Add(krakenAsset);
 
-                string baseName = assetPair.AclassBase;
-                string quoteName = assetPair.AclassQuote;
-
-                KnownSymbolStrings.Add(currencyPair);
-
-                KrakenCurrencies.Add(baseName);
-                KrakenCurrencies.Add(quoteName);
+                Logging.Log.Trace($"KrakenAsset {{ Code: { KVPair.Key }, CodeAlt: { KVPair.Value.Altname } }}");
             }
-        }*/
 
+            KnownPairs.Clear();
+            KnownPairsWhole.Clear();
 
-        private static readonly Dictionary<string, string> ToKrakenSymbol = new Dictionary<string, string>() {
+            foreach (KeyValuePair<string, DataType.AssetPair> KVPair in assetPairDict)
+            {
+                // remove dark pool markets
+                if (KVPair.Key.Contains(".d"))
+                    continue;
 
-            { "ETHBTC", "XETHXXBT" },
-            { "ETHEUR", "XETHZEUR" },
-            { "ETHUSD", "XETHZUSD" },
-            { "ICNETH", "XICNXETH" },
-            { "ICNBTC", "XICNXXBT" },
-            { "LTCXBT", "XLTCXXBT" },
-            { "LTCEUR", "XLTCZEUR" },
-            { "LTCUSD", "XLTCZUSD" },
-            { "BTCEUR", "XXBTZEUR" },
-            { "BTCUSD", "XXBTZUSD" },
-            { "XLMEUR", "XXLMZEUR" },
-            { "XLMBTC", "XXLMXXBT" },
-            { "XLMUSD", "XXLMZUSD" },
-        };
+                // KrakenPair krakenPair = new KrakenPair() { Pair = KVPair.Key, PairAlt = KVPair.Value.Altname };
+                KnownPairs.Add(KVPair.Key);
+                KnownPairsWhole.Add(KVPair.Value);
+
+                Logging.Log.Trace($"KnownPair {KVPair.Key}");
+            }
+        }
+         
+        void DecomposeKrakenPair(string krakenPair, out string baseCode, out string quoteCode)
+        {
+            Logging.Log.Trace($"DecomposeKrakenPair({krakenPair}, out baseCode, out quoteCode)");
+
+            List<string> foundCodes = new List<string>();
+
+            foreach(var krakenCode in KnownAssets)
+            {
+                if(krakenPair.Contains(krakenCode.Code))
+                {
+                    foundCodes.Add(krakenCode.Code);
+                }
+
+                if (krakenCode.Code != krakenCode.CodeAlt && krakenPair.Contains(krakenCode.CodeAlt))
+                {
+                    foundCodes.Add(krakenCode.CodeAlt);
+                }
+            }
+
+            foreach(string b in foundCodes)
+            {
+                foreach (string q in foundCodes)
+                {
+                    if(b + q == krakenPair)
+                    {
+                        baseCode  = b;
+                        quoteCode = q;
+
+                        return;
+                    }
+                }
+            }
+
+            throw new Kraken.DataType.KrakenException($"Decomposing kraken pair {krakenPair} unsucessful");
+        }
 
         static KrakenSymbolMapper()
         {
 
-            foreach (var pair in ToKrakenSymbol)
-                ToLeanSymbol.Add(pair.Value, pair.Key);
         }
 
-        private static readonly Dictionary<string, string> ToLeanSymbol = new Dictionary<string, string>();
-
         /// <summary>
-        /// Returns array with length of 2. 0 = base currency, 1 = quote currency
+        /// Gets pair from currency A and currency B
         /// </summary>
-        /// <param name="symbolString">Source symbol</param>
-        /// <returns></returns>
-        private static string[] SplitSymbol(string symbolString)
+        /// <param name="currencyA">First currency</param>
+        /// <param name="currencyB">Second currency</param>
+        /// <returns>Returns pair (string: pair, bool: is currencyA first) </pair></returns>
+        public string GetPair(string currencyA, string currencyB)
         {
+            Logging.Log.Trace($"GetPair({currencyA},{currencyB})");
 
-            int halfLength = (int)Math.Ceiling(symbolString.Length / 2f);
+            if (currencyA.Length == 0 || currencyB.Length == 0)
+                throw new DataType.KrakenException("No emtpy strings!");
 
-            return new string[] {
+            string strippedA = StripPrefixes(currencyA);
+            string strippedB = StripPrefixes(currencyB);
 
-                symbolString.Substring(0, halfLength),
-                symbolString.Substring(halfLength, halfLength)
-            };
+            foreach (string krakenPair in KnownPairs)
+            {
+                int A = krakenPair.IndexOf(strippedA);
+                int B = krakenPair.IndexOf(strippedB);
+
+                if (A >= 0 && B >= 0)
+                {
+                    if (A < B)
+                        return krakenPair;
+                }
+            }
+
+            throw new DataType.KrakenException($"Pair not found for {currencyA} {currencyB} pair");
+        }
+
+        string LeanCodeToKrakenCode(string leanCode)
+        {
+            Logging.Log.Trace($"LeanCodeToKrakenCode({leanCode})");
+                
+            if (leanCode == "BTC")
+                leanCode = "XBT";
+
+            foreach(var prefix in Prefixes)
+            {
+                string possibleCode = prefix + leanCode;
+
+                if (KnownAssets.Exists(krakenAsset => krakenAsset.Code == possibleCode || krakenAsset.CodeAlt == possibleCode)) {
+
+                    return possibleCode;
+                }
+            }
+
+            throw new DataType.KrakenException($"No possible Kraken code found for {leanCode}");
+        }
+
+        public string KrakenToLeanCode(string krakenCode)
+        {
+            Logging.Log.Trace($"KrakenToLeanCode({krakenCode})");
+
+            krakenCode = StripPrefixes(krakenCode);
+
+            if (krakenCode == "XBT")
+                krakenCode = "BTC";
+
+            return krakenCode;
         }
 
         /// <summary>
@@ -107,18 +191,57 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>The Kraken symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
+            Logging.Log.Trace($"GetBrokerageSymbol({symbol.Value})");
+
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
             if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Crypto)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
-            var brokerageSymbol = ConvertLeanSymbolToKrakenSymbol(symbol.Value);
+            string baseCode  = null;
+            string quoteCode = null;
 
-            if (!IsKnownBrokerageSymbol(brokerageSymbol))
-                throw new ArgumentException("Unknown symbol: " + symbol.Value);
+            Securities.Forex.Forex.DecomposeCurrencyPair(symbol.Value.ToUpper(), out baseCode, out quoteCode);
 
-            return brokerageSymbol;
+            baseCode = LeanCodeToKrakenCode(baseCode);
+            quoteCode = LeanCodeToKrakenCode(quoteCode);
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+
+            foreach(var prefixA in Prefixes)
+            {
+                foreach (var prefixB in Prefixes)
+                {
+                    builder.Append(prefixA);
+                    builder.Append(baseCode);
+                    builder.Append(prefixB);
+                    builder.Append(quoteCode);
+
+                    string possibleMatch = builder.ToString();
+                    builder.Clear();
+
+                    if(KnownPairs.Contains(possibleMatch)) {
+                        return possibleMatch;
+                    }
+                }
+            }
+
+            throw new ArgumentException($"Unknown LEAN symbol: {symbol.Value}");
+        }
+
+        string StripPrefixes(string currencyCode)
+        {
+            currencyCode = currencyCode.ToUpper();
+
+            Logging.Log.Trace($"StripPrefixes({currencyCode})");
+
+            string firstChar = currencyCode[0].ToString();
+
+            if(Prefixes.Exists(prefix => firstChar.Equals(prefix)))
+                return currencyCode.Substring(1, currencyCode.Length-1);
+            
+            return currencyCode;
         }
 
         /// <summary>
@@ -133,11 +256,10 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>A new Lean Symbol instance</returns>
         public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0)
         {
+            Logging.Log.Trace($"GetLeanSymbol({brokerageSymbol}, {securityType}, {market}, ... )");
+
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid Kraken symbol: " + brokerageSymbol);
-
-            if (!IsKnownBrokerageSymbol(brokerageSymbol))
-                throw new ArgumentException("Unknown Kraken symbol: " + brokerageSymbol);
 
             if (securityType != SecurityType.Crypto)
                 throw new ArgumentException("Invalid security type: " + securityType);
@@ -145,86 +267,26 @@ namespace QuantConnect.Brokerages.Kraken
             if (market != Market.Kraken)
                 throw new ArgumentException("Invalid market: " + market);
 
-            return Symbol.Create(ConvertKrakenSymbolToLeanSymbol(brokerageSymbol), SecurityType.Crypto, Market.Kraken);
-        }
+            string krakenBase = null;
+            string krakenQuote = null;
 
-        /// <summary>
-        /// Gets pair from currency A and currency B
-        /// </summary>
-        /// <param name="currencyA">First currency</param>
-        /// <param name="currencyB">Second currency</param>
-        /// <returns>Returns pair (string: pair, bool: is currencyA first) </pair></returns>
-        public KeyValuePair<string, bool> GetPair(string currencyA, string currencyB)
-        {
+            DecomposeKrakenPair(brokerageSymbol, out krakenBase, out krakenQuote);
 
-            if (currencyA.Length == 0 || currencyB.Length == 0)
-                throw new DataType.KrakenException("No emtpy strings!");
+            krakenBase = StripPrefixes(krakenBase);
+            krakenQuote = StripPrefixes(krakenQuote);
 
-            foreach (string krakenPair in ToLeanSymbol.Keys)
+            krakenBase = KrakenToLeanCode(krakenBase);
+            krakenQuote = KrakenToLeanCode(krakenQuote);
+
+            string leanSymbol = krakenBase + krakenQuote;
+
+            if(Currencies.CryptoCurrencyPairs.Contains(leanSymbol) || Currencies.CurrencyPairs.Contains(leanSymbol))
             {
-
-                int A = krakenPair.IndexOf(currencyA);
-                int B = krakenPair.IndexOf(currencyB);
-
-                if (A >= 0 && B >= 0)
-                {
-
-                    return new KeyValuePair<string, bool>(krakenPair, A < B);
-                }
+                return Symbol.Create(leanSymbol, SecurityType.Crypto, Market.Kraken);
             }
 
-            throw new DataType.KrakenException("Pair not found!");
-        }
-        /// <summary>
-        /// Checks if the symbol is supported by Kraken
-        /// </summary>
-        /// <param name="brokerageSymbol">The Kraken symbol</param>
-        /// <returns>True if Kraken supports the symbol</returns>
-        public bool IsKnownBrokerageSymbol(string brokerageSymbol)
-        {
-            return ToLeanSymbol.ContainsKey(brokerageSymbol);
+            throw new DataType.KrakenException("Converting Kraken symbol to Lean was unsucessful");
         }
 
-        /// <summary>
-        /// Checks if the symbol is supported by Kraken
-        /// </summary>
-        /// <param name="symbol">The Lean symbol</param>
-        /// <returns>True if Kraken supports the symbol</returns>
-        public bool IsKnownLeanSymbol(Symbol symbol)
-        {
-            return ToKrakenSymbol.ContainsKey(symbol.ID.Symbol);
-        }
-
-        /// <summary>
-        /// Converts an Kraken symbol to a Lean symbol string
-        /// </summary>
-        private static string ConvertKrakenSymbolToLeanSymbol(string krakenSymbol)
-        {
-            try
-            {
-                return ToLeanSymbol[krakenSymbol];
-            }
-            catch
-            {
-                throw new DataType.KrakenException($"Unknown Kraken Symbol: {krakenSymbol}");
-            }
-        }
-
-
-        /// <summary>
-        /// Converts a Lean symbol string to an Kraken symbol
-        /// </summary>
-        private static string ConvertLeanSymbolToKrakenSymbol(string leanSymbol)
-        {
-            try
-            {
-                return ToKrakenSymbol[leanSymbol];
-            }
-            catch
-            {
-                throw new DataType.KrakenException($"Unknown Lean Symbol {leanSymbol}, unsupported by Kraken");
-            }
-
-        }
     }
 }
