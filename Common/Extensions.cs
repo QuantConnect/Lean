@@ -1100,22 +1100,26 @@ namespace QuantConnect
             var locals = new PyDict();
             var types = type.GetGenericArguments();
 
-            for (var i = 0; i < types.Length; i++)
-            {
-                code += $",t{i}";
-                locals.SetItem($"t{i}", types[i].ToPython());
-            }
-            locals.SetItem("pyObject", pyObject);
-
             try
             {
-                var name = type.FullName.Substring(0, type.FullName.IndexOf('`'));
-                code = $"import System; delegate = {name}[{code.Substring(1)}](pyObject)";
+                using (Py.GIL())
+                {
+                    for (var i = 0; i < types.Length; i++)
+                    {
+                        code += $",t{i}";
+                        locals.SetItem($"t{i}", types[i].ToPython());
+                    }
 
-                PythonEngine.Exec(code, null, locals.Handle);
-                result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
+                    locals.SetItem("pyObject", pyObject);
 
-                return true;
+                    var name = type.FullName.Substring(0, type.FullName.IndexOf('`'));
+                    code = $"import System; delegate = {name}[{code.Substring(1)}](pyObject)";
+
+                    PythonEngine.Exec(code, null, locals.Handle);
+                    result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
+
+                    return true;
+                }
             }
             catch
             {

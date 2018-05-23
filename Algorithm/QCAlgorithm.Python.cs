@@ -104,18 +104,27 @@ namespace QuantConnect.Algorithm
         /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
-        /// <param name="pycoarse">Defines an initial coarse selection</param>
-        public void AddUniverse(PyObject pycoarse)
+        /// <param name="pyObject">Defines an initial coarse selection</param>
+        public void AddUniverse(PyObject pyObject)
         {
-            var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
-            if (coarse != null)
-            {
-                AddUniverse(c => coarse(c).Select(x => (Symbol)x));
-                return;
-            }
+            Func<IEnumerable<CoarseFundamental>, object[]> coarse;
+            Universe universe;
 
-            var type = (Type)pycoarse.GetPythonType().AsManagedObject(typeof(Type));
-            AddUniverse((dynamic)pycoarse.AsManagedObject(type));
+            if (pyObject.TryConvertToDelegate(out coarse))
+            {
+                AddUniverse(c => coarse(c.ToList()).Select(x => (Symbol)x));
+            }
+            else if (pyObject.TryConvert(out universe))
+            {
+                AddUniverse(universe);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pyObject.Repr()} is not a valid argument.");
+                }
+            }
         }
 
         /// <summary>
@@ -126,9 +135,20 @@ namespace QuantConnect.Algorithm
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(PyObject pycoarse, PyObject pyfine)
         {
-            var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
-            var fine = PythonUtil.ToFunc<IEnumerable<FineFundamental>, object[]>(pyfine);
-            AddUniverse(c => coarse(c).Select(x => (Symbol)x), f => fine(f).Select(x => (Symbol)x));
+            Func<IEnumerable<CoarseFundamental>, object[]> coarse;
+            Func<IEnumerable<FineFundamental>, object[]> fine;
+
+            if (pycoarse.TryConvertToDelegate(out coarse) && pyfine.TryConvertToDelegate(out fine))
+            {
+                AddUniverse(c => coarse(c.ToList()).Select(x => (Symbol)x), f => fine(f.ToList()).Select(x => (Symbol)x));
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pycoarse.Repr()} or {pyfine.Repr()} is not a valid argument.");
+                }
+            }
         }
 
         /// <summary>
@@ -140,7 +160,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(string name, Resolution resolution, PyObject pySelector)
         {
-            var selector = PythonUtil.ToFunc<DateTime, object[]>(pySelector);
+            var selector = pySelector.ConvertToDelegate<Func<DateTime, object[]>>();
             AddUniverse(name, resolution, d => selector(d).Select(x => (string)x));
         }
 
@@ -152,7 +172,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(string name, PyObject pySelector)
         {
-            var selector = PythonUtil.ToFunc<DateTime, object[]>(pySelector);
+            var selector = pySelector.ConvertToDelegate<Func<DateTime, object[]>>();
             AddUniverse(name, d => selector(d).Select(x => (string)x));
         }
 
@@ -167,7 +187,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
-            var selector = PythonUtil.ToFunc<DateTime, object[]>(pySelector);
+            var selector = pySelector.ConvertToDelegate<Func<DateTime, object[]>>();
             AddUniverse(securityType, name, resolution, market, universeSettings, d => selector(d).Select(x => (string)x));
         }
 
@@ -275,7 +295,7 @@ namespace QuantConnect.Algorithm
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
             var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
 
-            var selector = PythonUtil.ToFunc<IEnumerable<IBaseData>, object[]>(pySelector);
+            var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object[]>>();
 
             AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d)
                 .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market))));
