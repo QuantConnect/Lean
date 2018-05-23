@@ -35,6 +35,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using QuantConnect.Orders.TimeInForces;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -1626,6 +1627,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Rule80A = _agentDescription
             };
 
+            var gtdTimeInForce = order.TimeInForce as GoodTilDateTimeInForce;
+            if (gtdTimeInForce != null)
+            {
+                var exchangeTimeZone = MarketHoursDatabase
+                    .FromDataFolder()
+                    .GetExchangeHours(order.Symbol.ID.Market, order.Symbol, order.Symbol.SecurityType)
+                    .TimeZone;
+                var expiryUtc = gtdTimeInForce.Expiry.ConvertToUtc(exchangeTimeZone);
+
+                ibOrder.GoodTillDate = expiryUtc.ToString("yyyyMMdd HH:mm:ss UTC", CultureInfo.InvariantCulture);
+            }
+
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
             var stopLimitOrder = order as StopLimitOrder;
@@ -1750,7 +1763,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             order.BrokerId.Add(ibOrder.OrderId.ToString());
 
-            order.Properties.TimeInForce = ConvertTimeInForce(ibOrder.Tif);
+            order.Properties.TimeInForce = ConvertTimeInForce(ibOrder.Tif, ibOrder.GoodTillDate);
 
             return order;
         }
@@ -1894,15 +1907,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Maps TimeInForce from IB to LEAN
         /// </summary>
-        private static TimeInForce ConvertTimeInForce(string timeInForce)
+        private static TimeInForce ConvertTimeInForce(string timeInForce, string expiryDateTime)
         {
             switch (timeInForce)
             {
                 case IB.TimeInForce.Day:
                     return TimeInForce.Day;
 
-                //case IB.TimeInForce.GoodTillDate:
-                //    return TimeInForce.GoodTilDate;
+                case IB.TimeInForce.GoodTillDate:
+                    var expiry = DateTime.ParseExact(expiryDateTime, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+                    return new GoodTilDateTimeInForce(expiry);
 
                 //case IB.TimeInForce.FillOrKill:
                 //    return TimeInForce.FillOrKill;
@@ -1936,8 +1950,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case TimeInForceType.Day:
                     return IB.TimeInForce.Day;
 
-                //case TimeInForceType.GoodTilDate:
-                //    return IB.TimeInForce.GoodTillDate;
+                case TimeInForceType.GoodTilDate:
+                    return IB.TimeInForce.GoodTillDate;
 
                 //case TimeInForceType.FillOrKill:
                 //    return IB.TimeInForce.FillOrKill;
