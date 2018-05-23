@@ -773,7 +773,6 @@ namespace QuantConnect.Brokerages.Oanda
 
             var expiry = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
             qcOrder.Properties.TimeInForce = new GoodTilDateTimeInForce(expiry);
-            qcOrder.DurationValue = expiry;
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
 
             return qcOrder;

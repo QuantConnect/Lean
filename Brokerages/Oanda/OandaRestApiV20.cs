@@ -658,7 +658,6 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 var expiry = GetTickDateTimeFromString(gtdTime.ToString());
                 qcOrder.Properties.TimeInForce = new GoodTilDateTimeInForce(expiry);
-                qcOrder.DurationValue = expiry;
             }
 
             return qcOrder;

@@ -26,6 +26,9 @@ namespace QuantConnect.Orders
     /// </summary>
     public abstract class Order
     {
+        private decimal _quantity;
+        private decimal _price;
+
         /// <summary>
         /// Order ID.
         /// </summary>
@@ -51,8 +54,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Price
         {
-            get { return price; }
-            internal set { price = value.Normalize(); }
+            get { return _price; }
+            internal set { _price = value.Normalize(); }
         }
 
         /// <summary>
@@ -90,8 +93,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Quantity
         {
-            get { return quantity; }
-            internal set { quantity = value.Normalize(); }
+            get { return _quantity; }
+            internal set { _quantity = value.Normalize(); }
         }
 
         /// <summary>
@@ -193,7 +196,6 @@ namespace QuantConnect.Orders
             Tag = "";
             BrokerId = new List<string>();
             ContingentId = 0;
-            DurationValue = DateTime.MaxValue;
             Properties = new OrderProperties();
         }
 
@@ -216,7 +218,6 @@ namespace QuantConnect.Orders
             Tag = tag;
             BrokerId = new List<string>();
             ContingentId = 0;
-            DurationValue = DateTime.MaxValue;
             Properties = properties ?? new OrderProperties();
         }
 
@@ -269,7 +270,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("OrderId: {0} {1} {2} order for {3} unit{4} of {5}", Id, Status, Type, Quantity, Quantity == 1 ? "" : "s", Symbol);
+            return $"OrderId: {Id} {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}";
         }
 
         /// <summary>
@@ -314,24 +315,31 @@ namespace QuantConnect.Orders
                 case OrderType.Market:
                     order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 case OrderType.Limit:
                     order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 case OrderType.StopMarket:
                     order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 case OrderType.OptionExercise:
                     order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -343,13 +351,5 @@ namespace QuantConnect.Orders
             }
             return order;
         }
-
-        /// <summary>
-        /// Order Expiry on a specific UTC time.
-        /// </summary>
-        public DateTime DurationValue;
-
-        private decimal quantity;
-        private decimal price;
     }
 }

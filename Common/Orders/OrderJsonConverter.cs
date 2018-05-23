@@ -200,9 +200,17 @@ namespace QuantConnect.Orders
         /// </summary>
         private static TimeInForce CreateTimeInForce(JToken timeInForce, JObject jObject)
         {
+            // for backward-compatibility support deserialization of old JSON format
             if (timeInForce is JValue)
             {
-                return (TimeInForceType)timeInForce.Value<int>();
+                var value = timeInForce.Value<int>();
+                if (value == (int)TimeInForceType.GoodTilDate)
+                {
+                    var expiry = jObject["DurationValue"].Value<DateTime>();
+                    return new GoodTilDateTimeInForce(expiry);
+                }
+
+                return (TimeInForceType)value;
             }
 
             var timeInForceType = (TimeInForceType)timeInForce["Type"].Value<int>();
