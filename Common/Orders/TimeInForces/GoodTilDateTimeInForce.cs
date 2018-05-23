@@ -113,8 +113,52 @@ namespace QuantConnect.Orders.TimeInForces
         /// <returns>Returns true if the order has expired, false otherwise</returns>
         public override bool IsOrderExpired(Security security, Order order)
         {
-            // TODO:
-            throw new NotImplementedException();
+            var exchangeHours = security.Exchange.Hours;
+
+            var time = security.LocalTime;
+
+            bool expired;
+            switch (order.SecurityType)
+            {
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    // With real brokerages (IB, Oanda, FXCM have been verified) FX orders expire at 5 PM NewYork time.
+                    // For now we use this fixed cut-off time, in future we might get this value from brokerage models,
+                    // to support custom brokerage implementations.
+
+                    var cutOffTimeZone = TimeZones.NewYork;
+                    var cutOffTimeSpan = TimeSpan.FromHours(17);
+
+                    var expiryTime = Expiry.Date.Add(cutOffTimeSpan);
+                    if (order.Time.Date == Expiry.Date)
+                    {
+                        // expiry date same as order date
+                        var orderTime = order.Time.ConvertFromUtc(cutOffTimeZone);
+                        if (orderTime.TimeOfDay > cutOffTimeSpan)
+                        {
+                            // order submitted after 5 PM, expiry on next date
+                            expiryTime = expiryTime.AddDays(1);
+                        }
+                    }
+
+                    expired = time.ConvertTo(exchangeHours.TimeZone, cutOffTimeZone) >= expiryTime;
+                    break;
+
+                case SecurityType.Crypto:
+                    // expires at midnight after expiry date
+                    expired = time.Date > Expiry.Date;
+                    break;
+
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                case SecurityType.Future:
+                default:
+                    // expires at market close of expiry date
+                    expired = time >= exchangeHours.GetNextMarketClose(Expiry.Date, false);
+                    break;
+            }
+
+            return expired;
         }
 
         /// <summary>
