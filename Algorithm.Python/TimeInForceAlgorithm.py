@@ -20,6 +20,8 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Orders import *
+from QuantConnect.Orders.TimeInForces import *
+from datetime import datetime
 
 ### <summary>
 ### Demonstration algorithm of time in force order settings.
@@ -45,6 +47,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
 
         self.gtcOrderTicket = None
         self.dayOrderTicket = None
+        self.gtdOrderTicket = None
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     # Arguments:
@@ -64,6 +67,13 @@ class TimeInForceAlgorithm(QCAlgorithm):
 
             self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
             self.dayOrderTicket = self.LimitOrder(self.symbol, 10, 160)
+
+        if self.gtdOrderTicket is None:
+            # This order will expire on October 10th at market close,
+            # if not filled by then it will be canceled automatically.
+
+            self.DefaultOrderProperties.TimeInForce = GoodTilDateTimeInForce(datetime(2013, 10, 10))
+            self.gtdOrderTicket = self.LimitOrder(self.symbol, 10, 100)
 
     # Order event handler. This handler will be called for all order events, including submissions, fills, cancellations.
     # This method can be called asynchronously, ensure you use proper locks on thread-unsafe objects

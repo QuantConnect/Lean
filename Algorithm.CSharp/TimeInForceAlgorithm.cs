@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _symbol;
         private OrderTicket _gtcOrderTicket;
         private OrderTicket _dayOrderTicket;
+        private OrderTicket _gtdOrderTicket;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -69,6 +72,15 @@ namespace QuantConnect.Algorithm.CSharp
 
                 DefaultOrderProperties.TimeInForce = TimeInForce.Day;
                 _dayOrderTicket = LimitOrder(_symbol, 10, 160m);
+            }
+
+            if (_gtdOrderTicket == null)
+            {
+                // This order will expire on October 10th at market close,
+                // if not filled by then it will be canceled automatically.
+
+                DefaultOrderProperties.TimeInForce = new GoodTilDateTimeInForce(new DateTime(2013, 10, 10));
+                _gtdOrderTicket = LimitOrder(_symbol, 10, 100m);
             }
         }
 
