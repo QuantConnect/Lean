@@ -125,23 +125,7 @@ namespace QuantConnect.Orders.TimeInForces
                     // With real brokerages (IB, Oanda, FXCM have been verified) FX orders expire at 5 PM NewYork time.
                     // For now we use this fixed cut-off time, in future we might get this value from brokerage models,
                     // to support custom brokerage implementations.
-
-                    var cutOffTimeZone = TimeZones.NewYork;
-                    var cutOffTimeSpan = TimeSpan.FromHours(17);
-
-                    var expiryTime = Expiry.Date.Add(cutOffTimeSpan);
-                    if (order.Time.Date == Expiry.Date)
-                    {
-                        // expiry date same as order date
-                        var orderTime = order.Time.ConvertFromUtc(cutOffTimeZone);
-                        if (orderTime.TimeOfDay > cutOffTimeSpan)
-                        {
-                            // order submitted after 5 PM, expiry on next date
-                            expiryTime = expiryTime.AddDays(1);
-                        }
-                    }
-
-                    expired = time.ConvertTo(exchangeHours.TimeZone, cutOffTimeZone) >= expiryTime;
+                    expired = time.ConvertToUtc(exchangeHours.TimeZone) >= GetForexOrderExpiryDateTime(order);
                     break;
 
                 case SecurityType.Crypto:
@@ -171,6 +155,29 @@ namespace QuantConnect.Orders.TimeInForces
         public override bool IsFillValid(Security security, Order order, OrderEvent fill)
         {
             return true;
+        }
+
+        /// <summary>
+        /// Returns the expiry date and time (UTC) for a Forex order
+        /// </summary>
+        public DateTime GetForexOrderExpiryDateTime(Order order)
+        {
+            var cutOffTimeZone = TimeZones.NewYork;
+            var cutOffTimeSpan = TimeSpan.FromHours(17);
+
+            var expiryTime = Expiry.Date.Add(cutOffTimeSpan);
+            if (order.Time.Date == Expiry.Date)
+            {
+                // expiry date same as order date
+                var orderTime = order.Time.ConvertFromUtc(cutOffTimeZone);
+                if (orderTime.TimeOfDay > cutOffTimeSpan)
+                {
+                    // order submitted after 5 PM, expiry on next date
+                    expiryTime = expiryTime.AddDays(1);
+                }
+            }
+
+            return expiryTime.ConvertToUtc(cutOffTimeZone);
         }
     }
 }

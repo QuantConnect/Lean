@@ -1630,11 +1630,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var gtdTimeInForce = order.TimeInForce as GoodTilDateTimeInForce;
             if (gtdTimeInForce != null)
             {
-                var exchangeTimeZone = MarketHoursDatabase
-                    .FromDataFolder()
-                    .GetExchangeHours(order.Symbol.ID.Market, order.Symbol, order.Symbol.SecurityType)
-                    .TimeZone;
-                var expiryUtc = gtdTimeInForce.Expiry.ConvertToUtc(exchangeTimeZone);
+                DateTime expiryUtc;
+                if (order.SecurityType == SecurityType.Forex)
+                {
+                    expiryUtc = gtdTimeInForce.GetForexOrderExpiryDateTime(order);
+                }
+                else
+                {
+                    var exchangeHours = MarketHoursDatabase.FromDataFolder()
+                        .GetExchangeHours(order.Symbol.ID.Market, order.Symbol, order.SecurityType);
+
+                    var expiry = exchangeHours.GetNextMarketClose(gtdTimeInForce.Expiry.Date, false);
+                    expiryUtc = expiry.ConvertToUtc(exchangeHours.TimeZone);
+                }
+
+                // The IB format for the GoodTillDate order property is "yyyymmdd hh:mm:ss xxx" where yyyymmdd and xxx are optional.
+                // E.g.: 20031126 15:59:00 EST
+                // If no date is specified, current date is assumed. If no time-zone is specified, local time-zone is assumed.
 
                 ibOrder.GoodTillDate = expiryUtc.ToString("yyyyMMdd HH:mm:ss UTC", CultureInfo.InvariantCulture);
             }
@@ -1915,8 +1927,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return TimeInForce.Day;
 
                 case IB.TimeInForce.GoodTillDate:
-                    var expiry = DateTime.ParseExact(expiryDateTime, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
-                    return new GoodTilDateTimeInForce(expiry);
+                    return new GoodTilDateTimeInForce(ParseExpiryDateTime(expiryDateTime));
 
                 //case IB.TimeInForce.FillOrKill:
                 //    return TimeInForce.FillOrKill;
@@ -1929,6 +1940,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 default:
                     return TimeInForce.GoodTilCanceled;
             }
+        }
+
+        private static DateTime ParseExpiryDateTime(string expiryDateTime)
+        {
+            // NOTE: we currently ignore the time zone in this method for a couple of reasons:
+            // - TZ abbreviations are ambiguous and unparsable to a unique time zone
+            //   see this article for more info:
+            //   https://codeblog.jonskeet.uk/2015/05/05/common-mistakes-in-datetime-formatting-and-parsing/
+            // - IB seems to also have issues with Daylight Saving Time zones
+            //   Example: an order submitted from Europe with GoodTillDate property set to "20180524 21:00:00 UTC"
+            //   when reading the open orders, the same property will have this value: "20180524 23:00:00 CET"
+            //   which is incorrect: should be CEST (UTC+2) instead of CET (UTC+1)
+
+            // We can ignore this issue, because the method is only called by GetOpenOrders.
+
+            var parts = expiryDateTime.Split(' ');
+            if (parts.Length == 3)
+            {
+                expiryDateTime = expiryDateTime.Substring(0, expiryDateTime.LastIndexOf(" ", StringComparison.Ordinal));
+            }
+
+            return DateTime.ParseExact(expiryDateTime, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture).Date;
         }
 
         /// <summary>
