@@ -140,6 +140,9 @@
     <None Include="WarmupAlgorithm.py" />
     <None Include="WarmupHistoryAlgorithm.py" />
     <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+    <None Include="Benchmarks\BasicTemplateBenchmark.py" />
+    <None Include="Benchmarks\EmptyMinute400EquityBenchmark.py" />
+    <None Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
@@ -159,6 +162,9 @@
     <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.7\lib\Python.Runtime.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Benchmarks\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
