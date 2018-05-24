@@ -36,5 +36,6 @@ class BasicTemplateBenchmark(QCAlgorithm):
         self.AddEquity("SPY")
     
     def OnData(self, data):
-        self.SetHoldings("SPY", 1)
-        self.Debug("Purchased Stock")
+        if not self.Portfolio.Invested:
+            self.SetHoldings("SPY", 1)
+            self.Debug("Purchased Stock")
