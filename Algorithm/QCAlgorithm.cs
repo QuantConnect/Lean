@@ -1706,6 +1706,39 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a debug message to the web console:
+        /// </summary>
+        /// <param name="message">Message to send to debug console</param>
+        /// <seealso cref="Log(int)"/>
+        /// <seealso cref="Error(int)"/>
+        public void Debug(int message)
+        {
+            Debug(message.ToString());
+        }
+
+        /// <summary>
+        /// Send a debug message to the web console:
+        /// </summary>
+        /// <param name="message">Message to send to debug console</param>
+        /// <seealso cref="Log(double)"/>
+        /// <seealso cref="Error(double)"/>
+        public void Debug(double message)
+        {
+            Debug(message.ToString());
+        }
+
+        /// <summary>
+        /// Send a debug message to the web console:
+        /// </summary>
+        /// <param name="message">Message to send to debug console</param>
+        /// <seealso cref="Log(decimal)"/>
+        /// <seealso cref="Error(decimal)"/>
+        public void Debug(decimal message)
+        {
+            Debug(message.ToString());
+        }
+
+        /// <summary>
         /// Added another method for logging if user guessed.
         /// </summary>
         /// <param name="message">String message to log.</param>
@@ -1715,6 +1748,39 @@ namespace QuantConnect.Algorithm
         {
             if (!_liveMode && message == "") return;
             _logMessages.Enqueue(message);
+        }
+
+        /// <summary>
+        /// Added another method for logging if user guessed.
+        /// </summary>
+        /// <param name="message">Int message to log.</param>
+        /// <seealso cref="Debug(int)"/>
+        /// <seealso cref="Error(int)"/>
+        public void Log(int message)
+        {
+            Log(message.ToString());
+        }
+
+        /// <summary>
+        /// Added another method for logging if user guessed.
+        /// </summary>
+        /// <param name="message">Double message to log.</param>
+        /// <seealso cref="Debug(double)"/>
+        /// <seealso cref="Error(double)"/>
+        public void Log(double message)
+        {
+            Log(message.ToString());
+        }
+
+        /// <summary>
+        /// Added another method for logging if user guessed.
+        /// </summary>
+        /// <param name="message">Decimal message to log.</param>
+        /// <seealso cref="Debug(decimal)"/>
+        /// <seealso cref="Error(decimal)"/>
+        public void Log(decimal message)
+        {
+            Log(message.ToString());
         }
 
         /// <summary>
@@ -1728,6 +1794,39 @@ namespace QuantConnect.Algorithm
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
             _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
+        }
+
+        /// <summary>
+        /// Send a int error message to the Console.
+        /// </summary>
+        /// <param name="message">Message to display in errors grid</param>
+        /// <seealso cref="Debug(int)"/>
+        /// <seealso cref="Log(int)"/>
+        public void Error(int message)
+        {
+            Error(message.ToString());
+        }
+
+        /// <summary>
+        /// Send a double error message to the Console.
+        /// </summary>
+        /// <param name="message">Message to display in errors grid</param>
+        /// <seealso cref="Debug(double)"/>
+        /// <seealso cref="Log(double)"/>
+        public void Error(double message)
+        {
+            Error(message.ToString());
+        }
+
+        /// <summary>
+        /// Send a decimal error message to the Console.
+        /// </summary>
+        /// <param name="message">Message to display in errors grid</param>
+        /// <seealso cref="Debug(decimal)"/>
+        /// <seealso cref="Log(decimal)"/>
+        public void Error(decimal message)
+        {
+            Error(message.ToString());
         }
 
         /// <summary>
