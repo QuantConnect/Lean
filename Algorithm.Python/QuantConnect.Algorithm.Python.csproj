@@ -166,6 +166,9 @@
   <ItemGroup>
     <Folder Include="Benchmarks\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
