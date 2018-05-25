@@ -66,9 +66,10 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return ConversionRateSecurity.Select(conSec => conSec.RateSecurity.Symbol).ToList();
+                return (ConversionRateSecurity == null? new List<Symbol>() : ConversionRateSecurity.Select(conSec => conSec.RateSecurity.Symbol).ToList());
             }
         }
+        
         /// <summary>
         /// Gets the security used to apply conversion rates.
         /// If this cash represents the account currency, then null is returned.
@@ -303,12 +304,11 @@ namespace QuantConnect.Securities
             // Example #1: RENUSD doesn't exist, but there is RENETH  and ETHUSD,  from which we can calculate RENUSD
             // Example #2: RENUSD doesn't exist, but there is RENUSDT and USDTUSD, from which we can calculate RENUSD
 
-            // Finds pairs that contain REN such as RENBTC and RENETH
+            // Make a copy
             var existingPotentials = Currencies.CryptoCurrencyPairs.Select(x => x);
-            //.Where(cryptoPair => cryptoPair.Contains(this.Symbol));
-
-            // Order secondaryPotentials by whenever they are already contained in securities.
-            // This is must; if you add RENETH, it will use ETHUSD as a conversion pair for USD, and not BTCUSD
+           
+            // Order secondaryPotentials by whenever they are already contained in securities object.
+            // This is must; if you use AddCrypto(RENETH), currency conversion will use ETHUSD as a conversion pair for USD, and not BTCUSD
             existingPotentials = existingPotentials
             .OrderByDescending(cryptoPair =>
             {
@@ -340,8 +340,6 @@ namespace QuantConnect.Securities
                     // ETH
                     string secondCode = Forex.Forex.CurrencyPairDual(mainPair, this.Symbol);
 
-                    Log.Trace($"Found second code {secondCode} in mainPair {mainPair}");
-
                     bool mainInvert = mainPair.IndexOf(this.Symbol) != 0;
 
                     // ETHUSD
@@ -355,61 +353,59 @@ namespace QuantConnect.Securities
                         // found
                         if(linkingPair == linkingNormal || linkingPair == linkingInvert)
                         {
-                            Log.Trace($"Found linkingPair in {linkingPair}");
-
+                            
                             var securityType = SecurityType.Crypto;
 
-                            Symbol mainSymbol = CreateSymbol(marketMap, mainPair, markets, SecurityType.Crypto);
-                            Symbol linkingSymbol = CreateSymbol(marketMap, linkingPair, markets, SecurityType.Crypto);
+                            Symbol MainSymbol = CreateSymbol(marketMap, mainPair, markets, SecurityType.Crypto);
+                            Symbol LinkingSymbol = CreateSymbol(marketMap, linkingPair, markets, SecurityType.Crypto);
 
-                            var mainSymbolProperties    = symbolPropertiesDatabase.GetSymbolProperties(mainSymbol.ID.Market, mainSymbol.Value, securityType, secondCode);
-                            var linkingSymbolProperties = symbolPropertiesDatabase.GetSymbolProperties(linkingSymbol.ID.Market, linkingSymbol.Value, securityType, CashBook.AccountCurrency);
+                            var MainSymbolProperties    = symbolPropertiesDatabase.GetSymbolProperties(MainSymbol.ID.Market, MainSymbol.Value, securityType, secondCode);
+                            var LinkingSymbolProperties = symbolPropertiesDatabase.GetSymbolProperties(LinkingSymbol.ID.Market, LinkingSymbol.Value, securityType, CashBook.AccountCurrency);
 
-                            Cash mainQuoteCash;
-                            if (!cashBook.TryGetValue(mainSymbolProperties.QuoteCurrency, out mainQuoteCash))
+                            Cash MainQuoteCash;
+                            if (!cashBook.TryGetValue(MainSymbolProperties.QuoteCurrency, out MainQuoteCash))
                             {
-                                throw new Exception("Unable to resolve main quote cash: " + mainSymbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + mainSymbol.Value);
+                                throw new Exception("Unable to resolve main quote cash: " + MainSymbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + MainSymbol.Value);
                             }
 
-                            Cash linkingQuoteCash;
-                            if (!cashBook.TryGetValue(linkingSymbolProperties.QuoteCurrency, out linkingQuoteCash))
+                            Cash LinkingQuoteCash;
+                            if (!cashBook.TryGetValue(LinkingSymbolProperties.QuoteCurrency, out LinkingQuoteCash))
                             {
-                                throw new Exception("Unable to resolve linking quote cash: " + linkingSymbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + linkingSymbol.Value);
+                                throw new Exception("Unable to resolve linking quote cash: " + LinkingSymbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + LinkingSymbol.Value);
                             }
 
-                            var mMarketHoursDbEntry = marketHoursDatabase.GetEntry(mainSymbol.ID.Market, mainSymbol.Value, mainSymbol.ID.SecurityType);
-                            var lMarketHoursDbEntry = marketHoursDatabase.GetEntry(linkingSymbol.ID.Market, linkingSymbol.Value, linkingSymbol.ID.SecurityType);
+                            var MainMarketHoursDbEntry = marketHoursDatabase.GetEntry(MainSymbol.ID.Market, MainSymbol.Value, MainSymbol.ID.SecurityType);
+                            var LinkingMarketHoursDbEntry = marketHoursDatabase.GetEntry(LinkingSymbol.ID.Market, LinkingSymbol.Value, LinkingSymbol.ID.SecurityType);
 
-                            var mExchangeHours = mMarketHoursDbEntry.ExchangeHours;
-                            var lExchangeHours = lMarketHoursDbEntry.ExchangeHours;
-
-                            // use the first subscription defined in the subscription manager
-                            var mType = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
-                            var mObjectType = mType.Item1;
-                            var mTickType = mType.Item2;
+                            var MainExchangeHours = MainMarketHoursDbEntry.ExchangeHours;
+                            var LinkingExchangeHours = LinkingMarketHoursDbEntry.ExchangeHours;
 
                             // use the first subscription defined in the subscription manager
-                            var lType = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
-                            var lObjectType = lType.Item1;
-                            var lTickType = lType.Item2;
+                            var MainType = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
+                            var MainObjectType = MainType.Item1;
+                            var MainTickType = MainType.Item2;
 
+                            // use the first subscription defined in the subscription manager
+                            var LinkingType = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
+                            var LinkingObjectType = LinkingType.Item1;
+                            var LinkingTickType = LinkingType.Item2;
 
                             // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                            var mConfig = subscriptions.Add(mObjectType, mTickType, mainSymbol,   minimumResolution, mMarketHoursDbEntry.DataTimeZone, mExchangeHours.TimeZone, false, true, false, true);
-                            var lConfig = subscriptions.Add(lObjectType, lTickType, linkingSymbol, minimumResolution, lMarketHoursDbEntry.DataTimeZone, lExchangeHours.TimeZone, false, true, false, true);
+                            var MainConfig = subscriptions.Add(MainObjectType, MainTickType, MainSymbol,   minimumResolution, MainMarketHoursDbEntry.DataTimeZone, MainExchangeHours.TimeZone, false, true, false, true);
+                            var LinkingConfig = subscriptions.Add(LinkingObjectType, LinkingTickType, LinkingSymbol, minimumResolution, LinkingMarketHoursDbEntry.DataTimeZone, LinkingExchangeHours.TimeZone, false, true, false, true);
 
-                            Security mainSecurity = new Crypto.Crypto(mExchangeHours, mainQuoteCash, mConfig, mainSymbolProperties);
-                            Security linkingSecurity = new Crypto.Crypto(lExchangeHours, linkingQuoteCash, lConfig, linkingSymbolProperties);
+                            Security MainSecurity    = new Crypto.Crypto(MainExchangeHours,    MainQuoteCash,    MainConfig,    MainSymbolProperties);
+                            Security LinkingSecurity = new Crypto.Crypto(LinkingExchangeHours, LinkingQuoteCash, LinkingConfig, LinkingSymbolProperties);
 
-                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding main pair " + mainSymbol.Value + " for cash " + Symbol + " currency feed");
-                            securities.Add(mConfig.Symbol, mainSecurity);
-                            mainConSec = new ConversionSecurity(mainSecurity, mainInvert);
+                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding linking pair " + LinkingSymbol.Value + " for cash " + Symbol + " currency feed");
+                            securities.Add(LinkingConfig.Symbol, LinkingSecurity);
+                            linkingConSec = new ConversionSecurity(LinkingSecurity, linkingPair == linkingInvert);
+
+                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding main pair " + MainSymbol.Value + " for cash " + Symbol + " currency feed");
+                            securities.Add(MainConfig.Symbol, MainSecurity);
+                            mainConSec = new ConversionSecurity(MainSecurity, mainInvert);
 
 
-                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding linking pair " + linkingSymbol.Value + " for cash " + Symbol + " currency feed");
-                            securities.Add(lConfig.Symbol, linkingSecurity);
-                            linkingConSec = new ConversionSecurity(linkingSecurity, linkingPair == linkingInvert);
-                                
                             ConversionRateSecurity = new List<ConversionSecurity>() { mainConSec, linkingConSec };
                             return ConversionRateSecurity;
                                 
