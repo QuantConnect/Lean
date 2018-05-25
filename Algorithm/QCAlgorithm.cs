@@ -1597,21 +1597,57 @@ namespace QuantConnect.Algorithm
         public bool RemoveSecurity(Symbol symbol)
         {
             Security security;
-            if (Securities.TryGetValue(symbol, out security))
+            if (!Securities.TryGetValue(symbol, out security))
             {
-                // cancel open orders
-                Transactions.CancelOpenOrders(security.Symbol);
+                return false;
+            }
 
-                // Clear cache
-                security.Cache.Reset();
+            // cancel open orders
+            Transactions.CancelOpenOrders(security.Symbol);
 
-                // liquidate if invested
-                if (security.Invested) Liquidate(security.Symbol);
+            // liquidate if invested
+            if (security.Invested)
+            {
+                Liquidate(security.Symbol);
+            }
 
+            // Clear cache
+            security.Cache.Reset();
+
+            // Mark security as not tradable
+            security.IsTradable = false;
+            if (symbol.IsCanonical())
+            {
+                // remove underlying equity data if it's marked as internal
+                var universe = UniverseManager.Select(x => x.Value).FirstOrDefault(x => x.Configuration.Symbol == symbol);
+                if (universe != null)
+                {
+                    // remove underlying if not used by other universes
+                    if (symbol.HasUnderlying)
+                    {
+                        var underlying = Securities[symbol.Underlying];
+                        if (!UniverseManager.Any(ukvp => !ReferenceEquals(ukvp.Value, universe) && ukvp.Value.Members.ContainsKey(underlying.Symbol)))
+                        {
+                            RemoveSecurity(underlying.Symbol);
+                        }
+                    }
+
+                    // remove child securities (option contracts for option chain universes)
+                    foreach (var child in universe.Members.Values)
+                    {
+                        RemoveSecurity(child.Symbol);
+                    }
+
+                    // finally, dispose and remove the canonical security from the universe manager
+                    UniverseManager.Remove(symbol);
+                }
+            }
+            else
+            {
                 var universe = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
                 if (universe != null)
                 {
-                    var ret = universe.Remove(symbol);
+                    universe.Remove(symbol);
 
                     // if we are removing the symbol which is also the benchmark, add it back as internal feed
                     if (symbol == _benchmarkSymbol)
@@ -1623,11 +1659,10 @@ namespace QuantConnect.Algorithm
                     }
 
                     SubscriptionManager.HasCustomData = universe.Members.Any(x => x.Value.Subscriptions.Any(y => y.IsCustomData));
-
-                    return ret;
                 }
             }
-            return false;
+
+            return true;
         }
 
         /// <summary>

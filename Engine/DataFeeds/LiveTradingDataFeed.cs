@@ -219,9 +219,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // remove the subscription from our collection
             Subscription subscription;
+            if (!_subscriptions.TryGetValue(configuration, out subscription))
+            {
+                Log.Error($"LiveTradingDataFeed.RemoveSubscription(): Unable to locate: {configuration}");
+            }
+
+            // don't remove universe subscriptions immediately, instead mark them as disposed
+            // so we can turn the crank one more time to ensure we emit security changes properly
+            if (subscription.IsUniverseSelectionSubscription && subscription.Universe.DisposeRequested)
+            {
+                // subscription syncer will dispose the universe AFTER we've run selection a final time
+                // and then will invoke SubscriptionFinished which will remove the universe subscription
+                return false;
+            }
+
             if (!_subscriptions.TryRemove(configuration, out subscription))
             {
-                Log.Error("LiveTradingDataFeed.RemoveSubscription(): Unable to remove: " + configuration.ToString());
+                Log.Error($"LiveTradingDataFeed.RemoveSubscription(): Unable to remove: {configuration}");
                 return false;
             }
 
@@ -298,31 +312,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (packet.Count > 0) data.Add(packet);
 
                         // we have new universe data to select based on
-                        if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
+                        if (subscription.IsUniverseSelectionSubscription)
                         {
-                            var universe = subscription.Universe;
-
-                            // always wait for other thread to sync up
-                            if (!_bridge.WaitHandle.WaitOne(Timeout.Infinite, _cancellationTokenSource.Token))
+                            if (packet.Count > 0)
                             {
-                                break;
+                                var universe = subscription.Universe;
+
+                                // always wait for other thread to sync up
+                                if (!_bridge.WaitHandle.WaitOne(Timeout.Infinite, _cancellationTokenSource.Token))
+                                {
+                                    break;
+                                }
+
+                                // assume that if the first item is a base data collection then the enumerator handled the aggregation,
+                                // otherwise, load all the the data into a new collection instance
+                                var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, config.Symbol, packet.Data);
+
+                                BaseDataCollection existingCollection;
+                                if (universeData.TryGetValue(universe, out existingCollection))
+                                {
+                                    existingCollection.Data.AddRange(collection.Data);
+                                }
+                                else
+                                {
+                                    universeData[universe] = collection;
+                                }
+
+                                _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                             }
 
-                            // assume that if the first item is a base data collection then the enumerator handled the aggregation,
-                            // otherwise, load all the the data into a new collection instance
-                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, config.Symbol, packet.Data);
-
-                            BaseDataCollection existingCollection;
-                            if (universeData.TryGetValue(universe, out existingCollection))
+                            // remove subscription for universe data if disposal requested AFTER time sync
+                            // this ensures we get any security changes from removing the universe and its children
+                            if (subscription.Universe.DisposeRequested)
                             {
-                                existingCollection.Data.AddRange(collection.Data);
+                                RemoveSubscription(subscription.Configuration);
                             }
-                            else
-                            {
-                                universeData[universe] = collection;
-                            }
-
-                            _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }
                     }
 

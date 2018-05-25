@@ -184,6 +184,7 @@ namespace QuantConnect.Securities
             Universe universe;
             if (_universes.TryRemove(key, out universe))
             {
+                universe.Dispose();
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, universe));
                 return true;
             }

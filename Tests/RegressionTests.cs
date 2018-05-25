@@ -1145,10 +1145,34 @@ namespace QuantConnect.Tests
                 {"Rolling Averaged Population Magnitude", "0%"},
             };
 
+            var addRemoveOptionUniverseRegressionAlgorithm = new Dictionary<string, string>
+            {
+                {"Total Trades", "6"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.21%"},
+                {"Compounding Annual Return", "-96.657%"},
+                {"Drawdown", "0.600%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-0.626%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$1.50"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("AddRemoveOptionUniverseRegressionAlgorithm", addRemoveOptionUniverseRegressionAlgorithm, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
