@@ -176,15 +176,50 @@ namespace QuantConnect
         /// Returns option symbol ticker in accordance with OSI symbology
         /// More information can be found at http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
         /// </summary>
+        /// <param name="symbol">Symbol object to create OSI ticker from</param>
+        /// <returns>The OSI ticker representation</returns>
+        public static string GenerateOptionTickerOSI(Symbol symbol)
+        {
+            if (symbol.SecurityType != SecurityType.Option)
+            {
+                throw new ArgumentException($"{nameof(GenerateOptionTickerOSI)} returns symbol to be an option, received {symbol.SecurityType}.");
+            }
+
+            return GenerateOptionTickerOSI(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+        }
+
+        /// <summary>
+        /// Returns option symbol ticker in accordance with OSI symbology
+        /// More information can be found at http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
+        /// </summary>
         /// <param name="underlying">Underlying string</param>
         /// <param name="right">Option right</param>
         /// <param name="strikePrice">Option strike</param>
         /// <param name="expiration">Option expiration date</param>
-        /// <returns></returns>
+        /// <returns>The OSI ticker representation</returns>
         public static string GenerateOptionTickerOSI(string underlying, OptionRight right, decimal strikePrice, DateTime expiration)
         {
             if (underlying.Length > 5) underlying += " ";
             return string.Format("{0,-6}{1}{2}{3:00000000}", underlying, expiration.ToString(DateFormat.SixCharacter), right.ToString()[0], strikePrice * 1000m);
+        }
+
+        /// <summary>
+        /// Parses the specified OSI options ticker into a Symbol object
+        /// </summary>
+        /// <param name="ticker">The OSI compliant option ticker string</param>
+        /// <returns>Symbol object for the specified OSI option ticker string</returns>
+        public static Symbol ParseOptionTickerOSI(string ticker)
+        {
+            var underlying = ticker.Substring(0, 6).Trim();
+            var expiration = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
+            OptionRight right;
+            if (ticker[12] == 'C') right = OptionRight.Call;
+            else if (ticker[12] == 'P') right = OptionRight.Put;
+            else throw new FormatException($"Expected 12th character to be 'C' or 'P' for OptionRight: {ticker}");
+            var strike = decimal.Parse(ticker.Substring(13, 8)) / 1000m;
+            var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, Market.USA);
+            var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, Market.USA, strike, right, OptionStyle.American);
+            return new Symbol(sid, ticker, new Symbol(underlyingSid, underlying));
         }
 
         /// <summary>
