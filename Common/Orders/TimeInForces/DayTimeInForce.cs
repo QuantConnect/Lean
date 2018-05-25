@@ -24,14 +24,6 @@ namespace QuantConnect.Orders.TimeInForces
     public class DayTimeInForce : TimeInForce
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DayTimeInForce"/> class
-        /// </summary>
-        public DayTimeInForce()
-            : base(TimeInForceType.Day)
-        {
-        }
-
-        /// <summary>
         /// Checks if an order is expired
         /// </summary>
         /// <param name="security">The security matching the order</param>

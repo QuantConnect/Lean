@@ -1953,7 +1953,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             //   when reading the open orders, the same property will have this value: "20180524 23:00:00 CET"
             //   which is incorrect: should be CEST (UTC+2) instead of CET (UTC+1)
 
-            // We can ignore this issue, because the method is only called by GetOpenOrders.
+            // We can ignore this issue, because the method is only called by GetOpenOrders,
+            // we only call GetOpenOrders during live trading, which means we won't be simulating time in force
+            // and instead will rely on brokerages to apply TIF properly.
 
             var parts = expiryDateTime.Split(' ');
             if (parts.Length == 3)
@@ -1978,24 +1980,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return IB.TimeInForce.Day;
             }
 
-            switch (order.TimeInForce.Type)
+            if (order.TimeInForce is DayTimeInForce)
             {
-                case TimeInForceType.Day:
-                    return IB.TimeInForce.Day;
-
-                case TimeInForceType.GoodTilDate:
-                    return IB.TimeInForce.GoodTillDate;
-
-                //case TimeInForceType.FillOrKill:
-                //    return IB.TimeInForce.FillOrKill;
-
-                //case TimeInForceType.ImmediateOrCancel:
-                //    return IB.TimeInForce.ImmediateOrCancel;
-
-                case TimeInForceType.GoodTilCanceled:
-                default:
-                    return IB.TimeInForce.GoodTillCancel;
+                return IB.TimeInForce.Day;
             }
+
+            if (order.TimeInForce is GoodTilDateTimeInForce)
+            {
+                return IB.TimeInForce.GoodTillDate;
+            }
+
+            //if (order.TimeInForce is FillOrKillTimeInForce)
+            //{
+            //    return IB.TimeInForce.FillOrKill;
+            //}
+
+            //if (order.TimeInForce is ImmediateOrCancelTimeInForce)
+            //{
+            //    return IB.TimeInForce.ImmediateOrCancel;
+            //}
+
+            return IB.TimeInForce.GoodTillCancel;
         }
 
         /// <summary>

@@ -26,83 +26,21 @@ namespace QuantConnect.Orders.TimeInForces
         /// <summary>
         /// The date/time on which the order will expire and will be cancelled
         /// </summary>
-        public DateTime Expiry { get; }
+        public DateTime Expiry { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GoodTilDateTimeInForce"/> class
+        /// </summary>
+        public GoodTilDateTimeInForce()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoodTilDateTimeInForce"/> class
         /// </summary>
         public GoodTilDateTimeInForce(DateTime expiry)
-            : base(TimeInForceType.GoodTilDate)
         {
             Expiry = expiry;
-        }
-
-        /// <summary>
-        /// Equals operator
-        /// </summary>
-        /// <param name="left">The left operand</param>
-        /// <param name="right">The right operand</param>
-        /// <returns>True if both symbols are equal, otherwise false</returns>
-        public static bool operator ==(GoodTilDateTimeInForce left, GoodTilDateTimeInForce right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (ReferenceEquals(left, null)) return false;
-            if (ReferenceEquals(right, null)) return false;
-
-            return left.Equals(right);
-        }
-
-        /// <summary>
-        /// Not equals operator
-        /// </summary>
-        /// <param name="left">The left operand</param>
-        /// <param name="right">The right operand</param>
-        /// <returns>True if both symbols are not equal, otherwise false</returns>
-        public static bool operator !=(GoodTilDateTimeInForce left, GoodTilDateTimeInForce right)
-        {
-            return !(left == right);
-        }
-
-        /// <summary>
-        /// Determines whether the specified <see cref="GoodTilDateTimeInForce"/> is equal to the current <see cref="GoodTilDateTimeInForce"/>.
-        /// </summary>
-        /// <param name="obj">The object to compare with the current object. </param>
-        /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
-        public bool Equals(GoodTilDateTimeInForce obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-
-            return Type.Equals(obj.Type) && Expiry.Equals(obj.Expiry);
-        }
-
-        /// <summary>
-        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
-        /// </summary>
-        /// <param name="obj">The object to compare with the current object. </param>
-        /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-
-            if (obj is TimeInForceType)
-                return (TimeInForceType)obj == Type;
-
-            var gtd = obj as GoodTilDateTimeInForce;
-            if (gtd != null)
-                return Type.Equals(gtd.Type) && Expiry.Equals(gtd.Expiry);
-
-            return false;
-        }
-
-        /// <summary>
-        /// Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>A hash code for the current <see cref="TimeInForce"/>.</returns>
-        public override int GetHashCode()
-        {
-            return (Type.GetHashCode() * 397) ^ Expiry.GetHashCode();
         }
 
         /// <summary>

@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
@@ -27,11 +29,11 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class InteractiveBrokersBrokerageModel : DefaultBrokerageModel
     {
-        private readonly TimeInForceType[] _supportedTimeInForces =
+        private readonly Type[] _supportedTimeInForces =
         {
-            TimeInForceType.GoodTilCanceled,
-            TimeInForceType.Day,
-            TimeInForceType.GoodTilDate
+            typeof(GoodTilCanceledTimeInForce),
+            typeof(DayTimeInForce),
+            typeof(GoodTilDateTimeInForce)
         };
 
         /// <summary>
@@ -91,10 +93,10 @@ namespace QuantConnect.Brokerages
             }
 
             // validate time in force
-            if (!_supportedTimeInForces.Contains(order.TimeInForce.Type))
+            if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.TimeInForce.Type + " time in force."
+                    "This model does not support " + order.TimeInForce.GetType().Name + " time in force."
                 );
 
                 return false;

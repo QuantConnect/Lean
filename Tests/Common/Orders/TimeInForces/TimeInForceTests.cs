@@ -31,64 +31,6 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
     public class TimeInForceTests
     {
         [Test]
-        public void GtcTimeInForceCompareProperly()
-        {
-            var tif1 = new GoodTilCanceledTimeInForce();
-            var tif2 = new GoodTilCanceledTimeInForce();
-
-            Assert.IsTrue(tif1 == tif2);
-            Assert.IsFalse(tif1 != tif2);
-
-            Assert.IsTrue(tif1 == TimeInForce.GoodTilCanceled);
-            Assert.IsFalse(tif1 != TimeInForce.GoodTilCanceled);
-
-            Assert.AreEqual(tif1, tif2);
-            Assert.AreEqual(tif1.Type, tif2.Type);
-
-            Assert.AreEqual(tif1, TimeInForceType.GoodTilCanceled);
-        }
-
-        [Test]
-        public void DayTimeInForceCompareProperly()
-        {
-            var tif1 = new DayTimeInForce();
-            var tif2 = new DayTimeInForce();
-
-            Assert.IsTrue(tif1 == tif2);
-            Assert.IsFalse(tif1 != tif2);
-
-            Assert.IsTrue(tif1 == TimeInForce.Day);
-            Assert.IsFalse(tif1 != TimeInForce.Day);
-
-            Assert.AreEqual(tif1, tif2);
-            Assert.AreEqual(tif1.Type, tif2.Type);
-
-            Assert.AreEqual(tif1, TimeInForceType.Day);
-        }
-
-        [Test]
-        public void GtdTimeInForceCompareProperly()
-        {
-            var tif1 = new GoodTilDateTimeInForce(new DateTime(2018, 5, 21));
-            var tif2 = new GoodTilDateTimeInForce(new DateTime(2018, 5, 21));
-            var tif3 = new GoodTilDateTimeInForce(new DateTime(2018, 6, 6));
-
-            Assert.IsTrue(tif1 == tif2);
-            Assert.IsFalse(tif1 != tif2);
-
-            Assert.IsTrue(tif1 != tif3);
-            Assert.IsFalse(tif1 == tif3);
-
-            Assert.AreEqual(tif1, tif2);
-            Assert.AreEqual(tif1.Type, tif2.Type);
-
-            Assert.AreNotEqual(tif1, tif3);
-            Assert.AreEqual(tif1.Type, tif3.Type);
-
-            Assert.AreEqual(tif1, TimeInForceType.GoodTilDate);
-        }
-
-        [Test]
         public void GtcTimeInForceOrderDoesNotExpire()
         {
             var security = new Equity(

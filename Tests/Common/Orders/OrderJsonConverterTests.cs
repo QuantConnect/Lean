@@ -202,7 +202,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(1, (int)order.TimeInForce.Type);
+            Assert.IsTrue(order.TimeInForce is DayTimeInForce);
         }
 
         [Test]
@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(1, (int)order.TimeInForce.Type);
+            Assert.IsTrue(order.TimeInForce is DayTimeInForce);
         }
 
         [Test]
@@ -269,7 +269,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(TimeInForceType.GoodTilDate, order.TimeInForce.Type);
+            Assert.IsTrue(order.TimeInForce is GoodTilDateTimeInForce);
 
             var timeInForce = (GoodTilDateTimeInForce)order.TimeInForce;
             Assert.AreEqual(new DateTime(2010, 4, 4, 14, 31, 0), timeInForce.Expiry);
@@ -280,6 +280,37 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today);
             TestOrderType(expected);
+        }
+
+        [Test]
+        public void DeserializesOrderGoodTilCanceledTimeInForce()
+        {
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            TestOrderType(expected);
+        }
+
+        [Test]
+        public void DeserializesOrderDayTimeInForce()
+        {
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            TestOrderType(expected);
+        }
+
+        [Test]
+        public void DeserializesOrderGoodTilDateTimeInForce()
+        {
+            var expiry = new DateTime(2018, 5, 26);
+            var orderProperties = new OrderProperties { TimeInForce = new GoodTilDateTimeInForce(expiry) };
+            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            TestOrderType(expected);
+
+            var json = JsonConvert.SerializeObject(expected);
+            var actual = DeserializeOrder<MarketOrder>(json);
+
+            var gtd = (GoodTilDateTimeInForce)actual.Properties.TimeInForce;
+            Assert.AreEqual(expiry, gtd.Expiry);
         }
 
         private static T TestOrderType<T>(T expected)
@@ -294,7 +325,7 @@ namespace QuantConnect.Tests.Common.Orders
             CollectionAssert.AreEqual(expected.BrokerId, actual.BrokerId);
             Assert.AreEqual(expected.ContingentId, actual.ContingentId);
             Assert.AreEqual(expected.Direction, actual.Direction);
-            Assert.AreEqual(expected.TimeInForce, actual.TimeInForce);
+            Assert.AreEqual(expected.TimeInForce.GetType(), actual.TimeInForce.GetType());
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Price, actual.Price);
             Assert.AreEqual(expected.SecurityType, actual.SecurityType);

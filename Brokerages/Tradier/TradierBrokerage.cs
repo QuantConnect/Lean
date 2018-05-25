@@ -27,6 +27,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -1756,17 +1757,17 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         protected static TradierOrderDuration GetOrderDuration(TimeInForce timeInForce)
         {
-            switch (timeInForce.Type)
+            if (timeInForce is GoodTilCanceledTimeInForce)
             {
-                case TimeInForceType.GoodTilCanceled:
-                    return TradierOrderDuration.GTC;
-
-                case TimeInForceType.Day:
-                    return TradierOrderDuration.Day;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
+                return TradierOrderDuration.GTC;
             }
+
+            if (timeInForce is DayTimeInForce)
+            {
+                return TradierOrderDuration.Day;
+            }
+
+            throw new ArgumentOutOfRangeException();
         }
 
         /// <summary>

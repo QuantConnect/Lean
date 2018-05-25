@@ -204,31 +204,26 @@ namespace QuantConnect.Orders
             if (timeInForce is JValue)
             {
                 var value = timeInForce.Value<int>();
-                if (value == (int)TimeInForceType.GoodTilDate)
+
+                switch (value)
                 {
-                    var expiry = jObject["DurationValue"].Value<DateTime>();
-                    return new GoodTilDateTimeInForce(expiry);
+                    case 0:
+                        return TimeInForce.GoodTilCanceled;
+
+                    case 1:
+                        return TimeInForce.Day;
+
+                    case 2:
+                        var expiry = jObject["DurationValue"].Value<DateTime>();
+                        return new GoodTilDateTimeInForce(expiry);
+
+                    default:
+                        throw new Exception($"Unknown time in force value: {value}");
                 }
-
-                return (TimeInForceType)value;
             }
 
-            var timeInForceType = (TimeInForceType)timeInForce["Type"].Value<int>();
-            switch (timeInForceType)
-            {
-                case TimeInForceType.GoodTilCanceled:
-                    return new GoodTilCanceledTimeInForce();
-
-                case TimeInForceType.Day:
-                    return new DayTimeInForce();
-
-                case TimeInForceType.GoodTilDate:
-                    var expiry = timeInForce["Expiry"].Value<DateTime>();
-                    return new GoodTilDateTimeInForce(expiry);
-
-                default:
-                    throw new ArgumentOutOfRangeException("Unsupported TimeInForce type: " + timeInForceType);
-            }
+            // convert with TimeInForceJsonConverter
+            return timeInForce.ToObject<TimeInForce>();
         }
     }
 }

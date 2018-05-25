@@ -57,38 +57,6 @@ namespace QuantConnect.Orders
     }
 
     /// <summary>
-    /// Time In Force Type - defines the length of time over which an order will continue working before it is canceled
-    /// </summary>
-    public enum TimeInForceType
-    {
-        /// <summary>
-        /// Order active until it is filled or canceled (same as GTC).
-        /// </summary>
-        GoodTilCanceled,
-
-        /// <summary>
-        /// Order active until it is filled or canceled (same as GoodTilCanceled).
-        /// </summary>
-        GTC = GoodTilCanceled,
-
-        /// <summary>
-        /// Order valid only for the current day (DAY).
-        /// The order will be cancelled if not executed before the market close.
-        /// </summary>
-        Day,
-
-        /// <summary>
-        /// Order valid until a specific date/time value (same as GTD).
-        /// </summary>
-        GoodTilDate,
-
-        /// <summary>
-        /// Order valid until a specific date/time value (same as GoodTilDate).
-        /// </summary>
-        GTD = GoodTilDate
-    }
-
-    /// <summary>
     /// Direction of the order
     /// </summary>
     public enum OrderDirection
