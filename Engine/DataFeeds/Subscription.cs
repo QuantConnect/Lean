@@ -21,6 +21,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -29,16 +30,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class Subscription : IEnumerator<SubscriptionData>
     {
+        private bool _removedFromUniverse;
         private readonly IEnumerator<SubscriptionData> _enumerator;
 
         /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
-        public Universe Universe
-        {
-            get;
-            private set;
-        }
+        public Universe Universe { get; }
 
         /// <summary>
         /// Gets the security this subscription points to
@@ -53,10 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the exchange time zone associated with this subscription
         /// </summary>
-        public DateTimeZone TimeZone
-        {
-            get { return Security.Exchange.TimeZone; }
-        }
+        public DateTimeZone TimeZone => Security.Exchange.TimeZone;
 
         /// <summary>
         /// Gets the offset provider for time zone conversions to and from the data's local time
@@ -76,17 +71,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets true if this subscription is used in universe selection
         /// </summary>
-        public bool IsUniverseSelectionSubscription { get; private set; }
+        public bool IsUniverseSelectionSubscription { get; }
 
         /// <summary>
         /// Gets the start time of this subscription in UTC
         /// </summary>
-        public DateTime UtcStartTime { get; private set; }
+        public DateTime UtcStartTime { get; }
 
         /// <summary>
         /// Gets the end time of this subscription in UTC
         /// </summary>
-        public DateTime UtcEndTime { get; private set; }
+        public DateTime UtcEndTime { get; }
+
+        /// <summary>
+        /// Gets whether or not this subscription has been removed from its parent universe
+        /// </summary>
+        public IReadOnlyRef<bool> RemovedFromUniverse { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Subscription"/> class with a universe
@@ -119,6 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             UtcStartTime = utcStartTime;
             UtcEndTime = utcEndTime;
+            RemovedFromUniverse = Ref.CreateReadOnly(() => _removedFromUniverse);
         }
 
         /// <summary>
@@ -165,10 +166,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -181,6 +179,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Mark this subscription as having been removed from the universe.
+        /// Data for this time step will be discarded.
+        /// </summary>
+        public void MarkAsRemovedFromUniverse()
+        {
+            _removedFromUniverse = true;
+        }
+
+        /// <summary>
         /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
@@ -189,7 +196,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            return Configuration.Symbol.GetHashCode();
+            return Configuration.GetHashCode();
+        }
+
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <returns>
+        /// <see langword="true" /> if the specified object  is equal to the current object; otherwise, <see langword="false" />.</returns>
+        public override bool Equals(object obj)
+        {
+            var subscription = obj as Subscription;
+            if (subscription == null)
+            {
+                return false;
+            }
+
+            return subscription.Configuration.Equals(Configuration);
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
