@@ -362,10 +362,18 @@ namespace QuantConnect.Lean.Engine
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
                     var cash = kvp.Value;
-                    var updateData = cash.ConversionRateSecurity?.GetLastData();
-                    if (updateData != null)
+
+                    if (cash.ConversionRateSecurity != null)
                     {
-                        cash.Update(updateData);
+                        foreach (Cash.ConversionSecurity conSec in cash.ConversionRateSecurity)
+                        {
+                            var updateData = conSec.RateSecurity.GetLastData();
+
+                            if (updateData != null)
+                            {
+                                cash.Update(updateData);
+                            }
+                        }
                     }
                 }
 
