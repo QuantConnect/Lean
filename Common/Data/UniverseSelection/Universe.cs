@@ -152,7 +152,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var selections = result.ToHashSet();
-            var hasDiffs = _previousSelections.Except(selections).Union(selections.Except(_previousSelections)).Any();
+            var hasDiffs = _previousSelections.HasDiffs(selections);
             _previousSelections = selections;
             if (!hasDiffs)
             {

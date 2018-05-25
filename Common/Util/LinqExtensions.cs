@@ -315,5 +315,19 @@ namespace QuantConnect.Util
                 }
             }
         }
+
+        /// <summary>
+        /// Determines if there are any differences between the left and right collections.
+        /// This method uses sets to improve performance and also uses lazy evaluation so if a
+        /// difference is found, true is immediately returned and evaluation is halted.
+        /// </summary>
+        /// <typeparam name="T">The item type</typeparam>
+        /// <param name="left">The left set</param>
+        /// <param name="right">The right set</param>
+        /// <returns>True if there are any differences between the two sets, false otherwise</returns>
+        public static bool HasDiffs<T>(this ISet<T> left, ISet<T> right)
+        {
+            return left.Except(right).Any() || right.Except(left).Any();
+        }
     }
 }
