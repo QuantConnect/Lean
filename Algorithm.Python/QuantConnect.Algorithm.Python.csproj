@@ -143,6 +143,10 @@
     <None Include="Benchmarks\BasicTemplateBenchmark.py" />
     <None Include="Benchmarks\EmptyMinute400EquityBenchmark.py" />
     <None Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.py" />
+    <None Include="Benchmarks\HistoryRequestBenchmark.py" />
+    <None Include="Benchmarks\CoarseFineUniverseSelectionBenchmark.py" />
+    <None Include="Benchmarks\IndicatorRibbonBenchmark.py" />
+    <None Include="Benchmarks\ScheduleEventsBenchmark.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
