@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // if the security is no longer a member of the universe, then mark the subscription properly
-            if (!subscription.Universe.Members.ContainsKey(configuration.Symbol))
+            if (subscription.Universe != null && !subscription.Universe.Members.ContainsKey(configuration.Symbol))
             {
                 subscription.MarkAsRemovedFromUniverse();
             }
