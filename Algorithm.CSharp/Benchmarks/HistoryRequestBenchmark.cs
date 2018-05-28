@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {

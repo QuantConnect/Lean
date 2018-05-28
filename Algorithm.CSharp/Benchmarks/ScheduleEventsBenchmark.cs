@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
