@@ -102,8 +102,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 if (!_symbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
                 {
                     // create fast/slow EMAs
-                    var fast = algorithm.EMA(added.Symbol, _fastPeriod);
-                    var slow = algorithm.EMA(added.Symbol, _slowPeriod);
+                    var fast = algorithm.EMA(added.Symbol, _fastPeriod, _resolution);
+                    var slow = algorithm.EMA(added.Symbol, _slowPeriod, _resolution);
                     _symbolDataBySymbol[added.Symbol] = new SymbolData
                     {
                         Security = added,
