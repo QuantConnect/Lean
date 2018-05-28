@@ -54,9 +54,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
-            
-            // Get symbols that have emit insights and still in the universe
-            var symbols = _insightCollection.Select(x => x.Symbol).Distinct().ToList();
+
+            // Get symbols that have emit insights, are still in the universe, and insigths haven't expired
+            var symbols = _insightCollection
+                .Where(x => x.CloseTimeUtc > algorithm.UtcTime)
+                .Select(x => x.Symbol).Distinct().ToList();
 
             // give equal weighting to each security
             var percent = 1m / symbols.Count;

@@ -46,9 +46,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             return targets
 
         # Get symbols that have emit insights and still in the universe
-        symbols = list(set([x.Symbol for x in self.insightCollection]))
-
-        algorithm.Log(str(len(symbols)))
+        symbols = list(set([x.Symbol for x in self.insightCollection if x.CloseTimeUtc > algorithm.UtcTime]))
 
         # give equal weighting to each security
         percent = 1.0 / len(symbols)
@@ -70,6 +68,6 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
 
         # remove the insights of the removed symbol from the collection
         for removedSymbol in self.removedSymbols:
-            insights = [ x for x in self.insightCollection if x.Symbol == symbol ]
-            for insight in insights:
-                self.insightCollection.Remove(insight)
+            if self.insightCollection.ContainsKey(removedSymbol):
+                for insight in self.insightCollection[removedSymbol]:
+                    self.insightCollection.Remove(insight)
