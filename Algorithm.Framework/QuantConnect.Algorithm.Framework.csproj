@@ -130,6 +130,9 @@
     <Content Include="Alphas\HistoricalReturnsAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Alphas\NullAlphaModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Alphas\PairsTradingAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
