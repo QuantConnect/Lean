@@ -31,9 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="indicator classes" />
     /// <meta name="tag" content="plotting indicators" />
-    public class ConvertToFrameworkAlgorithm : QCAlgorithmFrameworkBridge // 1. Derive from QCAlgorithmFramworkBridge
+    public class ConvertToFrameworkAlgorithm : QCAlgorithmFrameworkBridge // 1. Derive from QCAlgorithmFrameworkBridge
     {
-        private DateTime _previous;
         private MovingAverageConvergenceDivergence _macd;
         private readonly string _symbol = "SPY";
 
@@ -91,6 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Insight.Price(_symbol, TimeSpan.FromDays(FastEmaPeriod), InsightDirection.Down)
                 );
 
+                // shortterm says sell as well
                 SetHoldings(_symbol, -1.0);
             }
 
@@ -98,8 +98,6 @@ namespace QuantConnect.Algorithm.CSharp
             Plot("MACD", _macd, _macd.Signal);
             Plot(_symbol, "Open", data[_symbol].Open);
             Plot(_symbol, _macd.Fast, _macd.Slow);
-
-            _previous = Time;
         }
     }
 }
