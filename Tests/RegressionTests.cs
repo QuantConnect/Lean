@@ -1201,6 +1201,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("ConvertToFrameworkAlgorithm", convertToFrameworkAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CompositeAlphaModelFrameworkAlgorithm", compositeAlphaModelFrameworkAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.Python),

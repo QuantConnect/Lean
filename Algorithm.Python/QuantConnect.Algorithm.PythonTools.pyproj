@@ -27,6 +27,7 @@
     <Compile Include="BasicTemplateIntrinioEconomicData.py" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="ConstituentsQC500GeneratorAlgorithm.py" />
+    <Compile Include="ConvertToFrameworkAlgorithm.py" />
     <Compile Include="CustomDataIndicatorExtensionsAlgorithm.py" />
     <Compile Include="CustomFrameworkModelsAlgorithm.py" />
     <Compile Include="CustomIndicatorAlgorithm.py" />

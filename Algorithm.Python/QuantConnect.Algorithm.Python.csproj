@@ -168,6 +168,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ConvertToFrameworkAlgorithm.py" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Benchmarks\" />
   </ItemGroup>
   <ItemGroup>
