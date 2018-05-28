@@ -64,5 +64,16 @@ namespace QuantConnect.Algorithm.Framework
         {
             OnInsightsGenerated(insights);
         }
+
+        /// <summary>
+        /// Manually emit insights from an algorithm.
+        /// This is typically invoked before calls to submit orders in algorithms written against
+        /// QCAlgorithm that have been ported into the algorithm framework.
+        /// </summary>
+        /// <param name="insights"></param>
+        public void EmitInsights(Insight insight)
+        {
+            OnInsightsGenerated(new[] { insight });
+        }
     }
 }
