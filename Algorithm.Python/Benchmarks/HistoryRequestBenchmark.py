@@ -34,3 +34,4 @@ class HistoryRequestBenchmark(QCAlgorithm):
  
     def OnData(self, data):
         self.History([self.symbol], 2, Resolution.Daily)
+        self.History([self.symbol], 4, Resolution.Minute)

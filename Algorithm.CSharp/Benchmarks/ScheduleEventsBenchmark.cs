@@ -20,37 +20,23 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
-    /// <summary>
-    /// Demonstration of the Scheduled Events features available in QuantConnect.
-    /// </summary>
     public class ScheduledEventsBenchmark : QCAlgorithm
     {
         public override void Initialize()
         {
-            SetStartDate(2008, 1, 1);
+            SetStartDate(2011, 1, 1);
             SetEndDate(2018, 1, 1);
             SetCash(100000);
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
-
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
             foreach (int period in Enumerable.Range(0, 100))
             {
-
-                Schedule.On(DateRules.EveryDay("SPY"), TimeRules.AfterMarketOpen("SPY", period), () =>
-                {
-                });
-
-                Schedule.On(DateRules.EveryDay("SPY"), TimeRules.BeforeMarketClose("SPY", period), () =>
-                {
-                });
-
+                Schedule.On(DateRules.EveryDay("SPY"), TimeRules.AfterMarketOpen("SPY", period), Rebalance);
+                Schedule.On(DateRules.EveryDay("SPY"), TimeRules.BeforeMarketClose("SPY", period), Rebalance);
             }
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromSeconds(5)), () =>
-            {
-            });
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromSeconds(5)), Rebalance);
         }
 
-        public override void OnData(Slice data)
-        {
-        }
+        public override void OnData(Slice data) { }
+        private void Rebalance() { }
     }
 }

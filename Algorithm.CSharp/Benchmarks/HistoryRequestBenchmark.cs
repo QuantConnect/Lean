@@ -19,19 +19,19 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
     public class HistoryRequestBenchmark : QCAlgorithm
     {
-
+        private Symbol symbol;
         public override void Initialize()
         {
             SetStartDate(2015, 01, 01);
             SetEndDate(2018, 01, 01);
             SetCash(10000);
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Hour);
-
+            symbol = AddEquity("SPY", Resolution.Hour).Symbol;
         }
 
         public override void OnData(Slice data)
         {
-            var history = History("SPY", 2, Resolution.Daily);
+            History(symbol, 2, Resolution.Daily);
+            History(symbol, 4, Resolution.Minute);
         }
     }
 }

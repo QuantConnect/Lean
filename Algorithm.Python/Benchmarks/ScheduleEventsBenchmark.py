@@ -22,17 +22,16 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from datetime import timedelta
 
-class ScheduledEventsAlgorithm(QCAlgorithm):
+class ScheduledEventsBenchmark(QCAlgorithm):
 
     def Initialize(self):
 
-        self.SetStartDate(2008, 1, 1)   
+        self.SetStartDate(2011, 1, 1)   
         self.SetEndDate(2018, 1, 1)     
         self.SetCash(100000)            
-        self.AddEquity("SPY", Resolution.Daily)
+        self.AddEquity("SPY", Resolution.Minute)
 
         for i in range(100):
-        
             self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", i), self.Rebalance)
             self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.BeforeMarketClose("SPY", i), self.Rebalance)
 
