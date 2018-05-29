@@ -91,6 +91,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             OnSubscriptionFinished(subscription);
                             continue;
                         }
+
+                        if (subscription.Current == null)
+                        {
+                            throw new Exception($"SubscriptionSynchronizer.Sync(): subscription.Current is null, configuration: {subscription}");
+                        }
                     }
 
                     var packet = new DataFeedPacket(subscription.Security, subscription.Configuration, subscription.RemovedFromUniverse);
