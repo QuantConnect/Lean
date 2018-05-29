@@ -1,4 +1,5 @@
 ﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,22 +18,22 @@ using System;
 using System.Linq;
 using QuantConnect.Data;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
-
+    /// <summary>
+    /// Demonstration of the Scheduled Events features available in QuantConnect.
+    /// </summary>
     public class ScheduledEventsBenchmark : QCAlgorithm
     {
-
         public override void Initialize()
         {
             SetStartDate(2008, 1, 1);
             SetEndDate(2018, 1, 1);
             SetCash(100000);
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
             foreach (int period in Enumerable.Range(0, 100))
             {
-                Log(period.ToString());
 
                 Schedule.On(DateRules.EveryDay("SPY"), TimeRules.AfterMarketOpen("SPY", period), () =>
                 {
@@ -42,10 +43,10 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                 });
 
-                Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromSeconds(5)), () =>
-                {
-                });
             }
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromSeconds(5)), () =>
+            {
+            });
         }
 
         public override void OnData(Slice data)

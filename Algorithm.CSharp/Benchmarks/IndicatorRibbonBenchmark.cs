@@ -19,7 +19,7 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
     /// <summary>
     /// Constructs a displaced moving average ribbon 

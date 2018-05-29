@@ -15,7 +15,7 @@
 
 using QuantConnect.Data;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
     public class HistoryRequestBenchmark : QCAlgorithm
     {

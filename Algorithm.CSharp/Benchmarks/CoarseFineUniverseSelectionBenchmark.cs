@@ -19,7 +19,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
 
     public class CoarseFineUniverseSelectionBenchmark : QCAlgorithm
