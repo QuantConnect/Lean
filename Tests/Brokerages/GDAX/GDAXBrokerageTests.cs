@@ -156,8 +156,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 Assert.AreEqual(expectedQuantity, e.FillQuantity);
                 // fill quantity = 5.23512
                 // fill price = 400.23
-                // partial order fee = (400.23 * 5.23512 * 0.0025) = 5.238130194
-                Assert.AreEqual(5.238130194m, actualFee);
+                // partial order fee = (400.23 * 5.23512 * 0.003) = 6.2857562328
+                Assert.AreEqual(6.2857562328m, actualFee);
                 raised.Set();
             };
 

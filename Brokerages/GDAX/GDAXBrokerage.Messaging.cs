@@ -634,10 +634,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return 0;
             }
 
-            decimal fee;
-            GDAXFeeModel.Fees.TryGetValue(symbol.Value, out fee);
-
-            return fillPrice * Math.Abs(fillQuantity) * fee;
+            return fillPrice * Math.Abs(fillQuantity) * GDAXFeeModel.TakerFee;
         }
     }
 }
