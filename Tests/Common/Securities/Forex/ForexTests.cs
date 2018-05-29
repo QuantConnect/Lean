@@ -45,10 +45,10 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string symbol = "";
 
-            for(int i = 0 ; i < Currencies.MaxCharactersPerCurrencyPair + 1; i++)
+            for(int i = 0 ; i < Currencies.MaxCharactersPerCurrencyPair + 2; i++)
                 symbol += "X";
 
-            Assert.AreEqual(symbol.Length, Currencies.MaxCharactersPerCurrencyPair + 1);
+            Assert.AreEqual(symbol.Length, Currencies.MaxCharactersPerCurrencyPair + 2);
 
             string basec, quotec;
             QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
