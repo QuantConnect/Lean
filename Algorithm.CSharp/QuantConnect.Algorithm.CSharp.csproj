@@ -87,6 +87,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="Benchmarks\BasicTemplateFrameworkBenchmark.cs" />
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
     <Compile Include="ConvertToFrameworkAlgorithm.cs" />
@@ -103,7 +104,7 @@
     <Compile Include="Benchmarks\BasicTemplateBenchmark.cs" />
     <Compile Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.cs" />
     <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
-    <Compile Include="EmaCrossUniverseSelectionFrameworkAlgorithm.cs" />
+    <Compile Include="Benchmarks\EmaCrossUniverseSelectionFrameworkAlgorithm.cs" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataSameResolutionRegressionAlgorithm.cs" />

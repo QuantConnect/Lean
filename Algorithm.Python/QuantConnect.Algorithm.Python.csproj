@@ -36,6 +36,8 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="Benchmarks\BasicTemplateFrameworkBenchmark.py" />
+    <Content Include="Benchmarks\EmaCrossUniverseSelectionFrameworkBenchmark.py" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -170,9 +172,7 @@
   <ItemGroup>
     <None Include="ConvertToFrameworkAlgorithm.py" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Benchmarks\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>

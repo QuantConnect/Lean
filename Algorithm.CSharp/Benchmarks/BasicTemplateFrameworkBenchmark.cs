@@ -12,37 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
+using System;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data.UniverseSelection;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
-    /// <summary>
-    /// Framework algorithm that uses the <see cref="EmaCrossUniverseSelectionModel"/> to
-    /// select the universe based on a moving average cross.
-    /// </summary>
-    public class EmaCrossUniverseSelectionFrameworkAlgorithm : QCAlgorithmFramework
+    public class BasicTemplateFrameworkBenchmark : QCAlgorithmFramework
     {
         public override void Initialize()
         {
-            SetStartDate(2013, 01, 01);
-            SetEndDate(2015, 01, 01);
+            UniverseSettings.Resolution = Resolution.Minute;
+
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
             SetCash(100000);
 
-            var fastPeriod = 100;
-            var slowPeriod = 300;
-            var count = 10;
-
-            UniverseSettings.Leverage = 2.0m;
-            UniverseSettings.Resolution = Resolution.Daily;
-
-            SetUniverseSelection(new EmaCrossUniverseSelectionModel(fastPeriod, slowPeriod, count));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, Resolution.Daily.ToTimeSpan()));
+            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
+            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            SetExecution(new ImmediateExecutionModel());
+            SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
         }
     }
 }
