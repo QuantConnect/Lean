@@ -32,7 +32,6 @@ using QuantConnect.Brokerages.Oanda.RestV1.Session;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using Order = QuantConnect.Orders.Order;
 
@@ -772,7 +771,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             var expiry = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
-            qcOrder.Properties.TimeInForce = new GoodTilDateTimeInForce(expiry);
+            qcOrder.Properties.TimeInForce = TimeInForce.GoodTilDate(expiry);
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
 
             return qcOrder;

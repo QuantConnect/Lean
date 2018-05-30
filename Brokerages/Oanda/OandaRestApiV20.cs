@@ -30,7 +30,6 @@ using Oanda.RestV20.Session;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using DateTime = System.DateTime;
 using LimitOrder = QuantConnect.Orders.LimitOrder;
@@ -657,7 +656,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (gtdTime != null)
             {
                 var expiry = GetTickDateTimeFromString(gtdTime.ToString());
-                qcOrder.Properties.TimeInForce = new GoodTilDateTimeInForce(expiry);
+                qcOrder.Properties.TimeInForce = TimeInForce.GoodTilDate(expiry);
             }
 
             return qcOrder;

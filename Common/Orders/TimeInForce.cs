@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders.TimeInForces;
@@ -35,6 +36,14 @@ namespace QuantConnect.Orders
         /// Gets a <see cref="DayTimeInForce"/> instance
         /// </summary>
         public static readonly TimeInForce Day = new DayTimeInForce();
+
+        /// <summary>
+        /// Gets a <see cref="GoodTilDateTimeInForce"/> instance
+        /// </summary>
+        public static TimeInForce GoodTilDate(DateTime expiry)
+        {
+            return new GoodTilDateTimeInForce(expiry);
+        }
 
         /// <summary>
         /// Checks if an order is expired

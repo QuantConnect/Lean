@@ -302,7 +302,7 @@ namespace QuantConnect.Tests.Common.Orders
         public void DeserializesOrderGoodTilDateTimeInForce()
         {
             var expiry = new DateTime(2018, 5, 26);
-            var orderProperties = new OrderProperties { TimeInForce = new GoodTilDateTimeInForce(expiry) };
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilDate(expiry) };
             var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
             TestOrderType(expected);
 

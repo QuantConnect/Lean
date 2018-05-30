@@ -1927,7 +1927,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return TimeInForce.Day;
 
                 case IB.TimeInForce.GoodTillDate:
-                    return new GoodTilDateTimeInForce(ParseExpiryDateTime(expiryDateTime));
+                    return TimeInForce.GoodTilDate(ParseExpiryDateTime(expiryDateTime));
 
                 //case IB.TimeInForce.FillOrKill:
                 //    return TimeInForce.FillOrKill;

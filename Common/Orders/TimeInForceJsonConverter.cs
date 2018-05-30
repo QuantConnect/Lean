@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Globalization;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -84,17 +86,33 @@ namespace QuantConnect.Orders
         {
             var jObject = JObject.Load(reader);
 
-            var timeInForce = Activator.CreateInstance("QuantConnect.Common", jObject["$type"].ToString()).Unwrap();
-
-            foreach (var property in timeInForce.GetType().GetProperties())
+            var typeName = jObject["$type"].ToString();
+            var type = Type.GetType(typeName);
+            if (type == null)
             {
-                if (property.CanWrite)
+                throw new Exception($"Unable to find the type: {typeName}");
+            }
+
+            var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[0], null);
+            if (constructor == null)
+            {
+                throw new Exception($"Unable to find a constructor for type: {typeName}");
+            }
+
+            var timeInForce = constructor.Invoke(null);
+
+            foreach (var property in timeInForce.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                var value = jObject[property.Name];
+                if (value != null)
                 {
-                    var value = jObject[property.Name];
-                    if (value != null)
-                    {
-                        property.SetValue(timeInForce, value.ToObject(property.PropertyType));
-                    }
+                    property.SetValue(
+                        timeInForce,
+                        value.ToObject(property.PropertyType),
+                        BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                        null,
+                        null,
+                        CultureInfo.InvariantCulture);
                 }
             }
 

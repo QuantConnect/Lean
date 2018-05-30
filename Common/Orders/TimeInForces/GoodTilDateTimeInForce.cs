@@ -26,12 +26,14 @@ namespace QuantConnect.Orders.TimeInForces
         /// <summary>
         /// The date/time on which the order will expire and will be cancelled
         /// </summary>
-        public DateTime Expiry { get; set; }
+        /// <remarks>The private set is required for JSON deserialization</remarks>
+        public DateTime Expiry { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoodTilDateTimeInForce"/> class
         /// </summary>
-        public GoodTilDateTimeInForce()
+        /// <remarks>This constructor is required for JSON deserialization</remarks>
+        private GoodTilDateTimeInForce()
         {
         }
 

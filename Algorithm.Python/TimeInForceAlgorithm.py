@@ -89,7 +89,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
             # These GTD orders will expire on October 10th at market close,
             # if not filled by then they will be canceled automatically.
 
-            self.DefaultOrderProperties.TimeInForce = GoodTilDateTimeInForce(datetime(2013, 10, 10))
+            self.DefaultOrderProperties.TimeInForce = TimeInForce.GoodTilDate(datetime(2013, 10, 10))
 
             # this order will not be filled before expiry and will be canceled
             self.gtdOrderTicket1 = self.LimitOrder(self.symbol, 10, 100)

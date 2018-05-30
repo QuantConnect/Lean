@@ -21,7 +21,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using QuantConnect.Brokerages;
-using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Orders
 {
@@ -215,7 +214,7 @@ namespace QuantConnect.Orders
 
                     case 2:
                         var expiry = jObject["DurationValue"].Value<DateTime>();
-                        return new GoodTilDateTimeInForce(expiry);
+                        return TimeInForce.GoodTilDate(expiry);
 
                     default:
                         throw new Exception($"Unknown time in force value: {value}");

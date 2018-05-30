@@ -214,7 +214,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 5, 1));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 5, 1));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.SPY, 10, 100, utcTime, "", orderProperties);
 
@@ -264,7 +264,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 5, 1));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 5, 1));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
 
@@ -313,7 +313,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 5, 1));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 5, 1));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
 
@@ -362,7 +362,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 4, 27));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 4, 27));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.SPY, 10, 100, utcTime, "", orderProperties);
 
@@ -398,7 +398,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 4, 27));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 4, 27));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
 
@@ -436,7 +436,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 4, 27));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 4, 27));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.EURUSD, 10, 100, utcTime, "", orderProperties);
 
@@ -477,7 +477,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
-            var timeInForce = new GoodTilDateTimeInForce(new DateTime(2018, 4, 27));
+            var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 4, 27));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
             var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
 

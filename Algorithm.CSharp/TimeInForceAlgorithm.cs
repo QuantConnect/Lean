@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
-using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -94,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // These GTD orders will expire on October 10th at market close,
                 // if not filled by then they will be canceled automatically.
 
-                DefaultOrderProperties.TimeInForce = new GoodTilDateTimeInForce(new DateTime(2013, 10, 10));
+                DefaultOrderProperties.TimeInForce = TimeInForce.GoodTilDate(new DateTime(2013, 10, 10));
 
                 // this order will not be filled before expiry and will be canceled
                 _gtdOrderTicket1 = LimitOrder(_symbol, 10, 100m);
