@@ -89,6 +89,7 @@
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
+    <Compile Include="ConvertToFrameworkAlgorithm.cs" />
     <Compile Include="RawPricesCoarseUniverseAlgorithm.cs" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="SectorExposureRiskFrameworkAlgorithm.cs" />

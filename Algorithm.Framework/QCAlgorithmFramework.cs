@@ -82,6 +82,15 @@ namespace QuantConnect.Algorithm.Framework
             // set model defaults
             Execution = new ImmediateExecutionModel();
             RiskManagement = new NullRiskManagementModel();
+
+            // set generated and close times on all insights
+            InsightsGenerated += (algorithm, data) =>
+            {
+                foreach (var insight in data.Insights)
+                {
+                    SetGeneratedAndClosedTimes(insight);
+                }
+            };
         }
 
         /// <summary>
@@ -119,10 +128,8 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public sealed override void OnFrameworkData(Slice slice)
         {
-            // generate, timestamp and emit insights
-            var insights = Alpha.Update(this, slice)
-                .Select(SetGeneratedAndClosedTimes)
-                .ToArray();
+            // insight timestamping handled via InsightsGenerated event handler
+            var insights = Alpha.Update(this, slice).ToArray();
 
             // only fire insights generated event if we actually have insights
             if (insights.Length != 0)

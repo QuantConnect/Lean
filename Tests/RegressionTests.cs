@@ -1109,12 +1109,50 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$44.32"},
             };
 
+            var convertToFrameworkAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "85"},
+                {"Average Win", "4.86%"},
+                {"Average Loss", "-4.22%"},
+                {"Compounding Annual Return", "-3.111%"},
+                {"Drawdown", "52.900%"},
+                {"Expectancy", "-0.052"},
+                {"Net Profit", "-29.385%"},
+                {"Sharpe Ratio", "-0.085"},
+                {"Loss Rate", "56%"},
+                {"Win Rate", "44%"},
+                {"Profit-Loss Ratio", "1.15"},
+                {"Alpha", "0.051"},
+                {"Beta", "-3.299"},
+                {"Annual Standard Deviation", "0.18"},
+                {"Annual Variance", "0.033"},
+                {"Information Ratio", "-0.196"},
+                {"Tracking Error", "0.18"},
+                {"Treynor Ratio", "0.005"},
+                {"Total Fees", "$715.78"},
+                {"Total Insights Generated", "85"},
+                {"Total Insights Closed", "85"},
+                {"Total Insights Analysis Completed", "84"},
+                {"Long Insight Count", "42"},
+                {"Short Insight Count", "43"},
+                {"Long/Short Ratio", "97.67%"},
+                {"Estimated Monthly Alpha Value", "$-605835.9"},
+                {"Total Accumulated Estimated Alpha Value", "$-81145830"},
+                {"Mean Population Estimated Insight Value", "$-954656.9"},
+                {"Mean Population Direction", "53.5714%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "43.5549%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("ConvertToFrameworkAlgorithm", convertToFrameworkAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CompositeAlphaModelFrameworkAlgorithm", compositeAlphaModelFrameworkAlgorithmStatistics, Language.CSharp),
@@ -1163,6 +1201,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateFrameworkAlgorithm", basicTemplateFrameworkStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("ConvertToFrameworkAlgorithm", convertToFrameworkAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("CompositeAlphaModelFrameworkAlgorithm", compositeAlphaModelFrameworkAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.Python),
