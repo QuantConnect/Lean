@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -98,28 +97,13 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.TimeInForce + " time in force."
+                    "This model does not support " + order.TimeInForce.GetType().Name + " time in force."
                 );
 
                 return false;
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Returns true if the brokerage would be able to execute this order at this time assuming
-        /// market prices are sufficient for the fill to take place. This is used to emulate the
-        /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
-        /// executions during extended market hours. This is not intended to be checking whether or not
-        /// the exchange is open, that is handled in the Security.Exchange property.
-        /// </summary>
-        /// <param name="security">The security being traded</param>
-        /// <param name="order">The order to test for execution</param>
-        /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
-        public override bool CanExecuteOrder(Security security, Order order)
-        {
-            return order.DurationValue == DateTime.MaxValue || order.DurationValue <= order.Time.AddMonths(3);
         }
 
         /// <summary>

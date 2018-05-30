@@ -191,12 +191,15 @@
     <Compile Include="Interfaces\ITimeInForceHandler.cs" />
     <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
     <Compile Include="Orders\GDAXOrderProperties.cs" />
+    <Compile Include="Orders\TimeInForceJsonConverter.cs" />
+    <Compile Include="Orders\TimeInForces\DayTimeInForce.cs" />
+    <Compile Include="Orders\TimeInForces\GoodTilCanceledTimeInForce.cs" />
+    <Compile Include="Orders\TimeInForces\GoodTilDateTimeInForce.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
     <Compile Include="Orders\OrderProperties.cs" />
     <Compile Include="Orders\OrderSubmissionData.cs" />
-    <Compile Include="Orders\TimeInForces\DayTimeInForceHandler.cs" />
-    <Compile Include="Orders\TimeInForces\GoodTilCanceledTimeInForceHandler.cs" />
+    <Compile Include="Orders\TimeInForce.cs" />
     <Compile Include="Packets\AlphaNodePacket.cs" />
     <Compile Include="Packets\AlphaResultPacket.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />

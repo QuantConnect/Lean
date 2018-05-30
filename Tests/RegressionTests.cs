@@ -1019,25 +1019,25 @@ namespace QuantConnect.Tests
 
             var timeInForceAlgorithmStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "1"},
+                {"Total Trades", "3"},
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "3.502%"},
-                {"Drawdown", "0.000%"},
+                {"Compounding Annual Return", "9.319%"},
+                {"Drawdown", "0.100%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "0.044%"},
-                {"Sharpe Ratio", "9.199"},
+                {"Net Profit", "0.114%"},
+                {"Sharpe Ratio", "7.351"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0"},
-                {"Beta", "2.009"},
-                {"Annual Standard Deviation", "0.002"},
+                {"Alpha", "-0.003"},
+                {"Beta", "5.432"},
+                {"Annual Standard Deviation", "0.008"},
                 {"Annual Variance", "0"},
-                {"Information Ratio", "4.813"},
-                {"Tracking Error", "0.002"},
+                {"Information Ratio", "6.013"},
+                {"Tracking Error", "0.008"},
                 {"Treynor Ratio", "0.011"},
-                {"Total Fees", "$1.00"}
+                {"Total Fees", "$3.00"}
             };
 
             var delistingEventsAlgorithm = new Dictionary<string, string>

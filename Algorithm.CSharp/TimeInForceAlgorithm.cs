@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 
@@ -27,8 +29,10 @@ namespace QuantConnect.Algorithm.CSharp
     public class TimeInForceAlgorithm : QCAlgorithm
     {
         private Symbol _symbol;
-        private OrderTicket _gtcOrderTicket;
-        private OrderTicket _dayOrderTicket;
+        private OrderTicket _gtcOrderTicket1, _gtcOrderTicket2;
+        private OrderTicket _dayOrderTicket1, _dayOrderTicket2;
+        private OrderTicket _gtdOrderTicket1, _gtdOrderTicket2;
+        private readonly Dictionary<int, OrderStatus> _expectedOrderStatuses = new Dictionary<int, OrderStatus>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -41,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // The default time in force setting for all orders is GoodTilCancelled (GTC),
             // uncomment this line to set a different time in force.
-            // We currently only support GTC and DAY.
+            // We currently only support GTC, DAY, GTD.
             // DefaultOrderProperties.TimeInForce = TimeInForce.Day;
 
             _symbol = AddEquity("SPY", Resolution.Minute).Symbol;
@@ -53,22 +57,51 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (_gtcOrderTicket == null)
+            if (_gtcOrderTicket1 == null)
             {
-                // This order has a default time in force of GoodTilCanceled,
-                // it will never expire and will not be canceled automatically.
+                // These GTC orders will never expire and will not be canceled automatically.
 
                 DefaultOrderProperties.TimeInForce = TimeInForce.GoodTilCanceled;
-                _gtcOrderTicket = LimitOrder(_symbol, 10, 160m);
+
+                // this order will not be filled before the end of the backtest
+                _gtcOrderTicket1 = LimitOrder(_symbol, 10, 100m);
+                _expectedOrderStatuses.Add(_gtcOrderTicket1.OrderId, OrderStatus.Submitted);
+
+                // this order will be filled before the end of the backtest
+                _gtcOrderTicket2 = LimitOrder(_symbol, 10, 160m);
+                _expectedOrderStatuses.Add(_gtcOrderTicket2.OrderId, OrderStatus.Filled);
             }
 
-            if (_dayOrderTicket == null)
+            if (_dayOrderTicket1 == null)
             {
-                // This order will expire at market close,
-                // if not filled by then it will be canceled automatically.
+                // These DAY orders will expire at market close,
+                // if not filled by then they will be canceled automatically.
 
                 DefaultOrderProperties.TimeInForce = TimeInForce.Day;
-                _dayOrderTicket = LimitOrder(_symbol, 10, 160m);
+
+                // this order will not be filled before market close and will be canceled
+                _dayOrderTicket1 = LimitOrder(_symbol, 10, 160m);
+                _expectedOrderStatuses.Add(_dayOrderTicket1.OrderId, OrderStatus.Canceled);
+
+                // this order will be filled before market close
+                _dayOrderTicket2 = LimitOrder(_symbol, 10, 180m);
+                _expectedOrderStatuses.Add(_dayOrderTicket2.OrderId, OrderStatus.Filled);
+            }
+
+            if (_gtdOrderTicket1 == null)
+            {
+                // These GTD orders will expire on October 10th at market close,
+                // if not filled by then they will be canceled automatically.
+
+                DefaultOrderProperties.TimeInForce = TimeInForce.GoodTilDate(new DateTime(2013, 10, 10));
+
+                // this order will not be filled before expiry and will be canceled
+                _gtdOrderTicket1 = LimitOrder(_symbol, 10, 100m);
+                _expectedOrderStatuses.Add(_gtdOrderTicket1.OrderId, OrderStatus.Canceled);
+
+                // this order will be filled before expiry
+                _gtdOrderTicket2 = LimitOrder(_symbol, 10, 160m);
+                _expectedOrderStatuses.Add(_gtdOrderTicket2.OrderId, OrderStatus.Filled);
             }
         }
 
@@ -82,5 +115,23 @@ namespace QuantConnect.Algorithm.CSharp
             Debug($"{Time} {orderEvent}");
         }
 
+        /// <summary>
+        /// End of algorithm run event handler. This method is called at the end of a backtest or live trading operation.
+        /// </summary>
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var kvp in _expectedOrderStatuses)
+            {
+                var orderId = kvp.Key;
+                var expectedStatus = kvp.Value;
+
+                var order = Transactions.GetOrderById(orderId);
+
+                if (order.Status != expectedStatus)
+                {
+                    throw new Exception($"Invalid status for order {orderId} - Expected: {expectedStatus}, actual: {order.Status}");
+                }
+            }
+        }
     }
 }

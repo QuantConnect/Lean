@@ -15,8 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
@@ -27,11 +29,18 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class InteractiveBrokersBrokerageModel : DefaultBrokerageModel
     {
+        private readonly Type[] _supportedTimeInForces =
+        {
+            typeof(GoodTilCanceledTimeInForce),
+            typeof(DayTimeInForce),
+            typeof(GoodTilDateTimeInForce)
+        };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        /// <see cref="AccountType.Margin"/></param>
         public InteractiveBrokersBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
@@ -84,10 +93,10 @@ namespace QuantConnect.Brokerages
             }
 
             // validate time in force
-            if (order.TimeInForce != TimeInForce.GoodTilCanceled && order.TimeInForce != TimeInForce.Day)
+            if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.TimeInForce + " time in force."
+                    "This model does not support " + order.TimeInForce.GetType().Name + " time in force."
                 );
 
                 return false;
@@ -165,7 +174,6 @@ namespace QuantConnect.Brokerages
             // switch on the currency being bought
             string baseCurrency, quoteCurrency;
             Forex.DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
-
 
             decimal max;
             ForexCurrencyLimits.TryGetValue(baseCurrency, out max);
