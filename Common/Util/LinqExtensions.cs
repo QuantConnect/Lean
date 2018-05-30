@@ -325,7 +325,7 @@ namespace QuantConnect.Util
         /// <param name="left">The left set</param>
         /// <param name="right">The right set</param>
         /// <returns>True if there are any differences between the two sets, false otherwise</returns>
-        public static bool HasDiffs<T>(this ISet<T> left, ISet<T> right)
+        public static bool AreDifferent<T>(this ISet<T> left, ISet<T> right)
         {
             return left.Except(right).Any() || right.Except(left).Any();
         }

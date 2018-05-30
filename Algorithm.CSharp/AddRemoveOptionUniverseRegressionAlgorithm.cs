@@ -70,19 +70,19 @@ namespace QuantConnect.Algorithm.CSharp
                 // things like manually added, auto added, and any other boolean state we need to track against a single security)
                 throw new Exception("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
-            if (ExpectedSecurities.HasDiffs(Securities.Keys.ToHashSet()))
+            if (ExpectedSecurities.AreDifferent(Securities.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedSecurities.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedUniverses.HasDiffs(UniverseManager.Keys.ToHashSet()))
+            if (ExpectedUniverses.AreDifferent(UniverseManager.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedUniverses.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedData.HasDiffs(data.Keys.ToHashSet()))
+            if (ExpectedData.AreDifferent(data.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));
@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Expected option contracts to be removed at 11:31AM, instead removed at: {Time}");
                 }
 
-                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).HasDiffs(ExpectedContracts.ToHashSet()))
+                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).AreDifferent(ExpectedContracts.ToHashSet()))
                 {
                     throw new Exception("Expected removed securities to equal expected contracts added");
                 }
