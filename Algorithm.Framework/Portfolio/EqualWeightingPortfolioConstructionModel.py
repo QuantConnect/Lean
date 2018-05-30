@@ -13,8 +13,8 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
+from QuantConnect.Algorithm.Framework.Alphas import InsightCollection
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
-
 
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
@@ -22,7 +22,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     For insights of direction InsightDirection.Up, long targets are returned and
     for insights of direction InsightDirection.Down, short targets are returned.'''
     def __init__(self):
-        self.securities = []
+        self.insightCollection = InsightCollection()
         self.removedSymbols = []
 
     def CreateTargets(self, algorithm, insights):
@@ -32,6 +32,8 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             insights: The insights to create portoflio targets from
         Returns:
             An enumerable of portoflio targets to be sent to the execution model'''
+        self.insightCollection.AddRange(insights)
+
         targets = []
 
         if self.removedSymbols is not None:
@@ -40,13 +42,18 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
                 targets.append(PortfolioTarget(symbol, 0))
                 self.removedSymbols = None
 
-        if len(self.securities) == 0:
-            return []
+        if len(insights) == 0:
+            return targets
+
+        # Get symbols that have emit insights and still in the universe
+        symbols = list(set([x.Symbol for x in self.insightCollection if x.CloseTimeUtc > algorithm.UtcTime]))
 
         # give equal weighting to each security
-        percent = 1.0 / len(self.securities)
-        for insight in insights:
-            targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent))
+        percent = 1.0 / len(symbols)
+        for symbol in symbols:
+            activeInsights = [ x for x in self.insightCollection if x.Symbol == symbol ]
+            direction = activeInsights[-1].Direction
+            targets.append(PortfolioTarget.Percent(algorithm, symbol, direction * percent))
 
         return targets
 
@@ -59,8 +66,8 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         # save securities removed so we can zero out our holdings
         self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
 
-        for added in changes.AddedSecurities:
-            self.securities.append(added)
-        for removed in changes.RemovedSecurities:
-            if removed in self.securities:
-                self.securities.remove(removed)
+        # remove the insights of the removed symbol from the collection
+        for removedSymbol in self.removedSymbols:
+            if self.insightCollection.ContainsKey(removedSymbol):
+                for insight in self.insightCollection[removedSymbol]:
+                    self.insightCollection.Remove(insight)
