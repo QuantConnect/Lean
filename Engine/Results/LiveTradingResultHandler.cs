@@ -1069,7 +1069,7 @@ namespace QuantConnect.Lean.Engine.Results
                         Security security;
                         if (_algorithm.Securities.TryGetValue(subscription.Configuration.Symbol, out security))
                         {
-                            // Sample Portfolio Value:
+                            //Sample Portfolio Value:
                             var price = subscription.RealtimePrice;
 
                             var last = security.GetLastData();
@@ -1081,17 +1081,14 @@ namespace QuantConnect.Lean.Engine.Results
                                 last.Value = price;
                                 security.SetRealTimePrice(last);
 
-                                // Update CashBook for Forex & Crypto securities
-                                var cashesToUpdate = (from c in _algorithm.Portfolio.CashBook
-                                    where c.Value.SecuritySymbol.Contains(last.Symbol)
-                                    select c.Value);
+                                // Update CashBook for Forex securities
+                                var cash = (from c in _algorithm.Portfolio.CashBook
+                                    where c.Value.SecuritySymbol == last.Symbol
+                                    select c.Value).SingleOrDefault();
 
-                                if (cashesToUpdate != null)
+                                if (cash != null)
                                 {
-                                    foreach(var cash in cashesToUpdate)
-                                    {
-                                        cash.Update(last);
-                                    }
+                                    cash.Update(last);
                                 }
                             }
                             else

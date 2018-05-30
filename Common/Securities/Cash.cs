@@ -28,33 +28,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-
-        /// <summary>
-        /// Class that holds Security for conversion and bool, which tells if rate should be inverted (1/rate)
-        /// </summary>
-        public class ConversionSecurity
-        {
-            public Security RateSecurity;
-            public bool inverted = false;
-            public decimal ConversionRate; 
-
-            public ConversionSecurity(Security RateSecurity, bool inverted = false)
-            {
-                this.RateSecurity = RateSecurity;
-                this.inverted = inverted;
-
-                if (RateSecurity.Price != 0)
-                {
-                    if (inverted == false)
-                        ConversionRate = RateSecurity.Price;
-                    else
-                        ConversionRate = 1m / RateSecurity.Price;
-                }
-            }
-        }
-
         private bool _isBaseCurrency;
-        
+        private bool _invertRealTimePrice;
+
         private readonly object _locker = new object();
 
         /// <summary>
@@ -62,19 +38,14 @@ namespace QuantConnect.Securities
         /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
         /// is returned
         /// </summary>
-        public List<Symbol> SecuritySymbol 
-        {
-            get
-            {
-                return ConversionRateSecurity.Select(conSec => conSec.RateSecurity.Symbol).ToList();
-            }
-        }
+        public Symbol SecuritySymbol => ConversionRateSecurity?.Symbol ?? QuantConnect.Symbol.Empty;
+
         /// <summary>
         /// Gets the security used to apply conversion rates.
         /// If this cash represents the account currency, then null is returned.
         /// </summary>
         [JsonIgnore]
-        public List<ConversionSecurity> ConversionRateSecurity { get; private set; }
+        public Security ConversionRateSecurity { get; private set; }
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -91,7 +62,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal ConversionRate { get; internal set; }
 
-        /// <summary>y
+        /// <summary>
         /// The symbol of the currency, such as $
         /// </summary>
         public string CurrencySymbol { get; }
@@ -128,25 +99,12 @@ namespace QuantConnect.Securities
         {
             if (_isBaseCurrency) return;
 
-            foreach(ConversionSecurity conSec in ConversionRateSecurity)
+            var rate = data.Value;
+            if (_invertRealTimePrice)
             {
-                if (conSec.RateSecurity.Symbol == data.Symbol)
-                {
-                    var rate = data.Value;
-
-                    if (conSec.inverted)
-                        rate = 1 / rate;
-
-                    conSec.ConversionRate = rate;
-                }
+                rate = 1 / rate;
             }
-
-            ConversionRate = 1m;
-            foreach (ConversionSecurity conSec in ConversionRateSecurity)
-            {
-                ConversionRate *= conSec.ConversionRate;
-            }
-
+            ConversionRate = rate;
         }
 
         /// <summary>
@@ -188,7 +146,7 @@ namespace QuantConnect.Securities
         /// <param name="cashBook">The cash book - used for resolving quote currencies for created conversion securities</param>
         /// <param name="changes"></param>
         /// <returns>Returns the added currency security if needed, otherwise null</returns>
-        public List<ConversionSecurity> EnsureCurrencyDataFeed(SecurityManager securities,
+        public Security EnsureCurrencyDataFeed(SecurityManager securities,
             SubscriptionManager subscriptions,
             MarketHoursDatabase marketHoursDatabase,
             SymbolPropertiesDatabase symbolPropertiesDatabase,
@@ -221,18 +179,18 @@ namespace QuantConnect.Securities
 
             foreach (var security in securitiesToSearch)
             {
-                if(security.Symbol.Value == normal)
+                if (security.Symbol.Value == normal)
                 {
-                    ConversionRateSecurity = new List<ConversionSecurity>() { new ConversionSecurity(security, false) };
+                    ConversionRateSecurity = security;
                     return null;
                 }
                 if (security.Symbol.Value == invert)
                 {
-                    ConversionRateSecurity = new List<ConversionSecurity>() { new ConversionSecurity(security, true) };
+                    ConversionRateSecurity = security;
+                    _invertRealTimePrice = true;
                     return null;
                 }
             }
-
             // if we've made it here we didn't find a security, so we'll need to add one
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
@@ -256,8 +214,7 @@ namespace QuantConnect.Securities
             {
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
-                    bool invertPrice = symbol.Value == invert;
-
+                    _invertRealTimePrice = symbol.Value == invert;
                     var securityType = symbol.ID.SecurityType;
                     var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
                     Cash quoteCash;
@@ -290,13 +247,15 @@ namespace QuantConnect.Securities
                         security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
                     }
 
-                    ConversionRateSecurity = new List<ConversionSecurity>() { new ConversionSecurity(security, invertPrice) };
-
+                    ConversionRateSecurity = security;
                     securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
-                    return ConversionRateSecurity;
+                    return security;
                 }
+
+
             }
+
 
             // No direct conversion rate pair is found, check for secondary conversion pair
             // Common to cryptocurrencies where there are no direct pairings with USD, but there is intermediary such as BTC or ETH
@@ -304,12 +263,12 @@ namespace QuantConnect.Securities
             // Example #2: RENUSD doesn't exist, but there is RENUSDT and USDTUSD, from which we can calculate RENUSD
 
             // Finds pairs that contain REN such as RENBTC and RENETH
-            var existingPotentials = Currencies.CryptoCurrencyPairs.Select(x => x);
-            //.Where(cryptoPair => cryptoPair.Contains(this.Symbol));
+            var secondaryPotentials = Currencies.CryptoCurrencyPairs
+            .Where(cryptoPair => cryptoPair.Contains(this.Symbol));
 
             // Order secondaryPotentials by whenever they are already contained in securities.
             // This is must; if you add RENETH, it will use ETHUSD as a conversion pair for USD, and not BTCUSD
-            existingPotentials = existingPotentials
+            secondaryPotentials = secondaryPotentials
             .OrderByDescending(cryptoPair =>
             {
                 foreach (var s in securities.Keys)
@@ -319,101 +278,46 @@ namespace QuantConnect.Securities
                 return 0;
             });
 
-            // RENUSD     = RENETH * ETHUSD
-            // calculated = main   * linking
-            ConversionSecurity mainConSec    = null;
-            ConversionSecurity linkingConSec = null;
-
-            List<ConversionSecurity> conversionSecuritiesList = new List<ConversionSecurity>();
-
-            string baseCode = null;
-            string quoteCode = null;
-
-            // find main pair, such as RENETH
-            foreach (var mainPair in existingPotentials)
+            foreach (var secondaryPair in secondaryPotentials)
             {
-                Forex.Forex.DecomposeCurrencyPair(mainPair, out baseCode, out quoteCode);
+                string SecondarySymbol = Forex.Forex.CurrencyPairDual(secondaryPair, this.Symbol);
 
-                // found RENETH
-                if(baseCode == this.Symbol || quoteCode == this.Symbol)
+                string secondaryNormal = SecondarySymbol + CashBook.AccountCurrency;
+                string secondaryInvert = CashBook.AccountCurrency + SecondarySymbol;
+
+                // Check in list of markets for any match
+                foreach (var symbol in potentials)
                 {
-                    // ETH
-                    string secondCode = Forex.Forex.CurrencyPairDual(mainPair, this.Symbol);
-
-                    Log.Trace($"Found second code {secondCode} in mainPair {mainPair}");
-
-                    bool mainInvert = mainPair.IndexOf(this.Symbol) != 0;
-
-                    // ETHUSD
-                    string linkingNormal = secondCode + CashBook.AccountCurrency;
-                    // USDETH
-                    string linkingInvert = CashBook.AccountCurrency + secondCode;
-
-                    // search for ETHUSD or USDETH
-                    foreach(var linkingPair in existingPotentials)
+                    if (symbol.Value == secondaryNormal || symbol.Value == secondaryInvert)
                     {
-                        // found
-                        if(linkingPair == linkingNormal || linkingPair == linkingInvert)
+
+                        _invertRealTimePrice = symbol.Value == invert;
+                        var securityType = SecurityType.Crypto;
+                        var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
+                        Cash quoteCash;
+                        if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
                         {
-                            Log.Trace($"Found linkingPair in {linkingPair}");
-
-                            var securityType = SecurityType.Crypto;
-
-                            Symbol mainSymbol = CreateSymbol(marketMap, mainPair, markets, SecurityType.Crypto);
-                            Symbol linkingSymbol = CreateSymbol(marketMap, linkingPair, markets, SecurityType.Crypto);
-
-                            var mainSymbolProperties    = symbolPropertiesDatabase.GetSymbolProperties(mainSymbol.ID.Market, mainSymbol.Value, securityType, secondCode);
-                            var linkingSymbolProperties = symbolPropertiesDatabase.GetSymbolProperties(linkingSymbol.ID.Market, linkingSymbol.Value, securityType, CashBook.AccountCurrency);
-
-                            Cash mainQuoteCash;
-                            if (!cashBook.TryGetValue(mainSymbolProperties.QuoteCurrency, out mainQuoteCash))
-                            {
-                                throw new Exception("Unable to resolve main quote cash: " + mainSymbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + mainSymbol.Value);
-                            }
-
-                            Cash linkingQuoteCash;
-                            if (!cashBook.TryGetValue(linkingSymbolProperties.QuoteCurrency, out linkingQuoteCash))
-                            {
-                                throw new Exception("Unable to resolve linking quote cash: " + linkingSymbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + linkingSymbol.Value);
-                            }
-
-                            var mMarketHoursDbEntry = marketHoursDatabase.GetEntry(mainSymbol.ID.Market, mainSymbol.Value, mainSymbol.ID.SecurityType);
-                            var lMarketHoursDbEntry = marketHoursDatabase.GetEntry(linkingSymbol.ID.Market, linkingSymbol.Value, linkingSymbol.ID.SecurityType);
-
-                            var mExchangeHours = mMarketHoursDbEntry.ExchangeHours;
-                            var lExchangeHours = lMarketHoursDbEntry.ExchangeHours;
-
-                            // use the first subscription defined in the subscription manager
-                            var mType = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
-                            var mObjectType = mType.Item1;
-                            var mTickType = mType.Item2;
-
-                            // use the first subscription defined in the subscription manager
-                            var lType = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
-                            var lObjectType = lType.Item1;
-                            var lTickType = lType.Item2;
-
-
-                            // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                            var mConfig = subscriptions.Add(mObjectType, mTickType, mainSymbol,   minimumResolution, mMarketHoursDbEntry.DataTimeZone, mExchangeHours.TimeZone, false, true, false, true);
-                            var lConfig = subscriptions.Add(lObjectType, lTickType, linkingSymbol, minimumResolution, lMarketHoursDbEntry.DataTimeZone, lExchangeHours.TimeZone, false, true, false, true);
-
-                            Security mainSecurity = new Crypto.Crypto(mExchangeHours, mainQuoteCash, mConfig, mainSymbolProperties);
-                            Security linkingSecurity = new Crypto.Crypto(lExchangeHours, linkingQuoteCash, lConfig, linkingSymbolProperties);
-
-                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding main pair " + mainSymbol.Value + " for cash " + Symbol + " currency feed");
-                            securities.Add(mConfig.Symbol, mainSecurity);
-                            mainConSec = new ConversionSecurity(mainSecurity, mainInvert);
-
-
-                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding linking pair " + linkingSymbol.Value + " for cash " + Symbol + " currency feed");
-                            securities.Add(lConfig.Symbol, linkingSecurity);
-                            linkingConSec = new ConversionSecurity(linkingSecurity, linkingPair == linkingInvert);
-                                
-                            ConversionRateSecurity = new List<ConversionSecurity>() { mainConSec, linkingConSec };
-                            return ConversionRateSecurity;
-                                
+                            throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
                         }
+                        var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+                        var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+                        // use the first subscription defined in the subscription manager
+                        var type = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
+                        var objectType = type.Item1;
+                        var tickType = type.Item2;
+
+                        // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
+                        var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+
+                        Security security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+
+                        ConversionRateSecurity = security;
+                        securities.Add(config.Symbol, security);
+                        Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+
+
+                        return security;
                     }
                 }
             }

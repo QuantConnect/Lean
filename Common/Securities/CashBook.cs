@@ -84,11 +84,10 @@ namespace QuantConnect.Securities
             {
                 var cash = kvp.Value;
 
-                var newSecurities = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
-
-                if (newSecurities != null)
+                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
+                if (security != null)
                 {
-                    addedSecurities.AddRange(newSecurities.Select(conSec => conSec.RateSecurity));
+                    addedSecurities.Add(security);
                 }
             }
             return addedSecurities;
