@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Globalization;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -106,13 +105,7 @@ namespace QuantConnect.Orders
                 var value = jObject[property.Name];
                 if (value != null)
                 {
-                    property.SetValue(
-                        timeInForce,
-                        value.ToObject(property.PropertyType),
-                        BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                        null,
-                        null,
-                        CultureInfo.InvariantCulture);
+                    property.SetValue(timeInForce, value.ToObject(property.PropertyType));
                 }
             }
 
