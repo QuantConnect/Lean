@@ -129,6 +129,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if we can remove the security, false otherwise</returns>
         public override bool CanRemoveMember(DateTime utcTime, Security security)
         {
+            // can always remove securities after dispose requested
+            if (DisposeRequested)
+            {
+                return true;
+            }
+
             // if we haven't begun receiving data for this security then it's safe to remove
             var lastData = security.Cache.GetData();
             if (lastData == null)

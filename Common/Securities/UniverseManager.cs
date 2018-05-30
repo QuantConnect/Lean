@@ -105,7 +105,7 @@ namespace QuantConnect.Securities
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param>
         public bool Contains(KeyValuePair<Symbol, Universe> item)
         {
-            return _universes.Contains(item);
+            return ContainsKey(item.Key);
         }
 
         /// <summary>
@@ -126,8 +126,7 @@ namespace QuantConnect.Securities
         /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.</exception>
         public bool Remove(KeyValuePair<Symbol, Universe> item)
         {
-            Universe universe;
-            return _universes.TryRemove(item.Key, out universe);
+            return Remove(item.Key);
         }
 
         /// <summary>
@@ -185,6 +184,7 @@ namespace QuantConnect.Securities
             Universe universe;
             if (_universes.TryRemove(key, out universe))
             {
+                universe.Dispose();
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, universe));
                 return true;
             }
@@ -260,8 +260,7 @@ namespace QuantConnect.Securities
         /// <param name="e"></param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
-            if (handler != null) handler(this, e);
+            CollectionChanged?.Invoke(this, e);
         }
     }
 }
