@@ -1623,19 +1623,23 @@ namespace QuantConnect.Algorithm
                 if (universe != null)
                 {
                     // remove underlying if not used by other universes
+                    var otherUniverses = UniverseManager.Select(ukvp => ukvp.Value).Where(u => !ReferenceEquals(u, universe)).ToList();
                     if (symbol.HasUnderlying)
                     {
                         var underlying = Securities[symbol.Underlying];
-                        if (!UniverseManager.Any(ukvp => !ReferenceEquals(ukvp.Value, universe) && ukvp.Value.Members.ContainsKey(underlying.Symbol)))
+                        if (!otherUniverses.Any(u => u.Members.ContainsKey(underlying.Symbol)))
                         {
                             RemoveSecurity(underlying.Symbol);
                         }
                     }
 
-                    // remove child securities (option contracts for option chain universes)
+                    // remove child securities (option contracts for option chain universes) if not used in other universes
                     foreach (var child in universe.Members.Values)
                     {
-                        RemoveSecurity(child.Symbol);
+                        if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)))
+                        {
+                            RemoveSecurity(child.Symbol);
+                        }
                     }
 
                     // finally, dispose and remove the canonical security from the universe manager
