@@ -136,6 +136,22 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Returns true if the brokerage would allow canceling the order as specified by the request
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be cancelled</param>
+        /// <param name="request">The order cancellation request</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be cancelled</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
+        public bool CanCancelOrder(Security security, Order order, CancelOrderRequest request, out BrokerageMessageEvent message)
+        {
+            using (Py.GIL())
+            {
+                return _model.CanCancelOrder(security, order, out message);
+            }
+        }
+
+        /// <summary>
         /// Gets a new fee model that represents this brokerage's fee structure
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>

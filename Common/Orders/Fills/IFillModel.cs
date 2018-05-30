@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,5 +69,13 @@ namespace QuantConnect.Orders.Fills
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order);
+
+        /// <summary>
+        /// Volume Weighted Average Price Fill Model. Return an order event with the fill details
+        /// </summary>
+        /// <param name="asset">Asset we're trading with this order</param>
+        /// <param name="order">Order to be filled</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        OrderEvent VwapFill(Security asset, VwapOrder order);
     }
 }

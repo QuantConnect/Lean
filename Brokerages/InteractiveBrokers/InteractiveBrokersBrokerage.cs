@@ -1769,6 +1769,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         );
                     break;
 
+                case OrderType.Vwap:
+                    order = new VwapOrder(mappedSymbol,
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
+                        new DateTime()
+                    );
+                    break;
+
                 default:
                     throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
@@ -1855,7 +1862,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.ActionSide.Sell: return OrderDirection.Sell;
                 case IB.ActionSide.Undefined: return OrderDirection.Hold;
                 default:
-                    throw new ArgumentException(direction, "direction");
+                    throw new ArgumentException(direction, nameof(direction));
             }
         }
 
@@ -1870,7 +1877,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int) direction, typeof (OrderDirection));
+                    throw new InvalidEnumArgumentException(nameof(direction), (int) direction, typeof (OrderDirection));
             }
         }
 
@@ -1881,14 +1888,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (type)
             {
-                case OrderType.Market:          return IB.OrderType.Market;
-                case OrderType.Limit:           return IB.OrderType.Limit;
-                case OrderType.StopMarket:      return IB.OrderType.Stop;
-                case OrderType.StopLimit:       return IB.OrderType.StopLimit;
-                case OrderType.MarketOnOpen:    return IB.OrderType.Market;
-                case OrderType.MarketOnClose:   return IB.OrderType.MarketOnClose;
+                case OrderType.Market:
+                    return IB.OrderType.Market;
+
+                case OrderType.Limit:
+                    return IB.OrderType.Limit;
+
+                case OrderType.StopMarket:
+                    return IB.OrderType.Stop;
+
+                case OrderType.StopLimit:
+                    return IB.OrderType.StopLimit;
+
+                case OrderType.MarketOnOpen:
+                    return IB.OrderType.Market;
+
+                case OrderType.MarketOnClose:
+                    return IB.OrderType.MarketOnClose;
+
+                case OrderType.Vwap:
+                    return IB.OrderType.VolumeWeightedAveragePrice;
+
                 default:
-                    throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
+                    throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(OrderType));
             }
         }
 
@@ -1899,10 +1921,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (order.OrderType)
             {
-                case IB.OrderType.Limit:            return OrderType.Limit;
-                case IB.OrderType.Stop:             return OrderType.StopMarket;
-                case IB.OrderType.StopLimit:        return OrderType.StopLimit;
-                case IB.OrderType.MarketOnClose:    return OrderType.MarketOnClose;
+                case IB.OrderType.Limit:
+                    return OrderType.Limit;
+
+                case IB.OrderType.Stop:
+                    return OrderType.StopMarket;
+
+                case IB.OrderType.StopLimit:
+                    return OrderType.StopLimit;
+
+                case IB.OrderType.MarketOnClose:
+                    return OrderType.MarketOnClose;
+
+                case IB.OrderType.VolumeWeightedAveragePrice:
+                    return OrderType.Vwap;
 
                 case IB.OrderType.Market:
                     if (order.Tif == IB.TimeInForce.MarketOnOpen)
@@ -1975,7 +2007,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 return IB.TimeInForce.MarketOnOpen;
             }
-            if (order.Type == OrderType.MarketOnClose)
+
+            if (order.Type == OrderType.MarketOnClose || order.Type == OrderType.Vwap)
             {
                 return IB.TimeInForce.Day;
             }
@@ -2041,7 +2074,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // not sure how to map these guys
                 default:
-                    throw new ArgumentException(status, "status");
+                    throw new ArgumentException(status, nameof(status));
             }
         }
 
@@ -2071,7 +2104,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new ArgumentException("InteractiveBrokers does not support SecurityType.Base");
 
                 default:
-                    throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
+                    throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(SecurityType));
             }
         }
 
@@ -2108,7 +2141,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return SecurityType.Base;
 
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw new ArgumentOutOfRangeException(nameof(type));
             }
         }
 

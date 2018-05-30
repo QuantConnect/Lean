@@ -340,9 +340,14 @@ namespace QuantConnect.Orders
                     order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
 
+                case OrderType.Vwap:
+                    order = new VwapOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             order.Status = OrderStatus.New;
             order.Id = request.OrderId;
             if (request.Tag != null)

@@ -1168,6 +1168,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$1.50"},
             };
 
+            var guaranteedVwapRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "146.262%"},
+                {"Drawdown", "0.200%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "1.060%"},
+                {"Sharpe Ratio", "9.392"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "48.301"},
+                {"Annual Standard Deviation", "0.057"},
+                {"Annual Variance", "0.003"},
+                {"Information Ratio", "9.218"},
+                {"Tracking Error", "0.057"},
+                {"Treynor Ratio", "0.011"},
+                {"Total Fees", "$8.00"}
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -1219,6 +1242,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("DelistingEventsAlgorithm", delistingEventsAlgorithm, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("RenkoConsolidatorAlgorithm", renkoConsolidatorStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DisplacedMovingAverageRibbon", displacedMovingAverageRibbonStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("GuaranteedVwapRegressionAlgorithm", guaranteedVwapRegressionAlgorithmStatistics, Language.CSharp),
 
                 // Python
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.Python),
@@ -1260,7 +1284,8 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("TimeInForceAlgorithm", timeInForceAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("SectorExposureRiskFrameworkAlgorithm", sectorExposureRiskFrameworkAlgorithmStatistics, Language.Python),
                 new AlgorithmStatisticsTestParameters("RenkoConsolidatorAlgorithm", renkoConsolidatorStatistics, Language.Python),
-                new AlgorithmStatisticsTestParameters("DisplacedMovingAverageRibbon", displacedMovingAverageRibbonStatistics, Language.Python)
+                new AlgorithmStatisticsTestParameters("DisplacedMovingAverageRibbon", displacedMovingAverageRibbonStatistics, Language.Python),
+                new AlgorithmStatisticsTestParameters("GuaranteedVwapRegressionAlgorithm", guaranteedVwapRegressionAlgorithmStatistics, Language.Python)
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

@@ -29,7 +29,6 @@ using NodaTime;
 using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect
@@ -951,22 +950,27 @@ namespace QuantConnect
                     var limitOrder = order as LimitOrder;
                     limitPrice = limitOrder.LimitPrice;
                     break;
+
                 case OrderType.StopMarket:
                     var stopMarketOrder = order as StopMarketOrder;
                     stopPrice = stopMarketOrder.StopPrice;
                     break;
+
                 case OrderType.StopLimit:
                     var stopLimitOrder = order as StopLimitOrder;
                     stopPrice = stopLimitOrder.StopPrice;
                     limitPrice = stopLimitOrder.LimitPrice;
                     break;
+
                 case OrderType.OptionExercise:
                 case OrderType.Market:
                 case OrderType.MarketOnOpen:
                 case OrderType.MarketOnClose:
+                case OrderType.Vwap:
                     limitPrice = order.Price;
                     stopPrice = order.Price;
                     break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }

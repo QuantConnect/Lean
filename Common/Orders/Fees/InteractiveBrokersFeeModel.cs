@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,9 +28,9 @@ namespace QuantConnect.Orders.Fees
         private readonly decimal _forexCommissionRate;
         private readonly decimal _forexMinimumOrderFee;
 
-        // option commission function takes number of contracts and the size of the option premium and returns total commission 
+        // option commission function takes number of contracts and the size of the option premium and returns total commission
         private readonly Func<decimal, decimal, decimal>  _optionsCommissionFunc;
-   
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
         /// </summary>
@@ -82,12 +82,14 @@ namespace QuantConnect.Orders.Fees
                 case SecurityType.Equity:
                     var tradeValue = Math.Abs(order.GetValue(security));
 
-                    //Per share fees
-                    var tradeFee = 0.005m * order.AbsoluteQuantity;
+                    var maximumPercentPerOrder = order.Type == OrderType.Vwap ? 0.02m : 0.005m;
 
-                    //Maximum Per Order: 0.5%
-                    //Minimum per order. $1.0
-                    var maximumPerOrder = 0.005m * tradeValue;
+                    //Per share fees
+                    var tradeFee = maximumPercentPerOrder * order.AbsoluteQuantity;
+
+                    // Maximum Per Order: 0.5% (2% for Guaranteed VWAP orders)
+                    // Minimum per order. $1.0
+                    var maximumPerOrder = maximumPercentPerOrder * tradeValue;
                     if (tradeFee < 1)
                     {
                         tradeFee = 1;
@@ -139,17 +141,17 @@ namespace QuantConnect.Orders.Fees
         private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, decimal> optionsCommissionFunc)
         {
             const decimal bp = 0.0001m;
-            if (monthlyOptionsTradeAmountInContracts <= 10000)      
+            if (monthlyOptionsTradeAmountInContracts <= 10000)
             {
                 optionsCommissionFunc = (orderSize, premium) =>
                 {
-                    var commissionRate = premium >= 0.1m ? 
-                                            0.7m : 
+                    var commissionRate = premium >= 0.1m ?
+                                            0.7m :
                                             (0.05m <= premium && premium < 0.1m ? 0.5m : 0.25m);
-                    return Math.Min(orderSize * commissionRate, 1.0m);                                                        
+                    return Math.Min(orderSize * commissionRate, 1.0m);
                 };
             }
-            else if (monthlyOptionsTradeAmountInContracts <= 50000) 
+            else if (monthlyOptionsTradeAmountInContracts <= 50000)
             {
                 optionsCommissionFunc = (orderSize, premium) =>
                 {

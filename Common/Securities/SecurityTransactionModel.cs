@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Default security transaction model for user defined securities.
@@ -90,9 +90,9 @@ namespace QuantConnect.Securities
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
         /// <remarks>
-        ///     There is no good way to model limit orders with OHLC because we never know whether the market has 
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
         ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
-        /// 
+        ///
         ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
         ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
         /// </remarks>
@@ -134,6 +134,17 @@ namespace QuantConnect.Securities
         public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
             return _fillModel.MarketOnCloseFill(asset, order);
+        }
+
+        /// <summary>
+        /// Volume Weighted Average Price Fill Model. Return an order event with the fill details
+        /// </summary>
+        /// <param name="asset">Asset we're trading with this order</param>
+        /// <param name="order">Order to be filled</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public OrderEvent VwapFill(Security asset, VwapOrder order)
+        {
+            return _fillModel.VwapFill(asset, order);
         }
 
         /// <summary>

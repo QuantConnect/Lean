@@ -197,6 +197,7 @@
     <Compile Include="Orders\TimeInForces\GoodTilDateTimeInForce.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Orders\VwapOrder.cs" />
     <Compile Include="Orders\OrderProperties.cs" />
     <Compile Include="Orders\OrderSubmissionData.cs" />
     <Compile Include="Orders\TimeInForce.cs" />
