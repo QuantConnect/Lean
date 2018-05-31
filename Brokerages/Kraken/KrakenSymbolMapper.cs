@@ -25,18 +25,18 @@ namespace QuantConnect.Brokerages.Kraken
     /// </summary>
     public class KrakenSymbolMapper : ISymbolMapper
     {
-        class KrakenAsset
+        private class KrakenAsset
         {   // currency code
             public string Code;   
             public string CodeAlt;
         }
 
-        List<KrakenAsset> KnownAssets = new List<KrakenAsset>();
+        private List<KrakenAsset> KnownAssets = new List<KrakenAsset>();
 
-        List<string> KnownPairs = new List<string>();
-        List<DataType.AssetPair> KnownPairsWhole = new List<DataType.AssetPair>();
+        private List<string> KnownPairs = new List<string>();
+        private List<DataType.AssetPair> KnownPairsWhole = new List<DataType.AssetPair>();
 
-        static List<string> Prefixes = new List<string>() { "", "Z", "X" };
+        private static List<string> Prefixes = new List<string>() { "", "Z", "X" };
 
         /// <summary>
         /// Updates all Kraken Symbols
@@ -80,7 +80,7 @@ namespace QuantConnect.Brokerages.Kraken
             }
         }
          
-        void DecomposeKrakenPair(string krakenPair, out string baseCode, out string quoteCode)
+        private void DecomposeKrakenPair(string krakenPair, out string baseCode, out string quoteCode)
         {
             Logging.Log.Trace($"DecomposeKrakenPair({krakenPair}, out baseCode, out quoteCode)");
 
@@ -116,11 +116,6 @@ namespace QuantConnect.Brokerages.Kraken
             throw new Kraken.DataType.KrakenException($"Decomposing kraken pair {krakenPair} unsucessful");
         }
 
-        static KrakenSymbolMapper()
-        {
-
-        }
-
         /// <summary>
         /// Gets pair from currency A and currency B
         /// </summary>
@@ -152,7 +147,7 @@ namespace QuantConnect.Brokerages.Kraken
             throw new DataType.KrakenException($"Pair not found for {currencyA} {currencyB} pair");
         }
 
-        string LeanCodeToKrakenCode(string leanCode)
+        private string LeanCodeToKrakenCode(string leanCode)
         {
             Logging.Log.Trace($"LeanCodeToKrakenCode({leanCode})");
                 
@@ -230,7 +225,7 @@ namespace QuantConnect.Brokerages.Kraken
             throw new ArgumentException($"Unknown LEAN symbol: {symbol.Value}");
         }
 
-        string StripPrefixes(string currencyCode)
+        private string StripPrefixes(string currencyCode)
         {
             currencyCode = currencyCode.ToUpper();
 

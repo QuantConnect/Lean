@@ -75,7 +75,6 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>A new brokerage instance</returns>
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-
             var required = new[] { "kraken-api-key", "kraken-api-secret" };
 
             foreach (var item in required)

@@ -56,7 +56,7 @@ namespace QuantConnect.Brokerages.Kraken
 
         /*class InnerRestClient
         {*/
-            RateGate LimitGate { get; set; }
+            private RateGate LimitGate { get; set; }
 
             private string BuildPostData(Dictionary<string, string> param)
             {
