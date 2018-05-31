@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -28,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="data event handlers" />
     /// <meta name="tag" content="delisting event" />
-    public class DelistingEventsAlgorithm : QCAlgorithm
+    public class DelistingEventsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -102,5 +103,36 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug($"OnOrderEvent(OrderEvent): {Time}: {orderEvent}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-5.59%"},
+            {"Compounding Annual Return", "-87.759%"},
+            {"Drawdown", "5.600%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-5.592%"},
+            {"Sharpe Ratio", "-10.227"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-1.958"},
+            {"Beta", "23.646"},
+            {"Annual Standard Deviation", "0.156"},
+            {"Annual Variance", "0.024"},
+            {"Information Ratio", "-10.33"},
+            {"Tracking Error", "0.156"},
+            {"Treynor Ratio", "-0.067"},
+            {"Total Fees", "$36.79"},
+        };
     }
 }

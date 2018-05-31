@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     ///     A buy signal is when the values of the indicators are increasing (from slowest to fastest).
     ///     A sell signal is when the values of the indicators are decreasing (from slowest to fastest).
     /// </summary>
-    public class DisplacedMovingAverageRibbon : QCAlgorithm
+    public class DisplacedMovingAverageRibbon : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
         private IndicatorBase<IndicatorDataPoint>[] _ribbon;
@@ -149,5 +149,36 @@ namespace QuantConnect.Algorithm.CSharp
             }
             return true;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "7"},
+            {"Average Win", "19.19%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "16.754%"},
+            {"Drawdown", "12.600%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "153.401%"},
+            {"Sharpe Ratio", "1.27"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.073"},
+            {"Beta", "4.493"},
+            {"Annual Standard Deviation", "0.129"},
+            {"Annual Variance", "0.017"},
+            {"Information Ratio", "1.114"},
+            {"Tracking Error", "0.129"},
+            {"Treynor Ratio", "0.036"},
+            {"Total Fees", "$44.32"},
+        };
     }
 }

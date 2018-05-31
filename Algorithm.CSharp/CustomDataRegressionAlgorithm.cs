@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="crypto" />
     /// <meta name="tag" content="regression test" />
-    public class CustomDataRegressionAlgorithm : QCAlgorithm
+    public class CustomDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -59,5 +60,36 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "155.365%"},
+            {"Drawdown", "84.800%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "5123.170%"},
+            {"Sharpe Ratio", "1.2"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.008"},
+            {"Beta", "73.725"},
+            {"Annual Standard Deviation", "0.84"},
+            {"Annual Variance", "0.706"},
+            {"Information Ratio", "1.183"},
+            {"Tracking Error", "0.84"},
+            {"Treynor Ratio", "0.014"},
+            {"Total Fees", "$0.00"}
+        };
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -24,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm is a regression test case for CancelOpenOrders and rejected orders
     /// </summary>
-    public class CancelOpenOrdersRegressionAlgorithm : QCAlgorithm
+    public class CancelOpenOrdersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -109,5 +110,36 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-100.000%"},
+            {"Drawdown", "5.800%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "-3.339%"},
+            {"Sharpe Ratio", "-11.206"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-8.422"},
+            {"Beta", "610.348"},
+            {"Annual Standard Deviation", "0.375"},
+            {"Annual Variance", "0.141"},
+            {"Information Ratio", "-11.243"},
+            {"Tracking Error", "0.375"},
+            {"Treynor Ratio", "-0.007"},
+            {"Total Fees", "$0.00"}
+        };
     }
 }

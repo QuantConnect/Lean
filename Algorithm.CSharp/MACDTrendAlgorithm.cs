@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -25,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="indicator classes" />
     /// <meta name="tag" content="plotting indicators" />
-    public class MACDTrendAlgorithm : QCAlgorithm
+    public class MACDTrendAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private DateTime _previous;
         private MovingAverageConvergenceDivergence _macd;
@@ -80,5 +81,36 @@ namespace QuantConnect.Algorithm.CSharp
 
             _previous = Time;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "84"},
+            {"Average Win", "4.79%"},
+            {"Average Loss", "-4.17%"},
+            {"Compounding Annual Return", "2.967%"},
+            {"Drawdown", "34.800%"},
+            {"Expectancy", "0.228"},
+            {"Net Profit", "37.970%"},
+            {"Sharpe Ratio", "0.299"},
+            {"Loss Rate", "43%"},
+            {"Win Rate", "57%"},
+            {"Profit-Loss Ratio", "1.15"},
+            {"Alpha", "0.111"},
+            {"Beta", "-3.721"},
+            {"Annual Standard Deviation", "0.124"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "0.137"},
+            {"Tracking Error", "0.124"},
+            {"Treynor Ratio", "-0.01"},
+            {"Total Fees", "$420.57"},
+        };
     }
 }

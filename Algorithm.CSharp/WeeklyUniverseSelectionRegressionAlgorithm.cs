@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm to test universe additions and removals with open positions
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class WeeklyUniverseSelectionRegressionAlgorithm : QCAlgorithm
+    public class WeeklyUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private SecurityChanges _changes = SecurityChanges.None;
 
@@ -81,5 +81,36 @@ namespace QuantConnect.Algorithm.CSharp
             _changes = changes;
             Log(Time + " " + changes);
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "8"},
+            {"Average Win", "0.28%"},
+            {"Average Loss", "-0.33%"},
+            {"Compounding Annual Return", "-1.247%"},
+            {"Drawdown", "1.300%"},
+            {"Expectancy", "-0.078"},
+            {"Net Profit", "-0.105%"},
+            {"Sharpe Ratio", "-0.27"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "0.84"},
+            {"Alpha", "-0.239"},
+            {"Beta", "12.675"},
+            {"Annual Standard Deviation", "0.04"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-0.723"},
+            {"Tracking Error", "0.04"},
+            {"Treynor Ratio", "-0.001"},
+            {"Total Fees", "$23.23"},
+        };
     }
 }

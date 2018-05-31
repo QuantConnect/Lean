@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -30,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateFrameworkAlgorithm : QCAlgorithmFramework
+    public class BasicTemplateFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -64,5 +65,49 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"Purchased Stock: {orderEvent.Symbol}");
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "3"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-1.03%"},
+            {"Compounding Annual Return", "245.773%"},
+            {"Drawdown", "2.300%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "1.599%"},
+            {"Sharpe Ratio", "4.164"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.007"},
+            {"Beta", "73.258"},
+            {"Annual Standard Deviation", "0.196"},
+            {"Annual Variance", "0.038"},
+            {"Information Ratio", "4.109"},
+            {"Tracking Error", "0.196"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$9.27"},
+            {"Total Insights Generated", "100"},
+            {"Total Insights Closed", "99"},
+            {"Total Insights Analysis Completed", "86"},
+            {"Long Insight Count", "100"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$167506.2210"},
+            {"Total Accumulated Estimated Alpha Value", "$26987.1134"},
+            {"Mean Population Estimated Insight Value", "$272.5971"},
+            {"Mean Population Direction", "48.8372%"},
+            {"Mean Population Magnitude", "48.8372%"},
+            {"Rolling Averaged Population Direction", "68.2411%"},
+            {"Rolling Averaged Population Magnitude", "68.2411%"},
+        };
     }
 }

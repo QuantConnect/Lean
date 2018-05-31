@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="custom universes" />
-    public class DropboxUniverseSelectionAlgorithm : QCAlgorithm
+    public class DropboxUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
@@ -139,5 +139,36 @@ namespace QuantConnect.Algorithm.CSharp
             // each time our securities change we'll be notified here
             _changes = changes;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "66"},
+            {"Average Win", "1.06%"},
+            {"Average Loss", "-0.50%"},
+            {"Compounding Annual Return", "18.581%"},
+            {"Drawdown", "7.100%"},
+            {"Expectancy", "0.815"},
+            {"Net Profit", "18.581%"},
+            {"Sharpe Ratio", "1.44"},
+            {"Loss Rate", "42%"},
+            {"Win Rate", "58%"},
+            {"Profit-Loss Ratio", "2.13"},
+            {"Alpha", "0.309"},
+            {"Beta", "-10.101"},
+            {"Annual Standard Deviation", "0.1"},
+            {"Annual Variance", "0.01"},
+            {"Information Ratio", "1.277"},
+            {"Tracking Error", "0.1"},
+            {"Treynor Ratio", "-0.014"},
+            {"Total Fees", "$185.37"},
+        };
     }
 }

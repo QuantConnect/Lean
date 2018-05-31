@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Indicators;
@@ -28,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateIntrinioEconomicData : QCAlgorithm
+    public class BasicTemplateIntrinioEconomicData : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         // Get the intrinio credentials from the parameters.
         [Parameter("intrinio-username")]
@@ -102,5 +103,36 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings(_uso, -0.25 * Math.Sign(_spread));
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "89"},
+            {"Average Win", "0.09%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "5.704%"},
+            {"Drawdown", "4.800%"},
+            {"Expectancy", "1.469"},
+            {"Net Profit", "24.865%"},
+            {"Sharpe Ratio", "1.143"},
+            {"Loss Rate", "70%"},
+            {"Win Rate", "30%"},
+            {"Profit-Loss Ratio", "7.23"},
+            {"Alpha", "0.065"},
+            {"Beta", "-0.522"},
+            {"Annual Standard Deviation", "0.048"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "0.74"},
+            {"Tracking Error", "0.048"},
+            {"Treynor Ratio", "-0.105"},
+            {"Total Fees", "$100.58"}
+        };
     }
 }

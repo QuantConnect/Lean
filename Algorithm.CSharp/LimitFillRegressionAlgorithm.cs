@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -26,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="placing orders" />
     /// <meta name="tag" content="updating orders" />
     /// <meta name="tag" content="regression test" />
-    public class LimitFillRegressionAlgorithm : QCAlgorithm
+    public class LimitFillRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -56,5 +57,36 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "34"},
+            {"Average Win", "0.02%"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "9.733%"},
+            {"Drawdown", "0.400%"},
+            {"Expectancy", "0.513"},
+            {"Net Profit", "0.119%"},
+            {"Sharpe Ratio", "1.954"},
+            {"Loss Rate", "25%"},
+            {"Win Rate", "75%"},
+            {"Profit-Loss Ratio", "1.02"},
+            {"Alpha", "-0.107"},
+            {"Beta", "15.186"},
+            {"Annual Standard Deviation", "0.031"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "1.6"},
+            {"Tracking Error", "0.031"},
+            {"Treynor Ratio", "0.004"},
+            {"Total Fees", "$34.00"},
+        };
     }
 }

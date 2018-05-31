@@ -16,6 +16,7 @@
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using System;
+using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 
@@ -24,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm for fractional forex pair
     /// </summary>
-    public class FractionalQuantityRegressionAlgorithm : QCAlgorithm
+    public class FractionalQuantityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -80,5 +81,36 @@ namespace QuantConnect.Algorithm.CSharp
                 Quit();
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "6"},
+            {"Average Win", "0.80%"},
+            {"Average Loss", "-2.42%"},
+            {"Compounding Annual Return", "145.604%"},
+            {"Drawdown", "7.000%"},
+            {"Expectancy", "-0.113"},
+            {"Net Profit", "0.990%"},
+            {"Sharpe Ratio", "0.922"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
+            {"Profit-Loss Ratio", "0.33"},
+            {"Alpha", "-1.411"},
+            {"Beta", "1.271"},
+            {"Annual Standard Deviation", "0.827"},
+            {"Annual Variance", "0.685"},
+            {"Information Ratio", "-4.895"},
+            {"Tracking Error", "0.193"},
+            {"Treynor Ratio", "0.6"},
+            {"Total Fees", "$2450.88"}
+        };
     }
 }

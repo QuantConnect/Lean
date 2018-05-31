@@ -24,7 +24,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class AddRemoveOptionUniverseRegressionAlgorithm : QCAlgorithm
+    public class AddRemoveOptionUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
@@ -174,5 +174,36 @@ namespace QuantConnect.Algorithm.CSharp
 
             Console.WriteLine($"{Time:o}:: PRICE:: {Securities["GOOG"].Price} CHANGES:: {changes}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "6"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.21%"},
+            {"Compounding Annual Return", "-96.657%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.626%"},
+            {"Sharpe Ratio", "0"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$1.50"},
+        };
     }
 }

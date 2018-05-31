@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="coarse universes" />
     /// <meta name="tag" content="regression test" />
-    public class CoarseFundamentalTop5Algorithm : QCAlgorithm
+    public class CoarseFundamentalTop5Algorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbols = 5;
 
@@ -99,5 +99,36 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log($"OnOrderEvent({UtcTime:o}):: {fill}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "10"},
+            {"Average Win", "1.15%"},
+            {"Average Loss", "-0.47%"},
+            {"Compounding Annual Return", "-0.746%"},
+            {"Drawdown", "3.000%"},
+            {"Expectancy", "-0.313"},
+            {"Net Profit", "-0.746%"},
+            {"Sharpe Ratio", "-0.267"},
+            {"Loss Rate", "80%"},
+            {"Win Rate", "20%"},
+            {"Profit-Loss Ratio", "2.44"},
+            {"Alpha", "-0.008"},
+            {"Beta", "0.032"},
+            {"Annual Standard Deviation", "0.027"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-1.014"},
+            {"Tracking Error", "0.027"},
+            {"Treynor Ratio", "-0.222"},
+            {"Total Fees", "$10.61"},
+        };
     }
 }
