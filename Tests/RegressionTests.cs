@@ -1168,6 +1168,42 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$1.50"},
             };
 
+            var basicTemplateOptionsFrameworkAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "0.14%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "74.140%"},
+                {"Drawdown", "0.700%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0.279%"},
+                {"Sharpe Ratio", "9.165"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "25.476"},
+                {"Annual Standard Deviation", "0.026"},
+                {"Annual Variance", "0.001"},
+                {"Information Ratio", "8.891"},
+                {"Tracking Error", "0.025"},
+                {"Treynor Ratio", "0.009"},
+                {"Total Fees", "$1.00"},
+                {"Total Insights Generated", "26"},
+                {"Total Insights Closed", "24"},
+                {"Total Insights Analysis Completed", "6"},
+                {"Long Insight Count", "26"},
+                {"Short Insight Count", "0"},
+                {"Long/Short Ratio", "100%"},
+                {"Estimated Monthly Alpha Value", "$22.79625"},
+                {"Total Accumulated Estimated Alpha Value", "$1.51975"},
+                {"Mean Population Estimated Insight Value", "$0.06332292"},
+                {"Mean Population Direction", "33.3333%"},
+                {"Mean Population Magnitude", "0%"},
+                {"Rolling Averaged Population Direction", "92.3114%"},
+                {"Rolling Averaged Population Magnitude", "0%"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
