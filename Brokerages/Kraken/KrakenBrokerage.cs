@@ -343,39 +343,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Orders.Order order)
         {
-
-            //! UPDATE ORDER           
-            //todo: maybe make it so, that this broker doesn't support updating orders (because it doesnt)
-            bool success = false;
-
-            if (CancelOrder(order))
-            {
-
-                order.BrokerId.Clear();
-
-                if (PlaceOrder(order))
-                {
-
-                    return true;
-                }
-                else
-                {
-
-                    // try again
-                    if (PlaceOrder(order))
-                    {
-
-                        return true;
-                    }
-                    else
-                    {
-                        throw new KrakenException("The update failed! Order was canceled but not placed again");
-                    }
-                }
-            }
-
-            return false;
-
+            throw new NotSupportedException("GDAXBrokerage.UpdateOrder: Order update not supported. Please cancel and re-create.");
         }
 
         /// <summary>
