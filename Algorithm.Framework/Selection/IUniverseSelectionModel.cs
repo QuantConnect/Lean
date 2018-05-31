@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
         /// </summary>
-        DateTime NextRefreshTimeUtc { get; }
+        DateTime GetNextRefreshTimeUtc();
 
         /// <summary>
         /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>

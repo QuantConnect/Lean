@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public sealed override void OnFrameworkData(Slice slice)
         {
-            if (UtcTime >= UniverseSelection.NextRefreshTimeUtc)
+            if (UtcTime >= UniverseSelection.GetNextRefreshTimeUtc())
             {
                 var universes = UniverseSelection.CreateUniverses(this).ToDictionary(u => u.Configuration.Symbol);
 

@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         private readonly ISecurityInitializer _securityInitializer;
         private readonly Func<DateTime, IEnumerable<Symbol>> _optionChainSymbolSelector;
 
-        public override DateTime NextRefreshTimeUtc => _nextRefreshTimeUtc;
+        public override DateTime GetNextRefreshTimeUtc() => _nextRefreshTimeUtc;
 
         public OptionUniverseSelectionModel(TimeSpan refreshInterval, Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector)
             : this(refreshInterval, optionChainSymbolSelector, null, null)
