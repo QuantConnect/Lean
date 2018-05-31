@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
@@ -82,15 +83,6 @@ namespace QuantConnect.Algorithm.Framework
             // set model defaults
             Execution = new ImmediateExecutionModel();
             RiskManagement = new NullRiskManagementModel();
-
-            // set generated and close times on all insights
-            InsightsGenerated += (algorithm, data) =>
-            {
-                foreach (var insight in data.Insights)
-                {
-                    SetGeneratedAndClosedTimes(insight);
-                }
-            };
         }
 
         /// <summary>
@@ -257,8 +249,29 @@ namespace QuantConnect.Algorithm.Framework
             RiskManagement = riskManagement;
         }
 
+        /// <summary>
+        /// Event invocator for the <see cref="QCAlgorithm.InsightsGenerated"/> event
+        /// </summary>
+        /// <remarks>
+        /// This method is sealed because the framework must be able to force setting of the
+        /// generated and close times before any event handlers are run. Bind directly to the
+        /// <see cref="QCAlgorithm.InsightsGenerated"/> event insead of overriding.
+        /// </remarks>
+        /// <param name="insights">The collection of insights generaed at the current time step</param>
+        protected sealed override void OnInsightsGenerated(IEnumerable<Insight> insights)
+        {
+            // set generated and close times on the insight object
+            base.OnInsightsGenerated(insights.Select(SetGeneratedAndClosedTimes));
+        }
+
         private Insight SetGeneratedAndClosedTimes(Insight insight)
         {
+            // function idempotency
+            if (insight.CloseTimeUtc != default(DateTime))
+            {
+                return insight;
+            }
+
             insight.GeneratedTimeUtc = UtcTime;
             insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
             if (string.IsNullOrEmpty(insight.SourceModel))
