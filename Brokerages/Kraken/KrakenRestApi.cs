@@ -31,16 +31,8 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Util;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.Kraken
 {

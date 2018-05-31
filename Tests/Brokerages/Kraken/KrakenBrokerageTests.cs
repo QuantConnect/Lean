@@ -36,7 +36,6 @@ using System.Threading;
     [TestFixture]
     public class KrakenBrokerageTests
     {
-        //! TODO - treba je vse example API response dol iz krakena potegnit
 
         #region Declarations
         KrakenBrokerage _unit;

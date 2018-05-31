@@ -220,10 +220,17 @@ namespace QuantConnect.Brokerages.Kraken
         /// </summary>
         public event EventHandler<BrokerageMessageEvent> Message;
         #endregion
+        
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected { get { return true; } }
+        public override bool IsConnected 
+        {
+            get
+            {
+                return true; 
+            }
+        }
 
         #region TRANSLATORS
         private string TranslateDirectionToKraken(OrderDirection direction)
@@ -320,7 +327,6 @@ namespace QuantConnect.Brokerages.Kraken
 
             if (order.Type == OrderType.Limit)
                 krakenOrder.Price = ((LimitOrder)order).LimitPrice;
-
             
             //krakenOrder.Leverage = 
 
@@ -328,7 +334,6 @@ namespace QuantConnect.Brokerages.Kraken
 
             if (result.Txid != null & result.Txid.Length != 0)
             {
-
                 order.BrokerId.AddRange(result.Txid);
 
                 return true;
@@ -354,18 +359,15 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Orders.Order order)
         {
-
             int sum = 0;
 
             foreach (string txid in order.BrokerId)
             {
-
                 var result = _restApi.CancelOrder(txid);
                 sum += result.Count;
             }
 
             return sum > 0;
-
         }
 
         /// <summary>
@@ -657,7 +659,6 @@ namespace QuantConnect.Brokerages.Kraken
                 }
             }
 
-            yield return null;
         }
 
         public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
