@@ -319,9 +319,10 @@ namespace QuantConnect.Brokerages.Kraken
             krakenOrder.Volume = order.AbsoluteQuantity;
 
             if (order.Type == OrderType.Limit)
-                krakenOrder.Price = order.Price;
+                krakenOrder.Price = ((LimitOrder)order).LimitPrice;
 
-            // krakenOrder.Leverage = ?
+            
+            //krakenOrder.Leverage = 
 
             var result = _restApi.AddOrder(krakenOrder);
 
@@ -409,20 +410,18 @@ namespace QuantConnect.Brokerages.Kraken
 
                 OrderDescription desc = info.Descr;
 
-                // This is for error-caching purposes here, will get removed in final release
-                if (pair.Key != desc.Pair)
-                    throw new KrakenException($"Pair strings {pair.Key} and {desc.Pair} don't match, please inspect!");
+                string txid = pair.Key;
 
                 var SOR = new SubmitOrderRequest(
 
-                    TranslateOrderTypeToLean(info.Descr.OrderType),
+                    TranslateOrderTypeToLean(desc.OrderType),
                     SecurityType.Crypto,
                     this.SymbolMapper.GetLeanSymbol(desc.Pair, SecurityType.Crypto, Market.Kraken),
                     info.Volume - info.VolumeExecuted,
                     info.StopPrice.HasValue ? info.StopPrice.Value : 0m,
                     info.LimitPrice.HasValue ? info.LimitPrice.Value : 0m,
                     Time.UnixTimeStampToDateTime(info.OpenTm),
-                    ""
+                    $"kraken txid: {txid}"
                 );
 
                 var order = Orders.Order.CreateOrder(SOR);
@@ -438,7 +437,6 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-
             var list = new List<Holding>();
 
             // Set MarketPrice in each Holding
