@@ -485,6 +485,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Returns the latest Slice object received
+        /// </summary>
+        public Slice LatestSlice { get; private set; }
+
+        /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         /// <seealso cref="SetStartDate(DateTime)"/>
@@ -2041,6 +2046,15 @@ namespace QuantConnect.Algorithm
         protected virtual void OnInsightsGenerated(IEnumerable<Insight> insights)
         {
             InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights));
+        }
+
+        /// <summary>
+        /// Set the latest slice received
+        /// </summary>
+        /// <param name="slice">The Slice object</param>
+        public void SetLatestSlice(Slice slice)
+        {
+            LatestSlice = slice;
         }
     }
 }
