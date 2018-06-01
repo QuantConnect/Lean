@@ -96,12 +96,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         }
 
         /// <summary>
-        /// Configure the created option security, this can include setting filters or other custom set up actions against the security object
+        /// Defines the option chain universe filter
         /// </summary>
-        /// <param name="optionChain">The option chain's security object</param>
-        protected virtual void ConfigureOptionChainSecurity(Option optionChain)
+        protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
             // NOP
+            return filter;
         }
 
         private OptionChainUniverse CreateOptionChain(QCAlgorithmFramework algorithm, Symbol symbol)
@@ -140,7 +140,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 algorithm.Log($"OptionUniverseSelectionModel.CreateOptionChain({algorithm.UtcTime}, {symbol}): Resolved existing Option Chain Security");
             }
 
-            ConfigureOptionChainSecurity(optionChain);
+            // set the option chain contract filter function
+            optionChain.SetFilter(Filter);
 
             // force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
             optionChain.IsTradable = false;

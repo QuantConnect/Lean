@@ -25,7 +25,6 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -88,22 +87,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             /// <summary>
-            /// Configure generated securities
+            /// Defines the option chain universe filter
             /// </summary>
-            /// <param name="optionChain"></param>
-            protected override void ConfigureOptionChainSecurity(Option optionChain)
+            protected override OptionFilterUniverse Filter(OptionFilterUniverse filter)
             {
-                // configure option chain filter to desired limit contracts
-                optionChain.SetFilter(filter =>
-                {
-                    return filter
-                        // limit options contracts to a maximum of 180 days in the future
-                        .Strikes(+1, +1)
-                        .Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
-                        .WeeklysOnly()
-                        .Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put))
-                        .OnlyApplyFilterAtMarketOpen();
-                });
+                return filter
+                    .Strikes(+1, +1)
+                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
+                    .WeeklysOnly()
+                    .Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put))
+                    .OnlyApplyFilterAtMarketOpen();
             }
         }
 
