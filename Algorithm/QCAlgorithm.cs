@@ -2038,7 +2038,7 @@ namespace QuantConnect.Algorithm
         /// Event invocator for the <see cref="InsightsGenerated"/> event
         /// </summary>
         /// <param name="insights">The collection of insights generaed at the current time step</param>
-        protected void OnInsightsGenerated(IEnumerable<Insight> insights)
+        protected virtual void OnInsightsGenerated(IEnumerable<Insight> insights)
         {
             InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights));
         }

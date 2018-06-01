@@ -125,6 +125,7 @@
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
+    <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\ManualUniverseSelectionModelTests.cs" />
     <Compile Include="API\ApiTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
@@ -176,6 +177,7 @@
     <Compile Include="Common\Scheduling\ScheduleManagerTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\CashBuyingPowerModelTests.cs" />
+    <Compile Include="Common\Securities\FakeOrderProcessor.cs" />
     <Compile Include="Common\Securities\Forex\ForexHoldingTest.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
