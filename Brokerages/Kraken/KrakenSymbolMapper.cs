@@ -135,11 +135,14 @@ namespace QuantConnect.Brokerages.Kraken
         {
             Logging.Log.Trace($"GetPair({currencyA},{currencyB})");
 
-            if (currencyA.Length == 0 || currencyB.Length == 0)
+            if (string.IsNullOrEmpty(currencyA) || string.IsNullOrEmpty(currencyB))
                 throw new DataType.KrakenException("No emtpy strings!");
 
             string strippedA = StripPrefixes(currencyA);
             string strippedB = StripPrefixes(currencyB);
+
+            if (string.IsNullOrEmpty(strippedA) || string.IsNullOrEmpty(strippedB))
+                throw new DataType.KrakenException("No empty strings!");
 
             foreach (string krakenPair in KnownPairs)
             {

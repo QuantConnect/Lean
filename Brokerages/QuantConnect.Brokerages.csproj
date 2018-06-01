@@ -208,7 +208,6 @@
     <Compile Include="Kraken\DataType\Trade.cs" />
     <Compile Include="Kraken\DataType\TradeBalanceInfo.cs" />
     <Compile Include="Kraken\DataType\TradeInfo.cs" />
-    <Compile Include="Kraken\KrakenApi.cs" />
     <Compile Include="Kraken\KrakenBrokerage.cs" />
     <Compile Include="Kraken\KrakenBrokerageFactory.cs" />
     <Compile Include="Kraken\KrakenRestApi.cs" />
