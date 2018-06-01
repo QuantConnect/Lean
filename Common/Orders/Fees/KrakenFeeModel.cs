@@ -39,8 +39,6 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Securities.Security security, Order order)
         {
-
-            
             // marketable limit orders are considered takers
             if (order.Type == OrderType.Limit && !order.IsMarketable)
             {

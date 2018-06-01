@@ -31,6 +31,7 @@ namespace QuantConnect.Brokerages.Kraken
             public string CodeAlt;
         }
 
+        private object KnownAssetsLock = new object();
         private List<KrakenAsset> KnownAssets = new List<KrakenAsset>();
 
         private List<string> KnownPairs = new List<string>();
@@ -49,18 +50,23 @@ namespace QuantConnect.Brokerages.Kraken
             Dictionary<string, DataType.AssetInfo> assetInfoDict = restApi.GetAssetInfo();
             Dictionary<string, DataType.AssetPair> assetPairDict = restApi.GetAssetPairs();
 
-            KnownAssets.Clear();
-
-            foreach (KeyValuePair<string, DataType.AssetInfo> KVPair in assetInfoDict)
+            lock (KnownAssetsLock)
             {
-                if (KVPair.Key == "KFEE")
-                    continue;
+                KnownAssets.Clear();
 
-                KrakenAsset krakenAsset = new KrakenAsset() { Code = KVPair.Key, CodeAlt = KVPair.Value.Altname };
+                foreach (KeyValuePair<string, DataType.AssetInfo> KVPair in assetInfoDict)
+                {
+                    // Not a symbol we are interested in
+                    // https://support.kraken.com/hc/en-us/articles/204799657-What-are-Kraken-fee-credits-KFEE-
+                    if (KVPair.Key == "KFEE")
+                        continue;
 
-                KnownAssets.Add(krakenAsset);
+                    KrakenAsset krakenAsset = new KrakenAsset() { Code = KVPair.Key, CodeAlt = KVPair.Value.Altname };
 
-                Logging.Log.Trace($"KrakenAsset {{ Code: { KVPair.Key }, CodeAlt: { KVPair.Value.Altname } }}");
+                    KnownAssets.Add(krakenAsset);
+
+                    Logging.Log.Trace($"KrakenAsset {{ Code: { KVPair.Key }, CodeAlt: { KVPair.Value.Altname } }}");
+                }
             }
 
             KnownPairs.Clear();
@@ -86,16 +92,19 @@ namespace QuantConnect.Brokerages.Kraken
 
             List<string> foundCodes = new List<string>();
 
-            foreach(var krakenCode in KnownAssets)
+            lock (KnownAssetsLock)
             {
-                if(krakenPair.Contains(krakenCode.Code))
+                foreach (var krakenCode in KnownAssets)
                 {
-                    foundCodes.Add(krakenCode.Code);
-                }
+                    if (krakenPair.Contains(krakenCode.Code))
+                    {
+                        foundCodes.Add(krakenCode.Code);
+                    }
 
-                if (krakenCode.Code != krakenCode.CodeAlt && krakenPair.Contains(krakenCode.CodeAlt))
-                {
-                    foundCodes.Add(krakenCode.CodeAlt);
+                    if (krakenCode.Code != krakenCode.CodeAlt && krakenPair.Contains(krakenCode.CodeAlt))
+                    {
+                        foundCodes.Add(krakenCode.CodeAlt);
+                    }
                 }
             }
 
@@ -154,13 +163,16 @@ namespace QuantConnect.Brokerages.Kraken
             if (leanCode == "BTC")
                 leanCode = "XBT";
 
-            foreach(var prefix in Prefixes)
+            foreach (var prefix in Prefixes)
             {
                 string possibleCode = prefix + leanCode;
 
-                if (KnownAssets.Exists(krakenAsset => krakenAsset.Code == possibleCode || krakenAsset.CodeAlt == possibleCode)) {
-
-                    return possibleCode;
+                lock (KnownAssetsLock)
+                {
+                    if (KnownAssets.Exists(krakenAsset => krakenAsset.Code == possibleCode || krakenAsset.CodeAlt == possibleCode))
+                    {
+                        return possibleCode;
+                    }
                 }
             }
 

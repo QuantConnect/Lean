@@ -151,11 +151,9 @@ namespace QuantConnect.Brokerages.Kraken
 
         private Tick KrakenTickToLeanTick(KeyValuePair<string, Ticker> pair)
         {
-
             Symbol symbol = SymbolMapper.GetLeanSymbol(pair.Key, SecurityType.Crypto, Market.Kraken);
 
             Ticker krakenTick = pair.Value;
-
 
             QuantConnect.Data.Market.Tick leanTick = new Tick();
 
@@ -174,7 +172,6 @@ namespace QuantConnect.Brokerages.Kraken
             leanTick.DataType = MarketDataType.Tick;
 
             return leanTick;
-
         }
 
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
@@ -502,15 +499,12 @@ namespace QuantConnect.Brokerages.Kraken
 
             Dictionary<string, decimal> balance   = _restApi.GetAccountBalance();
 
-
             foreach(var KVPair in balance)
             {
                 Log.Trace($"{KVPair.Key}, {KVPair.Value}");
             }
 
             List<string> pairs = new List<string>();
-
-
             HashSet<string> wantedPairs = new HashSet<string>();
 
             Dictionary<string, List<string>> assetToPairs = new Dictionary<string, List<string>>();
@@ -574,19 +568,6 @@ namespace QuantConnect.Brokerages.Kraken
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(b.ToString());
 
-            /* It works but it very slow
-             
-            Dictionary<string, Ticker> ticks =  new Dictionary<string, Ticker>();
-
-            foreach(string pair in wantedPairs)
-            {
-                var dict = _restApi.GetTicker(pair);
-
-                foreach(var KVPair in dict)
-                    ticks[KVPair.Key] = KVPair.Value;
-            }*/
-
-
             foreach (KeyValuePair<string, List<string>> KVPair in assetToPairs)
             {
                 string asset = KVPair.Key;
@@ -623,7 +604,6 @@ namespace QuantConnect.Brokerages.Kraken
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
             // TradeBar
-
             Symbol leanSymbol = request.Symbol;
 
             string krakenSymbol = SymbolMapper.GetBrokerageSymbol(leanSymbol);
@@ -643,7 +623,6 @@ namespace QuantConnect.Brokerages.Kraken
 
             while (startTime > endTime)
             {
-
                 GetOHLCResult result = _restApi.GetOHLC(krakenSymbol, interval, (int)startTime);
 
                 startTime = result.Last;
@@ -653,12 +632,10 @@ namespace QuantConnect.Brokerages.Kraken
 
                 foreach (OHLC candle in list)
                 {
-
                     if (candle.Time <= endTime)
                         yield return new TradeBar(FromUnix(candle.Time), leanSymbol, candle.Open, candle.High, candle.Low, candle.Close, candle.Volume, TimeSpan.FromMinutes(interval));
                 }
             }
-
         }
 
         public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
@@ -675,7 +652,6 @@ namespace QuantConnect.Brokerages.Kraken
 
             foreach (OHLC candle in list)
                 yield return new TradeBar(Time.UnixTimeStampToDateTime(checked((double)candle.Time)), symbol, candle.Open, candle.High, candle.Low, candle.Close, candle.Volume, TimeSpan.FromMinutes(interval));
-
         }
         #endregion
     }

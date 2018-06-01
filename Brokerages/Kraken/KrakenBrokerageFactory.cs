@@ -54,7 +54,7 @@ namespace QuantConnect.Brokerages.Kraken
             {
                 return new Dictionary<string, string>
                 {
-                    { "kraken-api-key", Config.Get("kraken-api-key") },
+                    { "kraken-api-key"   , Config.Get("kraken-api-key")    },
                     { "kraken-api-secret", Config.Get("kraken-api-secret") }
                 };
             }
