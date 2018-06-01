@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,6 +44,26 @@ namespace QuantConnect.Data.UniverseSelection
         public bool HasFundamentalData { get; set; }
 
         /// <summary>
+        /// Gets the price factor for the given date
+        /// </summary>
+        public decimal PriceFactor { get; set; } = 1m;
+
+        /// <summary>
+        /// Gets the split factor for the given date
+        /// </summary>
+        public decimal SplitFactor { get; set; } = 1m;
+
+        /// <summary>
+        /// Gets the combined factor used to create adjusted prices from raw prices
+        /// </summary>
+        public decimal PriceScaleFactor => PriceFactor * SplitFactor;
+
+        /// <summary>
+        /// Gets the split and dividend adjusted price
+        /// </summary>
+        public decimal AdjustedPrice => Price * PriceScaleFactor;
+
+        /// <summary>
         /// The end time of this data.
         /// </summary>
         public override DateTime EndTime
@@ -61,7 +81,7 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
@@ -74,8 +94,8 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
         /// <param name="line">Line of the source document</param>
@@ -102,6 +122,12 @@ namespace QuantConnect.Data.UniverseSelection
                     coarse.HasFundamentalData = Convert.ToBoolean(csv[5]);
                 }
 
+                if (csv.Length > 7)
+                {
+                    coarse.PriceFactor = csv[6].ToDecimal();
+                    coarse.SplitFactor = csv[7].ToDecimal();
+                }
+
                 return coarse;
             }
             catch (Exception)
@@ -125,7 +151,9 @@ namespace QuantConnect.Data.UniverseSelection
                 Value = Value,
                 Volume = Volume,
                 DataType = MarketDataType.Auxiliary,
-                HasFundamentalData = HasFundamentalData
+                HasFundamentalData = HasFundamentalData,
+                PriceFactor = PriceFactor,
+                SplitFactor = SplitFactor
             };
         }
 
