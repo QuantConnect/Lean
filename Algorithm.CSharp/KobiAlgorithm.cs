@@ -67,11 +67,8 @@ namespace QuantConnect.Algorithm.CSharp
             // DefaultOrderProperties = new GDAXOrderProperties { PostOnly = true };
 
             // Find more symbols here: http://quantconnect.com/data
-            AddCrypto("BTCUSD");
-            AddCrypto("ETHUSD");
-            AddCrypto("BTCEUR");
-
-            var symbol = AddCrypto("LTCUSD").Symbol;
+            
+            var symbol = AddCrypto("ETHEUR").Symbol;
 
             // create two moving averages
             _fast = EMA(symbol, 30, Resolution.Minute);
@@ -85,6 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            LimitOrder("ETHEUR", 1, 400);
+
             /*if (Time.Hour == 1 && Time.Minute == 0)
             {
                 // Sell all ETH holdings with a limit order at 1% above the current price
