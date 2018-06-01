@@ -128,6 +128,48 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="slice">The current data slice</param>
         public sealed override void OnFrameworkData(Slice slice)
         {
+            if (UtcTime >= UniverseSelection.GetNextRefreshTimeUtc())
+            {
+                var universes = UniverseSelection.CreateUniverses(this).ToDictionary(u => u.Configuration.Symbol);
+
+                // remove deselected universes by symbol
+                foreach (var ukvp in UniverseManager)
+                {
+                    var universeSymbol = ukvp.Key;
+                    var qcUserDefined = UserDefinedUniverse.CreateSymbol(ukvp.Value.SecurityType, ukvp.Value.Market);
+                    if (universeSymbol.Equals(qcUserDefined))
+                    {
+                        // prevent removal of qc algorithm created user defined universes
+                        continue;
+                    }
+
+                    Universe universe;
+                    if (!universes.TryGetValue(universeSymbol, out universe))
+                    {
+                        if (ukvp.Value.DisposeRequested)
+                        {
+                            UniverseManager.Remove(universeSymbol);
+                        }
+
+                        // mark this universe as disposed to remove all child subscriptions
+                        ukvp.Value.Dispose();
+                    }
+                }
+
+                // add newly selected universes
+                foreach (var ukvp in universes)
+                {
+                    // note: UniverseManager.Add uses TryAdd, so don't need to worry about duplicates here
+                    UniverseManager.Add(ukvp);
+                }
+            }
+
+            // we only want to run universe selection if there's no data available in the slice
+            if (!slice.HasData)
+            {
+                return;
+            }
+
             // insight timestamping handled via InsightsGenerated event handler
             var insights = Alpha.Update(this, slice).ToArray();
 

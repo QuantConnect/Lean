@@ -66,8 +66,8 @@ namespace QuantConnect.Algorithm.CSharp
                 // so there's currently no good way to remove the underlying equity without invoking RemoveSecurity(underlying) manually
                 // from the algorithm, otherwise we may remove it incorrectly. Now, we could track MORE state, but it would likely be a duplication
                 // of the internal flag's purpose, so kicking this issue for now with a big fat note here about it :) to be considerd for any future
-                // refactorings of how we manay subscription/security data and track various aspects about the security (thinking a flags enum with
-                // things like manually added, auto added, and any other boolean state we need to track against a single security)
+                // refactorings of how we manage subscription/security data and track various aspects about the security (thinking a flags enum with
+                // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
                 throw new Exception("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
             if (ExpectedSecurities.AreDifferent(Securities.Keys.ToHashSet()))
@@ -126,21 +126,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (changes.AddedSecurities.Count > 1)
             {
-                throw new Exception(
-                    $"This algorithm intends to add a single security at a time but added: {changes.AddedSecurities.Count}");
+                // added event fired for underlying since it was added to the option chain universe
+                if (changes.AddedSecurities.All(s => s.Symbol != Underlying))
+                {
+                    var securities = string.Join(Environment.NewLine, changes.AddedSecurities.Select(s => s.Symbol));
+                    throw new Exception($"This algorithm intends to add a single security at a time but added: {changes.AddedSecurities.Count}{Environment.NewLine}{securities}");
+                }
             }
 
-            // any security additions for this algorithm should match the expected contracts
             if (changes.AddedSecurities.Any())
             {
-                var added = changes.AddedSecurities[0];
+                // any option security additions for this algorithm should match the expected contracts
+                var added = changes.AddedSecurities.Single(s => s.Type == SecurityType.Option);
                 if (added.Symbol.SecurityType == SecurityType.Option)
                 {
                     var expectedContract = ExpectedContracts[expectedContractIndex];
                     if (added.Symbol != expectedContract)
                     {
-                        throw new Exception(
-                            $"Expected option contract {expectedContract} to be added but received {added.Symbol}");
+                        throw new Exception($"Expected option contract {expectedContract} to be added but received {added.Symbol}");
                     }
 
                     expectedContractIndex++;

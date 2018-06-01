@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -24,6 +25,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public interface IUniverseSelectionModel
     {
+        /// <summary>
+        /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
+        /// </summary>
+        DateTime GetNextRefreshTimeUtc();
+
         /// <summary>
         /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
         /// </summary>

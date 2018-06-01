@@ -26,6 +26,23 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class UniverseSelectionModelPythonWrapper : UniverseSelectionModel
     {
         private readonly dynamic _model;
+        private readonly bool _modelHasGetNextRefreshTime;
+
+        /// <summary>
+        /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
+        /// </summary>
+        public override DateTime GetNextRefreshTimeUtc()
+        {
+            if (!_modelHasGetNextRefreshTime)
+            {
+                return DateTime.MaxValue;
+            }
+
+            using (Py.GIL())
+            {
+                return _model.GetNextRefreshTime();
+            }
+        }
 
         /// <summary>
         /// Constructor for initialising the <see cref="IUniverseSelectionModel"/> class with wrapped <see cref="PyObject"/> object
@@ -35,6 +52,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             using (Py.GIL())
             {
+                if (!model.HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc)))
+                {
+                    _modelHasGetNextRefreshTime = false;
+                }
+
                 foreach (var attributeName in new[] { "CreateUniverses" })
                 {
                     if (!model.HasAttr(attributeName))
