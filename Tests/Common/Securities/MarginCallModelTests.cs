@@ -14,9 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -104,7 +101,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const int quantity = 1000;
             const decimal leverage = 2;
-            var orderProcessor = new OrderProcessor();
+            var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
 
             var security = GetSecurity(Symbols.AAPL);
@@ -136,7 +133,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const int quantity = 1000;
             const decimal leverage = 1m;
-            var orderProcessor = new OrderProcessor();
+            var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
             portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
 
@@ -240,55 +237,6 @@ namespace QuantConnect.Tests.Common.Securities
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
                 new Cash(CashBook.AccountCurrency, 0, 1m),
                 SymbolProperties.GetDefault(CashBook.AccountCurrency));
-        }
-
-        public class OrderProcessor : IOrderProcessor
-        {
-            private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
-            private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();
-            public void AddOrder(Order order)
-            {
-                _orders[order.Id] = order;
-            }
-
-            public void AddTicket(OrderTicket ticket)
-            {
-                _tickets[ticket.OrderId] = ticket;
-            }
-            public int OrdersCount { get; private set; }
-            public Order GetOrderById(int orderId)
-            {
-                Order order;
-                _orders.TryGetValue(orderId, out order);
-                return order;
-            }
-
-            public Order GetOrderByBrokerageId(string brokerageId)
-            {
-                return _orders.Values.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
-            }
-
-            public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
-            {
-                return _tickets.Values.Where(filter ?? (x => true));
-            }
-
-            public OrderTicket GetOrderTicket(int orderId)
-            {
-                OrderTicket ticket;
-                _tickets.TryGetValue(orderId, out ticket);
-                return ticket;
-            }
-
-            public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
-            {
-                return _orders.Values.Where(filter ?? (x => true));
-            }
-
-            public OrderTicket Process(OrderRequest request)
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }

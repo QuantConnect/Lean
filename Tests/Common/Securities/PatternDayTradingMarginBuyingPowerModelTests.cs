@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityPrice = 100m;
             var quantity = 300;
 
-            var orderProcessor = new MarginCallModelTests.OrderProcessor();
+            var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
             var model = new PatternDayTradingMarginModel();
 
@@ -243,7 +243,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityPrice = 100m;
             var quantity = -300;
 
-            var orderProcessor = new MarginCallModelTests.OrderProcessor();
+            var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
             var model = new PatternDayTradingMarginModel();
 
