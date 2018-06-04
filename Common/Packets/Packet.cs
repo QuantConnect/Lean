@@ -144,6 +144,9 @@ namespace QuantConnect.Packets
         AlphaWork,
 
         /// Alpha Controller -> Alpha Node packet
-        AlphaNode
+        AlphaNode,
+
+        /// Packet containing list of algorithms to run as a regression test
+        RegressionAlgorithm
     }
 }
