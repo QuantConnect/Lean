@@ -40,13 +40,10 @@ class DailyFxAlgorithm(QCAlgorithm):
         self.SetEndDate(2016,5,27)
         self._sliceCount = 0
         self._eventCount = 0
-        self.AddData[DailyFx]("DFX",Resolution.Second, TimeZones.Utc)
+        self.AddData(DailyFx, "DFX", Resolution.Second, TimeZones.Utc)
 
     def OnData(self, data):
-
         # Daily Fx demonstration to call on
-
-        if "DFX" not in data: return
         result = data["DFX"]
         self._sliceCount +=1
-        self.Log("SLICE >> {0} : {1}".format(self._sliceCount, result.ToString()))
+        self.Debug("ONDATA >> {0} : {1}".format(self._sliceCount, result))
