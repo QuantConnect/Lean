@@ -52,7 +52,7 @@ class CustomDataIndicatorExtensionsAlgorithm(QCAlgorithm):
         
         # Define the symbol and "type" of our generic data
         self.AddData(QuandlVix, self.vix, Resolution.Daily)
-        self.AddData[Quandl](self.vxv, Resolution.Daily)
+        self.AddData(Quandl, self.vxv, Resolution.Daily)
         
         # Set up default Indicators, these are just 'identities' of the closing price
         self.vix_sma = self.SMA(self.vix, 1, Resolution.Daily)
