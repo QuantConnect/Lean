@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetBenchmark(equity.Symbol);
         }
 
-        ~OptionExerciseAssignRegressionAlgorithm()
+        public override void OnEndOfAlgorithm()
         {
             if (!_assignedOption)
             {
