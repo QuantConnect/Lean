@@ -92,7 +92,7 @@ namespace QuantConnect.Brokerages.GDAX
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _algorithm = algorithm;
-            RateClient = new RestClient("http://api.fixer.io/latest?base=usd");
+            RateClient = new RestClient("http://data.fixer.io/api/latest?base=usd&access_key=26a2eb9f13db3f14b6df6ec2379f9261");
 
             WebSocket.Open += (sender, args) =>
             {
