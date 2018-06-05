@@ -652,9 +652,9 @@ namespace QuantConnect.Interfaces
         void SetFutureChainProvider(IFutureChainProvider futureChainProvider);
 
         /// <summary>
-        /// Set the latest slice received
+        /// Sets the current slice
         /// </summary>
         /// <param name="slice">The Slice object</param>
-        void SetLatestSlice(Slice slice);
+        void SetCurrentSlice(Slice slice);
     }
 }

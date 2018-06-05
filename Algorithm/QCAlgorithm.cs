@@ -485,9 +485,9 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Returns the latest Slice object received
+        /// Returns the current Slice object
         /// </summary>
-        public Slice LatestSlice { get; private set; }
+        public Slice CurrentSlice { get; private set; }
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -2049,12 +2049,12 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Set the latest slice received
+        /// Sets the current slice
         /// </summary>
         /// <param name="slice">The Slice object</param>
-        public void SetLatestSlice(Slice slice)
+        public void SetCurrentSlice(Slice slice)
         {
-            LatestSlice = slice;
+            CurrentSlice = slice;
         }
     }
 }

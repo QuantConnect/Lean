@@ -857,9 +857,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public override string ToString() => _algorithm == null ? base.ToString() : _algorithm.Repr();
 
         /// <summary>
-        /// Set the latest slice received
+        /// Sets the current slice
         /// </summary>
         /// <param name="slice">The Slice object</param>
-        public void SetLatestSlice(Slice slice) => _baseAlgorithm.SetLatestSlice(slice);
+        public void SetCurrentSlice(Slice slice) => _baseAlgorithm.SetCurrentSlice(slice);
     }
 }
