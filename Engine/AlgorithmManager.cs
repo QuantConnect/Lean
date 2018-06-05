@@ -291,6 +291,9 @@ namespace QuantConnect.Lean.Engine
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
 
+                // Update the current slice before firing scheduled events or any other task
+                algorithm.SetCurrentSlice(timeSlice.Slice);
+
                 if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
                 {
                     if (hasOnDataSymbolChangedEvents)
