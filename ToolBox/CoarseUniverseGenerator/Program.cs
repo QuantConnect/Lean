@@ -172,6 +172,9 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             }
             var fineFundamentalFolder = Path.Combine(fundamentalDirectoryInfo.FullName, "fine");
 
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
+
             // open up each daily file to get the values and append to the daily coarse files
             foreach (var file in Directory.EnumerateFiles(dailyFolder))
             {
@@ -264,8 +267,15 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             // check if symbol has fine fundamental data for the current date
                             var hasFundamentalDataForDate = date >= firstFineSymbolDate;
 
-                            // sid,symbol,close,volume,dollar volume,has fundamental data
-                            var coarseFileLine = sid + "," + symbol + "," + close + "," + volume + "," + Math.Truncate(dollarVolume) + "," + hasFundamentalDataForDate;
+                            // get price and split factors from factor files
+                            var leanSymbol = new Symbol(sid, symbol);
+                            var factorFile = factorFileProvider.Get(leanSymbol);
+                            var factorFileRow = factorFile?.GetScalingFactors(date);
+                            var priceFactor = factorFileRow?.PriceFactor ?? 1m;
+                            var splitFactor = factorFileRow?.SplitFactor ?? 1m;
+
+                            // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
+                            var coarseFileLine = $"{sid},{symbol},{close},{volume},{Math.Truncate(dollarVolume)},{hasFundamentalDataForDate},{priceFactor},{splitFactor}";
 
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))

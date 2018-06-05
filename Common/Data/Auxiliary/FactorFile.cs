@@ -114,6 +114,23 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
+        /// Gets price and split factors to be applied at the specified date
+        /// </summary>
+        public FactorFileRow GetScalingFactors(DateTime searchDate)
+        {
+            var factors = new FactorFileRow(searchDate, 1m, 1m);
+
+            // Iterate backwards to find the most recent factors
+            foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
+            {
+                if (splitDate.Date < searchDate.Date) break;
+                factors = SortedFactorFileData[splitDate];
+            }
+
+            return factors;
+        }
+
+        /// <summary>
         /// Checks whether or not a symbol has scaling factors
         /// </summary>
         public static bool HasScalingFactors(string permtick, string market)

@@ -63,7 +63,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
 
             # Updates the SymbolData object with current EOD price
             avg = self.averages[cf.Symbol]
-            avg.update(cf.EndTime, cf.Price)
+            avg.update(cf.EndTime, cf.AdjustedPrice)
 
         # Filter the values of the dict: we only want up-trending securities
         values = list(filter(lambda x: x.is_uptrend, self.averages.values()))
@@ -73,7 +73,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
 
         for x in values[:self.coarse_count]:
             self.Log('symbol: ' + str(x.symbol.Value) + '  scale: ' + str(x.scale))
-        
+
         # we need to return only the symbol objects
         return [ x.symbol for x in values[:self.coarse_count] ]
 

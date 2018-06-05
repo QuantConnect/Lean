@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         private readonly int _fastPeriod;
         private readonly int _slowPeriod;
         private readonly int _universeCount;
-        
+
         // holds our coarse fundamental indicators by symbol
         private readonly ConcurrentDictionary<Symbol, SelectionData> _averages;
 
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             int fastPeriod = 100,
             int slowPeriod = 300,
             int universeCount = 500,
-            UniverseSettings universeSettings = null, 
+            UniverseSettings universeSettings = null,
             ISecurityInitializer securityInitializer = null)
             : base(false, universeSettings, securityInitializer)
         {
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                         // grab th SelectionData instance for this symbol
                         let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData(_fastPeriod, _slowPeriod))
                         // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.Price)
+                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
                         // only pick symbols who have their _fastPeriod-day ema over their _slowPeriod-day ema
                         where avg.Fast > avg.Slow * (1 + _tolerance)
                         // prefer symbols with a larger delta by percentage between the two averages
