@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+// ReSharper disable InvokeAsExtensionMethod -- .net 4.7.2 added ToHashSet and it looks like our version of mono has it as well causing ambiguity in the cloud
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -70,19 +71,19 @@ namespace QuantConnect.Algorithm.CSharp
                 // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
                 throw new Exception("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
-            if (ExpectedSecurities.AreDifferent(Securities.Keys.ToHashSet()))
+            if (ExpectedSecurities.AreDifferent(LinqExtensions.ToHashSet(Securities.Keys)))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedSecurities.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedUniverses.AreDifferent(UniverseManager.Keys.ToHashSet()))
+            if (ExpectedUniverses.AreDifferent(LinqExtensions.ToHashSet(UniverseManager.Keys)))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedUniverses.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedData.AreDifferent(data.Keys.ToHashSet()))
+            if (ExpectedData.AreDifferent(LinqExtensions.ToHashSet(data.Keys)))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));
@@ -166,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Expected option contracts to be removed at 11:31AM, instead removed at: {Time}");
                 }
 
-                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).AreDifferent(ExpectedContracts.ToHashSet()))
+                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).AreDifferent(LinqExtensions.ToHashSet(ExpectedContracts)))
                 {
                     throw new Exception("Expected removed securities to equal expected contracts added");
                 }
