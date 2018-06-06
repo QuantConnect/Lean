@@ -15,6 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -111,6 +115,42 @@ namespace QuantConnect.Tests.Common.Data
 
             Assert.AreEqual(TickType.Trade, types[0].Item2);
             Assert.AreEqual(TickType.Quote, types[1].Item2);
+        }
+
+        [Test]
+        public void SubscriptionsMemberIsThreadSafe()
+        {
+            var timeKeeper = new TimeKeeper(DateTime.UtcNow);
+            var subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
+            var start = DateTime.UtcNow;
+            var end = start.AddSeconds(5);
+            var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.ToList();
+            var symbols = tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA)).ToList();
+
+            var readTask = new TaskFactory().StartNew(() =>
+            {
+                Console.WriteLine("Read task started");
+                while (DateTime.UtcNow < end)
+                {
+                    subscriptionManager.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
+                    Thread.Sleep(1);
+                }
+                Console.WriteLine("Read task ended");
+            });
+
+            while (readTask.Status != TaskStatus.Running) Thread.Sleep(1);
+
+            var addTask = new TaskFactory().StartNew(() =>
+            {
+                Console.WriteLine("Add task started");
+                foreach (var symbol in symbols)
+                {
+                    subscriptionManager.Add(symbol, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false);
+                }
+                Console.WriteLine("Add task ended");
+            });
+
+            Task.WaitAll(addTask, readTask);
         }
 
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)

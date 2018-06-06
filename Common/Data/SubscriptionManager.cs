@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
@@ -33,8 +34,14 @@ namespace QuantConnect.Data
         private readonly AlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
 
-        /// Generic Market Data Requested and Object[] Arguements to Get it:
-        public HashSet<SubscriptionDataConfig> Subscriptions;
+        /// There is no ConcurrentHashSet collection in .NET,
+        /// so we use ConcurrentDictionary with byte value to minimize memory usage
+        private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptions = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
+
+        /// <summary>
+        /// Returns an IEnumerable of Subscriptions
+        /// </summary>
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptions.Select(x => x.Key);
 
         /// <summary>
         /// Flags the existence of custom data in the subscriptions
@@ -44,11 +51,7 @@ namespace QuantConnect.Data
         /// <summary>
         ///
         /// </summary>
-        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes
-        {
-            get;
-            private set;
-        }
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
 
         /// <summary>
         /// Initialise the Generic Data Manager Class
@@ -59,8 +62,6 @@ namespace QuantConnect.Data
         {
             _algorithmSettings = algorithmSettings;
             _timeKeeper = timeKeeper;
-            //Generic Type Data Holder:
-            Subscriptions = new HashSet<SubscriptionDataConfig>();
 
             // Initialize the default data feeds for each security type
             AvailableDataTypes = DefaultDataTypes();
@@ -69,13 +70,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count
-        {
-            get
-            {
-                return Subscriptions.Count;
-            }
-        }
+        public int Count => _subscriptions.Skip(0).Count();
 
         /// <summary>
         /// Add Market Data Required (Overloaded method for backwards compatibility).
@@ -121,24 +116,24 @@ namespace QuantConnect.Data
         {
             if (dataTimeZone == null)
             {
-                throw new ArgumentNullException("dataTimeZone", "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
+                throw new ArgumentNullException(nameof(dataTimeZone), "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
             }
             if (exchangeTimeZone == null)
             {
-                throw new ArgumentNullException("exchangeTimeZone", "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
+                throw new ArgumentNullException(nameof(exchangeTimeZone), "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
             }
 
             //Create:
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
 
             //Add to subscription list: make sure we don't have this symbol:
-            if (Subscriptions.Contains(newConfig))
+            if (_subscriptions.ContainsKey(newConfig))
             {
                 Log.Trace("SubscriptionManager.Add(): subscription already added: " + newConfig);
                 return newConfig;
             }
 
-            Subscriptions.Add(newConfig);
+            _subscriptions.TryAdd(newConfig, 0);
 
             // count data subscriptions by symbol, ignoring multiple data types
             var uniqueCount = Subscriptions
@@ -148,9 +143,7 @@ namespace QuantConnect.Data
             if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
             {
                 throw new Exception(
-                    string.Format(
-                        "The maximum number of concurrent market data subscriptions was exceeded ({0}). Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.",
-                        _algorithmSettings.DataSubscriptionLimit));
+                    $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit}). Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
             }
 
             // add the time zone to our time keeper
@@ -188,11 +181,9 @@ namespace QuantConnect.Data
                 }
             }
 
-            throw new ArgumentException(string.Format("Type mismatch found between consolidator and symbol. " +
-                "Symbol: {0} does not support input type: {1}. Supported types: {2}.",
-                symbol.Value,
-                consolidator.InputType.Name,
-                string.Join(",", subscriptions.Select(x => x.Type.Name))));
+            throw new ArgumentException("Type mismatch found between consolidator and symbol. " +
+                                        $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. " +
+                                        $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}.");
         }
 
         /// <summary>
@@ -255,6 +246,5 @@ namespace QuantConnect.Data
             return AvailableDataTypes[symbolSecurityType].Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
-    } // End Algorithm MetaData Manager Class
-
-} // End QC Namespace
+    }
+}
