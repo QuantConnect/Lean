@@ -250,6 +250,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public SecurityManager Securities => _baseAlgorithm.Securities;
 
         /// <summary>
+        /// Read-only dictionary containing all active securities. An active security is
+        /// a security that is currently selected by the universe or has holdings or open orders.
+        /// </summary>
+        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => _baseAlgorithm.ActiveSecurities;
+
+        /// <summary>
         /// Gets an instance that is to be used to initialize newly created securities.
         /// </summary>
         public ISecurityInitializer SecurityInitializer => _baseAlgorithm.SecurityInitializer;

@@ -70,6 +70,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Read-only dictionary containing all active securities. An active security is
+        /// a security that is currently selected by the universe or has holdings or open orders.
+        /// </summary>
+        IReadOnlyDictionary<Symbol, Security> ActiveSecurities
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the collection of universes for the algorithm
         /// </summary>
         UniverseManager UniverseManager
