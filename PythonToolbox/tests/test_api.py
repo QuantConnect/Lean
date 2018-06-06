@@ -125,8 +125,8 @@ class TestApi(unittest.TestCase):
         self.assertTrue(deleteProject['success'])
 
     def test_LeanReportCreator(self):
-        lrc = LeanReportCreator("./json/sample.json")
-        lrc.genearte_report()
+        lrc = LeanReportCreator('--backtest=./json/sample.json --output=./outputs_test/Report.html --user=user_data.json')
+        lrc.create()
 
 def get_content(file):
     with open("../Algorithm.Python/" + file, 'r') as f:

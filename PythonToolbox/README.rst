@@ -13,6 +13,10 @@ This package can be installed with pip:
 
    >>> pip install quantconnect -U
 
+Local installation:
+
+   >>> pip install -e Lean/PythonToolbox
+
 Enter Python's interpreter and type the following commands:
 
    >>> from quantconnect.api import Api
@@ -30,42 +34,41 @@ Edit setup.py to set the desired package version. Then, create the distribution 
    >>> python setup.py sdist
    >>> twine upload  dist/*
 
-Lean-Report-Creator
+Lean Report Creator
 -------------------
 Create beautiful HTML/PDF reports for sharing your LEAN backtest results in Python.
 
-Instruction on installing and running the program
+Instruction on running the program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Dear users, please refer to the following instructions to generate your strategy report!
-
-1. Install Python3
-""""""""""""""""""
-You are strongly recommended to use Anaconda (or Miniconda) to install Python3 and its dependencies. 
-
-After downloading Anaconda (or Miniconda), open Anaconda Prompt and run "conda install python=3.6". Use the same method to install all its dependencies.
-
-2. Prepare input files
+1. Prepare input files
 """"""""""""""""""""""
-(1) The first input file is the .json file which you can download once you finish your backtesting. You could put this file into a convenient directory, such as ./json/sample.json.
+(1) The first input file is the .json file which you can download once you finish your backtesting. You could put this file into a convenient directory, such as ./json/sample.json. Using the API:
 
-(2) Then please replace the file "AuthorProfile.jpg" with your own profile image, but do not change the file name.
+   >>> from quantconnect.api import Api
+   >>> from json import dump
+   >>> api = Api(your-user-id, your-token)
+   >>> data = api.read_backtest(project-id, backtest-id)
+   >>> with open("./json/sample.json", 'w+') as fp:
+   >>>    json.dump(data['result'], fp, ensure_ascii=False)
 
-3. Generate report
+(2) Replace the file "AuthorProfile.jpg" with your own profile image, but do not change the file name.
+
+(3) Update the "user_data.json" accordingly.
+
+2. Generate report
 """"""""""""""""""""""
 Execute the following command to generate your strategy report:
 
-lrc = LeanReportCreator("./json/sample.json")
-lrc.genearte_report()
+   $ python CreateLeanReport.py --backtest=./json/sample.json --output=./outputs/Report.html --user=user_data.json
 
-4. Get the outputs
+3. Get the outputs
 """"""""""""""""""
-(1) Report.html
+(1) Lean report HTML file defined by "--output"
 
-(2) all the individual images in the directory "./outputs"
+(2) Individual images in the same directory of the report (remove the `lrc.clean()` statement in "CreateLeanReport.py")
 
 Explanation on the meaning of the charts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here I am going to give you a detailed explanation on the meaning of each chart.
 
 1. Cumulative Return
 """"""""""""""""""""
@@ -74,7 +77,7 @@ This chart shows the cumulative returns for both your strategy (in orange) and t
 
 The backtest version of this chart is calculated based on daily data. If the original price series in json file is not daily, we will first convert them into daily data.
 
-The live version of this chart is calculated based on miniute data. Icons on the chart will show when the live trading started, stopped, or had runtime errors.
+The live version of this chart is calculated based on minute data. Icons on the chart will show when the live trading started, stopped, or had runtime errors.
 
 2. Daily Return
 """""""""""""""
@@ -124,10 +127,13 @@ The x-axis represents the value of return. The y-axis is the number of months wh
 7. Crisis Events
 """"""""""""""""
 9/11
+
 .. image:: outputs//crisis-9-11.png
 Lehman Brothers
+
 .. image:: outputs//crisis-lehman-brothers.png
 Us Downgrade/European Debt Crisis
+
 .. image:: outputs//crisis-us-downgrade-european-debt-crisis.png
 This group of charts shows the behaviors of both your strategy and the benchmark during a certain historical period. 
 
