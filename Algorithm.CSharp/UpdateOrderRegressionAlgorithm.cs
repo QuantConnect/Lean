@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -189,23 +189,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "21"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.70%"},
-            {"Compounding Annual Return", "-8.246%"},
-            {"Drawdown", "16.600%"},
+            {"Average Loss", "-1.60%"},
+            {"Compounding Annual Return", "-7.780%"},
+            {"Drawdown", "15.700%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-15.812%"},
-            {"Sharpe Ratio", "-1.352"},
+            {"Net Profit", "-14.955%"},
+            {"Sharpe Ratio", "-1.355"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.063"},
-            {"Beta", "-1.046"},
-            {"Annual Standard Deviation", "0.062"},
-            {"Annual Variance", "0.004"},
-            {"Information Ratio", "-1.673"},
-            {"Tracking Error", "0.062"},
-            {"Treynor Ratio", "0.08"},
-            {"Total Fees", "$21.00"},
+            {"Alpha", "-0.06"},
+            {"Beta", "-0.978"},
+            {"Annual Standard Deviation", "0.058"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "-1.696"},
+            {"Tracking Error", "0.058"},
+            {"Treynor Ratio", "0.081"},
+            {"Total Fees", "$21.00"}
         };
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -79,35 +79,35 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "-1.03%"},
-            {"Compounding Annual Return", "245.773%"},
+            {"Compounding Annual Return", "246.473%"},
             {"Drawdown", "2.300%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "1.599%"},
-            {"Sharpe Ratio", "4.164"},
+            {"Net Profit", "1.601%"},
+            {"Sharpe Ratio", "4.169"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0.007"},
-            {"Beta", "73.258"},
+            {"Beta", "73.418"},
             {"Annual Standard Deviation", "0.196"},
             {"Annual Variance", "0.038"},
-            {"Information Ratio", "4.109"},
+            {"Information Ratio", "4.114"},
             {"Tracking Error", "0.196"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$9.27"},
+            {"Total Fees", "$9.80"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "86"},
             {"Long Insight Count", "100"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$167506.2210"},
-            {"Total Accumulated Estimated Alpha Value", "$26987.1134"},
-            {"Mean Population Estimated Insight Value", "$272.5971"},
+            {"Estimated Monthly Alpha Value", "$158418.3850"},
+            {"Total Accumulated Estimated Alpha Value", "$25522.9620"},
+            {"Mean Population Estimated Insight Value", "$257.8077"},
             {"Mean Population Direction", "48.8372%"},
             {"Mean Population Magnitude", "48.8372%"},
             {"Rolling Averaged Population Direction", "68.2411%"},
-            {"Rolling Averaged Population Magnitude", "68.2411%"},
+            {"Rolling Averaged Population Magnitude", "68.2411%"}
         };
     }
 }

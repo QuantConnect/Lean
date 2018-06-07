@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,25 +120,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades","2"},
-            {"Average Win","0%"},
-            {"Average Loss","-0.02%"},
-            {"Compounding Annual Return","-1.242%"},
-            {"Drawdown","0.000%"},
-            {"Expectancy","-1"},
-            {"Net Profit","-0.017%"},
-            {"Sharpe Ratio","-7.099"},
-            {"Loss Rate","100%"},
-            {"Win Rate","0%"},
-            {"Profit-Loss Ratio","0"},
-            {"Alpha","-0.01"},
-            {"Beta","0"},
-            {"Annual Standard Deviation","0.001"},
-            {"Annual Variance","0"},
-            {"Information Ratio","7.126"},
-            {"Tracking Error","6.064"},
-            {"Treynor Ratio","174.306"},
-            {"Total Fees","$0.50"},
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "-1.242%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.017%"},
+            {"Sharpe Ratio", "-7.099"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.01"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "7.126"},
+            {"Tracking Error", "6.064"},
+            {"Treynor Ratio", "174.306"},
+            {"Total Fees", "$0.50"}
         };
     }
 }

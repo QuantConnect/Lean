@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -218,7 +218,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "43.4783%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "65.5952%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }
