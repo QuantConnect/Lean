@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities.Conversion
+namespace QuantConnect.Lean.Engine.MeanPricing
 {
-    
-    
+   
     public class Graph
     {
         /// <summary>
@@ -18,6 +17,8 @@ namespace QuantConnect.Securities.Conversion
         /// <summary>
         /// Key is Pair name
         /// </summary>
-        public Dictionary<string, Connection> Connections;
+        public Dictionary<string, Edge> Connections;
+
+        
     }
 }

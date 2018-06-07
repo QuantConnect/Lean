@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities.Conversion
+namespace QuantConnect.Lean.Engine.MeanPricing
 {
     /// <summary>
     /// The connection represents a pair, but also holds other information
     /// Should be dynamically updated by AlgorithmManager (get Ticker information from exchanges)
     /// </summary>
-    public class Connection
+    public class Edge
     {
         /// <summary>
         /// Base asset, left side of pair
@@ -35,22 +35,42 @@ namespace QuantConnect.Securities.Conversion
         /// <summary>
         /// 24h Volume expressed in Base asset
         /// </summary>
-        public decimal BaseVolume { get; private set; }
+        public decimal Volume { get; private set; }
 
         /// <summary>
         /// 24h Volume expressed in Quote asset
         /// </summary>
         public decimal QuoteVolume { get; private set; }
 
-        //public decimal Brokerage (or some other ticker source 
+        /// <summary>
+        /// Used for calculating price flow
+        /// </summary>
+        public int Level { get; set; }
 
+        //public Dictionary<Brokerages.Brokerage>
+
+        public void Update(string Brokerage, string Pair, decimal LastPrice, decimal Volume24)
+        {
+            // Check if Brokerage is online, if not, remove it from list
+
+            // Check if Brokerage exists, if not, add it to
+
+        }
+
+        // public decimal Brokerage (or some other ticker source
         public bool Contains(Asset A)
         {
             return Base == A || Quote == A;
         }
 
         // should rate be inverted, 1/rate
-        public bool Invert(Asset leftSideAsset)
+        public bool NormalOrientation(Asset leftSideAsset)
+        {
+            return Base == leftSideAsset;
+        }
+
+        // should rate be inverted, 1/rate
+        public bool InverseOrientation(Asset leftSideAsset)
         {
             return Quote == leftSideAsset;
         }
