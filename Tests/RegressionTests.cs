@@ -70,6 +70,7 @@ namespace QuantConnect.Tests
                 // generate test parameters
                 return instance.Languages.Select(lang => new AlgorithmStatisticsTestParameters(ra.Name, instance.ExpectedStatistics, lang));
             })
+            .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
             // generate test cases from test parameters
             .Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm))
             .ToArray();
