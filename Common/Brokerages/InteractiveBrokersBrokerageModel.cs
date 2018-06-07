@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages
                 security.Type != SecurityType.Future)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + security.Type + " security type."
+                    $"The {nameof(InteractiveBrokersBrokerageModel)} does not support {security.Type} security type."
                 );
 
                 return false;
@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.TimeInForce.GetType().Name + " time in force."
+                    $"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force."
                 );
 
                 return false;
@@ -182,8 +182,8 @@ namespace QuantConnect.Brokerages
             if (!orderIsWithinForexSizeLimits)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSizeLimit",
-                    string.Format("The maximum allowable order size is {0}{1}.", max, baseCurrency)
-                    );
+                    $"The maximum allowable order size is {max}{baseCurrency}."
+                );
             }
             return orderIsWithinForexSizeLimits;
         }

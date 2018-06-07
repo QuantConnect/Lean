@@ -130,7 +130,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + security.Type + " security type."
+                    $"The {nameof(GDAXBrokerageModel)} does not support {security.Type} security type."
                 );
 
                 return false;
@@ -139,7 +139,7 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.Type + " order type."
+                    $"The {nameof(GDAXBrokerageModel)} does not support {order.Type} order type."
                 );
 
                 return false;
@@ -148,7 +148,7 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.TimeInForce.GetType().Name + " time in force."
+                    $"The {nameof(GDAXBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force."
                 );
 
                 return false;
