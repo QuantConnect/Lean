@@ -266,7 +266,7 @@ class LeanReportCreator(object):
                             <tr>
                                 <td style="overflow: hidden;">
                                     <img src="''' + self.user['authorPicture'] + '''">
-                                    <p id="author-bio" class="text-justify editable" style="max-width: 286px;">''' + self.user['authorBiography']+ '''</p>
+                                    <p id="author-bio" class="text-justify editable" style="max-width: 286px;height:193px">''' + self.user['authorBiography']+ '''</p>
                                 </td>
                             </tr>
                             </tbody>
