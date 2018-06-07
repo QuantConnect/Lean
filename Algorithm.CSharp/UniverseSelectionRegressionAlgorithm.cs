@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Universe Selection regression algorithm simulates an edge case. In one week, Google listed two new symbols, delisted one of them and changed tickers.
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class UniverseSelectionRegressionAlgorithm : QCAlgorithm
+    public class UniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>();
         private SecurityChanges _changes;
@@ -155,5 +155,36 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception(string.Format("{0}({1}) expected {2}, but received {3}.", symbol, symbol.ID, expected, actual));
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "5"},
+            {"Average Win", "0.70%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-73.794%"},
+            {"Drawdown", "6.600%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "-6.047%"},
+            {"Sharpe Ratio", "-3.974"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.682"},
+            {"Beta", "-29.539"},
+            {"Annual Standard Deviation", "0.317"},
+            {"Annual Variance", "0.1"},
+            {"Information Ratio", "-4.034"},
+            {"Tracking Error", "0.317"},
+            {"Treynor Ratio", "0.043"},
+            {"Total Fees", "$5.00"}
+        };
     }
 }

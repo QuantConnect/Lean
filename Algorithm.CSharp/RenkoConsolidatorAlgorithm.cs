@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -26,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="consolidating data" />
-    public class RenkoConsolidatorAlgorithm : QCAlgorithm
+    public class RenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initializes the algorithm state.
@@ -99,5 +100,36 @@ namespace QuantConnect.Algorithm.CSharp
             }
             Log($"7BAR - {data.Time.ToString("o")} - {data.Open} {data.Close}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "29"},
+            {"Average Win", "1.14%"},
+            {"Average Loss", "-1.76%"},
+            {"Compounding Annual Return", "-1.979%"},
+            {"Drawdown", "11.100%"},
+            {"Expectancy", "-0.059"},
+            {"Net Profit", "-1.984%"},
+            {"Sharpe Ratio", "-0.153"},
+            {"Loss Rate", "43%"},
+            {"Win Rate", "57%"},
+            {"Profit-Loss Ratio", "0.65"},
+            {"Alpha", "-0.172"},
+            {"Beta", "7.788"},
+            {"Annual Standard Deviation", "0.099"},
+            {"Annual Variance", "0.01"},
+            {"Information Ratio", "-0.356"},
+            {"Tracking Error", "0.099"},
+            {"Treynor Ratio", "-0.002"},
+            {"Total Fees", "$117.75"}
+        };
     }
 }

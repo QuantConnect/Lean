@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algortihm for testing <see cref="ScheduledUniverseSelectionModel"/> scheduling functions
     /// </summary>
-    public class ScheduledUniverseSelectionModelRegressionAlgorithm : QCAlgorithmFramework
+    public class ScheduledUniverseSelectionModelRegressionAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -176,5 +176,49 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "17"},
+            {"Average Win", "0.26%"},
+            {"Average Loss", "-0.11%"},
+            {"Compounding Annual Return", "26.961%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "1.895"},
+            {"Net Profit", "2.115%"},
+            {"Sharpe Ratio", "4.218"},
+            {"Loss Rate", "12%"},
+            {"Win Rate", "88%"},
+            {"Profit-Loss Ratio", "2.31"},
+            {"Alpha", "0.327"},
+            {"Beta", "-9.439"},
+            {"Annual Standard Deviation", "0.043"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "3.864"},
+            {"Tracking Error", "0.043"},
+            {"Treynor Ratio", "-0.019"},
+            {"Total Fees", "$0.00"},
+            {"Total Insights Generated", "54"},
+            {"Total Insights Closed", "48"},
+            {"Total Insights Analysis Completed", "46"},
+            {"Long Insight Count", "54"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "43.4783%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "65.5952%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
+        };
     }
 }

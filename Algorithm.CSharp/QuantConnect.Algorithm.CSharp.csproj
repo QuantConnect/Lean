@@ -94,6 +94,7 @@
     <Compile Include="ConvertToFrameworkAlgorithm.cs" />
     <Compile Include="RawPricesCoarseUniverseAlgorithm.cs" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.cs" />
+    <Compile Include="IRegressionAlgorithmDefinition.cs" />
     <Compile Include="SectorExposureRiskFrameworkAlgorithm.cs" />
     <Compile Include="DuplicateSecurityWithBenchmarkRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateCryptoAlgorithm.cs" />

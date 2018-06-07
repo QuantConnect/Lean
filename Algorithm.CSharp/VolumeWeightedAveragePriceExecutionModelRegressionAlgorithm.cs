@@ -14,6 +14,7 @@
  *
 */
 
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -28,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm shows how the execution model works to split up orders and submit them only when
     /// the price is on the favorable side of the intraday VWAP.
     /// </summary>
-    public class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm : QCAlgorithmFramework
+    public class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -57,5 +58,49 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log($"{Time}: {orderEvent}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "170"},
+            {"Average Win", "0.08%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "1085.165%"},
+            {"Drawdown", "0.900%"},
+            {"Expectancy", "7.666"},
+            {"Net Profit", "3.212%"},
+            {"Sharpe Ratio", "7.894"},
+            {"Loss Rate", "60%"},
+            {"Win Rate", "40%"},
+            {"Profit-Loss Ratio", "20.85"},
+            {"Alpha", "0"},
+            {"Beta", "146.28"},
+            {"Annual Standard Deviation", "0.205"},
+            {"Annual Variance", "0.042"},
+            {"Information Ratio", "7.844"},
+            {"Tracking Error", "0.204"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$220.90"},
+            {"Total Insights Generated", "5"},
+            {"Total Insights Closed", "3"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "3"},
+            {"Short Insight Count", "2"},
+            {"Long/Short Ratio", "150.0%"},
+            {"Estimated Monthly Alpha Value", "$867862.6489"},
+            {"Total Accumulated Estimated Alpha Value", "$139822.3157"},
+            {"Mean Population Estimated Insight Value", "$46607.4386"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+        };
     }
 }

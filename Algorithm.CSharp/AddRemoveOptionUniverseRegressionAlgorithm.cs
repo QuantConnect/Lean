@@ -21,10 +21,11 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+// ReSharper disable InvokeAsExtensionMethod -- .net 4.7.2 added ToHashSet and it looks like our version of mono has it as well causing ambiguity in the cloud
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class AddRemoveOptionUniverseRegressionAlgorithm : QCAlgorithm
+    public class AddRemoveOptionUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
@@ -70,19 +71,19 @@ namespace QuantConnect.Algorithm.CSharp
                 // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
                 throw new Exception("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
-            if (ExpectedSecurities.AreDifferent(Securities.Keys.ToHashSet()))
+            if (ExpectedSecurities.AreDifferent(LinqExtensions.ToHashSet(Securities.Keys)))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedSecurities.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedUniverses.AreDifferent(UniverseManager.Keys.ToHashSet()))
+            if (ExpectedUniverses.AreDifferent(LinqExtensions.ToHashSet(UniverseManager.Keys)))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedUniverses.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedData.AreDifferent(data.Keys.ToHashSet()))
+            if (ExpectedData.AreDifferent(LinqExtensions.ToHashSet(data.Keys)))
             {
                 var expected = string.Join(Environment.NewLine, ExpectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));
@@ -166,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Expected option contracts to be removed at 11:31AM, instead removed at: {Time}");
                 }
 
-                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).AreDifferent(ExpectedContracts.ToHashSet()))
+                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).AreDifferent(LinqExtensions.ToHashSet(ExpectedContracts)))
                 {
                     throw new Exception("Expected removed securities to equal expected contracts added");
                 }
@@ -174,5 +175,36 @@ namespace QuantConnect.Algorithm.CSharp
 
             Console.WriteLine($"{Time:o}:: PRICE:: {Securities["GOOG"].Price} CHANGES:: {changes}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "6"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.21%"},
+            {"Compounding Annual Return", "-96.657%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.626%"},
+            {"Sharpe Ratio", "0"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$1.50"},
+        };
     }
 }

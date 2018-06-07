@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -22,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Algorithm used for regression tests purposes
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class RegressionAlgorithm : QCAlgorithm
+    public class RegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -68,5 +69,36 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics { get; } = new Dictionary<string, string>
+        {
+            {"Total Trades", "5433"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-3.886%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-0.991"},
+            {"Net Profit", "-0.054%"},
+            {"Sharpe Ratio", "-30.336"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "2.40"},
+            {"Alpha", "-0.019"},
+            {"Beta", "-0.339"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-38.93"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "0.067"},
+            {"Total Fees", "$5433.00"}
+        };
     }
 }
