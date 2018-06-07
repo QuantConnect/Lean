@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
+using QuantConnect.Conversion;
 
 namespace QuantConnect.Securities
 {
@@ -47,6 +48,9 @@ namespace QuantConnect.Securities
         [JsonIgnore]
         public Security ConversionRateSecurity { get; private set; }
 
+        [JsonIgnore]
+        public IConversionRateProvider ConversionRateProvider  { get; private set; }
+
         /// <summary>
         /// Gets the symbol used to represent this cash
         /// </summary>
@@ -60,7 +64,13 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the conversion rate into account currency
         /// </summary>
-        public decimal ConversionRate { get; internal set; }
+        public decimal ConversionRate 
+        {
+            get
+            {
+                return ConversionRateProvider.GetConversionRate(this);
+            }
+        }
 
         /// <summary>
         /// The symbol of the currency, such as $
@@ -84,7 +94,7 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException($"Cash symbols must have atleast 3 characters and at most {Currencies.MaxCharactersPerCurrencyCode} characters.");
             }
-
+            
             Amount = amount;
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
@@ -104,6 +114,7 @@ namespace QuantConnect.Securities
             {
                 rate = 1 / rate;
             }
+
             ConversionRate = rate;
         }
 
@@ -164,8 +175,10 @@ namespace QuantConnect.Securities
 
             if (Symbol == CashBook.AccountCurrency)
             {
-                ConversionRateSecurity = null;
+                ConversionRateSecurity = ;
                 _isBaseCurrency = true;
+
+                
                 ConversionRate = 1.0m;
                 return null;
             }

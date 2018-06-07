@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.MeanPricing
+namespace QuantConnect.Conversion.Graph
 {
     /// <summary>
     /// Asset like USD or ETH
     /// </summary>
-    public class Asset
+    public class Node
     {
         public Cash Cash;
 
@@ -19,12 +19,13 @@ namespace QuantConnect.Lean.Engine.MeanPricing
         /// </summary>
         public string Code { get { return Cash.Symbol; } }
 
-        public int Level { get; set; }
+        public int Value { get; set; }
 
         /// <summary>
-        /// All connections connected to this asset
+        /// All edges connected to this asset
         /// </summary>
         public List<Edge> Edges { get; set; }
-        
+
+   
     }
 }

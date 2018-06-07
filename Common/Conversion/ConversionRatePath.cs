@@ -6,26 +6,24 @@ using System.Threading.Tasks;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
-namespace QuantConnect.Lean.Engine.MeanPricing
+namespace QuantConnect.Conversion
 {
     /// <summary>
     /// This class describes path of conversion from asset X to asset Y through DAG, might get deprecated probably
     /// </summary>
     public class ConversionRatePath
     {
+        public class UndirectedEdge
+        {
+            public Cash Cash;
+            public List<UndirectedEdge> Paths;
+        }
+
         // Directed Acyclic Graph, Path
-        Dictionary<Cash, List<Cash>> DAG = new Dictionary<Cash, List<Cash>>();
-
-        public Asset X { get; private set; }
-        public Asset Y { get; private set; }
-
-        //public List<Edge> Steps { get; private set; }
+        private Dictionary<Cash, List<Cash>> DAG = new Dictionary<Cash, List<Cash>>();
 
         public ConversionRatePath(Asset startAsset)
-        {
-            X = startAsset;
-            Y = startAsset;
-
+        {       
             //Steps = new List<Edge>();
         }
 

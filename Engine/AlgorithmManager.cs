@@ -358,6 +358,8 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
+                
+                // MEAN PRICING TARGET
                 // poke each cash object to update from the recent security data
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
