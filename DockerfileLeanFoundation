@@ -1,7 +1,7 @@
 #
-#	LEAN Foundation Docker Container 20180205
-#	Cross platform deployment for multiple brokerages
-#	Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
+#   LEAN Foundation Docker Container 20180607
+#   Cross platform deployment for multiple brokerages
+#   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
 
 # Use base system for cleaning up wayward processes
@@ -15,7 +15,7 @@ CMD ["/sbin/my_init"]
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
 RUN apt-get update && apt-get install -y wget bzip2 python3-pip python-opengl && \
-    apt-get install -y xvfb unzip curl libxrender1 libxtst6 libxi6
+    apt-get install -y clang cmake curl git unzip xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev
 
 # Install miniconda and supported third party python packages
 ENV PATH="/opt/miniconda3/bin:${PATH}"
@@ -26,10 +26,12 @@ RUN wget http://cdn.quantconnect.com.s3.amazonaws.com/miniconda/Miniconda3-4.3.3
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
     conda update -y python conda pip && \
     conda install -y cython pandas && \
+    conda install -y jsonschema lxml plotly quandl && \
     conda install -y blaze cvxopt keras nltk tensorflow theano && \
     conda install -y pytorch torchvision -c pytorch && \
     pip install arch copulalib cvxpy deap gym pykalman pyro-ppl  && \
     pip install sklearn statistics tensorforce xgboost && \
+    pip install QuantLib-Python && \
     conda clean -y --all
 
 # Java for running IB inside container:
@@ -63,13 +65,24 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/5.8.
 # Install Python.NET
 # Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
 RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5.7 && \
-    cp QuantConnect.pythonnet.1.0.5.7/lib/Python.Runtime.dll /usr/lib
+    cp QuantConnect.pythonnet.1.0.5.7/lib/Python.Runtime.dll /usr/lib && \
+    git clone https://github.com/QuantConnect/pythonnet && \
+    cd pythonnet && cp src/runtime/interop36.cs src/runtime/interop36m.cs && \
+    python setup.py install && cd .. && rm -irf pythonnet
+
+# Install Lean/PythonToolbox
+RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
+    python setup.py install && cd ../.. && rm -irf Lean
 
 # Install TA-lib for python
 RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
     pip install TA-lib
+
+# Install DX Analytics
+RUN git clone https://github.com/yhilpisch/dx.git && cd dx && \
+    python setup.py install && cd .. && rm -irf dx
 
 # Install R
 RUN apt-get update && \
