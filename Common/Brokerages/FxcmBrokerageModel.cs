@@ -43,16 +43,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
-        {
-            get { return DefaultMarketMap; }
-        }
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        /// <see cref="AccountType.Margin"/></param>
         public FxcmBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
@@ -77,8 +74,8 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Forex && security.Type != SecurityType.Cfd)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + security.Type + " security type."
-                    );
+                    $"The {nameof(FxcmBrokerageModel)} does not support {security.Type} security type."
+                );
 
                 return false;
             }
@@ -87,8 +84,8 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.Type + " order type."
-                    );
+                    $"The {nameof(FxcmBrokerageModel)} does not support {order.Type} order type."
+                );
 
                 return false;
             }
@@ -126,7 +123,7 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model does not support " + order.TimeInForce.GetType().Name + " time in force."
+                    $"The {nameof(FxcmBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force."
                 );
 
                 return false;
