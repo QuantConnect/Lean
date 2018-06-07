@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,13 +65,13 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Distribution
         {
-            get { return Value; } 
+            get { return Value; }
             set { Value = Math.Round(value, 2); }
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
         /// <param name="line">Line of the source document</param>
@@ -85,7 +85,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>

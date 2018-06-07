@@ -160,6 +160,7 @@
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\BrokerageNameTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
+    <Compile Include="Common\Data\Auxiliary\AuxiliaryDataSerializationTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
     <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
     <Compile Include="Common\Data\UniverseSelection\CoarseFundamentalTests.cs" />
