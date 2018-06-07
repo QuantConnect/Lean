@@ -568,6 +568,14 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets a read-only dictionary with all current parameters
+        /// </summary>
+        public IReadOnlyDictionary<string, string> GetParameters()
+        {
+            return _parameters.ToReadOnlyDictionary();
+        }
+
+        /// <summary>
         /// Sets the parameters from the dictionary
         /// </summary>
         /// <param name="parameters">Dictionary containing the parameter names to values</param>
