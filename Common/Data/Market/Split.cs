@@ -15,6 +15,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Market
 {
@@ -26,6 +27,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         ///Gets the type of split event, warning or split.
         /// </summary>
+        [JsonProperty]
         public SplitType Type
         {
             get; private set;
@@ -34,6 +36,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the split factor
         /// </summary>
+        [JsonProperty]
         public decimal SplitFactor
         {
             get; private set;
