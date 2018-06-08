@@ -22,7 +22,7 @@ namespace QuantConnect.Api
     public class BacktestReport : RestResponse
     {
         /// <summary>
-        /// Link to the data
+        /// HTML data of the report with embedded base64 images
         /// </summary>
         [JsonProperty(PropertyName = "report")]
         public string Report { get; set; }
