@@ -1207,6 +1207,9 @@ namespace QuantConnect.Algorithm
             // no need to set this value in live mode, will be set using the current time.
             if (_liveMode) return;
 
+            //Round down
+            start = start.RoundDown(TimeSpan.FromDays(1));
+
             //Validate the start date:
             //1. Check range;
             if (start < (new DateTime(1900, 01, 01)))
@@ -1214,7 +1217,14 @@ namespace QuantConnect.Algorithm
                 throw new Exception("Please select a start date after January 1st, 1900.");
             }
 
-            //2. Check end date greater:
+            //2. Check future date
+            var todayInAlgorithmTimeZone = DateTime.UtcNow.ConvertFromUtc(TimeZone).Date;
+            if (start > todayInAlgorithmTimeZone)
+            {
+                throw new Exception("Please select start date less than today");
+            }
+
+            //3. Check end date greater:
             if (_endDate != new DateTime())
             {
                 if (start > _endDate)
@@ -1223,10 +1233,7 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            //3. Round up and subtract one tick:
-            start = start.RoundDown(TimeSpan.FromDays(1));
-
-            //3. Check not locked already:
+            //4. Check not locked already:
             if (!_locked)
             {
                 // this is only or backtesting
