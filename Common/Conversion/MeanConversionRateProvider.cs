@@ -9,11 +9,11 @@ using QuantConnect.Securities.Forex;
 namespace QuantConnect.Conversion
 {
     //! TODO cache everything, so it doesn't rebuilds the graph for every calculation
-    public class MeanConversionRateProvider /*: IConversionRateProvider*/
+    public class MeanConversionRateProviderFactory /*: IConversionRateProvider*/
     {
         public Cash TargetCurrency { get; private set; }
 
-        private Graph currencyGraph;
+        private Graph.Graph currencyGraph;
 
         /// <summary>
         /// Flag for rebuilding structure (Security has been added / removed)
@@ -35,7 +35,7 @@ namespace QuantConnect.Conversion
 
         private Data.SubscriptionManager subscriptionManager;
 
-        public MeanConversionRateProvider(Data.SubscriptionManager subscriptionManager)
+        public MeanConversionRateProviderFactory(Data.SubscriptionManager subscriptionManager)
         {
             this.subscriptionManager = subscriptionManager;
 
@@ -101,6 +101,7 @@ namespace QuantConnect.Conversion
 
         ConversionRatePath GetPath(Cash from, Cash to)
         {
+
             return null;
         }
 

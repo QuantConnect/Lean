@@ -13,23 +13,18 @@ namespace QuantConnect.Conversion
         /// <summary>
         /// A source currency we calculate conversion rate for
         /// </summary>
-        Cash SourceCurrency { get; }
+        string SourceCurrency { get; }
 
         /// <summary>
         /// A target currency, usually <see cref="CashBook.AccountCurrency"/>, from which conversion rate is based from
         /// </summary>
-        Cash TargetCurrency { get; }
+        string TargetCurrency { get; }
 
         /// <summary>
         /// Gets current conversion rate. Rate can change over time.
         /// </summary>
         /// <returns>Conversion rate</returns>
-        decimal GetRate();
-
-        /// <summary>
-        /// A Factory from which this object was made
-        /// </summary>
-        IConversionRateProviderFactory ConversionRateProviderFactory { get; }
+        decimal ConversionRate { get; }
 
         /// <summary>
         /// Ensure if all needed securities are contained for conversion

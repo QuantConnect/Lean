@@ -144,14 +144,6 @@
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="Alphas\ChartingInsightManagerExtension.cs" />
     <Compile Include="Alphas\StatisticsInsightManagerExtension.cs" />
-    <Compile Include="Conversion\ConversionRate.cs" />
-    <Compile Include="Conversion\LegacyConversionRateProvider.cs" />
-    <Compile Include="Conversion\IConversionRateProvider.cs" />
-    <Compile Include="Conversion\Node.cs" />
-    <Compile Include="Conversion\Edge.cs" />
-    <Compile Include="Conversion\MeanConversionRateProvider.cs" />
-    <Compile Include="Conversion\Graph.cs" />
-    <Compile Include="Conversion\ConversionRatePath.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />
     <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />

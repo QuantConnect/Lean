@@ -7,9 +7,34 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Conversion
-{  
-    public class SinglePairConversionRateProvider
+{
+    /// <summary>
+    /// This class holds single security for conversion
+    /// </summary>
+    public class SingleSecurityConversionRateProvider : IConversionRateProvider
     {
+        public string SourceCurrency { get; private set; }
 
+        public string TargetCurrency { get; private set; }
+
+        public decimal ConversionRate 
+        {
+            get
+            {
+                return ConversionSecurity.Price;
+            }
+        }
+
+        public Security ConversionSecurity;
+
+        public bool EnsureCompleteConversionPath() => true;
+
+        public SingleSecurityConversionRateProvider(string source, string target, Security conversionSecurity)
+        {
+
+            SourceCurrency = source;
+            TargetCurrency = target;
+            ConversionSecurity = conversionSecurity;
+        }
     }
 }

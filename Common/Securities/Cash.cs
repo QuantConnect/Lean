@@ -29,11 +29,12 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-        private bool _isBaseCurrency;
         private bool _invertRealTimePrice;
 
         private readonly object _locker = new object();
 
+        public bool IsBaseCurrency { get; private set; }
+        
         /// <summary>
         /// Gets the symbol of the security required to provide conversion rates.
         /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
@@ -68,7 +69,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return ConversionRateProvider.GetConversionRate(this);
+                return ConversionRateProvider.ConversionRate;
             }
         }
 
@@ -94,9 +95,13 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException($"Cash symbols must have atleast 3 characters and at most {Currencies.MaxCharactersPerCurrencyCode} characters.");
             }
-            
+                        
+            IsBaseCurrency = this.Symbol == CashBook.AccountCurrency;
+
             Amount = amount;
-            ConversionRate = conversionRate;
+
+            ConversionRateProvider = new FixedConversionRateProvider(this.Symbol, CashBook.AccountCurrency, conversionRate);
+
             Symbol = symbol.ToUpper();
             CurrencySymbol = Currencies.GetCurrencySymbol(Symbol);
         }
@@ -107,7 +112,7 @@ namespace QuantConnect.Securities
         /// <param name="data">The new data for this cash object</param>
         public void Update(BaseData data)
         {
-            if (_isBaseCurrency) return;
+            if (IsBaseCurrency) return;
 
             var rate = data.Value;
             if (_invertRealTimePrice)
@@ -115,7 +120,21 @@ namespace QuantConnect.Securities
                 rate = 1 / rate;
             }
 
-            ConversionRate = rate;
+            if(ConversionRateProvider == null)
+            {
+                ConversionRateProvider = new SingleSecurityConversionRateProvider(this.Symbol, CashBook.AccountCurrency, )
+            }
+            else
+            {
+                Type type = ConversionRateProvider.GetType();
+
+                
+                if (type == typeof(FixedConversionRateProvider))
+                {
+                    ConversionRate = rate;
+                }
+            }
+
         }
 
         /// <summary>
@@ -175,10 +194,9 @@ namespace QuantConnect.Securities
 
             if (Symbol == CashBook.AccountCurrency)
             {
-                ConversionRateSecurity = ;
+                ConversionRateSecurity = 
                 _isBaseCurrency = true;
 
-                
                 ConversionRate = 1.0m;
                 return null;
             }

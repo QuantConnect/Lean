@@ -26,6 +26,5 @@ namespace QuantConnect.Conversion.Graph
         /// </summary>
         public List<Edge> Edges { get; set; }
 
-   
     }
 }

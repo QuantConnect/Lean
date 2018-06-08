@@ -11,6 +11,7 @@ namespace QuantConnect.Conversion
     /// <summary>
     /// This is used inside Cash class
     /// </summary>
+    /*
     public class ConversionRate
     {
         public IConversionRateProvider conversionRateProvider;
@@ -18,12 +19,12 @@ namespace QuantConnect.Conversion
 
         public decimal GetRate()
         {
-            return conversionRateProvider.GetPrice(cash);
+            return conversionRateProvider.GetPrice();
         }
 
         public override string ToString()
         {
             return "ConversionRate: " + cash.Symbol + conversionRateProvider.TargetCurrency;
         }
-    }
+    }*/
 }

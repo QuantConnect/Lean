@@ -8,32 +8,24 @@ using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Conversion
 {
+    /// <summary>
+    /// Fixed conversion rate
+    /// </summary>
     public class FixedConversionRateProvider : IConversionRateProvider
     {
-        public Cash SourceCurrency { get; private set; }
+        public string SourceCurrency { get; private set; }
 
-        public Cash TargetCurrency { get; private set; }
+        public string TargetCurrency { get; private set; }
 
-        private decimal fixedRate;
+        public decimal ConversionRate { get; private set; }
 
-        public decimal GetRate()
-        {
-            return fixedRate;
-        }
+        public bool EnsureCompleteConversionPath() => true; 
 
-        public IConversionRateProviderFactory ConversionRateProviderFactory { get; private set; }
-
-        public bool EnsureCompleteConversionPath()
-        {
-            return true;
-        }
-
-        public FixedConversionRateProvider(Cash source, Cash target, decimal fixedRate, IConversionRateProviderFactory factory) 
+        public FixedConversionRateProvider(string source, string target, decimal fixedRate) 
         {
             SourceCurrency = source;
             TargetCurrency = target;
-            this.fixedRate = fixedRate;
-            ConversionRateProviderFactory = factory;
+            this.ConversionRate = fixedRate;
         }
     }
 }

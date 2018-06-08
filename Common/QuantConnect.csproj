@@ -176,8 +176,10 @@
     <Compile Include="Conversion\ConversionRatePath.cs" />
     <Compile Include="Conversion\Graph\Edge.cs" />
     <Compile Include="Conversion\Graph\Graph.cs" />
+    <Compile Include="Conversion\IConversionRateProviderFactory.cs" />
     <Compile Include="Conversion\IConversionRateProvider.cs" />
-    <Compile Include="Conversion\SecurityRateProvider.cs" />
+    <Compile Include="Conversion\FixedConversionRateProvider.cs" />
+    <Compile Include="Conversion\SinglePairConversionRateProvider.cs" />
     <Compile Include="Conversion\MeanConversionRateProvider.cs" />
     <Compile Include="Conversion\Graph\Node.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
