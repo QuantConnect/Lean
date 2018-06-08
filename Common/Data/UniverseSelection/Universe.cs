@@ -280,6 +280,15 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Sets the security initializer, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer</param>
+        public virtual void SetSecurityInitializer(ISecurityInitializer securityInitializer)
+        {
+            SecurityInitializer = securityInitializer;
+        }
+
+        /// <summary>
         /// Marks this universe as disposed and ready to remove all child subscriptions
         /// </summary>
         public void Dispose()
