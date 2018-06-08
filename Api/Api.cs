@@ -566,6 +566,23 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Read out the report of a backtest in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="backtestId">Specific backtest id to read</param>
+        /// <returns><see cref="BacktestReport"/></returns>
+        public BacktestReport ReadBacktestReport(int projectId, string backtestId)
+        {
+            var request = new RestRequest("backtests/read/report", Method.POST);
+            request.AddParameter("backtestId", backtestId);
+            request.AddParameter("projectId", projectId);
+
+            BacktestReport report;
+            ApiConnection.TryRequest(request, out report);
+            return report;
+        }
+
+        /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
         /// <param name="symbol">Symbol of security of which data will be requested.</param>

@@ -155,6 +155,7 @@
     <Compile Include="API\Backtest.cs" />
     <Compile Include="API\Compile.cs" />
     <Compile Include="API\CompileState.cs" />
+    <Compile Include="API\BacktestReport.cs" />
     <Compile Include="API\Link.cs" />
     <Compile Include="API\LiveAlgorithm.cs" />
     <Compile Include="API\LiveAlgorithmResults.cs" />

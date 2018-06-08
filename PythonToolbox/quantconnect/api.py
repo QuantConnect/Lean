@@ -432,6 +432,23 @@ class Api:
 
         return self.api_connection.try_request(request)
 
+    def read_backtest_report(self, projectId, backtestId):
+        """Read out the report of a backtest in the project id specified.
+        Args:
+            projectId(int): Project id to read.
+            backtestId(str): Specific backtest id to read.
+        Returns:
+            BacktestReport report
+        """
+        request = Request('POST', "backtests/read/report",
+            params =
+            {
+                "backtestId": backtestId, 
+                "projectId": projectId
+            })
+
+        return self.api_connection.try_request(request)
+
     def download_data(self, symbol, securityType, market, resolution, date, fileName):
         """Method to download and save the data purchased through QuantConnect
         Args:
