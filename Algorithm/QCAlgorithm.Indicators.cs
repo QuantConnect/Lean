@@ -1315,7 +1315,7 @@ namespace QuantConnect.Algorithm
         /// <exception cref="InvalidOperationException">Thrown if no configuration is found for the requested symbol</exception>
         /// <param name="symbol">The symbol to retrieve configuration for</param>
         /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
-        protected SubscriptionDataConfig GetSubscription(Symbol symbol)
+        public SubscriptionDataConfig GetSubscription(Symbol symbol)
         {
             return GetSubscription(symbol, null);
         }
@@ -1327,13 +1327,18 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve configuration for</param>
         /// <param name="tickType">The tick type of the subscription to ge</param>
         /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
-        protected SubscriptionDataConfig GetSubscription(Symbol symbol, TickType? tickType)
+        public SubscriptionDataConfig GetSubscription(Symbol symbol, TickType? tickType)
         {
             SubscriptionDataConfig subscription;
             try
             {
                 // find our subscription to this symbol
-                subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol && (tickType == null || tickType == x.TickType));
+                subscription = SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol == symbol && (tickType == null || tickType == x.TickType));
+                if (subscription == null)
+                {
+                    // if we can't locate the exact subscription by tick type just grab the first one we find
+                    subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
+                }
             }
             catch (InvalidOperationException)
             {
@@ -1606,7 +1611,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         public IDataConsolidator Consolidate(Symbol symbol, TimeSpan period, Action<TradeBar> handler)
         {
-            return Consolidate(symbol, period, TickType.Quote, handler);
+            return Consolidate(symbol, period, TickType.Trade, handler);
         }
 
         /// <summary>
@@ -1692,17 +1697,24 @@ namespace QuantConnect.Algorithm
             var subscription = GetSubscription(symbol, tickType);
 
             // create requested consolidator
-            var consolidator = CreateConsolidator(period, subscription.Type, tickType);
+            var consolidator = CreateConsolidator(period, subscription.Type, subscription.TickType);
+
+            // register the consolidator for automatic updates via SubscriptionManager
+            SubscriptionManager.AddConsolidator(symbol, consolidator);
 
             if (!typeof(T).IsAssignableFrom(consolidator.OutputType))
             {
+                // special case downgrading of QuoteBar -> TradeBar
+                if (typeof(T) == typeof(TradeBar) && consolidator.OutputType == typeof(QuoteBar))
+                {
+                    // collapse quote bar into trade bar (ignore the funky casting, required due to generics)
+                    consolidator.DataConsolidated += (sender, consolidated) => handler((T)(object)((QuoteBar) consolidated).Collapse());
+                }
+
                 throw new ArgumentException(
                     $"Unable to consolidate with the specified handler because the consolidator's output type " +
                     $"is {consolidator.OutputType.Name} but the handler's input type is {typeof(T).Name}.");
             }
-
-            // register the consolidator for automatic updates via SubscriptionManager
-            SubscriptionManager.AddConsolidator(symbol, consolidator);
 
             // register user-defined handler to receive consolidated data events
             consolidator.DataConsolidated += (sender, consolidated) => handler((T) consolidated);

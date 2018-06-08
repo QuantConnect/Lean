@@ -48,7 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <meta name="tag" content="consolidating data" />
         public override void Initialize()
         {
-            AddSecurity(SecurityType.Equity, "SPY");
+            AddEquity("SPY");
+            AddForex("EURUSD", Resolution.Hour);
 
             // we have data for these dates locally
             var start = new DateTime(2013, 10, 07, 09, 30, 0);
@@ -90,11 +91,12 @@ namespace QuantConnect.Algorithm.CSharp
             SubscriptionManager.AddConsolidator("SPY", three_oneDayBar);
 
             // API convenience method for easily receiving consolidated data
-            Consolidate<TradeBar>("SPY", TimeSpan.FromMinutes(45), ForthFiveMinuteBarHandler);
-            Consolidate<TradeBar>("SPY", Resolution.Hour, HourBarHandler);
+            Consolidate("SPY", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
+            Consolidate("SPY", Resolution.Hour, HourBarHandler);
+            Consolidate("EURUSD", Resolution.Daily, DailyEurUsdBarHandler);
 
             // requires quote data subscription
-            //Consolidate<QuoteBar>("EURUSD", TimeSpan.FromMinutes(45), ForthFiveMinuteBarHandler);
+            //Consolidate<QuoteBar>("EURUSD", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
             //Consolidate<QuoteBar>("EURUSD", Resolution.Hour, HourBarHandler);
 
             // some securities may have trade and quote data available
@@ -165,10 +167,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is our event handler for our 45 minute consolidated defined using the Consolidate method
         /// </summary>
-        private void ForthFiveMinuteBarHandler(TradeBar consolidated)
+        private void FortyFiveMinuteBarHandler(TradeBar consolidated)
         {
             consolidated45Minute = true;
             Log($"{consolidated.EndTime:o} 45 minute consolidated.");
+        }
+
+        private void DailyEurUsdBarHandler(TradeBar consolidated)
+        {
+            Log($"{consolidated.EndTime:o} EURUSD Daily consolidated.");
         }
 
         public override void OnEndOfAlgorithm()

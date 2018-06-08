@@ -85,6 +85,18 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         # this call adds our 3 day to the manager to receive updates from the engine
         self.SubscriptionManager.AddConsolidator("SPY", three_oneDayBar)
 
+        # API convenience method for easily receiving consolidated data
+        #self.Consolidate(TradeBar, "SPY", timedelta(minutes=45), self.FortyFiveMinuteBarHandler)
+        self.Consolidate(TradeBar, "SPY", Resolution.Hour, self.HourBarHandler)
+
+        # requires quote data subscription
+        #self.Consolidate(QuoteBar, "EURUSD", timedelta(minutes=45), self.FortyFiveMinuteBarHandler)
+        #self.Consolidate(QuoteBar, "EURUSD", Resolution.Hour, self.HourBarHandler)
+
+        # some securities may have trade and quote data available
+        #self.Consolidate(QuoteBar, "BTCUSD", Resolution.Hour, self.HourBarHandler)
+        #self.Consolidate(TradeBar, "BTCUSD", Resolution.Hour, self.HourBarHandler)
+
         self.__last = None
 
     def OnData(self, data):
@@ -120,3 +132,9 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''
         self.Log("{0} >> Plotting!".format(bar.Time))
         self.Plot(bar.Symbol, "3HourBar", bar.Close)
+
+    def FortyFiveMinuteBarHandler(self, bar):
+        self.Log("{0} >> FortyFiveMinuteBarHandler >> {1}".format(bar.EndTime, bar.Close))
+
+    def HourBarHandler(self, bar):
+        self.Log("{0} >> FortyFiveMinuteBarHandler >> {1}".format(bar.EndTime, bar.Close))
