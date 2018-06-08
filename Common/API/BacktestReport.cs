@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Response from reading purchased data
+    /// Backtest Report Response wrapper
     /// </summary>
     public class BacktestReport : RestResponse
     {
