@@ -56,7 +56,7 @@ Instruction on running the program
 (3) Update the "user_data.json" accordingly.
 
 2. Generate report
-""""""""""""""""""""""
+""""""""""""""""""
 Execute the following command to generate your strategy report:
 
    $ python CreateLeanReport.py --backtest=./json/sample.json --output=./outputs/Report.html --user=user_data.json
@@ -66,6 +66,16 @@ Execute the following command to generate your strategy report:
 (1) Lean report HTML file defined by "--output"
 
 (2) Individual images in the same directory of the report (remove the `lrc.clean()` statement in "CreateLeanReport.py")
+
+4. Display report from QuantConnect
+"""""""""""""""""""""""""""""""""""
+For backtests that were executed in QuantConnect, use the API to get the report:
+
+   >>> from IPython.core.display import display, HTML
+   >>> from quantconnect.api import Api
+   >>> api = Api(your-user-id, your-token)
+   >>> lean_report = api.read_backtest_report(project-id, backtest-id)
+   >>> display(HTML(lean_report['report']))
 
 Explanation on the meaning of the charts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
