@@ -606,14 +606,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Sets the security initializer, used to initialize/configure securities after creation
+        /// Sets the security initializer, used to initialize/configure securities after creation.
+        /// The initializer will be applied to all universes and manually added securities.
         /// </summary>
         /// <param name="securityInitializer">The security initializer</param>
         public void SetSecurityInitializer(ISecurityInitializer securityInitializer)
         {
             if (_locked)
             {
-                throw new Exception("SetSecurityInitializer cannot be called after algorithm initialization.");
+                throw new Exception("SetSecurityInitializer() cannot be called after algorithm initialization. " +
+                                    "When you use the SetSecurityInitializer() method it will apply to all universes and manually added securities.");
+            }
+
+            if (_userSetSecurityInitializer)
+            {
+                Debug("Warning: SetSecurityInitializer() has already been called, existing security initializers in all universes will be overwritten.");
             }
 
             // this flag will prevent calls to SetBrokerageModel from overwriting this initializer
@@ -627,7 +634,8 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// Sets the security initializer function, used to initialize/configure securities after creation.
+        /// The initializer will be applied to all universes and manually added securities.
         /// </summary>
         /// <param name="securityInitializer">The security initializer function</param>
         [Obsolete("This method is deprecated. Please use this overload: SetSecurityInitializer(Action<Security> securityInitializer)")]
@@ -637,7 +645,8 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// Sets the security initializer function, used to initialize/configure securities after creation.
+        /// The initializer will be applied to all universes and manually added securities.
         /// </summary>
         /// <param name="securityInitializer">The security initializer function</param>
         public void SetSecurityInitializer(Action<Security> securityInitializer)
