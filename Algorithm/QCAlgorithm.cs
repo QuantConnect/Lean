@@ -611,6 +611,11 @@ namespace QuantConnect.Algorithm
         /// <param name="securityInitializer">The security initializer</param>
         public void SetSecurityInitializer(ISecurityInitializer securityInitializer)
         {
+            if (_locked)
+            {
+                throw new Exception("SetSecurityInitializer cannot be called after algorithm initialization.");
+            }
+
             // this flag will prevent calls to SetBrokerageModel from overwriting this initializer
             _userSetSecurityInitializer = true;
             SecurityInitializer = securityInitializer;
