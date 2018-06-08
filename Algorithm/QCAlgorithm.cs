@@ -614,6 +614,11 @@ namespace QuantConnect.Algorithm
             // this flag will prevent calls to SetBrokerageModel from overwriting this initializer
             _userSetSecurityInitializer = true;
             SecurityInitializer = securityInitializer;
+
+            foreach (var universe in UniverseManager.Select(x => x.Value))
+            {
+                universe.SetSecurityInitializer(securityInitializer);
+            }
         }
 
         /// <summary>
