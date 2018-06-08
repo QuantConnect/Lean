@@ -37,6 +37,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="consolidating data" />
     public class DataConsolidationAlgorithm : QCAlgorithm
     {
+        private bool consolidatedHour;
+        private bool consolidated45Minute;
         private TradeBar _last;
 
         /// <summary>
@@ -86,6 +88,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             // this call adds our 3 day to the manager to receive updates from the engine
             SubscriptionManager.AddConsolidator("SPY", three_oneDayBar);
+
+            // API convenience method for easily receiving consolidated data
+            Consolidate<TradeBar>("SPY", TimeSpan.FromMinutes(45), ForthFiveMinuteBarHandler);
+            Consolidate<TradeBar>("SPY", Resolution.Hour, HourBarHandler);
+
+            // requires quote data subscription
+            //Consolidate<QuoteBar>("EURUSD", TimeSpan.FromMinutes(45), ForthFiveMinuteBarHandler);
+            //Consolidate<QuoteBar>("EURUSD", Resolution.Hour, HourBarHandler);
+
+            // some securities may have trade and quote data available
+            //Consolidate<TradeBar>("BTCUSD", Resolution.Hour, HourBarHandler);
+            //Consolidate<QuoteBar>("BTCUSD", Resolution.Hour, HourBarHandler);
         }
 
         /// <summary>
@@ -117,12 +131,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_last != null && consolidated.Close > _last.Close)
             {
-                Log(consolidated.Time.ToString("o") + " >> SPY >> LONG  >> 100 >> " + Portfolio["SPY"].Quantity);
+                Log($"{consolidated.Time:o} >> SPY >> LONG  >> 100 >> {Portfolio["SPY"].Quantity}");
                 Order("SPY", 100);
             }
             else if (_last != null && consolidated.Close < _last.Close)
             {
-                Log(consolidated.Time.ToString("o") + " >> SPY >> SHORT >> 100 >> " + Portfolio["SPY"].Quantity);
+                Log($"{consolidated.Time:o} >> SPY >> SHORT >> 100 >> {Portfolio["SPY"].Quantity}");
                 Order("SPY", -100);
             }
             _last = consolidated;
@@ -135,8 +149,39 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private void ThreeDayBarConsolidatedHandler(object sender, TradeBar consolidated)
         {
-            Log(consolidated.Time.ToString("0") + " >> Plotting!");
+            Log($"{consolidated.Time:o} >> Plotting!");
             Plot(consolidated.Symbol, "3HourBar", consolidated.Close);
+        }
+
+        /// <summary>
+        /// This is our event handler for our one hour consolidated defined using the Consolidate method
+        /// </summary>
+        private void HourBarHandler(TradeBar consolidated)
+        {
+            consolidatedHour = true;
+            Log($"{consolidated.EndTime:o} Hour consolidated.");
+        }
+
+        /// <summary>
+        /// This is our event handler for our 45 minute consolidated defined using the Consolidate method
+        /// </summary>
+        private void ForthFiveMinuteBarHandler(TradeBar consolidated)
+        {
+            consolidated45Minute = true;
+            Log($"{consolidated.EndTime:o} 45 minute consolidated.");
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!consolidatedHour)
+            {
+                throw new Exception("Expected hourly consolidator to be fired.");
+            }
+
+            if (!consolidated45Minute)
+            {
+                throw new Exception("Expected 45-minute consolidator to be fired.");
+            }
         }
     }
 }
