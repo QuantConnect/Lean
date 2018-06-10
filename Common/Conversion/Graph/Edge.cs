@@ -8,7 +8,7 @@ namespace QuantConnect.Conversion.Graph
 {
     public class BrokeragePricePair
     {
-        public string Market;
+        public string  Market;
         public decimal Volume;
         public decimal Price;
     }
@@ -60,8 +60,7 @@ namespace QuantConnect.Conversion.Graph
         {
             // Approximate quote volume if none provided
             if(QuoteVolume24 == -1)           
-                QuoteVolume24 = BaseVolume24 * LastData.Price;
-            
+                QuoteVolume24 = BaseVolume24 * LastData.Price;           
         }
 
         // public decimal Brokerage (or some other price-volume source)
@@ -82,5 +81,4 @@ namespace QuantConnect.Conversion.Graph
             return Quote == leftSideAsset;
         }
     }
-
 }

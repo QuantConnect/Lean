@@ -13,18 +13,18 @@ namespace QuantConnect.Conversion
     /// </summary>
     public class FixedConversionRateProvider : IConversionRateProvider
     {
-        public string SourceCurrency { get; private set; }
+        public string SourceCurrencyCode { get; private set; }
 
-        public string TargetCurrency { get; private set; }
+        public string TargetCurrencyCode { get; private set; }
 
         public decimal ConversionRate { get; private set; }
 
         public bool EnsureCompleteConversionPath() => true; 
 
-        public FixedConversionRateProvider(string source, string target, decimal fixedRate) 
+        public FixedConversionRateProvider(string source, decimal fixedRate) 
         {
-            SourceCurrency = source;
-            TargetCurrency = target;
+            SourceCurrencyCode = source;
+            TargetCurrencyCode = source;
             this.ConversionRate = fixedRate;
         }
     }

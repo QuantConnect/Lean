@@ -21,7 +21,7 @@ namespace QuantConnect.Conversion
         private bool dirtyStructure = true;
 
         /// <summary>
-        /// Flag for recalculating prices (new data came)
+        /// Flag for recalculating prices (this flag is set to true when new data comes, set to false when whole graphs prices have been recalculated)
         /// </summary>
         private bool dirtyPrice = true;
 
@@ -99,15 +99,9 @@ namespace QuantConnect.Conversion
             return 0m;
         }
 
-        ConversionRatePath GetPath(Cash from, Cash to)
+        public Graph.Graph BuildGraph()
         {
-
-            return null;
-        }
-
-        public Graph BuildGraph()
-        {
-            Graph graph = new Graph();
+            var graph = new Graph.Graph();
 
             return graph;
         }
@@ -115,7 +109,6 @@ namespace QuantConnect.Conversion
         public void Recalculate()
         {
             // Stage 1
-
             // Stage 2
         }
     }

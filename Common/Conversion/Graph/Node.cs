@@ -11,13 +11,12 @@ namespace QuantConnect.Conversion.Graph
     /// Asset like USD or ETH
     /// </summary>
     public class Node
-    {
-        public Cash Cash;
-
+    {       
         /// <summary>
         /// Asset code like ETH
         /// </summary>
-        public string Code { get { return Cash.Symbol; } }
+        public string Code { get; private set; }
+
 
         public int Value { get; set; }
 

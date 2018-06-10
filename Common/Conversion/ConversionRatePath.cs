@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
-namespace QuantConnect.Conversion
+namespace QuantConnect.Conversion.Graph
 {
     /// <summary>
-    /// This class describes path of conversion from asset X to asset Y through DAG, might get deprecated probably
+    /// This class describes path of conversion from asset X to asset Y through DAG, might be useless in the end
     /// </summary>
     public class ConversionRatePath
     {
@@ -22,7 +22,7 @@ namespace QuantConnect.Conversion
         // Directed Acyclic Graph, Path
         private Dictionary<Cash, List<Cash>> DAG = new Dictionary<Cash, List<Cash>>();
 
-        public ConversionRatePath(Asset startAsset)
+        public ConversionRatePath(Node startAsset)
         {       
             //Steps = new List<Edge>();
         }

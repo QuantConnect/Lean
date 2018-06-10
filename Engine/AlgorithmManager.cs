@@ -206,6 +206,7 @@ namespace QuantConnect.Lean.Engine
             var addedSecurities = algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager,
                 MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(),
                 DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None);
+
             foreach (var security in addedSecurities)
             {
                 // assume currency feeds are always one subscription per, these are typically quote subscriptions

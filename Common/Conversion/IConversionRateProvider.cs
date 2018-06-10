@@ -13,12 +13,12 @@ namespace QuantConnect.Conversion
         /// <summary>
         /// A source currency we calculate conversion rate for
         /// </summary>
-        string SourceCurrency { get; }
+        string SourceCurrencyCode { get; }
 
         /// <summary>
         /// A target currency, usually <see cref="CashBook.AccountCurrency"/>, from which conversion rate is based from
         /// </summary>
-        string TargetCurrency { get; }
+        string TargetCurrencyCode { get; }
 
         /// <summary>
         /// Gets current conversion rate. Rate can change over time.
@@ -31,6 +31,5 @@ namespace QuantConnect.Conversion
         /// </summary>
         /// <returns>Returns true if all needed securities are added, else false.</returns>
         bool EnsureCompleteConversionPath();
-
     }
 }

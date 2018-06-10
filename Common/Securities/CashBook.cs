@@ -79,7 +79,7 @@ namespace QuantConnect.Securities
         /// <returns>Returns a list of added currency securities</returns>
         public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, SecurityChanges changes)
         {
-            var addedSecurities = new List<Security>();
+            var addedSecurities = new HashSet<Security>();
             foreach (var kvp in _currencies)
             {
                 var cash = kvp.Value;
@@ -87,10 +87,12 @@ namespace QuantConnect.Securities
                 var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
                 if (security != null)
                 {
-                    addedSecurities.Add(security);
+                    foreach (var s in security) {
+                        addedSecurities.Add(s);
+                    }
                 }
             }
-            return addedSecurities;
+            return addedSecurities.ToList();
         }
 
         /// <summary>

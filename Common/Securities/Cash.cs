@@ -98,9 +98,16 @@ namespace QuantConnect.Securities
                         
             IsBaseCurrency = this.Symbol == CashBook.AccountCurrency;
 
-            Amount = amount;
+            if(IsBaseCurrency)
+            {
+                ConversionRateProvider = new FixedConversionRateProvider(this.Symbol, CashBook.AccountCurrency, conversionRate);
+            }
+            else
+            {
+                ConversionRateProvider = new VariableConversionRateProvider(this.Symbol, CashBook.AccountCurrency, conversionRate);
+            }
 
-            ConversionRateProvider = new FixedConversionRateProvider(this.Symbol, CashBook.AccountCurrency, conversionRate);
+            Amount = amount;
 
             Symbol = symbol.ToUpper();
             CurrencySymbol = Currencies.GetCurrencySymbol(Symbol);
@@ -122,19 +129,16 @@ namespace QuantConnect.Securities
 
             if(ConversionRateProvider == null)
             {
-                ConversionRateProvider = new SingleSecurityConversionRateProvider(this.Symbol, CashBook.AccountCurrency, )
+                ConversionRateProvider = new VariableConversionRateProvider(this.Symbol, CashBook.AccountCurrency, rate);
             }
-            else
+            
+            Type type = ConversionRateProvider.GetType();
+            
+            if (type == typeof(VariableConversionRateProvider))
             {
-                Type type = ConversionRateProvider.GetType();
-
-                
-                if (type == typeof(FixedConversionRateProvider))
-                {
-                    ConversionRate = rate;
-                }
+                ((VariableConversionRateProvider)ConversionRateProvider).ConversionRate = rate;
             }
-
+            
         }
 
         /// <summary>
@@ -176,7 +180,7 @@ namespace QuantConnect.Securities
         /// <param name="cashBook">The cash book - used for resolving quote currencies for created conversion securities</param>
         /// <param name="changes"></param>
         /// <returns>Returns the added currency security if needed, otherwise null</returns>
-        public Security EnsureCurrencyDataFeed(SecurityManager securities,
+        public List<Security> EnsureCurrencyDataFeed(SecurityManager securities,
             SubscriptionManager subscriptions,
             MarketHoursDatabase marketHoursDatabase,
             SymbolPropertiesDatabase symbolPropertiesDatabase,
@@ -187,17 +191,19 @@ namespace QuantConnect.Securities
         {
             // this gets called every time we add securities using universe selection,
             // so must of the time we've already resolved the value and don't need to again
-            if (ConversionRateSecurity != null)
+            if (ConversionRateProvider != null)
             {
                 return null;
             }
 
             if (Symbol == CashBook.AccountCurrency)
             {
-                ConversionRateSecurity = 
-                _isBaseCurrency = true;
+                if (ConversionRateProvider == null)
+                {
+                    IsBaseCurrency = true;
+                    ConversionRateProvider = new FixedConversionRateProvider(Symbol, 1.0m);                   
+                }
 
-                ConversionRate = 1.0m;
                 return null;
             }
 
