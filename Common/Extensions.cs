@@ -1050,9 +1050,23 @@ namespace QuantConnect
             {
                 try
                 {
+                    if (typeof(T) == typeof(Type))
+                    {
+                        result = pyObject.As<Type>() as T;
+                        return true;
+                    }
+
+                    var pythonType = pyObject.GetPythonType();
+                    var csharpType = pythonType.As<Type>();
+
+                    if (!typeof(T).IsAssignableFrom(csharpType))
+                    {
+                        return false;
+                    }
+
                     result = pyObject.AsManagedObject(typeof(T)) as T;
 
-                    if (typeof(T) == typeof(Type) || result is IEnumerable)
+                    if (result is IEnumerable)
                     {
                         return true;
                     }
@@ -1060,7 +1074,7 @@ namespace QuantConnect
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class.
-                    string name = (pyObject.GetPythonType() as dynamic).__name__;
+                    string name = (pythonType as dynamic).__name__;
                     return name == result.GetType().Name;
                 }
                 catch
