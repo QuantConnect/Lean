@@ -14,14 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 from datetime import timedelta
 
@@ -49,6 +46,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         self.SetEndDate(self.StartDate + timedelta(1))           #Set End Date
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY")
+        self.AddForex("EURUSD", Resolution.Hour)
 
         # define our 30 minute trade bar consolidator. we can
         # access the 30 minute bar from the DataConsolidated events
@@ -85,6 +83,17 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         # this call adds our 3 day to the manager to receive updates from the engine
         self.SubscriptionManager.AddConsolidator("SPY", three_oneDayBar)
 
+        # API convenience method for easily receiving consolidated data
+        self.Consolidate("SPY", timedelta(minutes=45), self.FortyFiveMinuteBarHandler)
+        self.Consolidate("SPY", Resolution.Hour, self.HourBarHandler)
+        self.Consolidate("EURUSD", Resolution.Daily, self.DailyEurUsdBarHandler)
+
+        # some securities may have trade and quote data available, so we can choose it based on TickType:
+        #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Trade, self.HourBarHandler)   # to get TradeBar
+        #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Quote, self.HourBarHandler)   # to get QuoteBar (default)
+
+        self.consolidatedHour = False
+        self.consolidated45Minute = False
         self.__last = None
 
     def OnData(self, data):
@@ -98,25 +107,46 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         self.__last = None
 
 
-    def ThirtyMinuteBarHandler(self, sender, bar):
+    def ThirtyMinuteBarHandler(self, sender, consolidated):
         '''This is our event handler for our 30 minute trade bar defined above in Initialize(). So each time the
         consolidator produces a new 30 minute bar, this function will be called automatically. The 'sender' parameter
          will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''
 
-        if self.__last is not None and bar.Close > self.__last.Close:
-            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(bar.Time, self.Portfolio["SPY"].Quantity))
+        if self.__last is not None and consolidated.Close > self.__last.Close:
+            self.Log(f"{consolidated.Time} >> SPY >> LONG  >> 100 >> {self.Portfolio['SPY'].Quantity}")
             self.Order("SPY", 100)
 
-        elif self.__last is not None and bar.Close < self.__last.Close:
-            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(bar.Time, self.Portfolio["SPY"].Quantity))
+        elif self.__last is not None and consolidated.Close < self.__last.Close:
+            self.Log(f"{consolidated.Time} >> SPY >> SHORT  >> 100 >> {self.Portfolio['SPY'].Quantity}")
             self.Order("SPY", -100)
 
-        self.__last = bar
+        self.__last = consolidated
 
 
-    def ThreeDayBarConsolidatedHandler(self, sender, bar):
+    def ThreeDayBarConsolidatedHandler(self, sender, consolidated):
         ''' This is our event handler for our 3 day trade bar defined above in Initialize(). So each time the
         consolidator produces a new 3 day bar, this function will be called automatically. The 'sender' parameter
         will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''
-        self.Log("{0} >> Plotting!".format(bar.Time))
-        self.Plot(bar.Symbol, "3HourBar", bar.Close)
+        self.Log(f"{consolidated.Time} >> Plotting!")
+        self.Plot(consolidated.Symbol, "3HourBar", consolidated.Close)
+
+    def FortyFiveMinuteBarHandler(self, consolidated):
+        ''' This is our event handler for our 45 minute consolidated defined using the Consolidate method'''
+        self.consolidated45Minute = True
+        self.Log(f"{consolidated.EndTime} >> FortyFiveMinuteBarHandler >> {consolidated.Close}")
+
+    def HourBarHandler(self, consolidated):
+        '''This is our event handler for our one hour consolidated defined using the Consolidate method'''
+        self.consolidatedHour = True
+        self.Log(f"{consolidated.EndTime} >> FortyFiveMinuteBarHandler >> {consolidated.Close}")
+
+    def DailyEurUsdBarHandler(self, consolidated):
+        '''This is our event handler for our daily consolidated defined using the Consolidate method'''
+        self.Log(f"{consolidated.EndTime} EURUSD Daily consolidated.")
+
+    def OnEndOfAlgorithm(self):
+        if not self.consolidatedHour:
+            raise Exception("Expected hourly consolidator to be fired.")
+
+        if not self.consolidated45Minute: 
+            raise Exception("Expected 45-minute consolidator to be fired.")

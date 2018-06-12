@@ -1315,13 +1315,30 @@ namespace QuantConnect.Algorithm
         /// <exception cref="InvalidOperationException">Thrown if no configuration is found for the requested symbol</exception>
         /// <param name="symbol">The symbol to retrieve configuration for</param>
         /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
-        protected SubscriptionDataConfig GetSubscription(Symbol symbol)
+        public SubscriptionDataConfig GetSubscription(Symbol symbol)
+        {
+            return GetSubscription(symbol, null);
+        }
+
+        /// <summary>
+        /// Gets the SubscriptionDataConfig for the specified symbol and tick type
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if no configuration is found for the requested symbol</exception>
+        /// <param name="symbol">The symbol to retrieve configuration for</param>
+        /// <param name="tickType">The tick type of the subscription to ge</param>
+        /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
+        public SubscriptionDataConfig GetSubscription(Symbol symbol, TickType? tickType)
         {
             SubscriptionDataConfig subscription;
             try
             {
                 // find our subscription to this symbol
-                subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
+                subscription = SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol == symbol && (tickType == null || tickType == x.TickType));
+                if (subscription == null)
+                {
+                    // if we can't locate the exact subscription by tick type just grab the first one we find
+                    subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
+                }
             }
             catch (InvalidOperationException)
             {
@@ -1514,51 +1531,195 @@ namespace QuantConnect.Algorithm
                 );
             }
 
+            return CreateConsolidator(timeSpan.Value, subscription.Type, subscription.TickType);
+        }
+
+        /// <summary>
+        /// Creates a new consolidator for the specified period, generating the requested output type.
+        /// </summary>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="consolidatorInputType">The desired input type of the consolidator, such as TradeBar or QuoteBar</param>
+        /// <param name="tickType">Trade or Quote. Optional, defaults to trade</param>
+        /// <returns>A new consolidator matching the requested parameters</returns>
+        public static IDataConsolidator CreateConsolidator(TimeSpan period, Type consolidatorInputType, TickType? tickType = null)
+        {
             // if our type can be used as a trade bar, then let's just make one of those
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
-            if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
+            if (typeof(TradeBar).IsAssignableFrom(consolidatorInputType))
             {
-                return new TradeBarConsolidator(timeSpan.Value);
+                return new TradeBarConsolidator(period);
             }
 
             // if our type can be used as a quote bar, then let's just make one of those
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to QuoteBar
-            if (typeof(QuoteBar).IsAssignableFrom(subscription.Type))
+            if (typeof(QuoteBar).IsAssignableFrom(consolidatorInputType))
             {
-                return new QuoteBarConsolidator(timeSpan.Value);
+                return new QuoteBarConsolidator(period);
             }
 
             // if our type can be used as a tick then we'll use a consolidator that keeps the TickType
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
-            if (typeof(Tick).IsAssignableFrom(subscription.Type))
+            if (typeof(Tick).IsAssignableFrom(consolidatorInputType))
             {
                 // Use IdentityDataConsolidator when ticks are not meant to consolidated into bars
-                if (timeSpan.Value.Ticks == 0)
+                if (period.Ticks == 0)
                 {
                     return new IdentityDataConsolidator<Tick>();
                 }
 
-                switch (subscription.TickType)
+                switch (tickType)
                 {
                     case TickType.OpenInterest:
-                        return new OpenInterestConsolidator(timeSpan.Value);
+                        return new OpenInterestConsolidator(period);
 
                     case TickType.Quote:
-                        return new TickQuoteBarConsolidator(timeSpan.Value);
+                        return new TickQuoteBarConsolidator(period);
 
                     default:
-                        return new TickConsolidator(timeSpan.Value);
+                        return new TickConsolidator(period);
                 }
             }
 
             // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
-            if (typeof(DynamicData).IsAssignableFrom(subscription.Type))
+            if (typeof(DynamicData).IsAssignableFrom(consolidatorInputType))
             {
-                return new DynamicDataConsolidator(timeSpan.Value);
+                return new DynamicDataConsolidator(period);
             }
 
             // no matter what we can always consolidate based on the time-value pair of BaseData
-            return new BaseDataConsolidator(timeSpan.Value);
+            return new BaseDataConsolidator(period);
         }
-    } // End Partial Algorithm Template - Indicators.
-} // End QC Namespace
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, Resolution period, Action<TradeBar> handler)
+        {
+            return Consolidate(symbol, period.ToTimeSpan(), TickType.Trade, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, TimeSpan period, Action<TradeBar> handler)
+        {
+            return Consolidate(symbol, period, TickType.Trade, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, Resolution period, Action<QuoteBar> handler)
+        {
+            return Consolidate(symbol, period.ToTimeSpan(), TickType.Quote, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, TimeSpan period, Action<QuoteBar> handler)
+        {
+            return Consolidate(symbol, period, TickType.Quote, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
+        /// The handler and tick type must match.
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, Resolution period, Action<T> handler)
+            where T : class, IBaseData
+        {
+            return Consolidate(symbol, period.ToTimeSpan(), null, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
+        /// The handler and tick type must match.
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, Action<T> handler)
+            where T : class, IBaseData
+        {
+            return Consolidate(symbol, period, null, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
+        /// The handler and tick type must match.
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, Resolution period, TickType? tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            return Consolidate(symbol, period.ToTimeSpan(), null, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
+        /// The handler and tick type must match.
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, TickType? tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            // resolve consolidator input subscription
+            var subscription = GetSubscription(symbol, tickType);
+
+            // create requested consolidator
+            var consolidator = CreateConsolidator(period, subscription.Type, subscription.TickType);
+
+            // register the consolidator for automatic updates via SubscriptionManager
+            SubscriptionManager.AddConsolidator(symbol, consolidator);
+
+            if (!typeof(T).IsAssignableFrom(consolidator.OutputType))
+            {
+                // special case downgrading of QuoteBar -> TradeBar
+                if (typeof(T) == typeof(TradeBar) && consolidator.OutputType == typeof(QuoteBar))
+                {
+                    // collapse quote bar into trade bar (ignore the funky casting, required due to generics)
+                    consolidator.DataConsolidated += (sender, consolidated) => handler((T)(object)((QuoteBar) consolidated).Collapse());
+                }
+
+                throw new ArgumentException(
+                    $"Unable to consolidate with the specified handler because the consolidator's output type " +
+                    $"is {consolidator.OutputType.Name} but the handler's input type is {typeof(T).Name}.");
+            }
+
+            // register user-defined handler to receive consolidated data events
+            consolidator.DataConsolidated += (sender, consolidated) => handler((T) consolidated);
+
+            return consolidator;
+        }
+    }
+}

@@ -1037,7 +1037,6 @@ namespace QuantConnect
         /// <param name="result">Managed object </param>
         /// <returns>True if successful conversion</returns>
         public static bool TryConvert<T>(this PyObject pyObject, out T result)
-            where T : class
         {
             result = default(T);
 
@@ -1045,14 +1044,14 @@ namespace QuantConnect
             {
                 return true;
             }
-            
+
             using (Py.GIL())
             {
                 try
                 {
                     if (typeof(T) == typeof(Type))
                     {
-                        result = pyObject.As<Type>() as T;
+                        result = (T) (object) pyObject.As<Type>();
                         return true;
                     }
 
@@ -1064,7 +1063,7 @@ namespace QuantConnect
                         return false;
                     }
 
-                    result = pyObject.AsManagedObject(typeof(T)) as T;
+                    result = (T) pyObject.AsManagedObject(typeof(T));
 
                     if (result is IEnumerable)
                     {
@@ -1074,7 +1073,7 @@ namespace QuantConnect
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class.
-                    string name = (pythonType as dynamic).__name__;
+                    string name = ((dynamic) pythonType).__name__;
                     return name == result.GetType().Name;
                 }
                 catch
