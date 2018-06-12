@@ -67,10 +67,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var enumeratorsAdvanced = new List<IEnumerator<BaseData>>();
             _enumerators.ForEach(x =>
             {
-                if (x.Current == null)
+                if (x.Current == null && x.MoveNext())
                 {
-                    x.MoveNext();
-
                     enumeratorsAdvanced.Add(x);
                 }
             });

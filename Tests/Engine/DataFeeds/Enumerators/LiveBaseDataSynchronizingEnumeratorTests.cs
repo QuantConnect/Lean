@@ -34,9 +34,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var end = start.AddSeconds(15);
 
             var time = start;
-            var stream1 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(1) }).GetEnumerator();
-            var stream2 = Enumerable.Range(0, 5).Select(x => new Tick { Time = time.AddSeconds(2) }).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick { Time = time.AddSeconds(0.5) }).GetEnumerator();
+            var stream1 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(x * 1) }).GetEnumerator();
+            var stream2 = Enumerable.Range(0, 5).Select(x => new Tick { Time = time.AddSeconds(x * 2) }).GetEnumerator();
+            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick { Time = time.AddSeconds(x * 0.5) }).GetEnumerator();
 
             var previous = DateTime.MinValue;
             var synchronizer = new LiveBaseDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, stream2, stream3);
