@@ -16,29 +16,37 @@
 
 using System;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
-    public class SynchronizingEnumeratorTests
+    public class LiveBaseDataSynchronizingEnumeratorTests
     {
         [Test]
         public void SynchronizesData()
         {
-            var time = new DateTime(2016, 03, 03, 12, 05, 00);
-            var stream1 = Enumerable.Range(0, 10).Select(x => new Tick {Time = time.AddSeconds(x * 1)}).GetEnumerator();
-            var stream2 = Enumerable.Range(0, 5).Select(x => new Tick {Time = time.AddSeconds(x * 2)}).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick {Time = time.AddSeconds(x * 0.5)}).GetEnumerator();
+            var start = DateTime.UtcNow;
+            var end = start.AddSeconds(15);
+
+            var time = start;
+            var stream1 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(x * 1) }).GetEnumerator();
+            var stream2 = Enumerable.Range(0, 5).Select(x => new Tick { Time = time.AddSeconds(x * 2) }).GetEnumerator();
+            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick { Time = time.AddSeconds(x * 0.5) }).GetEnumerator();
 
             var previous = DateTime.MinValue;
-            var synchronizer = new SynchronizingEnumerator(stream1, stream2, stream3);
-            while (synchronizer.MoveNext())
+            var synchronizer = new LiveBaseDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, stream2, stream3);
+            while (synchronizer.MoveNext() && DateTime.UtcNow < end)
             {
-                Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous));
-                previous = synchronizer.Current.EndTime;
+                if (synchronizer.Current != null)
+                {
+                    Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous));
+                    previous = synchronizer.Current.EndTime;
+                }
             }
         }
     }
