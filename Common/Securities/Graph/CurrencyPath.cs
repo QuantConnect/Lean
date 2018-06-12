@@ -46,5 +46,21 @@ namespace QuantConnect.Securities.Graph
             newPath.Edges.Push(newEdge);
             return newPath;
         }
+
+        public override string ToString()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.AppendLine($"CurrencyPath with length: {Length} and path:");
+
+            builder.AppendLine("StartVertex:" + StartVertex.Code);
+            
+            foreach (var edge in Edges)
+                builder.AppendLine(edge.ToString());
+            
+            builder.AppendLine("EndVertex:" + EndVertex.Code);
+
+            return builder.ToString();
+        }
     }
 }

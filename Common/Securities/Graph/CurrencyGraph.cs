@@ -32,15 +32,33 @@ namespace QuantConnect.Securities.Graph
             return _vertices[Code];
         }
         
+        public CurrencyEdge AddEdge(string CurrencyPair)
+        {
+            string baseCode = null;
+            string quoteCode = null;
+
+            Forex.Forex.DecomposeCurrencyPair(CurrencyPair, out baseCode, out quoteCode);
+
+            return AddEdge(baseCode, quoteCode);
+        }
+
         public CurrencyEdge AddEdge(string BaseCode, string QuoteCode)
         {
             // Search if existing edge already exists
             foreach (CurrencyEdge strEdge in Edges)
             {
-                if(strEdge.CompareTo(BaseCode, QuoteCode) == CurrencyEdge.Match.ExactMatch)
-                    return strEdge;
-            }
+                CurrencyEdge.Match match = strEdge.CompareTo(BaseCode, QuoteCode);
 
+                if (match == CurrencyEdge.Match.ExactMatch)
+                    return strEdge;
+
+                if (match == CurrencyEdge.Match.InverseMatch)
+                {
+                    strEdge.MakeBidirectional();
+                    return strEdge;
+                }
+            }
+            
             // No existing edge, add new
             var vertexA = AddVertex(BaseCode);
             var vertexB = AddVertex(QuoteCode);
@@ -95,6 +113,27 @@ namespace QuantConnect.Securities.Graph
             }
 
             throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}");
+        }
+        
+        public override string ToString()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.AppendLine("Vertices:");
+            foreach (var vertex in Vertices.Values)
+            {
+                builder.AppendLine(vertex.ToString());
+            }
+
+            builder.AppendLine("");
+            builder.AppendLine("Edges:");
+            
+            foreach(var edge in Edges)
+            {
+                builder.AppendLine(edge.ToString());
+            }
+
+            return builder.ToString();
         }
     }
 }

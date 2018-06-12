@@ -17,6 +17,11 @@ namespace QuantConnect.Securities.Graph
             this.Code = Code;
             Edges = new List<CurrencyEdge>();
         }
+
+        public override string ToString()
+        {
+            return $"Vertex: {Code}, Edges count: {Edges.Count}";
+        }
     }
 
 }

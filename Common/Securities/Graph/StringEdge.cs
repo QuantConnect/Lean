@@ -19,6 +19,8 @@ namespace QuantConnect.Securities.Graph
         public CurrencyVertex Base;
         public CurrencyVertex Quote;
 
+        public bool Bidirectional { get; private set; }
+
         public string PairSymbol
         {
             get
@@ -31,6 +33,7 @@ namespace QuantConnect.Securities.Graph
         {
             this.Base = Base;
             this.Quote = Quote;
+            this.Bidirectional = false;
         }
         
         public Match CompareTo(string BaseCode, string QuoteCode)
@@ -70,6 +73,18 @@ namespace QuantConnect.Securities.Graph
 
             throw new ArgumentException($"The vertex: {thisVertex.Code} is not present in edge {PairSymbol}!");
         }
-        
+     
+        public void MakeBidirectional()
+        {
+            this.Bidirectional = true;
+        }
+
+        public override string ToString()
+        {
+            if (Bidirectional)
+                return $"Edge: {Base.Code}{Quote.Code} && {Quote.Code}{Base.Code}";
+
+            return $"Edge: {Base.Code}{Quote.Code}";
+        }
     }
 }

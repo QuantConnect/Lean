@@ -291,8 +291,7 @@ namespace QuantConnect
             "USDZAR",
             "ZARJPY"
         };
-
-
+        
         /// <summary>
         /// A mapping of currency codes to their display symbols.
         /// </summary>
@@ -363,5 +362,31 @@ namespace QuantConnect
             return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
         }
 
+        public static CurrencyGraph Graph;
+
+        static Currencies()
+        {
+            Graph = new CurrencyGraph();
+            
+            foreach(var code in CurrencySymbols.Keys)
+                Graph.AddVertex(code);
+
+            foreach (var pair in CryptoCurrencyPairs)
+                Graph.AddEdge(pair);
+
+            foreach (var pair in CfdCurrencyPairs)
+                Graph.AddEdge(pair);
+
+            foreach (var pair in CurrencyPairs)
+                Graph.AddEdge(pair);
+
+            
+            Logging.Log.Trace(Graph.FindShortedPath("EUR", "USD").ToString());
+            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "USD").ToString());
+            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EUR").ToString());
+            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EOS").ToString());
+
+
+        }
     }
 }
