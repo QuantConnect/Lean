@@ -16,8 +16,10 @@ namespace QuantConnect.Securities.Graph
             InverseMatch = 2
         }
 
-        public CurrencyVertex Base;
-        public CurrencyVertex Quote;
+        public CurrencyVertex Base { get; private set; }
+        public CurrencyVertex Quote { get; private set; }
+
+        public SecurityType Type { get; private set; }
 
         public bool Bidirectional { get; private set; }
 
@@ -29,11 +31,12 @@ namespace QuantConnect.Securities.Graph
             }
         }
 
-        public CurrencyEdge(CurrencyVertex Base, CurrencyVertex Quote) 
+        public CurrencyEdge(CurrencyVertex Base, CurrencyVertex Quote, SecurityType Type) 
         {
             this.Base = Base;
             this.Quote = Quote;
             this.Bidirectional = false;
+            this.Type = Type;
         }
         
         public Match CompareTo(string BaseCode, string QuoteCode)
@@ -53,7 +56,12 @@ namespace QuantConnect.Securities.Graph
                 return Match.ExactMatch;
 
             if (this.Base == edge.Base && this.Quote == edge.Base)
-                return Match.InverseMatch;
+            {
+                if (Bidirectional)
+                    return Match.ExactMatch;
+                else
+                    return Match.InverseMatch;
+            }
 
             return Match.NoMatch;
         }

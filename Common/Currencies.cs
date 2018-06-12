@@ -362,8 +362,14 @@ namespace QuantConnect
             return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
         }
 
-        public static CurrencyGraph Graph;
+        /// <summary>
+        /// Combines all currencies pairs into a network. Used for searching for closest path.
+        /// </summary>
+        public static readonly CurrencyGraph Graph;
 
+        /// <summary>
+        /// Static constructor for constructing Currency Graph
+        /// </summary>
         static Currencies()
         {
             Graph = new CurrencyGraph();
@@ -372,21 +378,21 @@ namespace QuantConnect
                 Graph.AddVertex(code);
 
             foreach (var pair in CryptoCurrencyPairs)
-                Graph.AddEdge(pair);
+                Graph.AddEdge(pair, SecurityType.Crypto);
 
             foreach (var pair in CfdCurrencyPairs)
-                Graph.AddEdge(pair);
+                Graph.AddEdge(pair, SecurityType.Cfd);
 
             foreach (var pair in CurrencyPairs)
-                Graph.AddEdge(pair);
+                Graph.AddEdge(pair, SecurityType.Forex);
 
+            //lock graph, makes not unable to be edited.
+            Graph.LockPermamently();
             
             Logging.Log.Trace(Graph.FindShortedPath("EUR", "USD").ToString());
             Logging.Log.Trace(Graph.FindShortedPath("ZRX", "USD").ToString());
             Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EUR").ToString());
             Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EOS").ToString());
-
-
         }
     }
 }

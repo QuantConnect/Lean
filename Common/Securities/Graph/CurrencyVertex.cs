@@ -8,14 +8,20 @@ namespace QuantConnect.Securities.Graph
 {
     public class CurrencyVertex
     {
-        public string Code;
+        public string Code { get; private set; }
+        public IReadOnlyList<CurrencyEdge> Edges { get { return _edges; } }
 
-        public List<CurrencyEdge> Edges;
+        private List<CurrencyEdge> _edges;
 
         public CurrencyVertex(string Code)
         {
             this.Code = Code;
-            Edges = new List<CurrencyEdge>();
+            _edges = new List<CurrencyEdge>();
+        }
+
+        public void AddEdge(CurrencyEdge edge)
+        {
+            _edges.Add(edge);
         }
 
         public override string ToString()

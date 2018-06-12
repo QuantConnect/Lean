@@ -208,7 +208,8 @@ namespace QuantConnect.Lean.Engine
                 DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None);
             foreach (var security in addedSecurities)
             {
-                // assume currency feeds are always one subscription per, these are typically quote subscriptions
+                // "assume currency feeds are always one subscription per, these are typically quote subscriptions" - this assumption is now wrong
+                // one subscription may need many currency feeds
                 feed.AddSubscription(new SubscriptionRequest(false, null, security, new SubscriptionDataConfig(security.Subscriptions.First()), algorithm.UtcTime, algorithm.EndDate));
             }
 

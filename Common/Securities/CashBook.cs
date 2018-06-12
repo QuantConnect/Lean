@@ -91,7 +91,7 @@ namespace QuantConnect.Securities
                 {
                     foreach (var s in security)
                     {
-                        addedSecurities.Add(s.RateSecurity);
+                        addedSecurities.Add(s);
                     }
                 }
             }

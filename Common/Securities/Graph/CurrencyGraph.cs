@@ -17,6 +17,8 @@ namespace QuantConnect.Securities.Graph
         private Dictionary<string, CurrencyVertex> _vertices;
         private List<CurrencyEdge> _edges;
 
+        private bool _locked = false;
+
         public CurrencyGraph()
         {
             _vertices = new Dictionary<string, CurrencyVertex>();
@@ -25,6 +27,9 @@ namespace QuantConnect.Securities.Graph
 
         public CurrencyVertex AddVertex(string Code)
         {
+            if (_locked)
+                throw new ArgumentException("The graph has been locked, cannot modify the graph anymore!");
+
             // Add new, if it doesn't already exist
             if (!_vertices.ContainsKey(Code))
                 _vertices[Code] = new CurrencyVertex(Code);
@@ -32,18 +37,24 @@ namespace QuantConnect.Securities.Graph
             return _vertices[Code];
         }
         
-        public CurrencyEdge AddEdge(string CurrencyPair)
+        public CurrencyEdge AddEdge(string CurrencyPair, SecurityType Type)
         {
+            if (_locked)
+                throw new ArgumentException("The graph has been locked, cannot modify the graph anymore!");
+
             string baseCode = null;
             string quoteCode = null;
 
             Forex.Forex.DecomposeCurrencyPair(CurrencyPair, out baseCode, out quoteCode);
 
-            return AddEdge(baseCode, quoteCode);
+            return AddEdge(baseCode, quoteCode, Type);
         }
 
-        public CurrencyEdge AddEdge(string BaseCode, string QuoteCode)
+        public CurrencyEdge AddEdge(string BaseCode, string QuoteCode, SecurityType Type)
         {
+            if (_locked)
+                throw new ArgumentException("The graph has been locked, cannot modify the graph anymore!");
+
             // Search if existing edge already exists
             foreach (CurrencyEdge strEdge in Edges)
             {
@@ -63,10 +74,10 @@ namespace QuantConnect.Securities.Graph
             var vertexA = AddVertex(BaseCode);
             var vertexB = AddVertex(QuoteCode);
 
-            var edge = new CurrencyEdge(vertexA, vertexB);
+            var edge = new CurrencyEdge(vertexA, vertexB, Type);
             
-            vertexA.Edges.Add(edge);
-            vertexB.Edges.Add(edge);
+            vertexA.AddEdge(edge);
+            vertexB.AddEdge(edge);
 
             _edges.Add(edge);
 
@@ -118,23 +129,28 @@ namespace QuantConnect.Securities.Graph
             throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}");
         }
         
+        /// <summary>
+        /// Locks the Graph from editing, makes it read only.
+        /// </summary>
+        public void LockPermamently()
+        {
+            _locked = true;
+        }
+
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
 
             builder.AppendLine("Vertices:");
             foreach (var vertex in Vertices.Values)
-            {
                 builder.AppendLine(vertex.ToString());
-            }
-
+            
             builder.AppendLine("");
             builder.AppendLine("Edges:");
             
             foreach(var edge in Edges)
-            {
                 builder.AppendLine(edge.ToString());
-            }
+            
 
             return builder.ToString();
         }

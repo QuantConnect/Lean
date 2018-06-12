@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,18 @@ namespace QuantConnect.Securities.Graph
 {
     public class CurrencyPath
     {
+        public class Step
+        {
+            public CurrencyEdge Edge;
+            public bool Inverted;
+
+            public Step(CurrencyEdge Edge, bool Inverted)
+            {
+                this.Edge = Edge;
+                this.Inverted = Inverted;
+            }
+        }
+
         public CurrencyVertex StartVertex { get; }
 
         public CurrencyVertex EndVertex { get; private set; }
@@ -25,7 +38,6 @@ namespace QuantConnect.Securities.Graph
         public CurrencyPath(CurrencyVertex startVertex)
         {
             StartVertex = startVertex;
-
             EndVertex = startVertex;
             Edges = new Queue<CurrencyEdge>();
         }
@@ -54,13 +66,37 @@ namespace QuantConnect.Securities.Graph
             builder.AppendLine($"CurrencyPath with length {Length} and path:");
 
             builder.AppendLine("StartVertex:" + StartVertex.Code);
-            
+
             foreach (var edge in Edges)
                 builder.AppendLine(edge.ToString());
             
             builder.AppendLine("EndVertex:" + EndVertex.Code);
 
             return builder.ToString();
+        }
+
+        public IEnumerable<Step> Steps 
+        {
+            get
+            {
+                CurrencyVertex BaseVertex = StartVertex;
+
+                foreach (var edge in Edges)
+                {
+                    // edge is not inverted
+                    if (BaseVertex.Code == edge.Base.Code)
+                    {
+                        BaseVertex = edge.Quote;
+                        yield return new Step(edge, false);
+                    }
+                    else
+                    {
+                        // edge is inverted
+                        BaseVertex = edge.Base;
+                        yield return new Step(edge, true);
+                    }
+                }
+            }
         }
     }
 }
