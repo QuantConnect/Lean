@@ -498,21 +498,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             });
                             enumerator = quoteBarAggregator;
                             break;
+
                         case TickType.Trade:
                         default:
                             var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            var auxDataEnumerator = new EnqueueableEnumerator<BaseData>();
+
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
-                                var tick = data as Tick;
-
-                                if (tick.TickType == TickType.Trade)
+                                if (data.DataType == MarketDataType.Auxiliary)
                                 {
-                                    tradeBarAggregator.ProcessData(tick);
-                                    if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+                                    auxDataEnumerator.Enqueue(data);
+                                }
+                                else
+                                {
+                                    var tick = data as Tick;
+                                    if (tick.TickType == TickType.Trade)
+                                    {
+                                        tradeBarAggregator.ProcessData(tick);
+                                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+                                    }
                                 }
                             });
-                            enumerator = tradeBarAggregator;
+
+                            enumerator = request.Configuration.SecurityType == SecurityType.Equity
+                                ? (IEnumerator<BaseData>) new LiveBaseDataSynchronizingEnumerator(_frontierTimeProvider, request.Security.Exchange.TimeZone, auxDataEnumerator, tradeBarAggregator)
+                                : tradeBarAggregator;
                             break;
+
                         case TickType.OpenInterest:
                             var oiAggregator = new OpenInterestEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
@@ -535,7 +548,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _exchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         tickEnumerator.Enqueue(data);
-                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+
+                        if (data.DataType != MarketDataType.Auxiliary &&
+                            SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider))
+                        {
+                            subscription.RealtimePrice = data.Value;
+                        }
                     });
                     enumerator = tickEnumerator;
                 }
@@ -705,7 +723,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return subscription;
         }
 
-                /// <summary>
+        /// <summary>
         /// Checks if the subscription should update the RealTimePrice
         /// </summary>
         /// <param name="subscription">The <see cref="Subscription"/></param>

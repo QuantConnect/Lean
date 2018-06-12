@@ -278,6 +278,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\LiveBaseDataSynchronizingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\QuoteBarFillForwardEnumeratorTests.cs" />
