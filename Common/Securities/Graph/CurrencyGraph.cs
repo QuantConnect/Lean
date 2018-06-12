@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities.CurrencyGraph
+namespace QuantConnect.Securities.Graph
 {
     /// <summary>
     /// Currency Graph, holds currency codes such as "USD" and pairs such as"USDEUR"

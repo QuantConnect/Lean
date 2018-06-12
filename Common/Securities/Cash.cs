@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
-using QuantConnect.Data.Graph;
+using QuantConnect.Securities.Graph;
 
 namespace QuantConnect.Securities
 {

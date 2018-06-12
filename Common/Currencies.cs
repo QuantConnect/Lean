@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Graph;
 
 namespace QuantConnect
 {
@@ -291,6 +292,7 @@ namespace QuantConnect
             "ZARJPY"
         };
 
+
         /// <summary>
         /// A mapping of currency codes to their display symbols.
         /// </summary>
@@ -360,5 +362,6 @@ namespace QuantConnect
             string currencySymbol;
             return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
         }
+
     }
 }
