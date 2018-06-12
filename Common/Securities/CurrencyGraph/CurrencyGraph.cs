@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Data.Graph
+namespace QuantConnect.Securities.CurrencyGraph
 {
     /// <summary>
     /// Currency Graph, holds currency codes such as "USD" and pairs such as"USDEUR"
@@ -81,13 +81,16 @@ namespace QuantConnect.Data.Graph
                     if(edge.ContainsOne(EndCode))
                         return nextPath;
                     
-                    // check if node has been visited
+                    // check if node has been NOT visited
                     if(!processedNodes.Contains(nextPath.EndVertex.Code))
                     {
                         CurrencyPath newPath = nextPath.Extend(edge);
+                        
+                        processedNodes.Add(newPath.EndVertex.Code);
 
                         pathsToExtend.Enqueue(newPath);
                     }
+                    // ignore the node
                 }
             }
 

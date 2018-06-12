@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Data.Graph
+namespace QuantConnect.Securities.CurrencyGraph
 {
     public class CurrencyVertex
     {
