@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void RegistersIndicatorProperlyPython()
         {
             var expected = 0;
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [Test, Ignore]
+        [Test, Category("TravisExclude")]
         public void RegisterPythonCustomIndicatorProperly()
         {
             using (Py.GIL())
@@ -142,6 +142,31 @@ namespace QuantConnect.Tests.Algorithm
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
                 Assert.Throws<ArgumentException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
+            }
+        }
+
+        [Test, Category("TravisExclude")]
+        public void RegistersIndicatorProperlyPythonScript()
+        {
+            var code = @"from clr import AddReference
+AddReference('System')
+AddReference('QuantConnect.Algorithm')
+AddReference('QuantConnect.Indicators')
+AddReference('QuantConnect.Common')
+
+from System import *
+from QuantConnect import *
+from QuantConnect.Algorithm import *
+from QuantConnect.Indicators import *
+
+algo = QCAlgorithm()
+forex = algo.AddForex('EURUSD', Resolution.Daily)
+indicator = IchimokuKinkoHyo('EURUSD', 9, 26, 26, 52, 26, 26)
+algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
+
+            using (Py.GIL())
+            {
+                Assert.DoesNotThrow(() => PythonEngine.ModuleFromString("RegistersIndicatorProperlyPythonScript", code));
             }
         }
     }
