@@ -53,6 +53,7 @@ namespace QuantConnect.Securities
         {
             _currencies = new ConcurrentDictionary<string, Cash>();
             _currencies.AddOrUpdate(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
+
         }
 
         /// <summary>
@@ -79,19 +80,22 @@ namespace QuantConnect.Securities
         /// <returns>Returns a list of added currency securities</returns>
         public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, SecurityChanges changes)
         {
-            var addedSecurities = new List<Security>();
+            var addedSecurities = new HashSet<Security>();
             foreach (var kvp in _currencies)
             {
                 var cash = kvp.Value;
 
-                var newSecurities = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
+                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
 
-                if (newSecurities != null)
+                if (security != null)
                 {
-                    addedSecurities.AddRange(newSecurities.Select(conSec => conSec.RateSecurity));
+                    foreach (var s in security)
+                    {
+                        addedSecurities.Add(s.RateSecurity);
+                    }
                 }
             }
-            return addedSecurities;
+            return addedSecurities.ToList();
         }
 
         /// <summary>

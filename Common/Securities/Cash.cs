@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
+using QuantConnect.Data.Graph;
 
 namespace QuantConnect.Securities
 {
@@ -28,7 +29,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-
         /// <summary>
         /// Class that holds Security for conversion and bool, which tells if rate should be inverted (1/rate)
         /// </summary>
@@ -227,6 +227,7 @@ namespace QuantConnect.Securities
                     ConversionRateSecurity = new List<ConversionSecurity>() { new ConversionSecurity(security, false) };
                     return null;
                 }
+
                 if (security.Symbol.Value == invert)
                 {
                     ConversionRateSecurity = new List<ConversionSecurity>() { new ConversionSecurity(security, true) };
@@ -250,6 +251,10 @@ namespace QuantConnect.Securities
             var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
                 .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
                 .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
+
+            CurrencyGraph graph = new CurrencyGraph();
+            
+            //!TODO
 
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
 
@@ -303,6 +308,8 @@ namespace QuantConnect.Securities
             // Common to cryptocurrencies where there are no direct pairings with USD, but there is intermediary such as BTC or ETH
             // Example #1: RENUSD doesn't exist, but there is RENETH  and ETHUSD,  from which we can calculate RENUSD
             // Example #2: RENUSD doesn't exist, but there is RENUSDT and USDTUSD, from which we can calculate RENUSD
+
+            
 
             // Make a copy
             var existingPotentials = Currencies.CryptoCurrencyPairs.Select(x => x);
@@ -407,8 +414,7 @@ namespace QuantConnect.Securities
 
 
                             ConversionRateSecurity = new List<ConversionSecurity>() { mainConSec, linkingConSec };
-                            return ConversionRateSecurity;
-                                
+                            return ConversionRateSecurity;                               
                         }
                     }
                 }
@@ -433,6 +439,7 @@ namespace QuantConnect.Securities
         private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)
         {
             string market;
+
             if (!markets.TryGetValue(securityType, out market))
             {
                 market = marketMap[securityType];

@@ -175,8 +175,7 @@ namespace QuantConnect.Securities.Forex
             {
                 throw new ArgumentException($"No base currency found for the pair: {currencyPair}");
             }
-            else
-            if (quotes.Count == 0)
+            else if (quotes.Count == 0)
             {
                 throw new ArgumentException($"No quote currency found for the pair: {currencyPair}");
             }
@@ -200,8 +199,7 @@ namespace QuantConnect.Securities.Forex
             {
                 return CurrencyB;
             }
-            else
-            if (CurrencyB == knownSymbol)
+            else if (CurrencyB == knownSymbol)
             {
                 return CurrencyA;
             }
