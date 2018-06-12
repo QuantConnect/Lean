@@ -12,7 +12,7 @@ namespace QuantConnect.Securities.Graph
 
         public CurrencyVertex EndVertex { get; private set; }
 
-        public Stack<CurrencyEdge> Edges { get; }
+        public Queue<CurrencyEdge> Edges { get; }
         
         public int Length 
         {
@@ -27,14 +27,14 @@ namespace QuantConnect.Securities.Graph
             StartVertex = startVertex;
 
             EndVertex = startVertex;
-            Edges = new Stack<CurrencyEdge>();
+            Edges = new Queue<CurrencyEdge>();
         }
 
         public CurrencyPath(CurrencyVertex startVertex, CurrencyVertex endVertex, IEnumerable<CurrencyEdge> collection)
         {
             StartVertex = startVertex;
             EndVertex = endVertex;
-            Edges = new Stack<CurrencyEdge>(collection);
+            Edges = new Queue<CurrencyEdge>(collection);
         }
 
         public CurrencyPath Extend(CurrencyEdge newEdge)
@@ -43,7 +43,7 @@ namespace QuantConnect.Securities.Graph
 
             CurrencyPath newPath = new CurrencyPath(this.StartVertex, end, this.Edges);
 
-            newPath.Edges.Push(newEdge);
+            newPath.Edges.Enqueue(newEdge);
             return newPath;
         }
 
@@ -51,7 +51,7 @@ namespace QuantConnect.Securities.Graph
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.AppendLine($"CurrencyPath with length: {Length} and path:");
+            builder.AppendLine($"CurrencyPath with length {Length} and path:");
 
             builder.AppendLine("StartVertex:" + StartVertex.Code);
             

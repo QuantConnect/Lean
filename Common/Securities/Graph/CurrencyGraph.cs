@@ -84,32 +84,35 @@ namespace QuantConnect.Securities.Graph
             CurrencyVertex startVertex = _vertices[StartCode];
 
             HashSet<string> processedNodes = new HashSet<string>();
-            
-            Queue<CurrencyPath> pathsToExtend = new Queue<CurrencyPath>();
 
+            Queue<CurrencyPath> pathsToExtend = new Queue<CurrencyPath>();
+            
             pathsToExtend.Enqueue(new CurrencyPath(startVertex));
 
             while (pathsToExtend.Count > 0)
             {
                 CurrencyPath nextPath = pathsToExtend.Dequeue();
-                
-                foreach(CurrencyEdge edge in nextPath.Edges)
+
+                foreach (CurrencyEdge edge in nextPath.EndVertex.Edges)
                 {
-                    // if edge contains end, return the path
-                    if(edge.ContainsOne(EndCode))
-                        return nextPath;
-                    
+
                     // check if node has been NOT visited
-                    if(!processedNodes.Contains(nextPath.EndVertex.Code))
+                    if (!processedNodes.Contains(nextPath.EndVertex.Code))
                     {
                         CurrencyPath newPath = nextPath.Extend(edge);
-                        
-                        processedNodes.Add(newPath.EndVertex.Code);
+
+                        // if edge contains end, return the path
+                        if (edge.ContainsOne(EndCode))
+                        {
+                            return newPath;
+                        }
 
                         pathsToExtend.Enqueue(newPath);
                     }
                     // ignore the node
                 }
+
+                processedNodes.Add(nextPath.EndVertex.Code);
             }
 
             throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}");
