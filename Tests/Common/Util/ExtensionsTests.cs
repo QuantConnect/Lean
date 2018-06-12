@@ -385,7 +385,23 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(canConvert);
             Assert.IsNotNull(indicatorBaseTradeBar);
             Assert.IsAssignableFrom<AccumulationDistribution>(indicatorBaseTradeBar);
+        }
 
+        [Test, Category("TravisExclude")]
+        public void PyObjectTryConvertSymbolArray()
+        {
+            PyObject value;
+            using (Py.GIL())
+            {
+                // Wrap a Symbol Array around a PyObject and convert it back
+                value = new PyList(new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() });
+            }
+
+            Symbol[] symbols;
+            var canConvert = value.TryConvert(out symbols);
+            Assert.IsTrue(canConvert);
+            Assert.IsNotNull(symbols);
+            Assert.IsAssignableFrom<Symbol[]>(symbols);
         }
 
         [Test, Category("TravisExclude")]

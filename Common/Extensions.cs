@@ -1039,6 +1039,7 @@ namespace QuantConnect
         public static bool TryConvert<T>(this PyObject pyObject, out T result)
         {
             result = default(T);
+            var type = typeof(T);
 
             if (pyObject == null)
             {
@@ -1049,26 +1050,29 @@ namespace QuantConnect
             {
                 try
                 {
-                    if (typeof(T) == typeof(Type))
+                    // Special case: Type
+                    if (typeof(Type).IsAssignableFrom(type))
                     {
-                        result = (T) (object) pyObject.As<Type>();
+                        result = (T)pyObject.AsManagedObject(type);
+                        return true;
+                    }
+
+                    // Special case: IEnumerable
+                    if (typeof(IEnumerable).IsAssignableFrom(type))
+                    {
+                        result = (T)pyObject.AsManagedObject(type);
                         return true;
                     }
 
                     var pythonType = pyObject.GetPythonType();
                     var csharpType = pythonType.As<Type>();
 
-                    if (!typeof(T).IsAssignableFrom(csharpType))
+                    if (!type.IsAssignableFrom(csharpType))
                     {
                         return false;
                     }
 
-                    result = (T) pyObject.AsManagedObject(typeof(T));
-
-                    if (result is IEnumerable)
-                    {
-                        return true;
-                    }
+                    result = (T)pyObject.AsManagedObject(type);
 
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
