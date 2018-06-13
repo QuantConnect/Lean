@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -66,38 +66,38 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "468"},
-            {"Average Win", "0.06%"},
-            {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "-96.930%"},
-            {"Drawdown", "4.500%"},
-            {"Expectancy", "-0.490"},
-            {"Net Profit", "-4.356%"},
-            {"Sharpe Ratio", "-26.255"},
-            {"Loss Rate", "81%"},
-            {"Win Rate", "19%"},
-            {"Profit-Loss Ratio", "1.75"},
-            {"Alpha", "-1.975"},
-            {"Beta", "-23.261"},
-            {"Annual Standard Deviation", "0.085"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "-26.372"},
-            {"Tracking Error", "0.085"},
-            {"Treynor Ratio", "0.096"},
-            {"Total Fees", "$2215.48"},
-            {"Total Insights Generated", "289"},
+            {"Total Trades", "3"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.38%"},
+            {"Compounding Annual Return", "1205.791%"},
+            {"Drawdown", "1.700%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "3.340%"},
+            {"Sharpe Ratio", "6.642"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "152.779"},
+            {"Annual Standard Deviation", "0.254"},
+            {"Annual Variance", "0.064"},
+            {"Information Ratio", "6.6"},
+            {"Tracking Error", "0.254"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$63.14"},
+            {"Total Insights Generated", "2"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "146"},
-            {"Short Insight Count", "143"},
-            {"Long/Short Ratio", "102.10%"},
+            {"Long Insight Count", "2"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$0"},
             {"Total Accumulated Estimated Alpha Value", "$0"},
             {"Mean Population Estimated Insight Value", "$0"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }
