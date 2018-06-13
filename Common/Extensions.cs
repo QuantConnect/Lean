@@ -921,7 +921,7 @@ namespace QuantConnect
         {
             // if there's only one use that guy
             // if there's more than one then find which one we should use using the algorithmTypeName specified
-            return names.Count == 1 ? names.Single() : names.SingleOrDefault(x => x.Contains("." + algorithmTypeName));
+            return names.Count == 1 ? names.Single() : names.SingleOrDefault(x => x.EndsWith("." + algorithmTypeName));
         }
 
         /// <summary>
