@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Custom import *
+from QuantConnect.Python import PythonQuandl
 from datetime import datetime, timedelta
 
 ### <summary>
@@ -37,12 +38,12 @@ class QuandlImporterAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.quandlCode = "YAHOO/INDEX_SPY";
-
-        self.SetStartDate(2013,1,1)                                 #Set Start Date
+        self.quandlCode = "SSE/YHO";
+        Quandl.SetAuthCode("JjAt5_5Ggmmoe5zUKipm")
+        self.SetStartDate(2014,4,1)                                 #Set Start Date
         self.SetEndDate(datetime.today() - timedelta(1))            #Set End Date
         self.SetCash(25000)                                         #Set Strategy Cash
-        self.AddData[Quandl](self.quandlCode, Resolution.Daily, TimeZones.NewYork)
+        self.AddData(QuandlCustomColumns, self.quandlCode, Resolution.Daily, TimeZones.NewYork)
         self.sma = self.SMA(self.quandlCode, 14)
 
     def OnData(self, data):
@@ -51,4 +52,11 @@ class QuandlImporterAlgorithm(QCAlgorithm):
             self.SetHoldings(self.quandlCode, 1)
             self.Debug("Purchased {0} >> {1}".format(self.quandlCode, self.Time))
 
-        self.Plot("SPY", self.sma.Current.Value)
+        self.Plot(self.quandlCode, "PriceSMA", self.sma.Current.Value)
+        
+# Quandl often doesn't use close columns so need to tell LEAN which is the "value" column.
+class QuandlCustomColumns(PythonQuandl):
+    '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
+    def __init__(self):
+        # Define ValueColumnName: cannot be None, Empty or non-existant column name
+        self.ValueColumnName = "last"
