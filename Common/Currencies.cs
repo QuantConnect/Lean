@@ -300,7 +300,6 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
-
             {"USD", "$"  },
             {"GBP", "₤"  },
             {"JPY", "¥"  },
@@ -388,11 +387,19 @@ namespace QuantConnect
 
             //lock graph, makes not unable to be edited.
             Graph.LockPermamently();
-            
+
+            //THIS ONE FAILS, IT GIVES ZRXBTC AS A EDGE BUT SHOULDNT
+            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "ZRX").ToString());
+
             Logging.Log.Trace(Graph.FindShortedPath("EUR", "USD").ToString());
+            Logging.Log.Trace(Graph.FindShortedPath("USD", "EUR").ToString());
             Logging.Log.Trace(Graph.FindShortedPath("ZRX", "USD").ToString());
+
             Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EUR").ToString());
+            Logging.Log.Trace(Graph.FindShortedPath("EUR", "ZRX").ToString());
+            
             Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EOS").ToString());
+            Logging.Log.Trace(Graph.FindShortedPath("SENT", "XAU").ToString());
         }
     }
 }

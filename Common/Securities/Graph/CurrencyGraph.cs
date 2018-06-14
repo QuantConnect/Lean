@@ -83,7 +83,7 @@ namespace QuantConnect.Securities.Graph
 
             return edge;
         }
-
+        
         /// <summary>
         /// Uses Breadth First Search to search through this graph
         /// </summary>
@@ -93,37 +93,30 @@ namespace QuantConnect.Securities.Graph
         public CurrencyPath FindShortedPath(string StartCode, string EndCode)
         {
             CurrencyVertex startVertex = _vertices[StartCode];
-
             HashSet<string> processedNodes = new HashSet<string>();
-
             Queue<CurrencyPath> pathsToExtend = new Queue<CurrencyPath>();
-            
-            pathsToExtend.Enqueue(new CurrencyPath(startVertex));
 
+            pathsToExtend.Enqueue(new CurrencyPath(startVertex));
+            
             while (pathsToExtend.Count > 0)
             {
-                CurrencyPath nextPath = pathsToExtend.Dequeue();
+                CurrencyPath path = pathsToExtend.Dequeue();
 
-                foreach (CurrencyEdge edge in nextPath.EndVertex.Edges)
+                if(path.EndVertex.Code == EndCode)
+                    return path;
+
+                processedNodes.Add(path.EndVertex.Code);
+
+                // grow paths
+                foreach (CurrencyEdge edge in path.EndVertex.Edges)
                 {
-
-                    // check if node has been NOT visited
-                    if (!processedNodes.Contains(nextPath.EndVertex.Code))
-                    {
-                        CurrencyPath newPath = nextPath.Extend(edge);
-
-                        // if edge contains end, return the path
-                        if (edge.ContainsOne(EndCode))
-                        {
-                            return newPath;
-                        }
-
-                        pathsToExtend.Enqueue(newPath);
-                    }
-                    // ignore the node
+                    //find other endpoint of edge
+                    CurrencyVertex vertex = edge.Other(path.EndVertex);
+                    
+                    // check if this endpoint has been NOT visited already then if, add the extended path to queue
+                    if (!processedNodes.Contains(vertex.Code))
+                        pathsToExtend.Enqueue(path.Extend(edge));
                 }
-
-                processedNodes.Add(nextPath.EndVertex.Code);
             }
 
             throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}");
@@ -153,6 +146,19 @@ namespace QuantConnect.Securities.Graph
             
 
             return builder.ToString();
+        }
+
+        public CurrencyGraph Copy()
+        {
+            CurrencyGraph copy = new CurrencyGraph();
+            
+            foreach(var code in _vertices.Keys)
+                copy.AddVertex(code);
+
+            foreach (var edge in _edges)
+                copy.AddEdge(edge.PairSymbol, edge.Type);
+
+            return copy;
         }
     }
 }

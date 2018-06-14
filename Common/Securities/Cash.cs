@@ -147,7 +147,6 @@ namespace QuantConnect.Securities
             {
                 ConversionRate *= conSec.ConversionRate;
             }
-
         }
 
         /// <summary>
@@ -212,12 +211,8 @@ namespace QuantConnect.Securities
                 ConversionRate = 1.0m;
                 return null;
             }
-
-            // we require a security that converts this into the base currency
-            //string normal = Symbol + CashBook.AccountCurrency;
-            //string invert = CashBook.AccountCurrency + Symbol;
-
-            //!EXISTING SECURITIES WITH DATAFEED
+            
+            // existing securities
             var securitiesToSearch = securities.Select(kvp => kvp.Value)
                 .Concat(changes.AddedSecurities)
                 .Where(s => s.Type == SecurityType.Forex || s.Type == SecurityType.Cfd || s.Type == SecurityType.Crypto);
@@ -233,17 +228,21 @@ namespace QuantConnect.Securities
             {
                 markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
             }
-
+            
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
-
-            //!TODO
-
+            
             List<ConversionSecurity> conversionSecuritiesList = new List<ConversionSecurity>();
 
             List<Security> requiredSecurities = new List<Security>();
 
             // return needed pairs for full conversion from one currency to another
-            CurrencyPath shortestPath = Currencies.Graph.FindShortedPath(Symbol, CashBook.AccountCurrency);
+            CurrencyGraph graph = Currencies.Graph.Copy();
+            
+            // add securities from securitiesToSearch
+            foreach(var knownSecurity in securitiesToSearch)
+                graph.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
+
+            CurrencyPath shortestPath = graph.FindShortedPath(Symbol, CashBook.AccountCurrency);
 
             foreach (var step in shortestPath.Steps)
             {
@@ -253,7 +252,7 @@ namespace QuantConnect.Securities
                 Security security;
                 try
                 {
-                    //check if it already exists
+                    // check if it already exists
                     security = securitiesToSearch.Where(sec => sec.Symbol.Value == step.Edge.PairSymbol).First();
                 }
                 catch
@@ -276,7 +275,7 @@ namespace QuantConnect.Securities
 
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
-
+                    
                     switch (symbol.SecurityType)
                     {
                         case SecurityType.Cfd:
@@ -291,7 +290,7 @@ namespace QuantConnect.Securities
                         default:
                             throw new ArgumentException("Unknown security type");
                     }
-
+                    
                     securities.Add(config.Symbol, security);
 
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
@@ -300,8 +299,10 @@ namespace QuantConnect.Securities
                 conversionSecuritiesList.Add(new ConversionSecurity(security, step.Inverted));
             }
 
-            if (shortestPath.Length == 0)
-                throw new ArgumentException(string.Format("No path found for converting {0} to {1}, so cannot calculate {0}{1}.", Symbol, CashBook.AccountCurrency));
+            this.ConversionRateSecurity = conversionSecuritiesList;
+            
+            if (this.ConversionRateSecurity.Count == 0)
+                    throw new ArgumentException(string.Format("No path found for converting {0} to {1}, so cannot calculate {0}{1}.", Symbol, CashBook.AccountCurrency));
 
             return requiredSecurities;
         }

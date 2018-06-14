@@ -121,11 +121,11 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, abcConfig, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             var usdjpy = new Security(Symbols.USDJPY, SecurityExchangeHours, new Cash("JPY", 0, 0), SymbolProperties.GetDefault("JPY"));
             var changes = new SecurityChanges(new[] {usdjpy}, Enumerable.Empty<Security>());
-            var addedSecurity = cash.EnsureCurrencyDataFeed(securities, subscriptions, AlwaysOpenMarketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook, changes);
+            var addedSecurities = cash.EnsureCurrencyDataFeed(securities, subscriptions, AlwaysOpenMarketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook, changes);
 
             // the security exists in SecurityChanges so it is NOT added to the security manager or subscriptions
             // this security will be added by the algorithm manager
-            Assert.IsNull(addedSecurity);
+            Assert.True(addedSecurities == null || addedSecurities.Count == 0);
         }
 
         [Test]

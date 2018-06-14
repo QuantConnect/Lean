@@ -59,22 +59,6 @@ namespace QuantConnect.Securities.Graph
             return newPath;
         }
 
-        public override string ToString()
-        {
-            StringBuilder builder = new StringBuilder();
-
-            builder.AppendLine($"CurrencyPath with length {Length} and path:");
-
-            builder.AppendLine("StartVertex:" + StartVertex.Code);
-
-            foreach (var edge in Edges)
-                builder.AppendLine(edge.ToString());
-            
-            builder.AppendLine("EndVertex:" + EndVertex.Code);
-
-            return builder.ToString();
-        }
-
         public IEnumerable<Step> Steps 
         {
             get
@@ -98,5 +82,21 @@ namespace QuantConnect.Securities.Graph
                 }
             }
         }
+
+        public override string ToString()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.AppendLine($"CurrencyPath with length {Length} and path:");
+            builder.AppendLine("StartVertex:" + StartVertex.Code);
+
+            foreach (var step in Steps)
+                builder.AppendLine($"{step.Edge}, Inverted: {step.Inverted}");
+
+            builder.AppendLine("EndVertex:" + EndVertex.Code);
+
+            return builder.ToString();
+        }
+
     }
 }
