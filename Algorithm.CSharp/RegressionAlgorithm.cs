@@ -78,24 +78,24 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics { get; } = new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "5433"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
             {"Compounding Annual Return", "-3.886%"},
             {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.991"},
+            {"Expectancy", "-0.992"},
             {"Net Profit", "-0.054%"},
-            {"Sharpe Ratio", "-30.336"},
+            {"Sharpe Ratio", "-30.341"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "2.40"},
+            {"Profit-Loss Ratio", "2.10"},
             {"Alpha", "-0.019"},
             {"Beta", "-0.339"},
             {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-38.93"},
+            {"Information Ratio", "-38.933"},
             {"Tracking Error", "0.001"},
             {"Treynor Ratio", "0.067"},
             {"Total Fees", "$5433.00"}
