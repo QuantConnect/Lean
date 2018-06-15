@@ -288,8 +288,8 @@ class LeanOutputReader(object):
         plt.xlabel("Returns(%)")
         plt.ylabel('Year',size = 12,fontweight='bold')
         plt.axvline(x = 0, color = 'black')
-        vline = plt.axvline(x = np.mean(df_this),color = "red", ls = "dashed", label = "mean")
-        plt.legend([vline],["mean"],loc='upper left')
+        vline = plt.axvline(x = np.mean(df_this),color = "red", ls = "dashed", label = "Mean")
+        plt.legend([vline],["Mean"],loc='upper left')
         ax.grid()
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
@@ -334,8 +334,8 @@ class LeanOutputReader(object):
         plt.xlabel("Returns(%)")
         plt.ylabel('Number of Months',size = 12,fontweight='bold')
         plt.axvline(x = -tmp_min, color = 'black')
-        vline = plt.axvline(x = tmp_mean-tmp_min,color = "red", ls = "dashed", label = "mean")
-        plt.legend([vline],["mean"],loc='upper left')
+        vline = plt.axvline(x = tmp_mean-tmp_min,color = "red", ls = "dashed", label = "Mean")
+        plt.legend([vline],["Mean"],loc='upper left')
         ax.grid()
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
@@ -424,7 +424,7 @@ class LeanOutputReader(object):
             plt.xticks(rotation = 0,ha = 'center')
             plt.xlabel("")
             plt.ylabel('Beta',size = 12,fontweight='bold')
-            ax.legend(["Beta6mo","Beta12mo"],prop = {'weight':'bold'},frameon=False, loc = "upper left")
+            ax.legend(["Beta 6mo","Beta 12mo"],prop = {'weight':'bold'},frameon=False, loc = "upper left")
             ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
             plt.axhline(y = 0, color = 'black')
             ax.grid()
@@ -463,8 +463,8 @@ class LeanOutputReader(object):
             fig = ax.get_figure()
             plt.xticks(rotation = 0,ha = 'center')
             plt.xlabel("")
-            plt.ylabel('SharpeRatio',size = 12,fontweight='bold')
-            plt.legend(["SharpeRatio","mean"],prop = {'weight':'bold'},frameon=False, loc = "upper left")
+            plt.ylabel('Sharpe Ratio',size = 12,fontweight='bold')
+            plt.legend(["Sharpe Ratio","Mean"],prop = {'weight':'bold'},frameon=False, loc = "upper left")
             ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
             plt.axhline(y = 0, color = 'black')
             ax.grid()
@@ -669,7 +669,7 @@ class LeanOutputReader(object):
                 "Significant Period": (self.df.index[-1] - self.df.index[0]).days/365 > 5,
                 "Significant Trading": len(self.orders) >= 100,
                 "Diversified": len(set(self.df_values["Symbol"])) > 7,
-                "Risk Control": self.data["TotalPerformance"]["PortfolioStatistics"]["Beta"] < 0.5,
+                "Risk Control": self.data["TotalPerformance"]["PortfolioStatistics"]["Drawdown"] < 0.1,
                 "Markets": [SecurityTypeName[x-1] for x in list(set(self.df_values["Type"])) if x > 0]
                 }
 
