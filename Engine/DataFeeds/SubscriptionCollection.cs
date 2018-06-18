@@ -126,6 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Select(x => x.Value)
                 .OrderBy(x => x.Configuration.SecurityType)
                 .ThenBy(x => x.Configuration.TickType)
+                .ThenBy(x => x.Configuration.Symbol)
                 .ToList();
         }
     }
