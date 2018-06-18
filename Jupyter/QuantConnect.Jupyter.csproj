@@ -10,6 +10,7 @@
     <RootNamespace>QuantConnect.Jupyter</RootNamespace>
     <AssemblyName>QuantConnect.Jupyter</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <LangVersion>6</LangVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -97,6 +98,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="BasicCSharpQuantBookTemplate.ipynb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="BasicQuantBookTemplate.ipynb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
