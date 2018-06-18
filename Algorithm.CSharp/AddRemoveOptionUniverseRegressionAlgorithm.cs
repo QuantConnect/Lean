@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+
 // ReSharper disable InvokeAsExtensionMethod -- .net 4.7.2 added ToHashSet and it looks like our version of mono has it as well causing ambiguity in the cloud
 
 namespace QuantConnect.Algorithm.CSharp
@@ -30,13 +30,13 @@ namespace QuantConnect.Algorithm.CSharp
         private const string UnderlyingTicker = "GOOG";
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
         public readonly Symbol OptionChainSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
-        private HashSet<Symbol> ExpectedSecurities = new HashSet<Symbol>();
-        private HashSet<Symbol> ExpectedData = new HashSet<Symbol>();
-        private HashSet<Symbol> ExpectedUniverses = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _expectedSecurities = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _expectedData = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _expectedUniverses = new HashSet<Symbol>();
 
         // order of expected contract additions as price moves
-        private int expectedContractIndex;
-        private List<Symbol> ExpectedContracts = new List<Symbol>
+        private int _expectedContractIndex;
+        private readonly List<Symbol> _expectedContracts = new List<Symbol>
         {
             SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00747500"),
             SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00750000"),
@@ -51,10 +51,10 @@ namespace QuantConnect.Algorithm.CSharp
             var goog = AddEquity(UnderlyingTicker);
 
             // expect GOOG equity
-            ExpectedData.Add(goog.Symbol);
-            ExpectedSecurities.Add(goog.Symbol);
+            _expectedData.Add(goog.Symbol);
+            _expectedSecurities.Add(goog.Symbol);
             // expect user defined universe holding GOOG equity
-            ExpectedUniverses.Add(UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA));
+            _expectedUniverses.Add(UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA));
         }
 
         public override void OnData(Slice data)
@@ -71,21 +71,21 @@ namespace QuantConnect.Algorithm.CSharp
                 // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
                 throw new Exception("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
-            if (ExpectedSecurities.AreDifferent(LinqExtensions.ToHashSet(Securities.Keys)))
+            if (_expectedSecurities.AreDifferent(LinqExtensions.ToHashSet(Securities.Keys)))
             {
-                var expected = string.Join(Environment.NewLine, ExpectedSecurities.OrderBy(s => s.ToString()));
+                var expected = string.Join(Environment.NewLine, _expectedSecurities.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedUniverses.AreDifferent(LinqExtensions.ToHashSet(UniverseManager.Keys)))
+            if (_expectedUniverses.AreDifferent(LinqExtensions.ToHashSet(UniverseManager.Keys)))
             {
-                var expected = string.Join(Environment.NewLine, ExpectedUniverses.OrderBy(s => s.ToString()));
+                var expected = string.Join(Environment.NewLine, _expectedUniverses.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (ExpectedData.AreDifferent(LinqExtensions.ToHashSet(data.Keys)))
+            if (_expectedData.AreDifferent(LinqExtensions.ToHashSet(data.Keys)))
             {
-                var expected = string.Join(Environment.NewLine, ExpectedData.OrderBy(s => s.ToString()));
+                var expected = string.Join(Environment.NewLine, _expectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));
                 throw new Exception($"{Time}:: Detected differences in expected and actual slice data keys{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
@@ -108,8 +108,8 @@ namespace QuantConnect.Algorithm.CSharp
                         .Contracts(c => c.Where(s => s.ID.OptionRight == OptionRight.Put));
                 });
 
-                ExpectedSecurities.Add(OptionChainSymbol);
-                ExpectedUniverses.Add(OptionChainSymbol);
+                _expectedSecurities.Add(OptionChainSymbol);
+                _expectedUniverses.Add(OptionChainSymbol);
             }
 
             // 11:30AM remove GOOG option chain
@@ -117,9 +117,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 RemoveSecurity(OptionChainSymbol);
                 // remove contracts from expected data
-                ExpectedData.RemoveWhere(s => ExpectedContracts.Contains(s));
+                _expectedData.RemoveWhere(s => _expectedContracts.Contains(s));
                 // remove option chain universe from expected universes
-                ExpectedUniverses.Remove(OptionChainSymbol);
+                _expectedUniverses.Remove(OptionChainSymbol);
             }
         }
 
@@ -137,29 +137,31 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (changes.AddedSecurities.Any())
             {
-                // any option security additions for this algorithm should match the expected contracts
-                var added = changes.AddedSecurities.Single(s => s.Type == SecurityType.Option);
-                if (added.Symbol.SecurityType == SecurityType.Option)
+                foreach (var added in changes.AddedSecurities)
                 {
-                    var expectedContract = ExpectedContracts[expectedContractIndex];
-                    if (added.Symbol != expectedContract)
+                    // any option security additions for this algorithm should match the expected contracts
+                    if (added.Symbol.SecurityType == SecurityType.Option)
                     {
-                        throw new Exception($"Expected option contract {expectedContract} to be added but received {added.Symbol}");
+                        var expectedContract = _expectedContracts[_expectedContractIndex];
+                        if (added.Symbol != expectedContract)
+                        {
+                            throw new Exception($"Expected option contract {expectedContract} to be added but received {added.Symbol}");
+                        }
+
+                        _expectedContractIndex++;
+
+                        // purchase for regression statistics
+                        MarketOrder(added.Symbol, 1);
                     }
 
-                    expectedContractIndex++;
+                    _expectedData.Add(added.Symbol);
+                    _expectedSecurities.Add(added.Symbol);
                 }
-
-                // purchase for regression statistics
-                MarketOrder(added.Symbol, 1);
-
-                ExpectedData.Add(added.Symbol);
-                ExpectedSecurities.Add(added.Symbol);
             }
 
             // security removal happens exactly once in this algorithm when the option chain is removed
             // and all child subscriptions (option contracts) should be removed at the same time
-            if (changes.RemovedSecurities.Any())
+            if (changes.RemovedSecurities.Any(x => x.Symbol.SecurityType == SecurityType.Option))
             {
                 // receive removed event next timestep at 11:31AM
                 if (Time.TimeOfDay.Hours != 11 || Time.TimeOfDay.Minutes != 31)
@@ -167,13 +169,19 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Expected option contracts to be removed at 11:31AM, instead removed at: {Time}");
                 }
 
-                if (changes.RemovedSecurities.ToHashSet(s => s.Symbol).AreDifferent(LinqExtensions.ToHashSet(ExpectedContracts)))
+                if (changes.RemovedSecurities
+                    .Where(x => x.Symbol.SecurityType == SecurityType.Option)
+                    .ToHashSet(s => s.Symbol)
+                    .AreDifferent(LinqExtensions.ToHashSet(_expectedContracts)))
                 {
                     throw new Exception("Expected removed securities to equal expected contracts added");
                 }
             }
 
-            Console.WriteLine($"{Time:o}:: PRICE:: {Securities["GOOG"].Price} CHANGES:: {changes}");
+            if (Securities.ContainsKey(Underlying))
+            {
+                Console.WriteLine($"{Time:o}:: PRICE:: {Securities[Underlying].Price} CHANGES:: {changes}");
+            }
         }
 
         /// <summary>
