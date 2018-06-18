@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.GDAX
                     return;
                 }
 
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, ("GDAXWebsocketsBrokerage.OnMessage: Unexpected message format: " + e.Message)));
+                Log.Trace($"GDAXWebsocketsBrokerage.OnMessage: Unexpected message format: {e.Message}");
             }
             catch (Exception exception)
             {
@@ -552,7 +552,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             WebSocket.Send(json);
 
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subscribe."));
+            Log.Trace("GDAXBrokerage.Subscribe: Sent subscribe.");
         }
 
         /// <summary>
@@ -565,7 +565,8 @@ namespace QuantConnect.Brokerages.GDAX
             var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"GDAXBrokerage.PollLatestTick: started polling for ticks: {symbol.Value.ToString()}"));
+                Log.Trace($"GDAXBrokerage.PollLatestTick: started polling for ticks: {symbol.Value}");
+
                 while (true)
                 {
                     var rate = GetConversionRate(symbol.Value.Replace("USD", ""));
@@ -584,7 +585,8 @@ namespace QuantConnect.Brokerages.GDAX
                     Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;
                 }
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"PollLatestTick: stopped polling for ticks: {symbol.Value.ToString()}"));
+
+                Log.Trace($"PollLatestTick: stopped polling for ticks: {symbol.Value}");
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 

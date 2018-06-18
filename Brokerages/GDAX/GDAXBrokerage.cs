@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Net;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -111,7 +112,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "Order completed successfully orderid:" + order.Id));
+                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                 UnlockStream();
                 return true;
