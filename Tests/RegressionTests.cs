@@ -19,6 +19,7 @@ using NUnit.Framework;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm.CSharp;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests
 {
@@ -28,25 +29,31 @@ namespace QuantConnect.Tests
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
-            QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
-            QuantConnect.Configuration.Config.Set("forward-console-messages", "false");
+            // ensure we start with a fresh config every time when running multiple tests
+            Config.Reset();
+
+            Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
+            Config.Set("forward-console-messages", "false");
 
             if (parameters.Algorithm == "OptionChainConsistencyRegressionAlgorithm")
             {
                 // special arrangement for consistency test - we check if limits work fine
-                QuantConnect.Configuration.Config.Set("symbol-minute-limit", "100");
-                QuantConnect.Configuration.Config.Set("symbol-second-limit", "100");
-                QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
+                Config.Set("symbol-minute-limit", "100");
+                Config.Set("symbol-second-limit", "100");
+                Config.Set("symbol-tick-limit", "100");
             }
 
             if (parameters.Algorithm == "BasicTemplateIntrinioEconomicData")
             {
-                var intrinioCredentials = new Dictionary<string, string>
-                {
-                    {"intrinio-username", "121078c02c20a09aa5d9c541087e7fa4"},
-                    {"intrinio-password", "65be35238b14de4cd0afc0edf364efc3" }
-                };
-                QuantConnect.Configuration.Config.Set("parameters", JsonConvert.SerializeObject(intrinioCredentials));
+                var parametersConfigString = Config.Get("parameters");
+                var algorithmParameters = parametersConfigString != string.Empty
+                    ? JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString)
+                    : new Dictionary<string, string>();
+
+                algorithmParameters["intrinio-username"] = "121078c02c20a09aa5d9c541087e7fa4";
+                algorithmParameters["intrinio-password"] = "65be35238b14de4cd0afc0edf364efc3";
+
+                Config.Set("parameters", JsonConvert.SerializeObject(algorithmParameters));
             }
 
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
