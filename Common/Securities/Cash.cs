@@ -238,24 +238,30 @@ namespace QuantConnect.Securities
             // return needed pairs for full conversion from one currency to another
             CurrencyGraph graph = Currencies.Graph.Copy();
             
-            // add securities from securitiesToSearch
+            // add securities from securitiesToSearch collection
             foreach(var knownSecurity in securitiesToSearch)
                 graph.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
 
-            CurrencyPath shortestPath = graph.FindShortedPath(Symbol, CashBook.AccountCurrency);
+            CurrencyPath shortestPath = graph.FindShortestPath(Symbol, CashBook.AccountCurrency);
 
             foreach (var step in shortestPath.Steps)
             {
                 // required symbol
-                Symbol symbol = CreateSymbol(marketMap, step.Edge.PairSymbol, markets, step.Edge.Type);
+                Symbol symbol;
 
-                Security security;
                 try
                 {
-                    // check if it already exists
-                    security = securitiesToSearch.Where(sec => sec.Symbol.Value == step.Edge.PairSymbol).First();
+                    symbol = SymbolCache.GetSymbol(step.Edge.PairSymbol);
                 }
                 catch
+                {
+                    symbol = CreateSymbol(marketMap, step.Edge.PairSymbol, markets, step.Edge.Type);
+                }
+
+                Security security;
+
+                // if subscription already exists
+                if (!securities.Where(s => s.Key.Value == step.Edge.PairSymbol).Any())
                 {
                     var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.SecurityType, Symbol);
 
@@ -264,7 +270,7 @@ namespace QuantConnect.Securities
                     {
                         throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
                     }
-
+                    
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
@@ -275,7 +281,7 @@ namespace QuantConnect.Securities
 
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
-                    
+
                     switch (symbol.SecurityType)
                     {
                         case SecurityType.Cfd:
@@ -290,10 +296,14 @@ namespace QuantConnect.Securities
                         default:
                             throw new ArgumentException("Unknown security type");
                     }
-                    
-                    securities.Add(config.Symbol, security);
 
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+
+                    securities.Add(symbol, security);
+                }
+                else
+                {
+                    security = securities[symbol.Value];
                 }
 
                 conversionSecuritiesList.Add(new ConversionSecurity(security, step.Inverted));

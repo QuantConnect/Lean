@@ -37,7 +37,6 @@ namespace QuantConnect
         /// </summary>
         public const int MaxCharactersPerCurrencyPair = 2*MaxCharactersPerCurrencyCode;
 
-
         /// <summary>
         /// Gets the listing of crypto pairs used for currency conversion rates
         /// </summary>
@@ -46,7 +45,6 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>() 
         {
-
             "BTCUSD",
             "BCHUSD",
             "LTCUSD",
@@ -119,7 +117,6 @@ namespace QuantConnect
             "USDJPY",
             "USDHKD",
             "USDSGD",
-
 
             "AUDCAD",
             "AUDCHF",
@@ -385,21 +382,8 @@ namespace QuantConnect
             foreach (var pair in CurrencyPairs)
                 Graph.AddEdge(pair, SecurityType.Forex);
 
-            //lock graph, makes not unable to be edited.
-            Graph.LockPermamently();
-
-            //THIS ONE FAILS, IT GIVES ZRXBTC AS A EDGE BUT SHOULDNT
-            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "ZRX").ToString());
-
-            Logging.Log.Trace(Graph.FindShortedPath("EUR", "USD").ToString());
-            Logging.Log.Trace(Graph.FindShortedPath("USD", "EUR").ToString());
-            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "USD").ToString());
-
-            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EUR").ToString());
-            Logging.Log.Trace(Graph.FindShortedPath("EUR", "ZRX").ToString());
-            
-            Logging.Log.Trace(Graph.FindShortedPath("ZRX", "EOS").ToString());
-            Logging.Log.Trace(Graph.FindShortedPath("SENT", "XAU").ToString());
+            // lock graph, makes it and it's vertices read only
+            Graph.Lock();
         }
     }
 }

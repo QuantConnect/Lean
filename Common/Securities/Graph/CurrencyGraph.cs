@@ -85,14 +85,22 @@ namespace QuantConnect.Securities.Graph
         }
         
         /// <summary>
-        /// Uses Breadth First Search to search through this graph
+        /// Uses BFS to search through this graph
         /// </summary>
         /// <param name="StartCode">Start of currency code</param>
         /// <param name="EndCode">End of currency code</param>
         /// <returns></returns>
-        public CurrencyPath FindShortedPath(string StartCode, string EndCode)
+        public CurrencyPath FindShortestPath(string StartCode, string EndCode)
         {
-            CurrencyVertex startVertex = _vertices[StartCode];
+            CurrencyVertex startVertex = null;
+
+            try {
+                startVertex = _vertices[StartCode];
+            }
+            catch {
+                throw new ArgumentException($"No path found, graph does not contain StartCode: {StartCode}");
+            }
+            
             HashSet<string> processedNodes = new HashSet<string>();
             Queue<CurrencyPath> pathsToExtend = new Queue<CurrencyPath>();
 
@@ -119,14 +127,18 @@ namespace QuantConnect.Securities.Graph
                 }
             }
 
-            throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}");
+            throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}, or no possible path");
         }
         
         /// <summary>
         /// Locks the Graph from editing, makes it read only.
         /// </summary>
-        public void LockPermamently()
+        public void Lock()
         {
+            // also make vertices read-only
+            foreach(var vertex in _vertices.Values)
+                vertex.Lock();
+            
             _locked = true;
         }
 
@@ -148,6 +160,10 @@ namespace QuantConnect.Securities.Graph
             return builder.ToString();
         }
 
+        /// <summary>
+        /// Make a complete copy of the graph. The copy will be also unlocked, so it can be modified freely.
+        /// </summary>
+        /// <returns>Copy of this instance</returns>
         public CurrencyGraph Copy()
         {
             CurrencyGraph copy = new CurrencyGraph();
