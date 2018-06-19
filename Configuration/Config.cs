@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
@@ -61,14 +60,26 @@ namespace QuantConnect.Configuration
             }
 
             var jsonArguments = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(cliArguments));
-            
+
             Settings.Value.Merge(jsonArguments, new JsonMergeSettings
             {
                 MergeArrayHandling = MergeArrayHandling.Union
             });
         }
 
-        private static readonly Lazy<JObject> Settings = new Lazy<JObject>(() =>
+        /// <summary>
+        /// Resets the config settings to their default values.
+        /// Called in regression tests where multiple algorithms are run sequentially,
+        /// and we need to guarantee that every test starts with the same configuration.
+        /// </summary>
+        public static void Reset()
+        {
+            Settings = new Lazy<JObject>(ConfigFactory);
+        }
+
+        private static Lazy<JObject> Settings = new Lazy<JObject>(ConfigFactory);
+
+        private static JObject ConfigFactory()
         {
             // initialize settings inside a lazy for free thread-safe, one-time initialization
             if (!File.Exists(ConfigurationFileName))
@@ -90,7 +101,7 @@ namespace QuantConnect.Configuration
             }
 
             return JObject.Parse(File.ReadAllText(ConfigurationFileName));
-        });
+        }
 
         /// <summary>
         /// Gets the currently selected environment. If sub-environments are defined,
@@ -117,7 +128,7 @@ namespace QuantConnect.Configuration
             }
             return string.Join(".", environments);
         }
-        
+
         /// <summary>
         /// Get the matching config setting from the file searching for this key.
         /// </summary>

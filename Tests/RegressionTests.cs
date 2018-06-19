@@ -29,6 +29,9 @@ namespace QuantConnect.Tests
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
+            // ensure we start with a fresh config every time when running multiple tests
+            Config.Reset();
+
             Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
             Config.Set("forward-console-messages", "false");
 
