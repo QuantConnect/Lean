@@ -26,6 +26,7 @@ Before we enable python support, follow the [installation instructions](https://
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
  3. Rebuild LEAN. This step will ensure that the `Python.Runtime.dll` you set in 2.1 will be used.
+      Note: Rebuilding will clean and build the whole solution from scratch, ignoring anything it's done before.
  4. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
 ### [macOS](https://github.com/QuantConnect/Lean#macos)
@@ -53,6 +54,7 @@ $ sudo ln -s /<path to anaconda>/lib/libpython* /usr/local/lib
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
  3. Rebuild LEAN. This step will ensure that the `Python.Runtime.dll` you set in 2.1 will be used.
+      Note: Rebuilding will clean and build the whole solution from scratch, ignoring anything it's done before.
  4. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
 ### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
