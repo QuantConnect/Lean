@@ -90,16 +90,20 @@ class BlackLittermanPortfolioConstructionModel(PortfolioConstructionModel):
         # get the implied excess equilibrium return vector 
         equilibrium_return, cov = self.get_equilibrium_return(returns)
         
-        # create the diagonal covariance matrix of error terms from the expressed views
-        omega = dot(dot(dot(self.tau, P), cov), transpose(P))
-
-        if np.linalg.det(omega) == 0:
+        # if view is empty, use equilibrium return as the expected return instead
+        if P.size == 0:
             expected_return = equilibrium_return
         else:
-            A = inv(dot(self.tau, cov)) + dot(dot(np.transpose(P), inv(omega)), P)
-            B = dot(inv(dot(self.tau, cov)), equilibrium_return) + dot(dot(np.transpose(P), inv(omega)), Q)
-            # the new combined expected return vector
-            expected_return = dot(inv(A), B)
+            # create the diagonal covariance matrix of error terms from the expressed views
+            omega = dot(dot(dot(self.tau, P), cov), transpose(P))
+    
+            if np.linalg.det(omega) == 0:
+                expected_return = equilibrium_return
+            else:
+                A = inv(dot(self.tau, cov)) + dot(dot(np.transpose(P), inv(omega)), P)
+                B = dot(inv(dot(self.tau, cov)), equilibrium_return) + dot(dot(np.transpose(P), inv(omega)), Q)
+                # the new combined expected return vector
+                expected_return = dot(inv(A), B)
 
         # the optimization method processes the data frame
         opt, weights = self.maximum_sharpe_ratio(self.risk_free_rate, expected_return, returns)
@@ -202,12 +206,13 @@ class BlackLittermanPortfolioConstructionModel(PortfolioConstructionModel):
         P = normalize_up_view + normalize_down_view
         # drop the rows with all zero views (flat direction)
         P = P[~(P == 0).all(axis=1)]
+
         # generate the estimated return vector for every different view (K x 1 column vector)
         Q = []
         for model, group in groupby(insights, lambda x: x.SourceModel):
             if model in P.index:
-                Q.append(sum([P.loc[model][str(insight.Symbol)]*insight.Magnitude for insight in group]))
-        
+                Q.append(sum([P.loc[model][str(insight.Symbol)]*insight.Magnitude for insight in group if insight.Magnitude is not None]))
+                
         return np.array(P), np.array(Q)
 
 
