@@ -28,7 +28,7 @@ Before we enable python support, follow the [installation instructions](https://
  3. Rebuild LEAN. This step will ensure that the `Python.Runtime.dll` you set in 2.1 will be used.
       Note: You should do a complete/clean build to recompile the whole solution from scratch, ignoring anything it's done before.
  4. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
-      Note: If you have multiple Python versions, you can confirm you're using the correct one in Visual Studio with (Ctrl+K,Ctrl+`)
+      Note: If you have multiple Python versions, confirm the default environtment in Visual Studio using Python Evironments
 
 ### [macOS](https://github.com/QuantConnect/Lean#macos)
 **1. Install Python 3.6 with Anaconda:**
