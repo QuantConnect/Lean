@@ -74,5 +74,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Process any synchronous events from the primary algorithm thread.
         /// </summary>
         void ProcessSynchronousEvents();
+
+        /// <summary>
+        /// Register an already open Order
+        /// </summary>
+        void AddOpenOrder(Order order);
     }
 }

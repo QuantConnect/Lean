@@ -404,6 +404,11 @@ namespace QuantConnect.Tests.Engine
                 throw new NotImplementedException();
             }
 
+            public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
+            {
+                return OrderTickets.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x)));
+            }
+
             public OrderTicket GetOrderTicket(int orderId)
             {
                 throw new NotImplementedException();
@@ -417,6 +422,11 @@ namespace QuantConnect.Tests.Engine
             public OrderTicket Process(OrderRequest request)
             {
                 throw new NotImplementedException();
+            }
+
+            public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
+            {
+                return Orders.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).ToList();
             }
 
             public bool IsActive { get; }
@@ -436,6 +446,11 @@ namespace QuantConnect.Tests.Engine
 
             public void ProcessSynchronousEvents()
             {
+            }
+
+            public void AddOpenOrder(Order order)
+            {
+                throw new NotImplementedException();
             }
         }
     }
