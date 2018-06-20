@@ -24,6 +24,7 @@ namespace QuantConnect.Brokerages.GDAX
     /// <summary>
     /// An implementation of <see cref="IDataQueueHandler"/> for GDAX
     /// </summary>
+    [BrokerageFactory(typeof(GDAXBrokerageFactory))]
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
         /// <summary>

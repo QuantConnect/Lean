@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Fasterflect;
 using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
@@ -66,6 +68,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
+        private IBrokerage _dataQueueHandlerBrokerage;
 
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
@@ -114,6 +117,40 @@ namespace QuantConnect.Lean.Engine.Setup
             // find the correct brokerage factory based on the specified brokerage in the live job packet
             _factory = Composer.Instance.Single<IBrokerageFactory>(brokerageFactory => brokerageFactory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
             factory = _factory;
+
+            // preload the data queue handler using custom BrokerageFactory attribute
+            var dataQueueHandlerType = Assembly.GetAssembly(typeof(Brokerage))
+                .GetTypes()
+                .FirstOrDefault(x =>
+                    x.FullName != null &&
+                    x.FullName.EndsWith(liveJob.DataQueueHandler) &&
+                    x.HasAttribute(typeof(BrokerageFactoryAttribute)));
+
+            if (dataQueueHandlerType != null)
+            {
+                var attribute = dataQueueHandlerType.GetCustomAttribute<BrokerageFactoryAttribute>();
+
+                // only load the data queue handler if the factory is different from our brokerage factory
+                if (attribute.Type != factory.GetType())
+                {
+                    var brokerageFactory = (BrokerageFactory) Activator.CreateInstance(attribute.Type);
+
+                    // copy the brokerage data (usually credentials)
+                    foreach (var kvp in brokerageFactory.BrokerageData)
+                    {
+                        if (!liveJob.BrokerageData.ContainsKey(kvp.Key))
+                        {
+                            liveJob.BrokerageData.Add(kvp.Key, kvp.Value);
+                        }
+                    }
+
+                    // create the data queue handler and add it to composer
+                    _dataQueueHandlerBrokerage = brokerageFactory.CreateBrokerage(liveJob, uninitializedAlgorithm);
+
+                    // open connection for subscriptions
+                    _dataQueueHandlerBrokerage.Connect();
+                }
+            }
 
             // initialize the correct brokerage using the resolved factory
             var brokerage = _factory.CreateBrokerage(liveJob, uninitializedAlgorithm);
@@ -432,9 +469,15 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            if (_factory != null)
+            _factory?.DisposeSafely();
+
+            if (_dataQueueHandlerBrokerage != null)
             {
-                _factory.Dispose();
+                if (_dataQueueHandlerBrokerage.IsConnected)
+                {
+                    _dataQueueHandlerBrokerage.Disconnect();
+                }
+                _dataQueueHandlerBrokerage.DisposeSafely();
             }
         }
     }
