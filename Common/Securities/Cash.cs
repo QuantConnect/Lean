@@ -238,31 +238,28 @@ namespace QuantConnect.Securities
             // return needed pairs for full conversion from one currency to another
             CurrencyGraph graph = Currencies.Graph.Copy();
             
-            // add securities from securitiesToSearch collection
+            // add securities symbols from securitiesToSearch collection
             foreach(var knownSecurity in securitiesToSearch)
                 graph.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
 
+            // calculate conversion path
             CurrencyPath shortestPath = graph.FindShortestPath(Symbol, CashBook.AccountCurrency);
 
+            // for each step, find existing security, and if it doesn't exist, make new one
+            // also build ConversionRateSecurity list
             foreach (var step in shortestPath.Steps)
-            {
-                // required symbol
-                Symbol symbol;
+            {               
+                Security security = null;
 
-                try
-                {
-                    symbol = SymbolCache.GetSymbol(step.Edge.PairSymbol);
+                var existingSecuritySet = securitiesToSearch.Where(s => s.Symbol.Value == step.Edge.PairSymbol);
+
+                if (existingSecuritySet.Any()) {
+                    security = existingSecuritySet.Single();
                 }
-                catch
+                else
                 {
-                    symbol = CreateSymbol(marketMap, step.Edge.PairSymbol, markets, step.Edge.Type);
-                }
-
-                Security security;
-
-                // if subscription already exists
-                if (!securities.Where(s => s.Key.Value == step.Edge.PairSymbol).Any())
-                {
+                    Symbol symbol = CreateSymbol(marketMap, step.Edge.PairSymbol, markets, step.Edge.Type);
+                    
                     var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.SecurityType, Symbol);
 
                     Cash quoteCash;
@@ -270,7 +267,7 @@ namespace QuantConnect.Securities
                     {
                         throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
                     }
-                    
+
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
@@ -300,10 +297,6 @@ namespace QuantConnect.Securities
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
 
                     securities.Add(symbol, security);
-                }
-                else
-                {
-                    security = securities[symbol.Value];
                 }
 
                 conversionSecuritiesList.Add(new ConversionSecurity(security, step.Inverted));
