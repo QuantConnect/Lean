@@ -20,7 +20,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Represents a bar sectioned not by time, but by some amount of movement in a value (for example, Closing price moving in $10 bar sizes)
     /// </summary>
-    public class RenkoBar : BaseData
+    public class RenkoBar : BaseData, IBaseDataBar
     {
         /// <summary>
         /// Gets the kind of the bar
