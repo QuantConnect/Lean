@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         /// <param name="securityType">Type of security</param>
         public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency, SecurityType securityType = SecurityType.Base)
         {
-            if (securityType == SecurityType.Forex && currencyPair == null || currencyPair.Length != 6)
+            if (securityType == SecurityType.Forex && (currencyPair == null || currencyPair.Length != 6))
             {
                 throw new ArgumentException($"Forex currency pair must not be null and length must be fixed at 6. Problematic pair: {currencyPair}");
             }
@@ -44,7 +44,7 @@ namespace QuantConnect.Securities
 
             if (currencyPair.Length == 6)
             {
-                // Old-code part for Forex (non-crypto) markets only. 
+                // Old-code part for Forex (non-crypto) markets only.
                 baseCurrency = currencyPair.Substring(0, 3);
                 quoteCurrency = currencyPair.Substring(3);
                 return;
