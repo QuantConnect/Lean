@@ -34,14 +34,14 @@ namespace QuantConnect.Securities
         /// </summary>
         public class ConversionSecurity
         {
-            public Security RateSecurity;
-            public bool inverted = false;
+            public readonly Security RateSecurity;
+            public readonly bool Inverted;
             public decimal ConversionRate; 
 
-            public ConversionSecurity(Security RateSecurity, bool inverted = false)
+            public ConversionSecurity(Security rateSecurity, bool inverted = false)
             {
-                this.RateSecurity = RateSecurity;
-                this.inverted = inverted;
+                this.RateSecurity = rateSecurity;
+                this.Inverted = inverted;
 
                 if (RateSecurity.Price != 0)
                 {
@@ -49,6 +49,19 @@ namespace QuantConnect.Securities
                         ConversionRate = RateSecurity.Price;
                     else
                         ConversionRate = 1m / RateSecurity.Price;
+                }
+            }
+
+            public void Update(BaseData data)
+            {
+                if (RateSecurity.Symbol == data.Symbol)
+                {
+                    var rate = data.Value;
+
+                    if (Inverted)
+                        rate = 1 / rate;
+
+                    ConversionRate = rate;
                 }
             }
         }
@@ -62,11 +75,11 @@ namespace QuantConnect.Securities
         /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
         /// is returned
         /// </summary>
-        public List<Symbol> SecuritySymbol 
+        public List<Symbol> SecuritySymbols 
         {
             get
             {
-                return (ConversionRateSecurity == null? new List<Symbol>() : ConversionRateSecurity.Select(conSec => conSec.RateSecurity.Symbol).ToList());
+                return (ConversionRateSecurities == null ? new List<Symbol>() : ConversionRateSecurities.Select(conSec => conSec.RateSecurity.Symbol).ToList());
             }
         }
         
@@ -75,7 +88,7 @@ namespace QuantConnect.Securities
         /// If this cash represents the account currency, then null is returned.
         /// </summary>
         [JsonIgnore]
-        public IReadOnlyList<ConversionSecurity> ConversionRateSecurity { get; private set; }
+        public IReadOnlyList<ConversionSecurity> ConversionRateSecurities { get; private set; }
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -129,24 +142,13 @@ namespace QuantConnect.Securities
         {
             if (_isBaseCurrency) return;
 
-            foreach(ConversionSecurity conSec in ConversionRateSecurity)
-            {
-                if (conSec.RateSecurity.Symbol == data.Symbol)
-                {
-                    var rate = data.Value;
-
-                    if (conSec.inverted)
-                        rate = 1 / rate;
-
-                    conSec.ConversionRate = rate;
-                }
-            }
-
+            foreach (ConversionSecurity conSec in ConversionRateSecurities)           
+                conSec.Update(data);
+            
             ConversionRate = 1m;
-            foreach (ConversionSecurity conSec in ConversionRateSecurity)
-            {
+            foreach (ConversionSecurity conSec in ConversionRateSecurities)            
                 ConversionRate *= conSec.ConversionRate;
-            }
+            
         }
 
         /// <summary>
@@ -199,14 +201,14 @@ namespace QuantConnect.Securities
         {
             // this gets called every time we add securities using universe selection,
             // so must of the time we've already resolved the value and don't need to again
-            if (ConversionRateSecurity != null)
+            if (ConversionRateSecurities != null)
             {
                 return null;
             }
 
             if (Symbol == CashBook.AccountCurrency)
             {
-                ConversionRateSecurity = null;
+                ConversionRateSecurities = null;
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
                 return null;
@@ -302,9 +304,9 @@ namespace QuantConnect.Securities
                 conversionSecuritiesList.Add(new ConversionSecurity(security, step.Inverted));
             }
 
-            this.ConversionRateSecurity = conversionSecuritiesList;
-            
-            if (this.ConversionRateSecurity.Count == 0)
+            this.ConversionRateSecurities = conversionSecuritiesList;
+
+            if (this.ConversionRateSecurities.Count == 0)
                     throw new ArgumentException(string.Format("No path found for converting {0} to {1}, so cannot calculate {0}{1}.", Symbol, CashBook.AccountCurrency));
 
             return requiredSecurities;

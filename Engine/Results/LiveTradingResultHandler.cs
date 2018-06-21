@@ -1083,7 +1083,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                                 // Update CashBook for Forex & Crypto securities
                                 var cashesToUpdate = (from c in _algorithm.Portfolio.CashBook
-                                    where c.Value.SecuritySymbol.Contains(last.Symbol)
+                                    where c.Value.SecuritySymbols.Contains(last.Symbol)
                                     select c.Value);
 
                                 if (cashesToUpdate != null)

@@ -364,9 +364,9 @@ namespace QuantConnect.Lean.Engine
                 {
                     var cash = kvp.Value;
 
-                    if (cash.ConversionRateSecurity != null)
+                    if (cash.ConversionRateSecurities != null)
                     {
-                        foreach (Cash.ConversionSecurity conSec in cash.ConversionRateSecurity)
+                        foreach (Cash.ConversionSecurity conSec in cash.ConversionRateSecurities)
                         {
                             var updateData = conSec.RateSecurity.GetLastData();
 
