@@ -37,6 +37,14 @@ namespace QuantConnect
         /// </summary>
         public const int MaxCharactersPerCurrencyPair = 2*MaxCharactersPerCurrencyCode;
 
+        // those pairs will be used for conversion
+        public static readonly IReadOnlyList<string> MainCryptoCurrencyPairs = new List<string>()
+        {
+            "BTCUSD",
+            "ETHUSD"
+            // fill this list
+        };
+
         /// <summary>
         /// Gets the listing of crypto pairs used for currency conversion rates
         /// </summary>
