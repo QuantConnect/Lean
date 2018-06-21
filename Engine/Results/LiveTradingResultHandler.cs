@@ -1073,6 +1073,7 @@ namespace QuantConnect.Lean.Engine.Results
                             var price = subscription.RealtimePrice;
 
                             var last = security.GetLastData();
+
                             if (last != null && price > 0)
                             {
                                 // Prevents changes in previous bar
@@ -1080,19 +1081,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                                 last.Value = price;
                                 security.SetRealTimePrice(last);
-
-                                // Update CashBook for Forex & Crypto securities
-                                var cashesToUpdate = (from c in _algorithm.Portfolio.CashBook
-                                    where c.Value.SecuritySymbols.Contains(last.Symbol)
-                                    select c.Value);
-
-                                if (cashesToUpdate != null)
-                                {
-                                    foreach(var cash in cashesToUpdate)
-                                    {
-                                        cash.Update(last);
-                                    }
-                                }
                             }
                             else
                             {
@@ -1102,6 +1090,12 @@ namespace QuantConnect.Lean.Engine.Results
                                     security.SetMarketPrice(new Tick(time, subscription.Configuration.Symbol, price, price));
                                 }
                             }
+
+                            foreach (var cash in _algorithm.Portfolio.CashBook)
+                            {
+                                cash.Value.Update();
+                            }
+
 
                             //Sample Asset Pricing:
                             SampleAssetPrices(subscription.Configuration.Symbol, time, price);

@@ -346,7 +346,7 @@ namespace QuantConnect.Securities
             {
                 // decompose the symbol into each currency pair
                 string baseCurrency;
-                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                Util.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
 
                 if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
                 {
@@ -498,13 +498,13 @@ namespace QuantConnect.Securities
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;
 
-            
+
             if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
             {
                 string baseCurrency = "";
                 string quoteCurrency = "";
 
-                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                Util.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
                 defaultQuoteCurrency = quoteCurrency;
             }
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);

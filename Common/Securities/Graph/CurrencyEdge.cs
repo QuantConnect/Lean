@@ -45,21 +45,25 @@ namespace QuantConnect.Securities.Graph
             }
         }
 
-        public CurrencyEdge(CurrencyVertex Base, CurrencyVertex Quote, SecurityType Type) 
+        public CurrencyEdge(CurrencyVertex Base, CurrencyVertex Quote, SecurityType Type)
         {
             this.Base = Base;
             this.Quote = Quote;
             this.Bidirectional = false;
             this.Type = Type;
         }
-        
+
         public Match CompareTo(string BaseCode, string QuoteCode)
         {
             if (this.Base.Code == BaseCode && this.Quote.Code == QuoteCode)
+            {
                 return Match.ExactMatch;
+            }
 
             if (this.Base.Code == QuoteCode && this.Quote.Code == BaseCode)
+            {
                 return Match.InverseMatch;
+            }
 
             return Match.NoMatch;
         }
@@ -67,14 +71,13 @@ namespace QuantConnect.Securities.Graph
         public Match CompareTo(CurrencyEdge edge)
         {
             if (this.Base == edge.Base && this.Quote == edge.Quote)
+            {
                 return Match.ExactMatch;
+            }
 
             if (this.Base == edge.Base && this.Quote == edge.Base)
             {
-                if (Bidirectional)
-                    return Match.ExactMatch;
-                else
-                    return Match.InverseMatch;
+                return Bidirectional ? Match.ExactMatch : Match.InverseMatch;
             }
 
             return Match.NoMatch;
@@ -84,18 +87,22 @@ namespace QuantConnect.Securities.Graph
         {
             return Base.Code == Code || Quote.Code == Code;
         }
-        
+
         public CurrencyVertex Other(CurrencyVertex thisVertex)
         {
             if (this.Base == thisVertex)
+            {
                 return this.Quote;
+            }
 
             if (this.Quote == thisVertex)
+            {
                 return this.Base;
+            }
 
             throw new ArgumentException($"The vertex: {thisVertex.Code} is not present in edge {PairSymbol}!");
         }
-     
+
         public void MakeBidirectional()
         {
             this.Bidirectional = true;
@@ -104,7 +111,9 @@ namespace QuantConnect.Securities.Graph
         public override string ToString()
         {
             if (Bidirectional)
+            {
                 return $"Edge: {Base.Code}{Quote.Code} && {Quote.Code}{Base.Code}";
+            }
 
             return $"Edge: {Base.Code}{Quote.Code}";
         }

@@ -48,7 +48,7 @@ namespace QuantConnect
             "BTCUSD",
             "BCHUSD",
             "LTCUSD",
-            "ETHUSD",
+            "ET HUSD",
             "BTCEUR",
             "BCHEUR",
             "LTCEUR",

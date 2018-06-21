@@ -52,11 +52,11 @@ namespace QuantConnect.Securities.Graph
         /// Edges in order
         /// </summary>
         public Queue<CurrencyEdge> Edges { get; }
-        
+
         /// <summary>
         /// Number of the edges
         /// </summary>
-        public int Length 
+        public int Length
         {
             get
             {
@@ -86,12 +86,14 @@ namespace QuantConnect.Securities.Graph
         public CurrencyPath Extend(CurrencyEdge newEdge)
         {
             CurrencyVertex end = newEdge.Other(EndVertex);
-            
+
             // error checking, path shouldn't have loops
             foreach(var edge in Edges)
             {
                 if (edge.ContainsOne(end.Code))
+                {
                     throw new ArgumentException($"The path already contains symbol {end.Code}");
+                }
             }
 
             CurrencyPath newPath = new CurrencyPath(this.StartVertex, end, this.Edges);
@@ -103,7 +105,7 @@ namespace QuantConnect.Securities.Graph
         /// <summary>
         /// Used for easier iterating the CurrencyPath, Step class contains Edge and Inverted (boolean).
         /// </summary>
-        public IEnumerable<Step> Steps 
+        public IEnumerable<Step> Steps
         {
             get
             {
@@ -135,7 +137,9 @@ namespace QuantConnect.Securities.Graph
             builder.AppendLine("StartVertex:" + StartVertex.Code);
 
             foreach (var step in Steps)
+            {
                 builder.AppendLine($"{step.Edge}, Inverted: {step.Inverted}");
+            }
 
             builder.AppendLine("EndVertex:" + EndVertex.Code);
 

@@ -42,7 +42,9 @@ namespace QuantConnect.Securities.Graph
         public void AddEdge(CurrencyEdge edge)
         {
             if (_locked)
+            {
                 throw new ArgumentException("The vertex has been locked, cannot modify the vertex anymore!");
+            }
 
             _edges.Add(edge);
         }

@@ -364,18 +364,8 @@ namespace QuantConnect.Lean.Engine
                 {
                     var cash = kvp.Value;
 
-                    if (cash.ConversionRateSecurities != null)
-                    {
-                        foreach (Cash.ConversionSecurity conSec in cash.ConversionRateSecurities)
-                        {
-                            var updateData = conSec.RateSecurity.GetLastData();
+                    cash.Update();
 
-                            if (updateData != null)
-                            {
-                                cash.Update(updateData);
-                            }
-                        }
-                    }
                 }
 
                 // sample alpha charts now that we've updated time/price information but BEFORE we receive new insights
