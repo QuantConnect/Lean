@@ -56,6 +56,11 @@ namespace QuantConnect.Tests.Common.Securities
             return _tickets.Values.Where(filter ?? (x => true));
         }
 
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _tickets.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x)));
+        }
+
         public OrderTicket GetOrderTicket(int orderId)
         {
             OrderTicket ticket;
@@ -66,6 +71,11 @@ namespace QuantConnect.Tests.Common.Securities
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
             return _orders.Values.Where(filter ?? (x => true));
+        }
+
+        public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
+        {
+            return _orders.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).ToList();
         }
 
         public OrderTicket Process(OrderRequest request)

@@ -721,8 +721,8 @@ namespace QuantConnect.Algorithm
                 return OrderResponse.Error(request, OrderResponseErrorCode.SecurityHasNoData, "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point.");
             }
 
-            //We've already processed too many orders: max 100 per day or the memory usage explodes
-            if (Transactions.OrdersCount > _maxOrders)
+            // We've already processed too many orders: max 10k
+            if (!LiveMode && Transactions.OrdersCount > _maxOrders)
             {
                 Status = AlgorithmStatus.Stopped;
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders, string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));

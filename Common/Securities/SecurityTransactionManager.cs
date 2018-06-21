@@ -190,7 +190,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOrderTickets(x => x.Symbol == symbol && x.Status.IsOpen()))
+            foreach (var ticket in GetOpenOrderTickets(x => x.Symbol == symbol))
             {
                 ticket.Cancel(tag);
                 cancelledOrders.Add(ticket);
@@ -216,6 +216,16 @@ namespace QuantConnect.Securities
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
         {
             return _orderProcessor.GetOrderTickets(filter ?? (x => true));
+        }
+
+        /// <summary>
+        /// Gets and enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
         }
 
         /// <summary>
@@ -254,32 +264,25 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get a list of all open orders.
-        /// </summary>
-        /// <returns>List of open orders.</returns>
-        public List<Order> GetOpenOrders()
-        {
-            return _orderProcessor.GetOrders(x => x.Status.IsOpen()).ToList();
-        }
-
-        /// <summary>
         /// Get a list of all open orders for a symbol.
         /// </summary>
         /// <param name="symbol">The symbol for which to return the orders</param>
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders(Symbol symbol)
         {
-            return _orderProcessor.GetOrders(x => x.Symbol == symbol && x.Status.IsOpen()).ToList();
+            return GetOpenOrders(x => x.Symbol == symbol).ToList();
         }
 
         /// <summary>
-        /// Get a list of open orders satisfying the filter.
+        /// Gets open orders matching the specified filter. Specifying null will return an enumerable
+        /// of all open orders.
         /// </summary>
-        /// <returns>List of open orders.</returns>
-        public List<Order> GetOpenOrders(Func<Order, bool> filter)
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All filtered open orders this order provider currently holds</returns>
+        public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
             filter = filter ?? (x => true);
-            return _orderProcessor.GetOrders(x => x.Status.IsOpen() && filter(x)).ToList();
+            return _orderProcessor.GetOpenOrders(x => filter(x));
         }
 
         /// <summary>
@@ -311,10 +314,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets all orders matching the specified filter
+        /// Gets all orders matching the specified filter. Specifying null will return an enumerable
+        /// of all orders.
         /// </summary>
         /// <param name="filter">Delegate used to filter the orders</param>
-        /// <returns>All open orders this order provider currently holds</returns>
+        /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
             return _orderProcessor.GetOrders(filter);

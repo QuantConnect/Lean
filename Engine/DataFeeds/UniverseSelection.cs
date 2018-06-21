@@ -319,7 +319,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool IsSafeToRemove(Security member)
         {
             // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
-            var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
+            var openOrders = _algorithm.Transactions.GetOpenOrders(x => x.Symbol == member.Symbol);
             if (!member.HoldStock && !openOrders.Any() && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0))
             {
                 return true;

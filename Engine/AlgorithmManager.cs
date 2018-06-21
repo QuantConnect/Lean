@@ -303,7 +303,7 @@ namespace QuantConnect.Lean.Engine
                     foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
                     {
                         // cancel all orders for the old symbol
-                        foreach (var ticket in transactions.GetOrderTickets(x => x.Status.IsOpen() && x.Symbol == symbol))
+                        foreach (var ticket in transactions.GetOpenOrderTickets(x => x.Symbol == symbol))
                         {
                             ticket.Cancel("Open order cancelled on symbol changed event");
                         }
@@ -500,7 +500,7 @@ namespace QuantConnect.Lean.Engine
                         if (_liveMode || algorithm.Securities[split.Symbol].DataNormalizationMode == DataNormalizationMode.Raw)
                         {
                             // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
-                            var openOrders = transactions.GetOrderTickets(ticket => ticket.Status.IsOpen() && ticket.Symbol == split.Symbol);
+                            var openOrders = transactions.GetOpenOrderTickets(ticket => ticket.Symbol == split.Symbol);
                             algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
                         }
                     }

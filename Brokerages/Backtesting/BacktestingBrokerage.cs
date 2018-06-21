@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            return Algorithm.Transactions.GetOpenOrders();
+            return Algorithm.Transactions.GetOpenOrders().ToList();
         }
 
         /// <summary>
