@@ -20,6 +20,7 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Represents the brokerage factory type required to load a data queue handler
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
     public class BrokerageFactoryAttribute : Attribute
     {
         /// <summary>
