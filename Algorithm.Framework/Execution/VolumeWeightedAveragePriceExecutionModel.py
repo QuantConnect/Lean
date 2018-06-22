@@ -52,7 +52,7 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
         # update the complete set of portfolio targets with the new targets
         self.targetsCollection.AddRange(targets)
 
-        for target in self.targetsCollection:
+        for target in self.targetsCollection.OrderByMarginImpact(algorithm):
             symbol = target.Symbol
 
             # calculate remaining quantity to be ordered

@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             _targetsCollection.AddRange(targets);
 
-            foreach (var target in _targetsCollection)
+            foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
             {
                 var symbol = target.Symbol;
 

@@ -25,6 +25,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class ImmediateExecutionModel : ExecutionModel
     {
+        private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
+
         /// <summary>
         /// Immediately submits orders for the specified portfolio targets.
         /// </summary>
@@ -32,7 +34,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets to be ordered</param>
         public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
-            foreach (var target in targets)
+            _targetsCollection.AddRange(targets);
+
+            foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
             {
                 var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
                     + algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
@@ -42,6 +46,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     algorithm.MarketOrder(target.Symbol, quantity);
                 }
             }
+
+            _targetsCollection.Clear();
         }
 
         /// <summary>

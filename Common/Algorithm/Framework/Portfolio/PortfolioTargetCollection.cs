@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -272,6 +273,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private T WithDictionary<T>(Func<IDictionary<Symbol, IPortfolioTarget>, T> func)
         {
             return func(_targets);
+        }
+
+        /// <summary>
+        /// Returned an ordered enumerable where position reducing orders are executed first
+        /// and the remaining orders are executed in decreasing order value.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        public IEnumerable<IPortfolioTarget> OrderByMarginImpact(IAlgorithm algorithm)
+        {
+            return _targets
+                .Select(x => x.Value)
+                .Select(x => new {
+                    PortfolioTarget = x,
+                    TargetQuantity = x.Quantity,
+                    ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
+                                       + algorithm.Transactions.GetOpenOrders(o => o.Symbol == x.Symbol)
+                                           .Sum(o => o.Quantity),
+                    Price = algorithm.Securities[x.Symbol].Price
+                })
+                .Select(x => new {
+                    PortfolioTarget = x.PortfolioTarget,
+                    OrderValue = Math.Abs((x.TargetQuantity - x.ExistingQuantity) * x.Price),
+                    IsReducingPosition = x.ExistingQuantity != 0 && Math.Abs(x.TargetQuantity) < Math.Abs(x.ExistingQuantity)
+                })
+                .OrderByDescending(x => x.IsReducingPosition)
+                .ThenByDescending(x => x.OrderValue)
+                .Select(x => x.PortfolioTarget);
         }
     }
 }
