@@ -193,9 +193,9 @@ namespace QuantConnect.Tests.Common.Securities
                 //Console.WriteLine("Step: " + i + " -- MCHJWB: " + mchJwb);
 
 
-                jwbCash.Update(new IndicatorDataPoint(MCHJWB, time, mchJwb));
-                usdCash.Update(new IndicatorDataPoint(MCHUSD, time, mchUsd));
-                mchCash.Update(new IndicatorDataPoint(JWBUSD, time, usdJwb));
+                jwbCash.Update();
+                usdCash.Update();
+                mchCash.Update();
 
                 var updateData = new Dictionary<Security, BaseData>
                 {

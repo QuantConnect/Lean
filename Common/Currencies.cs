@@ -378,17 +378,25 @@ namespace QuantConnect
         {
             Graph = new CurrencyGraph();
 
-            foreach(var code in CurrencySymbols.Keys)
+            foreach (var code in CurrencySymbols.Keys)
+            {
                 Graph.AddVertex(code);
+            }
 
             foreach (var pair in CryptoCurrencyPairs)
+            {
                 Graph.AddEdge(pair, SecurityType.Crypto);
+            }
 
             foreach (var pair in CfdCurrencyPairs)
+            {
                 Graph.AddEdge(pair, SecurityType.Cfd);
+            }
 
             foreach (var pair in CurrencyPairs)
+            {
                 Graph.AddEdge(pair, SecurityType.Forex);
+            }
 
             // lock graph, makes it and it's vertices read only
             Graph.Lock();
