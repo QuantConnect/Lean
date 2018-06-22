@@ -21,11 +21,13 @@ namespace QuantConnect.Securities.Graph
     /// </summary>
     public partial class CurrencyEdge
     {
+        [Flags]
         public enum Match
         {
-            NoMatch,
-            ExactMatch,
-            InverseMatch
+            NoMatch = 1,
+            ExactMatch = 2,
+            InverseMatch = 4,
+            BidirectionalMatch = 8
         }
 
         public CurrencyVertex Base { get; private set; }
@@ -60,7 +62,7 @@ namespace QuantConnect.Securities.Graph
 
             if (this.Base.Code == quoteCode && this.Quote.Code == baseCode)
             {
-                return Match.InverseMatch;
+                return Bidirectional ? (Match.ExactMatch | Match.BidirectionalMatch) : Match.InverseMatch;
             }
 
             return Match.NoMatch;
@@ -68,17 +70,7 @@ namespace QuantConnect.Securities.Graph
 
         public Match CompareTo(CurrencyEdge edge)
         {
-            if (this.Base == edge.Base && this.Quote == edge.Quote)
-            {
-                return Match.ExactMatch;
-            }
-
-            if (this.Base == edge.Base && this.Quote == edge.Base)
-            {
-                return Bidirectional ? Match.ExactMatch : Match.InverseMatch;
-            }
-
-            return Match.NoMatch;
+            return CompareTo(edge.Base.Code, edge.Quote.Code);
         }
 
         public bool ContainsOne(string code)

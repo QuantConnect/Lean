@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
             List<Security> requiredSecurities = new List<Security>();
 
             // return needed pairs for full conversion from one currency to another
-            CurrencyGraph graph = Currencies.Graph.Copy();
+            CurrencyGraphSearch graph = Currencies.Graph.Copy();
 
             // add securities symbols from securitiesToSearch collection
             foreach (var knownSecurity in securitiesToSearch)

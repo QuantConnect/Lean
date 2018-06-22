@@ -369,19 +369,19 @@ namespace QuantConnect
         /// <summary>
         /// Combines all currencies pairs into a network. Used for searching for closest path.
         /// </summary>
-        public static readonly CurrencyGraph Graph;
+        public static readonly CurrencyGraphSearch Graph;
 
         /// <summary>
         /// Static constructor for constructing Currency Graph
         /// </summary>
         static Currencies()
         {
-            Graph = new CurrencyGraph();
+            Graph = new CurrencyGraphSearch();
 
-            foreach (var code in CurrencySymbols.Keys)
+            /*foreach (var code in CurrencySymbols.Keys)
             {
                 Graph.AddVertex(code);
-            }
+            }*/
 
             foreach (var pair in CryptoCurrencyPairs)
             {

@@ -176,6 +176,7 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Data\Fundamental\Fundamentals.cs" />
+    <Compile Include="Securities\Graph\CurrencyList.cs" />
     <Compile Include="Securities\Graph\CurrencyPath.cs" />
     <Compile Include="Securities\Graph\CurrencyEdge.cs" />
     <Compile Include="Securities\Graph\CurrencyGraph.cs" />
@@ -215,6 +216,7 @@
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
+    <Compile Include="Securities\Graph\IShortestPathSearch.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />

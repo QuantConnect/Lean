@@ -21,7 +21,7 @@ namespace QuantConnect.Securities.Graph
     /// <summary>
     /// Currency Graph, holds currency codes such as "USD" and pairs such as"USDEUR"
     /// </summary>
-    public class CurrencyGraph
+    public class CurrencyGraphSearch : IShortestPathSearch
     {
         public IReadOnlyDictionary<string, CurrencyVertex> Vertices => _vertices;
         public IReadOnlyList<CurrencyEdge> Edges => _edges;
@@ -31,13 +31,13 @@ namespace QuantConnect.Securities.Graph
 
         private bool _locked = false;
 
-        public CurrencyGraph()
+        public CurrencyGraphSearch()
         {
             _vertices = new Dictionary<string, CurrencyVertex>();
             _edges = new List<CurrencyEdge>();
         }
 
-        public CurrencyVertex AddVertex(string code)
+        private CurrencyVertex AddVertex(string code)
         {
             if (_locked)
                 throw new ArgumentException("The graph has been locked, cannot modify the graph anymore!");
@@ -192,9 +192,9 @@ namespace QuantConnect.Securities.Graph
         /// Make a complete copy of the graph. The copy will be also unlocked, so it can be modified freely.
         /// </summary>
         /// <returns>Copy of this instance</returns>
-        public CurrencyGraph Copy()
+        public CurrencyGraphSearch Copy()
         {
-            CurrencyGraph copy = new CurrencyGraph();
+            CurrencyGraphSearch copy = new CurrencyGraphSearch();
 
             foreach (var code in _vertices.Keys)
             {
