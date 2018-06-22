@@ -16,12 +16,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace QuantConnect.Securities.CurrencyConversion
+namespace QuantConnect.Securities.CurrencyConversion.PathProvider
 {
     /// <summary>
     /// Currency Graph, holds currency codes such as "USD" and pairs such as"USDEUR"
     /// </summary>
-    public class GraphSearch : IShortestPathSearch
+    public class GraphSearchProvider : ICurrencyPathProvider
     {
         public IReadOnlyDictionary<string, CurrencyVertex> Vertices => _vertices;
         public IReadOnlyList<CurrencyEdge> Edges => _edges;
@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.CurrencyConversion
 
         private bool _locked = false;
 
-        public GraphSearch()
+        public GraphSearchProvider()
         {
             _vertices = new Dictionary<string, CurrencyVertex>();
             _edges = new List<CurrencyEdge>();
@@ -194,9 +194,9 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// Make a complete copy of the graph. The copy will be also unlocked, so it can be modified freely.
         /// </summary>
         /// <returns>Copy of this instance</returns>
-        public IShortestPathSearch Copy()
+        public ICurrencyPathProvider Copy()
         {
-            GraphSearch copy = new GraphSearch();
+            GraphSearchProvider copy = new GraphSearchProvider();
 
             foreach (var edge in _edges)
             {

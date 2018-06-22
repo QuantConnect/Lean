@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Securities.CurrencyConversion
 {
-    public interface IShortestPathSearch
+    public interface ICurrencyPathProvider
     {
         CurrencyEdge AddEdge(string currencyPair, SecurityType type);
 
@@ -14,6 +14,6 @@ namespace QuantConnect.Securities.CurrencyConversion
 
         CurrencyPath FindShortestPath(string startCode, string endCode);
 
-        IShortestPathSearch Copy();
+        ICurrencyPathProvider Copy();
     }
 }

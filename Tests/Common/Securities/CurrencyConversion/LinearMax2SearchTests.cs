@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Securities.CurrencyConversion;
+using QuantConnect.Securities.CurrencyConversion.PathProvider;
 using System.Linq;
 
 namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
@@ -39,7 +40,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
                 .Concat(Currencies.CfdCurrencyPairs)
                 .ToList();
 
-            IShortestPathSearch linearSearch = new LinearMax2Search();
+            ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
             // type of security here doesn't matter, we just want to test shortest path search
             pairs.ForEach(pair => linearSearch.AddEdge(pair, SecurityType.Base));
@@ -51,7 +52,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
         [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "too long")]
         public void ThrowsOnTooLongPath()
         {
-            IShortestPathSearch linearSearch = new LinearMax2Search();
+            ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
             linearSearch.AddEdge("RENETH", SecurityType.Crypto);
             linearSearch.AddEdge("USDETH", SecurityType.Crypto); //inverted path
@@ -64,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
         [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "No path")]
         public void ThrowsOnImpossiblePath()
         {
-            IShortestPathSearch linearSearch = new LinearMax2Search();
+            ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
             linearSearch.AddEdge("RENETH", SecurityType.Crypto);
             linearSearch.AddEdge("BTCETH", SecurityType.Crypto);
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
         [Test]
         public void CurrencyPath1StepsCorrect()
         {
-            IShortestPathSearch linearSearch = new LinearMax2Search();
+            ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
             linearSearch.AddEdge("BTCZRX", SecurityType.Crypto); // inverted = false
 
@@ -90,7 +91,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
         [Test]
         public void CurrencyPath2StepsCorrect()
         {
-            IShortestPathSearch linearSearch = new LinearMax2Search();
+            ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
             linearSearch.AddEdge("ZRXBTC", SecurityType.Crypto); // inverted = false
             linearSearch.AddEdge("ETHBTC", SecurityType.Crypto); // inverted = true

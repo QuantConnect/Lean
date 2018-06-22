@@ -254,16 +254,16 @@ namespace QuantConnect.Securities
             List<Security> requiredSecurities = new List<Security>();
 
             // return needed pairs for full conversion from one currency to another
-            IShortestPathSearch shortestPathProvider = Currencies.ShortestConversionPath.Copy();
+            ICurrencyPathProvider pathProvider = Currencies.ShortestConversionPath.Copy();
 
             // add securities symbols from securitiesToSearch collection
             foreach (var knownSecurity in securitiesToSearch)
             {
-                shortestPathProvider.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
+                pathProvider.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
             }
 
             // calculate conversion path
-            CurrencyPath shortestPath = shortestPathProvider.FindShortestPath(Symbol, CashBook.AccountCurrency);
+            CurrencyPath shortestPath = pathProvider.FindShortestPath(Symbol, CashBook.AccountCurrency);
 
             // for each step, find existing security, and if it doesn't exist, make new one
             // also build ConversionRateSecurity list

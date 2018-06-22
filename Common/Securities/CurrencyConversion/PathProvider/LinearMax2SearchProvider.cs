@@ -1,18 +1,33 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities.CurrencyConversion
+namespace QuantConnect.Securities.CurrencyConversion.PathProvider
 {
-    class LinearMax2Search : IShortestPathSearch
+    class LinearMax2SearchProvider : ICurrencyPathProvider
     {
         List<CurrencyEdge> _edges;
 
         Dictionary<string, CurrencyVertex> _vertices;
 
-        public LinearMax2Search()
+        public LinearMax2SearchProvider()
         {
             _edges = new List<CurrencyEdge>();
             _vertices = new Dictionary<string, CurrencyVertex>();
@@ -83,16 +98,14 @@ namespace QuantConnect.Securities.CurrencyConversion
             throw new ArgumentException($"No path found, linear search does not contain sufficient pairs for {startCode+endCode} pair, or path is too long.");
         }
 
-        public IShortestPathSearch Copy()
+        public ICurrencyPathProvider Copy()
         {
-            LinearMax2Search copy = new LinearMax2Search();
+            LinearMax2SearchProvider copy = new LinearMax2SearchProvider();
 
             foreach(var edge in _edges)
             {
                 copy.AddEdge(edge.Base.Code, edge.Quote.Code, edge.Type);
             }
-
-
 
             return copy;
         }

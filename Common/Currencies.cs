@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
+using QuantConnect.Securities.CurrencyConversion.PathProvider;
 
 namespace QuantConnect
 {
@@ -369,14 +370,14 @@ namespace QuantConnect
         /// <summary>
         /// Combines all currencies pairs into a network. Used for searching for closest path.
         /// </summary>
-        public static readonly IShortestPathSearch ShortestConversionPath;
+        public static readonly ICurrencyPathProvider ShortestConversionPath;
 
         /// <summary>
         /// Static constructor for constructing Currency Graph
         /// </summary>
         static Currencies()
         {
-            ShortestConversionPath = new GraphSearch();
+            ShortestConversionPath = new GraphSearchProvider();
 
             /*foreach (var code in CurrencySymbols.Keys)
             {
