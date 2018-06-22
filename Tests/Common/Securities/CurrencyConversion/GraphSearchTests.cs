@@ -1,11 +1,11 @@
 ﻿﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,14 +15,14 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Securities.Graph;
+using QuantConnect.Securities.CurrencyConversion;
 using System.Linq;
 
-namespace QuantConnect.Tests.Common.Securities.Graph
+namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.Graph
 {
     [TestFixture]
-    public class GraphTests
-    {   
+    public class GraphSearchTests
+    {
         [TestCase("BTC", "USD")]
         [TestCase("BTC", "EUR")]
         [TestCase("REN", "EUR")]
@@ -31,14 +31,24 @@ namespace QuantConnect.Tests.Common.Securities.Graph
         [TestCase("REN", "XAU")]
         public void CurrencyConversionPathTest(string start, string end)
         {
-            Currencies.Graph.FindShortestPath(start, end);
+            var pairs = Currencies.CurrencyPairs
+                .Concat(Currencies.CryptoCurrencyPairs)
+                .Concat(Currencies.CfdCurrencyPairs)
+                .ToList();
+
+            IShortestPathSearch graphSearch = new GraphSearch();
+
+            // type of security here doesn't matter, we just want to test shortest path search
+            pairs.ForEach(pair => graphSearch.AddEdge(pair, SecurityType.Base));
+
+            graphSearch.FindShortestPath(start, end);
         }
 
         [Test]
         [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "ETH")]
         public void GraphThrowsOnMissingStartCode()
         {
-            QuantConnect.Securities.Graph.CurrencyGraph graph = new QuantConnect.Securities.Graph.CurrencyGraph();
+            IShortestPathSearch graph = new GraphSearch();
 
             // add one test pair
             graph.AddEdge("ZRX", "BTC", SecurityType.Crypto);
@@ -49,8 +59,8 @@ namespace QuantConnect.Tests.Common.Securities.Graph
         [Test]
         [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "ETH")]
         public void GraphThrowsOnMissingEndCode()
-        {            
-            CurrencyGraph graph = new CurrencyGraph();
+        {
+            IShortestPathSearch graph = new GraphSearch();
 
             // add one test pair
             graph.AddEdge("ZRX", "BTC", SecurityType.Crypto);
@@ -61,7 +71,7 @@ namespace QuantConnect.Tests.Common.Securities.Graph
         [Test]
         public void SimpleCurrencyPathStepsCorrect()
         {
-            CurrencyGraph graph = new CurrencyGraph();
+            IShortestPathSearch graph = new GraphSearch();
 
             graph.AddEdge("ZRXBTC", SecurityType.Crypto); // inverted = false
             graph.AddEdge("ETHBTC", SecurityType.Crypto); // inverted = true
@@ -82,7 +92,7 @@ namespace QuantConnect.Tests.Common.Securities.Graph
         [Test] // longer path, and also test bidirectional pairs tests
         public void ComplicatedCurrencyPathStepsCorrect()
         {
-            CurrencyGraph graph = new CurrencyGraph();
+            IShortestPathSearch graph = new GraphSearch();
 
             graph.AddEdge("ZRXBTC", SecurityType.Crypto); // inverted = false
             graph.AddEdge("ETHBTC", SecurityType.Crypto); // inverted = true
@@ -111,4 +121,3 @@ namespace QuantConnect.Tests.Common.Securities.Graph
         }
     }
 }
-                                                             

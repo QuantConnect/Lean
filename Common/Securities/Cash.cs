@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
-using QuantConnect.Securities.Graph;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Securities
 {
@@ -49,6 +49,7 @@ namespace QuantConnect.Securities
                     {
                         ConversionRate = RateSecurity.Price;
                     }
+
                     else
                     {
                         ConversionRate = 1m / RateSecurity.Price;
@@ -253,16 +254,16 @@ namespace QuantConnect.Securities
             List<Security> requiredSecurities = new List<Security>();
 
             // return needed pairs for full conversion from one currency to another
-            CurrencyGraphSearch graph = Currencies.Graph.Copy();
+            IShortestPathSearch shortestPathProvider = Currencies.ShortestConversionPath.Copy();
 
             // add securities symbols from securitiesToSearch collection
             foreach (var knownSecurity in securitiesToSearch)
             {
-                graph.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
+                shortestPathProvider.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
             }
 
             // calculate conversion path
-            CurrencyPath shortestPath = graph.FindShortestPath(Symbol, CashBook.AccountCurrency);
+            CurrencyPath shortestPath = shortestPathProvider.FindShortestPath(Symbol, CashBook.AccountCurrency);
 
             // for each step, find existing security, and if it doesn't exist, make new one
             // also build ConversionRateSecurity list

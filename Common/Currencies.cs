@@ -15,7 +15,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Graph;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect
 {
@@ -369,14 +369,14 @@ namespace QuantConnect
         /// <summary>
         /// Combines all currencies pairs into a network. Used for searching for closest path.
         /// </summary>
-        public static readonly CurrencyGraphSearch Graph;
+        public static readonly IShortestPathSearch ShortestConversionPath;
 
         /// <summary>
         /// Static constructor for constructing Currency Graph
         /// </summary>
         static Currencies()
         {
-            Graph = new CurrencyGraphSearch();
+            ShortestConversionPath = new GraphSearch();
 
             /*foreach (var code in CurrencySymbols.Keys)
             {
@@ -385,21 +385,21 @@ namespace QuantConnect
 
             foreach (var pair in CryptoCurrencyPairs)
             {
-                Graph.AddEdge(pair, SecurityType.Crypto);
+                ShortestConversionPath.AddEdge(pair, SecurityType.Crypto);
             }
 
             foreach (var pair in CfdCurrencyPairs)
             {
-                Graph.AddEdge(pair, SecurityType.Cfd);
+                ShortestConversionPath.AddEdge(pair, SecurityType.Cfd);
             }
 
             foreach (var pair in CurrencyPairs)
             {
-                Graph.AddEdge(pair, SecurityType.Forex);
+                ShortestConversionPath.AddEdge(pair, SecurityType.Forex);
             }
 
             // lock graph, makes it and it's vertices read only
-            Graph.Lock();
+            //ShortestConversionPath.Lock();
         }
     }
 }

@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace QuantConnect.Securities.Graph
+namespace QuantConnect.Securities.CurrencyConversion
 {
     /// <summary>
     /// A class that represents currency conversion path

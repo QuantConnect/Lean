@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace QuantConnect.Securities.Graph
+namespace QuantConnect.Securities.CurrencyConversion
 {
     /// <summary>
     /// Represents one currency and all it's connections to other currencies

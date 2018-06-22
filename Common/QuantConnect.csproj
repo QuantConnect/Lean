@@ -176,11 +176,6 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Data\Fundamental\Fundamentals.cs" />
-    <Compile Include="Securities\Graph\CurrencyList.cs" />
-    <Compile Include="Securities\Graph\CurrencyPath.cs" />
-    <Compile Include="Securities\Graph\CurrencyEdge.cs" />
-    <Compile Include="Securities\Graph\CurrencyGraph.cs" />
-    <Compile Include="Securities\Graph\CurrencyVertex.cs" />
     <Compile Include="Data\UniverseSelection\ITimeTriggeredUniverse.cs" />
     <Compile Include="Data\UniverseSelection\ScheduledUniverse.cs" />
     <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />
@@ -216,7 +211,6 @@
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
-    <Compile Include="Securities\Graph\IShortestPathSearch.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />
@@ -436,6 +430,12 @@
     <Compile Include="Securities\Future\Futures.cs" />
     <Compile Include="Securities\Future\FutureMarginModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
+    <Compile Include="Securities\CurrencyConversion\CurrencyEdge.cs" />
+    <Compile Include="Securities\CurrencyConversion\CurrencyPath.cs" />
+    <Compile Include="Securities\CurrencyConversion\CurrencyVertex.cs" />
+    <Compile Include="Securities\CurrencyConversion\IShortestPathSearch.cs" />
+    <Compile Include="Securities\CurrencyConversion\Search\GraphSearch.cs" />
+    <Compile Include="Securities\CurrencyConversion\Search\LinearMax2Search.cs" />
     <Compile Include="Securities\Util.cs" />
     <Compile Include="Securities\Volatility\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />

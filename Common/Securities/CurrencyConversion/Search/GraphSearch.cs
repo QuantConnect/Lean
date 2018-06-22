@@ -16,12 +16,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace QuantConnect.Securities.Graph
+namespace QuantConnect.Securities.CurrencyConversion
 {
     /// <summary>
     /// Currency Graph, holds currency codes such as "USD" and pairs such as"USDEUR"
     /// </summary>
-    public class CurrencyGraphSearch : IShortestPathSearch
+    public class GraphSearch : IShortestPathSearch
     {
         public IReadOnlyDictionary<string, CurrencyVertex> Vertices => _vertices;
         public IReadOnlyList<CurrencyEdge> Edges => _edges;
@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.Graph
 
         private bool _locked = false;
 
-        public CurrencyGraphSearch()
+        public GraphSearch()
         {
             _vertices = new Dictionary<string, CurrencyVertex>();
             _edges = new List<CurrencyEdge>();
@@ -40,7 +40,9 @@ namespace QuantConnect.Securities.Graph
         private CurrencyVertex AddVertex(string code)
         {
             if (_locked)
+            {
                 throw new ArgumentException("The graph has been locked, cannot modify the graph anymore!");
+            }
 
             // Add new, if it doesn't already exist
             if (!_vertices.ContainsKey(code))
@@ -192,18 +194,13 @@ namespace QuantConnect.Securities.Graph
         /// Make a complete copy of the graph. The copy will be also unlocked, so it can be modified freely.
         /// </summary>
         /// <returns>Copy of this instance</returns>
-        public CurrencyGraphSearch Copy()
+        public IShortestPathSearch Copy()
         {
-            CurrencyGraphSearch copy = new CurrencyGraphSearch();
-
-            foreach (var code in _vertices.Keys)
-            {
-                copy.AddVertex(code);
-            }
+            GraphSearch copy = new GraphSearch();
 
             foreach (var edge in _edges)
             {
-                copy.AddEdge(edge.PairSymbol, edge.Type);
+                copy.AddEdge(edge.Base.Code, edge.Quote.Code, edge.Type);
             }
 
             return copy;

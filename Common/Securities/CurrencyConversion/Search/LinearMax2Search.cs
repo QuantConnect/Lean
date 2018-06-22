@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities.Graph
+namespace QuantConnect.Securities.CurrencyConversion
 {
-    class CurrencyListSearch : IShortestPathSearch
+    class LinearMax2Search : IShortestPathSearch
     {
         List<CurrencyEdge> _edges;
 
         Dictionary<string, CurrencyVertex> _vertices;
 
-        public CurrencyListSearch()
+        public LinearMax2Search()
         {
             _edges = new List<CurrencyEdge>();
             _vertices = new Dictionary<string, CurrencyVertex>();
@@ -34,7 +34,9 @@ namespace QuantConnect.Securities.Graph
             foreach (var edge in _edges)
             {
                 if (edge.CompareTo(baseCode, quoteCode) == CurrencyEdge.Match.ExactMatch)
+                {
                     return edge;
+                }
 
                 if (edge.CompareTo(baseCode, quoteCode) == CurrencyEdge.Match.InverseMatch)
                 {
@@ -53,7 +55,46 @@ namespace QuantConnect.Securities.Graph
 
         public CurrencyPath FindShortestPath(string startCode, string endCode)
         {
-            throw new NotImplementedException();
+            foreach (CurrencyEdge edge1 in _edges)
+            {
+                if (edge1.ContainsOne(startCode))
+                {
+                    string midCode = edge1.Other(startCode);
+
+                    if (midCode == endCode)
+                    {
+                        return new CurrencyPath(_vertices[startCode], _vertices[endCode], new List<CurrencyEdge>() { edge1 });
+                    }
+
+                    foreach (CurrencyEdge edge2 in _edges)
+                    {
+                        if(edge2.ContainsOne(midCode))
+                        {
+
+                            if(edge2.Other(midCode) == endCode)
+                            {
+                                return new CurrencyPath(_vertices[startCode], _vertices[endCode], new List<CurrencyEdge>() { edge1, edge2 });
+                            }
+                        }
+                    }
+                }
+            }
+
+            throw new ArgumentException($"No path found, linear search does not contain sufficient pairs for {startCode+endCode} pair, or path is too long.");
+        }
+
+        public IShortestPathSearch Copy()
+        {
+            LinearMax2Search copy = new LinearMax2Search();
+
+            foreach(var edge in _edges)
+            {
+                copy.AddEdge(edge.Base.Code, edge.Quote.Code, edge.Type);
+            }
+
+
+
+            return copy;
         }
 
         private CurrencyVertex AddVertex(string code)

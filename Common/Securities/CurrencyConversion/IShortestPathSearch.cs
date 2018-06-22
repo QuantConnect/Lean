@@ -4,14 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities.Graph
+namespace QuantConnect.Securities.CurrencyConversion
 {
-    interface IShortestPathSearch
+    public interface IShortestPathSearch
     {
         CurrencyEdge AddEdge(string currencyPair, SecurityType type);
 
         CurrencyEdge AddEdge(string baseCode, string quoteCode, SecurityType type);
 
         CurrencyPath FindShortestPath(string startCode, string endCode);
+
+        IShortestPathSearch Copy();
     }
 }

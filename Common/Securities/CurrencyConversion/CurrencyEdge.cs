@@ -14,20 +14,29 @@
 */
 using System;
 
-namespace QuantConnect.Securities.Graph
+namespace QuantConnect.Securities.CurrencyConversion
 {
     /// <summary>
     /// Represents a currency pair in CurrencyGraph. Even though edge is always bidirectional in graph terms, it can also be bidirectional in pair terms - both normal and inverse pairs can exist.
     /// </summary>
     public partial class CurrencyEdge
     {
-        [Flags]
         public enum Match
         {
-            NoMatch = 1,
-            ExactMatch = 2,
-            InverseMatch = 4,
-            BidirectionalMatch = 8
+            /// <summary>
+            /// No match was found
+            /// </summary>
+            NoMatch,
+
+            /// <summary>
+            /// Pair was found exact as it is
+            /// </summary>
+            ExactMatch,
+
+            /// <summary>
+            /// Only inverse pair was found
+            /// </summary>
+            InverseMatch
         }
 
         public CurrencyVertex Base { get; private set; }
@@ -62,7 +71,7 @@ namespace QuantConnect.Securities.Graph
 
             if (this.Base.Code == quoteCode && this.Quote.Code == baseCode)
             {
-                return Bidirectional ? (Match.ExactMatch | Match.BidirectionalMatch) : Match.InverseMatch;
+                return Bidirectional ? Match.ExactMatch : Match.InverseMatch;
             }
 
             return Match.NoMatch;
@@ -92,6 +101,22 @@ namespace QuantConnect.Securities.Graph
 
             throw new ArgumentException($"The vertex: {thisVertex.Code} is not present in edge {PairSymbol}!");
         }
+
+        public string Other(string thisCode)
+        {
+            if (this.Base.Code == thisCode)
+            {
+                return this.Quote.Code;
+            }
+
+            if (this.Quote.Code == thisCode)
+            {
+                return this.Base.Code;
+            }
+
+            throw new ArgumentException($"The vertex: {thisCode} is not present in edge {PairSymbol}!");
+        }
+
 
         public void MakeBidirectional()
         {

@@ -176,11 +176,12 @@
     <Compile Include="Common\Scheduling\ScheduleManagerTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\CashBuyingPowerModelTests.cs" />
+    <Compile Include="Common\Securities\CurrencyConversion\LinearMax2SearchTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexHoldingTest.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
-    <Compile Include="Common\Securities\Graph\GraphTests.cs" />
+    <Compile Include="Common\Securities\CurrencyConversion\GraphSearchTests.cs" />
     <Compile Include="Common\Securities\Options\OptionChainProviderTests.cs" />
     <Compile Include="Common\Securities\SecurityCacheTests.cs" />
     <Compile Include="Common\Securities\SecurityMarginModelTests.cs" />
