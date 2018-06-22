@@ -21,12 +21,11 @@ namespace QuantConnect.Securities.Graph
     /// </summary>
     public partial class CurrencyEdge
     {
-        [Flags]
         public enum Match
         {
-            NoMatch = 1,
-            ExactMatch = 2,
-            InverseMatch = 4
+            NoMatch,
+            ExactMatch,
+            InverseMatch
         }
 
         public CurrencyVertex Base { get; private set; }
