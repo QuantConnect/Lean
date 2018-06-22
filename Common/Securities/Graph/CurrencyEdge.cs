@@ -16,18 +16,17 @@ using System;
 
 namespace QuantConnect.Securities.Graph
 {
-
     /// <summary>
     /// Represents a currency pair in CurrencyGraph. Even though edge is always bidirectional in graph terms, it can also be bidirectional in pair terms - both normal and inverse pairs can exist.
     /// </summary>
-    public class CurrencyEdge
+    public partial class CurrencyEdge
     {
         [Flags]
         public enum Match
         {
-            NoMatch = 0,
-            ExactMatch = 1,
-            InverseMatch = 2
+            NoMatch = 1,
+            ExactMatch = 2,
+            InverseMatch = 4
         }
 
         public CurrencyVertex Base { get; private set; }
@@ -45,22 +44,22 @@ namespace QuantConnect.Securities.Graph
             }
         }
 
-        public CurrencyEdge(CurrencyVertex Base, CurrencyVertex Quote, SecurityType Type)
+        public CurrencyEdge(CurrencyVertex baseVertex, CurrencyVertex quoteVertex, SecurityType type)
         {
-            this.Base = Base;
-            this.Quote = Quote;
+            this.Base = baseVertex;
+            this.Quote = quoteVertex;
             this.Bidirectional = false;
-            this.Type = Type;
+            this.Type = type;
         }
 
-        public Match CompareTo(string BaseCode, string QuoteCode)
+        public Match CompareTo(string baseCode, string quoteCode)
         {
-            if (this.Base.Code == BaseCode && this.Quote.Code == QuoteCode)
+            if (this.Base.Code == baseCode && this.Quote.Code == quoteCode)
             {
                 return Match.ExactMatch;
             }
 
-            if (this.Base.Code == QuoteCode && this.Quote.Code == BaseCode)
+            if (this.Base.Code == quoteCode && this.Quote.Code == baseCode)
             {
                 return Match.InverseMatch;
             }
@@ -83,9 +82,9 @@ namespace QuantConnect.Securities.Graph
             return Match.NoMatch;
         }
 
-        public bool ContainsOne(string Code)
+        public bool ContainsOne(string code)
         {
-            return Base.Code == Code || Quote.Code == Code;
+            return Base.Code == code || Quote.Code == code;
         }
 
         public CurrencyVertex Other(CurrencyVertex thisVertex)

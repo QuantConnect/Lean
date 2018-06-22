@@ -37,21 +37,21 @@ namespace QuantConnect.Securities.Graph
             _edges = new List<CurrencyEdge>();
         }
 
-        public CurrencyVertex AddVertex(string Code)
+        public CurrencyVertex AddVertex(string code)
         {
             if (_locked)
                 throw new ArgumentException("The graph has been locked, cannot modify the graph anymore!");
 
             // Add new, if it doesn't already exist
-            if (!_vertices.ContainsKey(Code))
+            if (!_vertices.ContainsKey(code))
             {
-                _vertices[Code] = new CurrencyVertex(Code);
+                _vertices[code] = new CurrencyVertex(code);
             }
 
-            return _vertices[Code];
+            return _vertices[code];
         }
 
-        public CurrencyEdge AddEdge(string CurrencyPair, SecurityType Type)
+        public CurrencyEdge AddEdge(string currencyPair, SecurityType type)
         {
             if (_locked)
             {
@@ -61,12 +61,12 @@ namespace QuantConnect.Securities.Graph
             string baseCode = null;
             string quoteCode = null;
 
-            Util.DecomposeCurrencyPair(CurrencyPair, out baseCode, out quoteCode);
+            Util.DecomposeCurrencyPair(currencyPair, out baseCode, out quoteCode);
 
-            return AddEdge(baseCode, quoteCode, Type);
+            return AddEdge(baseCode, quoteCode, type);
         }
 
-        public CurrencyEdge AddEdge(string BaseCode, string QuoteCode, SecurityType Type)
+        public CurrencyEdge AddEdge(string baseCode, string quoteCode, SecurityType type)
         {
             if (_locked)
             {
@@ -76,7 +76,7 @@ namespace QuantConnect.Securities.Graph
             // Search if existing edge already exists
             foreach (CurrencyEdge strEdge in Edges)
             {
-                CurrencyEdge.Match match = strEdge.CompareTo(BaseCode, QuoteCode);
+                CurrencyEdge.Match match = strEdge.CompareTo(baseCode, quoteCode);
 
                 if (match == CurrencyEdge.Match.ExactMatch)
                 {
@@ -91,10 +91,10 @@ namespace QuantConnect.Securities.Graph
             }
 
             // No existing edge, add new
-            var vertexA = AddVertex(BaseCode);
-            var vertexB = AddVertex(QuoteCode);
+            var vertexA = AddVertex(baseCode);
+            var vertexB = AddVertex(quoteCode);
 
-            var edge = new CurrencyEdge(vertexA, vertexB, Type);
+            var edge = new CurrencyEdge(vertexA, vertexB, type);
 
             vertexA.AddEdge(edge);
             vertexB.AddEdge(edge);
@@ -107,19 +107,19 @@ namespace QuantConnect.Securities.Graph
         /// <summary>
         /// Uses BFS to search through this graph
         /// </summary>
-        /// <param name="StartCode">Start of currency code</param>
-        /// <param name="EndCode">End of currency code</param>
+        /// <param name="startCode">Start of currency code</param>
+        /// <param name="endCode">End of currency code</param>
         /// <returns></returns>
-        public CurrencyPath FindShortestPath(string StartCode, string EndCode)
+        public CurrencyPath FindShortestPath(string startCode, string endCode)
         {
             CurrencyVertex startVertex = null;
 
-            _vertices.TryGetValue(StartCode, out startVertex);
+            _vertices.TryGetValue(startCode, out startVertex);
 
 
             if (startVertex == null)
             {
-                throw new ArgumentException($"No path found, graph does not contain StartCode: {StartCode}");
+                throw new ArgumentException($"No path found, graph does not contain StartCode: {startCode}");
             }
 
             HashSet<string> processedNodes = new HashSet<string>();
@@ -131,7 +131,7 @@ namespace QuantConnect.Securities.Graph
             {
                 CurrencyPath path = pathsToExtend.Dequeue();
 
-                if (path.EndVertex.Code == EndCode)
+                if (path.EndVertex.Code == endCode)
                 {
                     return path;
                 }
@@ -150,7 +150,7 @@ namespace QuantConnect.Securities.Graph
                 }
             }
 
-            throw new ArgumentException($"No path found, graph does not contain EndCode: {EndCode}, or no possible path");
+            throw new ArgumentException($"No path found, graph does not contain EndCode: {endCode}, or no possible path");
         }
 
         /// <summary>

@@ -29,9 +29,9 @@ namespace QuantConnect.Securities.Graph
 
         private bool _locked = false;
 
-        public CurrencyVertex(string Code)
+        public CurrencyVertex(string code)
         {
-            this.Code = Code;
+            this.Code = code;
             _edges = new List<CurrencyEdge>();
         }
 
