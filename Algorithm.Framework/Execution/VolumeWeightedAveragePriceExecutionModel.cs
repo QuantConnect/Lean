@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             // update the complete set of portfolio targets with the new targets
             _targetsCollection.AddRange(targets);
 
-            foreach (var target in _targetsCollection)
+            foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
             {
                 var symbol = target.Symbol;
 
