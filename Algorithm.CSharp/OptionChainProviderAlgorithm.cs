@@ -39,6 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _equitySymbol;
         private Symbol _optionContract = string.Empty;
+        private readonly HashSet<Symbol> _contractsAdded = new HashSet<Symbol>();
 
         public override void Initialize()
         {
@@ -72,8 +73,11 @@ namespace QuantConnect.Algorithm.CSharp
                     _optionContract = otmCalls.OrderBy(x => x.ID.Date)
                                           .ThenBy(x => (x.ID.StrikePrice - underlyingPrice))
                                           .FirstOrDefault();
-                    // use AddOptionContract() to subscribe the data for specified contract
-                    AddOptionContract(_optionContract, Resolution.Minute);
+                    if (_contractsAdded.Add(_optionContract))
+                    {
+                        // use AddOptionContract() to subscribe the data for specified contract
+                        AddOptionContract(_optionContract, Resolution.Minute);
+                    }
                 }
                 else _optionContract = string.Empty;
             }
