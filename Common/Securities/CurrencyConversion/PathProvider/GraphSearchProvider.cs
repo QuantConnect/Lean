@@ -63,7 +63,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
             string baseCode = null;
             string quoteCode = null;
 
-            Util.DecomposeCurrencyPair(currencyPair, out baseCode, out quoteCode);
+            CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out baseCode, out quoteCode);
 
             return AddEdge(baseCode, quoteCode, type);
         }

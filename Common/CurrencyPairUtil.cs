@@ -19,9 +19,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect.Securities
+namespace QuantConnect
 {
-    class Util
+    class CurrencyPairUtil
     {
         /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters.
