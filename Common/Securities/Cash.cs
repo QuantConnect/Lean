@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Class that holds Security for conversion and bool, which tells if rate should be inverted (1/rate)
         /// </summary>
-        public class ConversionSecurity
+        private class ConversionSecurity
         {
             public readonly Security RateSecurity;
             public readonly bool Inverted;
@@ -76,19 +76,6 @@ namespace QuantConnect.Securities
         private bool _isBaseCurrency;
 
         private readonly object _locker = new object();
-
-        /// <summary>
-        /// Gets the symbol of the security required to provide conversion rates.
-        /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
-        /// is returned
-        /// </summary>
-        public List<Symbol> SecuritySymbols
-        {
-            get
-            {
-                return (_conversionRateSecurities == null ? new List<Symbol>() : _conversionRateSecurities.Select(conSec => conSec.RateSecurity.Symbol).ToList());
-            }
-        }
 
         /// <summary>
         /// Gets the security used to apply conversion rates.
@@ -249,12 +236,12 @@ namespace QuantConnect.Securities
 
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
 
-            List<ConversionSecurity> conversionSecuritiesList = new List<ConversionSecurity>();
+            var conversionSecuritiesList = new List<ConversionSecurity>();
 
-            List<Security> requiredSecurities = new List<Security>();
+            var requiredSecurities = new List<Security>();
 
             // return needed pairs for full conversion from one currency to another
-            ICurrencyPathProvider pathProvider = Currencies.ShortestConversionPath.Copy();
+            var pathProvider = Currencies.ShortestConversionPath.Copy();
 
             // add securities symbols from securitiesToSearch collection
             foreach (var knownSecurity in securitiesToSearch)
@@ -279,7 +266,7 @@ namespace QuantConnect.Securities
                 }
                 else
                 {
-                    Symbol symbol = CreateSymbol(marketMap, step.Edge.PairSymbol, markets, step.Edge.Type);
+                    var symbol = CreateSymbol(marketMap, step.Edge.PairSymbol, markets, step.Edge.Type);
 
                     var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.SecurityType, Symbol);
 
