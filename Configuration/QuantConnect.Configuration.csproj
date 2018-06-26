@@ -58,9 +58,12 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ApplicationParser.cs" />
+    <Compile Include="CommandLineOption.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="LeanArgumentParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ToolboxArgumentParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">

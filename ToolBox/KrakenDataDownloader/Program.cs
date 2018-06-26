@@ -14,49 +14,45 @@
 */
 
 using System;
-using System.Globalization;
+using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.KrakenDownloader
 {
-    class Program
+    public static class KrakenDownloaderProgram
     {
         /// <summary>
         /// Kraken Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// By @matthewsedam
         /// </summary>
-        static void Main(string[] args)
+        public static void KrakenDownloader(IList<string> symbols, string resolution, DateTime startDate, DateTime endDate)
         {
-            if (args.Length != 4)
+            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
             {
-                Console.WriteLine("Usage: KrakenDownloader PAIRS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOLS = eg XXBTZUSD,XETHZUSD");
-                Console.WriteLine("RESOLUTION = Minute/Hour/Daily/Tick");
-                Console.WriteLine("FROMDATE = yyyymmdd");
-                Console.WriteLine("TODATE = yyyymmdd");
+                Console.WriteLine("KrakenDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--symbols=eg XXBTZUSD,XETHZUSD");
+                Console.WriteLine("--resolution=Minute/Hour/Daily/Tick");
                 Environment.Exit(1);
             }
 
             try
             {
-                var pairs = args[0].Split(',');
-                var resolution = (Resolution)Enum.Parse(typeof(Resolution), args[1]);
-                var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
-                var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
+                var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json and create downloader
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var downloader = new KrakenDataDownloader();
 
-                foreach (var pair in pairs)
+                foreach (var pair in symbols)
                 {
                     // Download data
                     var pairObject = Symbol.Create(pair, SecurityType.Crypto, Market.Kraken);
-                    var data = downloader.Get(pairObject, resolution, startDate, endDate);
+                    var data = downloader.Get(pairObject, castResolution, startDate, endDate);
 
                     // Write data
-                    var writer = new LeanDataWriter(resolution, pairObject, dataDirectory);
+                    var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
                     writer.Write(data);
                 }
             }
@@ -64,7 +60,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
             {
                 Log.Error(err);
             }
-            
+
         }
     }
 }

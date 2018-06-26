@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,6 @@ using QuantConnect.Logging;
 using System.Diagnostics;
 using System.Globalization;
 using QuantConnect.Configuration;
-using QuantConnect.Util;
-using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
@@ -28,13 +26,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// <summary>
     /// AlgoSeek Options Converter: Convert raw OPRA channel files into QuantConnect Options Data Format.
     /// </summary>
-    public class Program
+    public static class AlgoSeekFuturesProgram
     {
-        public static void Main(string[] args)
+        public static void AlgoSeekFuturesConverter(string date)
         {
-            var date = args[0];
-
-            // There are practical file limits we need to override for this to work. 
+            // There are practical file limits we need to override for this to work.
             // By default programs are only allowed 1024 files open; for futures parsing we need 100k
             Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") });
@@ -71,12 +67,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             if (!string.IsNullOrEmpty(resolutions))
             {
                 var names = resolutions.Split(new[] { ';' });
-                resolutionList = 
+                resolutionList =
                     names
                     .Where(x => !string.IsNullOrEmpty(x))
                     .Select(name => (Resolution)Enum.Parse(typeof(Resolution), name, true)).ToArray();
             }
-  
+
             Log.Trace("Resolutions: " + string.Join(";", resolutionList.Select(x => x.ToString()).ToArray()));
 
             // Convert the date:

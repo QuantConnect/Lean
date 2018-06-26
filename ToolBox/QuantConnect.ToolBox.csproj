@@ -36,7 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.CoarseUniverseGenerator.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -123,6 +123,9 @@
     <Reference Include="IKVM.Runtime.JNI">
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -162,6 +165,7 @@
     <Compile Include="IBDownloader\IBDataDownloader.cs" />
     <Compile Include="IBDownloader\Program.cs" />
     <Compile Include="IVolatilityEquityConverter\Program.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />

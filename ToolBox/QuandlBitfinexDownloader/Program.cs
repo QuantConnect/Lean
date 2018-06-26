@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,23 +13,22 @@
  * limitations under the License.
 */
 using System;
-using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 {
-    class Program
+    public static class QuandlBitfinexDownloaderProgram
     {
         /// <summary>
         /// Quandl Bitfinex Toolbox Project For LEAN Algorithmic Trading Engine.
         /// </summary>
-        static void Main(string[] args)
+        public static void QuandlBitfinexDownloader(DateTime fromDate, string apiKey)
         {
-            if (args.Length != 2)
+            if (apiKey.IsNullOrEmpty())
             {
-                Console.WriteLine("Usage: Downloader FROMDATE APIKEY");
-                Console.WriteLine("FROMDATE = yyyymmdd");
+                Console.WriteLine("QuandlBitfinexDownloader ERROR: '--api-key=' parameter is missing");
                 Environment.Exit(1);
             }
 
@@ -40,11 +39,11 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
-                var downloader = new QuandlBitfinexDownloader(args[1]);
+                var downloader = new QuandlBitfinexDownloader(apiKey);
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);
-                var data = downloader.Get(symbol, Resolution.Daily, DateTime.ParseExact(args[0], "yyyyMMdd", CultureInfo.CurrentCulture), DateTime.UtcNow);
+                var data = downloader.Get(symbol, Resolution.Daily, fromDate, DateTime.UtcNow);
 
                 // Save the data
                 var writer = new LeanDataWriter(Resolution.Daily, symbol, dataDirectory, TickType.Quote);

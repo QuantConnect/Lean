@@ -27,7 +27,7 @@ using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
-    public static class Program
+    public static class CoarseUniverseGeneratorProgram
     {
         private const string ExclusionsFile = "exclusions.txt";
 
@@ -40,8 +40,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         ///
         /// The files are generated from LEAN formatted daily trade bar equity files
         /// </summary>
-        /// <param name="args">Unused argument</param>
-        public static void Main(string[] args)
+        public static void CoarseUniverseGenerator()
         {
             // read out the configuration file
             JToken jtoken;

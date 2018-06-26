@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,39 +15,34 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.OandaDownloader
 {
-    class Program
+    public static class OandaDownloaderProgram
     {
         /// <summary>
         /// Primary entry point to the program
         /// </summary>
-        static void Main(string[] args)
+        public static void OandaDownloader(IList<string> symbols, string resolution, DateTime startDate, DateTime endDate)
         {
-            if (args.Length != 4)
+            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
             {
-                Console.WriteLine("Usage: OandaDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
-                Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
-                Console.WriteLine("FROMDATE = yyyymmdd");
-                Console.WriteLine("TODATE = yyyymmdd");
+                Console.WriteLine("OandaDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--symbols=eg EURUSD,USDJPY");
+                Console.WriteLine("--resolution=Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
 
             try
             {
                 // Load settings from command line
-                var tickers = args[0].Split(',');
-                var allResolutions = args[1].ToLower() == "all";
-                var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
-                var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
-                var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
+                var allResolutions = resolution.ToLower() == "all";
+                var castResolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
@@ -58,26 +53,26 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 const string market = Market.Oanda;
                 var downloader = new OandaDataDownloader(accessToken, accountId);
 
-                foreach (var ticker in tickers)
+                foreach (var ticker in symbols)
                 {
                     if (!downloader.HasSymbol(ticker))
                         throw new ArgumentException("The symbol " + ticker + " is not available.");
                 }
 
-                foreach (var ticker in tickers)
+                foreach (var ticker in symbols)
                 {
                     // Download the data
                     var securityType = downloader.GetSecurityType(ticker);
                     var symbol = Symbol.Create(ticker, securityType, market);
 
-                    var data = downloader.Get(symbol, resolution, startDate, endDate);
+                    var data = downloader.Get(symbol, castResolution, startDate, endDate);
 
                     if (allResolutions)
                     {
                         var bars = data.Cast<QuoteBar>().ToList();
 
                         // Save the data (second resolution)
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                         writer.Write(bars);
 
                         // Save the data (other resolutions)
@@ -92,7 +87,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                         writer.Write(data);
                     }
                 }

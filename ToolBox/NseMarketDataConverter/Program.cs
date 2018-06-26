@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,42 +19,27 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Data;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.NseMarketDataConverter
 {
-    class Program
+    public static class NseMarketDataConverterProgram
     {
         /// <summary>
         /// Supports data from http://TrueData.in
         /// </summary>
-        private static void Main(string[] args)
+        public static void NseMarketDataConverter(string sourceDirectory, string destinationDirectory)
         {
             //Document the process:
             Console.WriteLine("QuantConnect.ToolBox: NseMarketData Converter: ");
             Console.WriteLine("==============================================");
             Console.WriteLine("The NseMarketData converter transforms NseMarketData orders into the LEAN Algorithmic Trading Engine Data Format.");
-            Console.WriteLine("Two parameters are required: ");
+            Console.WriteLine("Parameters required: --source-dir= --destination-dir= ");
             Console.WriteLine("   1> Source Directory of Unzipped NSE Data.");
             Console.WriteLine("   2> Destination Directory of LEAN Data Folder. (Typically located under Lean/Data)");
             Console.WriteLine(" ");
             Console.WriteLine("NOTE: THIS WILL OVERWRITE ANY EXISTING FILES.");
-            if (args.Length == 0)
-            {
-                Console.WriteLine("Press any key to Continue or Escape to quit.");
-                if (Console.ReadKey().Key == ConsoleKey.Escape)
-                {
-                    Environment.Exit(0);
-                }
-            }
-            var destinationDirectory = "";
-            string sourceDirectory;
-            if (args.Length == 2)
-            {
-                sourceDirectory = args[0];
-                destinationDirectory = args[1];
-            }
-            else
+            if (sourceDirectory.IsNullOrEmpty() || destinationDirectory.IsNullOrEmpty())
             {
                 Console.WriteLine("1. Source NSE source directory: ");
                 sourceDirectory = (Console.ReadLine() ?? "");
