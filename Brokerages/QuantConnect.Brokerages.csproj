@@ -171,6 +171,10 @@
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
     <Compile Include="Backtesting\IBacktestingMarketSimulation.cs" />
     <Compile Include="BaseWebsocketsBrokerage.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
+    <Compile Include="Bitfinex\Messages.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
