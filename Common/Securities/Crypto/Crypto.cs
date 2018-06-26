@@ -56,7 +56,7 @@ namespace QuantConnect.Securities.Crypto
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            CurrencyPairUtil.DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
         }
 
@@ -88,7 +88,7 @@ namespace QuantConnect.Securities.Crypto
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
         }
 

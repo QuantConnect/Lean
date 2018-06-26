@@ -76,6 +76,14 @@ namespace QuantConnect.Securities.CurrencyConversion
             StartVertex = startVertex;
             EndVertex = endVertex;
             Edges = new Queue<CurrencyEdge>(collection);
+
+            var edgesArray = Edges.ToArray();
+
+            // Validation
+            if(!edgesArray[0].ContainsOne(startVertex.Code) || !edgesArray[edgesArray.Length-1].ContainsOne(endVertex.Code))
+            {
+                throw new Exception("The path provided is invalid!");
+            }
         }
 
         /// <summary>
@@ -121,9 +129,24 @@ namespace QuantConnect.Securities.CurrencyConversion
                     }
                     else
                     {
+                        if(edge.Bidirectional)
+                        {
+                            if(BaseVertex == edge.Base)
+                            {
+                                yield return new Step(edge, false);
+                            }
+                            else
+                            {
+                                yield return new Step(edge, true);
+                            }
+                        }
+                        else
+                        {
+                            yield return new Step(edge, true);
+                        }
+
                         // edge is inverted
                         BaseVertex = edge.Base;
-                        yield return new Step(edge, edge.Bidirectional? false : true);
                     }
                 }
             }

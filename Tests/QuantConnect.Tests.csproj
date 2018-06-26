@@ -181,7 +181,6 @@
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
-    <Compile Include="Common\Securities\CurrencyConversion\GraphSearchTests.cs" />
     <Compile Include="Common\Securities\Options\OptionChainProviderTests.cs" />
     <Compile Include="Common\Securities\SecurityCacheTests.cs" />
     <Compile Include="Common\Securities\SecurityMarginModelTests.cs" />

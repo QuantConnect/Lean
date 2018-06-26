@@ -19,7 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuantConnect
+namespace QuantConnect.Util
 {
     class CurrencyPairUtil
     {

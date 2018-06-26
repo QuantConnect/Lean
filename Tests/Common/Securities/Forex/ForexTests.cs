@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             string symbol = "12345";
             Assert.AreEqual(5, symbol.Length);
             string basec, quotec;
-            QuantConnect.Securities.Util.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec);
         }
 
         [Test]
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(symbol.Length, Currencies.MaxCharactersPerCurrencyPair + 1);
 
             string basec, quotec;
-            QuantConnect.Securities.Util.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec);
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string symbol = null;
             string basec, quotec;
-            QuantConnect.Securities.Util.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec);
         }
 
         [Test]
@@ -77,8 +77,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string currencyPair = "EURUSD";
 
-            Assert.AreEqual(QuantConnect.Securities.Util.CurrencyPairDual(currencyPair, "EUR"), "USD");
-            Assert.AreEqual(QuantConnect.Securities.Util.CurrencyPairDual(currencyPair, "USD"), "EUR");
+            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "EUR"), "USD");
+            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "USD"), "EUR");
         }
 
         [Test]
@@ -86,8 +86,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string currencyPair = "ETHBTC";
 
-            Assert.AreEqual(QuantConnect.Securities.Util.CurrencyPairDual(currencyPair, "ETH"), "BTC");
-            Assert.AreEqual(QuantConnect.Securities.Util.CurrencyPairDual(currencyPair, "BTC"), "ETH");
+            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "ETH"), "BTC");
+            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "BTC"), "ETH");
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string currencyPair = "ETHBTC";
 
-            QuantConnect.Securities.Util.CurrencyPairDual(currencyPair, "ZRX");
+            QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "ZRX");
         }
     }
 }

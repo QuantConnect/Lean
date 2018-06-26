@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
             string baseCode;
             string quoteCode;
 
-            CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out baseCode, out quoteCode, type);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out baseCode, out quoteCode, type);
 
             return AddEdge(baseCode, quoteCode, type);
         }
@@ -70,22 +70,29 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
 
         public CurrencyPath FindShortestPath(string startCode, string endCode)
         {
+            // 1 leg
+            foreach (var edge1 in _edges)
+            {
+                if (edge1.ContainsOne(startCode))
+                {
+                    if (edge1.Other(startCode) == endCode)
+                    {
+                        return new CurrencyPath(_vertices[startCode], _vertices[endCode], new List<CurrencyEdge>() { edge1 });
+                    }
+                }
+            }
+
+            // 2 legs
             foreach (var edge1 in _edges)
             {
                 if (edge1.ContainsOne(startCode))
                 {
                     var midCode = edge1.Other(startCode);
 
-                    if (midCode == endCode)
-                    {
-                        return new CurrencyPath(_vertices[startCode], _vertices[endCode], new List<CurrencyEdge>() { edge1 });
-                    }
-
                     foreach (var edge2 in _edges)
                     {
                         if(edge2.ContainsOne(midCode))
                         {
-
                             if(edge2.Other(midCode) == endCode)
                             {
                                 return new CurrencyPath(_vertices[startCode], _vertices[endCode], new List<CurrencyEdge>() { edge1, edge2 });

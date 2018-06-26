@@ -162,7 +162,7 @@ namespace QuantConnect.Brokerages
 
             // switch on the currency being bought
             string baseCurrency, quoteCurrency;
-            CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
 
 
             decimal max;

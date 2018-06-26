@@ -241,12 +241,23 @@ namespace QuantConnect.Securities
             var requiredSecurities = new List<Security>();
 
             // return needed pairs for full conversion from one currency to another
-            var pathProvider = Currencies.ShortestConversionPath.Copy();
+            var pathProvider = new CurrencyConversion.PathProvider.LinearMax2SearchProvider();
 
-            // add securities symbols from securitiesToSearch collection
+            var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
+              .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
+              .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
+
+
+            // add securities symbols from securitiesToSearch collection (from Currencies.cs)
             foreach (var knownSecurity in securitiesToSearch)
             {
                 pathProvider.AddEdge(knownSecurity.Symbol.Value, knownSecurity.Type);
+            }
+
+            // add custom securities
+            foreach (var potential in potentials)
+            {
+                pathProvider.AddEdge(potential.Value, potential.SecurityType);
             }
 
             // calculate conversion path

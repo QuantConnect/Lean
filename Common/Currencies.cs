@@ -38,14 +38,6 @@ namespace QuantConnect
         /// </summary>
         public const int MaxCharactersPerCurrencyPair = 2*MaxCharactersPerCurrencyCode;
 
-        // those pairs will be used for conversion
-        public static readonly IReadOnlyList<string> MainCryptoCurrencyPairs = new List<string>()
-        {
-            "BTCUSD",
-            "ETHUSD"
-            // fill this list
-        };
-
         /// <summary>
         /// Gets the listing of crypto pairs used for currency conversion rates
         /// </summary>
@@ -367,40 +359,5 @@ namespace QuantConnect
             return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
         }
 
-        /// <summary>
-        /// Combines all currencies pairs into a network. Used for searching for closest path.
-        /// </summary>
-        public static readonly ICurrencyPathProvider ShortestConversionPath;
-
-        /// <summary>
-        /// Static constructor for constructing Currency Graph
-        /// </summary>
-        static Currencies()
-        {
-            ShortestConversionPath = new GraphSearchProvider();
-
-            /*foreach (var code in CurrencySymbols.Keys)
-            {
-                Graph.AddVertex(code);
-            }*/
-
-            foreach (var pair in CryptoCurrencyPairs)
-            {
-                ShortestConversionPath.AddEdge(pair, SecurityType.Crypto);
-            }
-
-            foreach (var pair in CfdCurrencyPairs)
-            {
-                ShortestConversionPath.AddEdge(pair, SecurityType.Cfd);
-            }
-
-            foreach (var pair in CurrencyPairs)
-            {
-                ShortestConversionPath.AddEdge(pair, SecurityType.Forex);
-            }
-
-            // lock graph, makes it and it's vertices read only
-            //ShortestConversionPath.Lock();
-        }
     }
 }
