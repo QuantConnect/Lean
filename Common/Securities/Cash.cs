@@ -136,7 +136,7 @@ namespace QuantConnect.Securities
         {
             if (_isBaseCurrency) return;
 
-            foreach (Cash.ConversionSecurity conSec in _conversionRateSecurities)
+            foreach (var conSec in _conversionRateSecurities)
             {
                 var updateData = conSec.RateSecurity.GetLastData();
 
@@ -147,7 +147,7 @@ namespace QuantConnect.Securities
             }
 
             ConversionRate = 1m;
-            foreach (ConversionSecurity conSec in _conversionRateSecurities)
+            foreach (var conSec in _conversionRateSecurities)
             {
                 ConversionRate *= conSec.ConversionRate;
             }
@@ -250,7 +250,7 @@ namespace QuantConnect.Securities
             }
 
             // calculate conversion path
-            CurrencyPath shortestPath = pathProvider.FindShortestPath(Symbol, CashBook.AccountCurrency);
+            var shortestPath = pathProvider.FindShortestPath(Symbol, CashBook.AccountCurrency);
 
             // for each step, find existing security, and if it doesn't exist, make new one
             // also build ConversionRateSecurity list

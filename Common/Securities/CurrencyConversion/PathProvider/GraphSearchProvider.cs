@@ -76,9 +76,9 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
             }
 
             // Search if existing edge already exists
-            foreach (CurrencyEdge strEdge in Edges)
+            foreach (var strEdge in Edges)
             {
-                CurrencyEdge.Match match = strEdge.CompareTo(baseCode, quoteCode);
+                var match = strEdge.CompareTo(baseCode, quoteCode);
 
                 if (match == CurrencyEdge.Match.ExactMatch)
                 {
@@ -124,14 +124,14 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
                 throw new ArgumentException($"No path found, graph does not contain StartCode: {startCode}");
             }
 
-            HashSet<string> processedNodes = new HashSet<string>();
-            Queue<CurrencyPath> pathsToExtend = new Queue<CurrencyPath>();
+            var processedNodes = new HashSet<string>();
+            var pathsToExtend = new Queue<CurrencyPath>();
 
             pathsToExtend.Enqueue(new CurrencyPath(startVertex));
 
             while (pathsToExtend.Count > 0)
             {
-                CurrencyPath path = pathsToExtend.Dequeue();
+                var path = pathsToExtend.Dequeue();
 
                 if (path.EndVertex.Code == endCode)
                 {
@@ -141,7 +141,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
                 processedNodes.Add(path.EndVertex.Code);
 
                 // grow paths
-                foreach (CurrencyEdge edge in path.EndVertex.Edges)
+                foreach (var edge in path.EndVertex.Edges)
                 {
                     //find other endpoint of edge
                     CurrencyVertex vertex = edge.GetOtherVertex(path.EndVertex);
@@ -171,7 +171,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
 
             builder.AppendLine("Vertices:");
             foreach (var vertex in Vertices.Values)
@@ -196,7 +196,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
         /// <returns>Copy of this instance</returns>
         public ICurrencyPathProvider Copy()
         {
-            GraphSearchProvider copy = new GraphSearchProvider();
+            var copy = new GraphSearchProvider();
 
             foreach (var edge in _edges)
             {

@@ -501,8 +501,8 @@ namespace QuantConnect.Securities
 
             if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
             {
-                string baseCurrency = "";
-                string quoteCurrency = "";
+                var baseCurrency = "";
+                var quoteCurrency = "";
 
                 CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
                 defaultQuoteCurrency = quoteCurrency;

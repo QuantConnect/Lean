@@ -360,12 +360,9 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // poke each cash object to update from the recent security data
-                foreach (var kvp in algorithm.Portfolio.CashBook)
+                foreach (var cash in algorithm.Portfolio.CashBook.Values)
                 {
-                    var cash = kvp.Value;
-
                     cash.Update();
-
                 }
 
                 // sample alpha charts now that we've updated time/price information but BEFORE we receive new insights

@@ -53,8 +53,8 @@ namespace QuantConnect
             baseCurrency = null;
             quoteCurrency = null;
 
-            List<string> bases = new List<string>();
-            List<string> quotes = new List<string>();
+            var bases  = new List<string>();
+            var quotes = new List<string>();
 
             // Find bases
             foreach (var symbol in Currencies.CurrencySymbols.Keys)
@@ -81,11 +81,11 @@ namespace QuantConnect
 
             // Make combinations (combined) and compare to currencyPair
             // When 100% match found, break the loop.
-            foreach (string b in bases)
+            foreach (var b in bases)
             {
-                foreach (string q in quotes)
+                foreach (var q in quotes)
                 {
-                    string combined = b + q;
+                    var combined = b + q;
 
                     if (combined.Equals(currencyPair))
                     {

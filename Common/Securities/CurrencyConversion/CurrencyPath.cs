@@ -85,7 +85,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <returns></returns>
         public CurrencyPath Extend(CurrencyEdge newEdge)
         {
-            CurrencyVertex end = newEdge.GetOtherVertex(EndVertex);
+            var end = newEdge.GetOtherVertex(EndVertex);
 
             // error checking, path shouldn't have loops
             foreach(var edge in Edges)
@@ -96,7 +96,7 @@ namespace QuantConnect.Securities.CurrencyConversion
                 }
             }
 
-            CurrencyPath newPath = new CurrencyPath(this.StartVertex, end, this.Edges);
+            var newPath = new CurrencyPath(this.StartVertex, end, this.Edges);
 
             newPath.Edges.Enqueue(newEdge);
             return newPath;
@@ -109,7 +109,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         {
             get
             {
-                CurrencyVertex BaseVertex = StartVertex;
+                var BaseVertex = StartVertex;
 
                 foreach (var edge in Edges)
                 {
@@ -131,7 +131,7 @@ namespace QuantConnect.Securities.CurrencyConversion
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
 
             builder.AppendLine($"CurrencyPath with length {Length} and path:");
             builder.AppendLine("StartVertex:" + StartVertex.Code);

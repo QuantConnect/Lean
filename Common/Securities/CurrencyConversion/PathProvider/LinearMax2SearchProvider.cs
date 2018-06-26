@@ -70,18 +70,18 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
 
         public CurrencyPath FindShortestPath(string startCode, string endCode)
         {
-            foreach (CurrencyEdge edge1 in _edges)
+            foreach (var edge1 in _edges)
             {
                 if (edge1.ContainsOne(startCode))
                 {
-                    string midCode = edge1.Other(startCode);
+                    var midCode = edge1.Other(startCode);
 
                     if (midCode == endCode)
                     {
                         return new CurrencyPath(_vertices[startCode], _vertices[endCode], new List<CurrencyEdge>() { edge1 });
                     }
 
-                    foreach (CurrencyEdge edge2 in _edges)
+                    foreach (var edge2 in _edges)
                     {
                         if(edge2.ContainsOne(midCode))
                         {
@@ -100,7 +100,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
 
         public ICurrencyPathProvider Copy()
         {
-            LinearMax2SearchProvider copy = new LinearMax2SearchProvider();
+            var copy = new LinearMax2SearchProvider();
 
             foreach(var edge in _edges)
             {
