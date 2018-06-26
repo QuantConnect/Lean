@@ -223,6 +223,14 @@ namespace QuantConnect.Tests.Engine
             public void Update()
             {
             }
+
+            public void OnAlgorithmStart()
+            {
+            }
+
+            public void OnAlgorithmEnd()
+            {
+            }
         }
 
         class NullResultHandler : IResultHandler
