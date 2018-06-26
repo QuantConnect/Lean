@@ -434,9 +434,8 @@
     <Compile Include="Securities\CurrencyConversion\CurrencyPath.cs" />
     <Compile Include="Securities\CurrencyConversion\CurrencyVertex.cs" />
     <Compile Include="Securities\CurrencyConversion\ICurrencyPathProvider.cs" />
-    <Compile Include="Securities\CurrencyConversion\PathProvider\GraphSearchProvider.cs" />
     <Compile Include="Securities\CurrencyConversion\PathProvider\LinearMax2SearchProvider.cs" />
-    <Compile Include="CurrencyPairUtil.cs" />
+    <Compile Include="Util\CurrencyPairUtil.cs" />
     <Compile Include="Securities\Volatility\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
