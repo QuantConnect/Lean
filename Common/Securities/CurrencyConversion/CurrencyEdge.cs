@@ -87,7 +87,7 @@ namespace QuantConnect.Securities.CurrencyConversion
             return Base.Code == code || Quote.Code == code;
         }
 
-        public CurrencyVertex Other(CurrencyVertex thisVertex)
+        public CurrencyVertex GetOtherVertex(CurrencyVertex thisVertex)
         {
             if (this.Base == thisVertex)
             {

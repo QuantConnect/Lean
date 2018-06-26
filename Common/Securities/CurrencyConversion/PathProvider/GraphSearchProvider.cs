@@ -144,7 +144,7 @@ namespace QuantConnect.Securities.CurrencyConversion.PathProvider
                 foreach (CurrencyEdge edge in path.EndVertex.Edges)
                 {
                     //find other endpoint of edge
-                    CurrencyVertex vertex = edge.Other(path.EndVertex);
+                    CurrencyVertex vertex = edge.GetOtherVertex(path.EndVertex);
 
                     // check if this endpoint has been NOT visited already then if, add the extended path to queue
                     if (!processedNodes.Contains(vertex.Code))

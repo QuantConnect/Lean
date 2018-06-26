@@ -85,7 +85,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <returns></returns>
         public CurrencyPath Extend(CurrencyEdge newEdge)
         {
-            CurrencyVertex end = newEdge.Other(EndVertex);
+            CurrencyVertex end = newEdge.GetOtherVertex(EndVertex);
 
             // error checking, path shouldn't have loops
             foreach(var edge in Edges)
