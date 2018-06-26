@@ -318,6 +318,8 @@ namespace QuantConnect.Securities
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
 
                     securities.Add(symbol, security);
+
+                    requiredSecurities.Add(security);
                 }
 
                 conversionSecuritiesList.Add(new ConversionSecurity(security, step.Inverted));

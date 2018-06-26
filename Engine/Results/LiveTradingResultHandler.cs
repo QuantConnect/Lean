@@ -1091,9 +1091,9 @@ namespace QuantConnect.Lean.Engine.Results
                                 }
                             }
 
-                            foreach (var cash in _algorithm.Portfolio.CashBook)
+                            foreach (var cash in _algorithm.Portfolio.CashBook.Values)
                             {
-                                cash.Value.Update();
+                                cash.Update();
                             }
 
 
