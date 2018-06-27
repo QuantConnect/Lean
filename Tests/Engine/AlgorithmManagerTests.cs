@@ -448,7 +448,7 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void AddOpenOrder(Order order)
+            public void AddOpenOrder(Order order, OrderTicket orderTicket)
             {
                 throw new NotImplementedException();
             }

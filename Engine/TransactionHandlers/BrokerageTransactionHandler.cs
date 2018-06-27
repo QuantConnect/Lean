@@ -568,13 +568,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Register an already open Order
         /// </summary>
-        public void AddOpenOrder(Order order)
+        public void AddOpenOrder(Order order, OrderTicket orderTicket)
         {
             _openOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
-            var ticket = order.ToOrderTicket(_algorithm.Transactions);
-            _openOrderTickets.AddOrUpdate(order.Id, ticket);
-            _completeOrderTickets.AddOrUpdate(order.Id, ticket);
+            _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
+            _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
         }
 
         /// <summary>
