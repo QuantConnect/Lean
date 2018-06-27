@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="history" />
     /// <meta name="tag" content="regression test" />
     /// <meta name="tag" content="warm up" />
-    public class HistoryAndWarmupRegressionAlgorithm : QCAlgorithm
+    public class IndicatorWarmupRegressionAlgorithm : QCAlgorithm
     {
         private const string SPY    = "SPY";
         private const string GOOG   = "GOOG";

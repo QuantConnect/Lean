@@ -95,7 +95,7 @@
     <None Include="FractionalQuantityRegressionAlgorithm.py" />
     <None Include="FuturesMomentumAlgorithm.py" />
     <None Include="HistoryAlgorithm.py" />
-    <None Include="HistoryAndWarmupRegressionAlgorithm.py" />
+    <None Include="IndicatorWarmupRegressionAlgorithm.py" />
     <None Include="HourReverseSplitRegressionAlgorithm.py" />
     <None Include="HourSplitRegressionAlgorithm.py" />
     <None Include="IndicatorSuiteAlgorithm.py" />
