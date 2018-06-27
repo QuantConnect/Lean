@@ -51,7 +51,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// Edges in order
         /// </summary>
-        public Queue<CurrencyEdge> Edges { get; }
+        public List<CurrencyEdge> Edges { get; }
 
         /// <summary>
         /// Number of the edges
@@ -68,14 +68,14 @@ namespace QuantConnect.Securities.CurrencyConversion
         {
             StartVertex = startVertex;
             EndVertex = startVertex;
-            Edges = new Queue<CurrencyEdge>();
+            Edges = new List<CurrencyEdge>();
         }
 
         public CurrencyPath(CurrencyVertex startVertex, CurrencyVertex endVertex, IEnumerable<CurrencyEdge> collection)
         {
             StartVertex = startVertex;
             EndVertex = endVertex;
-            Edges = new Queue<CurrencyEdge>(collection);
+            Edges = new List<CurrencyEdge>(collection);
 
             var edgesArray = Edges.ToArray();
 
@@ -106,7 +106,7 @@ namespace QuantConnect.Securities.CurrencyConversion
 
             var newPath = new CurrencyPath(this.StartVertex, end, this.Edges);
 
-            newPath.Edges.Enqueue(newEdge);
+            newPath.Edges.Add(newEdge);
             return newPath;
         }
 

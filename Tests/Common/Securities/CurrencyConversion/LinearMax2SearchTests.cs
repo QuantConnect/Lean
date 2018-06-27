@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
         }
 
         [Test]
-        public void CurrencyPath1StepsCorrect()
+        public void CurrencyPath1StepsIsInvertedCorrectly()
         {
             ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
         }
 
         [Test]
-        public void CurrencyPath2StepsCorrect()
+        public void CurrencyPath2StepsIsInvertedCorrectly()
         {
             ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
 
@@ -102,6 +102,42 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion.LinearMax2
 
             Assert.AreEqual(step[0].Inverted, false);
             Assert.AreEqual(step[1].Inverted, true);
+        }
+
+        [Test]
+        public void CurrencyPathCorrect()
+        {
+            ICurrencyPathProvider linearSearch = new LinearMax2SearchProvider();
+
+            linearSearch.AddEdge("ZRXBTC", SecurityType.Crypto);
+            linearSearch.AddEdge("ETHBTC", SecurityType.Crypto);
+            linearSearch.AddEdge("ZRXETH", SecurityType.Crypto);
+            linearSearch.AddEdge("ZRXREN", SecurityType.Crypto);
+
+            //1 step normal
+            var path = linearSearch.FindShortestPath("ZRX", "ETH");
+            var step = path.Steps.ToArray();
+
+            Assert.AreEqual(step[0].Edge.PairSymbol, "ZRXETH");
+            Assert.AreEqual(step[0].Inverted, false);
+
+            //1 step inversed
+            path = linearSearch.FindShortestPath("ETH", "ZRX");
+            step = path.Steps.ToArray();
+
+            Assert.AreEqual(step[0].Edge.PairSymbol, "ZRXETH");
+            Assert.AreEqual(step[0].Inverted, true);
+
+            //// 2 steps
+            path = linearSearch.FindShortestPath("REN", "ETH");
+            step = path.Steps.ToArray();
+
+            Assert.AreEqual(step[0].Edge.PairSymbol, "ZRXREN");
+            Assert.AreEqual(step[0].Inverted, true);
+
+            Assert.AreEqual(step[1].Edge.PairSymbol, "ZRXETH");
+            Assert.AreEqual(step[1].Inverted, false);
+
         }
     }
 
