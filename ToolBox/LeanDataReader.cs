@@ -127,5 +127,14 @@ namespace QuantConnect.ToolBox
             }
             zipFile.Dispose();
         }
+
+        /// <summary>
+        /// Returns the data time zone
+        /// </summary>
+        /// <returns>String representing the data timezone</returns>
+        public string GetDataTimeZone()
+        {
+            return _config.DataTimeZone.Id;
+        }
     }
 }
