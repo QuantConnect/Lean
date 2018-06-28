@@ -28,7 +28,7 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("symbols", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL)] "
                                                                                   + "--symbols=ETH-USD,ETH-BTC,BTC-USD,etc"),
                 new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL) and IVolatilityEquityConverter,"
-                                                                                   + " QuantQuoteConverter] *Not all downloaders support all resolutions*."
+                                                                                   + " QuantQuoteConverter] *Not all downloaders support all resolutions. Send empty for more information.*"
                                                                                    + " CASE SENSITIVE: --resolution=Tick/Second/Minute/Hour/Daily/All"),
                 new CommandLineOption("from-date", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders] --from-date=yyyyMMdd-HH:mm:ss"),
                 new CommandLineOption("to-date", CommandOptionType.SingleValue, "[OPTIONAL for downloaders] If not provided 'DateTime.UtcNow' will "
