@@ -161,6 +161,7 @@ namespace QuantConnect.Securities
                 .Where(s => s.Type == SecurityType.Forex || s.Type == SecurityType.Cfd || s.Type == SecurityType.Crypto);
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
+            // Side effects are expected!
             var markets = securities.Select(x => x.Key).GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
             if (markets.ContainsKey(SecurityType.Cfd) && !markets.ContainsKey(SecurityType.Forex))
             {
@@ -180,65 +181,59 @@ namespace QuantConnect.Securities
             .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
             .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
 
-            var currencyConversion = SecurityCurrencyConversion.LinearSearch(Symbol, CashBook.AccountCurrency, securitiesToSearch.Select(sec => sec.Symbol).Concat(potentials));
 
-            // for each step, find existing security, and if it doesn't exist, make new one
-            // also build ConversionRateSecurity list
-            foreach (var step in currencyConversion.ConversionSteps)
-            {
-                Security security = null;
+            //function for making new security used in conversion
+            var makeNewSecurity = new Func<Symbol, Security>(symbol => {
 
-                var existingSecuritySet = securitiesToSearch.Where(s => s.Symbol.Value == step.PairSymbol);
+                var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.SecurityType, Symbol);
 
-                if (existingSecuritySet.Any())
+                Cash quoteCash;
+                if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
                 {
-                    security = existingSecuritySet.SingleOrDefault();
+                    throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
                 }
-                else
+
+                var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+                var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+                // use the first subscription defined in the subscription manager
+                var type = subscriptions.LookupSubscriptionConfigDataTypes(symbol.SecurityType, minimumResolution, false).First();
+                var objectType = type.Item1;
+                var tickType = type.Item2;
+
+                // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
+                var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+
+                Security newSecurity;
+
+                switch (symbol.SecurityType)
                 {
-                    var symbol = CreateSymbol(marketMap, step.PairSymbol, markets, step.PairSymbol.Type);
+                    case SecurityType.Cfd:
+                        newSecurity = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
+                        break;
 
-                    var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.SecurityType, Symbol);
+                    case SecurityType.Crypto:
+                        newSecurity = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+                        break;
 
-                    Cash quoteCash;
-                    if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
-                    {
-                        throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
-                    }
+                    case SecurityType.Forex:
+                        newSecurity = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
+                        break;
 
-                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
-                    var exchangeHours = marketHoursDbEntry.ExchangeHours;
-
-                    // use the first subscription defined in the subscription manager
-                    var type = subscriptions.LookupSubscriptionConfigDataTypes(symbol.SecurityType, minimumResolution, false).First();
-                    var objectType = type.Item1;
-                    var tickType = type.Item2;
-
-                    // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
-
-                    switch (symbol.SecurityType)
-                    {
-                        case SecurityType.Cfd:
-                            security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
-                            break;
-                        case SecurityType.Crypto:
-                            security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
-                            break;
-                        case SecurityType.Forex:
-                            security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
-                            break;
-                        default:
-                            throw new ArgumentException("Unknown security type");
-                    }
-
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
-
-                    securities.Add(symbol, security);
-
-                    requiredSecurities.Add(security);
+                    default:
+                        throw new ArgumentException("Unknown security type");
                 }
-            }
+
+                Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+
+                securities.Add(symbol, newSecurity);
+
+                requiredSecurities.Add(newSecurity);
+
+                return newSecurity;
+            });
+
+            _currencyConversion = SecurityCurrencyConversion.LinearSearch(Symbol, CashBook.AccountCurrency, securitiesToSearch, potentials, makeNewSecurity);
 
             return requiredSecurities;
         }

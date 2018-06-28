@@ -15,34 +15,28 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// </summary>
         public class Step
         {
-            public readonly Security RateSecurity;
+            public readonly Symbol Symbol;
+            public Security RateSecurity { get; private set; }
             public readonly bool Inverted;
             public decimal ConversionRate;
 
             public string PairSymbol => RateSecurity.Symbol.Value;
 
-            public Step(Security rateSecurity, bool inverted = false)
+            public Step(Symbol symbol, Security rateSecurity, bool inverted = false)
             {
+                this.Symbol = symbol;
                 this.RateSecurity = rateSecurity;
                 this.Inverted = inverted;
 
-                if (RateSecurity.Price != 0)
+                if (RateSecurity != null)
                 {
-                    if (inverted == false)
-                    {
-                        ConversionRate = RateSecurity.Price;
-                    }
-
-                    else
-                    {
-                        ConversionRate = 1m / RateSecurity.Price;
-                    }
+                    Update(RateSecurity.GetLastData());
                 }
             }
 
             public void Update(BaseData data)
             {
-                if (RateSecurity.Symbol == data.Symbol)
+                if (data != null && Symbol == data.Symbol)
                 {
                     var rate = data.Value;
 
@@ -52,6 +46,14 @@ namespace QuantConnect.Securities.CurrencyConversion
                     }
 
                     ConversionRate = rate;
+                }
+            }
+
+            public void SetSecurity(Security security)
+            {
+                if (security.Symbol.ID == Symbol.ID)
+                {
+                    RateSecurity = security;
                 }
             }
         }
@@ -85,13 +87,18 @@ namespace QuantConnect.Securities.CurrencyConversion
 
             _steps.ForEach(step => {
 
-                if(step.Inverted)
+                decimal price = step.RateSecurity.Price;
+
+                if (price != 0m)
                 {
-                    newConversionRate /= step.RateSecurity.GetLastData().Value;
-                }
-                else
-                {
-                    newConversionRate *= step.RateSecurity.GetLastData().Value;
+                    if (step.Inverted)
+                    {
+                        newConversionRate /= step.RateSecurity.Price;
+                    }
+                    else
+                    {
+                        newConversionRate *= step.RateSecurity.Price;
+                    }
                 }
             });
 
@@ -101,23 +108,37 @@ namespace QuantConnect.Securities.CurrencyConversion
         }
 
         // linear search for path
-        public static SecurityCurrencyConversion LinearSearch(string sourceCurrency, string destinationCurrency, IEnumerable<Security> availableSecurities)
+        public static SecurityCurrencyConversion LinearSearch(string sourceCurrency, string destinationCurrency, IEnumerable<Security> existingSecurities, IEnumerable<Symbol> potentialSymbols, Func<Symbol, Security> makeNewSecurity)
         {
             var conversion = new SecurityCurrencyConversion();
 
-            conversion._securities = availableSecurities.ToList();
+            conversion._securities = existingSecurities.ToList();
+
+            var symToSecMap = new Dictionary<Symbol, Security>();
+
+            var allSymbols = existingSecurities.Select(sec => sec.Symbol).Concat(potentialSymbols);
 
             // search existing _securities list, and if anything found, calculate if inverted and then return step
             // 1 leg
-            foreach (var sec in availableSecurities)
+            foreach (var sym in allSymbols)
             {
-                if (sec.Symbol.Value.PairContainsCode(sourceCurrency))
+                if (sym.Value.PairContainsCode(sourceCurrency))
                 {
-                    if (sec.Symbol.Value.PairsOtherCode(sourceCurrency) == destinationCurrency)
+                    if (sym.Value.PairsOtherCode(sourceCurrency) == destinationCurrency)
                     {
-                        bool inverted = sec.Symbol.Value.ComparePair(sourceCurrency, destinationCurrency) == CurrencyPairUtil.Match.InverseMatch;
+                        bool inverted = sym.Value.ComparePair(sourceCurrency, destinationCurrency) == CurrencyPairUtil.Match.InverseMatch;
 
-                        conversion._steps = new List<Step>() { new Step(sec, inverted) };
+
+                        var selection = existingSecurities.Where(s => s.Symbol == sym);
+
+                        if (selection.Any())
+                        {
+                            conversion._steps = new List<Step>() { new Step(sym, selection.Single(), inverted) };
+                        }
+                        else
+                        {
+                            conversion._steps = new List<Step>() { new Step(sym, makeNewSecurity(sym), inverted) };
+                        }
 
                         return conversion;
                     }
@@ -125,26 +146,54 @@ namespace QuantConnect.Securities.CurrencyConversion
             }
 
             // 2 legs
-            foreach (var sec1 in availableSecurities)
+            foreach (var sym1 in allSymbols)
             {
-                if (sec1.Symbol.Value.PairContainsCode(sourceCurrency))
+                if (sym1.Value.PairContainsCode(sourceCurrency))
                 {
-                    var midCode = sec1.Symbol.Value.PairsOtherCode(sourceCurrency);
+                    var midCode = sym1.Value.PairsOtherCode(sourceCurrency);
 
-                    foreach (var sec2 in availableSecurities)
+                    foreach (var sym2 in allSymbols)
                     {
-                        if (sec2.Symbol.Value.PairContainsCode(midCode))
+                        if (sym2.Value.PairContainsCode(midCode))
                         {
-                            if (sec2.Symbol.Value.PairsOtherCode(midCode) == destinationCurrency)
+                            if (sym2.Value.PairsOtherCode(midCode) == destinationCurrency)
                             {
                                 string baseCode;
                                 string quoteCode;
 
-                                CurrencyPairUtil.DecomposeCurrencyPair(sec1.Symbol.Value, out baseCode, out quoteCode);
-                                Step step1 = new Step(sec1, sourceCurrency == quoteCode);
+                                CurrencyPairUtil.DecomposeCurrencyPair(sym1.Value, out baseCode, out quoteCode);
 
-                                CurrencyPairUtil.DecomposeCurrencyPair(sec2.Symbol.Value, out baseCode, out quoteCode);
-                                Step step2 = new Step(sec2, midCode == quoteCode);
+                                var selection = existingSecurities.Where(s => s.Symbol == sym1);
+
+                                // Step 1
+
+                                Step step1;
+
+                                if (selection.Any())
+                                {
+                                    step1 = new Step(sym1, selection.Single(), sourceCurrency == quoteCode);
+                                }
+                                else
+                                {
+                                    step1 = new Step(sym1, makeNewSecurity(sym1), sourceCurrency == quoteCode);
+                                }
+
+                                CurrencyPairUtil.DecomposeCurrencyPair(sym2.Value, out baseCode, out quoteCode);
+
+                                selection = existingSecurities.Where(s => s.Symbol == sym1);
+
+                                // Step 2
+
+                                Step step2;
+
+                                if(selection.Any())
+                                {
+                                    step2 = new Step(sym2, selection.Single(), midCode == quoteCode);
+                                }
+                                else
+                                {
+                                    step2 = new Step(sym2, makeNewSecurity(sym2), midCode == quoteCode);
+                                }
 
                                 conversion._steps = new List<Step>() { step1, step2 };
 

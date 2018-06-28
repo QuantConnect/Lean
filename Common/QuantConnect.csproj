@@ -211,7 +211,6 @@
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
     <Compile Include="Securities\CurrencyConversion\SecurityCurrencyConversion.cs" />
-    <Compile Include="Securities\CurrencyConversion\ICurrencyPathProvider.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
