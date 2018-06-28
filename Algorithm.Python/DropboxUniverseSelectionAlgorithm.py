@@ -21,6 +21,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
 import decimal as d
+import base64
 
 ### <summary>
 ### In this algortihm we show how you can easily use the universe selection feature to fetch symbols
@@ -53,7 +54,13 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
         # backtest - first cache the entire file
         if len(self.backtestSymbolsPerDay) == 0:
-            str = self.Download("https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1")
+
+            # No need for headers for authorization with dropbox, these two lines are for example purposes 
+            byteKey = base64.b64encode("UserName:Password".encode('ASCII'))
+            # The headers must be passed to the Download method as dictionary
+            headers = { 'Authorization' : f'Basic ({byteKey.decode("ASCII")})' }
+
+            str = self.Download("https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1", headers)
             for line in str.splitlines():
                 data = line.split(',')
                 self.backtestSymbolsPerDay[data[0]] = data[1:]
