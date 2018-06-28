@@ -753,10 +753,19 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="address">A string containing the URI to download</param>
         /// <param name="headers">Defines header values to add to the request</param>
+        /// <returns>The requested resource as a <see cref="string"/></returns>
+        public string Download(string address, PyObject headers) => Download(address, headers, null, null);
+
+        /// <summary>
+        /// Downloads the requested resource as a <see cref="string"/>.
+        /// The resource to download is specified as a <see cref="string"/> containing the URI.
+        /// </summary>
+        /// <param name="address">A string containing the URI to download</param>
+        /// <param name="headers">Defines header values to add to the request</param>
         /// <param name="userName">The user name associated with the credentials</param>
         /// <param name="password">The password for the user name associated with the credentials</param>
         /// <returns>The requested resource as a <see cref="string"/></returns>
-        public string Download(string address, PyObject headers = null, string userName = null, string password = null)
+        public string Download(string address, PyObject headers, string userName, string password)
         {
             var dict = new Dictionary<string, string>();
 
