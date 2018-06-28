@@ -95,7 +95,7 @@ namespace QuantConnect.Securities
                     }
                 }
             }
-            return addedSecurities.ToList();
+            return addedSecurities;
         }
 
         /// <summary>

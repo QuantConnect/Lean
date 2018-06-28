@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Util
 {
-    class CurrencyPairUtil
+    public static class CurrencyPairUtil
     {
         /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters.
@@ -135,5 +135,99 @@ namespace QuantConnect.Util
                 throw new ArgumentException($"The knownSymbol {knownSymbol} isn't contained in currencyPair {currencyPair}.");
             }
         }
+
+        public enum Match
+        {
+            /// <summary>
+            /// No match was found
+            /// </summary>
+            NoMatch,
+
+            /// <summary>
+            /// Pair was found exact as it is
+            /// </summary>
+            ExactMatch,
+
+            /// <summary>
+            /// Only inverse pair was found
+            /// </summary>
+            InverseMatch
+        }
+
+        public static Match ComparePair(this string pairA, string pairB)
+        {
+            if (pairA == pairB)
+            {
+                return Match.ExactMatch;
+            }
+
+            string baseA;
+            string quoteA;
+
+            DecomposeCurrencyPair(pairA, out baseA, out quoteA);
+
+            string baseB;
+            string quoteB;
+
+            DecomposeCurrencyPair(pairB, out baseB, out quoteB);
+
+            if(baseA == quoteB && baseB == quoteA)
+            {
+                return Match.InverseMatch;
+            }
+
+            return Match.NoMatch;
+        }
+
+        public static Match ComparePair(this string pairA, string baseB, string quoteB)
+        {
+            if (pairA == baseB + quoteB)
+            {
+                return Match.ExactMatch;
+            }
+
+            string baseA;
+            string quoteA;
+
+            DecomposeCurrencyPair(pairA, out baseA, out quoteA);
+
+            if (baseA == quoteB && baseB == quoteA)
+            {
+                return Match.InverseMatch;
+            }
+
+            return Match.NoMatch;
+        }
+
+        public static bool PairContainsCode(this string pair, string code)
+        {
+            string baseCode;
+            string quoteCode;
+
+            DecomposeCurrencyPair(pair, out baseCode, out quoteCode);
+
+            return baseCode == code || quoteCode == code;
+        }
+
+        public static string PairsOtherCode(this string pair, string code)
+        {
+            string baseCode;
+            string quoteCode;
+
+            DecomposeCurrencyPair(pair, out baseCode, out quoteCode);
+
+            if(baseCode == code)
+            {
+                return quoteCode;
+            }
+
+            if(quoteCode == code)
+            {
+                return baseCode;
+            }
+
+            throw new ArgumentException("The pair {pair} does not contain code {code}, cannot return other code");
+        }
+
     }
 }

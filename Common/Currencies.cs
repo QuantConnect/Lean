@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
-using QuantConnect.Securities.CurrencyConversion.PathProvider;
 
 namespace QuantConnect
 {
