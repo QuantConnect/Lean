@@ -26,7 +26,9 @@ Before we enable python support, follow the [installation instructions](https://
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
  3. Rebuild LEAN. This step will ensure that the `Python.Runtime.dll` you set in 2.1 will be used.
+      Note: You should do a complete/clean build to recompile the whole solution from scratch, ignoring anything it's done before.
  4. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
+      Note: If you have multiple Python versions, confirm the default environtment in Visual Studio using Python Evironments
 
 ### [macOS](https://github.com/QuantConnect/Lean#macos)
 **1. Install Python 3.6 with Anaconda:**
@@ -53,6 +55,7 @@ $ sudo ln -s /<path to anaconda>/lib/libpython* /usr/local/lib
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
  3. Rebuild LEAN. This step will ensure that the `Python.Runtime.dll` you set in 2.1 will be used.
+      Note: You should do a complete/clean build to recompile the whole solution from scratch, ignoring anything it's done before.
  4. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
 ### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
@@ -63,7 +66,7 @@ export PATH="$HOME/miniconda3/bin:$PATH"
 wget http://cdn.quantconnect.com.s3.amazonaws.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
 bash Miniconda3-4.3.31-Linux-x86_64.sh -b
 rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
-sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6.so
+sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 conda update -y python conda pip
 conda install -y cython pandas
 ```
