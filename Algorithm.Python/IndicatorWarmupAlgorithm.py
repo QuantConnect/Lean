@@ -34,7 +34,7 @@ import decimal as d
 ### <meta name="tag" content="history" />
 ### <meta name="tag" content="regression test" />
 ### <meta name="tag" content="warm up" />
-class IndicatorWarmupRegressionAlgorithm(QCAlgorithm):
+class IndicatorWarmupAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
