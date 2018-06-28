@@ -256,8 +256,8 @@ namespace QuantConnect.AlgorithmFactory
 
                     if (string.IsNullOrEmpty(types[0]))
                     {
-                        errorMessage = "Please verify algorithm type name matches the algorithm name in the configuration file. Unable to resolve multiple algorithm types to a single type.";
-                        Log.Error("Loader.TryCreateILAlgorithm(): Failed resolving multiple algorithm types to a single type.");
+                        errorMessage = "Unable to resolve multiple algorithm types to a single type. Please verify algorithm type name matches the algorithm name in the configuration file and that there is one and only one class derived from QCAlgorithm.";
+                        Log.Error($"Loader.TryCreateILAlgorithm(): {errorMessage}");
                         return false;
                     }
                 }
@@ -278,8 +278,10 @@ namespace QuantConnect.AlgorithmFactory
             }
             catch (Exception err)
             {
-                Log.Error(err);
-                if (err.InnerException != null) errorMessage = err.InnerException.Message;
+                errorMessage = "Unable to resolve multiple algorithm types to a single type. Please verify algorithm type name matches the algorithm name in the configuration file and that there is one and only one class derived from QCAlgorithm. ";
+                errorMessage += err.InnerException == null ? err.Message : err.InnerException.Message;
+                Log.Error($"Loader.TryCreateILAlgorithm(): {errorMessage}");
+                return false;
             }
 
             return true;
