@@ -212,6 +212,7 @@
     <Compile Include="Python\PandasConverter.cs" />
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
+    <Compile Include="Securities\CurrencyConversion\SecurityCurrencyConversion.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
@@ -432,6 +433,8 @@
     <Compile Include="Securities\Future\Futures.cs" />
     <Compile Include="Securities\Future\FutureMarginModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
+    <Compile Include="Securities\CurrencyConversion\ICurrencyConversion.cs" />
+    <Compile Include="Util\CurrencyPairUtil.cs" />
     <Compile Include="Securities\Volatility\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
@@ -612,7 +615,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Securities\CurrencyConversion\PathProvider\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.7\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.7\build\QuantConnect.pythonnet.targets')" />

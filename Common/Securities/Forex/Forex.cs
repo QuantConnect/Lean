@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,9 @@ using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
+using System.Collections.Generic;
 
-namespace QuantConnect.Securities.Forex 
+namespace QuantConnect.Securities.Forex
 {
     /// <summary>
     /// FOREX Security Object Implementation for FOREX Assets
@@ -55,7 +56,7 @@ namespace QuantConnect.Securities.Forex
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
         }
 
@@ -87,7 +88,7 @@ namespace QuantConnect.Securities.Forex
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
         }
 
@@ -100,20 +101,5 @@ namespace QuantConnect.Securities.Forex
         /// </remarks>
         public string BaseCurrencySymbol { get; private set; }
 
-        /// <summary>
-        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
-        /// </summary>
-        /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
-        /// <param name="baseCurrency">The output base currency</param>
-        /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
-        {
-            if (currencyPair == null || currencyPair.Length != 6)
-            {
-                throw new ArgumentException("Currency pairs must be exactly 6 characters: " + currencyPair);
-            }
-            baseCurrency = currencyPair.Substring(0, 3);
-            quoteCurrency = currencyPair.Substring(3);
-        }
     }
 }

@@ -15,7 +15,6 @@
 
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Tests.Common
 {
@@ -29,7 +28,7 @@ namespace QuantConnect.Tests.Common
             foreach (var currencyPair in allPairs)
             {
                 string quotec, basec;
-                Forex.DecomposeCurrencyPair(currencyPair, out basec, out quotec);
+                QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out basec, out quotec);
                 Assert.IsTrue(Currencies.CurrencySymbols.ContainsKey(basec), "Missing currency symbol for: " + basec);
                 Assert.IsTrue(Currencies.CurrencySymbols.ContainsKey(quotec), "Missing currency symbol for: " + quotec);
             }

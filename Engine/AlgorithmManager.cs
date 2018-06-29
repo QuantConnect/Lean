@@ -208,7 +208,8 @@ namespace QuantConnect.Lean.Engine
                 DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None);
             foreach (var security in addedSecurities)
             {
-                // assume currency feeds are always one subscription per, these are typically quote subscriptions
+                // "assume currency feeds are always one subscription per, these are typically quote subscriptions" - this assumption is now wrong
+                // one subscription may need many currency feeds
                 feed.AddSubscription(new SubscriptionRequest(false, null, security, new SubscriptionDataConfig(security.Subscriptions.First()), algorithm.UtcTime, algorithm.EndDate));
             }
 
@@ -359,14 +360,9 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // poke each cash object to update from the recent security data
-                foreach (var kvp in algorithm.Portfolio.CashBook)
+                foreach (var cash in algorithm.Portfolio.CashBook.Values)
                 {
-                    var cash = kvp.Value;
-                    var updateData = cash.ConversionRateSecurity?.GetLastData();
-                    if (updateData != null)
-                    {
-                        cash.Update(updateData);
-                    }
+                    cash.Update();
                 }
 
                 // sample alpha charts now that we've updated time/price information but BEFORE we receive new insights

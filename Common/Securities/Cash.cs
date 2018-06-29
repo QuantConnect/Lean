@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Securities
 {
@@ -28,24 +29,13 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
+
         private bool _isBaseCurrency;
-        private bool _invertRealTimePrice;
 
         private readonly object _locker = new object();
 
-        /// <summary>
-        /// Gets the symbol of the security required to provide conversion rates.
-        /// If this cash represents the account currency, then <see cref="QuantConnect.Symbol.Empty"/>
-        /// is returned
-        /// </summary>
-        public Symbol SecuritySymbol => ConversionRateSecurity?.Symbol ?? QuantConnect.Symbol.Empty;
-
-        /// <summary>
-        /// Gets the security used to apply conversion rates.
-        /// If this cash represents the account currency, then null is returned.
-        /// </summary>
         [JsonIgnore]
-        public Security ConversionRateSecurity { get; private set; }
+        private ICurrencyConversion _currencyConversion;
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -62,7 +52,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal ConversionRate { get; internal set; }
 
-        /// <summary>
+        /// <summary>y
         /// The symbol of the currency, such as $
         /// </summary>
         public string CurrencySymbol { get; }
@@ -80,10 +70,11 @@ namespace QuantConnect.Securities
         /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.AccountCurrency"/></param>
         public Cash(string symbol, decimal amount, decimal conversionRate)
         {
-            if (symbol == null || symbol.Length != 3)
+            if (symbol == null || symbol.Length < 3 || symbol.Length > Currencies.MaxCharactersPerCurrencyCode)
             {
-                throw new ArgumentException("Cash symbols must be exactly 3 characters.");
+                throw new ArgumentException($"Cash symbols must have atleast 3 characters and at most {Currencies.MaxCharactersPerCurrencyCode} characters.");
             }
+
             Amount = amount;
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
@@ -94,16 +85,11 @@ namespace QuantConnect.Securities
         /// Updates this cash object with the specified data
         /// </summary>
         /// <param name="data">The new data for this cash object</param>
-        public void Update(BaseData data)
+        public void Update()
         {
             if (_isBaseCurrency) return;
 
-            var rate = data.Value;
-            if (_invertRealTimePrice)
-            {
-                rate = 1/rate;
-            }
-            ConversionRate = rate;
+            ConversionRate = _currencyConversion.Update();
         }
 
         /// <summary>
@@ -145,7 +131,7 @@ namespace QuantConnect.Securities
         /// <param name="cashBook">The cash book - used for resolving quote currencies for created conversion securities</param>
         /// <param name="changes"></param>
         /// <returns>Returns the added currency security if needed, otherwise null</returns>
-        public Security EnsureCurrencyDataFeed(SecurityManager securities,
+        public List<Security> EnsureCurrencyDataFeed(SecurityManager securities,
             SubscriptionManager subscriptions,
             MarketHoursDatabase marketHoursDatabase,
             SymbolPropertiesDatabase symbolPropertiesDatabase,
@@ -156,105 +142,100 @@ namespace QuantConnect.Securities
         {
             // this gets called every time we add securities using universe selection,
             // so must of the time we've already resolved the value and don't need to again
-            if (ConversionRateSecurity != null)
+            if (_currencyConversion != null)
             {
                 return null;
             }
 
             if (Symbol == CashBook.AccountCurrency)
             {
-                ConversionRateSecurity = null;
+                _currencyConversion = null;
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
                 return null;
             }
 
-            // we require a security that converts this into the base currency
-            string normal = Symbol + CashBook.AccountCurrency;
-            string invert = CashBook.AccountCurrency + Symbol;
+            // existing securities
             var securitiesToSearch = securities.Select(kvp => kvp.Value)
                 .Concat(changes.AddedSecurities)
                 .Where(s => s.Type == SecurityType.Forex || s.Type == SecurityType.Cfd || s.Type == SecurityType.Crypto);
 
-            foreach (var security in securitiesToSearch)
-            {
-                if (security.Symbol.Value == normal)
-                {
-                    ConversionRateSecurity = security;
-                    return null;
-                }
-                if (security.Symbol.Value == invert)
-                {
-                    ConversionRateSecurity = security;
-                    _invertRealTimePrice = true;
-                    return null;
-                }
-            }
-            // if we've made it here we didn't find a security, so we'll need to add one
-
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
+            // Side effects are expected!
             var markets = securities.Select(x => x.Key).GroupBy(x => x.SecurityType).ToDictionary(x => x.Key, y => y.First().ID.Market);
             if (markets.ContainsKey(SecurityType.Cfd) && !markets.ContainsKey(SecurityType.Forex))
             {
                 markets.Add(SecurityType.Forex, markets[SecurityType.Cfd]);
             }
+
             if (markets.ContainsKey(SecurityType.Forex) && !markets.ContainsKey(SecurityType.Cfd))
             {
                 markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
             }
 
-            var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
-                .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
-                .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
-
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
 
-            foreach (var symbol in potentials)
-            {
-                if (symbol.Value == normal || symbol.Value == invert)
+            var requiredSecurities = new List<Security>();
+
+            var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
+            .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
+            .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
+
+
+            //function for making new security used in conversion
+            var makeNewSecurity = new Func<Symbol, Security>(symbol => {
+
+                var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.SecurityType, Symbol);
+
+                Cash quoteCash;
+                if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
                 {
-                    _invertRealTimePrice = symbol.Value == invert;
-                    var securityType = symbol.ID.SecurityType;
-                    var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
-                    Cash quoteCash;
-                    if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
-                    {
-                        throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
-                    }
-                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
-                    var exchangeHours = marketHoursDbEntry.ExchangeHours;
-
-                    // use the first subscription defined in the subscription manager
-                    var type = subscriptions.LookupSubscriptionConfigDataTypes(securityType, minimumResolution, false).First();
-                    var objectType = type.Item1;
-                    var tickType = type.Item2;
-
-                    // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
-
-                    Security security;
-                    if (securityType == SecurityType.Cfd)
-                    {
-                        security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
-                    }
-                    else if (securityType == SecurityType.Crypto)
-                    {
-                        security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
-                    }
-                    else
-                    {
-                        security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
-                    }
-
-                    ConversionRateSecurity = security;
-                    securities.Add(config.Symbol, security);
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
-                    return security;
+                    throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.Value);
                 }
-            }
 
-            // if this still hasn't been set then it's an error condition
-            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.AccountCurrency));
+                var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+                var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+                // use the first subscription defined in the subscription manager
+                var type = subscriptions.LookupSubscriptionConfigDataTypes(symbol.SecurityType, minimumResolution, false).First();
+                var objectType = type.Item1;
+                var tickType = type.Item2;
+
+                // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
+                var config = subscriptions.Add(objectType, tickType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+
+                Security newSecurity;
+
+                switch (symbol.SecurityType)
+                {
+                    case SecurityType.Cfd:
+                        newSecurity = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
+                        break;
+
+                    case SecurityType.Crypto:
+                        newSecurity = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+                        break;
+
+                    case SecurityType.Forex:
+                        newSecurity = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
+                        break;
+
+                    default:
+                        throw new ArgumentException("Unknown security type");
+                }
+
+                Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+
+                securities.Add(symbol, newSecurity);
+
+                requiredSecurities.Add(newSecurity);
+
+                return newSecurity;
+            });
+
+            _currencyConversion = SecurityCurrencyConversion.LinearSearch(Symbol, CashBook.AccountCurrency, securitiesToSearch, potentials, makeNewSecurity);
+
+            return requiredSecurities;
         }
 
         /// <summary>
@@ -272,6 +253,7 @@ namespace QuantConnect.Securities
         private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)
         {
             string market;
+
             if (!markets.TryGetValue(securityType, out market))
             {
                 market = marketMap[securityType];

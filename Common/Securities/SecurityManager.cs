@@ -346,7 +346,7 @@ namespace QuantConnect.Securities
             {
                 // decompose the symbol into each currency pair
                 string baseCurrency;
-                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
 
                 if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
                 {
@@ -497,7 +497,16 @@ namespace QuantConnect.Securities
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;
-            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto) defaultQuoteCurrency = symbol.Value.Substring(3);
+
+
+            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
+            {
+                var baseCurrency = "";
+                var quoteCurrency = "";
+
+                CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                defaultQuoteCurrency = quoteCurrency;
+            }
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var types = subscriptionManager.LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
