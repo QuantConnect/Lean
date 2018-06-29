@@ -116,6 +116,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly Dictionary<int, DateTime> _subscriptionTimes = new Dictionary<int, DateTime>();
         private readonly TimeSpan _minimumTimespanBeforeUnsubscribe = TimeSpan.FromMilliseconds(500);
 
+        private readonly bool _enableDelayedStreamingData = Config.GetBool("ib-enable-delayed-streaming-data");
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -2365,6 +2367,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                                 // track subscription time for minimum delay in unsubscribe
                                 _subscriptionTimes[id] = DateTime.UtcNow;
+
+                                if (_enableDelayedStreamingData)
+                                {
+                                    // Switch to delayed market data if the user does not have the necessary real time data subscription.
+                                    // If live data is available, it will always be returned instead of delayed data.
+                                    Client.ClientSocket.reqMarketDataType(3);
+                                }
 
                                 // we would like to receive OI (101)
                                 Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
