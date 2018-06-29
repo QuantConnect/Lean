@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,6 +59,7 @@ namespace QuantConnect.Brokerages.Kraken
         private Thread _connectionMonitorThread;
         private volatile bool _connectionLost;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
 
         /// <summary>
         /// The UTC time of the last received heartbeat message
@@ -217,15 +218,15 @@ namespace QuantConnect.Brokerages.Kraken
         /// </summary>
         public event EventHandler<BrokerageMessageEvent> Message;
         #endregion
-        
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected 
+        public override bool IsConnected
         {
             get
             {
-                return true; 
+                return true;
             }
         }
 
@@ -324,8 +325,8 @@ namespace QuantConnect.Brokerages.Kraken
 
             if (order.Type == OrderType.Limit)
                 krakenOrder.Price = ((LimitOrder)order).LimitPrice;
-            
-            //krakenOrder.Leverage = 
+
+            //krakenOrder.Leverage =
 
             var result = _restApi.AddOrder(krakenOrder);
 
@@ -393,7 +394,7 @@ namespace QuantConnect.Brokerages.Kraken
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from IB</returns>
@@ -447,7 +448,7 @@ namespace QuantConnect.Brokerages.Kraken
             if (KrakenSymbols.Count > 0)
             {
                 var quotes = _api.GetRates(KrakenSymbols);
-                
+
                 foreach (var holding in holdings)
                 {
                     var KrakenSymbol = _symbolMapper.GetBrokerageSymbol(holding.Symbol);
@@ -465,6 +466,9 @@ namespace QuantConnect.Brokerages.Kraken
 
         private decimal GetConversionRate(string currency)
         {
+            return 1m;
+
+            /*
             Log.Trace($"GetConversionRate({currency})");
 
             var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
@@ -482,7 +486,7 @@ namespace QuantConnect.Brokerages.Kraken
                 return 0;
             }
 
-            return 1m / rate;
+            return 1m / rate;*/
         }
 
         /// <summary>
@@ -492,9 +496,9 @@ namespace QuantConnect.Brokerages.Kraken
         public override List<Cash> GetCashBalance()
         {
             Log.Trace("GetCashBalance()");
-            
+
             // CashBook.AccountCurrency = "USD";
-            
+
             var list = new List<Cash>();
 
             Dictionary<string, decimal> balance   = _restApi.GetAccountBalance();
@@ -519,11 +523,14 @@ namespace QuantConnect.Brokerages.Kraken
                 //! TODO THIS DOESNT WORK AS EXPECTED, WANTS XRPETH PAIR WHICH DOES NOT EXIST
                 if (asset == "ZUSD")
                 {
+
                     list.Add(new Cash("USD", amount, 1));
                 }
                 else if (new [] {"ZEUR", "ZJPY", "ZGBP", "ZKRW", "ZCAD"}.Contains(asset))
                 {
                     string leanSymbol = SymbolMapper.KrakenToLeanCode(asset);
+
+
 
                     decimal price = GetConversionRate(leanSymbol);
 
@@ -534,7 +541,7 @@ namespace QuantConnect.Brokerages.Kraken
                     try
                     {
                         string pair = SymbolMapper.GetPair(asset, "USD"); //! <-- GetPair might not work properly
-                        // build 
+                        // build
 
                         wantedPairs.Add(pair);
 
@@ -545,7 +552,7 @@ namespace QuantConnect.Brokerages.Kraken
                         Log.Trace($"Catched exception in GetCashBalance(), with message: {e}");
 
                         string pair = SymbolMapper.GetPair(asset, "XBT"); //! <-- GetPair might not work properly
-                        // build 
+                        // build
 
                         wantedPairs.Add(pair);
                         wantedPairs.Add("XXBTZUSD");
@@ -577,7 +584,7 @@ namespace QuantConnect.Brokerages.Kraken
                 foreach(string pair in KVPair.Value)
                 {
                     Ticker t = ticks[pair];
-                    
+
                     decimal conversionRate = (t.Ask[0] + t.Bid[0]) / 2m;
 
                     price *= conversionRate;

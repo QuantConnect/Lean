@@ -60,14 +60,14 @@ namespace QuantConnect.Algorithm.CSharp
             // https://github.com/QuantConnect/Lean/issues/1859
 
             SetBrokerageModel(BrokerageName.Kraken, AccountType.Cash);
-            
+
             // You can uncomment the following line when live trading with GDAX,
             // to ensure limit orders will only be posted to the order book and never executed as a taker (incurring fees).
             // Please note this statement has no effect in backtesting or paper trading.
             // DefaultOrderProperties = new GDAXOrderProperties { PostOnly = true };
 
             // Find more symbols here: http://quantconnect.com/data
-            
+
             var symbol = AddCrypto("ETHEUR").Symbol;
 
             // create two moving averages
