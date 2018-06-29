@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,13 +28,13 @@ using QuantConnect.Logging;
 namespace QuantConnect.ToolBox.GDAXDownloader
 {
     /// <summary>
-    /// GDAX Data Downloader class 
+    /// GDAX Data Downloader class
     /// </summary>
     public class GDAXDownloader : IDataDownloader
     {
         const int MaxDatapointsPerRequest = 200;
         const int MaxRequestsPerSecond = 2;
-        const string HistoricCandlesUrl = "http://api.gdax.com/products/{0}/candles?start={1}&end={2}&granularity={3}";
+        const string HistoricCandlesUrl = "http://api.pro.coinbase.com/products/{0}/candles?start={1}&end={2}&granularity={3}";
 
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end times(in UTC).
@@ -110,7 +111,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// <summary>
         /// Parse string response from web response
         /// </summary>
-        /// <param name="Symbol">Crypto security symbol.</param>
+        /// <param name="symbol">Crypto security symbol.</param>
         /// <param name="granularity">Resolution in seconds.</param>
         /// <param name="data">Web response as string.</param>
         /// <returns>web response as string</returns>

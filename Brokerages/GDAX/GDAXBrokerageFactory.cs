@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "gdax-url" , Config.Get("gdax-url", "wss://ws-feed.gdax.com")},
+            { "gdax-url" , Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com")},
             { "gdax-api-secret", Config.Get("gdax-api-secret")},
             { "gdax-api-key", Config.Get("gdax-api-key")},
             { "gdax-passphrase", Config.Get("gdax-passphrase")}
@@ -73,7 +73,7 @@ namespace QuantConnect.Brokerages.GDAX
                     throw new Exception($"GDAXBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
             }
 
-            var restClient = new RestClient("https://api.gdax.com");
+            var restClient = new RestClient("https://api.pro.coinbase.com");
             var webSocketClient = new WebSocketWrapper();
 
             IBrokerage brokerage;

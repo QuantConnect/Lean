@@ -1,15 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Brokerages.GDAX;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
 using QuantConnect.Orders;
-using System.Reflection;
 using Moq;
 using QuantConnect.Brokerages;
 using RestSharp;
@@ -19,7 +28,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     [TestFixture, Ignore("This test requires a configured and active account")]
     public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
-
         #region Properties
         protected override Symbol Symbol
         {
@@ -58,13 +66,13 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var restClient = new RestClient("https://api.gdax.com");
+            var restClient = new RestClient("https://api.pro.coinbase.com");
             var webSocketClient = new WebSocketWrapper();
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));
 
-            return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.gdax.com"), webSocketClient, restClient, Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), 
+            return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com"), webSocketClient, restClient, Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"),
                 Config.Get("gdax-passphrase"), algorithm.Object);
         }
 
@@ -80,18 +88,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         }
 
         //no stop limit support
-        public override TestCaseData[] OrderParameters
+        public override TestCaseData[] OrderParameters => new[]
         {
-            get
-            {
-                return new[]
-                {
-                    new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-                    new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
-                };
-            }
-        }
-
+            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+        };
     }
 }
