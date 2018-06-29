@@ -208,6 +208,9 @@ namespace QuantConnect.Lean.Engine
                 //-> Using the job + initialization: load the designated handlers:
                 if (initializeComplete)
                 {
+                    // notify the LEAN manager that the algorithm is initialized and starting
+                    _systemHandlers.LeanManager.OnAlgorithmStart();
+
                     //-> Reset the backtest stopwatch; we're now running the algorithm.
                     var startTime = DateTime.Now;
 
@@ -301,6 +304,9 @@ namespace QuantConnect.Lean.Engine
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
                         HandleAlgorithmError(job, err);
                     }
+
+                    // notify the LEAN manager that the algorithm has finished
+                    _systemHandlers.LeanManager.OnAlgorithmEnd();
 
                     try
                     {
