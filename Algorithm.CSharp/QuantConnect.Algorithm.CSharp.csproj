@@ -151,7 +151,7 @@
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
-    <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
+    <Compile Include="IndicatorWarmupAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
     <Compile Include="BrokerageModelAlgorithm.cs" />
