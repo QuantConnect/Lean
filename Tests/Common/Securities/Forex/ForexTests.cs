@@ -30,40 +30,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         private const string MaxCharactersPerCurrencyPair = "12";
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of " + MaxCharactersPerCurrencyPair + ".")]
-        public void DecomposeThrowsOnSymbolTooShort()
-        {
-            string symbol = "12345";
-            Assert.AreEqual(5, symbol.Length);
-            string basec, quotec;
-            QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec);
-        }
-
-        [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of " + MaxCharactersPerCurrencyPair + ".")]
-        public void DecomposeThrowsOnSymbolTooLong()
-        {
-            string symbol = "";
-
-            for(int i = 0 ; i < Currencies.MaxCharactersPerCurrencyPair + 1; i++)
-                symbol += "X";
-
-            Assert.AreEqual(symbol.Length, Currencies.MaxCharactersPerCurrencyPair + 1);
-
-            string basec, quotec;
-            QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec);
-        }
-
-        [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must not be null, length minimum of 6 and maximum of " + MaxCharactersPerCurrencyPair + ".")]
-        public void DecomposeThrowsOnNullSymbol()
-        {
-            string symbol = null;
-            string basec, quotec;
-            QuantConnect.Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol, out basec, out quotec);
-        }
-
-        [Test]
         public void ConstructorDecomposesBaseAndQuoteCurrencies()
         {
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
@@ -72,31 +38,5 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual("USD", forex.QuoteCurrency.Symbol);
         }
 
-        [Test]
-        public void CurrencyPairDualForex()
-        {
-            string currencyPair = "EURUSD";
-
-            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "EUR"), "USD");
-            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "USD"), "EUR");
-        }
-
-        [Test]
-        public void CurrencyPairDualCrypto()
-        {
-            string currencyPair = "ETHBTC";
-
-            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "ETH"), "BTC");
-            Assert.AreEqual(QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "BTC"), "ETH");
-        }
-
-        [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "The knownSymbol ZRX isn't contained in currencyPair ETHBTC.")]
-        public void CurrencyPairDualThrowsOnWrongKnownSymbol()
-        {
-            string currencyPair = "ETHBTC";
-
-            QuantConnect.Util.CurrencyPairUtil.CurrencyPairDual(currencyPair, "ZRX");
-        }
     }
 }

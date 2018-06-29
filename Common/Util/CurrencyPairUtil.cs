@@ -115,7 +115,7 @@ namespace QuantConnect.Util
         /// <param name="knownSymbol">Known part of the currencyPair (either A or B)</param>
         /// <param name="securityType">Type of security</param>
         /// <returns>Returns other part of currencyPair (either B or A)</returns>
-        public static string CurrencyPairDual(string currencyPair, string knownSymbol, SecurityType securityType = SecurityType.Base)
+        public static string CurrencyPairDual(this string currencyPair, string knownSymbol, SecurityType securityType = SecurityType.Base)
         {
             string CurrencyA = null;
             string CurrencyB = null;
@@ -207,26 +207,6 @@ namespace QuantConnect.Util
             DecomposeCurrencyPair(pair, out baseCode, out quoteCode);
 
             return baseCode == code || quoteCode == code;
-        }
-
-        public static string PairsOtherCode(this string pair, string code)
-        {
-            string baseCode;
-            string quoteCode;
-
-            DecomposeCurrencyPair(pair, out baseCode, out quoteCode);
-
-            if(baseCode == code)
-            {
-                return quoteCode;
-            }
-
-            if(quoteCode == code)
-            {
-                return baseCode;
-            }
-
-            throw new ArgumentException("The pair {pair} does not contain code {code}, cannot return other code");
         }
 
     }

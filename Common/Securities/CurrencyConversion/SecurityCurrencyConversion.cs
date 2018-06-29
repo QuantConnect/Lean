@@ -124,7 +124,7 @@ namespace QuantConnect.Securities.CurrencyConversion
             {
                 if (sym.Value.PairContainsCode(sourceCurrency))
                 {
-                    if (sym.Value.PairsOtherCode(sourceCurrency) == destinationCurrency)
+                    if (sym.Value.CurrencyPairDual(sourceCurrency) == destinationCurrency)
                     {
                         bool inverted = sym.Value.ComparePair(sourceCurrency, destinationCurrency) == CurrencyPairUtil.Match.InverseMatch;
 
@@ -150,13 +150,13 @@ namespace QuantConnect.Securities.CurrencyConversion
             {
                 if (sym1.Value.PairContainsCode(sourceCurrency))
                 {
-                    var midCode = sym1.Value.PairsOtherCode(sourceCurrency);
+                    var midCode = sym1.Value.CurrencyPairDual(sourceCurrency);
 
                     foreach (var sym2 in allSymbols)
                     {
                         if (sym2.Value.PairContainsCode(midCode))
                         {
-                            if (sym2.Value.PairsOtherCode(midCode) == destinationCurrency)
+                            if (sym2.Value.CurrencyPairDual(midCode) == destinationCurrency)
                             {
                                 string baseCode;
                                 string quoteCode;
