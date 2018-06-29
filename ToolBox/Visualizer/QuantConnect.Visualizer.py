@@ -150,6 +150,7 @@ class Visualizer:
         is_low_resolution_data = 'hour' in self.arguments['DATAFILE'] or 'daily' in self.arguments['DATAFILE']
         if not is_low_resolution_data:
             plot.xaxis.set_major_formatter(DateFormatter("%H:%M"))
+            plot.set_xlabel(self.lean_data_reader.GetDataTimeZone())
 
         is_forex = 'forex' in self.arguments['DATAFILE']
         is_open_interest = 'openinterest' in self.arguments['DATAFILE']
