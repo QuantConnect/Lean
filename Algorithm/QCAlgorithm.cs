@@ -1060,9 +1060,16 @@ namespace QuantConnect.Algorithm
             // check existence
             symbol = symbol.ToUpper();
             var security = Securities.FirstOrDefault(x => x.Key.Value == symbol).Value;
-            _benchmarkSymbol = security == null
-                ? QuantConnect.Symbol.Create(symbol, SecurityType.Equity, Market.USA)
-                : security.Symbol;
+            if (security == null)
+            {
+                Debug($"Warning: SetBenchmark({symbol}): no existing security found, benchmark security will be added with {SecurityType.Equity} type.");
+
+                _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Equity, Market.USA);
+            }
+            else
+            {
+                _benchmarkSymbol = security.Symbol;
+            }
         }
 
         /// <summary>
