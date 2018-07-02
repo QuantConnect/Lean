@@ -57,7 +57,7 @@ class EmaCrossAlphaModel(AlphaModel):
                 if symbolData.FastIsOverSlow:
                     if symbolData.Slow > symbolData.Fast:
                         insights.append(Insight.Price(symbolData.Symbol, self.predictionInterval, InsightDirection.Down))
-                
+
                 elif symbolData.SlowIsOverFast:
                     if symbolData.Fast > symbolData.Slow:
                         insights.append(Insight.Price(symbolData.Symbol, self.predictionInterval, InsightDirection.Up))
@@ -76,8 +76,8 @@ class EmaCrossAlphaModel(AlphaModel):
             if symbolData is None:
                 # create fast/slow EMAs
                 symbolData = SymbolData(added)
-                symbolData.Fast = algorithm.EMA(added.Symbol, self.fastPeriod)
-                symbolData.Slow = algorithm.EMA(added.Symbol, self.slowPeriod)
+                symbolData.Fast = algorithm.EMA(added.Symbol, self.fastPeriod, self.resolution)
+                symbolData.Slow = algorithm.EMA(added.Symbol, self.slowPeriod, self.resolution)
                 self.symbolDataBySymbol[added.Symbol] = symbolData
             else:
                 # a security that was already initialized was re-added, reset the indicators

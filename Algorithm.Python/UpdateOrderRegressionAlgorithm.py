@@ -117,18 +117,19 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
 
     def OnOrderEvent(self, orderEvent):
         order = self.Transactions.GetOrderById(orderEvent.OrderId)
+        ticket = self.Transactions.GetOrderTicket(orderEvent.OrderId);
 
         #order cancelations update CanceledTime
-        if order.Status == OrderStatus.Canceled and orderEvent.CanceledTime != orderEvent.UtcTime:
+        if order.Status == OrderStatus.Canceled and order.CanceledTime != orderEvent.UtcTime:
             raise ValueError("Expected canceled order CanceledTime to equal canceled order event time.")
-        
+
         #fills update LastFillTime
         if (order.Status == OrderStatus.Filled or order.Status == OrderStatus.PartiallyFilled) and order.LastFillTime != orderEvent.UtcTime:
             raise ValueError("Expected filled order LastFillTime to equal fill order event time.")
 
-        #updates have a status of submitted and the created time will be different from the event time
-        if order.Status == OrderStatus.Submitted and order.Time != orderEvent.UtcTime and order.LastUpdateTime != orderEvent.UtcTime:
-            raise ValueError("Expected updated order LastUpdateTime to equal submitted update order event time")
+        # check the ticket to see if the update was successfully processed
+        if len([ur for ur in ticket.UpdateRequests if ur.Response is not None and ur.Response.IsSuccess]) > 0 and order.CreatedTime != self.UtcTime and order.LastUpdateTime == None:
+            raise ValueError("Expected updated order LastUpdateTime to equal submitted update order event time");
 
         if orderEvent.Status == OrderStatus.Filled:
             self.Log("FILLED:: {0} FILL PRICE:: {1}".format(self.Transactions.GetOrderById(orderEvent.OrderId), orderEvent.FillPrice))

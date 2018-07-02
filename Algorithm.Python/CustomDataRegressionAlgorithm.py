@@ -99,11 +99,6 @@ class Bitcoin(PythonData):
 
         try:
             data = line.split(',')
-
-            # If value is zero, return None
-            value = decimal.Decimal(data[4])
-            if value == 0: return None
-
             coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
             coin.Value = value
             coin["Open"] = float(data[1])

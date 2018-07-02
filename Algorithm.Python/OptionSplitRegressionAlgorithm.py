@@ -31,11 +31,11 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
-        # this test opens position in the first day of trading, lives through stock split (7 for 1), 
+        # this test opens position in the first day of trading, lives through stock split (7 for 1),
         # and closes adjusted position on the second day
 
         self.SetCash(1000000)
-        self.SetStartDate(2014,6,6)
+        self.SetStartDate(2014,6,5)
         self.SetEndDate(2014,6,9)
 
         option = self.AddOption("AAPL")
@@ -52,9 +52,9 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
             if self.Time.hour > 9 and self.Time.minute > 0:
                 for kvp in slice.OptionChains:
                     chain = kvp.Value
-                    contracts = filter(lambda x: x.Strike == 650 and x.Right ==  OptionRight.Call, chain) 
+                    contracts = filter(lambda x: x.Strike == 650 and x.Right ==  OptionRight.Call, chain)
                     sorted_contracts = sorted(contracts, key = lambda x: x.Expiry)
-                
+
                 if len(sorted_contracts) > 1:
                     self.contract = sorted_contracts[1]
                     self.Buy(self.contract.Symbol, 1)
@@ -62,7 +62,7 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
         elif self.Time.day > 6 and self.Time.hour > 14 and self.Time.minute > 0:
             self.Liquidate()
 
-        if self.Portfolio.Invested: 
+        if self.Portfolio.Invested:
             options_hold = [x for x in self.Portfolio.Securities if x.Value.Holdings.AbsoluteQuantity != 0]
             holdings = options_hold[0].Value.Holdings.AbsoluteQuantity
             if self.Time.day == 6 and holdings != 1:

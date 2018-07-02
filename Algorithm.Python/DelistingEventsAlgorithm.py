@@ -60,14 +60,29 @@ class DelistingEventsAlgorithm(QCAlgorithm):
             self.Log("OnData(Slice): {0}: {1}: {2}".format(self.Time, symbol, value.Close))
 
         # the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
+
+        aaa = self.Securities["AAA"];
+        if aaa.IsDelisted and aaa.IsTradable:
+            raise Exception("Delisted security must NOT be tradable");
+
+        if not aaa.IsDelisted and not aaa.IsTradable:
+            raise Exception("Securities must be marked as tradable until they're delisted or removed from the universe");
+
         for kvp in data.Delistings:
             symbol = kvp.Key
             value = kvp.Value
 
             if value.Type == DelistingType.Warning:
                 self.Log("OnData(Delistings): {0}: {1} will be delisted at end of day today.".format(self.Time, symbol))
+
+                # liquidate on delisting warning
+                self.SetHoldings(symbol, 0);
+
             if value.Type == DelistingType.Delisted:
                 self.Log("OnData(Delistings): {0}: {1} has been delisted.".format(self.Time, symbol))
+
+                # fails because the security has already been delisted and is no longer tradable
+                self.SetHoldings(symbol, 1);
 
 
     def OnOrderEvent(self, orderEvent):
