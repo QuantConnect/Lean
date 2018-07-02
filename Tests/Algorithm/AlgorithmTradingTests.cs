@@ -14,12 +14,15 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1123,9 +1126,10 @@ namespace QuantConnect.Tests.Algorithm
 
             algo.Portfolio.SetCash(150000);
 
-            var mock = new Mock<IOrderProcessor>();
-            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null, null);
-            mock.Setup(m => m.Process(It.IsAny<Orders.OrderRequest>())).Returns(new Orders.OrderTicket(null, request.Object));
+            var mock = new Mock<ITransactionHandler>();
+            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null);
+            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(new OrderTicket(null, request.Object));
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algo.Transactions.SetOrderProcessor(mock.Object);
 
             algo.Buy(Symbols.MSFT, 1);
