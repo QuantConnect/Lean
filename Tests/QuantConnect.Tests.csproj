@@ -265,6 +265,7 @@
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
     <Compile Include="Engine\AlgorithmManagerTests.cs" />
+    <Compile Include="Engine\Alphas\StatisticsInsightManagerExtensionTests.cs" />
     <Compile Include="Engine\BasicOptionAssignmentSimulationTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BrokerageTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataCacheProviders\SingleEntryDataCacheProviderTests.cs" />
