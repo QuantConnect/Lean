@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Logging;
 using WebSocketSharp;
 
 namespace QuantConnect.Brokerages
@@ -38,7 +39,10 @@ namespace QuantConnect.Brokerages
             }
 
             _url = url;
-            _wrapped = new WebSocket(url);
+            _wrapped = new WebSocket(url)
+            {
+                Log = { Output = (data, file) => { Log.Trace(data.Message); } }
+            };
 
             _wrapped.OnOpen += (sender, args) => OnOpen();
             _wrapped.OnMessage += (sender, args) => OnMessage(new WebSocketMessage(args.Data));
@@ -108,7 +112,7 @@ namespace QuantConnect.Brokerages
         /// <param name="e"></param>
         protected virtual void OnError(WebSocketError e)
         {
-            Logging.Log.Error(e.Exception, "WebSocketWrapper.OnError(): " + e.Message);
+            Log.Error(e.Exception, "WebSocketWrapper.OnError(): " + e.Message);
             Error?.Invoke(this, e);
         }
 
@@ -117,7 +121,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnOpen()
         {
-            Logging.Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened({IsOpen}): {_url}");
+            Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened({IsOpen}): {_url}");
             Open?.Invoke(this, EventArgs.Empty);
         }
     }
