@@ -128,7 +128,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
             raise ValueError("Expected filled order LastFillTime to equal fill order event time.")
 
         # check the ticket to see if the update was successfully processed
-        if len([ur for ur in ticket.UpdateRequests if ur.Response is not None and ur.Response.IsSuccess]) > 0 and order.CreatedTime != self.UtcTime and order.LastUpdateTime == None:
+        if len([ur for ur in ticket.UpdateRequests if ur.Response is not None and ur.Response.IsSuccess]) > 0 and order.CreatedTime != self.UtcTime and order.LastUpdateTime is None:
             raise ValueError("Expected updated order LastUpdateTime to equal submitted update order event time");
 
         if orderEvent.Status == OrderStatus.Filled:

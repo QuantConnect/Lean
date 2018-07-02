@@ -59,7 +59,7 @@ class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
 
     def OnData(self, data):
         # if we have no changes, do nothing
-        if self._changes == None: return
+        if self._changes is None: return
 
         # liquidate removed securities
         for security in self._changes.RemovedSecurities:

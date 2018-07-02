@@ -67,7 +67,7 @@ class CoarseFineFundamentalRegressionAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         # if we have no changes, do nothing
-        if self.changes == None: return
+        if self.changes is None: return
 
         # liquidate removed securities
         for security in self.changes.RemovedSecurities:
