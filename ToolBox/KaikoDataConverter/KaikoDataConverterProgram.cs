@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -14,27 +29,24 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
     /// <summary>
     /// Console application for converting Kaiko data into Lean data format
     /// </summary>
-    class Program
+    public static class KaikoDataConverterProgram
     {
-        static void Main(string[] args)
+        public static void KaikoDataConverter(string market, string _tickType, string sourceDirectory)
         {
-            if (args.Length != 3)
+            if (market.IsNullOrEmpty() || _tickType.IsNullOrEmpty() || sourceDirectory.IsNullOrEmpty())
             {
                 throw new ArgumentException("The arguments must be specified as [market] [tickType (quote/trade)] [kaiko raw data directory path]");
             }
-
-            var market = args[0];
-            var tickType = args[1] == "quote" ? TickType.Quote : TickType.Trade;
-            var fileLocation = args[2];
+            var tickType = _tickType == "quote" ? TickType.Quote : TickType.Trade;
 
             if (tickType == TickType.Quote)
             {
-                CreateCryptoTicks(fileLocation, market, tickType, ParseKaikoQuoteFile);
+                CreateCryptoTicks(sourceDirectory, market, tickType, ParseKaikoQuoteFile);
                 AggregateTicksInAllResolutions(market, tickType);
             }
             else
             {
-                CreateCryptoTicks(fileLocation, market, tickType, ParseKaikoTradeFile);
+                CreateCryptoTicks(sourceDirectory, market, tickType, ParseKaikoTradeFile);
                 AggregateTicksInAllResolutions(market, tickType);
             }
         }

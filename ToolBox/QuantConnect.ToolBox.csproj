@@ -36,7 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.CoarseUniverseGenerator.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -123,6 +123,9 @@
     <Reference Include="IKVM.Runtime.JNI">
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -157,40 +160,41 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
-    <Compile Include="GDAXDownloader\Program.cs" />
+    <Compile Include="GDAXDownloader\GDAXDownloaderProgram.cs" />
     <Compile Include="GzipStreamProvider.cs" />
     <Compile Include="IBDownloader\IBDataDownloader.cs" />
-    <Compile Include="IBDownloader\Program.cs" />
-    <Compile Include="IVolatilityEquityConverter\Program.cs" />
+    <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
+    <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
-    <Compile Include="AlgoSeekFuturesConverter\Program.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProgram.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverterProgram.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
-    <Compile Include="CoarseUniverseGenerator\Program.cs" />
+    <Compile Include="CoarseUniverseGenerator\CoarseUniverseGeneratorProgram.cs" />
     <Compile Include="ConsolidatorDataProcessor.cs" />
     <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
     <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
-    <Compile Include="CryptoiqDownloader\Program.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqDownloaderProgram.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
-    <Compile Include="DukascopyDownloader\Program.cs" />
+    <Compile Include="DukascopyDownloader\DukascopyDownloaderProgram.cs" />
     <Compile Include="FactorFileGenerator.cs" />
     <Compile Include="FileStreamProvider.cs" />
     <Compile Include="FilteredDataProcessor.cs" />
     <Compile Include="FxcmVolumeDownloader\FxcmVolumeAuxiliaryMethods.cs" />
     <Compile Include="FxcmVolumeDownloader\FxcmVolumeWriter.cs" />
     <Compile Include="FxcmVolumeDownloader\FxcmVolumeDownloader.cs" />
-    <Compile Include="FxcmVolumeDownloader\Program.cs" />
+    <Compile Include="FxcmVolumeDownloader\FxcmVolumeDownloadProgram.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
-    <Compile Include="FxcmDownloader\Program.cs" />
+    <Compile Include="FxcmDownloader\FxcmDownloaderProgram.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
-    <Compile Include="GoogleDownloader\Program.cs" />
+    <Compile Include="GoogleDownloader\GoogleDownloaderProgram.cs" />
     <Compile Include="IDataProcessor.cs" />
     <Compile Include="IEX\IEXDataQueueHandler.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
@@ -206,27 +210,27 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
-    <Compile Include="KaikoDataConverter\Program.cs" />
+    <Compile Include="KaikoDataConverter\KaikoDataConverterProgram.cs" />
     <Compile Include="KrakenDataDownloader\KrakenDataDownloader.cs" />
-    <Compile Include="KrakenDataDownloader\Program.cs" />
+    <Compile Include="KrakenDataDownloader\KrakenDownloaderProgram.cs" />
     <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataReader.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="LeanParser.cs" />
-    <Compile Include="NseMarketDataConverter\Program.cs" />
+    <Compile Include="NseMarketDataConverter\NseMarketDataConverterProgram.cs" />
     <Compile Include="OandaDownloader\OandaDataDownloader.cs" />
-    <Compile Include="OandaDownloader\Program.cs" />
+    <Compile Include="OandaDownloader\OandaDownloaderProgram.cs" />
     <Compile Include="PipeDataProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QuandlBitfinexDownloader\Program.cs" />
+    <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloaderProgram.cs" />
     <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloader.cs" />
-    <Compile Include="QuantQuoteConverter\Program.cs" />
+    <Compile Include="QuantQuoteConverter\QuantQuoteConverterProgram.cs" />
     <Compile Include="IDataDownloader.cs" />
     <Compile Include="RawFileProcessor.cs" />
     <Compile Include="CsvDataProcessor.cs" />
     <Compile Include="YahooDownloader\Historical.cs" />
-    <Compile Include="YahooDownloader\Program.cs" />
+    <Compile Include="YahooDownloader\YahooDownloaderProgram.cs" />
     <Compile Include="YahooDownloader\Token.cs" />
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
     <Compile Include="ZipStreamProvider.cs" />

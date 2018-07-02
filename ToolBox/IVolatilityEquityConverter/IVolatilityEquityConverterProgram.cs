@@ -4,7 +4,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * 
+ *
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,10 +22,11 @@ using System.Linq;
 using ikvm.extensions;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.IVolatilityEquityConverter
 {
-    public class Program
+    public static class IVolatilityEquityConverterProgram
     {
         const int TimeField = 0;
         private const int PriceBidField = 5;
@@ -44,13 +45,13 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
         static Resolution _resolution = Resolution.Minute;
         static readonly string[] Separators = {","};
 
-        public static void Main(string[] args)
+        public static void IVolatilityEquityConverter(string sourceDirectory, string sourceMetaDirectory, string destinationDirectory, string resolution)
         {
             Console.WriteLine("QuantConnect.ToolBox: IVolatility Converter: ");
             Console.WriteLine("==============================================");
             Console.WriteLine(
                 "The IVolatility converter transforms IVolatility orders into the LEAN Algorithmic Trading Engine Data Format.");
-            Console.WriteLine("Two parameters are required: ");
+            Console.WriteLine("Parameters required: --source-dir= --source-meta-dir= --destination-dir= --resolution=");
             Console.WriteLine("   1> Source archived IVolatility data.");
             Console.WriteLine("   2> Source archived IVolatility meta data.");
             Console.WriteLine("   3> Destination Directory of LEAN Data Folder. (Typically located under Lean/Data)");
@@ -58,12 +59,13 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
             Console.WriteLine(" ");
             Console.WriteLine("NOTE: THIS WILL OVERWRITE ANY EXISTING FILES.");
 
-            if (args.Length == 4)
+            if (!(sourceDirectory.IsNullOrEmpty() || sourceMetaDirectory.IsNullOrEmpty()
+                  || destinationDirectory.IsNullOrEmpty() || resolution.IsNullOrEmpty()))
             {
-                _sourceDirectory = args[0];
-                _sourceMetaDirectory = args[1];
-                _destinationDirectory = args[2];
-                _resolution = ParseResolution(args[3]);
+                _sourceDirectory = sourceDirectory;
+                _sourceMetaDirectory = sourceMetaDirectory;
+                _destinationDirectory = destinationDirectory;
+                _resolution = ParseResolution(resolution);
             }
             else
             {
@@ -263,7 +265,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
 
         /// <summary>
         /// Lean uses the inverse of IVol convention.
-        /// Ivol defines factor as split factor (1.5 for 3:2 split, 2 for 2/1 splits etc.), 
+        /// Ivol defines factor as split factor (1.5 for 3:2 split, 2 for 2/1 splits etc.),
         /// LEAN Defines as 0.5 for 2/1 splits
         /// </summary>
         /// <param name="amount"></param>

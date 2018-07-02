@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,49 +14,45 @@
 */
 
 using System;
-using System.Globalization;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.IBDownloader
 {
-    class Program
+    public static class IBDownloaderProgram
     {
         /// <summary>
         /// Primary entry point to the program. This program only supports FOREX for now.
         /// </summary>
-        static void Main(string[] args)
+        public static void IBDownloader(IList<string> symbols, string resolution, DateTime fromDate, DateTime toDate)
         {
-            if (args.Length != 5)
+            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
             {
-                Console.WriteLine("Usage: QuantConnect.ToolBox SYMBOLS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
-                Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
-                Console.WriteLine("FROMDATE = yyyymmdd");
-                Console.WriteLine("TODATE = yyyymmdd");
+                Console.WriteLine("IBDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--symbols=eg EURUSD,USDJPY");
+                Console.WriteLine("--resolution=Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
             try
             {
-                // Load settings from command line
-                var tickers = args[1].Split(',');
-                var allResolutions = args[2].ToLower() == "all";
-                var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[2]);
-                var startDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture).ConvertToUtc(TimeZones.NewYork);
-                var endDate = DateTime.ParseExact(args[4], "yyyyMMdd", CultureInfo.InvariantCulture).ConvertToUtc(TimeZones.NewYork);
+                var allResolutions = resolution.ToLower() == "all";
+                var castResolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), resolution);
+                var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
+                var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
 
-                // fix end date 
+                // fix end date
                 endDate = new DateTime(Math.Min(endDate.Ticks, DateTime.Now.AddDays(-1).Ticks));
 
                 // Max number of histoy days
                 int maxDays = 1;
                 if (!allResolutions)
                 {
-                    switch (resolution)
+                    switch (castResolution)
                     {
                         case Resolution.Daily:
                             maxDays = 365;
@@ -78,28 +74,28 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                 // Only FOREX for now
                 SecurityType securityType = SecurityType.Forex;
-                string market = Market.FXCM; 
+                string market = Market.FXCM;
 
 
                 using (var downloader = new IBDataDownloader())
                 {
-                    foreach (var ticker in tickers)
+                    foreach (var ticker in symbols)
                     {
                         // Download the data
                         var symbol = Symbol.Create(ticker, securityType, market);
 
-                        var auxEndDate = startDate.AddDays(maxDays); 
+                        var auxEndDate = startDate.AddDays(maxDays);
                         auxEndDate = new DateTime(Math.Min(auxEndDate.Ticks, endDate.Ticks));
 
                         while (startDate < auxEndDate)
                         {
-                            var data = downloader.Get(symbol, resolution, startDate, auxEndDate);
+                            var data = downloader.Get(symbol, castResolution, startDate, auxEndDate);
                             var bars = data.Cast<QuoteBar>().ToList();
 
                             if (allResolutions)
                             {
                                 // Save the data (second resolution)
-                                var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                                var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                                 writer.Write(bars);
 
                                 // Save the data (other resolutions)
@@ -114,7 +110,7 @@ namespace QuantConnect.ToolBox.IBDownloader
                             else
                             {
                                 // Save the data (single resolution)
-                                var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                                var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                                 writer.Write(data);
                             }
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Collections.Generic;
 using Microsoft.Extensions.CommandLineUtils;
 
 namespace QuantConnect.Configuration
@@ -19,10 +16,6 @@ namespace QuantConnect.Configuration
         private const string ApplicationHelpText =
             "If you are looking for help, please go to https://www.quantconnect.com/lean/docs";
 
-
-        private const string OptionHelp = "-?|-h|--help";
-        private const string OptionVersion = "-v|-V|--version";
-
         /// <summary>
         /// Configuration file path
         /// </summary>
@@ -34,111 +27,109 @@ namespace QuantConnect.Configuration
             "environments"
         };
 
-        private static readonly Dictionary<string, CommandOptionType> Options =
-            new Dictionary<string, CommandOptionType>
+        private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
-                {"config", CommandOptionType.SingleValue},
-                {"output", CommandOptionType.SingleValue},
+                new CommandLineOption("config", CommandOptionType.SingleValue),
+                new CommandLineOption("output", CommandOptionType.SingleValue),
 
-                // Options grabbed from config.json file
-
-                {"environment", CommandOptionType.SingleValue},
+                // Options grabbed from json file
+                new CommandLineOption("environment", CommandOptionType.SingleValue),
 
                 // algorithm class selector
-                {"algorithm-type-name", CommandOptionType.SingleValue},
+                new CommandLineOption("algorithm-type-name", CommandOptionType.SingleValue),
 
                 // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
-                {"algorithm-language", CommandOptionType.SingleValue},
+                new CommandLineOption("algorithm-language", CommandOptionType.SingleValue),
 
                 //Physical DLL location
-                {"algorithm-location", CommandOptionType.SingleValue},
+                new CommandLineOption("algorithm-location", CommandOptionType.SingleValue),
 
                 //Jupyter notebook
-                {"composer-dll-directory", CommandOptionType.SingleValue},
+                new CommandLineOption("composer-dll-directory", CommandOptionType.SingleValue),
 
                 // engine
-                {"data-folder", CommandOptionType.SingleValue},
+                new CommandLineOption("data-folder", CommandOptionType.SingleValue),
 
                 // handlers
-                {"log-handler", CommandOptionType.SingleValue},
-                {"messaging-handler", CommandOptionType.SingleValue},
-                {"job-queue-handler", CommandOptionType.SingleValue},
-                {"api-handler", CommandOptionType.SingleValue},
-                {"map-file-provider", CommandOptionType.SingleValue},
-                {"factor-file-provider", CommandOptionType.SingleValue},
-                {"data-provider", CommandOptionType.SingleValue},
-                {"alpha-handler", CommandOptionType.SingleValue},
+                new CommandLineOption("log-handler", CommandOptionType.SingleValue),
+                new CommandLineOption("messaging-handler", CommandOptionType.SingleValue),
+                new CommandLineOption("job-queue-handler", CommandOptionType.SingleValue),
+                new CommandLineOption("api-handler", CommandOptionType.SingleValue),
+                new CommandLineOption("map-file-provider", CommandOptionType.SingleValue),
+                new CommandLineOption("factor-file-provider", CommandOptionType.SingleValue),
+                new CommandLineOption("data-provider", CommandOptionType.SingleValue),
+                new CommandLineOption("alpha-handler", CommandOptionType.SingleValue),
 
                 // limits on number of symbols to allow
-                {"symbol-minute-limit", CommandOptionType.SingleValue},
-                {"symbol-second-limit", CommandOptionType.SingleValue},
-                {"symbol-tick-limit", CommandOptionType.SingleValue},
+                new CommandLineOption("symbol-minute-limit", CommandOptionType.SingleValue),
+                new CommandLineOption("symbol-second-limit", CommandOptionType.SingleValue),
+                new CommandLineOption("symbol-tick-limit", CommandOptionType.SingleValue),
 
                 // if one uses true in following token, market hours will remain open all hours and all days.
                 // if one uses false will make lean operate only during regular market hours.
-                {"force-exchange-always-open", CommandOptionType.NoValue},
+                new CommandLineOption("force-exchange-always-open", CommandOptionType.NoValue),
 
                 // save list of transactions to the specified csv file
-                {"transaction-log", CommandOptionType.SingleValue},
+                new CommandLineOption("transaction-log", CommandOptionType.SingleValue),
 
                 // To get your api access token go to quantconnect.com/account
-                {"job-user-id", CommandOptionType.SingleValue},
-                {"api-access-token", CommandOptionType.SingleValue},
+                new CommandLineOption("job-user-id", CommandOptionType.SingleValue),
+                new CommandLineOption("api-access-token", CommandOptionType.SingleValue),
 
                 // live data configuration
-                {"live-data-url", CommandOptionType.SingleValue},
-                {"live-data-port", CommandOptionType.SingleValue},
+                new CommandLineOption("live-data-url", CommandOptionType.SingleValue),
+                new CommandLineOption("live-data-port", CommandOptionType.SingleValue),
 
                 // interactive brokers configuration
-                {"ib-account", CommandOptionType.SingleValue},
-                {"ib-user-name", CommandOptionType.SingleValue},
-                {"ib-password", CommandOptionType.SingleValue},
-                {"ib-host", CommandOptionType.SingleValue},
-                {"ib-port", CommandOptionType.SingleValue},
-                {"ib-agent-description", CommandOptionType.SingleValue},
-                {"ib-use-tws", CommandOptionType.NoValue},
-                {"ib-tws-dir", CommandOptionType.SingleValue},
-                {"ib-trading-mode", CommandOptionType.SingleValue},
-                {"ib-controller-dir", CommandOptionType.SingleValue},
+                new CommandLineOption("ib-account", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-user-name", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-password", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-host", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-port", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-agent-description", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-use-tws", CommandOptionType.NoValue),
+                new CommandLineOption("ib-tws-dir", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-trading-mode", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-controller-dir", CommandOptionType.SingleValue),
 
                 // tradier configuration
-                {"tradier-account-id", CommandOptionType.SingleValue},
-                {"tradier-access-token", CommandOptionType.SingleValue},
-                {"tradier-refresh-token", CommandOptionType.SingleValue},
-                {"tradier-issued-at", CommandOptionType.SingleValue},
-                {"tradier-lifespan", CommandOptionType.SingleValue},
-                {"tradier-refresh-session", CommandOptionType.NoValue},
+                new CommandLineOption("tradier-account-id", CommandOptionType.SingleValue),
+                new CommandLineOption("tradier-access-token", CommandOptionType.SingleValue),
+                new CommandLineOption("tradier-refresh-token", CommandOptionType.SingleValue),
+                new CommandLineOption("tradier-issued-at", CommandOptionType.SingleValue),
+                new CommandLineOption("tradier-lifespan", CommandOptionType.SingleValue),
+                new CommandLineOption("tradier-refresh-session", CommandOptionType.NoValue),
 
                 // oanda configuration
-                {"oanda-environment", CommandOptionType.SingleValue},
-                {"oanda-access-token", CommandOptionType.SingleValue},
-                {"oanda-account-id", CommandOptionType.SingleValue},
+                new CommandLineOption("oanda-environment", CommandOptionType.SingleValue),
+                new CommandLineOption("oanda-access-token", CommandOptionType.SingleValue),
+                new CommandLineOption("oanda-account-id", CommandOptionType.SingleValue),
 
                 // fxcm configuration
-                {"fxcm-server", CommandOptionType.SingleValue},
-                {"fxcm-terminal", CommandOptionType.SingleValue}, //Real or Demo
-                {"fxcm-user-name", CommandOptionType.SingleValue},
-                {"fxcm-password", CommandOptionType.SingleValue},
-                {"fxcm-account-id", CommandOptionType.SingleValue},
+                new CommandLineOption("fxcm-server", CommandOptionType.SingleValue),
+                new CommandLineOption("fxcm-terminal", CommandOptionType.SingleValue), //Real or Demo
+                new CommandLineOption("fxcm-user-name", CommandOptionType.SingleValue),
+                new CommandLineOption("fxcm-password", CommandOptionType.SingleValue),
+                new CommandLineOption("fxcm-account-id", CommandOptionType.SingleValue),
 
                 // iqfeed configuration
-                {"iqfeed-username", CommandOptionType.SingleValue},
-                {"iqfeed-password", CommandOptionType.SingleValue},
-                {"iqfeed-productName", CommandOptionType.SingleValue},
-                {"iqfeed-version", CommandOptionType.SingleValue},
+                new CommandLineOption("iqfeed-username", CommandOptionType.SingleValue),
+                new CommandLineOption("iqfeed-password", CommandOptionType.SingleValue),
+                new CommandLineOption("iqfeed-productName", CommandOptionType.SingleValue),
+                new CommandLineOption("iqfeed-version", CommandOptionType.SingleValue),
 
                 // gdax configuration
-                {"gdax-api-secret", CommandOptionType.SingleValue},
-                {"gdax-api-key", CommandOptionType.SingleValue},
-                {"gdax-passphrase", CommandOptionType.SingleValue},
+                new CommandLineOption("gdax-api-secret", CommandOptionType.SingleValue),
+                new CommandLineOption("gdax-api-key", CommandOptionType.SingleValue),
+                new CommandLineOption("gdax-passphrase", CommandOptionType.SingleValue),
 
                 // Required to access data from Quandl
                 // To get your access token go to https://www.quandl.com/account/api
-                {"quandl-auth-token", CommandOptionType.SingleValue},
+                new CommandLineOption("quandl-auth-token", CommandOptionType.SingleValue),
 
                 // parameters to set in the algorithm (the below are just samples)
-                {"parameters", CommandOptionType.MultipleValue},
-                {"environments", CommandOptionType.MultipleValue}
+                new CommandLineOption("parameters", CommandOptionType.MultipleValue),
+                new CommandLineOption("environments", CommandOptionType.MultipleValue)
             };
 
         /// <summary>
@@ -146,83 +137,7 @@ namespace QuantConnect.Configuration
         /// </summary>
         public static Dictionary<string, object> ParseArguments(string[] args)
         {
-            var lean = new CommandLineApplication
-            {
-                Name = ApplicationName,
-                Description = ApplicationDescription,
-                ExtendedHelpText = ApplicationHelpText
-            };
-
-
-            lean.HelpOption(OptionHelp);
-
-            // This is a helper/shortcut method to display version info - it is creating a regular Option, with some defaults.
-            // The default help text is "Show version Information"
-            lean.VersionOption(OptionVersion,
-                () =>
-                    $"Version {Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
-
-            var optionsObject = new Dictionary<string, object>();
-
-            var listOfOptions = new List<CommandOption>();
-
-            foreach (var optionsKey in Options.Keys)
-            {
-                listOfOptions.Add(lean.Option($"--{optionsKey}", "@TODO", Options[optionsKey]));
-            }
-
-            lean.OnExecute(() =>
-            {
-                foreach (var commandOption in listOfOptions.Where(option => option.HasValue()))
-                {
-                    var optionKey = commandOption.Template.Replace("--", "");
-                    switch (Options[optionKey])
-                    {
-                         // Booleans, string and numbers
-                        case CommandOptionType.NoValue:
-                        case CommandOptionType.SingleValue:
-                            optionsObject[optionKey] = ParseTypedArgument(commandOption.Value());
-                            break;
-                        
-                        // Parsing nested objects
-                        case CommandOptionType.MultipleValue:
-                            var keyValuePairs = commandOption.Value().Split(',');
-                            var subDictionary = new Dictionary<string, object>();
-                            foreach (var keyValuePair in keyValuePairs)
-                            {
-                                var subKeys = keyValuePair.Split(':');
-                                subDictionary[subKeys[0]] = ParseTypedArgument(subKeys[1]);
-                            }
-
-                            optionsObject[optionKey] = subDictionary;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-
-                return 0;
-            });
-
-            lean.Execute(args);
-
-            return optionsObject;
-        }
-
-        private static object ParseTypedArgument(string value)
-        {
-            if (value == "true" || value == "false")
-            {
-                return value == "true";
-            }
-
-            double numericValue;
-            if (double.TryParse(value, out numericValue))
-            {
-                return numericValue;
-            }
-
-            return value;
+            return ApplicationParser.Parse(ApplicationName, ApplicationDescription, ApplicationHelpText, args, Options);
         }
     }
 }

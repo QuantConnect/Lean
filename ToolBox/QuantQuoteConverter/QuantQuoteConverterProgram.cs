@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,44 +18,28 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.QuantQuoteConverter
 {
-    class Program
+    public static class QuantQuoteConverterProgram
     {
         /// <summary>
         /// Primary entry point to the program
         /// </summary>
-        private static void Main(string[] args)
+        public static void QuantQuoteConverter(string destinationDirectory, string sourceDirectory, string resolution)
         {
             //Document the process:
             Console.WriteLine("QuantConnect.ToolBox: QuantQuote Converter: ");
             Console.WriteLine("==============================================");
             Console.WriteLine("The QuantQuote converter transforms QuantQuote orders into the LEAN Algorithmic Trading Engine Data Format.");
-            Console.WriteLine("Two parameters are required: ");
+            Console.WriteLine("Parameters required: --source-dir= --destination-dir= --resolution=");
             Console.WriteLine("   1> Source Directory of Unzipped QuantQuote Data.");
             Console.WriteLine("   2> Destination Directory of LEAN Data Folder. (Typically located under Lean/Data)");
             Console.WriteLine("   3> Resolution of your QuantQuote data. (either minute, second or tick)");
             Console.WriteLine(" ");
             Console.WriteLine("NOTE: THIS WILL OVERWRITE ANY EXISTING FILES.");
-            if (args.Length == 0)
-            {
-                Console.WriteLine("Press any key to Continue or Escape to quit.");
-                if (Console.ReadKey().Key == ConsoleKey.Escape)
-                {
-                    Environment.Exit(0);
-                }
-            }
-            var destinationDirectory = "";
-            var resolution = "";
-            string sourceDirectory;
-            if (args.Length == 3)
-            {
-                sourceDirectory = args[0];
-                destinationDirectory = args[1];
-                resolution = args[2];
-            }
-            else
+            if(sourceDirectory.IsNullOrEmpty() || destinationDirectory.IsNullOrEmpty() || resolution.IsNullOrEmpty())
             {
                 Console.WriteLine("1. Source QuantQuote source directory: ");
                 sourceDirectory = (Console.ReadLine() ?? "");
@@ -68,7 +52,7 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
 
             //Validate the user input:
             Validate(sourceDirectory, destinationDirectory, resolution);
-            
+
             //Remove the final slash to make the path building easier:
             sourceDirectory = StripFinalSlash(sourceDirectory);
             destinationDirectory = StripFinalSlash(destinationDirectory);
@@ -79,7 +63,7 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
             var totalCount = GetCount(sourceDirectory);
             Console.WriteLine("Processing {0} Files ...", totalCount);
 
-            //Enumerate files 
+            //Enumerate files
             foreach (var directory in Directory.EnumerateDirectories(sourceDirectory))
             {
                 var date = GetDate(directory);

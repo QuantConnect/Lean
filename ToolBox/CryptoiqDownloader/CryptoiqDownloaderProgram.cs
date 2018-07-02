@@ -13,51 +13,46 @@
  * limitations under the License.
 */
 using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.CryptoiqDownloader
 {
-    class Program
+    public static class CryptoiqDownloaderProgram
     {
         /// <summary>
         /// Cryptoiq Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// </summary>
-        static void Main(string[] args)
+        public static void CryptoiqDownloader(IList<string> symbols, string exchange, DateTime startDate, DateTime endDate)
         {
-            if (args.Length == 3)
+            if (exchange.IsNullOrEmpty() || symbols.IsNullOrEmpty())
             {
-                args = new [] { args[0], DateTime.UtcNow.ToString("yyyyMMdd"), args[1], args[2] };
-            }
-            else if (args.Length < 4)
-            {
-                Console.WriteLine("Usage: CryptoiqDownloader FROMDATE TODATE EXCHANGE SYMBOL");
-                Console.WriteLine("FROMDATE = yyyymmdd");
-                Console.WriteLine("TODATE = yyyymmdd");
+                Console.WriteLine("CryptoiqDownloader ERROR: '--exchange=' or '--symbols=' parameter is missing");
                 Environment.Exit(1);
             }
 
             try
             {
-                // Load settings from command line
-                var startDate = DateTime.ParseExact(args[0], "yyyyMMdd", CultureInfo.InvariantCulture);
-                var endDate = DateTime.ParseExact(args[1], "yyyyMMdd", CultureInfo.InvariantCulture);
-
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 //todo: will download any exchange but always save as gdax
                 // Create an instance of the downloader
                 const string market = Market.GDAX;
-                var downloader = new CryptoiqDownloader(args[2]);
+                var downloader = new CryptoiqDownloader(exchange);
 
-                // Download the data
-                var symbolObject = Symbol.Create(args[3], SecurityType.Crypto, market);
-                var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
+                foreach (var symbol in symbols)
+                {
+                    // Download the data
+                    var symbolObject = Symbol.Create(symbol, SecurityType.Crypto, market);
+                    var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
 
-                // Save the data
-                var writer = new LeanDataWriter(Resolution.Tick, symbolObject, dataDirectory, TickType.Quote);
-                writer.Write(data);
+                    // Save the data
+                    var writer = new LeanDataWriter(Resolution.Tick, symbolObject, dataDirectory, TickType.Quote);
+                    writer.Write(data);
+                }
             }
             catch (Exception err)
             {
