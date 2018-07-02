@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -81,7 +82,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fineCollection = new BaseDataCollection();
                     var dataProvider = new DefaultDataProvider();
 
-                    foreach (var symbol in selectSymbolsResult)
+                    // use all available threads, the entire system is waiting for this to complete
+                    var options = new ParallelOptions{MaxDegreeOfParallelism = Environment.ProcessorCount};
+                    Parallel.ForEach(selectSymbolsResult, options, symbol =>
                     {
                         var config = FineFundamentalUniverse.CreateConfiguration(symbol);
 
@@ -98,10 +101,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (enumerator.MoveNext())
                             {
-                                fineCollection.Data.Add(enumerator.Current);
+                                lock (fineCollection.Data)
+                                {
+                                    fineCollection.Data.Add(enumerator.Current);
+                                }
                             }
                         }
-                    }
+                    });
 
                     // WARNING -- HACK ATTACK -- WARNING
                     // Fine universes are considered special due to their chaining behavior.
