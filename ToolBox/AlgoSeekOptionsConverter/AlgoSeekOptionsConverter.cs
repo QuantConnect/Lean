@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.BZip2;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -34,8 +36,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public class AlgoSeekOptionsConverter
     {
-        private const int execTimeout = 600;// sec
-
         private string _source;
         private string _remote;
         private string _remoteMask;
@@ -70,34 +70,49 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public void Convert()
         {
             //Get the list of all the files, then for each file open a separate streamer.
-            var files = Directory.EnumerateFiles(_remote, _remoteMask);
-            Log.Trace("AlgoSeekOptionsConverter.Convert(): Loading {0} AlgoSeekOptionsReader for {1} ", files.Count(), _referenceDate);
+            var compressedRawDatafiles = Directory.EnumerateFiles(_remote, _remoteMask).Select(f => new FileInfo(f)).ToList();
+            var rawDatafiles = new List<FileInfo>();
+
+            Log.Trace("AlgoSeekOptionsConverter.Convert(): Loading {0} AlgoSeekOptionsReader for {1} ", compressedRawDatafiles.Count, _referenceDate);
 
             //Initialize parameters
-            var totalLinesProcessed = 0L;
-            var totalFiles = files.Count();
+            var totalLinesProcessed = 0L;   
+            var totalFiles = compressedRawDatafiles.Count;
             var totalFilesProcessed = 0;
             var start = DateTime.MinValue;
 
-            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
             var random = new Random((int)DateTime.Now.Ticks);
 
-            //Extract each file massively in parallel.
-            Parallel.ForEach(files, parallelOptionsProcessing, file =>
+            foreach (var compressedRawDatafile in compressedRawDatafiles)
             {
-                Log.Trace("Remote File :" + file);
-
-                var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
-
-                Log.Trace("Source File :" + csvFile);
-
-                if (!File.Exists(csvFile))
+                var timer = DateTime.UtcNow;
+                var rawDataFile = new FileInfo(Path.Combine(_source, compressedRawDatafile.Name.Replace(".bz2", "")));
+                var decompressSuccessful = false;
+                var counter = 1;
+                do
                 {
-                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Extracting " + file);
+                    var attempt = counter == 1 ? string.Empty : $" attempt {counter} of 3";
+                    Log.Trace($"AlgoSeekOptionsConverter.Convert(): Extracting {compressedRawDatafile.Name}{attempt}.");
+                    decompressSuccessful = DecompressOpraFile(compressedRawDatafile, rawDataFile);
+                    counter++;
+                } while (!decompressSuccessful && counter <= 3);
 
-                    var cmdArgs = " e " + file + " -o" + _source;
-                    RunZipper(zipper, cmdArgs);
+                if (!decompressSuccessful)
+                {
+                    Log.Error($"Error decompressing {compressedRawDatafile}. Process Stop.");
+                    throw new NotImplementedException();
                 }
+
+                Log.Trace($"AlgoSeekOptionsConverter.Convert(): Extraction successful in {DateTime.UtcNow - timer:g}, deleting {compressedRawDatafile.Name}.");
+                compressedRawDatafile.Delete();
+                rawDatafiles.Add(rawDataFile);
+            }
+
+
+            //Process each file massively in parallel.
+            Parallel.ForEach(rawDatafiles, parallelOptionsProcessing, rawDataFile =>
+            {
+                Log.Trace("Source File :" + rawDataFile.Name);
 
                 // setting up local processors and the flush event
                 var processors = new Processors();
@@ -108,7 +123,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
                 // var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate, symbolFilter);
 
-                var reader = new ToolBox.AlgoSeekOptionsConverter.AlgoSeekOptionsReader(csvFile, _referenceDate);
+                var reader = new ToolBox.AlgoSeekOptionsConverter.AlgoSeekOptionsReader(rawDataFile.FullName, _referenceDate);
                 if (start == DateTime.MinValue)
                 {
                     start = DateTime.Now;
@@ -160,13 +175,13 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     Flush(processors, DateTime.MaxValue, true);
                     WriteToDisk(processors, waitForFlush, DateTime.MaxValue, flushStep, true);
 
-                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Cleaning up extracted options file {0}", csvFile);
-                    File.Delete(csvFile);
+                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Cleaning up extracted options file {0}", rawDataFile.FullName);
+                    rawDataFile.Delete();
                 }
 
                 processors = null;
 
-                Log.Trace("AlgoSeekOptionsConverter.Convert(): Finished processing file: " + file);
+                Log.Trace("AlgoSeekOptionsConverter.Convert(): Finished processing file: " + rawDataFile);
                 Interlocked.Increment(ref totalFilesProcessed);
 
             });
@@ -260,8 +275,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         public void Package(DateTime date)
         {
-            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
-
             Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping all files ...");
 
             var destination = Path.Combine(_destination, "option");
@@ -339,57 +352,32 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             });
         }
 
-        private static void RunZipper(string zipper, string cmdArgs)
+        /// <summary>
+        /// Decompress huge AlgoSeek's opra bz2 files and returns the outcome status.
+        /// </summary>
+        /// <param name="compressedRawDatafile">Fileinfo of the compressed orpa file.</param>
+        /// <param name="rawDatafile">Fileinfo of the uncompressed output file.</param>
+        /// <returns>Boolean indicating if this the process was successful.</returns>
+        /// <remarks>Public static members of the SharpZipLib.BZip2 type are safe for multithreaded operations.
+        ///          Source: https://documentation.help/SharpZip/ICSharpCode.SharpZipLib.BZip2.BZip2.html
+        /// </remarks>>
+        private static bool DecompressOpraFile(FileInfo compressedRawDatafile, FileInfo rawDatafile)
         {
-            bool timedOut = false;
-
-            Func<object, string> readStream = streamReader => ((StreamReader)streamReader).ReadToEnd();
-
-            using (var process = new Process())
+            var outcome = false;
+            using (FileStream fileToDecompressAsStream = compressedRawDatafile.OpenRead())
+            using (FileStream decompressedStream = File.Create(rawDatafile.FullName))
             {
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.FileName = zipper;
-                process.StartInfo.Arguments = cmdArgs;
-
-                process.Start();
-
-                using (var processWaiter = Task.Factory.StartNew(() => process.WaitForExit(execTimeout * 1000)))
-                using (var outputReader = Task.Factory.StartNew(readStream, process.StandardOutput))
-                using (var errorReader = Task.Factory.StartNew(readStream, process.StandardError))
+                try
                 {
-                    bool waitResult = processWaiter.Result;
-
-                    if (!waitResult)
-                    {
-                        process.Kill();
-                        Log.Trace("7Zip Process Killed: " + cmdArgs);
-                    }
-
-                    Task.WaitAll(new Task[] { outputReader, errorReader }, execTimeout * 1000);
-
-                    if (!waitResult)
-                    {
-                        Log.Error("7Zip timed out: " + cmdArgs);
-                        throw new Exception("7z timed out");
-                    }
-                    else
-                    {
-                        if (process.ExitCode > 0)
-                        {
-                            Log.Error("7Zip Exited Unsuccessfully: " + cmdArgs);
-                            Log.Error("7zip message {0}", process.StandardError.ReadToEnd());
-                            throw new Exception("7z exited unsuccessfully");
-                        }
-                        else
-                        {
-                            Log.Trace("7Zip Exited Successfully: " + cmdArgs);
-                        }
-                    }
+                    BZip2.Decompress(fileToDecompressAsStream, decompressedStream);
+                    outcome = true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"AlgoSeekOptionsConverter.DecompressOpraFile({compressedRawDatafile.Name}, {rawDatafile.Name}): SharpzipLib.BZip2.Decompress returned error: " + ex);
                 }
             }
+            return outcome;
         }
     }
 }
