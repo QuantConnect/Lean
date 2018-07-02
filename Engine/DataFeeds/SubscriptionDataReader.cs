@@ -386,6 +386,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return true;
                 }
 
+                if (_delisted)
+                {
+                    break;
+                }
+
                 // we've ended the enumerator, time to refresh
                 _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
             }
