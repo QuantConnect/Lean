@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
@@ -55,46 +55,47 @@ namespace QuantConnect.Algorithm.CSharp
             // define a new custom universe that will trigger each day at midnight
             AddUniverse("my-dropbox-universe", Resolution.Daily, dateTime =>
             {
-                const string liveUrl = @"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1";
-                const string backtestUrl = @"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1";
-                var url = LiveMode ? liveUrl : backtestUrl;
-                using (var client = new WebClient())
+                // handle live mode file format
+                if (LiveMode)
                 {
-                    // handle live mode file format
-                    if (LiveMode)
-                    {
-                        // fetch the file from dropbox
-                        var file = client.DownloadString(url);
-                        // if we have a file for today, break apart by commas and return symbols
-                        if (file.Length > 0) return file.ToCsv();
-                        // no symbol today, leave universe unchanged
-                        return Universe.Unchanged;
-                    }
-
-                    // backtest - first cache the entire file
-                    if (_backtestSymbolsPerDay.Count == 0)
-                    {
-                        // fetch the file from dropbox only if we haven't cached the result already
-                        var file = client.DownloadString(url);
-
-                        // split the file into lines and add to our cache
-                        foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            var csv = line.ToCsv();
-                            var date = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
-                            var symbols = csv.Skip(1).ToList();
-                            _backtestSymbolsPerDay[date] = symbols;
-                        }
-                    }
-
-                    // if we have symbols for this date return them, else specify Universe.Unchanged
-                    List<string> result;
-                    if (_backtestSymbolsPerDay.TryGetValue(dateTime.Date, out result))
-                    {
-                        return result;
-                    }
+                    // fetch the file from dropbox
+                    var file = Download(@"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1");
+                    // if we have a file for today, break apart by commas and return symbols
+                    if (file.Length > 0) return file.ToCsv();
+                    // no symbol today, leave universe unchanged
                     return Universe.Unchanged;
                 }
+
+                // backtest - first cache the entire file
+                if (_backtestSymbolsPerDay.Count == 0)
+                {
+                    // No need for headers for authorization with dropbox, these two lines are for example purposes 
+                    var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
+                    // The headers must be passed to the Download method as list of key/value pair.
+                    var headers = new List<KeyValuePair<string, string>>
+                    {
+                        new KeyValuePair<string, string>("Authorization", $"Basic ({Convert.ToBase64String(byteKey)})")
+                    };
+
+                    var file = Download(@"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1", headers);
+
+                    // split the file into lines and add to our cache
+                    foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var csv = line.ToCsv();
+                        var date = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
+                        var symbols = csv.Skip(1).ToList();
+                        _backtestSymbolsPerDay[date] = symbols;
+                    }
+                }
+
+                // if we have symbols for this date return them, else specify Universe.Unchanged
+                List<string> result;
+                if (_backtestSymbolsPerDay.TryGetValue(dateTime.Date, out result))
+                {
+                    return result;
+                }
+                return Universe.Unchanged;
             });
         }
 

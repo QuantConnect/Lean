@@ -106,6 +106,7 @@
     </Compile>
     <Compile Include="AlgorithmFactory\LoaderTests.cs" />
     <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Algorithm\AlgorithmDownloadTests.cs" />
     <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
     <Compile Include="Algorithm\AlgorithmInitializeTests.cs" />
     <Compile Include="Algorithm\AlgorithmPlottingTests.cs" />
