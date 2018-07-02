@@ -28,6 +28,7 @@ namespace QuantConnect.Lean.Engine.Alphas
     {
         private readonly double _smoothingFactor;
         private readonly int _rollingAverageIsReadyCount;
+        private readonly bool _requireRollingAverageWarmup;
         private readonly decimal _tradablePercentOfVolume;
 
         /// <summary>
@@ -39,14 +40,15 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets whether or not the rolling average statistics is ready
         /// </summary>
-        public bool RollingAverageIsReady => Statistics.TotalInsightsAnalysisCompleted >= _rollingAverageIsReadyCount;
+        public bool RollingAverageIsReady => !_requireRollingAverageWarmup || Statistics.TotalInsightsAnalysisCompleted >= _rollingAverageIsReadyCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StatisticsInsightManagerExtension"/> class
         /// </summary>
         /// <param name="tradablePercentOfVolume">Percent of volume of first bar used to estimate the maximum number of tradable shares. Defaults to 1%</param>
-        /// <param name="period">The period used for exponential smoothing of scores - this is a number of insights. Defaults to 100 insight predictions</param>
-        public StatisticsInsightManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100)
+        /// <param name="period">The period used for exponential smoothing of scores - this is a number of insights. Defaults to 100 insight predictions.</param>
+        /// <param name="requireRollingAverageWarmup">Specify true to force the population average scoring to warmup before plotting.</param>
+        public StatisticsInsightManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100, bool requireRollingAverageWarmup = false)
         {
             Statistics = new AlphaRuntimeStatistics();
             _tradablePercentOfVolume = tradablePercentOfVolume;
@@ -54,6 +56,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             // use normal ema warmup period
             _rollingAverageIsReadyCount = period;
+            _requireRollingAverageWarmup = requireRollingAverageWarmup;
         }
 
         /// <summary>
