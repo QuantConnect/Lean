@@ -69,9 +69,53 @@ namespace QuantConnect.Brokerages.Bitfinex
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Gets the total account cash balance for specified account type
+        /// </summary>
+        /// <returns></returns>
         public override List<Cash> GetCashBalance()
         {
-            throw new NotImplementedException();
+            var list = new List<Cash>();
+            var endpoint = "/v1/balances";
+            var request = new RestRequest(endpoint, Method.POST);
+
+            JsonObject payload = new JsonObject();
+            payload.Add("request", endpoint);
+            payload.Add("nonce", GetNonce().ToString());
+            
+            request.AddJsonBody(payload.ToString());
+            SignRequest(request, payload.ToString());
+
+            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"BitfinexBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            //foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))
+            //{
+            //    if (item.Balance > 0)
+            //    {
+            //        if (item.Currency == "USD")
+            //        {
+            //            list.Add(new Cash(item.Currency, item.Balance, 1));
+            //        }
+            //        else if (new[] { "GBP", "EUR" }.Contains(item.Currency))
+            //        {
+            //            var rate = GetConversionRate(item.Currency);
+            //            list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
+            //        }
+            //        else
+            //        {
+            //            var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
+
+            //            list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
+            //        }
+            //    }
+            //}
+
+            return list;
         }
         #endregion
 
@@ -112,9 +156,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
         #endregion
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public override void Dispose()
         {
-            base.Dispose();
+            _restRateLimiter.Dispose();
         }
     }
 }

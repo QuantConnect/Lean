@@ -33,6 +33,8 @@ namespace QuantConnect.Brokerages.Bitfinex
     {
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
+        internal enum BitfinexEndpointType { Public, Private }
+        private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
