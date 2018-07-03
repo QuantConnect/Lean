@@ -26,7 +26,7 @@
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Non-functional change (xml comments/documentation/ect)
+- [ ] Non-functional change (xml comments/documentation/etc)
 
 #### Checklist:
 <!--- The following is a checklist of items that MUST be completed before a PR is accepted -->
