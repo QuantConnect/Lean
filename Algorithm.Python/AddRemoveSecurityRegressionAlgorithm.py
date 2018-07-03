@@ -18,7 +18,7 @@ AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders import OrderStatus
+from QuantConnect.Orders import *
 from QuantConnect.Algorithm import QCAlgorithm
 
 ### <summary>
