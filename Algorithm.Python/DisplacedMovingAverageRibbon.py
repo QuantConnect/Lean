@@ -87,7 +87,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
     def IsAscending(self, values):
         last = None
         for val in values:
-            if last == None:
+            if last is None:
                 last = val
                 continue
             if last < val:
@@ -99,7 +99,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
     def IsDescending(self, values):
         last = None
         for val in values:
-            if last == None:
+            if last is None:
                 last = val
                 continue
             if last > val:

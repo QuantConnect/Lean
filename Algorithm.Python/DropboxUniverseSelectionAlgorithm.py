@@ -73,7 +73,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
     def OnData(self, slice):
 
         if slice.Bars.Count == 0: return
-        if self.changes == None: return
+        if self.changes is None: return
 
         # start fresh
         self.Liquidate()
