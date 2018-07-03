@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -45,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             // set framework models
             SetUniverseSelection(new EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(SelectOptionChainSymbols));
             SetAlpha(new ConstantOptionContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromHours(0.5)));
-            SetPortfolioConstruction(new SingleSharePortofioConstructionModel());
+            SetPortfolioConstruction(new SingleSharePortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
@@ -95,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .Strikes(+1, +1)
                     .Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
                     .WeeklysOnly()
-                    .Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put))
+                    .PutsOnly()
                     .OnlyApplyFilterAtMarketOpen();
             }
         }
@@ -123,21 +122,16 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Portoflio construction model that sets target quantities to 1 for up insights and -1 for down insights
+        /// Portfolio construction model that sets target quantities to 1 for up insights and -1 for down insights
         /// </summary>
-        class SingleSharePortofioConstructionModel : IPortfolioConstructionModel
+        class SingleSharePortfolioConstructionModel : PortfolioConstructionModel
         {
-            public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
             {
                 foreach (var insight in insights)
                 {
                     yield return new PortfolioTarget(insight.Symbol, (int) insight.Direction);
                 }
-            }
-
-            public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-            {
-                // no need to track anything here
             }
         }
     }

@@ -349,6 +349,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets universe of call options (if any) as a selection
+        /// </summary>
+        public OptionFilterUniverse CallsOnly()
+        {
+            return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Call));
+        }
+
+        /// <summary>
+        /// Sets universe of put options (if any) as a selection
+        /// </summary>
+        public OptionFilterUniverse PutsOnly()
+        {
+            return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put));
+        }
+
+        /// <summary>
         /// Instructs the engine to only filter options contracts on the first time step of each market day.
         /// </summary>
         public OptionFilterUniverse OnlyApplyFilterAtMarketOpen()
