@@ -20,7 +20,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
-from datetime import datetime
+from datetime import date
 
 ### <summary>
 ### Demonstration of how to define a universe as a combination of use the coarse fundamental data and fine fundamental data
@@ -50,8 +50,7 @@ class CoarseFineFundamentalRegressionAlgorithm(QCAlgorithm):
     def CoarseSelectionFunction(self, coarse):
         tickers = [ "GOOG", "BAC", "SPY" ]
 
-        dt = datetime(self.Time.year, self.Time.month, self.Time.day)
-        if dt < datetime(2014, 4, 1):
+        if self.Time.date() < date(2014, 4, 1):
             tickers = [ "AAPL", "AIG", "IBM" ]
 
         return [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers ]
