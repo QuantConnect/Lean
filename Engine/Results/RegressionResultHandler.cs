@@ -28,14 +28,13 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class RegressionResultHandler : BacktestingResultHandler
     {
-        private string AlgorithmTypeName => Algorithm.GetType().Name;
         private Language Language => Config.GetValue<Language>("algorithm-language");
         private readonly Lazy<StreamWriter> OrdersLogStreamWriter;
 
         /// <summary>
         /// Gets the path used for logging all order events
         /// </summary>
-        public string OrdersLogFilePath => $"./regression/{AlgorithmTypeName}.{Language.ToLower()}.orders.log";
+        public string OrdersLogFilePath => $"./regression/{Algorithm.AlgorithmId}.{Language.ToLower()}.orders.log";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegressionResultHandler"/> class
