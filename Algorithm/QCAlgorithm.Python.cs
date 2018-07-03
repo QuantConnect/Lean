@@ -110,13 +110,13 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<CoarseFundamental>, object[]> coarse;
             Universe universe;
 
-            if (pyObject.TryConvertToDelegate(out coarse))
-            {
-                AddUniverse(c => coarse(c.ToList()).Select(x => (Symbol)x));
-            }
-            else if (pyObject.TryConvert(out universe))
+            if (pyObject.TryConvert(out universe))
             {
                 AddUniverse(universe);
+            }
+            else if (pyObject.TryConvertToDelegate(out coarse))
+            {
+                AddUniverse(c => coarse(c.ToList()).Select(x => (Symbol)x));
             }
             else
             {
