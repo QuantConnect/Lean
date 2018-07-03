@@ -54,8 +54,8 @@ namespace QuantConnect.ToolBox
             {
                 var fromDate = DateTime.ParseExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture);
                 var resolution = optionsObject.ContainsKey("resolution") ? optionsObject["resolution"].ToString() : "";
-                var symbols = optionsObject.ContainsKey("symbols")
-                    ? (optionsObject["symbols"] as Dictionary<string, object>)?.Keys.ToList()
+                var tickers = optionsObject.ContainsKey("tickers")
+                    ? (optionsObject["tickers"] as Dictionary<string, object>)?.Keys.ToList()
                     : new List<string>();
                 var toDate = optionsObject.ContainsKey("to-date")
                     ? DateTime.ParseExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture)
@@ -64,39 +64,39 @@ namespace QuantConnect.ToolBox
                 {
                     case "gdaxdl":
                     case "gdaxdownloader":
-                        GDAXDownloaderProgram.GDAXDownloader(symbols, resolution, fromDate, toDate);
+                        GDAXDownloaderProgram.GDAXDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "cdl":
                     case "cryptoiqdownloader":
-                        CryptoiqDownloaderProgram.CryptoiqDownloader(symbols, GetParameterOrExit(optionsObject, "exchange"), fromDate, toDate);
+                        CryptoiqDownloaderProgram.CryptoiqDownloader(tickers, GetParameterOrExit(optionsObject, "exchange"), fromDate, toDate);
                         break;
                     case "ddl":
                     case "dukascopydownloader":
-                        DukascopyDownloaderProgram.DukascopyDownloader(symbols, resolution, fromDate, toDate);
+                        DukascopyDownloaderProgram.DukascopyDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "fdl":
                     case "fxcmdownloader":
-                        FxcmDownloaderProgram.FxcmDownloader(symbols, resolution, fromDate, toDate);
+                        FxcmDownloaderProgram.FxcmDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "fvdl":
                     case "fxcmvolumedownload":
-                        FxcmVolumeDownloadProgram.FxcmVolumeDownload(symbols, resolution, fromDate, toDate);
+                        FxcmVolumeDownloadProgram.FxcmVolumeDownload(tickers, resolution, fromDate, toDate);
                         break;
                     case "gdl":
                     case "googledownloader":
-                        GoogleDownloaderProgram.GoogleDownloader(symbols, resolution, fromDate, toDate);
+                        GoogleDownloaderProgram.GoogleDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "ibdl":
                     case "ibdownloader":
-                        IBDownloaderProgram.IBDownloader(symbols, resolution, fromDate, toDate);
+                        IBDownloaderProgram.IBDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "kdl":
                     case "krakendownloader":
-                        KrakenDownloaderProgram.KrakenDownloader(symbols, resolution, fromDate, toDate);
+                        KrakenDownloaderProgram.KrakenDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "odl":
                     case "oandadownloader":
-                        OandaDownloaderProgram.OandaDownloader(symbols, resolution, fromDate, toDate);
+                        OandaDownloaderProgram.OandaDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "qbdl":
                     case "quandlbitfinexdownloader":
@@ -104,7 +104,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "ydl":
                     case "yahoodownloader":
-                        YahooDownloaderProgram.YahooDownloader(symbols, resolution, fromDate, toDate);
+                        YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
@@ -164,7 +164,7 @@ namespace QuantConnect.ToolBox
             {
                 Console.WriteLine("\n" + message);
             }
-            Console.WriteLine("\nUse the '--h' parameter for more information");
+            Console.WriteLine("\nUse the '--help' parameter for more information");
             Console.WriteLine("Press any key to quit");
             Console.ReadLine();
             Environment.Exit(exitCode);

@@ -29,12 +29,12 @@ namespace QuantConnect.ToolBox.IBDownloader
         /// <summary>
         /// Primary entry point to the program. This program only supports FOREX for now.
         /// </summary>
-        public static void IBDownloader(IList<string> symbols, string resolution, DateTime fromDate, DateTime toDate)
+        public static void IBDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
         {
-            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("IBDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=eg EURUSD,USDJPY");
+                Console.WriteLine("IBDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg EURUSD,USDJPY");
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
@@ -79,7 +79,7 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                 using (var downloader = new IBDataDownloader())
                 {
-                    foreach (var ticker in symbols)
+                    foreach (var ticker in tickers)
                     {
                         // Download the data
                         var symbol = Symbol.Create(ticker, securityType, market);

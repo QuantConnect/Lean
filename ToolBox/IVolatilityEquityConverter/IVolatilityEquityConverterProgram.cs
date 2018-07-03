@@ -75,7 +75,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
                 _sourceMetaDirectory = (Console.ReadLine() ?? "");
                 Console.WriteLine("3. Destination LEAN Data directory: ");
                 _destinationDirectory = (Console.ReadLine() ?? "");
-                Console.WriteLine("4. Enter resolution of source data (min, hour, day): ");
+                Console.WriteLine("4. Enter resolution of source data (Minute, Hour, Daily): ");
                 _resolution = ParseResolution(Console.ReadLine() ?? "");
             }
 
@@ -146,11 +146,11 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
         {
             switch (entry.Trim().toLowerCase())
             {
-                case "min":
+                case "minute":
                     return Resolution.Minute;
                 case "hour":
                     return Resolution.Hour;
-                case "day":
+                case "daily":
                     return Resolution.Daily;
                 default:
                     return Resolution.Minute;

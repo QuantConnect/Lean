@@ -11,8 +11,8 @@ namespace QuantConnect.Configuration
         private const string ApplicationName = "QuantConnect.ToolBox.exe";
         private const string ApplicationDescription = "Lean Engine ToolBox";
         private const string ApplicationHelpText = "\nThe ToolBox is a wrapper of >15 tools. "
-                                                   + "Each require a different set of parameters. Example: --app=GDAXDownloader --symbols="
-                                                   + "ETH-USD --resolution=Minute --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss";
+                                                   + "Each require a different set of parameters. Example: --app=GoogleDownloader --tickers="
+                                                   + "SPY,AAPL --resolution=Minute --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss";
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
                 new CommandLineOption("app", CommandOptionType.SingleValue,
@@ -25,8 +25,8 @@ namespace QuantConnect.Configuration
                                                      + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG\n"
                                                      + "Example 1: --app=DDL\n"
                                                      + "Example 2: --app=NseMarketDataConverter\n"),
-                new CommandLineOption("symbols", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL)] "
-                                                                                  + "--symbols=ETH-USD,ETH-BTC,BTC-USD,etc"),
+                new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL)] "
+                                                                                  + "--tickers=SPY,AAPL,etc"),
                 new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL) and IVolatilityEquityConverter,"
                                                                                    + " QuantQuoteConverter] *Not all downloaders support all resolutions. Send empty for more information.*"
                                                                                    + " CASE SENSITIVE: --resolution=Tick/Second/Minute/Hour/Daily/All"),
@@ -43,7 +43,7 @@ namespace QuantConnect.Configuration
                                                                                         + "NseMarketDataConverter, QuantQuoteConverter]"),
                 new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter]"),
                 new CommandLineOption("market", CommandOptionType.SingleValue, "[REQUIRED for KaikoDataConverter]"),
-                new CommandLineOption("tick-type", CommandOptionType.SingleValue, "[REQUIRED for KaikoDataConverter]")
+                new CommandLineOption("tick-type", CommandOptionType.SingleValue, "[REQUIRED for KaikoDataConverter] CASE INSENSITIVE: --tick-type=Quote/Trade")
             };
 
         /// <summary>

@@ -27,12 +27,12 @@ namespace QuantConnect.ToolBox.GoogleDownloader
         /// QuantConnect Google Downloader For LEAN Algorithmic Trading Engine.
         /// Original by @chrisdk2015, tidied by @jaredbroad
         /// </summary>
-        public static void GoogleDownloader(IList<string> symbols, string resolution, DateTime startDate, DateTime endDate)
+        public static void GoogleDownloader(IList<string> tickers, string resolution, DateTime startDate, DateTime endDate)
         {
-            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("GoogleDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=eg SPY,AAPL");
+                Console.WriteLine("GoogleDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg SPY,AAPL");
                 Console.WriteLine("--resolution=Minute/Hour/Daily");
                 Environment.Exit(1);
             }
@@ -48,10 +48,10 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                 const string market = Market.USA;
                 var downloader = new GoogleDataDownloader();
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
                     // Download the data
-                    var symbolObject = Symbol.Create(symbol, SecurityType.Equity, market);
+                    var symbolObject = Symbol.Create(ticker, SecurityType.Equity, market);
                     var data = downloader.Get(symbolObject, castResolution, startDate, endDate);
 
                     // Save the data

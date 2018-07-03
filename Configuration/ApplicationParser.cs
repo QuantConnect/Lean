@@ -31,11 +31,11 @@ namespace QuantConnect.Configuration
                 ExtendedHelpText = applicationHelpText
             };
 
-            application.HelpOption("-?|-h|--help|--h");
+            application.HelpOption("-?|-h|--help");
 
             // This is a helper/shortcut method to display version info - it is creating a regular Option, with some defaults.
             // The default help text is "Show version Information"
-            application.VersionOption("-v|-V|--version|--v",
+            application.VersionOption("-v|-V|--version",
                 () =>
                     $"Version {Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion}");
 
