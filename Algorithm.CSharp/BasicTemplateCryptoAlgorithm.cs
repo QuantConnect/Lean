@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Brokerages;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {

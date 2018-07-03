@@ -20,6 +20,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests
 {

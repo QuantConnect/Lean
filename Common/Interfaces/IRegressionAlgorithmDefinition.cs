@@ -15,7 +15,7 @@
 
 using System.Collections.Generic;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Defines a C# algorithm as a regression algorithm to be run as part of the test suite.

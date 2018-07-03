@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;

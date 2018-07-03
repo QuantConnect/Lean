@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {

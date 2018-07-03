@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -69,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // backtest - first cache the entire file
                 if (_backtestSymbolsPerDay.Count == 0)
                 {
-                    // No need for headers for authorization with dropbox, these two lines are for example purposes 
+                    // No need for headers for authorization with dropbox, these two lines are for example purposes
                     var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
                     // The headers must be passed to the Download method as list of key/value pair.
                     var headers = new List<KeyValuePair<string, string>>
