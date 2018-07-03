@@ -22,7 +22,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
-using QuantConnect.Scheduling;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {

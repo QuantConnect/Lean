@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Indicators;
 using QuantConnect.Parameters;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {

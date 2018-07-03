@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
