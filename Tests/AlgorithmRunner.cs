@@ -91,12 +91,19 @@ namespace QuantConnect.Tests
                     var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
                     Task.Factory.StartNew(() =>
                     {
-                        string algorithmPath;
-                        var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-                        ((BacktestNodePacket)job).BacktestId = algorithm;
-                        var algorithmManager = new AlgorithmManager(false);
-                        engine.Run(job, algorithmManager, algorithmPath);
-                        ordersLogFile = ((RegressionResultHandler) algorithmHandlers.Results).OrdersLogFilePath;
+                        try
+                        {
+                            string algorithmPath;
+                            var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                            ((BacktestNodePacket)job).BacktestId = algorithm;
+                            var algorithmManager = new AlgorithmManager(false);
+                            engine.Run(job, algorithmManager, algorithmPath);
+                            ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).OrdersLogFilePath;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.LogHandler.Trace($"Error in AlgorithmRunner task: {e}");
+                        }
                     }).Wait();
 
                     var backtestingResultHandler = (BacktestingResultHandler) algorithmHandlers.Results;
