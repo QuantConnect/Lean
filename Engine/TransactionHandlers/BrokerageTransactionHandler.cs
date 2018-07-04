@@ -85,6 +85,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private readonly ConcurrentDictionary<int, OrderTicket> _completeOrderTickets = new ConcurrentDictionary<int, OrderTicket>();
 
+        /// <summary>
+        /// The _cancelPendingOrders instance will help to keep track of CancelPending orders and their Status
+        /// </summary>
+        protected readonly CancelPendingOrders _cancelPendingOrders = new CancelPendingOrders();
+
         private IResultHandler _resultHandler;
 
         /// <summary>
@@ -335,6 +340,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 else
                 {
+                    _cancelPendingOrders.Set(order.Id, order.Status);
                     // update the order status
                     order.Status = OrderStatus.CancelPending;
 
@@ -402,9 +408,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private Order GetOrderByIdInternal(int orderId)
         {
-            // this function can be invoked by brokerages when getting open orders, guard against null ref
-            if (_completeOrders == null) return null;
-
             Order order;
             return _completeOrders.TryGetValue(orderId, out order) ? order : null;
         }
@@ -416,9 +419,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(string brokerageId)
         {
-            // this function can be invoked by brokerages when getting open orders, guard against null ref
-            if (_completeOrders == null || _openOrders == null) return null;
-
             var order = _openOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value
                         ?? _completeOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
             return order?.Clone();
@@ -432,12 +432,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
-            if (_completeOrders == null)
-            {
-                // this is the case when we haven't initialize yet, backtesting brokerage
-                // will end up calling this through the transaction manager
-                return Enumerable.Empty<Order>();
-            }
             if (filter != null)
             {
                 // return a clone to prevent object reference shenanigans, you must submit a request to change the order
@@ -453,13 +447,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All open orders this order provider currently holds</returns>
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
-            if (_openOrders == null)
-            {
-                // this is the case when we haven't initialize yet, backtesting brokerage
-                // will end up calling this through the transaction manager
-                return new List<Order>();
-            }
-
             if (filter != null)
             {
                 // return a clone to prevent object reference shenanigans, you must submit a request to change the order
@@ -842,9 +829,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             BrokerageMessageEvent message;
             if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(_algorithm.Securities[order.Symbol], order, request, out message))
             {
-                // if we couldn't actually process the order, mark it as invalid and bail
-                order.Status = OrderStatus.Invalid;
-                if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to update order: " + order.Id);
+                if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidRequest", "BrokerageModel declared unable to update order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to update order"));
@@ -905,11 +890,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_completeOrders.TryGetValue(request.OrderId, out order) || !_completeOrderTickets.TryGetValue(request.OrderId, out ticket))
             {
                 Log.Error("BrokerageTransactionHandler.HandleCancelOrderRequest(): Unable to cancel order with ID " + request.OrderId + ".");
+                _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.UnableToFindOrder(request);
             }
 
             if (order.Status.IsClosed())
             {
+                _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.InvalidStatus(request, order);
             }
 
@@ -931,12 +918,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // failed to cancel the order
                 var message = "Brokerage failed to cancel order with id " + order.Id;
                 _algorithm.Error(message);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to cancel order"));
+                _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToCancelOrder, message);
             }
-
-            // we succeeded to cancel the order
-            order.Status = OrderStatus.Canceled;
 
             if (request.Tag != null)
             {
@@ -970,6 +954,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + fill.OrderId);
                 return;
             }
+            _cancelPendingOrders.UpdateOrRemove(order.Id, fill.Status);
             // set the status of our order object based on the fill event
             order.Status = fill.Status;
 
