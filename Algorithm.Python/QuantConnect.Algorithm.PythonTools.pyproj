@@ -25,6 +25,7 @@
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <Compile Include="BasicTemplateCryptoAlgorithm.py" />
     <Compile Include="BasicTemplateIntrinioEconomicData.py" />
+    <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="ConstituentsQC500GeneratorAlgorithm.py" />
     <Compile Include="ConvertToFrameworkAlgorithm.py" />
@@ -79,6 +80,7 @@
     <Compile Include="HourReverseSplitRegressionAlgorithm.py" />
     <Compile Include="HourSplitRegressionAlgorithm.py" />
     <Compile Include="IndicatorSuiteAlgorithm.py" />
+    <Compile Include="IndicatorWarmupAlgorithm.py" />
     <Compile Include="LimitFillRegressionAlgorithm.py" />
     <Compile Include="MACDTrendAlgorithm.py" />
     <Compile Include="main.py" />
@@ -89,6 +91,7 @@
     <Compile Include="MultipleSymbolConsolidationAlgorithm.py" />
     <Compile Include="OptionChainConsistencyRegressionAlgorithm.py" />
     <Compile Include="OptionChainProviderAlgorithm.py" />
+    <Compile Include="OptionDataNullReferenceRegressionAlgorithm.py" />
     <Compile Include="OptionExerciseAssignRegressionAlgorithm.py" />
     <Compile Include="OptionOpenInterestRegressionAlgorithm.py" />
     <Compile Include="OptionRenameRegressionAlgorithm.py" />

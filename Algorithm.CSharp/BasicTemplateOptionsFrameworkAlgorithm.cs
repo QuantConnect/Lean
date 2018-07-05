@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -23,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Basic template options framework algorithm uses framework components to define an algorithm
     /// that trades options.
     /// </summary>
-    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithmFramework
+    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             // set framework models
             SetUniverseSelection(new EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(SelectOptionChainSymbols));
             SetAlpha(new ConstantOptionContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromHours(0.5)));
-            SetPortfolioConstruction(new SingleSharePortofioConstructionModel());
+            SetPortfolioConstruction(new SingleSharePortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .Strikes(+1, +1)
                     .Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
                     .WeeklysOnly()
-                    .Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put))
+                    .PutsOnly()
                     .OnlyApplyFilterAtMarketOpen();
             }
         }
@@ -123,22 +123,61 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Portoflio construction model that sets target quantities to 1 for up insights and -1 for down insights
+        /// Portfolio construction model that sets target quantities to 1 for up insights and -1 for down insights
         /// </summary>
-        class SingleSharePortofioConstructionModel : IPortfolioConstructionModel
+        class SingleSharePortfolioConstructionModel : PortfolioConstructionModel
         {
-            public IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
             {
                 foreach (var insight in insights)
                 {
                     yield return new PortfolioTarget(insight.Symbol, (int) insight.Direction);
                 }
             }
-
-            public void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-            {
-                // no need to track anything here
-            }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "4"},
+            {"Average Win", "0.14%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "74.140%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.279%"},
+            {"Sharpe Ratio", "9.165"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "25.476"},
+            {"Annual Standard Deviation", "0.026"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "8.891"},
+            {"Tracking Error", "0.025"},
+            {"Treynor Ratio", "0.009"},
+            {"Total Fees", "$1.00"},
+            {"Total Insights Generated", "26"},
+            {"Total Insights Closed", "24"},
+            {"Total Insights Analysis Completed", "6"},
+            {"Long Insight Count", "26"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$22.79625"},
+            {"Total Accumulated Estimated Alpha Value", "$1.51975"},
+            {"Mean Population Estimated Insight Value", "$0.06332292"},
+            {"Mean Population Direction", "33.3333%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "92.3114%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
+        };
     }
 }
