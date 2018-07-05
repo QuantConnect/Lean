@@ -26,11 +26,11 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
         /// <summary>
         /// Cryptoiq Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// </summary>
-        public static void CryptoiqDownloader(IList<string> symbols, string exchange, DateTime startDate, DateTime endDate)
+        public static void CryptoiqDownloader(IList<string> tickers, string exchange, DateTime startDate, DateTime endDate)
         {
-            if (exchange.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (exchange.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("CryptoiqDownloader ERROR: '--exchange=' or '--symbols=' parameter is missing");
+                Console.WriteLine("CryptoiqDownloader ERROR: '--exchange=' or '--tickers=' parameter is missing");
                 Environment.Exit(1);
             }
 
@@ -43,10 +43,10 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 const string market = Market.GDAX;
                 var downloader = new CryptoiqDownloader(exchange);
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
                     // Download the data
-                    var symbolObject = Symbol.Create(symbol, SecurityType.Crypto, market);
+                    var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
                     var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
 
                     // Save the data

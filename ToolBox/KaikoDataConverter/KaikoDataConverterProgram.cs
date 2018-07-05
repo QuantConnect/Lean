@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
             {
                 throw new ArgumentException("The arguments must be specified as [market] [tickType (quote/trade)] [kaiko raw data directory path]");
             }
-            var tickType = _tickType == "quote" ? TickType.Quote : TickType.Trade;
+            var tickType = _tickType.ToLower() == "quote" ? TickType.Quote : TickType.Trade;
 
             if (tickType == TickType.Quote)
             {

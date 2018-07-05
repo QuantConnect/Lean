@@ -28,12 +28,12 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <summary>
         /// Primary entry point to the program
         /// </summary>
-        public static void DukascopyDownloader(IList<string> symbols, string resolution, DateTime startDate, DateTime endDate)
+        public static void DukascopyDownloader(IList<string> tickers, string resolution, DateTime startDate, DateTime endDate)
         {
-            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("DukascopyDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=eg EURUSD,USDJPY");
+                Console.WriteLine("DukascopyDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg EURUSD,USDJPY");
                 Console.WriteLine("--resolution=Tick/Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
@@ -48,19 +48,18 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
 
                 // Download the data
-                const string market = Market.Dukascopy;
                 var downloader = new DukascopyDataDownloader();
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
-                    if (!downloader.HasSymbol(symbol))
-                        throw new ArgumentException("The symbol " + symbol + " is not available.");
+                    if (!downloader.HasSymbol(ticker))
+                        throw new ArgumentException("The ticker " + ticker + " is not available.");
                 }
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
-                    var securityType = downloader.GetSecurityType(symbol);
-                    var symbolObject = Symbol.Create(symbol, securityType, Market.Dukascopy);
+                    var securityType = downloader.GetSecurityType(ticker);
+                    var symbolObject = Symbol.Create(ticker, securityType, Market.Dukascopy);
                     var data = downloader.Get(symbolObject, castResolution, startDate, endDate);
 
                     if (allResolutions)

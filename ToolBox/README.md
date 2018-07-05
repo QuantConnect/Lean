@@ -1,4 +1,4 @@
-Lean Data ToolBox 
+![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png) Lean Data ToolBox
 =========
 [![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -7,34 +7,65 @@ Lean Data ToolBox
 
 ## Introduction ##
 
-Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows and Linux.
+Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
 
-The following is a collection of helper projects for data download and storage to Lean.
+The ToolBox project is a command line program which wraps over 15 tools.
 
-## QuantQuote Converter ##
+## Usage
 
-The QuantQuote converter ports an extracted QuantQuote order to QuantConnect data format and saves it to your LEAN directory. The user must enter three key parts of information:
+Each tool requires a different set of parameters, the only **required argument is '--app='**, which defines the target tool and is case insensitive.
 
- - Directory where your QuantQuote order is extracted.
- - Directory where Lean Data is located "Lean/Data".
- - Resolution of the QuantQuote data.
+Help information is available using the '--help' parameter.
 
-## Oanda Downloader ##
+Example: --app=GoogleDownloader --tickers=SPY,AAPL --resolution=Minute --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss
 
-Download data directly from the Oanda database using your personal access token. The downloader will save the information to your FX directory.
+#### Available downloaders
 
-## Dukascopy Downloader ##
+- **'--app='**
+	- GDAXDownloader or GDAXDL
+	- CryptoiqDownloader or CDL
+	- DukascopyDownloader or DDL
+	- FxcmDownloader or FDL
+	- FxcmVolumeDownload or FVDL
+	- GoogleDownloader or GDL
+	- IBDownloader or IBDL
+	- KrakenDownloader or KDL
+	- OandaDownloader or ODL
+	- QuandlBitfinexDownloader or QBDL
+	- YahooDownloader or YDL
+- **'--from-date=yyyyMMdd-HH:mm:ss'** required
+- **'--tickers=SPY,AAPL,etc'** required, except for QuandlBitfinexDownloader (QBDL)
+- **'--resolution=Tick/Second/Minute/Hour/Daily/All'** required, except for QuandlBitfinexDownloader (QBDL), CryptoiqDownloader (CDL). **Case sensitive. Not all downloaders support all resolutions**, send empty for more information.
+- **'--to-date=yyyyMMdd-HH:mm:ss'** optional. If not provided 'DateTime.UtcNow' will be used
 
-Download data from Dukascopy website and convert it into LEAN engine format. Save the data to your personal LEAN data directory.
+#### Available Converters
 
-## Yahoo Downloader ##
+- **'--app='**
+	- AlgoSeekFuturesConverter or ASFC
+		- **'--date=yyyyMMdd'** reference date.
+	- AlgoSeekOptionsConverter or ASOC
+		- **'--date=yyyyMMdd'** reference date.
+	- IVolatilityEquityConverter or IVEC
+		- **'--source-dir='** source archived IVolatility data.
+		- **'--source-meta-dir='** source archived IVolatility meta data.
+		- **'--destination-dir='** directory where Lean Data is located "Lean/Data".
+		- **'--resolution=Minute/Hour/Daily'** resolution of your IVolatility data. Case insensitive.
+	- KaikoDataConverter or KDC
+		- **'--market='** the exchange the data represents.
+		- **'--tick-type=Quote/Trade'** the tick type being processed. Case insensitive.
+		- **'--source-dir='** path to the raw Kaiko data.
+	- NseMarketDataConverter or NMDC
+		- **'--source-dir='** source directory of unzipped NSE data.
+		- **'--destination-dir='** directory where Lean Data is located "Lean/Data".
+	- QuantQuoteConverter or QQC
+		- **'--source-dir='** directory where your QuantQuote order is extracted.
+		- **'--destination-dir='** directory where Lean Data is located "Lean/Data".
+		- **'--resolution='** resolution of the QuantQuote data.
 
-Download data from Yahoo into daily files and store them in your local data directory.
+#### Other tools
+- **'--app='**
+	- CoarseUniverseGenerator or CUG
 
-## Google Downloader ##
-
-Download data from Google and store them in your local data directory.
-
-  [1]: https://lean.quantconnect.com "Lean Open Source Home Page"
-  [2]: https://lean.quantconnect.com/docs "Lean Documentation"
-  [3]: https://github.com/QuantConnect/Lean/archive/master.zip
+[1]: https://lean.quantconnect.com "Lean Open Source Home Page"
+[2]: https://lean.quantconnect.com/docs "Lean Documentation"
+[3]: https://github.com/QuantConnect/Lean/archive/master.zip

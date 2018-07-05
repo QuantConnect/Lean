@@ -28,12 +28,12 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <summary>
         /// Primary entry point to the program
         /// </summary>
-        public static void OandaDownloader(IList<string> symbols, string resolution, DateTime startDate, DateTime endDate)
+        public static void OandaDownloader(IList<string> tickers, string resolution, DateTime startDate, DateTime endDate)
         {
-            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("OandaDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=eg EURUSD,USDJPY");
+                Console.WriteLine("OandaDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg EURUSD,USDJPY");
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
@@ -53,13 +53,13 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 const string market = Market.Oanda;
                 var downloader = new OandaDataDownloader(accessToken, accountId);
 
-                foreach (var ticker in symbols)
+                foreach (var ticker in tickers)
                 {
                     if (!downloader.HasSymbol(ticker))
-                        throw new ArgumentException("The symbol " + ticker + " is not available.");
+                        throw new ArgumentException("The ticker " + ticker + " is not available.");
                 }
 
-                foreach (var ticker in symbols)
+                foreach (var ticker in tickers)
                 {
                     // Download the data
                     var securityType = downloader.GetSecurityType(ticker);

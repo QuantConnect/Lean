@@ -28,14 +28,14 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// <summary>
         /// GDAX Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// </summary>
-        public static void GDAXDownloader(IList<string> symbols, string resolution, DateTime fromDate, DateTime toDate)
+        public static void GDAXDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("GDAXDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=ETH-USD,ETH-BTC,BTC-USD,etc.");
+                Console.WriteLine("GDAXDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=ETH-USD,ETH-BTC,BTC-USD,etc.");
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily");
                 Environment.Exit(1);
             }
@@ -48,10 +48,10 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 // Create an instance of the downloader
                 const string market = Market.GDAX;
                 var downloader = new GDAXDownloader();
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
                     // Download the data
-                    var symbolObject = Symbol.Create(symbol, SecurityType.Crypto, market);
+                    var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
                     var data = downloader.Get(symbolObject, castResolution, fromDate, toDate);
 
                     // Save the data

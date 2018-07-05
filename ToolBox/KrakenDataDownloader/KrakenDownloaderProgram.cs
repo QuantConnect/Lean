@@ -27,12 +27,12 @@ namespace QuantConnect.ToolBox.KrakenDownloader
         /// Kraken Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// By @matthewsedam
         /// </summary>
-        public static void KrakenDownloader(IList<string> symbols, string resolution, DateTime startDate, DateTime endDate)
+        public static void KrakenDownloader(IList<string> tickers, string resolution, DateTime startDate, DateTime endDate)
         {
-            if (resolution.IsNullOrEmpty() || symbols.IsNullOrEmpty())
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("KrakenDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=eg XXBTZUSD,XETHZUSD");
+                Console.WriteLine("KrakenDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg XXBTZUSD,XETHZUSD");
                 Console.WriteLine("--resolution=Minute/Hour/Daily/Tick");
                 Environment.Exit(1);
             }
@@ -45,7 +45,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var downloader = new KrakenDataDownloader();
 
-                foreach (var pair in symbols)
+                foreach (var pair in tickers)
                 {
                     // Download data
                     var pairObject = Symbol.Create(pair, SecurityType.Crypto, Market.Kraken);

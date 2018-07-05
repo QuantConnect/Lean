@@ -33,8 +33,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         {
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("FxcmDownloader ERROR: '--symbols=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--symbols=eg EURUSD,USDJPY");
+                Console.WriteLine("FxcmDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg EURUSD,USDJPY");
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
@@ -64,7 +64,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 foreach (var ticker in tickers)
                 {
                     if (!downloader.HasSymbol(ticker))
-                        throw new ArgumentException("The symbol " + ticker + " is not available.");
+                        throw new ArgumentException("The ticker " + ticker + " is not available.");
                 }
 
                 foreach (var ticker in tickers)

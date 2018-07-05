@@ -30,10 +30,10 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
             {
                 if (!tickers.IsNullOrEmpty())
                 {
-                    var symbols = tickers.First().ToLower();
-                    if (symbols == "all" || symbols == "update")
+                    var _tickers = tickers.First().ToLower();
+                    if (_tickers == "all" || _tickers == "update")
                     {
-                        if (symbols == "update")
+                        if (_tickers == "update")
                         {
                             isUpdate = true;
                         }
@@ -48,8 +48,8 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
                     Console.WriteLine("Usage:\n\t" +
                                       "FxcmVolumeDownloader all\t will download data for all available pair for the three resolutions.\n\t" +
                                       "FxcmVolumeDownloader update\t will download just last day data for all pair and resolutions already downloaded.");
-                    Console.WriteLine("Usage: FxcmVolumeDownloader --symbols= --resolution= --from-date= --to-date=");
-                    Console.WriteLine("--symbols=eg EURUSD,USDJPY\n" +
+                    Console.WriteLine("Usage: FxcmVolumeDownloader --tickers= --resolution= --from-date= --to-date=");
+                    Console.WriteLine("--tickers=eg EURUSD,USDJPY\n" +
                                       "\tAvailable pairs:\n" +
                                       "\tEURUSD, USDJPY, GBPUSD, USDCHF, EURCHF, AUDUSD, USDCAD,\n" +
                                       "\tNZDUSD, EURGBP, EURJPY, GBPJPY, EURAUD, EURCAD, AUDJPY");
