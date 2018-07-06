@@ -44,10 +44,10 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
         self.AddEquity("SPY")
 
         # create a 15 day exponential moving average
-        self.fast = self.EMA("SPY", 15, Resolution.Daily);
+        self.fast = self.EMA("SPY", 15, Resolution.Daily)
 
         # create a 30 day exponential moving average
-        self.slow = self.EMA("SPY", 30, Resolution.Daily);
+        self.slow = self.EMA("SPY", 30, Resolution.Daily)
 
         self.previous = None
 
@@ -68,7 +68,7 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
             return
 
         # define a small tolerance on our checks to avoid bouncing
-        tolerance = 0.00015;
+        tolerance = 0.00015
 
         holdings = self.Portfolio["SPY"].Quantity
 

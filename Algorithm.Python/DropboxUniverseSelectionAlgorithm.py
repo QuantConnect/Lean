@@ -40,7 +40,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         self.backtestSymbolsPerDay = {}
         self.current_universe = []
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
         self.AddUniverse("my-dropbox-universe", self.selector)
 
     def selector(self, date):

@@ -81,7 +81,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         for security in self._changes.AddedSecurities:
             self.SetHoldings(security.Symbol, 0.2)
 
-        self._changes = None;
+        self._changes = None
 
 
     # this event fires whenever we have changes to our universe

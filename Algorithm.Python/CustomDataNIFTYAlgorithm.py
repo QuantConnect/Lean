@@ -83,14 +83,14 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
     def GetSource(self, config, date, isLiveMode):
-        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
 
 
     def Reader(self, config, line, date, isLiveMode):
         if not (line.strip() and line[0].isdigit()): return None
 
         # New Nifty object
-        index = Nifty();
+        index = Nifty()
         index.Symbol = config.Symbol
 
         try:
@@ -122,7 +122,7 @@ class DollarRupee(PythonData):
         if not (line.strip() and line[0].isdigit()): return None
 
         # New USDINR object
-        currency = DollarRupee();
+        currency = DollarRupee()
         currency.Symbol = config.Symbol
 
         try:
@@ -135,7 +135,7 @@ class DollarRupee(PythonData):
             # Do nothing
             return None
 
-        return currency;
+        return currency
 
 
 class CorrelationPair:

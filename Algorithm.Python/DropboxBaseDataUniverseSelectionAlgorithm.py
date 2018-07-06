@@ -42,7 +42,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         self.SetStartDate(2013,1,1)
         self.SetEndDate(2013,12,31)

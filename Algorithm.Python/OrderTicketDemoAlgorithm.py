@@ -277,7 +277,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             qty = self.Portfolio[self.spy.Value].Quantity
             qty = 100 if qty == 0 else 2*qty
 
-            newTicket = self.MarketOnCloseOrder(self.spy, qty);
+            newTicket = self.MarketOnCloseOrder(self.spy, qty)
             self.__openMarketOnCloseOrders.append(newTicket)
 
         if len(self.__openMarketOnCloseOrders) == 1 and self.Time.minute == 59:
@@ -346,7 +346,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             longOrder.Cancel("Short filled")
             return True
 
-        return False;
+        return False
 
 
     def TimeIs(self, day, hour, minute):

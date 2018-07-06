@@ -45,8 +45,8 @@ class PairsTradingAlphaModel(AlphaModel):
         self.asset2Price = None
         self.ratio = None
         self.mean = None
-        self.upperThreshold = None;
-        self.lowerThreshold = None;
+        self.upperThreshold = None
+        self.lowerThreshold = None
 
         self.Name = '{}({},{},{})'.format(self.__class__.__name__, asset1, asset2, Extensions.Normalize(threshold))
 

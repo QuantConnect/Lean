@@ -61,7 +61,7 @@ class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithmFramework):
 
     def SelectOptionChainSymbols(self, utcTime):
         newYorkTime = Extensions.ConvertFromUtc(utcTime, TimeZones.NewYork)
-        ticker = "TWX" if newYorkTime.date() < date(2014, 6, 6) else "AAPL";
+        ticker = "TWX" if newYorkTime.date() < date(2014, 6, 6) else "AAPL"
         return [ Symbol.Create(ticker, SecurityType.Option, Market.USA, f"?{ticker}") ]
 
 class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(OptionUniverseSelectionModel):

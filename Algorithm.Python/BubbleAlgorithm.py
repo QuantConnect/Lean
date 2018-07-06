@@ -114,7 +114,7 @@ class BubbleAlgorithm(QCAlgorithm):
                 # Cape Ratio is missing from orignial data
                 # Most recent cape data is most likely to be missing 
                 elif self._currCape == 0:
-                    self.Debug("Exiting due to no CAPE!");
+                    self.Debug("Exiting due to no CAPE!")
                     self.Quit("CAPE ratio not supplied in data, exiting.")
                 
             except:

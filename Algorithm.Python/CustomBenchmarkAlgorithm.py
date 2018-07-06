@@ -36,10 +36,10 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY", Resolution.Second)
 
-        self.SetBenchmark("SPY");
+        self.SetBenchmark("SPY")
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
-            self.Debug("Purchased Stock");
+            self.Debug("Purchased Stock")

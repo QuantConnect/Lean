@@ -68,7 +68,7 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
             if not security.Invested:
                 self.MarketOrder(security.Symbol, 10)
 
-        self.changes = None;
+        self.changes = None
 
 
     # this event fires whenever we have changes to our universe

@@ -61,7 +61,7 @@ class DelistingEventsAlgorithm(QCAlgorithm):
 
         # the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
 
-        aaa = self.Securities["AAA"];
+        aaa = self.Securities["AAA"]
         if aaa.IsDelisted and aaa.IsTradable:
             raise Exception("Delisted security must NOT be tradable")
 
