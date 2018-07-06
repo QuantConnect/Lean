@@ -15,6 +15,7 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 
 namespace QuantConnect.Tests.Algorithm
 {

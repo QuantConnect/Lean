@@ -69,7 +69,7 @@ namespace QuantConnect.Api
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
         /// <returns>Project object from the API.</returns>
-        
+
         public ProjectResponse CreateProject(string name, Language language)
         {
             var request = new RestRequest("projects/create", Method.POST);
@@ -126,7 +126,7 @@ namespace QuantConnect.Api
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
-        
+
         public ProjectFilesResponse AddProjectFile(int projectId, string name, string content)
         {
             var request = new RestRequest("files/create", Method.POST);
@@ -148,7 +148,7 @@ namespace QuantConnect.Api
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        
+
         public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
         {
             var request = new RestRequest("files/update", Method.POST);
@@ -170,7 +170,7 @@ namespace QuantConnect.Api
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        
+
         public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
         {
             var request = new RestRequest("files/update", Method.POST);
@@ -190,7 +190,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        
+
         public ProjectFilesResponse ReadProjectFiles(int projectId)
         {
             var request = new RestRequest("files/read", Method.GET);
@@ -209,7 +209,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
-        
+
         public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
         {
             var request = new RestRequest("files/read", Method.GET);
@@ -228,7 +228,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        
+
         public RestResponse DeleteProjectFile(int projectId, string name)
         {
             var request = new RestRequest("files/delete", Method.POST);
@@ -246,7 +246,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we own and wish to delete</param>
         /// <returns>RestResponse indicating success</returns>
-        
+
         public RestResponse DeleteProject(int projectId)
         {
             var request = new RestRequest("projects/delete", Method.POST);
@@ -265,7 +265,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we wish to compile.</param>
         /// <returns>Compile object result</returns>
-        
+
         public Compile CreateCompile(int projectId)
         {
             var request = new RestRequest("compile/create", Method.POST);
@@ -284,7 +284,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id we sent for compile</param>
         /// <param name="compileId">Compile id return from the creation request</param>
         /// <returns><see cref="Compile"/></returns>
-        
+
         public Compile ReadCompile(int projectId, string compileId)
         {
             var request = new RestRequest("compile/read", Method.GET);
@@ -304,7 +304,7 @@ namespace QuantConnect.Api
         /// <param name="compileId">Compile id for the project</param>
         /// <param name="backtestName">Name for the new backtest</param>
         /// <returns><see cref="Backtest"/>t</returns>
-        
+
         public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
         {
             var request = new RestRequest("backtests/create", Method.POST);
@@ -322,7 +322,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to read</param>
         /// <param name="backtestId">Specific backtest id to read</param>
         /// <returns><see cref="Backtest"/></returns>
-        
+
         public Backtest ReadBacktest(int projectId, string backtestId)
         {
             var request = new RestRequest("backtests/read", Method.GET);
@@ -341,7 +341,7 @@ namespace QuantConnect.Api
         /// <param name="name">Name we'd like to assign to the backtest</param>
         /// <param name="note">Note attached to the backtest</param>
         /// <returns><see cref="RestResponse"/></returns>
-        
+
         public RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "")
         {
             var request = new RestRequest("backtests/update", Method.POST);
@@ -363,7 +363,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
         /// <returns><see cref="BacktestList"/></returns>
-        
+
         public BacktestList ListBacktests(int projectId)
         {
             var request = new RestRequest("backtests/read", Method.GET);
@@ -379,7 +379,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project for the backtest we want to delete</param>
         /// <param name="backtestId">Backtest id we want to delete</param>
         /// <returns><see cref="RestResponse"/></returns>
-        
+
         public RestResponse DeleteBacktest(int projectId, string backtestId)
         {
             var request = new RestRequest("backtests/delete", Method.POST);
@@ -398,24 +398,24 @@ namespace QuantConnect.Api
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
         /// <param name="serverType">Type of server instance that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
-        /// <param name="versionId">The version of the Lean used to run the algorithm.  
+        /// <param name="versionId">The version of the Lean used to run the algorithm.
         ///                         -1 is master, however, sometimes this can create problems with live deployments.
         ///                         If you experience problems using, try specifying the version of Lean you would like to use.</param>
         /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        
-        public LiveAlgorithm CreateLiveAlgorithm(int projectId, 
-                                                 string compileId, 
-                                                 string serverType, 
-                                                 BaseLiveAlgorithmSettings baseLiveAlgorithmSettings, 
+
+        public LiveAlgorithm CreateLiveAlgorithm(int projectId,
+                                                 string compileId,
+                                                 string serverType,
+                                                 BaseLiveAlgorithmSettings baseLiveAlgorithmSettings,
                                                  string versionId = "-1")
         {
             var request = new RestRequest("live/create", Method.POST);
             request.AddHeader("Accept", "application/json");
             request.Parameters.Clear();
-            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId, 
-                                                                                       compileId, 
-                                                                                       serverType, 
-                                                                                       baseLiveAlgorithmSettings, 
+            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId,
+                                                                                       compileId,
+                                                                                       serverType,
+                                                                                       baseLiveAlgorithmSettings,
                                                                                        versionId));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
@@ -431,7 +431,7 @@ namespace QuantConnect.Api
         /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
         /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns><see cref="LiveList"/></returns>
-        
+
         public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null,
                                            DateTime? startTime = null,
                                            DateTime? endTime = null)
@@ -471,7 +471,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns><see cref="LiveAlgorithmResults"/></returns>
-        
+
         public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
         {
             var request = new RestRequest("live/read", Method.GET);
@@ -487,7 +487,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
         /// <returns><see cref="RestResponse"/></returns>
-        
+
         public RestResponse LiquidateLiveAlgorithm(int projectId)
         {
             var request = new RestRequest("live/update/liquidate", Method.POST);
@@ -503,7 +503,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
         /// <returns><see cref="RestResponse"/></returns>
-        
+
         public RestResponse StopLiveAlgorithm(int projectId)
         {
             var request = new RestRequest("live/update/stop", Method.POST);
@@ -522,7 +522,7 @@ namespace QuantConnect.Api
         /// <param name="startTime">No logs will be returned before this time</param>
         /// <param name="endTime">No logs will be returned after this time</param>
         /// <returns><see cref="LiveLog"/> List of strings that represent the logs of the algorithm</returns>
-        
+
         public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
         {
             var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
@@ -548,7 +548,7 @@ namespace QuantConnect.Api
         /// <param name="resolution">Resolution of data requested.</param>
         /// <param name="date">Date of the data requested.</param>
         /// <returns><see cref="Link"/> to the downloadable data.</returns>
-        
+
         public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
         {
             var request = new RestRequest("data/read", Method.GET);
@@ -589,7 +589,7 @@ namespace QuantConnect.Api
         /// <param name="resolution">Resolution of data requested.</param>
         /// <param name="date">Date of the data requested.</param>
         /// <returns>A <see cref="bool"/> indicating whether the data was successfully downloaded or not.</returns>
-        
+
         public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
         {
             // Get a link to the data
@@ -635,7 +635,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">String algorithm id we're setting.</param>
         /// <param name="message">Message for the algorithm status event</param>
         /// <returns>Algorithm status enum</returns>
-        
+
         public virtual void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
         {
             //
@@ -654,7 +654,7 @@ namespace QuantConnect.Api
         /// <param name="volume">Volume traded</param>
         /// <param name="trades">Total trades since inception</param>
         /// <param name="sharpe">Sharpe ratio since inception</param>
-        
+
         public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
             //
@@ -666,7 +666,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">The algorithm id</param>
         /// <param name="subject">The email subject</param>
         /// <param name="body">The email message body</param>
-        
+
         public virtual void SendUserEmail(string algorithmId, string subject, string body)
         {
             //
@@ -676,7 +676,7 @@ namespace QuantConnect.Api
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        
+
         public virtual void Dispose()
         {
             // NOP

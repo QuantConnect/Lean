@@ -26,6 +26,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuandlFuture = QuantConnect.Algorithm.CSharp.QCUQuandlFutures.QuandlFuture;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {

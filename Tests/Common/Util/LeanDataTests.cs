@@ -17,13 +17,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NodaTime;
 using NUnit.Framework;
-using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 
 namespace QuantConnect.Tests.Common.Util
 {

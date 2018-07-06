@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities;
 
@@ -12,6 +14,8 @@ namespace QuantConnect
     {
         private DateTime _startDate;
         private double _daysCompleted;
+        // this is only used when deserializing to this type since it represents a computed property dependent on internal state
+        private decimal _overrideEstimatedMonthlyAlphaValue;
 
         /// <summary>
         /// Gets the mean scores for the entire population of insights
@@ -46,13 +50,18 @@ namespace QuantConnect
         /// <summary>
         /// Suggested Value of the Alpha On A Monthly Basis For Licensing
         /// </summary>
+        [JsonProperty]
         public decimal EstimatedMonthlyAlphaValue
         {
             get
             {
-                if (_daysCompleted == 0) return 0;
+                if (_daysCompleted == 0)
+                {
+                    return _overrideEstimatedMonthlyAlphaValue;
+                }
                 return (TotalAccumulatedEstimatedAlphaValue / (decimal) _daysCompleted) * 30;
             }
+            private set { _overrideEstimatedMonthlyAlphaValue = value; }
         }
 
         /// <summary>

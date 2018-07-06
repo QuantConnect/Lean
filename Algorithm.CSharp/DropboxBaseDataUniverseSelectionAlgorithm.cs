@@ -182,22 +182,22 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "90"},
             {"Average Win", "0.78%"},
             {"Average Loss", "-0.40%"},
-            {"Compounding Annual Return", "18.516%"},
+            {"Compounding Annual Return", "18.508%"},
             {"Drawdown", "4.700%"},
             {"Expectancy", "1.061"},
-            {"Net Profit", "18.516%"},
-            {"Sharpe Ratio", "1.988"},
+            {"Net Profit", "18.508%"},
+            {"Sharpe Ratio", "1.987"},
             {"Loss Rate", "30%"},
             {"Win Rate", "70%"},
             {"Profit-Loss Ratio", "1.95"},
-            {"Alpha", "0.11"},
-            {"Beta", "3.072"},
+            {"Alpha", "0.118"},
+            {"Beta", "2.677"},
             {"Annual Standard Deviation", "0.086"},
             {"Annual Variance", "0.007"},
             {"Information Ratio", "1.759"},
             {"Tracking Error", "0.086"},
-            {"Treynor Ratio", "0.055"},
-            {"Total Fees", "$251.46"}
+            {"Treynor Ratio", "0.064"},
+            {"Total Fees", "$251.49"}
         };
     }
 }
