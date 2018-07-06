@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Securities.Equity;
@@ -311,5 +312,19 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0.011"},
             {"Total Fees", "$3.27"}
         };
+
+        /// <summary>
+        /// Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.
+        /// </summary>
+        public class QuandlFuture : Quandl
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="QuandlFuture"/> class.
+            /// </summary>
+            public QuandlFuture()
+                : base(valueColumnName: "Settle")
+            {
+            }
+        }
     }
 }

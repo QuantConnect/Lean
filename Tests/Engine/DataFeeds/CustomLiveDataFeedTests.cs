@@ -27,6 +27,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -193,8 +194,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static int _countFilesWritten;
 
-        public class TestableQuandlFuture : QuandlFuture
+        public class TestableQuandlFuture : Quandl
         {
+            public TestableQuandlFuture()
+                : base("Settle")
+            {
+            }
+
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 // use local file instead of remote file
