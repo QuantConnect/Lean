@@ -46,7 +46,8 @@ class RollingWindowAlgorithm(QCAlgorithm):
         self.window = RollingWindow[TradeBar](2)    # For other security types, use QuoteBar
 
         # Creates an indicator and adds to a rolling window when it is updated
-        self.SMA("SPY", 5).Updated += self.SmaUpdated
+        self.sma = self.SMA("SPY", 5)
+        self.Updated += self.SmaUpdated
         self.smaWin = RollingWindow[IndicatorDataPoint](5)
 
 
