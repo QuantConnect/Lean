@@ -41,9 +41,9 @@ class EmaCrossUniverseSelectionFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetEndDate(2015,1,1)
         self.SetCash(100000)
 
-        fastPeriod = 100;
-        slowPeriod = 300;
-        count = 10;
+        fastPeriod = 100
+        slowPeriod = 300
+        count = 10
 
         self.UniverseSettings.Leverage = 2.0
         self.UniverseSettings.Resolution = Resolution.Daily

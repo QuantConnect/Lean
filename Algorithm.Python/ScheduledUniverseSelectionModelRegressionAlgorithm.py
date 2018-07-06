@@ -81,7 +81,7 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
         weekday = self.Time.weekday()
 
         if weekday == 0:
-            self.ExpectAdditions(changes, 'SPY', 'NZDUSD');
+            self.ExpectAdditions(changes, 'SPY', 'NZDUSD')
             if weekday not in self.seenDays:
                 self.seenDays.append(weekday)
                 self.ExpectRemovals(changes, None)
@@ -89,7 +89,7 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
                 self.ExpectRemovals(changes, 'EURUSD', 'IBM')
 
         if weekday == 1:
-            self.ExpectAdditions(changes, 'EURUSD');
+            self.ExpectAdditions(changes, 'EURUSD')
             if weekday not in self.seenDays:
                 self.seenDays.append(weekday)
                 self.ExpectRemovals(changes, 'NZDUSD')
@@ -115,7 +115,7 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
 
         for ticker in tickers:
             if ticker is not None and ticker not in [s.Symbol.Value for s in changes.AddedSecurities]:
-                raise Exception("{}: Expected {} to be added: {}".format(self.Time, ticker, self.Time.weekday()));
+                raise Exception("{}: Expected {} to be added: {}".format(self.Time, ticker, self.Time.weekday()))
 
     def ExpectRemovals(self, changes, *tickers):
         if tickers is None and changes.RemovedSecurities.Count > 0:
@@ -123,4 +123,4 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
 
         for ticker in tickers:
             if ticker is not None and ticker not in [s.Symbol.Value for s in changes.RemovedSecurities]:
-                raise Exception("{}: Expected {} to be removed: {}".format(self.Time, ticker, self.Time.weekday()));
+                raise Exception("{}: Expected {} to be removed: {}".format(self.Time, ticker, self.Time.weekday()))

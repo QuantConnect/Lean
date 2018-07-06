@@ -38,7 +38,7 @@ class CustomDataUniverseAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         # Data ADDED via universe selection is added with Daily resolution.
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         self.SetStartDate(2015,1,5)
         self.SetEndDate(2015,7,1)

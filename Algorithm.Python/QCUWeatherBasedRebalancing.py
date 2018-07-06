@@ -72,8 +72,8 @@ class Weather(PythonData):
 
     def GetSource(self, config, date, isLive):
         source = "https://dl.dropboxusercontent.com/u/44311500/KNYC.csv"
-        source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.year);
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
+        source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.year)
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
 
 
     def Reader(self, config, line, date, isLive):

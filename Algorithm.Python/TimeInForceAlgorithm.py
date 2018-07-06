@@ -41,7 +41,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
         # The default time in force setting for all orders is GoodTilCancelled (GTC),
         # uncomment this line to set a different time in force.
         # We currently only support GTC and DAY.
-        # self.DefaultOrderProperties.TimeInForce = TimeInForce.Day;
+        # self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
 
         self.symbol = self.AddEquity("SPY", Resolution.Minute).Symbol
 

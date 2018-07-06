@@ -52,7 +52,7 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
 
         ### The default buying power model for the Crypto security type is now CashBuyingPowerModel.
         ### Since this test algorithm uses leverage we need to set a buying power model with margin.
-        security.BuyingPowerModel = SecurityMarginModel(3.3);
+        security.BuyingPowerModel = SecurityMarginModel(3.3)
 
         con = QuoteBarConsolidator(timedelta(1))
         self.SubscriptionManager.AddConsolidator("BTCUSD", con)
