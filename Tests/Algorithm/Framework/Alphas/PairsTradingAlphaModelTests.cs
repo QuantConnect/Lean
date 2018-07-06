@@ -19,31 +19,32 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
     [TestFixture]
     public class PairsTradingAlphaModelTests : CommonAlphaModelTests
     {
+        private readonly TimeSpan _period = TimeSpan.FromMinutes(15);
+
         protected override int MaxSliceCount => 1500;
 
         protected override IAlphaModel CreateCSharpAlphaModel()
         {
-            return new PairsTradingAlphaModel(
-                Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                Symbol.Create("AIG", SecurityType.Equity, Market.USA)
-            );
+            return new PairsTradingAlphaModel(_period);
         }
 
         protected override void InitializeAlgorithm(QCAlgorithmFramework algorithm)
         {
-            algorithm.AddEquity("BAC");
-            algorithm.AddEquity("AIG");
+            algorithm.SetUniverseSelection(new ManualUniverseSelectionModel(
+                Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                Symbol.Create("BAC", SecurityType.Equity, Market.USA)));
         }
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(PairsTradingAlphaModel)}(BAC,AIG,1)";
+            return $"{nameof(PairsTradingAlphaModel)}({_period},1)";
         }
 
         protected override IAlphaModel CreatePythonAlphaModel()
@@ -51,9 +52,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             using (Py.GIL())
             {
                 dynamic model = Py.Import("PairsTradingAlphaModel").GetAttr("PairsTradingAlphaModel");
-                var instance = model(
-                    Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                    Symbol.Create("AIG", SecurityType.Equity, Market.USA));
+                var instance = model(_period);
                 return new AlphaModelPythonWrapper(instance);
             }
         }

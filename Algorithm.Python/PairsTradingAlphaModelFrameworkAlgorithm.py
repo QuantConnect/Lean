@@ -12,23 +12,19 @@
 # limitations under the License.
 
 from clr import AddReference
-AddReference("System")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
-from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Alphas.PairsTradingAlphaModel import PairsTradingAlphaModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
+from datetime import timedelta
 
 ### <summary>
 ### Framework algorithm that uses the PairsTradingAlphaModel to detect
@@ -45,11 +41,11 @@ class PairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetStartDate(2013,10,7)
         self.SetEndDate(2013,10,11)
 
-        bac = self.AddEquity("BAC")
-        aig = self.AddEquity("AIG")
+        self.SetUniverseSelection(ManualUniverseSelectionModel(
+            Symbol.Create('AIG', SecurityType.Equity, Market.USA),
+            Symbol.Create('BAC', SecurityType.Equity, Market.USA)))
 
-        self.SetUniverseSelection(ManualUniverseSelectionModel(self.Securities.Keys))
-        self.SetAlpha(PairsTradingAlphaModel(bac.Symbol, aig.Symbol))
+        self.SetAlpha(PairsTradingAlphaModel(timedelta(minutes = 15)))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())

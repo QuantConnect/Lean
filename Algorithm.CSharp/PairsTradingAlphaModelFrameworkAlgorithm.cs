@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -36,11 +37,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            var bac = AddEquity("BAC");
-            var aig = AddEquity("AIG");
+            SetUniverseSelection(new ManualUniverseSelectionModel(
+                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA)));
 
-            SetUniverseSelection(new ManualUniverseSelectionModel(Securities.Keys));
-            SetAlpha(new PairsTradingAlphaModel(bac.Symbol, aig.Symbol));
+            SetAlpha(new PairsTradingAlphaModel(TimeSpan.FromMinutes(15)));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
@@ -86,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Estimated Insight Value", "$-46.25617"},
             {"Mean Population Direction", "50%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "3.8827%"},
+            {"Rolling Averaged Population Direction", "96.1173%"},
             {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
