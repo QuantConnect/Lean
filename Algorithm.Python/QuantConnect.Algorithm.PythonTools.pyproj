@@ -76,7 +76,6 @@
     <Compile Include="FractionalQuantityRegressionAlgorithm.py" />
     <Compile Include="FuturesMomentumAlgorithm.py" />
     <Compile Include="HistoryAlgorithm.py" />
-    <Compile Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Compile Include="HourReverseSplitRegressionAlgorithm.py" />
     <Compile Include="HourSplitRegressionAlgorithm.py" />
     <Compile Include="IndicatorSuiteAlgorithm.py" />
@@ -99,6 +98,7 @@
     <Compile Include="OrderTicketDemoAlgorithm.py" />
     <Compile Include="PairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="ParameterizedAlgorithm.py" />
+    <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="PythonPackageTestAlgorithm.py" />
     <Compile Include="QCUWeatherBasedRebalancing.py" />
     <Compile Include="QuandlFuturesDataAlgorithm.py" />
