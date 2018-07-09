@@ -22,12 +22,16 @@ using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using NodaTime;
+using System.Net;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -35,7 +39,7 @@ namespace QuantConnect.ToolBox.IEX
     /// IEX live data handler.
     /// Data provided for free by IEX. See more at https://iextrading.com/api-exhibit-a
     /// </summary>
-    public class IEXDataQueueHandler : LiveDataQueue, IDisposable
+    public class IEXDataQueueHandler : LiveDataQueue, IDisposable, IHistoryProvider
     {
         // using SocketIoClientDotNet is a temp solution until IEX implements standard WebSockets protocol
         private Socket _socket;
@@ -47,6 +51,15 @@ namespace QuantConnect.ToolBox.IEX
         private TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private Task _lastEmitTask;
         private bool _subscribedToAll;
+        private int _dataPointCount;
+
+        /// <summary>
+        /// Gets the total number of data points emitted by this history provider
+        /// </summary>
+        public int DataPointCount
+        {
+            get { return _dataPointCount; }
+        }
 
         private BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
 
@@ -88,6 +101,89 @@ namespace QuantConnect.ToolBox.IEX
                 Log.Error("IEXDataQueueHandler.Reconnect(): " + err.Message);
             }
         }
+
+        /// <summary>
+        /// Initializes this history provider to work for the specified job
+        /// </summary>
+        /// <param name="job">The job</param>
+        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
+        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="statusUpdate">Function used to send status updates</param>
+        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
+        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        {
+            return;
+        }
+
+        /// <summary>
+        /// Gets the history for the requested securities
+        /// </summary>
+        /// <param name="requests">The historical data requests</param>
+        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        {
+            foreach (var request in requests)
+            {
+                foreach (var slice in ProcessHistoryRequests(request))
+                {
+                    yield return slice;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Populate request data
+        /// </summary>
+        private IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
+        {
+            var ticker = request.Symbol.ID.Symbol;
+            var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+            var end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+
+            if (request.Resolution != Resolution.Daily)
+            {
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support daily resolution.");
+                yield break;
+            }
+            if (start <= DateTime.Today.AddYears(-5))
+            {
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support a maximum of 5 years history.");
+                yield break;
+            }
+
+            Log.Trace(string.Format("IEXDataQUeueHandler.ProcessHistoryRequests(): Submitting request: {0}-{1}: {2} {3}->{4}", request.Symbol.SecurityType, ticker, request.Resolution, start, end));
+
+            var client = new WebClient();
+            client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+            var response = client.DownloadString("https://api.iextrading.com/1.0/stock/" + ticker + "/chart/5y");
+            var parsedResponse = JArray.Parse(response);
+
+            foreach (var item in parsedResponse.Children())
+            {
+                var date = DateTime.Parse(item["date"].Value<string>());
+
+                if (date.Date < start.Date || date.Date > end.Date)
+                {
+                    continue;
+                }
+
+                Interlocked.Increment(ref _dataPointCount);
+
+                var open = item["open"].Value<decimal>();
+                var high = item["high"].Value<decimal>();
+                var low = item["low"].Value<decimal>();
+                var close = item["close"].Value<decimal>();
+                var volume = item["volume"].Value<int>();
+
+                TradeBar tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume);
+
+                yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
+            }
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ProcessJsonObject(JObject message)
