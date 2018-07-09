@@ -21,15 +21,15 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from Alphas.PairsTradingAlphaModel import PairsTradingAlphaModel
+from Alphas.BasePairsTradingAlphaModel import BasePairsTradingAlphaModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from datetime import timedelta
 
 ### <summary>
-### Framework algorithm that uses the PairsTradingAlphaModel to detect
-### divergences between correllated assets. Detection of asset correlation is not
-### performed and is expected to be handled outside of the alpha model.
+### Framework algorithm that uses the BasePairsTradingAlphaModel to detect
+### divergences between correlated assets. Detection of asset correlation is not
+### performed (all assets are assumed to be correlated).
 ### </summary>
 class PairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
     '''Framework algorithm that uses the PairsTradingAlphaModel to detect
@@ -45,7 +45,7 @@ class PairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
             Symbol.Create('AIG', SecurityType.Equity, Market.USA),
             Symbol.Create('BAC', SecurityType.Equity, Market.USA)))
 
-        self.SetAlpha(PairsTradingAlphaModel(timedelta(minutes = 15)))
+        self.SetAlpha(BasePairsTradingAlphaModel(timedelta(minutes = 15)))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())

@@ -26,9 +26,9 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Framework algorithm that uses the <see cref="PairsTradingAlphaModel"/> to detect
-    /// divergences between correllated assets. Detection of asset correlation is not
-    /// performed and is expected to be handled outside of the alpha model.
+    /// Framework algorithm that uses the <see cref="BasePairsTradingAlphaModel"/> to detect
+    /// divergences between correlated assets. Detection of asset correlation is not
+    /// performed (all assets are assumed to be correlated).
     /// </summary>
     public class PairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA)));
 
-            SetAlpha(new PairsTradingAlphaModel(TimeSpan.FromMinutes(15)));
+            SetAlpha(new BasePairsTradingAlphaModel(TimeSpan.FromMinutes(15)));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());

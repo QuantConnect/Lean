@@ -62,7 +62,7 @@
     <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
     <Compile Include="Alphas\INamedModel.cs" />
     <Compile Include="Alphas\NullAlphaModel.cs" />
-    <Compile Include="Alphas\PairsTradingAlphaModel.cs" />
+    <Compile Include="Alphas\BasePairsTradingAlphaModel.cs" />
     <Compile Include="Alphas\RsiAlphaModel.cs" />
     <Compile Include="Execution\ExecutionModel.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
@@ -136,7 +136,7 @@
     <Content Include="Alphas\NullAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Alphas\PairsTradingAlphaModel.py">
+    <Content Include="Alphas\BasePairsTradingAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Execution\NullExecutionModel.py">

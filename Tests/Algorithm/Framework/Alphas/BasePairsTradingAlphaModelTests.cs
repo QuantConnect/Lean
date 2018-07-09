@@ -24,7 +24,7 @@ using QuantConnect.Algorithm.Framework.Selection;
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
     [TestFixture]
-    public class PairsTradingAlphaModelTests : CommonAlphaModelTests
+    public class BasePairsTradingAlphaModelTests : CommonAlphaModelTests
     {
         private readonly TimeSpan _period = TimeSpan.FromMinutes(15);
 
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override IAlphaModel CreateCSharpAlphaModel()
         {
-            return new PairsTradingAlphaModel(_period);
+            return new BasePairsTradingAlphaModel(_period);
         }
 
         protected override void InitializeAlgorithm(QCAlgorithmFramework algorithm)
@@ -44,14 +44,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(PairsTradingAlphaModel)}({_period},1)";
+            return $"{nameof(BasePairsTradingAlphaModel)}({_period},1)";
         }
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
             using (Py.GIL())
             {
-                dynamic model = Py.Import("PairsTradingAlphaModel").GetAttr("PairsTradingAlphaModel");
+                dynamic model = Py.Import("BasePairsTradingAlphaModel").GetAttr("BasePairsTradingAlphaModel");
                 var instance = model(_period);
                 return new AlphaModelPythonWrapper(instance);
             }

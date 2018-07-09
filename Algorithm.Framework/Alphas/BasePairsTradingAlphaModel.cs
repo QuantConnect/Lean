@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -9,31 +24,34 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// This alpha model is designed to work against a single, predefined pair.
+    /// This alpha model is designed to accept every possible pair combination
+    /// from securities selected by the universe selection model
     /// This model generates alternating long ratio/short ratio insights emitted as a group
     /// </summary>
-    public class PairsTradingAlphaModel : AlphaModel
+    public class BasePairsTradingAlphaModel : AlphaModel
     {
         private readonly TimeSpan _period;
         private readonly decimal _threshold;
-
-        private readonly HashSet<Security> _securities;
-        private readonly Dictionary<string, Pair> _pairs;
+        private readonly Dictionary<Tuple<Symbol, Symbol>, PairData> _pairs;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PairsTradingAlphaModel"/> class
+        /// List of security objects present in the universe
+        /// </summary>
+        public HashSet<Security> Securities { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BasePairsTradingAlphaModel"/> class
         /// </summary>
         /// <param name="period">Period over which this insight is expected to come to fruition</param>
         /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
-        public PairsTradingAlphaModel(TimeSpan period, decimal threshold = 1m)
+        public BasePairsTradingAlphaModel(TimeSpan period, decimal threshold = 1m)
         {
             _period = period;
             _threshold = threshold;
+            _pairs = new Dictionary<Tuple<Symbol, Symbol>, PairData>();
 
-            _securities = new HashSet<Security>();
-            _pairs = new Dictionary<string, Pair>();
-
-            Name = $"{nameof(PairsTradingAlphaModel)}({_period},{_threshold.Normalize()})";
+            Securities = new HashSet<Security>();
+            Name = $"{nameof(BasePairsTradingAlphaModel)}({_period},{_threshold.Normalize()})";
         }
 
         /// <summary>
@@ -67,49 +85,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
-            NotifiedSecurityChanges.UpdateCollection(_securities, changes);
+            NotifiedSecurityChanges.UpdateCollection(Securities, changes);
 
             UpdatePairs(algorithm);
 
             // Remove pairs that has assets that were removed from the universe 
             foreach (var security in changes.RemovedSecurities)
             {
-                var assetId = security.Symbol.ID.ToString();
-                var keys = _pairs.Keys.Where(k => k.Contains(assetId));
+                var symbol = security.Symbol;
+                var keys = _pairs.Keys.Where(k => k.Item1 == symbol || k.Item2 == symbol).ToList();
 
                 foreach (var key in keys)
                 {
                     _pairs.Remove(key);
-                }
-            }
-        }
-
-        private void UpdatePairs(QCAlgorithm algorithm)
-        {
-            var securities = _securities.ToArray();
-
-            for (var i = 0; i < securities.Length; i++)
-            {
-                var assetI = securities[i].Symbol;
-
-                for (var j = i + 1; j < securities.Length; j++)
-                {
-                    var assetJ = securities[j].Symbol;
-
-                    var pairName = Pair.GetPairName(assetI, assetJ);
-
-                    if (_pairs.ContainsKey(pairName))
-                    {
-                        continue;
-                    }
-
-                    if (!HasPassedTest(algorithm, assetI, assetJ))
-                    {
-                        continue;
-                    }
-
-                    var pair = new Pair(algorithm, assetI, assetJ, _period, _threshold);
-                    _pairs.Add(pairName, pair);
                 }
             }
         }
@@ -123,7 +111,38 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>True if the statistical test for the pair is successful</returns>
         public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2) => true;
 
-        internal class Pair
+        private void UpdatePairs(QCAlgorithm algorithm)
+        {
+            var assets = Securities.Select(x => x.Symbol).ToArray();
+
+            for (var i = 0; i < assets.Length; i++)
+            {
+                var assetI = assets[i];
+
+                for (var j = i + 1; j < assets.Length; j++)
+                {
+                    var assetJ = assets[j];
+
+                    var pairSymbol = Tuple.Create(assetI, assetJ);
+                    var invert = Tuple.Create(assetJ, assetI);
+
+                    if (_pairs.ContainsKey(pairSymbol) || _pairs.ContainsKey(invert))
+                    {
+                        continue;
+                    }
+
+                    if (!HasPassedTest(algorithm, assetI, assetJ))
+                    {
+                        continue;
+                    }
+
+                    var pairData = new PairData(algorithm, assetI, assetJ, _period, _threshold);
+                    _pairs.Add(pairSymbol, pairData);
+                }
+            }
+        }
+
+        private class PairData
         {
             private enum State
             {
@@ -131,22 +150,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 FlatRatio,
                 LongRatio
             };
-
-            /// <summary>
-            /// Creates a name for the pair
-            /// </summary>
-            /// <param name="asset1">The first asset's symbol in the pair</param>
-            /// <param name="asset2">The second asset's symbol in the pair</param>
-            /// <returns>String: name of the pair</returns>
-            public static string GetPairName(Symbol asset1, Symbol asset2)
-            {
-                var asset1Id = asset1.ID.ToString();
-                var asset2Id = asset2.ID.ToString();
-
-                return asset1Id.CompareTo(asset2Id) < 0
-                    ? $"{asset1Id}/{asset2Id}"
-                    : $"{asset2Id}/{asset1Id}";
-            }
 
             private State _state = State.FlatRatio;
 
@@ -172,7 +175,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             /// <param name="asset2">The second asset's symbol in the pair</param>
             /// <param name="period">Period over which this insight is expected to come to fruition</param>
             /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
-            public Pair(QCAlgorithm algorithm, Symbol asset1, Symbol asset2, TimeSpan period, decimal threshold)
+            public PairData(QCAlgorithm algorithm, Symbol asset1, Symbol asset2, TimeSpan period, decimal threshold)
             {
                 _asset1 = asset1;
                 _asset2 = asset2;
