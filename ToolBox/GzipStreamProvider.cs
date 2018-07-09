@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.IO;
 using Ionic.BZip2;
 using Ionic.Zlib;
-using Quobject.Collections.Immutable;
 
 namespace QuantConnect.ToolBox
 {

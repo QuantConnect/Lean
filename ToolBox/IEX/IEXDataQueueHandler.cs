@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.IEX
                     new IO.Options()
                     {
                         // default is 1000, default attempts is int.MaxValue
-                        ReconnectionDelay = 250
+                        ReconnectionDelay = 1000
                     });
                 _socket.On(Socket.EVENT_CONNECT, () =>
                 {
@@ -80,7 +80,7 @@ namespace QuantConnect.ToolBox.IEX
                     Log.Trace("IEXDataQueueHandler.Reconnect(): IEX Real-Time Price");
                 });
 
-                _socket.On("message", message => ProcessJsonObject((JObject)message));
+                _socket.On("message", message => ProcessJsonObject(JObject.Parse((string)message)));
                 _manager = _socket.Io();
             }
             catch (Exception err)
