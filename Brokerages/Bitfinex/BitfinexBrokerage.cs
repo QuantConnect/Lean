@@ -107,11 +107,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                     continue;
                 }
 
-                order.Quantity = item.Side == "sell" ? -item.Quantity : item.Quantity;
+                order.Quantity = item.Side == "sell" ? -item.OriginalAmount : item.OriginalAmount;
                 order.BrokerId = new List<string> { item.Id };
                 order.Symbol = CreateSymbol(item.Symbol);
                 order.Time = Time.UnixTimeStampToDateTime(item.Timestamp);
-                order.Status = OrderStatus.Submitted;
+                order.Status = ConvertOrderStatus(item);
                 order.Price = item.Price;
                 list.Add(order);
             }

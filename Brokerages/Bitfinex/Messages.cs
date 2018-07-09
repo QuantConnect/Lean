@@ -37,8 +37,16 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string Type { get; set; }
         public string Side { get; set; }
         public double Timestamp { get; set; }
+        [JsonProperty("is_live")]
+        public bool IsLive { get; set; }
+        [JsonProperty("is_cancelled")]
+        public bool IsCancelled { get; set; }
+        [JsonProperty("original_amount")]
+        public decimal OriginalAmount { get; set; }
         [JsonProperty("remaining_amount")]
-        public decimal Quantity { get; set; }
+        public decimal RemainingAmount { get; set; }
+        [JsonProperty("executed_amount")]
+        public decimal ExecutedAmount { get; set; }
 
         public bool IsExchange => Type.StartsWith("exchange", StringComparison.OrdinalIgnoreCase);
     }

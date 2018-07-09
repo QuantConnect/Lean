@@ -70,7 +70,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 request.AddHeader(SignatureHeader, payloadSha384hmac);
             }
         }
-        
+
         private Func<Messages.Wallet, bool> WalletFilter(AccountType accountType)
         {
             return wallet => wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
@@ -114,6 +114,28 @@ namespace QuantConnect.Brokerages.Bitfinex
         public string GetEndpoint(string method)
         {
             return $"/{ApiVersion}/{method}";
+        }
+
+        private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)
+        {
+            if (order.IsLive && order.ExecutedAmount == 0)
+            {
+                return Orders.OrderStatus.Submitted;
+            }
+            else if (order.ExecutedAmount > 0 && order.RemainingAmount > 0)
+            {
+                return Orders.OrderStatus.PartiallyFilled;
+            }
+            else if (order.RemainingAmount == 0)
+            {
+                return Orders.OrderStatus.Filled;
+            }
+            else if (order.IsCancelled)
+            {
+                return Orders.OrderStatus.Canceled;
+            }
+
+            return Orders.OrderStatus.None;
         }
 
         private Holding ConvertHolding(Messages.Position position)
