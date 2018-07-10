@@ -1308,7 +1308,6 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Cost associated with issuance of debt/equity capital in the Financing Cash Flow section.
-		/// The increase or decrease between periods of the investment properties.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26208
@@ -1929,6 +1928,16 @@ namespace QuantConnect.Data.Fundamental
 		public OtherCashAdjustExcludeFromChangeinCashCashFlowStatement OtherCashAdjustExcludeFromChangeinCash { get; set; }
 
 		/// <summary>
+		/// The change in cash flow from the previous period to the current, as reported by the company, may be the same or not the same as
+		/// Morningstar's standardized definition. It is a supplemental value which would be reported outside consolidated statements.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26305
+		/// </remarks>
+		[JsonProperty("26305")]
+		public ChangeinCashSupplementalAsReportedCashFlowStatement ChangeinCashSupplementalAsReported { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the CashFlowStatement class
 		/// </summary>
 		public CashFlowStatement()
@@ -2131,6 +2140,7 @@ namespace QuantConnect.Data.Fundamental
 			SaleOfInvestmentProperties = new SaleOfInvestmentPropertiesCashFlowStatement();
 			OtherCashAdjustIncludedIntoChangeinCash = new OtherCashAdjustIncludedIntoChangeinCashCashFlowStatement();
 			OtherCashAdjustExcludeFromChangeinCash = new OtherCashAdjustExcludeFromChangeinCashCashFlowStatement();
+			ChangeinCashSupplementalAsReported = new ChangeinCashSupplementalAsReportedCashFlowStatement();
 		}
 
 		/// <summary>
@@ -2340,6 +2350,7 @@ namespace QuantConnect.Data.Fundamental
 			if (SaleOfInvestmentProperties != null) SaleOfInvestmentProperties.UpdateValues(previous.SaleOfInvestmentProperties);
 			if (OtherCashAdjustIncludedIntoChangeinCash != null) OtherCashAdjustIncludedIntoChangeinCash.UpdateValues(previous.OtherCashAdjustIncludedIntoChangeinCash);
 			if (OtherCashAdjustExcludeFromChangeinCash != null) OtherCashAdjustExcludeFromChangeinCash.UpdateValues(previous.OtherCashAdjustExcludeFromChangeinCash);
+			if (ChangeinCashSupplementalAsReported != null) ChangeinCashSupplementalAsReported.UpdateValues(previous.ChangeinCashSupplementalAsReported);
 		}
 	}
 }

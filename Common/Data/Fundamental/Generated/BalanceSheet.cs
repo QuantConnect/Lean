@@ -849,8 +849,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Represent obligations of the company to deliver the specified security at the contracted price and, thereby, create a liability to
-		/// .
-		/// purchase the security in the market at prevailing prices
+		/// purchase the security in the market at prevailing prices.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23208
@@ -1957,7 +1956,7 @@ namespace QuantConnect.Data.Fundamental
 		public TangibleBookValueBalanceSheet TangibleBookValue { get; set; }
 
 		/// <summary>
-		/// Total Equity equals Stockholder's Equity+ minority interest.
+		/// Total Equity equals Preferred Stock Equity + Common Stock Equity.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23384
@@ -3048,6 +3047,24 @@ namespace QuantConnect.Data.Fundamental
 		public OtherFinancialLiabilitiesBalanceSheet OtherFinancialLiabilities { get; set; }
 
 		/// <summary>
+		/// Total liabilities as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23556
+		/// </remarks>
+		[JsonProperty("23556")]
+		public TotalLiabilitiesAsReportedBalanceSheet TotalLiabilitiesAsReported { get; set; }
+
+		/// <summary>
+		/// Total Equity as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23557
+		/// </remarks>
+		[JsonProperty("23557")]
+		public TotalEquityAsReportedBalanceSheet TotalEquityAsReported { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the BalanceSheet class
 		/// </summary>
 		public BalanceSheet()
@@ -3358,6 +3375,8 @@ namespace QuantConnect.Data.Fundamental
 			CurrentOtherFinancialLiabilities = new CurrentOtherFinancialLiabilitiesBalanceSheet();
 			NonCurrentOtherFinancialLiabilities = new NonCurrentOtherFinancialLiabilitiesBalanceSheet();
 			OtherFinancialLiabilities = new OtherFinancialLiabilitiesBalanceSheet();
+			TotalLiabilitiesAsReported = new TotalLiabilitiesAsReportedBalanceSheet();
+			TotalEquityAsReported = new TotalEquityAsReportedBalanceSheet();
 		}
 
 		/// <summary>
@@ -3675,6 +3694,8 @@ namespace QuantConnect.Data.Fundamental
 			if (CurrentOtherFinancialLiabilities != null) CurrentOtherFinancialLiabilities.UpdateValues(previous.CurrentOtherFinancialLiabilities);
 			if (NonCurrentOtherFinancialLiabilities != null) NonCurrentOtherFinancialLiabilities.UpdateValues(previous.NonCurrentOtherFinancialLiabilities);
 			if (OtherFinancialLiabilities != null) OtherFinancialLiabilities.UpdateValues(previous.OtherFinancialLiabilities);
+			if (TotalLiabilitiesAsReported != null) TotalLiabilitiesAsReported.UpdateValues(previous.TotalLiabilitiesAsReported);
+			if (TotalEquityAsReported != null) TotalEquityAsReported.UpdateValues(previous.TotalEquityAsReported);
 		}
 	}
 }

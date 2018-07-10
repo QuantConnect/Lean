@@ -1570,7 +1570,7 @@ namespace QuantConnect.Data.Fundamental
 		public TaxEffectOfUnusualItemsIncomeStatement TaxEffectOfUnusualItems { get; set; }
 
 		/// <summary>
-		/// EBITDA - Total Unusual Items
+		/// EBITDA less Total Unusual Items
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20420
@@ -1679,7 +1679,7 @@ namespace QuantConnect.Data.Fundamental
 		public ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement ReinsuranceRecoveriesofInsuranceLiabilities { get; set; }
 
 		/// <summary>
-		/// Operating profit/loss what the company reported, may be the same or not the same as Morningstar definition.
+		/// Operating profit/loss as reported by the company, may be the same or not the same as Morningstar's standardized definition.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20435
@@ -1774,6 +1774,76 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("20444")]
 		public AmortizationSupplementalIncomeStatement AmortizationSupplemental { get; set; }
+
+		/// <summary>
+		/// Total revenue as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20445
+		/// </remarks>
+		[JsonProperty("20445")]
+		public TotalRevenueAsReportedIncomeStatement TotalRevenueAsReported { get; set; }
+
+		/// <summary>
+		/// Operating expense as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20446
+		/// </remarks>
+		[JsonProperty("20446")]
+		public OperatingExpenseAsReportedIncomeStatement OperatingExpenseAsReported { get; set; }
+
+		/// <summary>
+		/// Earnings adjusted for items that are irregular or unusual in nature, and/or are non-recurring. This can be used to fairly measure a
+		/// company's profitability. This is as reported by the company, may be the same or not the same as Morningstar's standardized
+		/// definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20447
+		/// </remarks>
+		[JsonProperty("20447")]
+		public NormalizedIncomeAsReportedIncomeStatement NormalizedIncomeAsReported { get; set; }
+
+		/// <summary>
+		/// EBITDA less Total Unusual Items. This is as reported by the company, may be the same or not the same as Morningstar's
+		/// standardized definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20448
+		/// </remarks>
+		[JsonProperty("20448")]
+		public NormalizedEBITDAAsReportedIncomeStatement NormalizedEBITDAAsReported { get; set; }
+
+		/// <summary>
+		/// EBIT less Total Unusual Items. This is as reported by the company, may be the same or not the same as Morningstar's standardized
+		/// definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20449
+		/// </remarks>
+		[JsonProperty("20449")]
+		public NormalizedEBITAsReportedIncomeStatement NormalizedEBITAsReported { get; set; }
+
+		/// <summary>
+		/// Operating profit adjusted for items that are irregular or unusual in nature, and/or are non-recurring. This can be used to fairly
+		/// measure a company's profitability. This is as reported by the company, may be the same or not the same as Morningstar's
+		/// standardized definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20450
+		/// </remarks>
+		[JsonProperty("20450")]
+		public NormalizedOperatingProfitAsReportedIncomeStatement NormalizedOperatingProfitAsReported { get; set; }
+
+		/// <summary>
+		/// The average tax rate for the period as reported by the company, may be the same or not the same as Morningstar's standardized
+		/// definition.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20451
+		/// </remarks>
+		[JsonProperty("20451")]
+		public EffectiveTaxRateAsReportedIncomeStatement EffectiveTaxRateAsReported { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the IncomeStatement class
@@ -1954,6 +2024,13 @@ namespace QuantConnect.Data.Fundamental
 			ResearchAndDevelopmentExpensesSupplemental = new ResearchAndDevelopmentExpensesSupplementalIncomeStatement();
 			DepreciationSupplemental = new DepreciationSupplementalIncomeStatement();
 			AmortizationSupplemental = new AmortizationSupplementalIncomeStatement();
+			TotalRevenueAsReported = new TotalRevenueAsReportedIncomeStatement();
+			OperatingExpenseAsReported = new OperatingExpenseAsReportedIncomeStatement();
+			NormalizedIncomeAsReported = new NormalizedIncomeAsReportedIncomeStatement();
+			NormalizedEBITDAAsReported = new NormalizedEBITDAAsReportedIncomeStatement();
+			NormalizedEBITAsReported = new NormalizedEBITAsReportedIncomeStatement();
+			NormalizedOperatingProfitAsReported = new NormalizedOperatingProfitAsReportedIncomeStatement();
+			EffectiveTaxRateAsReported = new EffectiveTaxRateAsReportedIncomeStatement();
 		}
 
 		/// <summary>
@@ -2139,6 +2216,13 @@ namespace QuantConnect.Data.Fundamental
 			if (ResearchAndDevelopmentExpensesSupplemental != null) ResearchAndDevelopmentExpensesSupplemental.UpdateValues(previous.ResearchAndDevelopmentExpensesSupplemental);
 			if (DepreciationSupplemental != null) DepreciationSupplemental.UpdateValues(previous.DepreciationSupplemental);
 			if (AmortizationSupplemental != null) AmortizationSupplemental.UpdateValues(previous.AmortizationSupplemental);
+			if (TotalRevenueAsReported != null) TotalRevenueAsReported.UpdateValues(previous.TotalRevenueAsReported);
+			if (OperatingExpenseAsReported != null) OperatingExpenseAsReported.UpdateValues(previous.OperatingExpenseAsReported);
+			if (NormalizedIncomeAsReported != null) NormalizedIncomeAsReported.UpdateValues(previous.NormalizedIncomeAsReported);
+			if (NormalizedEBITDAAsReported != null) NormalizedEBITDAAsReported.UpdateValues(previous.NormalizedEBITDAAsReported);
+			if (NormalizedEBITAsReported != null) NormalizedEBITAsReported.UpdateValues(previous.NormalizedEBITAsReported);
+			if (NormalizedOperatingProfitAsReported != null) NormalizedOperatingProfitAsReported.UpdateValues(previous.NormalizedOperatingProfitAsReported);
+			if (EffectiveTaxRateAsReported != null) EffectiveTaxRateAsReported.UpdateValues(previous.EffectiveTaxRateAsReported);
 		}
 	}
 }

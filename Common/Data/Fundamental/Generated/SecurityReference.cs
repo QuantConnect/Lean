@@ -212,8 +212,9 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Refers to the type of securities that can be found within the equity database. For the vast majority, this value will populate as null
-		/// for regular common shares. For a minority of shareclasses, this will populate as either "Participating Preferred" or "Closed-End
-		/// Fund", which reflects our limited coverage of these types of securities within our equity database.
+		/// for regular common shares. For a minority of shareclasses, this will populate as either "Participating Preferred", "Closed-End Fund",
+		/// "Foreign Share", or "Foreign Participated Preferred" which reflects our limited coverage of these types of securities within our
+		/// equity database.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1023

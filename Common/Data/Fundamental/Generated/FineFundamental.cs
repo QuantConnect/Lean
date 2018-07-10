@@ -64,6 +64,16 @@ namespace QuantConnect.Data.Fundamental
 		public ValuationRatios ValuationRatios { get; set; }
 
 		/// <summary>
+		/// The instance of the CompanyProfile class
+		/// </summary>
+		public CompanyProfile CompanyProfile { get; set; }
+
+		/// <summary>
+		/// The instance of the AssetClassification class
+		/// </summary>
+		public AssetClassification AssetClassification { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the FineFundamental class
 		/// </summary>
 		public FineFundamental()
@@ -77,6 +87,8 @@ namespace QuantConnect.Data.Fundamental
 			OperationRatios = new OperationRatios();
 			EarningRatios = new EarningRatios();
 			ValuationRatios = new ValuationRatios();
+			CompanyProfile = new CompanyProfile();
+			AssetClassification = new AssetClassification();
 		}
 
 		/// <summary>
@@ -95,6 +107,8 @@ namespace QuantConnect.Data.Fundamental
 			if (OperationRatios != null) OperationRatios.UpdateValues(previous.OperationRatios);
 			if (EarningRatios != null) EarningRatios.UpdateValues(previous.EarningRatios);
 			if (ValuationRatios != null) ValuationRatios.UpdateValues(previous.ValuationRatios);
+			if (CompanyProfile != null) CompanyProfile.UpdateValues(previous.CompanyProfile);
+			if (AssetClassification != null) AssetClassification.UpdateValues(previous.AssetClassification);
 		}
 	}
 }
