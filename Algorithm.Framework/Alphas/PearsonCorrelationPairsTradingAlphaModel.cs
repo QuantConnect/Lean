@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -31,19 +30,22 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     {
         private readonly int _lookback;
         private readonly Resolution _resolution;
+        private readonly double _minimumCorrelation;
         private Tuple<Symbol, Symbol> _bestPair;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PearsonCorrelationPairsTradingAlphaModel"/> class
         /// </summary>
-        /// <param name="lookback">Historical return lookback period</param>
-        /// <param name="resolution">The resolution of historical data</param>
+        /// <param name="lookback">Lookback period of the analysis</param>
+        /// <param name="resolution">Analysis resolution</param>
         /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
-        public PearsonCorrelationPairsTradingAlphaModel(int lookback, Resolution resolution, decimal threshold = 1m)
+        /// <param name="minimumCorrelation">The minimum correlation to consider a tradable pair</param>
+        public PearsonCorrelationPairsTradingAlphaModel(int lookback, Resolution resolution, decimal threshold = 1m, double minimumCorrelation = .5)
             : base(lookback, resolution, threshold)
         {
             _lookback = lookback;
             _resolution = resolution;
+            _minimumCorrelation = minimumCorrelation;
         }
 
         /// <summary>
@@ -58,11 +60,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             var symbols = Securities.Select(x => x.Symbol).ToArray();
 
             var history = algorithm.History(symbols, _lookback, _resolution)
-                .SelectMany(x => x.Bars.Values)
+                .SelectMany(x => x.Values)
                 .GroupBy(x => x.Symbol)
                 .Select(x =>
                 {
-                    var array = x.Select(b => (double)b.Close).ToArray();
+                    var array = x.Select(b => (double)b.Price).ToArray();
 
                     for (var i = array.Length - 1; i > 0; i--)
                     {
@@ -73,13 +75,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     return array;
                 });
 
-            var pearsonMatrix = Correlation.PearsonMatrix(history).UpperTriangle();
+            if (history.Count() > 0)
+            {
+                var pearsonMatrix = Correlation.PearsonMatrix(history).UpperTriangle();
 
-            var corr = new Dictionary<Tuple<Symbol, Symbol>, double>();
-            var maxValue = pearsonMatrix.Enumerate().Where(x => Math.Abs(x) < 1).Max();
-            var maxTuple = pearsonMatrix.Find(x => x == maxValue);
-
-            _bestPair = Tuple.Create(symbols[maxTuple.Item1], symbols[maxTuple.Item2]);
+                var maxValue = pearsonMatrix.Enumerate().Where(x => Math.Abs(x) < 1).Max();
+                if (maxValue >= _minimumCorrelation)
+                {
+                    var maxTuple = pearsonMatrix.Find(x => x == maxValue);
+                    _bestPair = Tuple.Create(symbols[maxTuple.Item1], symbols[maxTuple.Item2]);
+                }
+            }
 
             base.OnSecuritiesChanged(algorithm, changes);
         }
@@ -93,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>True if the statistical test for the pair is successful</returns>
         public override bool HasPassedTest(QCAlgorithmFramework algorithm, Symbol asset1, Symbol asset2)
         {
-            return asset1 == _bestPair.Item1 && asset2 == _bestPair.Item2;
+            return _bestPair != null && asset1 == _bestPair.Item1 && asset2 == _bestPair.Item2;
         }
     }
 }

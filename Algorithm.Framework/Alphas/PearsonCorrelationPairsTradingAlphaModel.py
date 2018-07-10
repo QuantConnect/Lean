@@ -31,15 +31,18 @@ class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
 
     def __init__(self, lookback = 15,
             resolution = Resolution.Minute,
-            threshold = 1):
+            threshold = 1,
+            minimumCorrelation = .5):
         '''Initializes a new instance of the PearsonCorrelationPairsTradingAlphaModel class
         Args:
             lookback: lookback period of the analysis
             resolution: analysis resolution
-            threshold: The percent [0, 100] deviation of the ratio from the mean before emitting an insight'''
+            threshold: The percent [0, 100] deviation of the ratio from the mean before emitting an insight
+            minimumCorrelation: The minimum correlation to consider a tradable pair'''
         super().__init__(lookback, resolution, threshold)
         self.lookback = lookback
         self.resolution = resolution
+        self.minimumCorrelation = minimumCorrelation
         self.best_pair = ()
 
     def OnSecuritiesChanged(self, algorithm, changes):
@@ -58,19 +61,22 @@ class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
         symbols = [ x.Symbol for x in self.Securities ]
 
         history = algorithm.History(symbols, self.lookback, self.resolution).close.unstack(level=0)
-        df = (np.log(history) - np.log(history.shift(1))).dropna()
-        stop = len(df.columns)
 
-        corr = dict()
+        if not history.empty:
 
-        for i in range(0, stop):
-            for j in range(i+1, stop):
-                if (j, i) not in corr:
-                    corr[(i, j)] = pearsonr(df.iloc[:,i], df.iloc[:,j])[0]
+            df = (np.log(history) - np.log(history.shift(1))).dropna()
+            stop = len(df.columns)
 
-        corr = sorted(corr.items(), key = lambda kv: kv[1])
+            corr = dict()
 
-        self.best_pair = (symbols[corr[-1][0][0]], symbols[corr[-1][0][1]])
+            for i in range(0, stop):
+                for j in range(i+1, stop):
+                    if (j, i) not in corr:
+                        corr[(i, j)] = pearsonr(df.iloc[:,i], df.iloc[:,j])[0]
+
+            corr = sorted(corr.items(), key = lambda kv: kv[1])
+            if corr[-1][1] >= self.minimumCorrelation: 
+                self.best_pair = (symbols[corr[-1][0][0]], symbols[corr[-1][0][1]])
 
         super().OnSecuritiesChanged(algorithm, changes)
 
@@ -82,4 +88,4 @@ class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
             asset2: The second asset's symbol in the pair
         Returns:
             True if the statistical test for the pair is successful'''
-        return self.best_pair == (asset1, asset2)
+        return self.best_pair is not None and self.best_pair == (asset1, asset2)
