@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class BasePairsTradingAlphaModel : AlphaModel
     {
-        private readonly TimeSpan _period;
+        private readonly int _lookback;
+        private readonly Resolution _resolution;
+        private readonly TimeSpan _predictionInterval;
         private readonly decimal _threshold;
         private readonly Dictionary<Tuple<Symbol, Symbol>, PairData> _pairs;
 
@@ -42,16 +44,23 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Initializes a new instance of the <see cref="BasePairsTradingAlphaModel"/> class
         /// </summary>
-        /// <param name="period">Period over which this insight is expected to come to fruition</param>
+        /// <param name="lookback">Lookback period of the analysis</param>
+        /// <param name="resolution">Analysis resolution</param>
         /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
-        public BasePairsTradingAlphaModel(TimeSpan period, decimal threshold = 1m)
+        public BasePairsTradingAlphaModel(
+            int lookback = 1,
+            Resolution resolution = Resolution.Daily,
+            decimal threshold = 1m
+            )
         {
-            _period = period;
+            _lookback = lookback;
+            _resolution = resolution;
             _threshold = threshold;
+            _predictionInterval = _resolution.ToTimeSpan().Multiply(_lookback);
             _pairs = new Dictionary<Tuple<Symbol, Symbol>, PairData>();
 
             Securities = new HashSet<Security>();
-            Name = $"{nameof(BasePairsTradingAlphaModel)}({_period},{_threshold.Normalize()})";
+            Name = $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})";
         }
 
         /// <summary>
@@ -67,12 +76,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             foreach (var kvp in _pairs)
             {
-                var pair = kvp.Value;
-
-                if (pair.IsReady)
-                {
-                    insights.AddRange(pair.GetInsightGroup());
-                }
+                insights.AddRange(kvp.Value.GetInsightGroup());
             }
 
             return insights;
@@ -109,9 +113,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="asset1">The first asset's symbol in the pair</param>
         /// <param name="asset2">The second asset's symbol in the pair</param>
         /// <returns>True if the statistical test for the pair is successful</returns>
-        public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2) => true;
+        public virtual bool HasPassedTest(QCAlgorithmFramework algorithm, Symbol asset1, Symbol asset2) => true;
 
-        private void UpdatePairs(QCAlgorithm algorithm)
+        private void UpdatePairs(QCAlgorithmFramework algorithm)
         {
             var assets = Securities.Select(x => x.Symbol).ToArray();
 
@@ -136,7 +140,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                         continue;
                     }
 
-                    var pairData = new PairData(algorithm, assetI, assetJ, _period, _threshold);
+                    var pairData = new PairData(algorithm, assetI, assetJ, _predictionInterval, _threshold);
                     _pairs.Add(pairSymbol, pairData);
                 }
             }
@@ -162,10 +166,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             private readonly IndicatorBase<IndicatorDataPoint> _mean;
             private readonly IndicatorBase<IndicatorDataPoint> _upperThreshold;
             private readonly IndicatorBase<IndicatorDataPoint> _lowerThreshold;
-
-            private readonly TimeSpan _period;
-
-            public bool IsReady => _mean.IsReady;
+            private readonly TimeSpan _predictionInterval;
 
             /// <summary>
             /// Create a new pair
@@ -192,7 +193,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 var lower = new ConstantIndicator<IndicatorDataPoint>("ct", 1 - threshold / 100m);
                 _lowerThreshold = _mean.Times(lower, "LowerThreshold");
 
-                _period = period;
+                _predictionInterval = period;
             }
 
             /// <summary>
@@ -201,14 +202,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             /// <returns>Insights grouped by an unique group id</returns>
             public IEnumerable<Insight> GetInsightGroup()
             {
+                if (!_mean.IsReady)
+                {
+                    return Enumerable.Empty<Insight>();
+                }
+
                 // don't re-emit the same direction
                 if (_state != State.LongRatio && _ratio > _upperThreshold)
                 {
                     _state = State.LongRatio;
 
                     // asset1/asset2 is more than 2 std away from mean, short asset1, long asset2
-                    var shortAsset1 = Insight.Price(_asset1, _period, InsightDirection.Down);
-                    var longAsset2 = Insight.Price(_asset2, _period, InsightDirection.Up);
+                    var shortAsset1 = Insight.Price(_asset1, _predictionInterval, InsightDirection.Down);
+                    var longAsset2 = Insight.Price(_asset2, _predictionInterval, InsightDirection.Up);
 
                     // creates a group id and set the GroupId property on each insight object
                     return Insight.Group(shortAsset1, longAsset2);
@@ -220,8 +226,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     _state = State.ShortRatio;
 
                     // asset1/asset2 is less than 2 std away from mean, long asset1, short asset2
-                    var longAsset1 = Insight.Price(_asset1, _period, InsightDirection.Up);
-                    var shortAsset2 = Insight.Price(_asset2, _period, InsightDirection.Down);
+                    var longAsset1 = Insight.Price(_asset1, _predictionInterval, InsightDirection.Up);
+                    var shortAsset2 = Insight.Price(_asset2, _predictionInterval, InsightDirection.Down);
 
                     // creates a group id and set the GroupId property on each insight object
                     return Insight.Group(longAsset1, shortAsset2);

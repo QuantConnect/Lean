@@ -45,7 +45,7 @@ class PairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
             Symbol.Create('AIG', SecurityType.Equity, Market.USA),
             Symbol.Create('BAC', SecurityType.Equity, Market.USA)))
 
-        self.SetAlpha(BasePairsTradingAlphaModel(timedelta(minutes = 15)))
+        self.SetAlpha(BasePairsTradingAlphaModel(15, Resolution.Minute))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())

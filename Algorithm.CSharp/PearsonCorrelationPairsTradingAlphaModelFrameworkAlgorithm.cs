@@ -13,17 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data.UniverseSelection;
-using MathNet.Numerics.Statistics;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This model extendes <see cref="BasePairsTradingAlphaModel"/> and uses Pearson correlation
     /// to rank the pairs trading candidates and use the best candidate to trade.
     /// </summary>
-    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithmFramework
+    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -45,71 +42,54 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
 
-            SetAlpha(new PearsonCorrelationPairsTradingAlphaModel(365, TimeSpan.FromMinutes(15)));
+            SetAlpha(new PearsonCorrelationPairsTradingAlphaModel(365, Resolution.Daily));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
 
         /// <summary>
-        /// This alpha model is designed to rank every pair combination by its pearson correlation 
-        /// and trade the pair with the hightest correlation
-        /// This model generates alternating long ratio/short ratio insights emitted as a group
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        private class PearsonCorrelationPairsTradingAlphaModel : BasePairsTradingAlphaModel
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            private readonly int _lookback;
-            private Tuple<Symbol, Symbol> _bestPair;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="PearsonCorrelationPairsTradingAlphaModel"/> class
-            /// </summary>
-            /// <param name="lookback">lookback period to evaluate the historical correlation</param>
-            /// <param name="period">Period over which this insight is expected to come to fruition</param>
-            /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
-            public PearsonCorrelationPairsTradingAlphaModel(int lookback, TimeSpan period, decimal threshold = 1m)
-                : base(period, threshold)
-            {
-                _lookback = lookback;
-            }
-
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-            {
-                NotifiedSecurityChanges.UpdateCollection(Securities, changes);
-
-                var symbols = Securities.Select(x => x.Symbol).ToArray();
-
-                var history = algorithm.History(symbols, _lookback, Resolution.Daily)
-                    .SelectMany(x => x.Bars.Values)
-                    .GroupBy(x => x.Symbol)
-                    .Select(x =>
-                    {
-                        var array = x.Select(b => (double)b.Close).ToArray();
-
-                        for (var i = array.Length - 1; i > 0; i--)
-                        {
-                            array[i] = Math.Log(array[i]) - Math.Log(array[i - 1]);
-                        }
-                        array[0] = 0;
-
-                        return array;
-                    });
-
-                var pearsonMatrix = Correlation.PearsonMatrix(history).UpperTriangle();
-
-                var corr = new Dictionary<Tuple<Symbol, Symbol>, double>();
-                var maxValue = pearsonMatrix.Enumerate().Where(x => Math.Abs(x) < 1).Max();
-                var maxTuple = pearsonMatrix.Find(x => x == maxValue);
-
-                _bestPair = Tuple.Create(symbols[maxTuple.Item1], symbols[maxTuple.Item2]);
-
-                base.OnSecuritiesChanged(algorithm, changes);
-            }
-
-            public override bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2)
-            {
-                return asset1 == _bestPair.Item1 && asset2 == _bestPair.Item2;
-            }
-        }
+            {"Total Trades", "4"},
+            {"Average Win", "1.67%"},
+            {"Average Loss", "-0.78%"},
+            {"Compounding Annual Return", "47.623%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "0.574"},
+            {"Net Profit", "0.499%"},
+            {"Sharpe Ratio", "8.054"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "2.15"},
+            {"Alpha", "0"},
+            {"Beta", "22.782"},
+            {"Annual Standard Deviation", "0.031"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "7.727"},
+            {"Tracking Error", "0.031"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$21.89"},
+            {"Total Insights Generated", "4"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "2"},
+            {"Short Insight Count", "2"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
+        };
     }
 }

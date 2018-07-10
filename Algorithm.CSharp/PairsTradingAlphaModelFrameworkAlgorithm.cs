@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA)));
 
-            SetAlpha(new BasePairsTradingAlphaModel(TimeSpan.FromMinutes(15)));
+            SetAlpha(new BasePairsTradingAlphaModel(15, Resolution.Minute));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());

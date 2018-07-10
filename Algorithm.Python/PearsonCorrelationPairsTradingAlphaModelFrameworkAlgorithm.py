@@ -21,12 +21,10 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from Alphas.BasePairsTradingAlphaModel import BasePairsTradingAlphaModel
+from Alphas.PearsonCorrelationPairsTradingAlphaModel import PearsonCorrelationPairsTradingAlphaModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
-from datetime import timedelta
-from scipy.stats import pearsonr
-import numpy as np
+
 
 ### <summary>
 ### Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
@@ -49,54 +47,7 @@ class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFram
             Symbol.Create('IBM', SecurityType.Equity, Market.USA),
             Symbol.Create('SPY', SecurityType.Equity, Market.USA)))
 
-        self.SetAlpha(self.PearsonCorrelationPairsTradingAlphaModel(360, timedelta(minutes = 15)))
+        self.SetAlpha(PearsonCorrelationPairsTradingAlphaModel(360, Resolution.Daily))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
-
-
-    class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
-        ''' This alpha model is designed to rank every pair combination by its pearson correlation 
-        and trade the pair with the hightest correlation
-        This model generates alternating long ratio/short ratio insights emitted as a group'''
-
-        def __init__(self, lookback, period, threshold = 1):
-            '''Initializes a new instance of the PearsonCorrelationPairsTradingAlphaModel class
-            Args:
-                lookback: lookback period to evaluate the historical correlation
-                period: Period over which this insight is expected to come to fruition
-                threshold: The percent [0, 100] deviation of the ratio from the mean before emitting an insight'''
-            super().__init__(period, threshold)
-            self.lookback = lookback
-            self.best_pair = ()
-
-        def OnSecuritiesChanged(self, algorithm, changes):
-
-            for security in changes.AddedSecurities:
-                self.Securities.append(security)
-
-            for security in changes.RemovedSecurities:
-                if security in self.Securities:
-                    self.Securities.remove(security)
-
-            symbols = [ x.Symbol for x in self.Securities ]
-
-            history = algorithm.History(symbols, self.lookback, Resolution.Daily).close.unstack(level=0)
-            df = (np.log(history) - np.log(history.shift(1))).dropna()
-            stop = len(df.columns)
-
-            corr = dict()
-
-            for i in range(0, stop):
-                for j in range(i+1, stop):
-                    if (j, i) not in corr:
-                        corr[(i, j)] = pearsonr(df.iloc[:,i], df.iloc[:,j])[0]
-
-            corr = sorted(corr.items(), key = lambda kv: kv[1])
-
-            self.best_pair = (symbols[corr[-1][0][0]], symbols[corr[-1][0][1]])
-
-            super().OnSecuritiesChanged(algorithm, changes)
-
-        def HasPassedTest(self, algorithm, asset1, asset2):
-            return self.best_pair == (asset1, asset2)

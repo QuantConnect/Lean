@@ -27,17 +27,24 @@ class BasePairsTradingAlphaModel(AlphaModel):
     from securities selected by the universe selection model
     This model generates alternating long ratio/short ratio insights emitted as a group'''
 
-    def __init__(self, period, threshold = 1):
+    def __init__(self, lookback = 1,
+            resolution = Resolution.Daily,
+            threshold = 1):
         ''' Initializes a new instance of the PairsTradingAlphaModel class
         Args:
-            period: Period over which this insight is expected to come to fruition
+            lookback: Lookback period of the analysis
+            resolution: Analysis resolution
             threshold: The percent [0, 100] deviation of the ratio from the mean before emitting an insight'''
-        self.period = period
+        self.lookback = lookback
+        self.resolution = resolution
         self.threshold = threshold
-        self.pairs = dict()
+        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
 
+        self.pairs = dict()
         self.Securities = list()
-        self.Name = '{}({},{})'.format(self.__class__.__name__, strfdelta(period), Extensions.Normalize(threshold))
+
+        resolutionString = Extensions.GetEnumString(resolution, Resolution)
+        self.Name = f'{self.__class__.__name__}({self.lookback},{resolutionString},{Extensions.Normalize(threshold)})'
 
 
     def Update(self, algorithm, data):
@@ -51,8 +58,7 @@ class BasePairsTradingAlphaModel(AlphaModel):
         insights = []
 
         for key, pair in self.pairs.items():
-            if pair.IsReady:
-                insights.extend(pair.GetInsightGroup())
+            insights.extend(pair.GetInsightGroup())
  
         return insights
 
@@ -96,7 +102,7 @@ class BasePairsTradingAlphaModel(AlphaModel):
                 if not self.HasPassedTest(algorithm, asset_i, asset_j):
                     continue
 
-                pair = self.Pair(algorithm, asset_i, asset_j, self.period, self.threshold)
+                pair = self.Pair(algorithm, asset_i, asset_j, self.predictionInterval, self.threshold)
                 self.pairs[pair_symbol] = pair
 
     def HasPassedTest(self, algorithm, asset1, asset2):
@@ -116,13 +122,13 @@ class BasePairsTradingAlphaModel(AlphaModel):
             FlatRatio = 0
             LongRatio = 1
 
-        def __init__(self, algorithm, asset1, asset2, period, threshold):
+        def __init__(self, algorithm, asset1, asset2, predictionInterval, threshold):
             '''Create a new pair
             Args:
                 algorithm: The algorithm instance that experienced the change in securities
                 asset1: The first asset's symbol in the pair
                 asset2: The second asset's symbol in the pair
-                period: Period over which this insight is expected to come to fruition
+                predictionInterval: Period over which this insight is expected to come to fruition
                 threshold: The percent [0, 100] deviation of the ratio from the mean before emitting an insight'''
             self.state = self.State.FlatRatio
 
@@ -141,24 +147,23 @@ class BasePairsTradingAlphaModel(AlphaModel):
             lower = ConstantIndicator[IndicatorDataPoint]("ct", 1 - threshold / 100)
             self.lowerThreshold = IndicatorExtensions.Times(self.mean, lower)
             
-            self.period = period
-
-        @property
-        def IsReady(self):
-            return self.mean.IsReady
+            self.predictionInterval = predictionInterval
 
         def GetInsightGroup(self):
             '''Gets the insights group for the pair
             Returns:
                 Insights grouped by an unique group id'''
 
+            if not self.mean.IsReady:
+                return []
+
             # don't re-emit the same direction
             if self.state is not self.State.LongRatio and self.ratio > self.upperThreshold:
                 self.state = self.State.LongRatio
 
                 # asset1/asset2 is more than 2 std away from mean, short asset1, long asset2
-                shortAsset1 = Insight.Price(self.asset1, self.period, InsightDirection.Down)
-                longAsset2 = Insight.Price(self.asset2, self.period, InsightDirection.Up)
+                shortAsset1 = Insight.Price(self.asset1, self.predictionInterval, InsightDirection.Down)
+                longAsset2 = Insight.Price(self.asset2, self.predictionInterval, InsightDirection.Up)
 
                 # creates a group id and set the GroupId property on each insight object
                 return Insight.Group(shortAsset1, longAsset2)
@@ -168,17 +173,10 @@ class BasePairsTradingAlphaModel(AlphaModel):
                 self.state = self.State.ShortRatio
 
                 # asset1/asset2 is less than 2 std away from mean, long asset1, short asset2
-                longAsset1 = Insight.Price(self.asset1, self.period, InsightDirection.Up)
-                shortAsset2 = Insight.Price(self.asset2, self.period, InsightDirection.Down)
+                longAsset1 = Insight.Price(self.asset1, self.predictionInterval, InsightDirection.Up)
+                shortAsset2 = Insight.Price(self.asset2, self.predictionInterval, InsightDirection.Down)
 
                 # creates a group id and set the GroupId property on each insight object
                 return Insight.Group(longAsset1, shortAsset2)
 
             return []
-
-def strfdelta(tdelta):
-    h, rem = divmod(tdelta.seconds, 3600)
-    m, s = divmod(rem, 60)
-    strf = f'{h:02d}:{m:02d}:{s:02d}'
-
-    return '{tdelta.days}.{strf}' if tdelta.days > 0 else strf
