@@ -48,11 +48,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             return returns.ToDictionary(r => r.Item2, r =>r.Item1);
         }
 
-        public bool IsReady() => Window.IsReady;
+        public bool IsReady => Window.IsReady;
 
         public void RemoveConsolidators(QCAlgorithmFramework algorithm)
         {
-            algorithm.SubscriptionManager.AddConsolidator(Symbol, Consolidator);
+            algorithm.SubscriptionManager.RemoveConsolidator(Symbol, Consolidator);
         }
 
         public void WarmUpIndicators(IEnumerable<Slice> history)
