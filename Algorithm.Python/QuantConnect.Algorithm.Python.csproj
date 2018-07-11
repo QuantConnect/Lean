@@ -117,7 +117,6 @@
     <None Include="OptionSplitRegressionAlgorithm.py" />
     <None Include="OrderTicketDemoAlgorithm.py" />
     <None Include="packages.config" />
-    <None Include="PairsTradingAlphaModelFrameworkAlgorithm.py" />
     <None Include="ParameterizedAlgorithm.py" />
     <None Include="PythonPackageTestAlgorithm.py" />
     <None Include="QCUWeatherBasedRebalancing.py" />
@@ -172,9 +171,7 @@
   <ItemGroup>
     <None Include="ConvertToFrameworkAlgorithm.py" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Benchmarks\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>

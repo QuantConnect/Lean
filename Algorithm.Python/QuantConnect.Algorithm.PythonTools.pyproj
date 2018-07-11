@@ -96,7 +96,6 @@
     <Compile Include="OptionRenameRegressionAlgorithm.py" />
     <Compile Include="OptionSplitRegressionAlgorithm.py" />
     <Compile Include="OrderTicketDemoAlgorithm.py" />
-    <Compile Include="PairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="ParameterizedAlgorithm.py" />
     <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="PythonPackageTestAlgorithm.py" />
