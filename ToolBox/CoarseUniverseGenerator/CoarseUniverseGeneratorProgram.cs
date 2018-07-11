@@ -175,7 +175,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
 
             // open up each daily file to get the values and append to the daily coarse files
-            foreach (var file in Directory.EnumerateFiles(dailyFolder))
+            foreach (var file in Directory.EnumerateFiles(dailyFolder, "*.zip"))
             {
                 try
                 {
