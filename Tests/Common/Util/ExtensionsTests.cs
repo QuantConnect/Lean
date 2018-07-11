@@ -23,6 +23,7 @@ using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Util
@@ -534,6 +535,24 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(2, by2[1].Count);
             Assert.AreEqual(1, by2[2].Count);
             CollectionAssert.AreEqual(list, by2.SelectMany(x => x));
+        }
+
+        [Test]
+        public void ToOrderTicketCreatesCorrectTicket()
+        {
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, SecurityType.Equity, Symbols.USDJPY, 1000, 0, 1.11m, DateTime.Now, "Pepe");
+            var order = Order.CreateOrder(orderRequest);
+            order.Status = OrderStatus.Submitted;
+            order.Id = 11;
+            var orderTicket = order.ToOrderTicket(null);
+            Assert.AreEqual(order.Id, orderTicket.OrderId);
+            Assert.AreEqual(order.Quantity, orderTicket.Quantity);
+            Assert.AreEqual(order.Status, orderTicket.Status);
+            Assert.AreEqual(order.Type, orderTicket.OrderType);
+            Assert.AreEqual(order.Symbol, orderTicket.Symbol);
+            Assert.AreEqual(order.Tag, orderTicket.Tag);
+            Assert.AreEqual(order.Time, orderTicket.Time);
+            Assert.AreEqual(order.SecurityType, orderTicket.SecurityType);
         }
 
         private PyObject ConvertToPyObject(object value)
