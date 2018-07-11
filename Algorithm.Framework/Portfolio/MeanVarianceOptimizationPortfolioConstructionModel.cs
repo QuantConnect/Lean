@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Accord.Statistics;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -77,6 +76,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             var targets = new List<IPortfolioTarget>();
 
+            // remove pending
             foreach (var symbol in _pendingRemoval)
             {
                 targets.Add(new PortfolioTarget(symbol, 0));
@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             
             // The optimization method processes the data frame
-            var weights = MinimumVariance(returns.Values, symbols);
+            var weights = Optimization.MinimumVariance(returns, _minimumWeight, _maximumWeight, _targetReturn);
             algorithm.Log(" ### [" + string.Join(",", weights.Keys)+ "] = ["+ string.Join(",", weights.Values) + "]");
 
             // Create portfolio targets from the specified insights
@@ -171,85 +171,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     _symbolDataDict[symbol] = symbolData;
                 }
             }            
-        }
-
-        /// <summary>
-        /// Perform mean variance optimization given the returns
-        /// </summary>
-        /// <param name="returns">Collections of returns by symbols</param>
-        /// <param name="symbols">Collection of symbols</param>
-        /// <returns></returns>
-        public Dictionary<Symbol, double> MinimumVariance(IEnumerable<IEnumerable<double>> returns, IEnumerable<Symbol> symbols)
-        {
-            var weights = new Dictionary<Symbol, double>();
-            var means = returns.Select(r => Measures.Mean(r.ToArray())).ToList();
-            var size = means.Count;
-            var data = Accord.Math.Matrix.Create(returns.Select(r => r.ToArray()).ToArray());
-            var cov = Measures.Covariance(Accord.Math.Matrix.Transpose(data), means.ToArray());
-
-            // initial point
-            var x0 = new double[size];
-            for (int i = 0; i < size; i++) { x0[i] = 1.0 / size; }
-            // lower boundaries
-            var bndl = new double[size];
-            for (int i = 0; i < size; i++) { bndl[i] = _minimumWeight; }
-            // upper boundaries
-            var bndu = new double[size];
-            for (int i = 0; i < size; i++) { bndu[i] = _maximumWeight; }
-            // scale
-            var s = new double[size];
-            for (int i = 0; i < size; i++) { s[i] = 1.0; }
-            // covariance
-            double[,] a = cov;
-            //double[] b = new double[size];
-
-            alglib.minqpstate state;
-            alglib.minqpreport rep;
-
-            // create solver, set quadratic/linear terms
-            alglib.minqpcreate(size, out state);
-            alglib.minqpsetquadraticterm(state, a);
-            //alglib.minqpsetlinearterm(state, b);
-            alglib.minqpsetstartingpoint(state, x0);
-            // set scale
-            alglib.minqpsetscale(state, s);
-            // upper and lower bounds
-            alglib.minqpsetbc(state, bndl, bndu);
-
-            // c1: sum(x) = 1
-            // c2: R^T * x = mu
-            means.Add(_targetReturn);
-            var c1 = new double[means.Count];
-            for (int i = 0; i < means.Count; i++) { c1[i] = 1.0; }
-            var c2 = means.ToArray();
-            var C =  Accord.Math.Matrix.Create(new double[][] { c1, c2 });
-            int[] ct = new int[] { 0, 0 };
-            alglib.minqpsetlc(state, C, ct);
-
-            // Solve problem
-            //if (size > 50)
-            //{
-            //    alglib.minqpsetalgodenseaul(state, 1.0e-9, 1.0e+4, 5);
-            //}
-            //else
-            {
-                alglib.minqpsetalgobleic(state, 0.0, 0.0, 0.0, 0);
-            }
-            alglib.minqpoptimize(state);
-
-            // Get results
-            double[] x;
-            alglib.minqpresults(state, out x, out rep);
-            
-            // Solver succesfully
-            if (rep.terminationtype > 0)
-            {                
-                foreach (var kv in symbols.Zip(x, (sym, w) => Tuple.Create(sym, w)))
-                {
-                    weights[kv.Item1] = kv.Item2;
-                }
-            }
-            return weights;
         }
     }
 }
