@@ -176,6 +176,7 @@
     <Compile Include="Common\Exceptions\NullExceptionInterpreter.cs" />
     <Compile Include="Common\Exceptions\ScheduledEventExceptionInterpreterTests.cs" />
     <Compile Include="Common\Orders\Fills\LatestPriceFillModelTests.cs" />
+    <Compile Include="Common\Orders\OrderTicketTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Orders\TimeInForces\TimeInForceTests.cs" />
     <Compile Include="Common\Scheduling\ScheduleManagerTests.cs" />
