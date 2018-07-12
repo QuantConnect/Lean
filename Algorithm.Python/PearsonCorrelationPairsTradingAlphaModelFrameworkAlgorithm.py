@@ -12,44 +12,42 @@
 # limitations under the License.
 
 from clr import AddReference
-AddReference("System")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
-from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from Alphas.PairsTradingAlphaModel import PairsTradingAlphaModel
+from Alphas.PearsonCorrelationPairsTradingAlphaModel import PearsonCorrelationPairsTradingAlphaModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 
+
 ### <summary>
-### Framework algorithm that uses the PairsTradingAlphaModel to detect
-### divergences between correllated assets. Detection of asset correlation is not
-### performed and is expected to be handled outside of the alpha model.
+### Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
+### This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
+### to rank the pairs trading candidates and use the best candidate to trade.
 ### </summary>
-class PairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
-    '''Framework algorithm that uses the PairsTradingAlphaModel to detect
-    divergences between correllated assets. Detection of asset correlation is not
-    performed and is expected to be handled outside of the alpha model.'''
+class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
+    '''Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
+    This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
+    to rank the pairs trading candidates and use the best candidate to trade.'''
 
     def Initialize(self):
 
         self.SetStartDate(2013,10,7)
         self.SetEndDate(2013,10,11)
 
-        bac = self.AddEquity("BAC")
-        aig = self.AddEquity("AIG")
+        self.SetUniverseSelection(ManualUniverseSelectionModel(
+            Symbol.Create('AIG', SecurityType.Equity, Market.USA),
+            Symbol.Create('BAC', SecurityType.Equity, Market.USA),
+            Symbol.Create('IBM', SecurityType.Equity, Market.USA),
+            Symbol.Create('SPY', SecurityType.Equity, Market.USA)))
 
-        self.SetUniverseSelection(ManualUniverseSelectionModel(self.Securities.Keys))
-        self.SetAlpha(PairsTradingAlphaModel(bac.Symbol, aig.Symbol))
+        self.SetAlpha(PearsonCorrelationPairsTradingAlphaModel(360, Resolution.Daily))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())

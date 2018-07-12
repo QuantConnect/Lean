@@ -36,6 +36,9 @@
     <DocumentationFile>bin\Release\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
@@ -58,11 +61,12 @@
     <Compile Include="Alphas\AlphaModel.cs" />
     <Compile Include="Alphas\AlphaModelExtensions.cs" />
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
+    <Compile Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.cs" />
     <Compile Include="Alphas\CompositeAlphaModel.cs" />
     <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
     <Compile Include="Alphas\INamedModel.cs" />
     <Compile Include="Alphas\NullAlphaModel.cs" />
-    <Compile Include="Alphas\PairsTradingAlphaModel.cs" />
+    <Compile Include="Alphas\BasePairsTradingAlphaModel.cs" />
     <Compile Include="Alphas\RsiAlphaModel.cs" />
     <Compile Include="Execution\ExecutionModel.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
@@ -130,13 +134,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Alphas\HistoricalReturnsAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Alphas\NullAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Alphas\PairsTradingAlphaModel.py">
+    <Content Include="Alphas\BasePairsTradingAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Execution\NullExecutionModel.py">

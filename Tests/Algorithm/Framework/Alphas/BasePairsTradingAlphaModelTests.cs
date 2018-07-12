@@ -19,41 +19,41 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
     [TestFixture]
-    public class PairsTradingAlphaModelTests : CommonAlphaModelTests
+    public class BasePairsTradingAlphaModelTests : CommonAlphaModelTests
     {
+        private const int _lookback = 15;
+        private const Resolution _resolution = Resolution.Minute;
+
         protected override int MaxSliceCount => 1500;
 
         protected override IAlphaModel CreateCSharpAlphaModel()
         {
-            return new PairsTradingAlphaModel(
-                Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                Symbol.Create("AIG", SecurityType.Equity, Market.USA)
-            );
+            return new BasePairsTradingAlphaModel(_lookback, _resolution);
         }
 
         protected override void InitializeAlgorithm(QCAlgorithmFramework algorithm)
         {
-            algorithm.AddEquity("BAC");
-            algorithm.AddEquity("AIG");
+            algorithm.SetUniverseSelection(new ManualUniverseSelectionModel(
+                Symbol.Create("AIG", SecurityType.Equity, Market.USA),
+                Symbol.Create("BAC", SecurityType.Equity, Market.USA)));
         }
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(PairsTradingAlphaModel)}(BAC,AIG,1)";
+            return $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},1)";
         }
 
         protected override IAlphaModel CreatePythonAlphaModel()
         {
             using (Py.GIL())
             {
-                dynamic model = Py.Import("PairsTradingAlphaModel").GetAttr("PairsTradingAlphaModel");
-                var instance = model(
-                    Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                    Symbol.Create("AIG", SecurityType.Equity, Market.USA));
+                dynamic model = Py.Import("BasePairsTradingAlphaModel").GetAttr("BasePairsTradingAlphaModel");
+                var instance = model(_lookback, _resolution);
                 return new AlphaModelPythonWrapper(instance);
             }
         }

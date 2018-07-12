@@ -92,6 +92,7 @@
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
     <Compile Include="ConvertToFrameworkAlgorithm.cs" />
+    <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="RawPricesCoarseUniverseAlgorithm.cs" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="SectorExposureRiskFrameworkAlgorithm.cs" />
@@ -109,7 +110,6 @@
     <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm.cs" />
     <Compile Include="ForexInternalFeedOnDataSameResolutionRegressionAlgorithm.cs" />
-    <Compile Include="PairsTradingAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="RollingWindowAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
     <Compile Include="CallingRFromCSharp.cs" />
