@@ -705,6 +705,29 @@ namespace QuantConnect.Data.Fundamental
 		public SolvencyRatio SolvencyRatio { get; set; }
 
 		/// <summary>
+		/// A measure of operating performance for Insurance companies, as it shows the relationship between the premiums earned and
+		/// administrative expenses related to claims such as fees and commissions. A number of 1 or lower is preferred, as this means the
+		/// premiums exceed the expenses. Calculated as: (Deferred Policy Acquisition Amortization Expense+Fees and Commission
+		/// Expense+Other Underwriting Expenses+Selling, General and Administrative) / Net Premiums Earned
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 12046
+		/// </remarks>
+		[JsonProperty("12046")]
+		public ExpenseRatio ExpenseRatio { get; set; }
+
+		/// <summary>
+		/// A measure of operating performance for Insurance companies, as it shows the relationship between the premiums earned and the
+		/// expenses related to claims. A number of 1 or lower is preferred, as this means the premiums exceed the expenses. Calculated as:
+		/// Benefits, Claims and Loss Adjustment Expense, Net / Net Premiums Earned
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 12047
+		/// </remarks>
+		[JsonProperty("12047")]
+		public LossRatio LossRatio { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the OperationRatios class
 		/// </summary>
 		public OperationRatios()
@@ -777,6 +800,8 @@ namespace QuantConnect.Data.Fundamental
 			WorkingCapitalTurnoverRatio = new WorkingCapitalTurnoverRatio();
 			NetIncomePerEmployee = new NetIncomePerEmployee();
 			SolvencyRatio = new SolvencyRatio();
+			ExpenseRatio = new ExpenseRatio();
+			LossRatio = new LossRatio();
 		}
 
 		/// <summary>
@@ -856,6 +881,8 @@ namespace QuantConnect.Data.Fundamental
 			if (WorkingCapitalTurnoverRatio != null) WorkingCapitalTurnoverRatio.UpdateValues(previous.WorkingCapitalTurnoverRatio);
 			if (NetIncomePerEmployee != null) NetIncomePerEmployee.UpdateValues(previous.NetIncomePerEmployee);
 			if (SolvencyRatio != null) SolvencyRatio.UpdateValues(previous.SolvencyRatio);
+			if (ExpenseRatio != null) ExpenseRatio.UpdateValues(previous.ExpenseRatio);
+			if (LossRatio != null) LossRatio.UpdateValues(previous.LossRatio);
 		}
 	}
 }

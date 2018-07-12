@@ -322,6 +322,17 @@ namespace QuantConnect.Data.Fundamental
 		public DividendCoverageRatio DividendCoverageRatio { get; set; }
 
 		/// <summary>
+		/// The nature of the period covered by an individual set of financial results. The output can be: Quarter, Semi-annual or Annual.
+		/// Assuming a 12-month fiscal year, quarter typically covers a three-month period, semi-annual a six-month period, and annual a
+		/// twelve-month period. Annual could cover results collected either from preliminary results or an annual report
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 28006
+		/// </remarks>
+		[JsonProperty("28006")]
+		public string PeriodType { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the EarningReports class
 		/// </summary>
 		public EarningReports()

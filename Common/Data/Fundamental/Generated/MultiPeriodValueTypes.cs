@@ -10891,7 +10891,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// EBITDA - Total Unusual Items
+	/// EBITDA less Total Unusual Items
 	/// </summary>
 	public class NormalizedEBITDAIncomeStatement : MultiPeriodField
 	{
@@ -11583,7 +11583,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Operating profit/loss what the company reported, may be the same or not the same as Morningstar definition.
+	/// Operating profit/loss as reported by the company, may be the same or not the same as Morningstar's standardized definition.
 	/// </summary>
 	public class TotalOperatingIncomeAsReportedIncomeStatement : MultiPeriodField
 	{
@@ -12197,6 +12197,440 @@ namespace QuantConnect.Data.Fundamental
 		/// Creates an instance of the AmortizationSupplementalIncomeStatement class
 		/// </summary>
 		public AmortizationSupplementalIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Total revenue as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+	/// </summary>
+	public class TotalRevenueAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the TotalRevenueAsReportedIncomeStatement class
+		/// </summary>
+		public TotalRevenueAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the TotalRevenueAsReportedIncomeStatement class
+		/// </summary>
+		public TotalRevenueAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Operating expense as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+	/// </summary>
+	public class OperatingExpenseAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the OperatingExpenseAsReportedIncomeStatement class
+		/// </summary>
+		public OperatingExpenseAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the OperatingExpenseAsReportedIncomeStatement class
+		/// </summary>
+		public OperatingExpenseAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Earnings adjusted for items that are irregular or unusual in nature, and/or are non-recurring. This can be used to fairly measure a
+	/// company's profitability. This is as reported by the company, may be the same or not the same as Morningstar's standardized
+	/// definition.
+	/// </summary>
+	public class NormalizedIncomeAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the NormalizedIncomeAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedIncomeAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the NormalizedIncomeAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedIncomeAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// EBITDA less Total Unusual Items. This is as reported by the company, may be the same or not the same as Morningstar's
+	/// standardized definition.
+	/// </summary>
+	public class NormalizedEBITDAAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the NormalizedEBITDAAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedEBITDAAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the NormalizedEBITDAAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedEBITDAAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// EBIT less Total Unusual Items. This is as reported by the company, may be the same or not the same as Morningstar's standardized
+	/// definition.
+	/// </summary>
+	public class NormalizedEBITAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the NormalizedEBITAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedEBITAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the NormalizedEBITAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedEBITAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Operating profit adjusted for items that are irregular or unusual in nature, and/or are non-recurring. This can be used to fairly
+	/// measure a company's profitability. This is as reported by the company, may be the same or not the same as Morningstar's
+	/// standardized definition.
+	/// </summary>
+	public class NormalizedOperatingProfitAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the NormalizedOperatingProfitAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedOperatingProfitAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the NormalizedOperatingProfitAsReportedIncomeStatement class
+		/// </summary>
+		public NormalizedOperatingProfitAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// The average tax rate for the period as reported by the company, may be the same or not the same as Morningstar's standardized
+	/// definition.
+	/// </summary>
+	public class EffectiveTaxRateAsReportedIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the EffectiveTaxRateAsReportedIncomeStatement class
+		/// </summary>
+		public EffectiveTaxRateAsReportedIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the EffectiveTaxRateAsReportedIncomeStatement class
+		/// </summary>
+		public EffectiveTaxRateAsReportedIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
@@ -17979,8 +18413,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// Represent obligations of the company to deliver the specified security at the contracted price and, thereby, create a liability to
-	/// .
-	/// purchase the security in the market at prevailing prices
+	/// purchase the security in the market at prevailing prices.
 	/// </summary>
 	public class SecuritySoldNotYetRepurchasedBalanceSheet : MultiPeriodField
 	{
@@ -24861,7 +25294,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Total Equity equals Stockholder's Equity+ minority interest.
+	/// Total Equity equals Preferred Stock Equity + Common Stock Equity.
 	/// </summary>
 	public class TotalEquityBalanceSheet : MultiPeriodField
 	{
@@ -29796,6 +30229,88 @@ namespace QuantConnect.Data.Fundamental
 		/// Creates an instance of the OtherFinancialLiabilitiesBalanceSheet class
 		/// </summary>
 		public OtherFinancialLiabilitiesBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Total liabilities as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+	/// </summary>
+	public class TotalLiabilitiesAsReportedBalanceSheet : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the TotalLiabilitiesAsReportedBalanceSheet class
+		/// </summary>
+		public TotalLiabilitiesAsReportedBalanceSheet() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the TotalLiabilitiesAsReportedBalanceSheet class
+		/// </summary>
+		public TotalLiabilitiesAsReportedBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Total Equity as reported by the company, may be the same or not the same as Morningstar's standardized definition.
+	/// </summary>
+	public class TotalEquityAsReportedBalanceSheet : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the TotalEquityAsReportedBalanceSheet class
+		/// </summary>
+		public TotalEquityAsReportedBalanceSheet() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the TotalEquityAsReportedBalanceSheet class
+		/// </summary>
+		public TotalEquityAsReportedBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
@@ -39489,7 +40004,6 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// Cost associated with issuance of debt/equity capital in the Financing Cash Flow section.
-	/// The increase or decrease between periods of the investment properties.
 	/// </summary>
 	public class IssueExpensesCashFlowStatement : MultiPeriodField
 	{
@@ -43450,6 +43964,68 @@ namespace QuantConnect.Data.Fundamental
 		/// Creates an instance of the OtherCashAdjustExcludeFromChangeinCashCashFlowStatement class
 		/// </summary>
 		public OtherCashAdjustExcludeFromChangeinCashCashFlowStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// The change in cash flow from the previous period to the current, as reported by the company, may be the same or not the same as
+	/// Morningstar's standardized definition. It is a supplemental value which would be reported outside consolidated statements.
+	/// </summary>
+	public class ChangeinCashSupplementalAsReportedCashFlowStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ChangeinCashSupplementalAsReportedCashFlowStatement class
+		/// </summary>
+		public ChangeinCashSupplementalAsReportedCashFlowStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ChangeinCashSupplementalAsReportedCashFlowStatement class
+		/// </summary>
+		public ChangeinCashSupplementalAsReportedCashFlowStatement(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
@@ -49205,6 +49781,93 @@ namespace QuantConnect.Data.Fundamental
 		/// Creates an instance of the SolvencyRatio class
 		/// </summary>
 		public SolvencyRatio(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// A measure of operating performance for Insurance companies, as it shows the relationship between the premiums earned and
+	/// administrative expenses related to claims such as fees and commissions. A number of 1 or lower is preferred, as this means the
+	/// premiums exceed the expenses. Calculated as: (Deferred Policy Acquisition Amortization Expense+Fees and Commission
+	/// Expense+Other Underwriting Expenses+Selling, General and Administrative) / Net Premiums Earned
+	/// </summary>
+	public class ExpenseRatio : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.OneYear; } }
+
+		/// <summary>
+		/// Gets/sets the OneYear period value for the field
+		/// </summary>
+		[JsonProperty(Period.OneYear)]
+		public decimal OneYear
+		{
+			get { return GetPeriodValue(Period.OneYear); }
+			set { SetPeriodValue(Period.OneYear, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ExpenseRatio class
+		/// </summary>
+		public ExpenseRatio() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ExpenseRatio class
+		/// </summary>
+		public ExpenseRatio(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// A measure of operating performance for Insurance companies, as it shows the relationship between the premiums earned and the
+	/// expenses related to claims. A number of 1 or lower is preferred, as this means the premiums exceed the expenses. Calculated as:
+	/// Benefits, Claims and Loss Adjustment Expense, Net / Net Premiums Earned
+	/// </summary>
+	public class LossRatio : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.OneYear; } }
+
+		/// <summary>
+		/// Gets/sets the OneYear period value for the field
+		/// </summary>
+		[JsonProperty(Period.OneYear)]
+		public decimal OneYear
+		{
+			get { return GetPeriodValue(Period.OneYear); }
+			set { SetPeriodValue(Period.OneYear, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the LossRatio class
+		/// </summary>
+		public LossRatio() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the LossRatio class
+		/// </summary>
+		public LossRatio(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
