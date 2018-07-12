@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Brokerages;
-using QuantConnect.Brokerages.GDAX;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -269,6 +267,11 @@ namespace QuantConnect.Tests.Brokerages
         protected abstract decimal LowPrice { get; }
 
         /// <summary>
+        /// Returns wether or not the brokers order methods implementation are async
+        /// </summary>
+        protected abstract bool IsAsync();
+
+        /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
         protected abstract decimal GetAskPrice(Symbol symbol);
@@ -285,6 +288,65 @@ namespace QuantConnect.Tests.Brokerages
         public void IsConnected()
         {
             Assert.IsTrue(Brokerage.IsConnected);
+        }
+
+        [Test, TestCaseSource("OrderParameters")]
+        public void CancelOrders(OrderTestParameters parameters)
+        {
+            const int secondsTimeout = 20;
+            Log.Trace("");
+            Log.Trace("CANCEL ORDERS");
+            Log.Trace("");
+
+            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+
+            var canceledOrderStatusEvent = new ManualResetEvent(false);
+            EventHandler<OrderEvent> orderStatusCallback = (sender, fill) =>
+            {
+                if (fill.Status == OrderStatus.Canceled)
+                {
+                    canceledOrderStatusEvent.Set();
+                }
+            };
+            Brokerage.OrderStatusChanged += orderStatusCallback;
+            var cancelResult = false;
+            try
+            {
+                cancelResult = Brokerage.CancelOrder(order);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
+
+            Assert.AreEqual(IsAsync() || parameters.ExpectedCancellationResult, cancelResult);
+
+            if (parameters.ExpectedCancellationResult)
+            {
+                // We expect the OrderStatus.Canceled event
+                canceledOrderStatusEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timedout to cancel");
+            }
+
+            var openOrders = Brokerage.GetOpenOrders();
+            var cancelledOrder = openOrders.FirstOrDefault(x => x.Id == order.Id);
+            Assert.IsNull(cancelledOrder);
+
+            canceledOrderStatusEvent.Reset();
+
+            var cancelResultSecondTime = false;
+            try
+            {
+                cancelResultSecondTime = Brokerage.CancelOrder(order);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
+            Assert.AreEqual(IsAsync(), cancelResultSecondTime);
+            // We do NOT expect the OrderStatus.Canceled event
+            Assert.IsFalse(canceledOrderStatusEvent.WaitOne(new TimeSpan(0, 0, 10)));
+
+            Brokerage.OrderStatusChanged -= orderStatusCallback;
         }
 
         [Test, TestCaseSource("OrderParameters")]
@@ -497,8 +559,10 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="order">The order to be submitted</param>
         /// <param name="expectedStatus">The status to wait for</param>
         /// <param name="secondsTimeout">Maximum amount of time to wait for <paramref name="expectedStatus"/></param>
+        /// <param name="allowFailedSubmission">Allow failed order submission</param>
         /// <returns>The same order that was submitted.</returns>
-        protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled, double secondsTimeout = 10.0, bool allowFailedSubmission = false)
+        protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
+                                                double secondsTimeout = 10.0, bool allowFailedSubmission = false)
         {
             var requiredStatusEvent = new ManualResetEvent(false);
             var desiredStatusEvent = new ManualResetEvent(false);
@@ -529,8 +593,20 @@ namespace QuantConnect.Tests.Brokerages
             {
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }
-            requiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "Expected every order to fire a submitted or invalid status event");
-            desiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
+
+            // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
+            // which causes the Status.Submitted order event to never be set
+            bool assertOrderEventStatus = !(Brokerage.Name == "Interactive Brokers Brokerage"
+                                            && new[] { OrderType.StopMarket, OrderType.StopLimit }.Contains(order.Type));
+            if (assertOrderEventStatus)
+            {
+                requiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "Expected every order to fire a submitted or invalid status event");
+                desiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
+            }
+            else
+            {
+                requiredStatusEvent.WaitOne((int)(1000 * secondsTimeout));
+            }
 
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 

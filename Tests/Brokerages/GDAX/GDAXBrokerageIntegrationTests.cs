@@ -76,6 +76,14 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 Config.Get("gdax-passphrase"), algorithm.Object);
         }
 
+        /// <summary>
+        /// Returns wether or not the brokers order methods implementation are async
+        /// </summary>
+        protected override bool IsAsync()
+        {
+            return false;
+        }
+
         protected override decimal GetAskPrice(Symbol symbol)
         {
             var tick = ((GDAXBrokerage)this.Brokerage).GetTick(symbol);

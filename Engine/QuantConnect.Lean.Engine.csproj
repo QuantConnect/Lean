@@ -241,6 +241,7 @@
     <Compile Include="Alphas\IAlphaHandler.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
+    <Compile Include="TransactionHandlers\CancelPendingOrders.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
     <Compile Include="DataFeeds\IDataFeed.cs" />
     <Compile Include="Results\LiveTradingResultHandler.cs" />
