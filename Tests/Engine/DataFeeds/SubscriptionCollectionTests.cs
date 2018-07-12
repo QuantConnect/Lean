@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
@@ -25,6 +26,9 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -92,6 +96,249 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, cts.Token);
 
             Task.WaitAll(addTask, removeTask, readTask);
+        }
+        [Test]
+        public void DefaultFillForwardResolution()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var defaultFillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution();
+            Assert.AreEqual(defaultFillForwardResolutio.Value, new TimeSpan(0, 1, 0));
+        }
+
+        [Test]
+        public void UpdatesFillForwardResolutionOverridesDefaultWhenNotAdding()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Daily);
+
+            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
+            Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(1, 0, 0, 0));
+        }
+
+        [Test]
+        public void UpdatesFillForwardResolutionSuccessfullyWhenNotAdding()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second);
+
+            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
+            Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(0, 0, 1));
+        }
+
+        [Test]
+        public void UpdatesFillForwardResolutionSuccessfullyWhenAdding()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second);
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+        }
+
+        [Test]
+        public void UpdatesFillForwardResolutionSuccessfullyOverridesDefaultWhenAdding()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Daily);
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+        }
+
+        [Test]
+        public void DoesNotUpdateFillForwardResolutionWhenAddingBiggerResolution()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second);
+            var subscription2 = CreateSubscription(Resolution.Minute);
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionColletion.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+        }
+
+        [Test]
+        public void UpdatesFillForwardResolutionWhenRemoving()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second);
+            var subscription2 = CreateSubscription(Resolution.Daily);
+
+            subscriptionColletion.TryAdd(subscription);
+            subscriptionColletion.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+            subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+        }
+
+        [Test]
+        public void FillForwardResolutionIgnoresTick()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Tick);
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+        }
+
+        [Test]
+        public void FillForwardResolutionIgnoresInternalFeed()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second, "AAPL", true);
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+        }
+
+        [Test]
+        public void DoesNotUpdateFillForwardResolutionWhenRemovingDuplicateResolution()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second);
+            var subscription2 = CreateSubscription(Resolution.Second, "SPY");
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionColletion.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
+            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+        }
+
+        [Test]
+        public void SubscriptionsAreSortedWhenAdding()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second, "GC", false, SecurityType.Future);
+            var subscription2 = CreateSubscription(Resolution.Second, "SPY");
+            var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
+            var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
+            var subscription5 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.OpenInterest);
+            var subscription6 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.Quote);
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription });
+            subscriptionColletion.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription });
+            subscriptionColletion.TryAdd(subscription3);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription3, subscription });
+            subscriptionColletion.TryAdd(subscription4);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
+            subscriptionColletion.TryAdd(subscription5);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription5, subscription });
+            subscriptionColletion.TryAdd(subscription6);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
+
+
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
+                SecurityType.Option, SecurityType.Option, SecurityType.Future });
+        }
+
+        [Test]
+        public void SubscriptionsAreSortedWhenAdding2()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second, "GC", false, SecurityType.Future);
+            var subscription2 = CreateSubscription(Resolution.Second, "SPY");
+            var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
+            var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
+
+            subscriptionColletion.TryAdd(subscription);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription });
+            subscriptionColletion.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription });
+            subscriptionColletion.TryAdd(subscription3);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription3, subscription });
+            subscriptionColletion.TryAdd(subscription4);
+
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
+        }
+
+        [Test]
+        public void SubscriptionsAreSortedWhenRemoving()
+        {
+            var subscriptionColletion = new SubscriptionCollection();
+            var subscription = CreateSubscription(Resolution.Second, "BTCEUR", false, SecurityType.Future);
+            var subscription2 = CreateSubscription(Resolution.Second, "SPY");
+            var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
+            var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
+            var subscription5 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.OpenInterest);
+            var subscription6 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.Quote);
+
+            subscriptionColletion.TryAdd(subscription);
+            subscriptionColletion.TryAdd(subscription2);
+            subscriptionColletion.TryAdd(subscription3);
+            subscriptionColletion.TryAdd(subscription4);
+            subscriptionColletion.TryAdd(subscription5);
+            subscriptionColletion.TryAdd(subscription6);
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
+
+            subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option,
+                            SecurityType.Option, SecurityType.Option, SecurityType.Future });
+
+            subscriptionColletion.TryRemove(subscription3.Configuration, out subscription3);
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option, SecurityType.Future });
+
+            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option });
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription6, subscription5 });
+
+            subscriptionColletion.TryRemove(subscription6.Configuration, out subscription6);
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option });
+            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription5 });
+
+            subscriptionColletion.TryRemove(subscription5.Configuration, out subscription5);
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] {SecurityType.Equity});
+
+            subscriptionColletion.TryRemove(subscription4.Configuration, out subscription4);
+            Assert.IsTrue(subscriptionColletion.Select(x => x.Security.Type).ToList().IsNullOrEmpty());
+        }
+
+        private Subscription CreateSubscription(Resolution resolution, string symbol = "AAPL", bool isInternalFeed = false,
+                                                SecurityType type = SecurityType.Equity, TickType tickType = TickType.Trade)
+        {
+            var start = DateTime.UtcNow;
+            var end = start.AddSeconds(10);
+            Security security;
+            Symbol _symbol;
+            if (type == SecurityType.Equity)
+            {
+                _symbol = new Symbol(SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA), symbol);
+                security = new Equity(_symbol, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
+            }
+            else if (type == SecurityType.Option)
+            {
+                _symbol = new Symbol(SecurityIdentifier.GenerateOption(DateTime.Now,
+                    SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA),
+                    Market.USA, 0.0m, OptionRight.Call, OptionStyle.American), symbol);
+                security = new Option(_symbol, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), new OptionSymbolProperties(SymbolProperties.GetDefault("USD")));
+            }
+            else if (type == SecurityType.Future)
+            {
+                _symbol = new Symbol(SecurityIdentifier.GenerateFuture(DateTime.Now, symbol, Market.USA), symbol);
+                security = new Future(_symbol, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
+            }
+            else
+            {
+                throw new Exception("SecurityType not implemented");
+            }
+            var config = new SubscriptionDataConfig(typeof(TradeBar), _symbol, resolution, DateTimeZone.Utc, DateTimeZone.Utc, true, false, isInternalFeed, false, tickType);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
+            var enumerator = new EnqueueableEnumerator<BaseData>();
+            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);
+            return new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
         }
     }
 }
