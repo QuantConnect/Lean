@@ -23,6 +23,7 @@ from Alphas.BasePairsTradingAlphaModel import BasePairsTradingAlphaModel
 from datetime import timedelta
 from scipy.stats import pearsonr
 import numpy as np
+import pandas as pd
 
 class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
     ''' This alpha model is designed to rank every pair combination by its pearson correlation 
@@ -59,12 +60,12 @@ class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
                 self.Securities.remove(security)
 
         symbols = [ x.Symbol for x in self.Securities ]
-
+        
         history = algorithm.History(symbols, self.lookback, self.resolution).close.unstack(level=0)
 
         if not history.empty:
 
-            df = (np.log(history) - np.log(history.shift(1))).dropna()
+            df = self.get_price_dataframe(history)
             stop = len(df.columns)
 
             corr = dict()
@@ -89,3 +90,28 @@ class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
         Returns:
             True if the statistical test for the pair is successful'''
         return self.best_pair is not None and self.best_pair == (asset1, asset2)
+
+    def get_price_dataframe(self, df):
+        timezones = { x.Symbol.Value: x.Exchange.TimeZone for x in self.Securities }
+
+        # Use log prices
+        df = np.log(df)
+
+        is_single_timeZone = len(set(timezones.values())) == 1
+
+        if not is_single_timeZone:
+            series_dict = dict()
+
+            for column in df:
+                # Change the dataframe index from data time to UTC time
+                to_utc = lambda x: Extensions.ConvertToUtc(x, timezones[column])
+                if self.resolution == Resolution.Daily:
+                    to_utc = lambda x: Extensions.ConvertToUtc(x, timezones[column]).date()
+
+                data = df[[column]]
+                data.index = data.index.map(to_utc)
+                series_dict[column] = data[column]
+
+            df = pd.DataFrame(series_dict).dropna()
+
+        return (df - df.shift(1)).dropna()
