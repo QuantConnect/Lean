@@ -50,9 +50,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\market\factor_files\{SYMBOL}.csv
         private readonly bool _hasScaleFactors;
 
-        // Symbol Mapping:
-        private string _mappedSymbol = "";
-
         // Location of the datafeed - the type of this data.
 
         // Create a single instance to invoke all Type Methods:
@@ -563,15 +560,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check to see if the symbol was remapped
-                var newSymbol = _mapFile.GetMappedSymbol(date);
-                if (newSymbol != _mappedSymbol)
+                var newSymbol = _mapFile.GetMappedSymbol(date, _config.MappedSymbol);
+                if (newSymbol != _config.MappedSymbol)
                 {
-                    if (_mappedSymbol != "")
-                    {
-                        var changed = new SymbolChangedEvent(_config.Symbol, date, _mappedSymbol, newSymbol);
-                        _auxiliaryData.Enqueue(changed);
-                    }
-                    _config.MappedSymbol = _mappedSymbol = newSymbol;
+                    var changed = new SymbolChangedEvent(_config.Symbol, date, _config.MappedSymbol, newSymbol);
+                    _auxiliaryData.Enqueue(changed);
+                    _config.MappedSymbol = newSymbol;
                 }
 
                 // we've passed initial checks,now go get data for this date!
