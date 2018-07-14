@@ -89,6 +89,7 @@
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.cs" />
+    <Compile Include="BlackLittermanPortfolioOptimizationAlgorithm.cs" />
     <Compile Include="MeanVarianceOptimizationAlgorithm.cs" />
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
