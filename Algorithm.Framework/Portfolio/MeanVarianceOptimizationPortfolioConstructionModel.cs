@@ -100,7 +100,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     if (!insight.Magnitude.HasValue)
                     {
-                        algorithm.SetRunTimeError(new ArgumentNullException("MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. Please checkout the selected Alpha Model specifications."));
+                        algorithm.SetRunTimeError(
+                            new ArgumentNullException(
+                                insight.Symbol.Value,
+                                "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. "+
+                                "Please checkout the selected Alpha Model specifications: " + insight.SourceModel));
+                        continue;
                     }
                     data.Add(algorithm.Time, (decimal)insight.Magnitude.Value);
                 }
