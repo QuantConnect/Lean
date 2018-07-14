@@ -48,6 +48,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             return returns.ToDictionary(r => r.Item2, r =>r.Item1);
         }
 
+        public Dictionary<DateTime, double> Returns => Window.Select(x => new { Date = x.EndTime, Return = (double) x.Value}).ToDictionary(r=>r.Date, r=>r.Return);
+
         public bool IsReady => Window.IsReady;
 
         public void RemoveConsolidators(QCAlgorithmFramework algorithm)

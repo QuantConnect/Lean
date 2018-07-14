@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Accord.Math;
+using Accord.Statistics;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -30,15 +32,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class MeanVarianceOptimizationPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private readonly int _lookback = 1;
-        private readonly int _period = 63;
-        private readonly Resolution _resolution = Resolution.Daily;
-        private readonly double _minimumWeight = -1;
-        private readonly double _maximumWeight = 1;
-        private readonly double _targetReturn = 0.02;
-        
-        private List<Symbol> _pendingRemoval = new List<Symbol>();
-        private readonly Dictionary<Symbol, SymbolData> _symbolDataDict = new Dictionary<Symbol, SymbolData>();
+        private readonly int _lookback;
+        private readonly int _period;
+        private readonly Resolution _resolution;
+        private readonly double _minimumWeight;
+        private readonly double _maximumWeight;
+        private readonly double _targetReturn;
+        private readonly List<Symbol> _pendingRemoval;
+        private readonly Dictionary<Symbol, SymbolData> _symbolDataDict;
 
         /// <summary>
         /// Initialize the model
@@ -64,6 +65,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _minimumWeight = minimumWeight;
             _maximumWeight = maximumWeight;
             _targetReturn = targetReturn;
+
+            _pendingRemoval = new List<Symbol>();
+            _symbolDataDict = new Dictionary<Symbol, SymbolData>();
         }
 
         /// <summary>
@@ -102,38 +106,34 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
             }
 
-            // Get symbols' returns by date
-            var returnsByDate = (from x in _symbolDataDict
-                          where symbols.Contains(x.Key)
-                          select new { Symbol = x.Key, Returns = x.Value.Return() }).ToDictionary(r => r.Symbol, r =>r.Returns);
+            // Get symbols' returns
+            var returns = GetReturns(from s in symbols join sd in _symbolDataDict on s equals sd.Key select sd.Value.Returns);
+            // Calculate rate of returns
+            var rreturns = returns.Apply(e => System.Math.Pow(1.0 + e, 252.0) - 1.0);
+            // Calculate geometric mean of rate of returns            
+            var gmean = Enumerable.Range(0, rreturns.GetLength(1))
+                .Select(i => rreturns.GetColumn(i))
+                .Select(c => System.Math.Pow(Elementwise.Add(c, 1.0).Product(), 1.0 / (double)c.Length) - 1.0)
+                .ToArray();
 
-            // Consolidate by date
-            var alldates = returnsByDate.SelectMany(r => r.Value.Keys).Distinct();
-            var returns = new Dictionary<Symbol, List<double>>();
-            foreach (var symbol in returnsByDate.Keys)
-                returns[symbol] = new List<double>();
+            // The optimization method processes the data frame
+            double[] W;
+            var opt = new Optimization.MeanVariancePortfolio(rreturns.Covariance());
+            var ret = opt.Optimize(out W, _minimumWeight, _maximumWeight, expectedReturns: gmean, targetReturn: _targetReturn);
 
-            foreach (var d in alldates)
+            // process results
+            if (ret > 0)
             {
-                foreach (var s in symbols)
+                var weights = symbols.Zip(W, (sym, w) => new { S = sym, W = w }).ToDictionary(r => r.S, r => r.W);
+                algorithm.Log(" ### [" + string.Join(",", weights.Keys) + "] = [" + string.Join(",", weights.Values) + "]");
+
+                // Create portfolio targets from the specified insights
+                foreach (var insight in insights)
                 {
-                    double v;
-                    returnsByDate[s].TryGetValue(d, out v);
-                    returns[s].Add(v);
+                    var weight = (decimal)weights[insight.Symbol];
+                    targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, weight));
                 }
             }
-            
-            // The optimization method processes the data frame
-            var weights = Optimization.MinimumVariance(returns, _minimumWeight, _maximumWeight, _targetReturn);
-            algorithm.Log(" ### [" + string.Join(",", weights.Keys)+ "] = ["+ string.Join(",", weights.Values) + "]");
-
-            // Create portfolio targets from the specified insights
-            foreach (var insight in insights)
-            {
-                var weight = (decimal)weights[insight.Symbol];
-                targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, weight));
-            }
-
             return targets;
         }
 

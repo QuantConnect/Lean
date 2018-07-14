@@ -66,6 +66,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -100,6 +101,7 @@
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\Optimization.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />

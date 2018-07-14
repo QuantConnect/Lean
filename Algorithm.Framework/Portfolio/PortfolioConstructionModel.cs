@@ -12,12 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Accord.Math;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
+    public static class Tools
+    {
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
+        {
+            TValue obj;
+            return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
+        }
+    }
+
     /// <summary>
     /// Provides a base class for portoflio construction models
     /// </summary>
@@ -41,6 +53,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
+        }
+
+        public static double[,] GetReturns(IEnumerable<Dictionary<DateTime, double>> returnsByDate)
+        {
+            // Consolidate by date
+            var alldates = returnsByDate.SelectMany(r => r.Keys).Distinct();
+            var returns = Matrix.Create(alldates
+                .Select(d => returnsByDate.Select(s => s.GetValueOrDefault(d, Double.NaN)).ToArray())
+                .Where(r => !r.Select(v => Math.Abs(v)).Sum().IsNaNOrZero()) // remove empty rows
+                .ToArray());
+
+            return returns;
         }
     }
 }

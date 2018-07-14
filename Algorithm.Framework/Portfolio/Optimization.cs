@@ -1,124 +1,226 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Accord.Math;
 using Accord.Statistics;
 
-namespace QuantConnect.Algorithm.Framework.Portfolio
+namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
 {
+    public enum ConstraintType { Equal = 0, Less = -1, More = 1 };
+
     /// <summary>
-    /// Optimization methods for portfolios
+    /// Mean-Variance Portfolio Optimization
     /// </summary>
-    public class Optimization
+    public class MeanVariancePortfolio
     {
-        /// <summary>
-        /// Fill vector with specified values
-        /// </summary>
-        /// <typeparam name="T">Vector element type</typeparam>
-        /// <param name="size">Vector size</param>
-        /// <param name="value">Fill value</param>
-        /// <returns></returns>
-        public static T[] FillVector<T>(int size, T value)
+        public double[,] _cov;
+        public double[] _x0;
+        public double[] _scale;
+        public List<double[]> _constraints;
+        public List<int> _constraintTypes;
+        public double _lower;
+        public double _upper;
+
+        public int Size => _cov.GetLength(0);
+
+        public MeanVariancePortfolio(double[,] cov)
         {
-            var vec = new T[size];
-            for (int i = 0; i < size; i++)
-            {
-                vec[i] = value;
-            }
-            return vec;
+            _constraints = new List<double[]>();
+            _constraintTypes = new List<int>();
+            _cov = cov;
+            _x0 = null;
+            _scale = null;
+            _lower = Double.NaN;
+            _upper = Double.NaN;
         }
 
-        public static void GetCovariance(IEnumerable<IEnumerable<double>> returns, out double[,] cov, out double[] mean)
+        public void SetInitialValue(double[] init = null)
         {
-            mean = returns.Select(r => Measures.Mean(r.ToArray())).ToArray();
-            var data = Accord.Math.Matrix.Create(returns.Select(r => r.ToArray()).ToArray());
-            cov = Measures.Covariance(Accord.Math.Matrix.Transpose(data), mean);
-            return;
+            if (init == null || init.Length != Size)
+            {
+                if (_x0 == null)
+                {
+                    _x0 = Vector.Create(Size, 1.0 / Size);
+                }
+            }
+            else
+            {
+                _x0 = init;
+            }
+        }
+
+        public void SetScale(double[] scale = null)
+        {
+            if (scale == null || scale.Length != Size)
+            {
+                if (_scale == null)
+                {
+                    _scale = Vector.Create(Size, 1.0);
+                }
+            }
+            else
+            {
+                _scale = scale;
+            }
+        }
+
+        public void SetBounds(double lower, double upper)
+        {
+            _lower = lower;
+            _upper = upper;
+        }
+
+        public void SetConstraints(double[] lc, ConstraintType ct, double rc)
+        {
+            if (lc.Length != Size)
+            {
+                throw new ArgumentOutOfRangeException(String.Format("Incorrect number of constraints: {0}", lc));
+            }
+            var c = Vector.Create(Size + 1, rc);
+            lc.CopyTo(c, 0);
+            _constraints.Add(c);
+            _constraintTypes.Add((int)ct);
+        }
+
+        /// <summary>
+        /// Solve QP problem
+        /// </summary>
+        /// <param name="x">Portfolio weights</param>
+        /// <returns></returns>
+        protected virtual int Optimize(out double[] x)
+        {
+            alglib.minqpstate state;
+
+            SetInitialValue();
+
+            // set quadratic/linear terms
+            alglib.minqpcreate(Size, out state);
+            alglib.minqpsetquadraticterm(state, _cov.Multiply(2.0));
+            //alglib.minqpsetlinearterm(state, b);
+
+            alglib.minqpsetstartingpoint(state, _x0);            
+            alglib.minqpsetbc(state, Vector.Create(Size, _lower), Vector.Create(Size, _upper));
+
+            // wire all constraints            
+            var C = Matrix.Create(_constraints.ToArray());
+            alglib.minqpsetlc(state, C, _constraintTypes.ToArray());
+
+            int ret = 0;
+            x = Vector.Create(Size, 0.0);
+            alglib.minqpreport rep;
+            bool autoscale = true;
+            while (autoscale)
+            {
+                //if (autoscale) // For version 3.14
+                //{
+                //    alglib.minqpsetscaleautodiag(_state);
+                //}
+                //else
+                {
+                    SetScale();
+                    alglib.minqpsetscale(state, _scale);
+                }
+                autoscale = false;
+
+                // Solve problem                
+                //alglib.minqpsetalgodenseaul(_state, 0, 1.0e+4, 0); // For version 3.14
+                alglib.minqpsetalgobleic(state, 0.0, 0.0, 0.0, 0);
+                alglib.minqpoptimize(state);
+
+                // Get results
+                double[] res;
+                alglib.minqpresults(state, out res, out rep);
+                ret = rep.terminationtype;
+                x = res;
+
+                // Restart with different scale
+                if (ret == -9)
+                    autoscale = true;
+            }
+            return ret;
         }
 
         /// <summary>
         /// Perform mean variance optimization given the returns
         /// </summary>
-        /// <param name="symbols">Collection of symbols</param>
-        /// <param name="returns">Collections of returns by symbols</param>
+        /// <param name="W">Portfolio weights</param>       
         /// <param name="minimumWeight">Lower weight bound</param>
         /// <param name="maximumWeight">Upper weight bound</param>
-        /// <param name="mu">Target return value</param>
-        /// <returns></returns>
-        public static Dictionary<Symbol, double> MinimumVariance(
-            Dictionary<Symbol, List<double>> returns,
-            double minimumWeight,
-            double maximumWeight,
-            double mu)
+        /// <param name="expectedReturns">Vector of expected returns</param>
+        /// <param name="targetReturn">Target return value</param>
+        /// <returns>error code</returns>
+        public virtual int Optimize(out double[] W, double minimumWeight, double maximumWeight, double[] expectedReturns, double targetReturn = 0.0)
         {
+            SetBounds(minimumWeight, maximumWeight);
 
-            var symbols = returns.Keys;
+            // sum(x) = 1
+            SetConstraints(Vector.Create(Size, 1.0), ConstraintType.Equal, 1.0);
+            // mu^T x = R  or mu^T x >= 0
+            SetConstraints(expectedReturns, targetReturn == 0.0 ? ConstraintType.More : ConstraintType.Equal, targetReturn);
 
-            double[] mean;
-            double[,] cov;
-            GetCovariance(symbols.Select(sym => returns[sym]), out cov, out mean);
-            var size = mean.Length;
-            
-            // initial point
-            var x0 = FillVector(size, 1.0 / size);
-            // lower boundaries
-            var bndl = FillVector(size, minimumWeight);
-            // upper boundaries
-            var bndu = FillVector(size, maximumWeight);
-            // scale
-            var s = FillVector(size, 1.0);
-            // covariance
-            double[,] a = cov;
-            //double[] b = new double[size];
-
-            alglib.minqpstate state;
-            alglib.minqpreport rep;
-
-            // create solver, set quadratic/linear terms
-            alglib.minqpcreate(size, out state);
-            alglib.minqpsetquadraticterm(state, a);
-            //alglib.minqpsetlinearterm(state, b);
-            alglib.minqpsetstartingpoint(state, x0);
-            // set scale
-            alglib.minqpsetscale(state, s);
-            // upper and lower bounds
-            alglib.minqpsetbc(state, bndl, bndu);
-
-            // c1: sum(x) = 1
-            var c1 = FillVector(mean.Length + 1, 1.0);
-            // c2: R^T * x = mu
-            var c2 = FillVector(mean.Length + 1, mu); 
-            mean.CopyTo(c2, 0);
-
-            // set constraints
-            var C = Accord.Math.Matrix.Create(new double[][] { c1, c2 });
-            int[] ct = new int[] { 0, 0 };
-            alglib.minqpsetlc(state, C, ct);
-
-            // Solve problem
-            //if (size > 50)
-            //{
-            //    alglib.minqpsetalgodenseaul(state, 1.0e-9, 1.0e+4, 5);
-            //}
-            //else
-            {
-                alglib.minqpsetalgobleic(state, 0.0, 0.0, 0.0, 0);
-            }
-            alglib.minqpoptimize(state);
-
-            // Get results
-            double[] x;
-            alglib.minqpresults(state, out x, out rep);
-
-            var weights = new Dictionary<Symbol, double>();
-            // Solved succesfully
-            if (rep.terminationtype > 0)
-            {
-                foreach (var kv in symbols.Zip(x, (sym, w) => Tuple.Create(sym, w)))
-                {
-                    weights[kv.Item1] = kv.Item2;
-                }
-            }
-            return weights;
+            return Optimize(out W);
         }
     }
+
+    /// <summary>
+    /// Maximum Sharpe Ratio Portfolio Optimization
+    /// </summary>
+    public class MaxSharpeRatioPortfolio : MeanVariancePortfolio
+    {
+        double _riskFreeRate;
+        double[] _expectedReturns;
+
+        public MaxSharpeRatioPortfolio(double[,] cov, double riskFreeRate) : base(cov)
+        {
+            _riskFreeRate = riskFreeRate;
+        }
+
+        public override int Optimize(out double[] x, double minimumWeight, double maximumWeight, double[] expectedReturns, double targetReturn = 0.0)
+        {
+            _expectedReturns = expectedReturns;
+
+            SetBounds(minimumWeight, maximumWeight);
+            SetConstraints(Vector.Create(Size, 1.0), ConstraintType.Equal, 1.0);
+
+            var ret = Optimize(out x); // use NLP solver
+
+            return ret;
+        }
+
+        public static void SharpeRatio(double[] x, ref double func, object obj)
+        {
+            var opt = (MaxSharpeRatioPortfolio)obj;
+            var annual_return = opt._expectedReturns.Dot(x);
+            var annual_volatility = Math.Sqrt(x.Dot(opt._cov).Dot(x));
+            func = (annual_return - opt._riskFreeRate) / annual_volatility;
+            func = Double.IsInfinity(func) || Double.IsNaN(func)  ? 1.0E+300 : -func;
+        }
+
+        protected override int Optimize(out double[] x)
+        {
+            alglib.minbleicstate state;
+
+            SetInitialValue();
+
+            //
+            // This variable contains differentiation step
+            //
+            double diffstep = 1.0e-6;
+            alglib.minbleiccreatef(_x0, diffstep, out state);
+            alglib.minbleicsetbc(state, Vector.Create(Size, _lower), Vector.Create(Size, _upper));
+
+            // wire all constraints            
+            var C = Matrix.Create(_constraints.ToArray());
+            alglib.minbleicsetlc(state, C, _constraintTypes.ToArray());
+
+            // Stopping conditions for the optimizer. 
+            alglib.minbleicsetcond(state, 0, 0, 0, 0);
+            alglib.minbleicoptimize(state, SharpeRatio, null, this);
+
+            alglib.minbleicreport rep;
+            alglib.minbleicresults(state, out x, out rep);
+            return rep.terminationtype;
+        }
+    }
+
 }
