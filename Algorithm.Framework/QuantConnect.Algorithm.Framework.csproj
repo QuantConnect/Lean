@@ -38,6 +38,7 @@
   <ItemGroup>
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
+	</Reference>
     <Reference Include="Accord, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.3.6.0\lib\net45\Accord.dll</HintPath>
     </Reference>
@@ -49,10 +50,6 @@
     </Reference>
     <Reference Include="Accord.Statistics, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Statistics.3.6.0\lib\net45\Accord.Statistics.dll</HintPath>
-    </Reference>
-    <Reference Include="Alglib2, Version=3.10.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\alglib2.dll.3.10.4\x86\Alglib2.dll</HintPath>
     </Reference>
     <Reference Include="Alglib2, Version=3.10.0.0, Culture=neutral, processorArchitecture=x64">
       <SpecificVersion>False</SpecificVersion>
