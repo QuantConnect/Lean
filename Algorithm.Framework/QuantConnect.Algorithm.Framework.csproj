@@ -38,7 +38,7 @@
   <ItemGroup>
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
-	</Reference>
+    </Reference>
     <Reference Include="Accord, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.3.6.0\lib\net45\Accord.dll</HintPath>
     </Reference>
@@ -50,10 +50,6 @@
     </Reference>
     <Reference Include="Accord.Statistics, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Statistics.3.6.0\lib\net45\Accord.Statistics.dll</HintPath>
-    </Reference>
-    <Reference Include="Alglib2, Version=3.10.0.0, Culture=neutral, processorArchitecture=x64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\alglib2.dll.3.10.4\x64\Alglib2.dll</HintPath>
     </Reference>
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
@@ -143,6 +139,10 @@
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\packages\alglib2.dll.3.10.4\Alglib2.csproj">
+      <Project>{0ffd3504-ae68-4aff-8e44-5d0906b8fe70}</Project>
+      <Name>Alglib2</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
