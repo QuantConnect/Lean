@@ -53,6 +53,7 @@ namespace QuantConnect.Securities
         {
             _currencies = new ConcurrentDictionary<string, Cash>();
             _currencies.AddOrUpdate(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
+
         }
 
         /// <summary>
@@ -85,9 +86,13 @@ namespace QuantConnect.Securities
                 var cash = kvp.Value;
 
                 var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this, changes);
+
                 if (security != null)
                 {
-                    addedSecurities.Add(security);
+                    foreach (var s in security)
+                    {
+                        addedSecurities.Add(s);
+                    }
                 }
             }
             return addedSecurities;

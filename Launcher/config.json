@@ -6,10 +6,10 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+    "environment": "live-kraken", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
     // algorithm class selector
-    "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+    "algorithm-type-name": "KobiAlgorithm",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
     "algorithm-language": "CSharp",
@@ -99,6 +99,10 @@
     "gdax-api-secret": "",
     "gdax-api-key": "",
     "gdax-passphrase": "",
+
+     // kraken configuration
+    "kraken-api-key": "qUeK1A3zIigcxJJANrHhNo64yQ5VaNJBhIn5MW2o74mYUoEcuohFeWnj",
+    "kraken-api-secret": "9GYPjXSV+++bagJqGOzhSl4KmaOo+l0MHQI3+wElRAKeCYvHWzxIx+dCUKRcJd6It3bBftoq87wHXRAcbeLzKQ==",
 
     // Required to access data from Quandl
     // To get your access token go to https://www.quandl.com/account/api
@@ -258,19 +262,35 @@
             "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
         },
 
-        "live-gdax": {
-            "live-mode": true,
+      "live-gdax": {
 
-            // real brokerage implementations require the BrokerageTransactionHandler
-            "live-mode-brokerage": "GDAXBrokerage",
-            "data-queue-handler": "GDAXDataQueueHandler",
-            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-            "history-provider": "BrokerageHistoryProvider"
-        }
+        "live-mode": true,
+
+        // real brokerage implementations require the BrokerageTransactionHandler
+        "live-mode-brokerage": "GDAXBrokerage",
+        "data-queue-handler": "GDAXDataQueueHandler",
+        "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+        "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+        "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+        "history-provider": "BrokerageHistoryProvider"
+      },
+
+      "live-kraken": {
+
+        "live-mode": true,
+
+        // real brokerage implementations require the BrokerageTransactionHandler
+        "live-mode-brokerage": "KrakenBrokerage",
+        "data-queue-handler": "KrakenBrokerage",
+        "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+        "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+        "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+        "history-provider": "BrokerageHistoryProvider"
+      }
 
     }
 }

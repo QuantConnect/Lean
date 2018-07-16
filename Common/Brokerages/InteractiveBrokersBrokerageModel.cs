@@ -18,8 +18,6 @@ using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
-
 namespace QuantConnect.Brokerages
 {
     /// <summary>
@@ -164,7 +162,7 @@ namespace QuantConnect.Brokerages
 
             // switch on the currency being bought
             string baseCurrency, quoteCurrency;
-            Forex.DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
 
 
             decimal max;

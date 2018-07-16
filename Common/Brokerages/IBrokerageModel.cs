@@ -166,6 +166,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
 
+                case BrokerageName.Kraken:
+                    return new KrakenBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }

@@ -32,6 +32,7 @@ namespace QuantConnect.Brokerages.GDAX
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm)
         {
+
         }
 
         /// <summary>

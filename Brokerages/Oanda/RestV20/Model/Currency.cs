@@ -1,4 +1,4 @@
-/* 
+/*
  * OANDA v20 REST API
  *
  * The full OANDA v20 REST API Specification. This specification defines how to interact with v20 Accounts, Trades, Orders, Pricing and more.
@@ -36,7 +36,7 @@ namespace Oanda.RestV20.Model
         public Currency()
         {
         }
-        
+
         /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
@@ -48,7 +48,7 @@ namespace Oanda.RestV20.Model
             sb.Append("}\n");
             return sb.ToString();
         }
-  
+
         /// <summary>
         /// Returns the JSON string presentation of the object
         /// </summary>
@@ -104,7 +104,7 @@ namespace Oanda.RestV20.Model
         /// <param name="validationContext">Validation context</param>
         /// <returns>Validation Result</returns>
         IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
-        { 
+        {
             yield break;
         }
     }
