@@ -46,6 +46,7 @@ namespace QuantConnect.Tests
         {
             var statistics = new Dictionary<string, string>();
             var alphaStatistics = new AlphaRuntimeStatistics();
+            var algorithmManager = new AlgorithmManager(false);
 
             Composer.Instance.Reset();
             var ordersLogFile = string.Empty;
@@ -96,7 +97,6 @@ namespace QuantConnect.Tests
                             string algorithmPath;
                             var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
                             ((BacktestNodePacket)job).BacktestId = algorithm;
-                            var algorithmManager = new AlgorithmManager(false);
                             engine.Run(job, algorithmManager, algorithmPath);
                             ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).OrdersLogFilePath;
                         }
@@ -118,6 +118,10 @@ namespace QuantConnect.Tests
             catch (Exception ex)
             {
                 Log.LogHandler.Error("{0} {1}", ex.Message, ex.StackTrace);
+            }
+            if (algorithmManager.State != AlgorithmStatus.Completed)
+            {
+                Assert.Fail($"Algorithm state should be completed and is: {algorithmManager.State}");
             }
 
             foreach (var stat in expectedStatistics)

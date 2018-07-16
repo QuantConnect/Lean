@@ -427,7 +427,7 @@ namespace QuantConnect.Data
                         yield return new KeyValuePair<Symbol, BaseData>(kvp.Key, dataPoint);
                     }
                 }
-                else
+                else if (data != null)
                 {
                     yield return new KeyValuePair<Symbol, BaseData>(kvp.Key, data);
                 }

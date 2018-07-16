@@ -718,6 +718,7 @@ namespace QuantConnect.Lean.Engine
 
             //Algorithm finished, send regardless of commands:
             results.SendStatusUpdate(AlgorithmStatus.Completed);
+            SetStatus(AlgorithmStatus.Completed);
 
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
