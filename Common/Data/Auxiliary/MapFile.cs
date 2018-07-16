@@ -65,10 +65,11 @@ namespace QuantConnect.Data.Auxiliary
         /// Memory overload search method for finding the mapped symbol for this date.
         /// </summary>
         /// <param name="searchDate">date for symbol we need to find.</param>
+        /// <param name="defaultReturnValue">Default return value if search was got no result.</param>
         /// <returns>Symbol on this date.</returns>
-        public string GetMappedSymbol(DateTime searchDate)
+        public string GetMappedSymbol(DateTime searchDate, string defaultReturnValue = "")
         {
-            var mappedSymbol = "";
+            var mappedSymbol = defaultReturnValue;
             //Iterate backwards to find the most recent factor:
             foreach (var splitDate in _data.Keys)
             {
