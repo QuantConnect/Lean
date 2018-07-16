@@ -57,6 +57,7 @@ namespace QuantConnect.Configuration
             if (cliArguments.ContainsKey("config"))
             {
                 SetConfigurationFile(cliArguments["config"] as string);
+                Reset();
             }
 
             var jsonArguments = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(cliArguments));
