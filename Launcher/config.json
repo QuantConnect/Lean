@@ -6,10 +6,10 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+    "environment": "live-kraken", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
     // algorithm class selector
-    "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+    "algorithm-type-name": "KobiAlgorithm",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
     "algorithm-language": "CSharp",
@@ -101,9 +101,9 @@
     "gdax-passphrase": "",
 
      // kraken configuration
-    "kraken-api-secret": "",
-    "kraken-api-key": "",
-    
+    "kraken-api-key": "qUeK1A3zIigcxJJANrHhNo64yQ5VaNJBhIn5MW2o74mYUoEcuohFeWnj",
+    "kraken-api-secret": "9GYPjXSV+++bagJqGOzhSl4KmaOo+l0MHQI3+wElRAKeCYvHWzxIx+dCUKRcJd6It3bBftoq87wHXRAcbeLzKQ==",
+
     // Required to access data from Quandl
     // To get your access token go to https://www.quandl.com/account/api
     "quandl-auth-token": "",
@@ -263,6 +263,7 @@
         },
 
       "live-gdax": {
+
         "live-mode": true,
 
         // real brokerage implementations require the BrokerageTransactionHandler
@@ -274,7 +275,7 @@
         "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
         "history-provider": "BrokerageHistoryProvider"
-      }
+      },
 
       "live-kraken": {
 
@@ -288,7 +289,7 @@
         "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
         "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-        "history-provider": "BrokerageHistoryProvider"   
+        "history-provider": "BrokerageHistoryProvider"
       }
 
     }

@@ -76,6 +76,18 @@ namespace QuantConnect
             "TRXETH",
             "OMGBTC",
             "OMGETH",
+            "XLMEUR",
+            "XLMUSD",
+            "XLMBTC",
+            "ETCUSD",
+            "ETCETH",
+            "ETCEUR",
+            "ETCBTC",
+            "XRPEUR",
+            "XRPUSD",
+            "XRPBTC",
+            "XRPCAD",
+            "XRPJPY"
         };
 
         /// <summary>
@@ -107,7 +119,7 @@ namespace QuantConnect
             "EURCHF",
             "EURGBP",
             "EURJPY",
-            "EURUSD",
+            //"EURUSD",
             "GBPAUD",
             "GBPJPY",
             "GBPUSD",
@@ -273,7 +285,7 @@ namespace QuantConnect
             "USDCNY",
             "USDCZK",
             "USDDKK",
-            "USDEUR",
+            //"USDEUR",
             "USDGBP",
             "USDHUF",
             "USDINR",

@@ -282,8 +282,8 @@ namespace QuantConnect.Brokerages.Kraken
         {
             if(pairs == "")
                 return new Dictionary<string, Ticker>();
-            
-            Log.Trace($"KrakenRestApi.GetTicker({pairs})");
+
+            //Log.Trace($"KrakenRestApi.GetTicker({pairs})");
 
             var param = new Dictionary<string, string>();
             param.Add("pair", pairs);
@@ -291,7 +291,7 @@ namespace QuantConnect.Brokerages.Kraken
             var res = QueryPublic("Ticker", param);
             var ret = JsonConvert.DeserializeObject<GetTickerResponse>(res);
             if (ret.Error.Count != 0)
-                throw new KrakenException(ret.Error[0], ret);
+                throw new KrakenException(ret.Error[0]+" ; thrown for pairs: " + pairs, ret);
             return ret.Result;
         }
 

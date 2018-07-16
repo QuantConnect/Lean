@@ -110,6 +110,18 @@ namespace QuantConnect.Securities.CurrencyConversion
         // linear search for path
         public static SecurityCurrencyConversion LinearSearch(string sourceCurrency, string destinationCurrency, IEnumerable<Security> existingSecurities, IEnumerable<Symbol> potentialSymbols, Func<Symbol, Security> makeNewSecurity)
         {
+            /*foreach(var sec in existingSecurities)
+            {
+                if (sec == null)
+                    throw new Exception("WTF");
+            }
+
+            foreach(var sym in potentialSymbols)
+            {
+                if (sym == null)
+                    throw new Exception("WTF");
+            }*/
+
             var conversion = new SecurityCurrencyConversion();
 
             conversion._securities = existingSecurities.ToList();
@@ -117,6 +129,7 @@ namespace QuantConnect.Securities.CurrencyConversion
             var symToSecMap = new Dictionary<Symbol, Security>();
 
             var allSymbols = existingSecurities.Select(sec => sec.Symbol).Concat(potentialSymbols);
+
 
             // search existing _securities list, and if anything found, calculate if inverted and then return step
             // 1 leg
@@ -128,12 +141,11 @@ namespace QuantConnect.Securities.CurrencyConversion
                     {
                         bool inverted = sym.Value.ComparePair(sourceCurrency, destinationCurrency) == CurrencyPairUtil.Match.InverseMatch;
 
-
                         var selection = existingSecurities.Where(s => s.Symbol == sym);
 
                         if (selection.Any())
                         {
-                            conversion._steps = new List<Step>() { new Step(sym, selection.Single(), inverted) };
+                            conversion._steps = new List<Step>() { new Step(sym, selection.Take(1).Single(), inverted) };
                         }
                         else
                         {
@@ -171,7 +183,7 @@ namespace QuantConnect.Securities.CurrencyConversion
 
                                 if (selection.Any())
                                 {
-                                    step1 = new Step(sym1, selection.Single(), sourceCurrency == quoteCode);
+                                    step1 = new Step(sym1, selection.Take(1).Single(), sourceCurrency == quoteCode);
                                 }
                                 else
                                 {
@@ -188,7 +200,7 @@ namespace QuantConnect.Securities.CurrencyConversion
 
                                 if(selection.Any())
                                 {
-                                    step2 = new Step(sym2, selection.Single(), midCode == quoteCode);
+                                    step2 = new Step(sym2, selection.Take(1).Single(), midCode == quoteCode);
                                 }
                                 else
                                 {

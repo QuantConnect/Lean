@@ -27,7 +27,7 @@ namespace QuantConnect.Brokerages.Kraken
     {
         private class KrakenAsset
         {   // currency code
-            public string Code;   
+            public string Code;
             public string CodeAlt;
         }
 
@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <param name="restApi">Existing KrakenRestApi object</param>
         public void UpdateSymbols(KrakenRestApi restApi)
         {
-            Logging.Log.Trace("UpdateSymbols(restApi)");
+            //Logging.Log.Trace("UpdateSymbols(restApi)");
 
             Dictionary<string, DataType.AssetInfo> assetInfoDict = restApi.GetAssetInfo();
             Dictionary<string, DataType.AssetPair> assetPairDict = restApi.GetAssetPairs();
@@ -65,7 +65,7 @@ namespace QuantConnect.Brokerages.Kraken
 
                     KnownAssets.Add(krakenAsset);
 
-                    Logging.Log.Trace($"KrakenAsset {{ Code: { KVPair.Key }, CodeAlt: { KVPair.Value.Altname } }}");
+                    //Logging.Log.Trace($"KrakenAsset {{ Code: { KVPair.Key }, CodeAlt: { KVPair.Value.Altname } }}");
                 }
             }
 
@@ -82,13 +82,13 @@ namespace QuantConnect.Brokerages.Kraken
                 KnownPairs.Add(KVPair.Key);
                 KnownPairsWhole.Add(KVPair.Value);
 
-                Logging.Log.Trace($"KnownPair {KVPair.Key}");
+                //Logging.Log.Trace($"KnownPair {KVPair.Key}");
             }
         }
-         
+
         private void DecomposeKrakenPair(string krakenPair, out string baseCode, out string quoteCode)
         {
-            Logging.Log.Trace($"DecomposeKrakenPair({krakenPair}, out baseCode, out quoteCode)");
+            //Logging.Log.Trace($"DecomposeKrakenPair({krakenPair}, out baseCode, out quoteCode)");
 
             List<string> foundCodes = new List<string>();
 
@@ -133,7 +133,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>Returns pair (string: pair, bool: is currencyA first) </pair></returns>
         public string GetPair(string currencyA, string currencyB)
         {
-            Logging.Log.Trace($"GetPair({currencyA},{currencyB})");
+            //Logging.Log.Trace($"GetPair({currencyA},{currencyB})");
 
             if (string.IsNullOrEmpty(currencyA) || string.IsNullOrEmpty(currencyB))
                 throw new DataType.KrakenException("No emtpy strings!");
@@ -161,8 +161,8 @@ namespace QuantConnect.Brokerages.Kraken
 
         private string LeanCodeToKrakenCode(string leanCode)
         {
-            Logging.Log.Trace($"LeanCodeToKrakenCode({leanCode})");
-                
+            //Logging.Log.Trace($"LeanCodeToKrakenCode({leanCode})");
+
             if (leanCode == "BTC")
                 leanCode = "XBT";
 
@@ -184,7 +184,7 @@ namespace QuantConnect.Brokerages.Kraken
 
         public string KrakenToLeanCode(string krakenCode)
         {
-            Logging.Log.Trace($"KrakenToLeanCode({krakenCode})");
+            //Logging.Log.Trace($"KrakenToLeanCode({krakenCode})");
 
             krakenCode = StripPrefixes(krakenCode);
 
@@ -201,7 +201,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>The Kraken symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            Logging.Log.Trace($"GetBrokerageSymbol({symbol.Value})");
+            //Logging.Log.Trace($"GetBrokerageSymbol({symbol.Value})");
 
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
@@ -212,7 +212,7 @@ namespace QuantConnect.Brokerages.Kraken
             string baseCode  = null;
             string quoteCode = null;
 
-            Securities.Forex.Forex.DecomposeCurrencyPair(symbol.Value.ToUpper(), out baseCode, out quoteCode);
+            Util.CurrencyPairUtil.DecomposeCurrencyPair(symbol.Value.ToUpper(), out baseCode, out quoteCode);
 
             baseCode = LeanCodeToKrakenCode(baseCode);
             quoteCode = LeanCodeToKrakenCode(quoteCode);
@@ -244,13 +244,18 @@ namespace QuantConnect.Brokerages.Kraken
         {
             currencyCode = currencyCode.ToUpper();
 
-            Logging.Log.Trace($"StripPrefixes({currencyCode})");
+            //Logging.Log.Trace($"StripPrefixes({currencyCode})");
 
             string firstChar = currencyCode[0].ToString();
 
-            if(Prefixes.Exists(prefix => firstChar.Equals(prefix)))
-                return currencyCode.Substring(1, currencyCode.Length-1);
-            
+            if (Prefixes.Exists(prefix => firstChar.Equals(prefix)))
+            {
+                var noPrefixes = currencyCode.Substring(1, currencyCode.Length - 1);
+
+                if (noPrefixes.Length > 2) {
+                    return noPrefixes;
+                }
+            }
             return currencyCode;
         }
 
@@ -266,7 +271,7 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>A new Lean Symbol instance</returns>
         public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0)
         {
-            Logging.Log.Trace($"GetLeanSymbol({brokerageSymbol}, {securityType}, {market}, ... )");
+            //Logging.Log.Trace($"GetLeanSymbol({brokerageSymbol}, {securityType}, {market}, ... )");
 
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid Kraken symbol: " + brokerageSymbol);

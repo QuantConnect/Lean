@@ -60,7 +60,6 @@ namespace QuantConnect.Brokerages.Kraken
         private volatile bool _connectionLost;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-
         /// <summary>
         /// The UTC time of the last received heartbeat message
         /// </summary>
@@ -124,18 +123,28 @@ namespace QuantConnect.Brokerages.Kraken
         {
             tickerStringbuilder.Clear();
 
+            int i = 0;
             foreach (Symbol symbol in SubscribedSymbols)
             {
                 string krakenSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
 
                 tickerStringbuilder.Append(krakenSymbol);
-                tickerStringbuilder.Append(", ");
+
+                if (i != SubscribedSymbols.Count - 1)
+                {
+                    tickerStringbuilder.Append(", ");
+                    i++;
+                }
             }
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(tickerStringbuilder.ToString());
 
             foreach (KeyValuePair<string, Ticker> pair in ticks)
-                yield return KrakenTickToLeanTick(pair);
+            {
+                var leanTick = KrakenTickToLeanTick(pair);
+                Log.Trace($"Tick {leanTick.Symbol.Value} => {leanTick.Price} at time {leanTick.Time}");
+                yield return leanTick;
+            }
 
         }
 
@@ -307,6 +316,7 @@ namespace QuantConnect.Brokerages.Kraken
         }
 
         #endregion
+
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
@@ -314,9 +324,12 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Orders.Order order)
         {
+            Logging.Log.Trace($"KrakenBrokerage.PlaceOrder(Order{{ID:{order.Id}, Symbol:{order.Symbol.Value}, Price:{order.Price}, Quantity:{order.AbsoluteQuantity} }})");
+
             Order krakenOrder = new Order();
 
             krakenOrder.Pair = SymbolMapper.GetBrokerageSymbol(order.Symbol);
+            krakenOrder.UserRef = order.Id;
 
             // buy/sell
             krakenOrder.Type = TranslateDirectionToKraken(order.Direction);
@@ -326,13 +339,15 @@ namespace QuantConnect.Brokerages.Kraken
             if (order.Type == OrderType.Limit)
                 krakenOrder.Price = ((LimitOrder)order).LimitPrice;
 
-            //krakenOrder.Leverage =
+            //krakenOrder.Leverage = TODO
 
             var result = _restApi.AddOrder(krakenOrder);
 
             if (result.Txid != null & result.Txid.Length != 0)
             {
                 order.BrokerId.AddRange(result.Txid);
+
+                Logging.Log.Trace($"KrakenBrokerage.PlaceOrder: Order { result.Txid.Aggregate((a,b)=> a + " " + b) } placed");
 
                 return true;
             }
@@ -357,15 +372,9 @@ namespace QuantConnect.Brokerages.Kraken
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Orders.Order order)
         {
-            int sum = 0;
+            var result = _restApi.CancelOrder(order.Id.ToString());
 
-            foreach (string txid in order.BrokerId)
-            {
-                var result = _restApi.CancelOrder(txid);
-                sum += result.Count;
-            }
-
-            return sum > 0;
+            return result.Count > 0;
         }
 
         /// <summary>
@@ -530,11 +539,11 @@ namespace QuantConnect.Brokerages.Kraken
                 {
                     string leanSymbol = SymbolMapper.KrakenToLeanCode(asset);
 
-
-
                     decimal price = GetConversionRate(leanSymbol);
 
                     Cash cash = new Cash(leanSymbol, amount, price);
+
+                    list.Add(cash);
                 }
                 else
                 {
@@ -565,12 +574,14 @@ namespace QuantConnect.Brokerages.Kraken
 
             List<string> wantedPairsList = wantedPairs.ToList();
 
-            for (int i = 0; i < wantedPairsList.Count;i++)
+            for (int i = 0; i < wantedPairsList.Count; i++)
             {
                 b.Append(wantedPairsList[i]);
 
-                if(i != wantedPairsList.Count-1)
+                if (i != (wantedPairsList.Count - 1))
+                {
                     b.Append(", ");
+                }
             }
 
             Dictionary<string, Ticker> ticks = _restApi.GetTicker(b.ToString());

@@ -119,6 +119,9 @@ namespace QuantConnect.Data
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
         public SubscriptionDataConfig Add(Type dataType, TickType tickType, Symbol symbol, Resolution resolution, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false, bool isFilteredSubscription = true)
         {
+            if(symbol==null)
+
+
             if (dataTimeZone == null)
             {
                 throw new ArgumentNullException("dataTimeZone", "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
@@ -139,6 +142,8 @@ namespace QuantConnect.Data
             }
 
             Subscriptions.Add(newConfig);
+
+
 
             // count data subscriptions by symbol, ignoring multiple data types
             var uniqueCount = Subscriptions
