@@ -68,7 +68,7 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(orderEvent.ToString())
+            self.Debug(orderEvent)
 
     def maximum_sharpe_ratio(self, returns):
         '''Maximum Sharpe Ratio optimization method'''

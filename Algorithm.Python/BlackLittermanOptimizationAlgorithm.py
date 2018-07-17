@@ -68,4 +68,4 @@ class BlackLittermanOptimizationAlgorithm(QCAlgorithmFramework):
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(orderEvent.ToString())
+            self.Debug(orderEvent)

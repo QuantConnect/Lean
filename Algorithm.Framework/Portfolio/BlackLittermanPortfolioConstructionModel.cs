@@ -24,6 +24,7 @@ using Accord.Statistics;
 using QuantConnect.Util;
 using Accord.Math;
 using Accord.Math.Optimization;
+using QuantConnect.Algorithm.Framework.Portfolio.Optimization;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -58,14 +59,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="maximumWeight">The upper bounds on portfolio weights</param>
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
+        /// <param name="optimization">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanPortfolioConstructionModel(
-            Optimization.IPortfolioOptimization optimization,
             int lookback = 5,
             Resolution resolution = Resolution.Daily,
             double minimumWeight = -1.0,
             double maximumWeight = 1.0,
             double riskFreeRate = 0.0,
-            double tau = 0.025
+            double tau = 0.025,
+            IPortfolioOptimization optimization = null
             )
         {
             _lookback = lookback;
@@ -74,7 +76,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _maximumWeight = maximumWeight;
             _riskFreeRate = riskFreeRate;
             _tau = tau;
-            _optimization = optimization;
+
+            _optimization = optimization ?? new MaxSharpeRatioPortfolio(minimumWeight, maximumWeight, riskFreeRate);
 
             _pendingRemoval = new List<Symbol>();
             _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
@@ -133,14 +136,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // The optimization method processes the data frame
             double[] W;
             _optimization.SetCovariance(Σ);
-            _optimization.SetBounds(_minimumWeight, _maximumWeight);
             var ret = _optimization.Optimize(out W, expectedReturns: Π);
 
             /// process results
             if (ret > 0)
             {
                 var weights = symbols.Zip(W, (sym, w) => new { S = sym, W = w }).ToDictionary(r => r.S, r => r.W);
-                algorithm.Debug(" ### [" + string.Join(",", weights.Keys) + "] = [" + string.Join(",", weights.Values) + "]");
 
                 // Create portfolio targets from the specified insights
                 foreach (var insight in insights)

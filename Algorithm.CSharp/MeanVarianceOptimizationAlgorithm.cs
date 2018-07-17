@@ -15,7 +15,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class MeanVarianceOptimizationAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
-        IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
+        private IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             // set algorithm framework models
             SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
             SetAlpha(new HistoricalReturnsAlphaModel(lookback, Resolution.Daily));
-            SetPortfolioConstruction(new MeanVarianceOptimizationPortfolioConstructionModel(new MeanVariancePortfolio()));
+            SetPortfolioConstruction(new MeanVarianceOptimizationPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }

@@ -15,7 +15,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class BlackLittermanOptimizationAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
-        IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
+        private IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetAlpha(new CompositeAlphaModel(
                 new HistoricalReturnsAlphaModel(lookback, Resolution.Daily),
                 new RsiAlphaModel()));
-            SetPortfolioConstruction(new BlackLittermanPortfolioConstructionModel(new MaxSharpeRatioPortfolio()));
+            SetPortfolioConstruction(new BlackLittermanPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }

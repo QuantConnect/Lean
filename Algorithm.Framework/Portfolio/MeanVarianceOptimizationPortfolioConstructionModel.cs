@@ -19,6 +19,7 @@ using System.Linq;
 using Accord.Math;
 using Accord.Statistics;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Portfolio.Optimization;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -51,15 +52,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="minimumWeight">The lower bounds on portfolio weights</param>
         /// <param name="maximumWeight">The upper bounds on portfolio weights</param>
-        /// <param name="targetReturn"> The target portfolio return</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        /// <param name="optimization">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be mean-variance optimization.</param>
         public MeanVarianceOptimizationPortfolioConstructionModel(
-            Optimization.IPortfolioOptimization optimization,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double minimumWeight = -1,
             double maximumWeight = 1,
-            double targetReturn = 0.02
+            double targetReturn = 0.02,
+            IPortfolioOptimization optimization = null
             )
         {
             _lookback = lookback;
@@ -68,7 +70,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _minimumWeight = minimumWeight;
             _maximumWeight = maximumWeight;
             _targetReturn = targetReturn;
-            _optimization = optimization;
+            
+            _optimization = optimization ?? new MeanVariancePortfolio(minimumWeight, maximumWeight);
 
             _pendingRemoval = new List<Symbol>();
             _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
@@ -128,14 +131,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // The optimization method processes the data frame
             double[] W;
             _optimization.SetCovariance(rreturns.Covariance());
-            _optimization.SetBounds(_minimumWeight, _maximumWeight);
             var ret = _optimization.Optimize(out W, expectedReturns: gmean);
 
             // process results
             if (ret > 0)
             {
                 var weights = symbols.Zip(W, (sym, w) => new { S = sym, W = w }).ToDictionary(r => r.S, r => r.W);
-                algorithm.Debug(" ### [" + string.Join(",", weights.Keys) + "] = [" + string.Join(",", weights.Values) + "]");
 
                 // Create portfolio targets from the specified insights
                 foreach (var insight in insights)

@@ -16,15 +16,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         /// <summary>
         /// Provide a covariance matrix to an optimization algorithm
         /// </summary>
-        /// <param name="cov"></param>
+        /// <param name="cov">Covariance matrix</param>
         void SetCovariance(double [,] cov);
-
-        /// <summary>
-        /// Provide lower and upper bounds to an optimization algorithm
-        /// </summary>
-        /// <param name="lower"></param>
-        /// <param name="upper"></param>
-        void SetBounds(double lower, double upper);
 
         /// <summary>
         /// Perform portfolio optimization for a provided expected returns
@@ -40,27 +33,27 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
     /// </summary>
     public class MeanVariancePortfolio : IPortfolioOptimization
     {
-        public double[,] _cov;
-        public double[] _x0;
-        public double[] _scale;
-        public double _lower;
-        public double _upper;
-        public List<double[]> _constraints;
-        public List<int> _constraintTypes;
+        protected double[,] _cov;
+        protected double[] _x0;
+        protected double[] _scale;
+        protected double _lower;
+        protected double _upper;
+        protected List<double[]> _constraints;
+        protected List<int> _constraintTypes;
 
-        public double _targetReturn;
+        protected double _targetReturn;
 
-        public int Size => _cov == null ? 0 : _cov.GetLength(0);
+        protected int Size => _cov == null ? 0 : _cov.GetLength(0);
 
-        public MeanVariancePortfolio(double targetReturn = 0.0)
+        public MeanVariancePortfolio(double lower, double upper, double targetReturn = 0.0)
         {
             _constraints = new List<double[]>();
             _constraintTypes = new List<int>();
             _cov = null;
             _x0 = null;
             _scale = null;
-            _lower = -1.0;
-            _upper = 1.0;
+            _lower = lower;
+            _upper = upper;
             _targetReturn = targetReturn;
         }
 
@@ -94,12 +87,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
             {
                 _scale = scale;
             }
-        }
-
-        public void SetBounds(double lower, double upper)
-        {
-            _lower = lower;
-            _upper = upper;
         }
 
         public void SetConstraints(double[] lc, ConstraintType ct, double rc)
@@ -199,7 +186,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         double _riskFreeRate;
         double[] _expectedReturns;
 
-        public MaxSharpeRatioPortfolio(double riskFreeRate = 0.0) : base(0.0)
+        public MaxSharpeRatioPortfolio(double lower, double upper, double riskFreeRate = 0.0) : base(lower, upper, 0.0)
         {
             _riskFreeRate = riskFreeRate;
         }
@@ -229,11 +216,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         protected override int Optimize(out double[] x)
         {
             alglib.minbleicstate state;
-
-            //
-            // This variable contains differentiation step
-            //
-            double diffstep = 1.0e-6;
+            
+            double diffstep = 1.0e-6; // This variable contains differentiation step            
             alglib.minbleiccreatef(_x0, diffstep, out state);
             alglib.minbleicsetbc(state, Vector.Create(Size, _lower), Vector.Create(Size, _upper));
 
