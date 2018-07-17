@@ -233,7 +233,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="serializedInsight">The insight DTO</param>
         /// <returns>A new insight containing the information specified</returns>
-        internal static Insight FromSerializedInsight(SerializedInsight serializedInsight)
+        public static Insight FromSerializedInsight(SerializedInsight serializedInsight)
         {
             var insight = new Insight(
                 Time.UnixTimeStampToDateTime(serializedInsight.GeneratedTime),
