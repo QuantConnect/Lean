@@ -195,11 +195,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     if (_symbolDataDict.TryGetValue(bar.Symbol, out symbolData))
                     {
                         symbolData.ROC.Update(bar.EndTime, bar.Value);
-                        if (symbolData.IsReady)
-                        {
-                            var values = symbolData.Window.Select(x => x.Value).ToArray();
-                            algorithm.Log(" ### " + symbolData.Symbol.Value + string.Join(",", values));
-                        }
                     }
                 });
         }
