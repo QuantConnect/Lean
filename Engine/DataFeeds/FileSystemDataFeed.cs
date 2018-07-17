@@ -43,7 +43,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private ParallelRunnerController _controller;
         private IResultHandler _resultHandler;
-        private Ref<TimeSpan> _fillForwardResolution;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataProvider _dataProvider;
@@ -84,9 +83,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
             _controller = new ParallelRunnerController(threadCount);
             _controller.Start(_cancellationTokenSource.Token);
-
-            var ffres = Time.OneMinute;
-            _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -229,12 +225,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + request.Configuration + " Start: " + request.StartTimeUtc + " End: " + request.EndTimeUtc);
-
-            if (_subscriptions.TryAdd(subscription))
-            {
-                UpdateFillForwardResolution();
-            }
-
+            _subscriptions.TryAdd(subscription);
             return true;
         }
 
@@ -274,8 +265,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 subscription.Dispose();
                 Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
-
-                UpdateFillForwardResolution();
             }
 
             return true;
@@ -430,40 +419,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Updates the fill forward resolution by checking all existing subscriptions and
-        /// selecting the smallest resoluton not equal to tick
-        /// </summary>
-        private void UpdateFillForwardResolution()
-        {
-            UpdateFillForwardResolution(_subscriptions.Select( x => x.Configuration ));
-        }
-
-        /// <summary>
-        /// Updates the fill forward resolution by checking specified subscription configurations and
-        /// selecting the smallest resoluton not equal to tick
-        /// </summary>
-        /// <param name="subscriptionConfigs">Subscription configurations list</param>
-        private void UpdateFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
-        {
-            _fillForwardResolution.Value = GetFillForwardResolution(subscriptionConfigs);
-        }
-
-        /// <summary>
-        /// Returns the fill forward resolution by checking specified subscription configurations and
-        /// selecting the smallest resoluton not equal to tick
-        /// </summary>
-        /// <param name="subscriptionConfigs">Subscription configurations list</param>
-        private TimeSpan GetFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
-        {
-            return subscriptionConfigs
-                .Where(x => !x.IsInternalFeed)
-                .Select(x => x.Resolution)
-                .Where(x => x != Resolution.Tick)
-                .DefaultIfEmpty(Resolution.Minute)
-                .Min().ToTimeSpan();
-        }
-
-        /// <summary>
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>
@@ -557,11 +512,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     enumerator = new QuoteBarFillForwardEnumerator(enumerator);
                 }
 
-                var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+                var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
 
-                UpdateFillForwardResolution(subscriptionConfigs);
-
-                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, _fillForwardResolution,
+                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardResolution,
                     request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
             }
 
