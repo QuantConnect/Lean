@@ -102,8 +102,14 @@ namespace QuantConnect.Algorithm.CSharp
             Log(orderEvent.ToString());
         }
 
-        public Language[] Languages { get; } = { Language.CSharp };
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "8218"},

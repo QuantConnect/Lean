@@ -33,8 +33,8 @@ from datetime import timedelta
 class BasicTemplateFuturesAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
+        self.SetStartDate(2013, 10, 8)
+        self.SetEndDate(2013, 10, 10)
         self.SetCash(1000000)
 
         # Subscribe and set our expiry filter for the futures chain
