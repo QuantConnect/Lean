@@ -488,14 +488,12 @@ namespace QuantConnect.Jupyter
 
             selector = selector ?? (x => x.Value);
 
-            foreach (var slice in history)
+            history.PushThrough(bar =>
             {
-                foreach(var bar in slice.Values)
-                {
-                    var value = selector(bar);
-                    indicator.Update(bar.EndTime, value);
-                }
-            }
+                var value = selector(bar);
+                indicator.Update(bar.EndTime, value);
+            });
+
             return PandasConverter.GetIndicatorDataFrame(properties);
         }
 
@@ -533,16 +531,11 @@ namespace QuantConnect.Jupyter
                     kvp.Value.Add((IndicatorDataPoint)dataPoint);
                 }
             };
-            
+
             selector = selector ?? (x => (T)x);
 
-            foreach (var slice in history)
-            {
-                foreach (var bar in slice.Values)
-                {
-                    indicator.Update(selector(bar));
-                }
-            }
+            history.PushThrough(bar => indicator.Update(selector(bar)));
+
             return PandasConverter.GetIndicatorDataFrame(properties);
         }
         
