@@ -25,7 +25,7 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
+from Portfolio.BlackLittermanPortfolioConstructionModel import *
 from QuantConnect.Util import PythonUtil
 
 ### <summary>

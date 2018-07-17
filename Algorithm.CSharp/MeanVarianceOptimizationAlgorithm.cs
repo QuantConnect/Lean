@@ -9,12 +9,13 @@ using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Portfolio.Optimization;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class MeanVarianceOptimizationAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
-        IEnumerable<Symbol> symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
+        IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -37,15 +38,15 @@ namespace QuantConnect.Algorithm.CSharp
             // set algorithm framework models
             SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
             SetAlpha(new HistoricalReturnsAlphaModel(lookback, Resolution.Daily));
-            SetPortfolioConstruction(new MeanVarianceOptimizationPortfolioConstructionModel());
+            SetPortfolioConstruction(new MeanVarianceOptimizationPortfolioConstructionModel(new MeanVariancePortfolio()));
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
 
         public IEnumerable<Symbol> CoarseSelector(IEnumerable<CoarseFundamental> coarse)
         {
-            int last = Time.Day > 8 ? 3 : symbols.Count();
-            return symbols.Take(last);
+            int last = Time.Day > 8 ? 3 : _symbols.Count();
+            return _symbols.Take(last);
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

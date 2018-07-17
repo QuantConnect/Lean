@@ -9,36 +9,68 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
     public enum ConstraintType { Equal = 0, Less = -1, More = 1 };
 
     /// <summary>
+    /// Interface for portfolio optimization algorithms
+    /// </summary>
+    public interface IPortfolioOptimization
+    {
+        /// <summary>
+        /// Provide a covariance matrix to an optimization algorithm
+        /// </summary>
+        /// <param name="cov"></param>
+        void SetCovariance(double [,] cov);
+
+        /// <summary>
+        /// Provide lower and upper bounds to an optimization algorithm
+        /// </summary>
+        /// <param name="lower"></param>
+        /// <param name="upper"></param>
+        void SetBounds(double lower, double upper);
+
+        /// <summary>
+        /// Perform portfolio optimization for a provided expected returns
+        /// </summary>
+        /// <param name="W">Portfolio weights</param>
+        /// <param name="expectedReturns">Vector of expected returns</param>
+        /// <returns>Error code</returns>
+        int Optimize(out double[] W, double[] expectedReturns);
+    }
+
+    /// <summary>
     /// Mean-Variance Portfolio Optimization
     /// </summary>
-    public class MeanVariancePortfolio
+    public class MeanVariancePortfolio : IPortfolioOptimization
     {
         public double[,] _cov;
         public double[] _x0;
         public double[] _scale;
-        public List<double[]> _constraints;
-        public List<int> _constraintTypes;
         public double _lower;
         public double _upper;
+        public List<double[]> _constraints;
+        public List<int> _constraintTypes;
 
-        public int Size => _cov.GetLength(0);
+        public double _targetReturn;
 
-        public MeanVariancePortfolio(double[,] cov)
+        public int Size => _cov == null ? 0 : _cov.GetLength(0);
+
+        public MeanVariancePortfolio(double targetReturn = 0.0)
         {
             _constraints = new List<double[]>();
             _constraintTypes = new List<int>();
-            _cov = cov;
+            _cov = null;
             _x0 = null;
             _scale = null;
-            _lower = Double.NaN;
-            _upper = Double.NaN;
+            _lower = -1.0;
+            _upper = 1.0;
+            _targetReturn = targetReturn;
         }
+
+        public void SetCovariance(double[,] cov) => _cov = cov;
 
         public void SetInitialValue(double[] init = null)
         {
             if (init == null || init.Length != Size)
             {
-                if (_x0 == null)
+                if (_x0 == null || _x0.Length != Size)
                 {
                     _x0 = Vector.Create(Size, 1.0 / Size);
                 }
@@ -53,7 +85,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         {
             if (scale == null || scale.Length != Size)
             {
-                if (_scale == null)
+                if (_scale == null || _scale.Length != Size)
                 {
                     _scale = Vector.Create(Size, 1.0);
                 }
@@ -91,8 +123,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         {
             alglib.minqpstate state;
 
-            SetInitialValue();
-
             // set quadratic/linear terms
             alglib.minqpcreate(Size, out state);
             alglib.minqpsetquadraticterm(state, _cov.Multiply(2.0));
@@ -104,6 +134,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
             // wire all constraints            
             var C = Matrix.Create(_constraints.ToArray());
             alglib.minqpsetlc(state, C, _constraintTypes.ToArray());
+            _constraints.Clear();
+            _constraintTypes.Clear();
 
             int ret = 0;
             x = Vector.Create(Size, 0.0);
@@ -144,19 +176,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         /// Perform mean variance optimization given the returns
         /// </summary>
         /// <param name="W">Portfolio weights</param>       
-        /// <param name="minimumWeight">Lower weight bound</param>
-        /// <param name="maximumWeight">Upper weight bound</param>
         /// <param name="expectedReturns">Vector of expected returns</param>
-        /// <param name="targetReturn">Target return value</param>
         /// <returns>error code</returns>
-        public virtual int Optimize(out double[] W, double minimumWeight, double maximumWeight, double[] expectedReturns, double targetReturn = 0.0)
+        public virtual int Optimize(out double[] W, double[] expectedReturns)
         {
-            SetBounds(minimumWeight, maximumWeight);
+            SetInitialValue();
 
             // sum(x) = 1
             SetConstraints(Vector.Create(Size, 1.0), ConstraintType.Equal, 1.0);
             // mu^T x = R  or mu^T x >= 0
-            SetConstraints(expectedReturns, targetReturn == 0.0 ? ConstraintType.More : ConstraintType.Equal, targetReturn);
+            SetConstraints(expectedReturns, _targetReturn == 0.0 ? ConstraintType.More : ConstraintType.Equal, _targetReturn);
 
             return Optimize(out W);
         }
@@ -170,16 +199,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         double _riskFreeRate;
         double[] _expectedReturns;
 
-        public MaxSharpeRatioPortfolio(double[,] cov, double riskFreeRate) : base(cov)
+        public MaxSharpeRatioPortfolio(double riskFreeRate = 0.0) : base(0.0)
         {
             _riskFreeRate = riskFreeRate;
         }
 
-        public override int Optimize(out double[] x, double minimumWeight, double maximumWeight, double[] expectedReturns, double targetReturn = 0.0)
+        public override int Optimize(out double[] x, double[] expectedReturns)
         {
             _expectedReturns = expectedReturns;
 
-            SetBounds(minimumWeight, maximumWeight);
+            SetInitialValue();
+
             SetConstraints(Vector.Create(Size, 1.0), ConstraintType.Equal, 1.0);
 
             var ret = Optimize(out x); // use NLP solver
@@ -200,8 +230,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         {
             alglib.minbleicstate state;
 
-            SetInitialValue();
-
             //
             // This variable contains differentiation step
             //
@@ -212,6 +240,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
             // wire all constraints            
             var C = Matrix.Create(_constraints.ToArray());
             alglib.minbleicsetlc(state, C, _constraintTypes.ToArray());
+            _constraints.Clear();
+            _constraintTypes.Clear();
 
             // Stopping conditions for the optimizer. 
             alglib.minbleicsetcond(state, 0, 0, 0, 0);

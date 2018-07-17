@@ -24,10 +24,8 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
-#from Alphas.HistoricalReturnsAlphaModel import *
-#from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
+from Alphas.HistoricalReturnsAlphaModel import *
+from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
 from QuantConnect.Util import PythonUtil
 
 ### <summary>
@@ -58,8 +56,7 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
         # set algorithm framework models
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.coarseSelector))
         self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
-        #self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
-        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel())
+        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
 

@@ -8,16 +8,16 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Contains data specific to a symbol required by this model
+    /// Contains returns specific to a symbol required for optimization model
     /// </summary>
-    public class SymbolData
+    public class ReturnsSymbolData
     {
         public Symbol Symbol { get; }
         public RateOfChange ROC { get; }
         public IDataConsolidator Consolidator { get; }
         public RollingWindow<IndicatorDataPoint> Window { get; }
 
-        public SymbolData(QCAlgorithmFramework algorithm, Symbol symbol, int lookback, Resolution resolution)
+        public ReturnsSymbolData(QCAlgorithmFramework algorithm, Symbol symbol, int lookback, Resolution resolution)
         {
             Symbol = symbol;
             ROC = new RateOfChange($"{Symbol}.ROC(1)", 1);
@@ -40,12 +40,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             var item = new IndicatorDataPoint(Symbol, time, value);
             Window.Add(item);
-        }
-
-        public Dictionary<DateTime, double> Return()
-        {
-            var returns = Window.Select(x => new Tuple<double, DateTime>(Math.Pow((1.0+(double)x.Value), 252)-1.0, x.EndTime));
-            return returns.ToDictionary(r => r.Item2, r =>r.Item1);
         }
 
         public Dictionary<DateTime, double> Returns => Window.Select(x => new { Date = x.EndTime, Return = (double) x.Value}).ToDictionary(r=>r.Date, r=>r.Return);

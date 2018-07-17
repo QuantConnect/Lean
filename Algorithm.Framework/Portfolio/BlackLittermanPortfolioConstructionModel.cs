@@ -44,8 +44,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly double _maximumWeight;
         private readonly double _riskFreeRate;
         private readonly double _tau;
+        private readonly Optimization.IPortfolioOptimization _optimization;
+
         private readonly List<Symbol> _pendingRemoval;
-        private readonly Dictionary<Symbol, SymbolData> _symbolDataDict;
+        private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
 
         /// <summary>
         /// Initialize the model
@@ -57,11 +59,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         public BlackLittermanPortfolioConstructionModel(
+            Optimization.IPortfolioOptimization optimization,
             int lookback = 5,
             Resolution resolution = Resolution.Daily,
-            double minimumWeight = -1,
-            double maximumWeight = 1,
-            double riskFreeRate = 0,
+            double minimumWeight = -1.0,
+            double maximumWeight = 1.0,
+            double riskFreeRate = 0.0,
             double tau = 0.025
             )
         {
@@ -71,9 +74,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _maximumWeight = maximumWeight;
             _riskFreeRate = riskFreeRate;
             _tau = tau;
+            _optimization = optimization;
 
             _pendingRemoval = new List<Symbol>();
-            _symbolDataDict = new Dictionary<Symbol, SymbolData>();
+            _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
         }
 
         /// <summary>
@@ -128,14 +132,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // The optimization method processes the data frame
             double[] W;
-            var opt = new Optimization.MaxSharpeRatioPortfolio(Σ, _riskFreeRate);
-            var ret = opt.Optimize(out W, _minimumWeight, _maximumWeight, expectedReturns: Π);
+            _optimization.SetCovariance(Σ);
+            _optimization.SetBounds(_minimumWeight, _maximumWeight);
+            var ret = _optimization.Optimize(out W, expectedReturns: Π);
 
             /// process results
             if (ret > 0)
             {
                 var weights = symbols.Zip(W, (sym, w) => new { S = sym, W = w }).ToDictionary(r => r.S, r => r.W);
-                algorithm.Log(" ### [" + string.Join(",", weights.Keys) + "] = [" + string.Join(",", weights.Values) + "]");
+                algorithm.Debug(" ### [" + string.Join(",", weights.Keys) + "] = [" + string.Join(",", weights.Values) + "]");
 
                 // Create portfolio targets from the specified insights
                 foreach (var insight in insights)
@@ -158,7 +163,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             foreach (var removed in changes.RemovedSecurities)
             {
                 _pendingRemoval.Add(removed.Symbol);
-                SymbolData data;
+                ReturnsSymbolData data;
                 if (_symbolDataDict.TryGetValue(removed.Symbol, out data))
                 {
                     _symbolDataDict.Remove(removed.Symbol);
@@ -172,7 +177,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 if (!_symbolDataDict.ContainsKey(added.Symbol))
                 {
-                    var symbolData = new SymbolData(algorithm, added.Symbol, _lookback, _resolution);
+                    var symbolData = new ReturnsSymbolData(algorithm, added.Symbol, _lookback, _resolution);
                     _symbolDataDict[added.Symbol] = symbolData;
                     addedSymbols.Add(symbolData.Symbol);
                 }
@@ -185,7 +190,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             algorithm.History(addedSymbols, _lookback, _resolution)
                 .PushThrough(bar =>
                 {
-                    SymbolData symbolData;
+                    ReturnsSymbolData symbolData;
                     if (_symbolDataDict.TryGetValue(bar.Symbol, out symbolData))
                     {
                         symbolData.ROC.Update(bar.EndTime, bar.Value);
@@ -224,8 +229,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Generate views from multiple alpha models
         /// </summary>
         /// <param name="insights"></param>
-        /// <param name="P"></param>
-        /// <param name="Q"></param>
+        /// <param name="P">a matrix that identifies the assets involved in the views (size: K x N)</param>
+        /// <param name="Q">a view vector (size: K x 1)</param>
         /// <returns></returns>
         private bool TryGetViews(Insight[] insights, out double[,] P, out double[] Q)
         {
@@ -274,6 +279,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             return true;
         }
 
+        /// <summary>
+        /// Calculate implied equilibrium returns
+        /// </summary>
+        /// <param name="covariance">Annualized covariance matrix</param>
+        /// <returns>Vector of implied equilibrium returns</returns>
         private double[] GetEquilibriumReturn(out double[,] covariance)
         {
             var matrix = Matrix.Create(_symbolDataDict.Select(kvp => kvp.Value.Window.Select(x => (double)x.Value).ToArray()).ToArray());

@@ -99,7 +99,7 @@
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\SymbolData.cs" />
+    <Compile Include="Portfolio\ReturnsSymbolData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithmFramework.Python.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
