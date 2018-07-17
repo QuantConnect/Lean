@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -23,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -42,6 +44,14 @@ namespace QuantConnect.Brokerages.Oanda
         private Thread _connectionMonitorThread;
         private volatile bool _connectionLost;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        /// <summary>
+        /// This lock is used to sync 'PlaceOrder' and callback 'OnTransactionDataReceived'
+        /// </summary>
+        protected readonly object Locker = new object();
+        /// <summary>
+        /// This container is used to keep pending to be filled market orders, so when the callback comes in we send the filled event
+        /// </summary>
+        protected readonly ConcurrentDictionary<int, OrderStatus> PendingFilledMarketOrders = new ConcurrentDictionary<int, OrderStatus>();
 
         /// <summary>
         /// The UTC time of the last received heartbeat message
@@ -348,7 +358,7 @@ namespace QuantConnect.Brokerages.Oanda
 
                 Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
 
-                // Oanda does not allow more than a few rate streaming sessions, 
+                // Oanda does not allow more than a few rate streaming sessions,
                 // so we only use a single session for all currently subscribed symbols
                 symbolsToSubscribe = symbolsToSubscribe.Union(SubscribedSymbols.ToList()).ToList();
 
@@ -375,7 +385,7 @@ namespace QuantConnect.Brokerages.Oanda
 
                 Log.Trace("OandaBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
 
-                // Oanda does not allow more than a few rate streaming sessions, 
+                // Oanda does not allow more than a few rate streaming sessions,
                 // so we only use a single session for all currently subscribed symbols
                 var symbolsToSubscribe = SubscribedSymbols.ToList().Where(x => !symbolsToUnsubscribe.Contains(x)).ToList();
 

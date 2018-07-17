@@ -14,8 +14,11 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Configuration;
@@ -41,6 +44,16 @@ namespace QuantConnect.Tests.Brokerages.Oanda
 
             return new OandaBrokerage(orderProvider, securityProvider, environment, accessToken, accountId);
         }
+
+        /// <summary>
+        /// Provides the data required to test each order type in various cases
+        /// </summary>
+        public override TestCaseData[] OrderParameters => new[]
+        {
+            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder")
+        };
 
         /// <summary>
         ///     Gets the symbol to be traded, must be shortable
@@ -91,17 +104,52 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var quote = oanda.GetRates(new OandaSymbolMapper().GetBrokerageSymbol(symbol));
             return quote.AskPrice;
         }
+        [Test]
+        public void ValidateMarketOrders()
+        {
+            var orderEventTracker = new ConcurrentBag<OrderEvent>();
+            var oanda = (OandaBrokerage)Brokerage;
+            var symbol = Symbol;
+            EventHandler<OrderEvent> orderStatusChangedCallback = (s, e) => {
+                orderEventTracker.Add(e);
+            };
+            oanda.OrderStatusChanged += orderStatusChangedCallback;
+            const int numberOfOrders = 100;
+            Parallel.For(0, numberOfOrders, (i) =>
+            {
+                var order = new MarketOrder(symbol, 100, DateTime.Now);
+                OrderProvider.Add(order);
+                Assert.IsTrue(oanda.PlaceOrder(order));
+                Assert.IsTrue(order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled);
+                var orderr = new MarketOrder(symbol, -100, DateTime.UtcNow);
+                OrderProvider.Add(orderr);
+                Assert.IsTrue(oanda.PlaceOrder(orderr));
+                Assert.IsTrue(orderr.Status == OrderStatus.Filled || orderr.Status == OrderStatus.PartiallyFilled);
+
+            });
+            // We want to verify the number of order events with OrderStatus.Filled sent
+            Thread.Sleep(4000);
+            oanda.OrderStatusChanged -= orderStatusChangedCallback;
+            Assert.AreEqual(orderEventTracker.Count(x => x.Status == OrderStatus.Submitted), numberOfOrders * 2);
+            Assert.AreEqual(orderEventTracker.Count(x => x.Status == OrderStatus.Filled), numberOfOrders * 2);
+        }
 
         [Test]
         public void ValidateLimitOrders()
         {
+            var orderEventTracker = new ConcurrentBag<OrderEvent>();
             var oanda = (OandaBrokerage)Brokerage;
             var symbol = Symbol;
             var quote = oanda.GetRates(new OandaSymbolMapper().GetBrokerageSymbol(symbol));
+            EventHandler<OrderEvent> orderStatusChangedCallback = (s, e) => {
+                orderEventTracker.Add(e);
+            };
+            oanda.OrderStatusChanged += orderStatusChangedCallback;
 
             // Buy Limit order below market
             var limitPrice = quote.BidPrice - 0.5m;
             var order = new LimitOrder(symbol, 1, limitPrice, DateTime.Now);
+            OrderProvider.Add(order);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // update Buy Limit order with no changes
@@ -110,6 +158,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             // move Buy Limit order above market
             order.LimitPrice = quote.AskPrice + 0.5m;
             Assert.IsTrue(oanda.UpdateOrder(order));
+            oanda.OrderStatusChanged -= orderStatusChangedCallback;
+            Assert.AreEqual(orderEventTracker.Count(x => x.Status == OrderStatus.Submitted), 1);
+            Assert.AreEqual(orderEventTracker.Count(x => x.Status == OrderStatus.Filled), 1);
         }
 
         [Test]

@@ -52,7 +52,6 @@ namespace QuantConnect.Brokerages.Oanda
         private TransactionStreamSession _eventsSession;
         private PricingStreamSession _ratesSession;
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
-        private readonly object _locker = new object();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaRestApiV20"/> class.
@@ -156,52 +155,57 @@ namespace QuantConnect.Brokerages.Oanda
         public override bool PlaceOrder(Order order)
         {
             const int orderFee = 0;
-            ApiResponse<InlineResponse201> response;
+            var marketOrderFillQuantity = 0;
+            var marketOrderFillPrice = 0m;
+            var marketOrderRemainingQuantity = 0;
+            var marketOrderStatus = OrderStatus.Filled;
+            var request = GenerateOrderRequest(order);
+            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-            lock (_locker)
+            lock (Locker)
             {
-                var request = GenerateOrderRequest(order);
-                response = _apiRest.CreateOrder(Authorization, AccountId, request);
+                var response = _apiRest.CreateOrder(Authorization, AccountId, request);
                 order.BrokerId.Add(response.Data.OrderCreateTransaction.Id);
 
-                // send Submitted order event
-                order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+                // Market orders are special, due to the callback not being triggered always,
+                // if the order was Filled/PartiallyFilled, find fill quantity and price and inform the user
+                if (order.Type == OrderType.Market)
+                {
+                    var fill = response.Data.OrderFillTransaction;
+                    marketOrderFillPrice = Convert.ToDecimal(fill.Price);
+
+                    if (fill.TradeOpened != null && fill.TradeOpened.TradeID.Length > 0)
+                    {
+                        marketOrderFillQuantity = Convert.ToInt32(fill.TradeOpened.Units);
+                    }
+
+                    if (fill.TradeReduced != null && fill.TradeReduced.TradeID.Length > 0)
+                    {
+                        marketOrderFillQuantity = Convert.ToInt32(fill.TradeReduced.Units);
+                    }
+
+                    if (fill.TradesClosed != null && fill.TradesClosed.Count > 0)
+                    {
+                        marketOrderFillQuantity += fill.TradesClosed.Sum(trade => Convert.ToInt32(trade.Units));
+                    }
+
+                    marketOrderRemainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - Math.Abs(marketOrderFillQuantity));
+                    if (marketOrderRemainingQuantity > 0)
+                    {
+                        marketOrderStatus = OrderStatus.PartiallyFilled;
+                        // The order was not fully filled lets save it so the callback can inform the user
+                        PendingFilledMarketOrders[order.Id] = marketOrderStatus;
+                    }
+                }
             }
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
 
-            // if market order, find fill quantity and price
-            var fill = response.Data.OrderFillTransaction;
-            var marketOrderFillPrice = 0m;
-            var marketOrderFillQuantity = 0;
-
-            if (order.Type == OrderType.Market)
+            // If 'marketOrderRemainingQuantity < order.AbsoluteQuantity' is false it means the order was not even PartiallyFilled, wait for callback
+            if (order.Type == OrderType.Market && marketOrderRemainingQuantity < order.AbsoluteQuantity)
             {
-                marketOrderFillPrice = Convert.ToDecimal(fill.Price);
-
-                if (fill.TradeOpened != null && fill.TradeOpened.TradeID.Length > 0)
-                {
-                    marketOrderFillQuantity = Convert.ToInt32(fill.TradeOpened.Units);
-                }
-
-                if (fill.TradeReduced != null && fill.TradeReduced.TradeID.Length > 0)
-                {
-                    marketOrderFillQuantity = Convert.ToInt32(fill.TradeReduced.Units);
-                }
-
-                if (fill.TradesClosed != null && fill.TradesClosed.Count > 0)
-                {
-                    marketOrderFillQuantity += fill.TradesClosed.Sum(trade => Convert.ToInt32(trade.Units));
-                }
-            }
-
-            if (order.Type == OrderType.Market && order.Status != OrderStatus.Filled)
-            {
-                order.Status = OrderStatus.Filled;
-
-                // if market order, also send Filled order event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                 {
-                    Status = OrderStatus.Filled,
+                    Status = marketOrderStatus,
                     FillPrice = marketOrderFillPrice,
                     FillQuantity = marketOrderFillQuantity
                 });
@@ -349,16 +353,18 @@ namespace QuantConnect.Brokerages.Oanda
                     var transaction = obj.ToObject<OrderFillTransaction>();
 
                     Order order;
-                    lock (_locker)
+                    lock (Locker)
                     {
                         order = OrderProvider.GetOrderByBrokerageId(transaction.OrderID);
                     }
                     if (order != null)
                     {
-                        if (order.Type != OrderType.Market || order.Status != OrderStatus.Filled)
+                        OrderStatus status;
+                        // Market orders are special: if the order was not in 'PartiallyFilledMarketOrders', means
+                        // we already sent the fill event with OrderStatus.Filled, else it means we already informed the user
+                        // of a partiall fill, or didn't inform the user, so we need to do it now
+                        if (order.Type != OrderType.Market || PendingFilledMarketOrders.TryRemove(order.Id, out status))
                         {
-                            order.Status = OrderStatus.Filled;
-
                             order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
                             const int orderFee = 0;
