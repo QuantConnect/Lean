@@ -198,20 +198,6 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "")
         {
             var security = Securities[symbol];
-
-            // check the exchange is open before sending a market order, if it's not open
-            // then convert it into a market on open order
-            if (!security.Exchange.ExchangeOpen)
-            {
-                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
-                var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
-                if (mooTicket.SubmitRequest.Response.IsSuccess && !anyNonDailySubscriptions)
-                {
-                    Debug("Converted OrderID: " + mooTicket.OrderId + " into a MarketOnOpen order.");
-                }
-                return mooTicket;
-            }
-
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
@@ -874,9 +860,10 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Automatically place an order which will set the holdings to between 100% or -100% of *PORTFOLIO VALUE*.
+        /// Automatically place a market order which will set the holdings to between 100% or -100% of *PORTFOLIO VALUE*.
         /// E.g. SetHoldings("AAPL", 0.1); SetHoldings("IBM", -0.2); -> Sets portfolio as long 10% APPL and short 20% IBM
         /// E.g. SetHoldings("AAPL", 2); -> Sets apple to 2x leveraged with all our cash.
+        /// If the market is closed, place a market on open order.
         /// </summary>
         /// <param name="symbol">Symbol indexer</param>
         /// <param name="percentage">decimal fraction of portfolio to set stock</param>
@@ -889,7 +876,7 @@ namespace QuantConnect.Algorithm
             Security security;
             if (!Securities.TryGetValue(symbol, out security))
             {
-                Error(symbol.ToString() + " not found in portfolio. Request this data when initializing the algorithm.");
+                Error($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
                 return;
             }
 
@@ -909,7 +896,7 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            // calculate total unfilled quantity for open market orders
+            //Calculate total unfilled quantity for open market orders
             var marketOrdersQuantity =
                 (from order in Transactions.GetOpenOrders(symbol)
                  where order.Type == OrderType.Market
@@ -922,7 +909,18 @@ namespace QuantConnect.Algorithm
             var quantity = CalculateOrderQuantity(symbol, percentage) - marketOrdersQuantity;
             if (Math.Abs(quantity) > 0)
             {
-                MarketOrder(symbol, quantity, false, tag);
+                var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
+
+                //Check whether the exchange is open and intraday data is available to send a market order. 
+                //If not, send a market on open order instead
+                if (security.Exchange.ExchangeOpen && anyNonDailySubscriptions)
+                {
+                    MarketOrder(symbol, quantity, false, tag);
+                }
+                else
+                { 
+                    MarketOnOpenOrder(symbol, quantity, tag);
+                }
             }
         }
 
