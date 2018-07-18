@@ -36,6 +36,9 @@
     <DocumentationFile>bin\Release\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="alglibnet2">
+      <HintPath>..\Vendor\alglibnet2.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -93,9 +96,9 @@
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\BlackLittermanPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\IPortfolioOptimization.cs" />
     <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\PortfolioOptimization.cs" />
+    <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />    
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
@@ -127,6 +130,18 @@
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
     <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />
   </ItemGroup>
+  <Choose>
+    <When Condition=" Exists('..\Vendor\alglibnet2.dll') ">
+	  <ItemGroup>
+	    <Compile Include="Portfolio\PortfolioOptimization.Alglib.cs" />
+	  </ItemGroup>
+	</When>
+	<Otherwise>  
+	  <ItemGroup>
+	    <Compile Include="Portfolio\PortfolioOptimization.Empty.cs" />
+	  </ItemGroup>
+	</Otherwise>
+  </Choose>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
       <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
@@ -139,10 +154,6 @@
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\packages\alglib2.dll.3.10.4\Alglib2.csproj">
-      <Project>{0ffd3504-ae68-4aff-8e44-5d0906b8fe70}</Project>
-      <Name>Alglib2</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

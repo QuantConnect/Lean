@@ -18,29 +18,7 @@ using System.Collections.Generic;
 using Accord.Math;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
-{
-    public enum ConstraintType { Equal = 0, Less = -1, More = 1 };
-
-    /// <summary>
-    /// Interface for portfolio optimization algorithms
-    /// </summary>
-    public interface IPortfolioOptimization
-    {
-        /// <summary>
-        /// Provide a covariance matrix to an optimization algorithm
-        /// </summary>
-        /// <param name="cov">Covariance matrix</param>
-        void SetCovariance(double [,] cov);
-
-        /// <summary>
-        /// Perform portfolio optimization for a provided expected returns
-        /// </summary>
-        /// <param name="W">Portfolio weights</param>
-        /// <param name="expectedReturns">Vector of expected returns</param>
-        /// <returns>Error code</returns>
-        int Optimize(out double[] W, double[] expectedReturns);
-    }
-
+{    
     /// <summary>
     /// Mean-Variance Portfolio Optimization
     /// </summary>
