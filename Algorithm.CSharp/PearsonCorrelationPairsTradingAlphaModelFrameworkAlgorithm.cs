@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
 
-            SetAlpha(new PearsonCorrelationPairsTradingAlphaModel(365, Resolution.Daily));
+            SetAlpha(new PearsonCorrelationPairsTradingAlphaModel(252, Resolution.Daily));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());

@@ -47,7 +47,7 @@ class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFram
             Symbol.Create('IBM', SecurityType.Equity, Market.USA),
             Symbol.Create('SPY', SecurityType.Equity, Market.USA)))
 
-        self.SetAlpha(PearsonCorrelationPairsTradingAlphaModel(360, Resolution.Daily))
+        self.SetAlpha(PearsonCorrelationPairsTradingAlphaModel(252, Resolution.Daily))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
