@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine
             foreach (var security in addedSecurities)
             {
                 // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                feed.AddSubscription(new SubscriptionRequest(false, null, security, new SubscriptionDataConfig(security.Subscriptions.First()), algorithm.UtcTime, algorithm.EndDate));
+                feed.AddSubscription(new SubscriptionRequest(false, null, security, new SubscriptionDataConfig(security.Subscriptions.First()), algorithm.UtcTime, algorithm.EndDate.ConvertToUtc(algorithm.TimeZone)));
             }
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
