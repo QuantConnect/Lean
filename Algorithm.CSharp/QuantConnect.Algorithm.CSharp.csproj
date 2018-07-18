@@ -92,6 +92,7 @@
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
     <Compile Include="ConvertToFrameworkAlgorithm.cs" />
+    <Compile Include="OptionDelistedDataRegressionAlgorithm.cs" />
     <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="RawPricesCoarseUniverseAlgorithm.cs" />
     <Compile Include="CompositeAlphaModelFrameworkAlgorithm.cs" />

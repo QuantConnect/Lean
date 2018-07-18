@@ -290,6 +290,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return true;
                 }
 
+                if (_delisted)
+                {
+                    break;
+                }
+
                 // keep enumerating until we find something that is within our time frame
                 while (_subscriptionFactoryEnumerator.MoveNext())
                 {
@@ -383,11 +388,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return true;
                 }
 
-                if (_delisted)
-                {
-                    break;
-                }
-
                 // we've ended the enumerator, time to refresh
                 _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
             }
@@ -436,10 +436,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (sourceChanged || liveRemoteFile)
                 {
                     // dispose of the current enumerator before creating a new one
-                    if (_subscriptionFactoryEnumerator != null)
-                    {
-                        _subscriptionFactoryEnumerator.Dispose();
-                    }
+                    Dispose();
 
                     // save off for comparison next time
                     _source = newSource;
