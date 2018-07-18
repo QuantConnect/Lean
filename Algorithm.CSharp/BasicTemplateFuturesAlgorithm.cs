@@ -15,8 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -30,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="benchmarks" />
     /// <meta name="tag" content="futures" />
-    public class BasicTemplateFuturesAlgorithm : QCAlgorithm
+    public class BasicTemplateFuturesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
@@ -45,8 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 10);
             SetCash(1000000);
 
             var futureSP500 = AddFuture(RootSP500);
@@ -75,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
                         from futuresContract in chain.Value.OrderBy(x => x.Expiry)
                         where futuresContract.Expiry > Time.Date.AddDays(90)
                         select futuresContract
-                        ).FirstOrDefault();
+                    ).FirstOrDefault();
 
                     // if found, trade it
                     if (contract != null)
@@ -99,5 +101,36 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "8218"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-100.0%"},
+            {"Drawdown", "26.400%"},
+            {"Expectancy", "-0.862"},
+            {"Net Profit", "-26.370%"},
+            {"Sharpe Ratio", "-32.599"},
+            {"Loss Rate", "90%"},
+            {"Win Rate", "10%"},
+            {"Profit-Loss Ratio", "0.39"},
+            {"Alpha", "-15.5"},
+            {"Beta", "-2.098"},
+            {"Annual Standard Deviation", "0.566"},
+            {"Annual Variance", "0.32"},
+            {"Information Ratio", "-28.931"},
+            {"Tracking Error", "0.686"},
+            {"Treynor Ratio", "8.788"},
+            {"Total Fees", "$15203.30"}
+        };
     }
 }
