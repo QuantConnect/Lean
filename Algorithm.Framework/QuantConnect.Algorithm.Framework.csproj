@@ -95,7 +95,7 @@
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\Optimization.cs" />
+    <Compile Include="Portfolio\PortfolioOptimization.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />

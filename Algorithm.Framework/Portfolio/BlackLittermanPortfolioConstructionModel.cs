@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Get symbols' returns
-            var returns = GetReturns(from s in symbols join sd in _symbolDataDict on s equals sd.Key select sd.Value.Returns);
+            var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
             // Calculate equilibrium returns
             double[]  Π;
@@ -273,34 +273,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return false;
             }
             return true;
-        }
-
-        /// <summary>
-        /// Calculate implied equilibrium returns
-        /// </summary>
-        /// <param name="covariance">Annualized covariance matrix</param>
-        /// <returns>Vector of implied equilibrium returns</returns>
-        private double[] GetEquilibriumReturn(out double[,] covariance)
-        {
-            var matrix = Matrix.Create(_symbolDataDict.Select(kvp => kvp.Value.Window.Select(x => (double)x.Value).ToArray()).ToArray());
-
-            covariance = Measures.Covariance(matrix).Multiply(252);
-
-            // equal weighting scheme
-            var count = _symbolDataDict.Count;
-            var W = Vector.Create(count, 1.0/count);
-
-            // annualized return
-            var annualReturn = Math.Pow(1 + W.Dot(matrix.Mean(1)), 252) - 1;
-
-            //annualized variance of return
-            var annualVariance = W.Dot(covariance.Dot(W));
-
-            // the risk aversion coefficient
-            var riskAversion = (annualReturn - _riskFreeRate) / annualVariance;
-
-            // the implied excess equilibrium return Vector (N x 1 column vector)
-            return  covariance.Dot(W).Multiply(riskAversion);
-        }     
+        }  
     }
 }

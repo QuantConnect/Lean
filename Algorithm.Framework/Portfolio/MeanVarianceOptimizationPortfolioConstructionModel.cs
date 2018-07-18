@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Get symbols' returns
-            var returns = GetReturns(from s in symbols join sd in _symbolDataDict on s equals sd.Key select sd.Value.Returns);
+            var returns = _symbolDataDict.FormReturnsMatrix(symbols);
             // Calculate rate of returns
             var rreturns = returns.Apply(e => System.Math.Pow(1.0 + e, 252.0) - 1.0);
             // Calculate geometric mean of rate of returns            
