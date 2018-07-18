@@ -38,6 +38,7 @@
   <ItemGroup>
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
@@ -116,7 +117,6 @@
     <None Include="OptionRenameRegressionAlgorithm.py" />
     <None Include="OptionSplitRegressionAlgorithm.py" />
     <None Include="OrderTicketDemoAlgorithm.py" />
-    <None Include="packages.config" />
     <None Include="ParameterizedAlgorithm.py" />
     <None Include="PythonPackageTestAlgorithm.py" />
     <None Include="QCUWeatherBasedRebalancing.py" />
@@ -164,14 +164,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.7\lib\Python.Runtime.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="ConvertToFrameworkAlgorithm.py" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.8\lib\Python.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>
@@ -184,12 +183,12 @@
       ./build.sh
     </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.7\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.7\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.7\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.7\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
