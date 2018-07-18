@@ -14,8 +14,10 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace QuantConnect.Brokerages.Bitfinex.Messages
 {
@@ -33,6 +35,8 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
     {
         public string Id { get; set; }
         public decimal Price { get; set; }
+        [JsonProperty("avg_execution_price")]
+        public decimal PriceAvg { get; set; }
         public string Symbol { get; set; }
         public string Type { get; set; }
         public string Side { get; set; }

@@ -16,9 +16,13 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
 using RestSharp;
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -71,6 +75,19 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        /// <summary>
+        /// Creates an auth token for ws auth endppoints
+        /// </summary>
+        /// <param name="payload">the body of the request</param>
+        /// <returns>a token representing the request params</returns>
+        private string AuthenticationToken(string payload)
+        {
+            using (HMACSHA384 hmac = new HMACSHA384(Encoding.UTF8.GetBytes(ApiSecret)))
+            {
+                return ByteArrayToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
+            }
+        }
+
         private Func<Messages.Wallet, bool> WalletFilter(AccountType accountType)
         {
             return wallet => wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
@@ -116,7 +133,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             return $"/{ApiVersion}/{method}";
         }
 
-        private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)
+        private static OrderStatus ConvertOrderStatus(Messages.Order order)
         {
             if (order.IsLive && order.ExecutedAmount == 0)
             {
@@ -136,6 +153,50 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
 
             return Orders.OrderStatus.None;
+        }
+
+        private static string ConvertOrderType(AccountType accountType, OrderType orderType)
+        {
+            string outputOrderType = string.Empty;
+            switch (orderType)
+            {
+                case OrderType.Limit:
+                case OrderType.Market:
+                    outputOrderType = orderType.ToString().ToLower();
+                    break;
+                case OrderType.StopMarket:
+                    outputOrderType = "stop";
+                    break;
+                default:
+                    throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {orderType}");
+            }
+
+            return (accountType == AccountType.Cash ? "exchange " : "") + outputOrderType;
+        }
+
+        private static string ConvertOrderDirection(OrderDirection orderDirection)
+        {
+            if (orderDirection == OrderDirection.Buy || orderDirection == OrderDirection.Sell)
+            {
+                return orderDirection.ToString().ToLower();
+            }
+
+            throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
+        }
+
+        private static decimal GetOrderPrice(Order order)
+        {
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    return ((LimitOrder)order).LimitPrice;
+                case OrderType.Market:
+                    return 1;
+                case OrderType.StopMarket:
+                    return ((StopMarketOrder)order).StopPrice;
+            }
+
+            throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
         }
 
         private Holding ConvertHolding(Messages.Position position)
@@ -180,6 +241,82 @@ namespace QuantConnect.Brokerages.Bitfinex
             foreach (byte b in ba)
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
+        }
+
+        private bool SubmitOrder(string endpoint, Order order)
+        {
+            LockStream();
+
+            var payload = new JsonObject();
+            payload.Add("request", endpoint);
+            payload.Add("nonce", GetNonce().ToString());
+            payload.Add("symbol", order.Symbol.Value.ToLower());
+            payload.Add("amount", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture));
+            payload.Add("side", ConvertOrderDirection(order.Direction));
+            payload.Add("type", ConvertOrderType(_algorithm.BrokerageModel.AccountType, order.Type));
+            payload.Add("price", GetOrderPrice(order).ToString(CultureInfo.InvariantCulture));
+
+            if (order.BrokerId.Any())
+            {
+                payload.Add("order_id", long.Parse(order.BrokerId.FirstOrDefault()));
+            }
+
+            var orderProperties = order.Properties as BitfinexOrderProperties;
+            if (orderProperties != null)
+            {
+                if (order.Type == OrderType.Limit)
+                {
+                    payload.Add("is_hidden", orderProperties.Hidden);
+                    payload.Add("is_postonly", orderProperties.PostOnly);
+                }
+            }
+
+            var request = new RestRequest(endpoint, Method.POST);
+            request.AddJsonBody(payload.ToString());
+            SignRequest(request, payload.ToString());
+
+            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
+
+                if (string.IsNullOrEmpty(raw?.Id))
+                {
+                    var errorMessage = $"Error parsing response from place order: {response.Content}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
+                    UnlockStream();
+                    return true;
+                }
+
+                var brokerId = raw.Id;
+                if (CachedOrderIDs.ContainsKey(order.Id))
+                {
+                    CachedOrderIDs[order.Id].BrokerId.Clear();
+                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+                }
+                else
+                {
+                    order.BrokerId.Add(brokerId);
+                    CachedOrderIDs.TryAdd(order.Id, order);
+                }
+
+                // Generate submitted event
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
+                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+
+                UnlockStream();
+                return true;
+            }
+
+            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
+
+            UnlockStream();
+            return true;
         }
 
         private static Symbol CreateSymbol(string symbol)

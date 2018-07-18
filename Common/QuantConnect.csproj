@@ -177,6 +177,7 @@
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\BitfinexBrokerageModel.cs" />
+    <Compile Include="Brokerages\BitfinexTransactionModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
@@ -206,7 +207,9 @@
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
     <Compile Include="Interfaces\IRegressionAlgorithmDefinition.cs" />
     <Compile Include="Interfaces\ITimeInForceHandler.cs" />
+    <Compile Include="Orders\Fees\BitfinexFeeModel.cs" />
     <Compile Include="Orders\Fills\LatestPriceFillModel.cs" />
+    <Compile Include="Orders\BitfinexOrderProperties.cs" />
     <Compile Include="Orders\GDAXOrderProperties.cs" />
     <Compile Include="Orders\OrderSizing.cs" />
     <Compile Include="Orders\TimeInForceJsonConverter.cs" />

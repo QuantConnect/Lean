@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,34 +13,27 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
-using System.Linq;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Provides Bitfinex specific properties
+    /// Bitfinex Transaction Model Class: Specific transaction fill models for Bitfinex orders
     /// </summary>
-    public class BitfinexBrokerageModel : DefaultBrokerageModel
+    /// <seealso cref="SecurityTransactionModel"/>
+    /// <seealso cref="ISecurityTransactionModel"/>
+    public class BitfinexTransactionModel : SecurityTransactionModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="BitfinexBrokerageModel"/> class
+        /// Initializes a new instance of the <see cref="BitfinexTransactionModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="AccountType.Margin"/></param>
-        public BitfinexBrokerageModel(AccountType accountType = AccountType.Margin)
-            : base(accountType)
+        public BitfinexTransactionModel()
+            : base(new ImmediateFillModel(), new BitfinexFeeModel(), new ConstantSlippageModel(0))
         {
-        }
-
-        public override IFeeModel GetFeeModel(Security security)
-        {
-            return new BitfinexFeeModel();
         }
     }
 }

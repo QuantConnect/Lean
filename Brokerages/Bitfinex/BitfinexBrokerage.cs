@@ -14,18 +14,19 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Net;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
-using QuantConnect.Data;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -37,19 +38,73 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override bool IsConnected => WebSocket.IsOpen;
 
+        /// <summary>
+        /// Places a new order and assigns a new broker ID to the order
+        /// </summary>
+        /// <param name="order">The order to be placed</param>
+        /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            return SubmitOrder(GetEndpoint("order/new"), order);
         }
 
+        /// <summary>
+        /// Updates the order with the same id
+        /// </summary>
+        /// <param name="order">The new order information</param>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            if (order.BrokerId.Count == 0)
+            {
+                throw new ArgumentNullException("BitfinexBrokerage.UpdateOrder: There is no brokerage id to be updated for this order.");
+            }
+            if (order.BrokerId.Count > 1)
+            {
+                throw new NotSupportedException("BitfinexBrokerage.UpdateOrder: Multiple orders update not supported. Please cancel and re-create.");
+            }
+
+            return SubmitOrder(GetEndpoint("order/cancel/replace"), order);
         }
 
+        /// <summary>
+        /// Cancels the order with the specified ID
+        /// </summary>
+        /// <param name="order">The order to cancel</param>
+        /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            Log.Trace("BitfinexBrokerage.CancelOrder(): {0}", order);
+
+            if (!order.BrokerId.Any())
+            {
+                // we need the brokerage order id in order to perform a cancellation
+                Log.Trace("BitfinexBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
+                return false;
+            }
+
+            LockStream();
+            var endpoint = GetEndpoint("order/cancel/multi");
+            var payload = new JsonObject();
+            payload.Add("request", endpoint);
+            payload.Add("nonce", GetNonce().ToString());
+            payload.Add("order_ids", order.BrokerId.Select(i => long.Parse(i)));
+
+            var request = new RestRequest(endpoint, Method.POST);
+            request.AddJsonBody(payload.ToString());
+            SignRequest(request, payload.ToString());
+
+            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+            var cancellationSubmitted = false;
+            if (response.StatusCode == HttpStatusCode.OK && !(response.Content?.IndexOf("None to cancel", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
+
+                cancellationSubmitted = true;
+            }
+
+            UnlockStream();
+            return cancellationSubmitted;
         }
 
         public override void Disconnect()
