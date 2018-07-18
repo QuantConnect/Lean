@@ -23,8 +23,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Perform portfolio optimization for a provided matrix of returns
         /// </summary>
-        /// <param name="returns">Matrix of returns</param>
-        /// <returns>Array of decimal with the portfolio weights</returns>
-        decimal[] Optimize(decimal[,] returns);
+        /// <param name="returns">Matrix of returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
+        /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
+        double[] Optimize(double[,] returns);
     }
 }
