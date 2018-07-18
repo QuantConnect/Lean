@@ -198,6 +198,20 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "")
         {
             var security = Securities[symbol];
+
+            // check the exchange is open before sending a market order, if it's not open
+            // then convert it into a market on open order
+            if (!security.Exchange.ExchangeOpen)
+            {
+                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
+                var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
+                if (mooTicket.SubmitRequest.Response.IsSuccess && !anyNonDailySubscriptions)
+                {
+                    Debug("Converted OrderID: " + mooTicket.OrderId + " into a MarketOnOpen order.");
+                }
+                return mooTicket;
+            }
+
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
@@ -909,11 +923,8 @@ namespace QuantConnect.Algorithm
             var quantity = CalculateOrderQuantity(symbol, percentage) - marketOrdersQuantity;
             if (Math.Abs(quantity) > 0)
             {
-                var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
-
-                //Check whether the exchange is open and intraday data is available to send a market order. 
-                //If not, send a market on open order instead
-                if (security.Exchange.ExchangeOpen && anyNonDailySubscriptions)
+                //Check whether the exchange is open to send a market order. If not, send a market on open order instead
+                if (security.Exchange.ExchangeOpen)
                 {
                     MarketOrder(symbol, quantity, false, tag);
                 }
