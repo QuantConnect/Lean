@@ -329,5 +329,22 @@ namespace QuantConnect.Util
         {
             return left.Except(right).Any() || right.Except(left).Any();
         }
+
+        /// <summary>
+        /// Converts an <see cref="IEnumerator{T}"/> to an <see cref="IEnumerable{T}"/>
+        /// </summary>
+        /// <typeparam name="T">Collection element type</typeparam>
+        /// <param name="enumerator">The enumerator to convert to an enumerable</param>
+        /// <returns>An enumerable wrapping the specified enumerator</returns>
+        public static IEnumerable<T> AsEnumerable<T>(this IEnumerator<T> enumerator)
+        {
+            using (enumerator)
+            {
+                while (enumerator.MoveNext())
+                {
+                    yield return enumerator.Current;
+                }
+            }
+        }
     }
 }
