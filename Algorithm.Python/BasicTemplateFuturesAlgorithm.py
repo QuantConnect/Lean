@@ -44,6 +44,9 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         futureGC = self.AddFuture(Futures.Metals.Gold)
         futureGC.SetFilter(timedelta(0), timedelta(182))
 
+        benchmark = self.AddEquity("SPY");
+        self.SetBenchmark(benchmark.Symbol);
+
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
