@@ -74,7 +74,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         symbols = [insight.Symbol for insight in insights]
         if len(symbols) == 0:
-            return []
+            return targets
 
         for insight in insights:
             symbolData = self.symbolDataBySymbol.get(insight.Symbol)

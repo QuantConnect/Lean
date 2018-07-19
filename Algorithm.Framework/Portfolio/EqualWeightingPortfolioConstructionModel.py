@@ -48,6 +48,9 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         # Get symbols that have emit insights and still in the universe
         symbols = list(set([x.Symbol for x in self.insightCollection if x.CloseTimeUtc > algorithm.UtcTime]))
 
+        if len(symbol) == 0:
+            return targets
+
         # give equal weighting to each security
         percent = 1.0 / len(symbols)
         for symbol in symbols:

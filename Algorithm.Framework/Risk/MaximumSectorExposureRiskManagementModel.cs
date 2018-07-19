@@ -38,7 +38,12 @@ namespace QuantConnect.Algorithm.Framework.Risk
             decimal maximumSectorExposure = 0.20m
             )
         {
-            _maximumSectorExposure = Math.Abs(maximumSectorExposure);
+            if (maximumSectorExposure <= 0)
+            {
+                throw new ArgumentOutOfRangeException("MaximumSectorExposureRiskManagementModel: the maximum sector exposure cannot be a non-positive value.");
+            }
+
+            _maximumSectorExposure = maximumSectorExposure;
             _targetsCollection = new PortfolioTargetCollection();
         }
 

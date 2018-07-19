@@ -27,7 +27,10 @@ class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
         '''Initializes a new instance of the MaximumSectorExposureRiskManagementModel class
         Args:
             maximumDrawdownPercent: The maximum exposure for any sector, defaults to 20% sector exposure.'''
-        self.maximumSectorExposure = abs(maximumSectorExposure)
+        if maximumSectorExposure <= 0:
+            raise ValueError('MaximumSectorExposureRiskManagementModel: the maximum sector exposure cannot be a non-positive value.')
+
+        self.maximumSectorExposure = maximumSectorExposure
         self.targetsCollection = PortfolioTargetCollection()
 
     def ManageRisk(self, algorithm, targets):
