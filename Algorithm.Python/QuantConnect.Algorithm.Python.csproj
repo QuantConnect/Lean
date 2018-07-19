@@ -62,6 +62,7 @@
     <None Include="BasicTemplateOptionsHistoryAlgorithm.py" />
     <None Include="BasicTemplateOptionStrategyAlgorithm.py" />
     <None Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <None Include="BlackLittermanOptimizationAlgorithm.py" />
     <None Include="BrokerageModelAlgorithm.py" />
     <None Include="BubbleAlgorithm.py" />
     <None Include="build.sh" />
