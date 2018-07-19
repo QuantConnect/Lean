@@ -78,7 +78,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
             self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
 
             # this order will not be filled before market close and will be canceled
-            self.dayOrderTicket1 = self.LimitOrder(self.symbol, 10, 160)
+            self.dayOrderTicket1 = self.LimitOrder(self.symbol, 10, 150)
             self.expectedOrderStatuses[self.dayOrderTicket1.OrderId] = OrderStatus.Canceled
 
             # this order will be filled before market close
