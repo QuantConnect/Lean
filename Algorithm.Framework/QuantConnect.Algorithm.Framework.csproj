@@ -98,7 +98,7 @@
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioOptimization.cs" />
     <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />    
+    <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
@@ -132,15 +132,15 @@
   </ItemGroup>
   <Choose>
     <When Condition=" Exists('..\Vendor\alglibnet2.dll') ">
-	  <ItemGroup>
-	    <Compile Include="Portfolio\PortfolioOptimization.Alglib.cs" />
-	  </ItemGroup>
-	</When>
-	<Otherwise>  
-	  <ItemGroup>
-	    <Compile Include="Portfolio\PortfolioOptimization.Empty.cs" />
-	  </ItemGroup>
-	</Otherwise>
+      <ItemGroup>
+        <Compile Include="Portfolio\PortfolioOptimization.Alglib.cs" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Compile Include="Portfolio\PortfolioOptimization.Accord.cs" />
+      </ItemGroup>
+    </Otherwise>
   </Choose>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

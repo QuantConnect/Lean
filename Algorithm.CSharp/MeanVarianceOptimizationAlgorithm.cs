@@ -71,6 +71,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public bool CanRunLocally => true;
+
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
