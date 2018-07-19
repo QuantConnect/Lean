@@ -29,11 +29,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
         void SetCovariance(double[,] cov);
 
         /// <summary>
-        /// Perform portfolio optimization for a provided expected returns
+        /// Perform portfolio optimization for a provided vector of expected returns
         /// </summary>
-        /// <param name="W">Portfolio weights</param>
-        /// <param name="expectedReturns">Vector of expected returns</param>
-        /// <returns>Error code</returns>
-        int Optimize(out double[] W, double[] expectedReturns);
+        /// <param name="expectedReturns">Vector of expected for each security (size: K x 1)</param>
+        /// <returns>Array of double with the portfolio weights (size: K x 1). If optimization fails, all weight values are set to NaN.</returns>
+        double[] Optimize(double[] expectedReturns);
     }
 }

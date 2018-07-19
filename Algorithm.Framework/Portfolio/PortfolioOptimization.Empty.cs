@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
     {
         public MeanVariancePortfolio(double lower, double upper, double targetReturn = 0.0) {}
 
-        public int Optimize(out double[] W, double[] expectedReturns)
+        public double[] Optimize(double[] expectedReturns)
         {
             throw new NoSolverException();
         }
@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
     {
         public MaxSharpeRatioPortfolio(double lower, double upper, double riskFreeRate = 0.0) {}
 
-        public int Optimize(out double[] W, double[] expectedReturns)
+        public double[] Optimize(double[] expectedReturns)
         {
             throw new NoSolverException();
         }

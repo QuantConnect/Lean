@@ -129,12 +129,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 .ToArray();
 
             // The optimization method processes the data frame
-            double[] W;
             _optimization.SetCovariance(rreturns.Covariance());
-            var ret = _optimization.Optimize(out W, expectedReturns: gmean);
+            var W = _optimization.Optimize(gmean);
 
             // process results
-            if (ret > 0)
+            if (!W.All(w => Double.IsNaN(w)))
             {
                 var weights = symbols.Zip(W, (sym, w) => new { S = sym, W = w }).ToDictionary(r => r.S, r => r.W);
 

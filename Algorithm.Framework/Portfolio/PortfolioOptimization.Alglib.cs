@@ -152,11 +152,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
 
         /// <summary>
         /// Perform mean variance optimization given the returns
-        /// </summary>
-        /// <param name="W">Portfolio weights</param>       
+        /// </summary>   
         /// <param name="expectedReturns">Vector of expected returns</param>
-        /// <returns>error code</returns>
-        public virtual int Optimize(out double[] W, double[] expectedReturns)
+        /// <returns>Portfolio weights</returns>
+        public double[] Optimize(double[] expectedReturns)
         {
             SetInitialValue();
 
@@ -165,7 +164,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
             // mu^T x = R  or mu^T x >= 0
             SetConstraints(expectedReturns, _targetReturn == 0.0 ? ConstraintType.More : ConstraintType.Equal, _targetReturn);
 
-            return Optimize(out W);
+            double[] W;
+            var ret = Optimize(out W);
+
+            return W;
         }
     }
 
@@ -182,7 +184,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
             _riskFreeRate = riskFreeRate;
         }
 
-        public override int Optimize(out double[] x, double[] expectedReturns)
+        public new double[] Optimize(double[] expectedReturns)
         {
             _expectedReturns = expectedReturns;
 
@@ -190,9 +192,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.Optimization
 
             SetConstraints(Vector.Create(Size, 1.0), ConstraintType.Equal, 1.0);
 
-            var ret = Optimize(out x); // use NLP solver
+            double[] W;
+            var ret = Optimize(out W); // use NLP solver
 
-            return ret;
+            return W;
         }
 
         public static void SharpeRatio(double[] x, ref double func, object obj)
