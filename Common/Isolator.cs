@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
-    /// Isolator class - create a new instance of the algorithm and ensure it doesn't 
+    /// Isolator class - create a new instance of the algorithm and ensure it doesn't
     /// exceed memory or time execution limits.
     /// </summary>
     public class Isolator
@@ -88,7 +88,11 @@ namespace QuantConnect
             while (!task.IsCompleted && DateTime.Now < end)
             {
                 // if over 80% allocation force GC then sample
-                var sample = Convert.ToDouble(GC.GetTotalMemory(memoryUsed > memoryCap * 0.8));
+                var sample = OS.ApplicationMemoryUsed * 1024 * 1024;
+                if (memoryUsed > memoryCap * 0.8)
+                {
+                    GC.Collect();
+                }
 
                 // find the EMA of the memory used to prevent spikes killing stategy
                 memoryUsed = Convert.ToInt64((emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample);

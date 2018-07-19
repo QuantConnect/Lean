@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,13 +19,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
     /// Operating systems class for managing anything that is operation system specific.
     /// </summary>
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
-    public static class OS 
+    public static class OS
     {
         private static PerformanceCounter _ramTotalCounter;
         private static PerformanceCounter _ramAvailableBytes;
@@ -34,17 +34,17 @@ namespace QuantConnect
         /// <summary>
         /// Total Physical Ram on the Machine:
         /// </summary>
-        private static PerformanceCounter RamTotalCounter 
+        private static PerformanceCounter RamTotalCounter
         {
-            get 
+            get
             {
-                if (_ramTotalCounter == null) 
+                if (_ramTotalCounter == null)
                 {
-                    if (IsLinux) 
+                    if (IsLinux)
                     {
-                        _ramTotalCounter = new PerformanceCounter ("Mono Memory", "Total Physical Memory"); 
-                    } 
-                    else 
+                        _ramTotalCounter = new PerformanceCounter ("Mono Memory", "Total Physical Memory");
+                    }
+                    else
                     {
                         _ramTotalCounter = new PerformanceCounter("Memory", "Available Bytes");
                     }
@@ -56,17 +56,17 @@ namespace QuantConnect
         /// <summary>
         /// Memory free on the machine available for use:
         /// </summary>
-        public static PerformanceCounter RamAvailableBytes 
+        public static PerformanceCounter RamAvailableBytes
         {
-            get 
+            get
             {
-                if (_ramAvailableBytes == null) 
+                if (_ramAvailableBytes == null)
                 {
-                    if (IsLinux) 
-                    { 
+                    if (IsLinux)
+                    {
                         _ramAvailableBytes = new PerformanceCounter("Mono Memory", "Allocated Objects");
-                    } 
-                    else 
+                    }
+                    else
                     {
                         _ramAvailableBytes = new PerformanceCounter("Memory", "Available Bytes");
                     }
@@ -84,7 +84,7 @@ namespace QuantConnect
             {
                 if (_cpuUsageCounter == null)
                 {
-                    _cpuUsageCounter = new PerformanceCounter("Process", "% Processor Time", 
+                    _cpuUsageCounter = new PerformanceCounter("Process", "% Processor Time",
                         IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
                 }
                 return _cpuUsageCounter;
@@ -94,7 +94,7 @@ namespace QuantConnect
         /// <summary>
         /// Global Flag :: Operating System
         /// </summary>
-        public static bool IsLinux 
+        public static bool IsLinux
         {
             get
             {
@@ -108,7 +108,7 @@ namespace QuantConnect
         /// </summary>
         public static bool IsWindows
         {
-            get 
+            get
             {
                 return !IsLinux;
             }
@@ -118,7 +118,7 @@ namespace QuantConnect
         /// <summary>
         /// Character Separating directories in this OS:
         /// </summary>
-        public static string PathSeparation 
+        public static string PathSeparation
         {
             get
             {
@@ -129,9 +129,9 @@ namespace QuantConnect
         /// <summary>
         /// Get the drive space remaining on windows and linux in MB
         /// </summary>
-        public static long DriveSpaceRemaining 
-        { 
-            get 
+        public static long DriveSpaceRemaining
+        {
+            get
             {
                 var d = GetDrive();
                 return d.AvailableFreeSpace / (1024 * 1024);
@@ -175,9 +175,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Get the RAM remaining on the machine:
+        /// Gets the total RAM used by application in MB
         /// </summary>
-        public static long ApplicationMemoryUsed 
+        public static long ApplicationMemoryUsed
         {
             get
             {
@@ -200,7 +200,7 @@ namespace QuantConnect
         /// </summary>
         public static long TotalPhysicalMemoryUsed
         {
-            get 
+            get
             {
                 return GC.GetTotalMemory(false) / (1024*1024);
             }
