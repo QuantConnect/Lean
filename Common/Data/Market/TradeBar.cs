@@ -38,12 +38,12 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Volume:
         /// </summary>
-        public decimal Volume { get; set; }
+        public virtual decimal Volume { get; set; }
 
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open
+        public virtual decimal Open
         {
             get { return _open; }
             set
@@ -56,7 +56,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// High price of the TradeBar during the time period.
         /// </summary>
-        public decimal High
+        public virtual decimal High
         {
             get { return _high; }
             set
@@ -69,7 +69,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Low price of the TradeBar during the time period.
         /// </summary>
-        public decimal Low
+        public virtual decimal Low
         {
             get { return _low; }
             set
@@ -82,7 +82,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Closing price of the TradeBar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
-        public decimal Close
+        public virtual decimal Close
         {
             get { return Value; }
             set
@@ -104,7 +104,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The period of this trade bar, (second, minute, daily, ect...)
         /// </summary>
-        public TimeSpan Period { get; set; }
+        public virtual TimeSpan Period { get; set; }
 
         //In Base Class: Alias of Closing:
         //public decimal Price;

@@ -177,6 +177,8 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
+    <Compile Include="Data\Custom\Tiingo\Tiingo.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoDailyData.cs" />
     <Compile Include="Data\Fundamental\Fundamentals.cs" />
     <Compile Include="Data\Fundamental\Generated\AssetClassification.cs" />
     <Compile Include="Data\Fundamental\Generated\CompanyProfile.cs" />
