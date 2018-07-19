@@ -16,11 +16,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -333,6 +333,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var option = security as Option;
             if (option != null)
             {
+                if (option.Underlying == null)
+                {
+                    Log.Error($"TimeSlice.HandleOptionData(): {algorithmTime}: Option underlying is null");
+                    return false;
+                }
                 var underlyingData = option.Underlying.GetLastData();
 
                 BaseData underlyingUpdate;
@@ -341,6 +346,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     underlyingData = underlyingUpdate;
                 }
 
+                if (underlyingData == null)
+                {
+                    Log.Error($"TimeSlice.HandleOptionData(): {algorithmTime}: Option underlying GetLastData returned null");
+                    return false;
+                }
                 chain.Underlying = underlyingData;
             }
 
