@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 DefaultOrderProperties.TimeInForce = TimeInForce.Day;
 
                 // this order will not be filled before market close and will be canceled
-                _dayOrderTicket1 = LimitOrder(_symbol, 10, 160m);
+                _dayOrderTicket1 = LimitOrder(_symbol, 10, 150m);
                 _expectedOrderStatuses.Add(_dayOrderTicket1.OrderId, OrderStatus.Canceled);
 
                 // this order will be filled before market close
@@ -150,25 +150,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "7.243%"},
+            {"Compounding Annual Return", "5.914%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.089%"},
-            {"Sharpe Ratio", "2.747"},
+            {"Net Profit", "0.073%"},
+            {"Sharpe Ratio", "4.198"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.01"},
-            {"Beta", "4.541"},
-            {"Annual Standard Deviation", "0.013"},
+            {"Alpha", "-0.008"},
+            {"Beta", "4.042"},
+            {"Annual Standard Deviation", "0.009"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "1.985"},
-            {"Tracking Error", "0.013"},
-            {"Treynor Ratio", "0.008"},
-            {"Total Fees", "$4.00"}
+            {"Information Ratio", "2.968"},
+            {"Tracking Error", "0.009"},
+            {"Treynor Ratio", "0.009"},
+            {"Total Fees", "$3.00"}
         };
     }
 }
