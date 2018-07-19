@@ -484,6 +484,7 @@ namespace QuantConnect.Tests.Brokerages
             // pick a security with low, but some, volume
             var symbol = Symbols.EURUSD;
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
+            OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
 
             // pause for a while to wait for fills to come in
