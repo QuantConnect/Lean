@@ -79,6 +79,7 @@
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
