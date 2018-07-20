@@ -107,9 +107,9 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Returns a <see cref="System.String"/> that represents the current <see cref="QuantConnect.Data.Market.Split"/>.
+        /// Formats a string with the symbol and value.
         /// </summary>
-        /// <returns>A <see cref="System.String"/> that represents the current <see cref="QuantConnect.Data.Market.Split"/>.</returns>
+        /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
             var type = Type == SplitType.Warning ? "Split Warning" : "Split";
