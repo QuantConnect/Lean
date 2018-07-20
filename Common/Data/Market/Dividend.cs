@@ -108,5 +108,14 @@ namespace QuantConnect.Data.Market
         {
             return new Dividend(Symbol, Time, Distribution);
         }
+
+        /// <summary>
+        /// Formats a string with the symbol and value.
+        /// </summary>
+        /// <returns>string - a string formatted as SPY: 167.753</returns>
+        public override string ToString()
+        {
+            return $"{Symbol}: {Distribution}";
+        }
     }
 }
