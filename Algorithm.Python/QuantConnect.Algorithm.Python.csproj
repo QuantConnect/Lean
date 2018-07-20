@@ -38,6 +38,7 @@
   <ItemGroup>
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
     <None Include="packages.config" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
   </ItemGroup>
@@ -107,7 +108,7 @@
     <None Include="main.py" />
     <None Include="MarginCallEventsAlgorithm.py" />
     <None Include="MarketOnOpenOnCloseAlgorithm.py" />
-    <None Include="MeanVarianceOptimizationAlgorithm.py" />
+    <None Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <None Include="MovingAverageCrossAlgorithm.py" />
     <None Include="MultipleSymbolConsolidationAlgorithm.py" />
     <None Include="OptionChainConsistencyRegressionAlgorithm.py" />

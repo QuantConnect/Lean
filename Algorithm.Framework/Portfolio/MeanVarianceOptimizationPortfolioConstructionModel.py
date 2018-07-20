@@ -22,37 +22,33 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
+from Portfolio.MinimumVariancePortfolioOptimizer import MinimumVariancePortfolioOptimizer
 from datetime import timedelta
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
 
 ### <summary>
 ### Provides an implementation of Mean-Variance portfolio optimization based on modern portfolio theory.
-### The interval of weights in optimization method can be changed based on the long-short algorithm.
-### The default model uses the last three months daily price to calculate the optimal weight 
-### with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
+### The default model uses the MinimumVariancePortfolioOptimizer that accepts a 63-row matrix of 1-day returns. 
 ### </summary>
 class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, 
+                 lookback = 1,
+                 period = 63,
+                 resolution = Resolution.Daily,
+                 optimizer = None):
         """Initialize the model
         Args:
             lookback(int): Historical return lookback period
-            period(int): The time interval of history price to calculate the weight 
-            resolution: The resolution of the history price 
-            minimum_weight(float): The lower bounds on portfolio weights
-            maximum_weight(float): The upper bounds on portfolio weights
-            target_return(float): The target portfolio return
-            optimization_method(method): Method used to compute the portfolio weights"""
-        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
-        self.period = kwargs['period'] if 'period' in kwargs else 63
-        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
-        self.minimum_weight = kwargs['minimum_weight'] if 'minimum_weight' in kwargs else -1
-        self.maximum_weight = kwargs['maximum_weight'] if 'maximum_weight' in kwargs else 1
-        self.target_return = kwargs['target_return'] if 'target_return' is kwargs else 0.02
-        self.optimization_method = kwargs['optimization_method'] if 'optimization_method' in kwargs else self.minimum_variance
+            period(int): The time interval of history price to calculate the weight
+            resolution: The resolution of the history price
+            optimizer(class): Method used to compute the portfolio weights"""
+        self.lookback = lookback
+        self.period = period
+        self.resolution = resolution
+        self.optimizer = MinimumVariancePortfolioOptimizer() if optimizer is None else optimizer
+
         self.symbolDataBySymbol = {}
         self.pendingRemoval = []
 
@@ -69,11 +65,10 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         for symbol in self.pendingRemoval:
             targets.append(PortfolioTarget.Percent(algorithm, symbol, 0))
-
         self.pendingRemoval.clear()
 
         symbols = [insight.Symbol for insight in insights]
-        if len(symbols) == 0:
+        if len(symbols) == 0 or all([insight.Magnitude == 0 for insight in insights]):
             return targets
 
         for insight in insights:
@@ -86,8 +81,9 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         returns = { str(symbol) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
         returns = pd.DataFrame(returns)
 
-        # The optimization method processes the data frame 
-        opt, weights = self.optimization_method(returns)
+        # The portfolio optimizer finds the optional weights for the given data 
+        weights = self.optimizer.Optimize(returns)
+        weights = pd.Series(weights, index = returns.columns)
 
         # Create portfolio targets from the specified insights
         for insight in insights:
@@ -95,7 +91,6 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, weight))
 
         return targets
-
 
     def OnSecuritiesChanged(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
@@ -107,8 +102,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         for removed in changes.RemovedSecurities:
             self.pendingRemoval.append(removed.Symbol)
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if symbolData is not None:
-                symbolData.RemoveConsolidators(algorithm)
+            symbolData.Reset()
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
@@ -120,75 +114,44 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             symbol = SymbolCache.GetSymbol(ticker)
 
             if symbol not in self.symbolDataBySymbol:
-                symbolData = SymbolData(symbol, self.lookback, self.period)
-                self.symbolDataBySymbol[symbol] = symbolData
-                symbolData.RegisterIndicators(algorithm, self.resolution)
+                symbolData = self.MeanVarianceSymbolData(symbol, self.lookback, self.period)
                 symbolData.WarmUpIndicators(history.loc[ticker])
+                self.symbolDataBySymbol[symbol] = symbolData
 
+    class MeanVarianceSymbolData:
+        '''Contains data specific to a symbol required by this model'''
+        def __init__(self, symbol, lookback, period):
+            self.symbol = symbol
+            self.roc = RateOfChange(f'{symbol}.ROC({lookback})', lookback)
+            self.roc.Updated += self.OnRateOfChangeUpdated
+            self.window = RollingWindow[IndicatorDataPoint](period)
 
-    def minimum_variance(self, returns):
-        '''Minimum variance optimization method'''
+        def Reset(self):
+            self.roc.Updated -= self.OnRateOfChangeUpdated
+            self.roc.Reset()
+            self.window.Reset()
 
-        # Objective function
-        fun = lambda weights: np.dot(weights.T, np.dot(returns.cov(), weights))
+        def WarmUpIndicators(self, history):
+            for tuple in history.itertuples():
+                self.roc.Update(tuple.Index, tuple.close)
 
-        # Constraint #1: The weights can be negative, which means investors can short a security.
-        constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1}]
+        def OnRateOfChangeUpdated(self, roc, value):
+            if roc.IsReady:
+                self.window.Add(value)
 
-        # Constraint #2: Portfolio targets a given return
-        constraints.append({'type': 'eq', 'fun': lambda weights: np.dot(np.matrix(returns.mean()), np.matrix(weights).T).item() - self.target_return})
+        def Add(self, time, value):
+            item = IndicatorDataPoint(self.symbol, time, value)
+            self.window.Add(item)
 
-        size = returns.columns.size
-        x0 = np.array(size * [1. / size])
-        bounds = tuple((self.minimum_weight, self.maximum_weight) for x in range(size))
+        @property
+        def Return(self):
+            return pd.Series(
+                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                index = [x.EndTime for x in self.window])
 
-        opt = minimize(fun,                         # Objective function
-                       x0,                          # Initial guess
-                       method='SLSQP',              # Optimization method:  Sequential Least SQuares Programming
-                       bounds = bounds,             # Bounds for variables 
-                       constraints = constraints)   # Constraints definition
+        @property
+        def IsReady(self):
+            return self.window.IsReady
 
-        return opt, pd.Series(opt['x'], index = returns.columns)
-
-
-class SymbolData:
-    '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, lookback, period):
-        self.Symbol = symbol
-        self.ROC = RateOfChange('{}.ROC({})'.format(symbol, lookback), lookback)
-        self.ROC.Updated += self.OnRateOfChangeUpdated
-        self.Window = RollingWindow[IndicatorDataPoint](period)
-        self.Consolidator = None
-
-    def RegisterIndicators(self, algorithm, resolution):
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
-
-    def RemoveConsolidators(self, algorithm):
-        if self.Consolidator is not None:
-            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
-
-    def WarmUpIndicators(self, history):
-        for tuple in history.itertuples():
-            self.ROC.Update(tuple.Index, tuple.close)
-
-    def OnRateOfChangeUpdated(self, roc, value):
-        if roc.IsReady:
-            self.Window.Add(value)
-
-    def Add(self, time, value):
-        item = IndicatorDataPoint(self.Symbol, time, value)
-        self.Window.Add(item)
-
-    @property
-    def Return(self):
-        data = [(1 + float(x.Value))**252 - 1 for x in self.Window]
-        index = [x.EndTime for x in self.Window]
-        return pd.Series(data, index=index)
-
-    @property
-    def IsReady(self):
-        return self.Window.IsReady
-
-    def __str__(self, **kwargs):
-        return '{}: {:.2%}'.format(self.ROC.Name, (1 + self.Window[0])**252 - 1)
+        def __str__(self, **kwargs):
+            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)

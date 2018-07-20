@@ -127,12 +127,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.py">
+    <Content Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Portfolio\BlackLittermanPortfolioConstructionModel.py">
+    </Content>
+    <Content Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
+    <Content Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Portfolio\MinimumVariancePortfolioOptimizer.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.py">
