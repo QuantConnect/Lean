@@ -14,19 +14,19 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Selection import *
-from Alphas.HistoricalReturnsAlphaModel import *
+from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+from Risk.NullRiskManagementModel import NullRiskManagementModel
 from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
-from QuantConnect.Util import PythonUtil
 
 ### <summary>
 ### Mean Variance Optimization algorithm
@@ -36,7 +36,7 @@ from QuantConnect.Util import PythonUtil
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
+class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithmFramework):
     '''Mean Variance Optimization algorithm.'''
 
     def Initialize(self):
@@ -50,13 +50,10 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
 
         self.symbols = [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in [ 'AIG', 'BAC', 'IBM', 'SPY' ] ]
 
-        self.minimum_weight = -1
-        self.maximum_weight = 1
-
         # set algorithm framework models
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.coarseSelector))
         self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
-        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(optimization_method = self.maximum_sharpe_ratio))
+        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
 
@@ -68,33 +65,4 @@ class MeanVarianceOptimizationAlgorithm(QCAlgorithmFramework):
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(orderEvent.ToString())
-
-    def maximum_sharpe_ratio(self, returns):
-        '''Maximum Sharpe Ratio optimization method'''
-
-        # Objective function
-        fun = lambda weights: -self.sharpe_ratio(returns, weights)
-
-        # Constraint #1: The weights can be negative, which means investors can short a security.
-        constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1}]
-
-        size = returns.columns.size
-        x0 = np.array(size * [1. / size])
-        bounds = tuple((self.minimum_weight, self.maximum_weight) for x in range(size))
-
-        opt = minimize(fun,                         # Objective function
-                       x0,                          # Initial guess
-                       method='SLSQP',              # Optimization method:  Sequential Least SQuares Programming
-                       bounds = bounds,             # Bounds for variables 
-                       constraints = constraints)   # Constraints definition
-
-        weights = pd.Series(opt['x'], index = returns.columns)
-        self.Log('{}:\n\r{}'.format(self.Time, weights))
-
-        return opt, weights
-
-    def sharpe_ratio(self, returns, weights):
-        annual_return = np.dot(np.matrix(returns.mean()), np.matrix(weights).T).item()
-        annual_volatility = np.sqrt(np.dot(weights.T, np.dot(returns.cov(), weights)))
-        return annual_return/annual_volatility
+            self.Debug(orderEvent)
