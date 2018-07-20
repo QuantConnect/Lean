@@ -95,7 +95,22 @@ namespace QuantConnect.Securities.Future
                     return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
-            // CBOE Volatility Index Futures (VIX)  is not found on cmegroup will discuss and update
+            // CBOE Volatility Index Futures (VIX): https://cfe.cboe.com/cfe-products/vx-cboe-volatility-index-vix-futures/contract-specifications
+            {Futures.Indices.VIX, (time =>
+                {
+                    // Trading can occur up to 9:00 a.m. Eastern Time (ET) on the "Wednesday that is 30 days prior to
+                    // the third Friday of the calendar month immediately following the month in which the contract expires".
+                    var nextThirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time.AddMonths(1));
+                    var expiryDate = nextThirdFriday.AddDays(-30);
+                    // If the next third Friday or the Wednesday are holidays, then it is moved to the previous day.
+                    if (USHoliday.Dates.Contains(expiryDate) || USHoliday.Dates.Contains(nextThirdFriday))
+                    {
+                        expiryDate = expiryDate.AddDays(-1);
+                    }
+                    // Trading hours for expiring VX futures contracts end at 8:00 a.m. Chicago time on the final settlement date.
+                    return expiryDate.Add(new TimeSpan(13, 0, 0));
+                })
+            },
             // Grains And OilSeeds Group
             // Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
             {Futures.Grains.Wheat, (time =>
