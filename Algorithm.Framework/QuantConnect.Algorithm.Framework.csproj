@@ -36,6 +36,18 @@
     <DocumentationFile>bin\Release\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Accord, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.3.6.0\lib\net45\Accord.dll</HintPath>
+    </Reference>
+    <Reference Include="Accord.Math, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Math.3.6.0\lib\net45\Accord.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="Accord.Math.Core, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Math.3.6.0\lib\net45\Accord.Math.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Accord.Statistics, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Statistics.3.6.0\lib\net45\Accord.Statistics.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -47,6 +59,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -78,12 +91,17 @@
     <Compile Include="Execution\VolumeWeightedAveragePriceExecutionModel.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
+    <Compile Include="Portfolio\BlackLittermanPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
+    <Compile Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.cs" />
+    <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\MinimumVariancePortfolioOptimizer.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\ReturnsSymbolData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithmFramework.Python.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
@@ -217,5 +235,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\Accord.3.6.0\build\Accord.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.3.6.0\build\Accord.targets'))" />
   </Target>
+  <Import Project="..\packages\Accord.3.6.0\build\Accord.targets" Condition="Exists('..\packages\Accord.3.6.0\build\Accord.targets')" />
 </Project>
