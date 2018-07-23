@@ -92,6 +92,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private IResultHandler _resultHandler;
 
+        private readonly object _lockHandleOrderEvent = new object();
+
         /// <summary>
         /// Gets the permanent storage for all orders
         /// </summary>
@@ -189,13 +191,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             switch (request.OrderRequestType)
             {
                 case OrderRequestType.Submit:
-                    return AddOrder((SubmitOrderRequest) request);
+                    return AddOrder((SubmitOrderRequest)request);
 
                 case OrderRequestType.Update:
-                    return UpdateOrder((UpdateOrderRequest) request);
+                    return UpdateOrder((UpdateOrderRequest)request);
 
                 case OrderRequestType.Cancel:
-                    return CancelOrder((CancelOrderRequest) request);
+                    return CancelOrder((CancelOrderRequest)request);
 
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -462,7 +464,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             try
             {
-                foreach(var request in _orderRequestQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
+                foreach (var request in _orderRequestQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
                     HandleOrderRequest(request);
                     ProcessAsynchronousEvents();
@@ -933,95 +935,97 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void HandleOrderEvent(OrderEvent fill)
         {
-            Order order;
-            OrderTicket ticket;
-            if(fill.Status.IsClosed() && _openOrders.TryRemove(fill.OrderId, out order))
+            lock (_lockHandleOrderEvent)
             {
-                _completeOrders[fill.OrderId] = order;
-            }
-            else if(!_completeOrders.TryGetValue(fill.OrderId, out order))
-            {
-                Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate open Order with id " + fill.OrderId);
-                return;
-            }
+                Order order;
+                OrderTicket ticket;
+                if (fill.Status.IsClosed() && _openOrders.TryRemove(fill.OrderId, out order))
+                {
+                    _completeOrders[fill.OrderId] = order;
+                }
+                else if (!_completeOrders.TryGetValue(fill.OrderId, out order))
+                {
+                    Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate open Order with id " + fill.OrderId);
+                    return;
+                }
 
-            if (fill.Status.IsClosed() && _openOrderTickets.TryRemove(fill.OrderId, out ticket))
-            {
-                _completeOrderTickets[fill.OrderId] = ticket;
-            }
-            else if (!_completeOrderTickets.TryGetValue(fill.OrderId, out ticket))
-            {
-                Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + fill.OrderId);
-                return;
-            }
-            _cancelPendingOrders.UpdateOrRemove(order.Id, fill.Status);
-            // set the status of our order object based on the fill event
-            order.Status = fill.Status;
+                if (fill.Status.IsClosed() && _openOrderTickets.TryRemove(fill.OrderId, out ticket))
+                {
+                    _completeOrderTickets[fill.OrderId] = ticket;
+                }
+                else if (!_completeOrderTickets.TryGetValue(fill.OrderId, out ticket))
+                {
+                    Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + fill.OrderId);
+                    return;
+                }
+                _cancelPendingOrders.UpdateOrRemove(order.Id, fill.Status);
+                // set the status of our order object based on the fill event
+                order.Status = fill.Status;
 
 
-            // set the modified time of the order to the fill's timestamp
-            switch (fill.Status)
-            {
-                case OrderStatus.Canceled:
-                    order.CanceledTime = fill.UtcTime;
-                    break;
+                // set the modified time of the order to the fill's timestamp
+                switch (fill.Status)
+                {
+                    case OrderStatus.Canceled:
+                        order.CanceledTime = fill.UtcTime;
+                        break;
 
-                case OrderStatus.PartiallyFilled:
-                case OrderStatus.Filled:
-                    order.LastFillTime = fill.UtcTime;
-                    break;
+                    case OrderStatus.PartiallyFilled:
+                    case OrderStatus.Filled:
+                        order.LastFillTime = fill.UtcTime;
+                        break;
 
-                case OrderStatus.Submitted:
-                    // submit events after the initial submission are all order updates
-                    if (ticket.UpdateRequests.Count > 0)
+                    case OrderStatus.Submitted:
+                        // submit events after the initial submission are all order updates
+                        if (ticket.UpdateRequests.Count > 0)
+                        {
+                            order.LastUpdateTime = fill.UtcTime;
+                        }
+                        break;
+                }
+
+                // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
+                //these hog memory
+                //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
+                //orderEvents.Add(orderEvent);
+
+                //Apply the filled order to our portfolio:
+                if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
+                {
+                    Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.UtcNow.Ticks);
+
+                    // check if the fill currency and the order currency match the symbol currency
+                    var security = _algorithm.Securities[fill.Symbol];
+                    // Bug in FXCM API flipping the currencies -- disabling for now. 5/17/16 RFB
+                    //if (fill.FillPriceCurrency != security.SymbolProperties.QuoteCurrency)
+                    //{
+                    //    Log.Error(string.Format("Currency mismatch: Fill currency: {0}, Symbol currency: {1}", fill.FillPriceCurrency, security.SymbolProperties.QuoteCurrency));
+                    //}
+                    //if (order.PriceCurrency != security.SymbolProperties.QuoteCurrency)
+                    //{
+                    //    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
+                    //}
+
+                    try
                     {
-                        order.LastUpdateTime = fill.UtcTime;
+                        _algorithm.Portfolio.ProcessFill(fill);
+
+                        var conversionRate = security.QuoteCurrency.ConversionRate;
+                        var multiplier = security.SymbolProperties.ContractMultiplier;
+
+                        _algorithm.TradeBuilder.ProcessFill(fill, conversionRate, multiplier);
                     }
-                    break;
-            }
-
-            // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
-            //these hog memory
-            //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
-            //orderEvents.Add(orderEvent);
-
-            //Apply the filled order to our portfolio:
-            if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
-            {
-                Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.UtcNow.Ticks);
-
-                // check if the fill currency and the order currency match the symbol currency
-                var security = _algorithm.Securities[fill.Symbol];
-                // Bug in FXCM API flipping the currencies -- disabling for now. 5/17/16 RFB
-                //if (fill.FillPriceCurrency != security.SymbolProperties.QuoteCurrency)
-                //{
-                //    Log.Error(string.Format("Currency mismatch: Fill currency: {0}, Symbol currency: {1}", fill.FillPriceCurrency, security.SymbolProperties.QuoteCurrency));
-                //}
-                //if (order.PriceCurrency != security.SymbolProperties.QuoteCurrency)
-                //{
-                //    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
-                //}
-
-                try
-                {
-                    _algorithm.Portfolio.ProcessFill(fill);
-
-                    var conversionRate = security.QuoteCurrency.ConversionRate;
-                    var multiplier = security.SymbolProperties.ContractMultiplier;
-
-                    _algorithm.TradeBuilder.ProcessFill(fill, conversionRate, multiplier);
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        _algorithm.Error(string.Format("Order Error: id: {0}, Error in Portfolio.ProcessFill: {1}", order.Id, err.Message));
+                    }
                 }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Error in Portfolio.ProcessFill: {1}", order.Id, err.Message));
-                }
+
+                // update the ticket and order after we've processed the fill, but before the event, this way everything is ready for user code
+                ticket.AddOrderEvent(fill);
+                order.Price = ticket.AverageFillPrice;
             }
-
-            // update the ticket and order after we've processed the fill, but before the event, this way everything is ready for user code
-            ticket.AddOrderEvent(fill);
-            order.Price = ticket.AverageFillPrice;
-
             //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
             if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
             {
