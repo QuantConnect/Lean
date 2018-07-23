@@ -175,7 +175,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     ReturnsSymbolData symbolData;
                     if (_symbolDataDict.TryGetValue(bar.Symbol, out symbolData))
                     {
-                        symbolData.ROC.Update(bar.EndTime, bar.Value);
+                        symbolData.Update(bar.EndTime, bar.Value);
                     }
                 });        
         }

@@ -28,44 +28,43 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class ReturnsSymbolData
     {
-        public Symbol Symbol { get; }
-        public RateOfChange ROC { get; }
-        public IDataConsolidator Consolidator { get; }
-        private RollingWindow<IndicatorDataPoint> Window { get; }
+        internal readonly Symbol Symbol;
+        private readonly RateOfChange _roc;
+        private readonly RollingWindow<IndicatorDataPoint> _window;
 
         public ReturnsSymbolData(QCAlgorithmFramework algorithm, Symbol symbol, int lookback, int period, Resolution resolution)
         {
             Symbol = symbol;
-            ROC = new RateOfChange($"{Symbol}.ROC(1)", lookback);
-            Window = new RollingWindow<IndicatorDataPoint>(period);
-
-            Consolidator = algorithm.ResolveConsolidator(Symbol, resolution);
-            algorithm.SubscriptionManager.AddConsolidator(Symbol, Consolidator);
-            algorithm.RegisterIndicator(Symbol, ROC, Consolidator);
-
-            ROC.Updated += OnRateOfChangeUpdated;
+            _roc = new RateOfChange($"{Symbol}.ROC(1)", lookback);
+            _window = new RollingWindow<IndicatorDataPoint>(period);
+            _roc.Updated += OnRateOfChangeUpdated;
         }
 
-        public Dictionary<DateTime, double> Returns => Window.Select(x => new { Date = x.EndTime, Return = (double)x.Value }).ToDictionary(r => r.Date, r => r.Return);
+        public Dictionary<DateTime, double> Returns => _window.Select(x => new { Date = x.EndTime, Return = (double)x.Value }).ToDictionary(r => r.Date, r => r.Return);
 
         public void Add(DateTime time, decimal value)
         {
             var item = new IndicatorDataPoint(Symbol, time, value);
-            Window.Add(item);
+            _window.Add(item);
+        }
+
+        public bool Update(DateTime time, decimal value)
+        {
+            return _roc.Update(time, value);
         }
 
         public void Reset()
         {
-            ROC.Updated -= OnRateOfChangeUpdated;
-            ROC.Reset();
-            Window.Reset();
+            _roc.Updated -= OnRateOfChangeUpdated;
+            _roc.Reset();
+            _window.Reset();
         }
 
         private void OnRateOfChangeUpdated(object roc, IndicatorDataPoint updated)
         {
-            if (((RateOfChange)roc).IsReady)
+            if (_roc.IsReady)
             {
-                Window.Add(updated);
+                _window.Add(updated);
             }
         }
     }
