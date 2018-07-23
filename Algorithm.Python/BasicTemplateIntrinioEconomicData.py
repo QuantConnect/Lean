@@ -48,6 +48,8 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
         self.AddData(IntrinioEconomicData, "$DCOILWTICO", Resolution.Daily)
         self.AddData(IntrinioEconomicData, "$DCOILBRENTEU", Resolution.Daily)
+        
+        self.emaWti = self.EMA("$DCOILWTICO", 10)
 
 
     def OnData(self, slice):
