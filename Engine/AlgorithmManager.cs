@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
-using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -200,16 +199,6 @@ namespace QuantConnect.Lean.Engine
                         methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
                     }
                 }
-            }
-
-            // add internal feeds for currencies added during initialization
-            var addedSecurities = algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager,
-                MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(),
-                DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None);
-            foreach (var security in addedSecurities)
-            {
-                // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                feed.AddSubscription(new SubscriptionRequest(false, null, security, new SubscriptionDataConfig(security.Subscriptions.First()), algorithm.UtcTime, algorithm.EndDate.ConvertToUtc(algorithm.TimeZone)));
             }
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
@@ -811,6 +800,14 @@ namespace QuantConnect.Lean.Engine
                 {
                     start = Math.Min(request.StartTimeUtc.Ticks, start);
                     Log.Trace(string.Format("AlgorithmManager.Stream(): WarmupHistoryRequest: {0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
+                }
+
+                // trigger universe selection in order to add all required internal feeds,
+                // this is needed to have non-zero currency conversion rates during warmup
+                var us = new UniverseSelection(feed, algorithm);
+                foreach (var universe in algorithm.UniverseManager.Values)
+                {
+                    us.ApplyUniverseSelection(universe, new DateTime(start), new BaseDataCollection());
                 }
 
                 // make the history request and build time slices
