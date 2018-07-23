@@ -973,31 +973,39 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a type with a given name
+        /// Creates a type with a given name, if PyObject is not a CLR type. Otherwise, convert it.
         /// </summary>
-        /// <param name="type">Python object</param>
+        /// <param name="pyObject">Python object representing a type.</param>
         /// <returns>Type object</returns>
-        private Type CreateType(PyObject type)
+        private Type CreateType(PyObject pyObject)
         {
+            Type type;
+            if (pyObject.TryConvert(out type) &&
+                type != typeof(PythonQuandl) &&
+                type != typeof(PythonData))
+            {
+                return type;
+            }
+
             PythonActivator pythonType;
-            if (!_pythonActivators.TryGetValue(type.Handle, out pythonType))
+            if (!_pythonActivators.TryGetValue(pyObject.Handle, out pythonType))
             {
                 AssemblyName an;
                 using (Py.GIL())
                 {
-                    an = new AssemblyName(type.Repr().Split('\'')[1]);
+                    an = new AssemblyName(pyObject.Repr().Split('\'')[1]);
                 }
                 var typeBuilder = AppDomain.CurrentDomain
                     .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
                     .DefineDynamicModule("MainModule")
                     .DefineType(an.Name, TypeAttributes.Class, typeof(DynamicData));
 
-                pythonType = new PythonActivator(typeBuilder.CreateType(), type);
+                pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
 
                 ObjectActivator.AddActivator(pythonType.Type, pythonType.Factory);
 
                 // Save to prevent future additions
-                _pythonActivators.Add(type.Handle, pythonType);
+                _pythonActivators.Add(pyObject.Handle, pythonType);
             }
             return pythonType.Type;
         }
