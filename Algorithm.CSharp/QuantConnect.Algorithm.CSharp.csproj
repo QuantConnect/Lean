@@ -178,6 +178,7 @@
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />
+    <Compile Include="WarmupConversionRatesRegressionAlgorithm.cs" />
     <Compile Include="WarmupHistoryAlgorithm.cs" />
     <Compile Include="MACDTrendAlgorithm.cs" />
     <Compile Include="MarginCallEventsAlgorithm.cs" />

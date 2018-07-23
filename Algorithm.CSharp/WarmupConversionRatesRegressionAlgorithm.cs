@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,25 +21,21 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm is a test case for adding forex symbols at the same resolution of an existing internal feed.
-    /// The second symbol is added in the OnData method.
+    /// This regression algorithm is a test case for validation of conversion rates during warm up.
     /// </summary>
-    public class ForexInternalFeedOnDataSameResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupConversionRatesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly Dictionary<Symbol, int> _dataPointsPerSymbol = new Dictionary<Symbol, int>();
-        private bool _added;
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2013, 10, 8);
-            SetCash(100000);
+            SetStartDate(2018, 4, 1);
+            SetEndDate(2018, 4, 15);
+            SetCash(10000);
 
-            var eurgbp = AddForex("EURGBP", Resolution.Daily);
-            _dataPointsPerSymbol.Add(eurgbp.Symbol, 0);
+            SetWarmUp(5);
+            AddCrypto("BTCUSD", Resolution.Daily);
         }
 
         /// <summary>
@@ -48,50 +44,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!_added)
+            var conversionRate = Portfolio.CashBook["BTC"].ConversionRate;
+            if (conversionRate == 0)
             {
-                var eurusd = AddForex("EURUSD", Resolution.Daily);
-                _dataPointsPerSymbol.Add(eurusd.Symbol, 0);
-
-                _added = true;
+                throw new Exception("Conversion rate for BTC should not be zero.");
             }
 
-            foreach (var kvp in data)
-            {
-                var symbol = kvp.Key;
-                _dataPointsPerSymbol[symbol]++;
-
-                Log($"{Time} {symbol.Value} {kvp.Value.Price}");
-            }
-        }
-
-        /// <summary>
-        /// End of algorithm run event handler. This method is called at the end of a backtest or live trading operation. Intended for closing out logs.
-        /// </summary>
-        public override void OnEndOfAlgorithm()
-        {
-            // EURUSD has one less data point, because it was added on the first time step instead of during Initialize
-            var expectedDataPointsPerSymbol = new Dictionary<string, int>
-            {
-                // normal feed
-                { "EURGBP", 3 },
-                // internal feed on the first day, normal feed on the other two days
-                { "EURUSD", 2 },
-                // internal feed only
-                { "GBPUSD", 0 }
-            };
-
-            foreach (var kvp in _dataPointsPerSymbol)
-            {
-                var symbol = kvp.Key;
-                var actualDataPoints = _dataPointsPerSymbol[symbol];
-                Log($"Data points for symbol {symbol.Value}: {actualDataPoints}");
-
-                if (actualDataPoints != expectedDataPointsPerSymbol[symbol.Value])
-                {
-                    throw new Exception($"Data point count mismatch for symbol {symbol.Value}: expected: {expectedDataPointsPerSymbol[symbol.Value]}, actual: {actualDataPoints}");
-                }
-            }
+            Log($"BTC current price: {Securities["BTCUSD"].Price}");
+            Log($"BTC conversion rate: {conversionRate}");
         }
 
         /// <summary>
