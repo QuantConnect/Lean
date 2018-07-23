@@ -21,28 +21,95 @@ using Accord.Statistics;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
-    public class MaximumSharpeRatioPortfolioOptimizer : MinimumVariancePortfolioOptimizer
+    public class MaximumSharpeRatioPortfolioOptimizer : IPortfolioOptimizer
     {
+        private double _lower;
+        private double _upper;
         private double _riskFreeRate;
 
-        public MaximumSharpeRatioPortfolioOptimizer(double lower = -1, double upper = 1, double riskFreeRate = 0.0) : base(lower, upper, 0.0)
+        public MaximumSharpeRatioPortfolioOptimizer(double lower = -1, double upper = 1, double riskFreeRate = 0.0)
         {
+            _lower = lower;
+            _upper = upper;
             _riskFreeRate = riskFreeRate;
         }
 
-        public override double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
+        /// <summary>
+        /// Sum of all weight is one: 1^T w = 1 / Σw = 1
+        /// </summary>
+        /// <param name="size">number of variables</param>
+        /// <returns>linear constaraint object</returns>
+        protected LinearConstraint GetBudgetConstraint(int size)
         {
-            _cov = historicalReturns.Covariance();
-
-            // (r -r_f)^T x = R or (r -r_f)^T x >= 0
-            _constraints.Add(new LinearConstraint(Size)
+            return new LinearConstraint(size)
             {
-                CombinedAs = (expectedReturns ?? historicalReturns.Mean(0)).Subtract(_riskFreeRate),
-                ShouldBe = _targetReturn > 0 ? ConstraintType.EqualTo : ConstraintType.GreaterThanOrEqualTo,
-                Value = _targetReturn
+                CombinedAs = Vector.Create(size, 1.0),
+                ShouldBe = ConstraintType.EqualTo,
+                Value = 1.0
+            };
+        }
+
+        /// <summary>
+        /// Boundary constraints on weights: lw ≤ w ≤ up
+        /// </summary>
+        /// <param name="size">number of variables</param>
+        /// <returns>enumeration of linear constaraint objects</returns>
+        protected IEnumerable<LinearConstraint> GetBoundaryConditions(int size)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                yield return new LinearConstraint(1)
+                {
+                    VariablesAtIndices = new int[] { i },
+                    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                    Value = _lower
+                };
+                yield return new LinearConstraint(1)
+                {
+                    VariablesAtIndices = new int[] { i },
+                    ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                    Value = _upper
+                };
+            }
+        }
+
+        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
+        {
+            var cov = historicalReturns.Covariance();
+            var size = cov.GetLength(0);
+            var returns = (expectedReturns ?? historicalReturns.Mean(0)).Subtract(_riskFreeRate);
+            var constraints = new List<LinearConstraint>();
+
+            // (µ − r_f)^T w = 1
+            constraints.Add(new LinearConstraint(size)
+            {
+                CombinedAs = returns,
+                ShouldBe = ConstraintType.EqualTo,
+                Value = 1.0
             });
 
-            return Optimize();
+            // Σw = 1
+            constraints.Add(GetBudgetConstraint(size));
+
+            //// Σw ≥ 0
+            //constraints.Add(new LinearConstraint(size)
+            //{
+            //    CombinedAs = Vector.Create(size, 1.0),
+            //    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+            //    Value = 0.0
+            //});
+
+            // lw ≤ w ≤ up
+            constraints.AddRange(GetBoundaryConditions(size));
+
+            // Setup solver
+            var optfunc = new QuadraticObjectiveFunction(cov, Vector.Create(size, 0.0));
+            var solver = new GoldfarbIdnani(optfunc, constraints);
+
+            // Solve problem
+            var x0 = Vector.Create(size, 1.0 / size);
+            bool success = solver.Minimize(Vector.Copy(x0));
+            return success ? solver.Solution : x0;
         }
     }
 }

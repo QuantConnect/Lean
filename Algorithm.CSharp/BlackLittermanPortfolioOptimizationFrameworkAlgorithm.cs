@@ -50,10 +50,11 @@ namespace QuantConnect.Algorithm.CSharp
             
             // set algorithm framework models
             SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
-            SetAlpha(new CompositeAlphaModel(
-                new HistoricalReturnsAlphaModel(resolution: Resolution.Daily),
-                new RsiAlphaModel()));
-            SetPortfolioConstruction(new BlackLittermanPortfolioConstructionModel());            
+            //SetAlpha(new CompositeAlphaModel(
+            //    new HistoricalReturnsAlphaModel(resolution: Resolution.Daily),
+            //    new RsiAlphaModel()));
+            SetAlpha(new HistoricalReturnsAlphaModel(resolution: Resolution.Daily));
+            SetPortfolioConstruction(new BlackLittermanPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }

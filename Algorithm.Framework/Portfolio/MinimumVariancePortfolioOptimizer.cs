@@ -27,74 +27,85 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class MinimumVariancePortfolioOptimizer : IPortfolioOptimizer
     {
-        protected double _lower;
-        protected double _upper;
-        protected double _targetReturn;
-        protected double[,] _cov;
-        protected List<LinearConstraint> _constraints;
-
-        protected int Size => _cov == null ? 0 : _cov.GetLength(0);
+        private double _lower;
+        private double _upper;
+        private double _targetReturn;
 
         public MinimumVariancePortfolioOptimizer(double lower = -1, double upper = 1, double targetReturn = 0.02)
         {
             _lower = lower;
             _upper = upper;
             _targetReturn = targetReturn;
-            _cov = null;
-            _constraints = new List<LinearConstraint>();
         }
 
-        protected double[] Optimize()
+        /// <summary>
+        /// Sum of all weight is one: 1^T w = 1 / Σw = 1
+        /// </summary>
+        /// <param name="size">number of variables</param>
+        /// <returns>linear constaraint object</returns>
+        protected LinearConstraint GetBudgetConstraint(int size)
         {
-            // sum(x) = 1
-            _constraints.Add(new LinearConstraint(Size)
+            return new LinearConstraint(size)
             {
-                CombinedAs = Vector.Create(Size, 1.0),
+                CombinedAs = Vector.Create(size, 1.0),
                 ShouldBe = ConstraintType.EqualTo,
                 Value = 1.0
-            });
+            };
+        }
 
-            // lw <= x <= up
-            for (int i = 0; i < Size; i++)
+        /// <summary>
+        /// Boundary constraints on weights: lw ≤ w ≤ up
+        /// </summary>
+        /// <param name="size">number of variables</param>
+        /// <returns>enumeration of linear constaraint objects</returns>
+        protected IEnumerable<LinearConstraint> GetBoundaryConditions(int size)
+        {            
+            for (int i = 0; i < size; i++)
             {
-                _constraints.Add(new LinearConstraint(1)
+                yield return new LinearConstraint(1)
                 {
                     VariablesAtIndices = new int[] { i },
                     ShouldBe = ConstraintType.GreaterThanOrEqualTo,
                     Value = _lower
-                });
-                _constraints.Add(new LinearConstraint(1)
+                };
+                yield return new LinearConstraint(1)
                 {
                     VariablesAtIndices = new int[] { i },
                     ShouldBe = ConstraintType.LesserThanOrEqualTo,
                     Value = _upper
-                });
+                };
             }
-
-            var optfunc = new QuadraticObjectiveFunction(_cov, Vector.Create(Size, 0.0));
-            var solver = new GoldfarbIdnani(optfunc, _constraints);
-            _constraints.Clear();
-
-            var init = Vector.Create(Size, 1.0 / Size);
-            bool success = solver.Minimize(init);
-            return success ? solver.Solution : init;
         }
 
-        public virtual double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
+        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
         {
-            _cov = historicalReturns.Covariance();
+            var cov = historicalReturns.Covariance();
+            var size = cov.GetLength(0);
             var returns = expectedReturns ?? historicalReturns.Mean(0);
+            var constraints = new List<LinearConstraint>();
 
-            // mu^T x = R  or mu^T x >= 0
-            _constraints.Add(new LinearConstraint(Size)
+            // w^T µ ≥ β
+            constraints.Add(new LinearConstraint(size)
             {
                 CombinedAs = returns,
                 ShouldBe = _targetReturn > 0 ? ConstraintType.EqualTo : ConstraintType.GreaterThanOrEqualTo,
                 Value = _targetReturn
             });
 
-            return Optimize();
-        }
+            // Σw = 1
+            constraints.Add(GetBudgetConstraint(size));
 
+            // lw ≤ w ≤ up
+            constraints.AddRange(GetBoundaryConditions(size));
+
+            // Setup solver
+            var optfunc = new QuadraticObjectiveFunction(cov, Vector.Create(size, 0.0));
+            var solver = new GoldfarbIdnani(optfunc, constraints);
+
+            // Solve problem
+            var x0 = Vector.Create(size, 1.0 / size);
+            bool success = solver.Minimize(Vector.Copy(x0));
+            return success ? solver.Solution : x0;
+        }
     }
 }
