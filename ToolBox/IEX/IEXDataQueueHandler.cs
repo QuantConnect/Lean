@@ -28,6 +28,9 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text;
+using QuantConnect.Interfaces;
+using NodaTime;
+using System.Globalization;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -35,7 +38,7 @@ namespace QuantConnect.ToolBox.IEX
     /// IEX live data handler.
     /// Data provided for free by IEX. See more at https://iextrading.com/api-exhibit-a
     /// </summary>
-    public class IEXDataQueueHandler : LiveDataQueue, IDisposable
+    public class IEXDataQueueHandler : LiveDataQueue, IHistoryProvider, IDisposable
     {
         // using SocketIoClientDotNet is a temp solution until IEX implements standard WebSockets protocol
         private Socket _socket;
@@ -47,6 +50,7 @@ namespace QuantConnect.ToolBox.IEX
         private TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private Task _lastEmitTask;
         private bool _subscribedToAll;
+        private int _dataPointCount;
 
         private BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
 
@@ -57,10 +61,11 @@ namespace QuantConnect.ToolBox.IEX
             get { return _manager.ReadyState == Manager.ReadyStateEnum.OPEN; }
         }
 
-        public IEXDataQueueHandler()
+        public IEXDataQueueHandler(bool live = true)
         {
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
-            Reconnect();
+            if (live)
+                Reconnect();
         }
 
         internal void Reconnect()
@@ -284,9 +289,11 @@ namespace QuantConnect.ToolBox.IEX
         {
             _outputCollection.CompleteAdding();
             _cts.Cancel();
-            _socket.Disconnect();
-            _socket.Close();
-
+            if (_socket != null)
+            {
+                _socket.Disconnect();
+                _socket.Close();
+            }
             Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
         }
 
@@ -294,5 +301,139 @@ namespace QuantConnect.ToolBox.IEX
         {
             Dispose(false);
         }
+
+        #region IHistoryProvider implementation
+
+        /// <summary>
+        /// Gets the total number of data points emitted by this history provider
+        /// </summary>
+        public int DataPointCount
+        {
+            get { return _dataPointCount; }
+        }
+
+        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        {
+        }
+
+        public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        {
+            foreach (var request in requests)
+            {
+                foreach (var slice in ProcessHistoryRequests(request))
+                {
+                    yield return slice;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Populate request data
+        /// </summary>
+        private IEnumerable<Slice> ProcessHistoryRequests(Data.HistoryRequest request)
+        {
+            var ticker = request.Symbol.ID.Symbol;
+            var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+            var end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+
+            if (request.Resolution == Resolution.Minute && start <= DateTime.Today.AddDays(-30))
+            {
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available for trailing 30 calendar days."); 
+                yield break;
+            } else if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
+            {
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support daily & minute resolution.");
+                yield break;
+            }
+            if (start <= DateTime.Today.AddYears(-5))
+            {
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support a maximum of 5 years history.");
+                yield break;
+            }
+
+            Log.Trace(string.Format("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: {0}-{1}: {2} {3}->{4}", request.Symbol.SecurityType, ticker, request.Resolution, start, end));
+
+            var span = end.Date - start.Date;
+            var suffixes = new List<string>();
+            if (span.Days < 30 && request.Resolution == Resolution.Minute)
+            {
+                var begin = start;
+                while (begin < end)
+                { 
+                    suffixes.Add("date/" + begin.ToString("yyyyMMdd"));
+                    begin = begin.AddDays(1);
+                }
+            }
+            else if (span.Days < 30)
+            {
+                suffixes.Add("1m");
+            }
+            else if (span.Days < 3*30)
+            {
+                suffixes.Add("3m");
+            }
+            else if (span.Days < 6 * 30)
+            {
+                suffixes.Add("6m");
+            }
+            else if (span.Days < 12 * 30)
+            {
+                suffixes.Add("1y");
+            }
+            else if (span.Days < 24 * 30)
+            {
+                suffixes.Add("2y");
+            }
+            else 
+            {
+                suffixes.Add("5y");
+            }
+
+            // Download and parse data
+            var client = new System.Net.WebClient();
+            foreach (var suffix in suffixes)
+            {
+                var response = client.DownloadString("https://api.iextrading.com/1.0/stock/" + ticker + "/chart/" + suffix);
+                var parsedResponse = JArray.Parse(response);
+
+                foreach (var item in parsedResponse.Children())
+                {
+                    DateTime date;
+                    if (item["minute"] != null)
+                    {
+                        date = DateTime.ParseExact(item["date"].Value<string>(), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        var mins = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
+                        date += mins;
+                    }
+                    else
+                    {
+                        date = DateTime.Parse(item["date"].Value<string>());
+                    }
+
+                    if (date.Date < start.Date || date.Date > end.Date)
+                    {
+                        continue;
+                    }
+
+                    Interlocked.Increment(ref _dataPointCount);
+
+                    if (item["open"] == null)
+                    {
+                        continue;
+                    }                    
+                    var open = item["open"].Value<decimal>();
+                    var high = item["high"].Value<decimal>();
+                    var low = item["low"].Value<decimal>();
+                    var close = item["close"].Value<decimal>();
+                    var volume = item["volume"].Value<int>();
+
+                    TradeBar tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume);
+
+                    yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
+                }
+            }
+        }
+
+        #endregion
     }
 }

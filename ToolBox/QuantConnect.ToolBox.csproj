@@ -175,6 +175,8 @@
     <Compile Include="GzipStreamProvider.cs" />
     <Compile Include="IBDownloader\IBDataDownloader.cs" />
     <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
+    <Compile Include="IEX\IEXDataDownloader.cs" />
+    <Compile Include="IEX\IEXDownloaderProgram.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="TickAggregator.cs" />
