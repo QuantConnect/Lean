@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using NodaTime;
 using NUnit.Framework;
-using Python.Runtime;
 using QuantConnect.Algorithm;
-using QuantConnect.Algorithm.CSharp;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -13,9 +12,12 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -105,6 +107,27 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(quandlSubscription.Type, typeof(Quandl));
         }
 
+        [Test]
+        public void OnEndOfTimeStepSeedsUnderlyingSecuritiesThatHaveNoData()
+        {
+            var qcAlgorithm = new QCAlgorithm();
+            qcAlgorithm.SetLiveMode(true);
+            var testHistoryProvider = new TestHistoryProvider();
+            qcAlgorithm.HistoryProvider = testHistoryProvider;
+
+            var option = qcAlgorithm.AddSecurity(SecurityType.Option, testHistoryProvider.underlyingSymbol);
+            var option2 = qcAlgorithm.AddSecurity(SecurityType.Option, testHistoryProvider.underlyingSymbol2);
+            Assert.IsFalse(qcAlgorithm.Securities.ContainsKey(option.Symbol.Underlying));
+            Assert.IsFalse(qcAlgorithm.Securities.ContainsKey(option2.Symbol.Underlying));
+            qcAlgorithm.OnEndOfTimeStep();
+            var data = qcAlgorithm.Securities[testHistoryProvider.underlyingSymbol].GetLastData();
+            var data2 = qcAlgorithm.Securities[testHistoryProvider.underlyingSymbol2].GetLastData();
+            Assert.IsNotNull(data);
+            Assert.IsNotNull(data2);
+            Assert.AreEqual(data.Price, 2);
+            Assert.AreEqual(data2.Price, 3);
+        }
+
         [Test, Ignore]
         public void PythonCustomDataTypes_AreAddedToSubscriptions_Successfully()
         {
@@ -157,6 +180,39 @@ namespace QuantConnect.Tests.Algorithm
             return (from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
                     where type.IsAssignableFrom(sub.Type)
                     select sub).FirstOrDefault();
+        }
+
+        private class TestHistoryProvider : IHistoryProvider
+        {
+            public string underlyingSymbol = "GOOG";
+            public string underlyingSymbol2 = "AAPL";
+            public int DataPointCount { get; }
+            public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider,
+                IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                var now = DateTime.UtcNow;
+                var tradeBar1 = new TradeBar(now, underlyingSymbol, 1, 1, 1, 1, 1, TimeSpan.FromDays(1));
+                var tradeBar2 = new TradeBar(now, underlyingSymbol2, 3, 3, 3, 3, 3, TimeSpan.FromDays(1));
+                var slice1 = new Slice(now, new List<BaseData> { tradeBar1, tradeBar2 },
+                                    new TradeBars(now), new QuoteBars(),
+                                    new Ticks(), new OptionChains(),
+                                    new FuturesChains(), new Splits(),
+                                    new Dividends(now), new Delistings(),
+                                    new SymbolChangedEvents());
+                var tradeBar1_2 = new TradeBar(now, underlyingSymbol, 2, 2, 2, 2, 2, TimeSpan.FromDays(1));
+                var slice2 = new Slice(now, new List<BaseData> { tradeBar1_2 },
+                    new TradeBars(now), new QuoteBars(),
+                    new Ticks(), new OptionChains(),
+                    new FuturesChains(), new Splits(),
+                    new Dividends(now), new Delistings(),
+                    new SymbolChangedEvents());
+                return new[] { slice1, slice2 };
+            }
         }
     }
 }

@@ -63,6 +63,7 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
+            var requiredHistoryRequests = new Dictionary<Security, Resolution>();
             // rewrite securities w/ derivatives to be in raw mode
             lock (_pendingUniverseAdditionsLock)
             {
@@ -91,7 +92,11 @@ namespace QuantConnect.Algorithm
                         // set data mode raw and default volatility model
                         ConfigureUnderlyingSecurity(underlyingSecurity);
 
-                        // set the underying security on the derivative -- we do this in two places since it's possible
+                        if (LiveMode && underlyingSecurity.GetLastData() == null)
+                        {
+                            requiredHistoryRequests.Add(underlyingSecurity, (Resolution)Math.Max((int)security.Resolution, (int)Resolution.Minute));
+                        }
+                        // set the underlying security on the derivative -- we do this in two places since it's possible
                         // to do AddOptionContract w/out the underlying already added and normalized properly
                         var derivative = security as IDerivativeSecurity;
                         if (derivative != null)
@@ -99,6 +104,24 @@ namespace QuantConnect.Algorithm
                             derivative.Underlying = underlyingSecurity;
                         }
                     }
+                }
+
+                if (!requiredHistoryRequests.IsNullOrEmpty())
+                {
+                    // Create requests
+                    var historyRequests = Enumerable.Empty<HistoryRequest>();
+                    foreach (var byResolution in requiredHistoryRequests.GroupBy(x => x.Value))
+                    {
+                        historyRequests = historyRequests.Concat(
+                            CreateBarCountHistoryRequests(byResolution.Select(x => x.Key.Symbol), 3, byResolution.Key));
+                    }
+                    // Request data
+                    var historicLastData = History(historyRequests);
+                    historicLastData.PushThrough(x =>
+                    {
+                        var security = requiredHistoryRequests.Keys.FirstOrDefault(y => y.Symbol == x.Symbol);
+                        security?.Cache.AddData(x);
+                    });
                 }
 
                 // add securities to their respective user defined universes
@@ -443,7 +466,7 @@ namespace QuantConnect.Algorithm
                                 TimeSpan.Zero),
                             SecurityInitializer,
                             QuantConnect.Time.MaxTimeSpan,
-                            new List<Symbol> {security.Symbol}
+                            new List<Symbol> { security.Symbol }
                         );
                         _pendingUniverseAdditions.Add(universe);
                     }
