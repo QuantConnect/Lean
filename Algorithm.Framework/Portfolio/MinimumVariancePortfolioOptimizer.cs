@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using Accord.Math;
 using Accord.Math.Optimization;
@@ -77,20 +76,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
         }
 
+        /// <summary>
+        /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
+        /// </summary>
+        /// <param name="historicalReturns">Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
+        /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
+        /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
         public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
         {
             var cov = historicalReturns.Covariance();
             var size = cov.GetLength(0);
             var returns = expectedReturns ?? historicalReturns.Mean(0);
-            var constraints = new List<LinearConstraint>();
 
-            // w^T µ ≥ β
-            constraints.Add(new LinearConstraint(size)
+            var constraints = new List<LinearConstraint>
             {
-                CombinedAs = returns,
-                ShouldBe = _targetReturn > 0 ? ConstraintType.EqualTo : ConstraintType.GreaterThanOrEqualTo,
-                Value = _targetReturn
-            });
+                // w^T µ ≥ β
+                new LinearConstraint(size)
+                {
+                    CombinedAs = returns,
+                    ShouldBe = ConstraintType.EqualTo,
+                    Value = _targetReturn
+                }
+            };
 
             // Σw = 1
             constraints.Add(GetBudgetConstraint(size));

@@ -20,7 +20,6 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
@@ -62,14 +61,6 @@ namespace QuantConnect.Algorithm.CSharp
             return _symbols.Take(last);
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            if (orderEvent.Status.IsFill())
-            {
-                Debug(orderEvent.ToString());
-            }
-        }
-
         public bool CanRunLocally => true;
 
         /// <summary>
@@ -82,31 +73,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "14"},
-            {"Average Win", "0.42%"},
-            {"Average Loss", "-0.08%"},
-            {"Compounding Annual Return", "83.733%"},
-            {"Drawdown", "1.700%"},
-            {"Expectancy", "1.671"},
-            {"Net Profit", "0.837%"},
-            {"Sharpe Ratio", "2.239"},
-            {"Loss Rate", "57%"},
-            {"Win Rate", "43%"},
-            {"Profit-Loss Ratio", "5.23"},
+            {"Total Trades", "11"},
+            {"Average Win", "0.50%"},
+            {"Average Loss", "-0.14%"},
+            {"Compounding Annual Return", "564.274%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "1.248"},
+            {"Net Profit", "2.628%"},
+            {"Sharpe Ratio", "8.542"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "3.50"},
             {"Alpha", "0"},
-            {"Beta", "31.394"},
-            {"Annual Standard Deviation", "0.161"},
-            {"Annual Variance", "0.026"},
-            {"Information Ratio", "2.168"},
-            {"Tracking Error", "0.161"},
+            {"Beta", "95.538"},
+            {"Annual Standard Deviation", "0.129"},
+            {"Annual Variance", "0.017"},
+            {"Information Ratio", "8.459"},
+            {"Tracking Error", "0.129"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$55.58"},
+            {"Total Fees", "$23.99"},
             {"Total Insights Generated", "14"},
             {"Total Insights Closed", "4"},
             {"Total Insights Analysis Completed", "0"},
             {"Long Insight Count", "6"},
             {"Short Insight Count", "4"},
-            {"Long/Short Ratio", "150%"},
+            {"Long/Short Ratio", "150.0%"},
             {"Estimated Monthly Alpha Value", "$0"},
             {"Total Accumulated Estimated Alpha Value", "$0"},
             {"Mean Population Estimated Insight Value", "$0"},

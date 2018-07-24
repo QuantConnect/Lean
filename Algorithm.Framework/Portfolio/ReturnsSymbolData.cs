@@ -16,8 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
 using QuantConnect.Util;
 
@@ -28,14 +26,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class ReturnsSymbolData
     {
-        internal readonly Symbol Symbol;
+        private readonly Symbol _symbol;
         private readonly RateOfChange _roc;
         private readonly RollingWindow<IndicatorDataPoint> _window;
 
-        public ReturnsSymbolData(QCAlgorithmFramework algorithm, Symbol symbol, int lookback, int period, Resolution resolution)
+        public ReturnsSymbolData(Symbol symbol, int lookback, int period)
         {
-            Symbol = symbol;
-            _roc = new RateOfChange($"{Symbol}.ROC(1)", lookback);
+            _symbol = symbol;
+            _roc = new RateOfChange($"{_symbol}.ROC({lookback})", lookback);
             _window = new RollingWindow<IndicatorDataPoint>(period);
             _roc.Updated += OnRateOfChangeUpdated;
         }
@@ -44,7 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         public void Add(DateTime time, decimal value)
         {
-            var item = new IndicatorDataPoint(Symbol, time, value);
+            var item = new IndicatorDataPoint(_symbol, time, value);
             _window.Add(item);
         }
 

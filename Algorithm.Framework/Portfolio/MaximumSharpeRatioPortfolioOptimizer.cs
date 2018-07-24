@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using Accord.Math;
 using Accord.Math.Optimization;
@@ -21,6 +20,11 @@ using Accord.Statistics;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
+    /// <summary>
+    /// Provides an implementation of a portfolio optimizer that maximizes the portfolio Sharpe Ratio.
+    /// The interval of weights in optimization method can be changed based on the long-short algorithm.
+    /// The default model uses flat risk free rate and weight for an individual security range from -1 to 1.
+    /// </summary>
     public class MaximumSharpeRatioPortfolioOptimizer : IPortfolioOptimizer
     {
         private double _lower;
@@ -73,31 +77,31 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
         }
 
+        /// <summary>
+        /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
+        /// </summary>
+        /// <param name="historicalReturns">Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
+        /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
+        /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
         public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
         {
             var cov = historicalReturns.Covariance();
             var size = cov.GetLength(0);
             var returns = (expectedReturns ?? historicalReturns.Mean(0)).Subtract(_riskFreeRate);
-            var constraints = new List<LinearConstraint>();
 
-            // (µ − r_f)^T w = 1
-            constraints.Add(new LinearConstraint(size)
+            var constraints = new List<LinearConstraint>
             {
-                CombinedAs = returns,
-                ShouldBe = ConstraintType.EqualTo,
-                Value = 1.0
-            });
+                // (µ − r_f)^T w = 1
+                new LinearConstraint(size)
+                {
+                    CombinedAs = returns,
+                    ShouldBe = ConstraintType.EqualTo,
+                    Value = 1.0
+                }
+            };
 
             // Σw = 1
             constraints.Add(GetBudgetConstraint(size));
-
-            //// Σw ≥ 0
-            //constraints.Add(new LinearConstraint(size)
-            //{
-            //    CombinedAs = Vector.Create(size, 1.0),
-            //    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
-            //    Value = 0.0
-            //});
 
             // lw ≤ w ≤ up
             constraints.AddRange(GetBoundaryConditions(size));

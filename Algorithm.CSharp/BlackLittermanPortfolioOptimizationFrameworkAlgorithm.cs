@@ -21,7 +21,6 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
 
@@ -47,14 +46,11 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            
+
             // set algorithm framework models
             SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
-            //SetAlpha(new CompositeAlphaModel(
-            //    new HistoricalReturnsAlphaModel(resolution: Resolution.Daily),
-            //    new RsiAlphaModel()));
             SetAlpha(new HistoricalReturnsAlphaModel(resolution: Resolution.Daily));
-            SetPortfolioConstruction(new BlackLittermanPortfolioConstructionModel());
+            SetPortfolioConstruction(new BlackLittermanOptimizationPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
@@ -63,14 +59,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             int last = Time.Day > 8 ? 3 : _symbols.Count();
             return _symbols.Take(last);
-        }
-
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            if (orderEvent.Status.IsFill())
-            {                
-                Debug(orderEvent.ToString());
-            }
         }
 
         public bool CanRunLocally => true;        
@@ -110,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Insights Analysis Completed", "0"},
             {"Long Insight Count", "6"},
             {"Short Insight Count", "4"},
-            {"Long/Short Ratio", "150%"},
+            {"Long/Short Ratio", "150.0%"},
             {"Total Accumulated Estimated Alpha Value", "$0"},
             {"Mean Population Estimated Insight Value", "$0"},
             {"Mean Population Direction", "0%"},

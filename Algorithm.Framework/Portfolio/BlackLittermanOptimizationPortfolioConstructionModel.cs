@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// The default model uses the 0.0025 as weight-on-views scalar parameter tau. The optimization method
     /// maximizes the Sharpe ratio with the weight range from -1 to 1.
     /// </summary>
-    public class BlackLittermanPortfolioConstructionModel : PortfolioConstructionModel
+    public class BlackLittermanOptimizationPortfolioConstructionModel : PortfolioConstructionModel
     {
         private readonly int _lookback;
         private readonly int _period;
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
-        public BlackLittermanPortfolioConstructionModel(
+        public BlackLittermanOptimizationPortfolioConstructionModel(
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
@@ -170,9 +170,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 if (!_symbolDataDict.ContainsKey(added.Symbol))
                 {
-                    var symbolData = new ReturnsSymbolData(algorithm, added.Symbol, _lookback, _period, _resolution);
+                    var symbolData = new ReturnsSymbolData(added.Symbol, _lookback, _period);
                     _symbolDataDict[added.Symbol] = symbolData;
-                    addedSymbols.Add(symbolData.Symbol);
+                    addedSymbols.Add(added.Symbol);
                 }
             }
             if (addedSymbols.Count == 0)
