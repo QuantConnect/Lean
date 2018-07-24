@@ -75,18 +75,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IStreamReader reader = null;
             try
             {
-                switch (source.TransportMedium)
+                try
                 {
-                    default:
-                    case SubscriptionTransportMedium.Rest:
-                        reader = new RestSubscriptionStreamReader(source.Source, source.Headers, _isLiveMode);
-                        break;
-                    case SubscriptionTransportMedium.LocalFile:
-                        reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
-                        break;
-                    case SubscriptionTransportMedium.RemoteFile:
-                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
-                        break;
+                    switch (source.TransportMedium)
+                    {
+                        default:
+                        case SubscriptionTransportMedium.Rest:
+                            reader = new RestSubscriptionStreamReader(source.Source, source.Headers, _isLiveMode);
+                            break;
+                        case SubscriptionTransportMedium.LocalFile:
+                            reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
+                            break;
+                        case SubscriptionTransportMedium.RemoteFile:
+                            reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    OnInvalidSource(source, e);
+                    yield break;
                 }
 
                 var raw = "";
