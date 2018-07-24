@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
@@ -71,7 +70,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            throw new NotImplementedException();
+            return 1m;
         }
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
