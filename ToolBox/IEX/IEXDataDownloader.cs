@@ -54,20 +54,19 @@ namespace QuantConnect.ToolBox.IEX
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
 
-            var historyRequests = new List<HistoryRequest>() {
-                new HistoryRequest(
-                    startUtc,
-                    endUtc,
-                    typeof(QuoteBar),
-                    symbol,
-                    resolution,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
-                    DateTimeZone.Utc,
-                    resolution,
-                    false,
-                    false,
-                    DataNormalizationMode.Adjusted,
-                    TickType.Quote)
+            var historyRequests = new[] {
+                new HistoryRequest(startUtc,
+                                   endUtc,
+                                   typeof(QuoteBar),
+                                   symbol,
+                                   resolution,
+                                   SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
+                                   DateTimeZone.Utc,
+                                   resolution,
+                                   false,
+                                   false,
+                                   DataNormalizationMode.Adjusted,
+                                   TickType.Quote)
             };
 
             foreach (var slice in _handler.GetHistory(historyRequests, TimeZones.EasternStandard))

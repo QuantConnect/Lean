@@ -338,7 +338,7 @@ namespace QuantConnect.ToolBox.IEX
 
             if (request.Resolution == Resolution.Minute && start <= DateTime.Today.AddDays(-30))
             {
-                Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available for trailing 30 calendar days."); 
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available only for trailing 30 calendar days."); 
                 yield break;
             } else if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
             {
