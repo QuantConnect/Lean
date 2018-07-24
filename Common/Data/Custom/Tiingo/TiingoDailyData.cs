@@ -125,6 +125,15 @@ namespace QuantConnect.Data.Custom.Tiingo
         public decimal SplitFactor { get; set; }
 
         /// <summary>
+        /// Initializes an instance of the <see cref="TiingoDailyData"/> class.
+        /// </summary>
+        public TiingoDailyData()
+        {
+            Symbol = Symbol.Empty;
+            DataType = MarketDataType.Base;
+        }
+
+        /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="config">Configuration object</param>
@@ -164,6 +173,7 @@ namespace QuantConnect.Data.Custom.Tiingo
             {
                 item.Symbol = config.Symbol;
                 item.Time = item.Date;
+                item.Value = item.Close;
             }
 
             return new BaseDataCollection(date, config.Symbol, list);
