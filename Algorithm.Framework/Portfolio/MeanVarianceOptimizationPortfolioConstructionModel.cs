@@ -84,9 +84,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _pendingRemoval.Clear();
 
             var symbols = insights.Select(x => x.Symbol).Distinct();
-            if (symbols.Count() == 0)
+            if (symbols.Count() == 0 || insights.All(x => x.Magnitude == 0))
             {
-                return Enumerable.Empty<IPortfolioTarget>();
+                return targets;
             }
 
             foreach (var insight in insights)
@@ -160,9 +160,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 if (!_symbolDataDict.ContainsKey(added.Symbol))
                 {
-                    var symbolData = new ReturnsSymbolData(algorithm, added.Symbol, _lookback, _period, _resolution);
+                    var symbolData = new ReturnsSymbolData(added.Symbol, _lookback, _period);
                     _symbolDataDict[added.Symbol] = symbolData;
-                    addedSymbols.Add(symbolData.Symbol);
+                    addedSymbols.Add(added.Symbol);
                 }
             }
             if (addedSymbols.Count == 0)
@@ -177,7 +177,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     {
                         symbolData.Update(bar.EndTime, bar.Value);
                     }
-                });        
+                });
         }
     }
 }

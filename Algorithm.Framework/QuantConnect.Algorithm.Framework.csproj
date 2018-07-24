@@ -91,7 +91,7 @@
     <Compile Include="Execution\VolumeWeightedAveragePriceExecutionModel.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
-    <Compile Include="Portfolio\BlackLittermanPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
     <Compile Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.cs" />
