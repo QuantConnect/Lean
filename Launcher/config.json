@@ -105,6 +105,10 @@
     // To get your access token go to https://www.quandl.com/account/api
     "quandl-auth-token": "",
 
+    // Required to access data from Tiingo
+    // To get your access token go to https://www.tiingo.com
+    "tiingo-auth-token": "",
+
     // parameters to set in the algorithm (the below are just samples)
     "parameters": {
         // Intrinio account user and password
