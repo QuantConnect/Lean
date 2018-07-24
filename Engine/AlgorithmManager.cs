@@ -1006,7 +1006,7 @@ namespace QuantConnect.Lean.Engine
                     if (!delistings.Any(x => x.Symbol == delisting.Symbol && x.Type == delisting.Type))
                     {
                         delistings.Add(delisting);
-                        Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.Value);
+                        Log.Trace($"AlgorithmManager.Run(): Security delisting warning: {delisting.Symbol.Value}, UtcTime: {algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                     }
                 }
                 else
@@ -1026,7 +1026,7 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
 
-                    Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.Value);
+                    Log.Trace($"AlgorithmManager.Run(): Security delisted: {delisting.Symbol.Value}, UtcTime: {algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                     var cancelledOrders = algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
                     foreach (var cancelledOrder in cancelledOrders)
                     {

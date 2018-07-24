@@ -95,6 +95,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
             Assert.AreEqual("SPXL", mapFile.GetMappedSymbol(date.AddDays(1)));
         }
 
+        [Test]
+        public void ResolvesRemappedAndDelistedSymbol()
+        {
+            var date = new DateTime(2018, 7, 23);
+            var mapFile = _resolver.ResolveMapFile("TWX", date);
+            Assert.IsNotNull(mapFile);
+            Assert.AreEqual("AOL", mapFile.GetMappedSymbol(new DateTime(2000, 1, 1)));
+            Assert.AreEqual("TWX", mapFile.GetMappedSymbol(new DateTime(2014, 1, 1)));
+        }
+
         private static MapFileResolver CreateMapFileResolver()
         {
             return new MapFileResolver(new List<MapFile>
@@ -140,6 +150,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
                 {
                     new MapFileRow(new DateTime(2011, 12, 21), "oih"),
                     new MapFileRow(new DateTime(2050, 12, 31), "oih")
+                }),
+                // remapped + delisted
+                new MapFile("twx.1", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(1998, 1, 2), "twx"),
+                    new MapFileRow(new DateTime(2001, 1, 11), "twx")
+                }),
+                new MapFile("twx", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(1998, 1, 2), "aol"),
+                    new MapFileRow(new DateTime(2003, 10, 15), "aol"),
+                    new MapFileRow(new DateTime(2018, 6, 15), "twx")
                 }),
             });
         }
