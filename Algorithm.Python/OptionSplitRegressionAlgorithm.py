@@ -35,7 +35,7 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
         # and closes adjusted position on the second day
 
         self.SetCash(1000000)
-        self.SetStartDate(2014,6,5)
+        self.SetStartDate(2014,6,6)
         self.SetEndDate(2014,6,9)
 
         option = self.AddOption("AAPL")
