@@ -526,6 +526,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // if message processing thread is still running, wait until it terminates
                     Disconnect();
 
+                    // There is socket exception happening when reconnecting right away. Testing showed 10 ms is enough, using 50ms to be on the safe side.
+                    Thread.Sleep(50);
+
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, _clientId);
 
@@ -2015,15 +2018,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 case IB.OrderStatus.ApiPending:
                 case IB.OrderStatus.PendingSubmit:
-                case IB.OrderStatus.PreSubmitted:
                     return OrderStatus.New;
 
-                case IB.OrderStatus.ApiCancelled:
                 case IB.OrderStatus.PendingCancel:
+                    return OrderStatus.CancelPending;
+
+                case IB.OrderStatus.ApiCancelled:
                 case IB.OrderStatus.Cancelled:
                     return OrderStatus.Canceled;
 
                 case IB.OrderStatus.Submitted:
+                case IB.OrderStatus.PreSubmitted:
                     return OrderStatus.Submitted;
 
                 case IB.OrderStatus.Filled:

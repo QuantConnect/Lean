@@ -449,6 +449,8 @@ namespace QuantConnect.Tests.Brokerages
 
             PlaceOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.Now));
 
+            Thread.Sleep(3000);
+
             var after = Brokerage.GetAccountHoldings();
 
             var beforeHoldings = before.FirstOrDefault(x => x.Symbol == Symbol);

@@ -117,6 +117,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
                 _interactiveBrokersBrokerage.Dispose();
                 _interactiveBrokersBrokerage = null;
+                _orders.Clear();
             }
             finally
             {
@@ -547,10 +548,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 _orders.Add(order);
                 ib.PlaceOrder(order);
 
-                orderEventFired.WaitOneAssertFail(1500, "Didnt receive order event #" + i);
+                orderEventFired.WaitOneAssertFail(3000, "Didnt receive order event #" + i);
                 orderEventFired.Reset();
 
-                accountChangedFired.WaitOneAssertFail(1500, "Didnt receive account event #" + i);
+                accountChangedFired.WaitOneAssertFail(3000, "Didnt receive account event #" + i);
                 accountChangedFired.Reset();
             }
 
@@ -572,7 +573,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             _orders.Add(order);
             ib.PlaceOrder(order);
 
-            manualResetEvent.WaitOneAssertFail(1500, "Didn't receive account changed event");
+            manualResetEvent.WaitOneAssertFail(3000, "Didn't receive account changed event");
 
             decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
 
