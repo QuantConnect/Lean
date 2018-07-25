@@ -42,14 +42,26 @@ namespace QuantConnect.Securities.Option
             // expire on 3rd Friday, not Saturday following 3rd Friday as it was before.
             // More details: https://www.sec.gov/rules/sro/occ/2013/34-69480.pdf
 
+            int daysBefore = 0;
+            var symbolDateTime = symbol.ID.Date;
+
             if (IsStandardContract(symbol) &&
-                symbol.ID.Date.DayOfWeek == DayOfWeek.Saturday &&
-                symbol.ID.Date < new DateTime(2015, 2, 1))
+                symbolDateTime.DayOfWeek == DayOfWeek.Saturday &&
+                symbolDateTime < new DateTime(2015, 2, 1))
             {
-                return symbol.ID.Date.Date.AddDays(-1.0);
+                daysBefore--;
             }
 
-            return symbol.ID.Date.Date;
+            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+                                              .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
+                                              .ExchangeHours;
+
+            while (!exchangeHours.IsDateOpen(symbolDateTime.AddDays(daysBefore)))
+            {
+                daysBefore--;
+            }
+
+            return symbolDateTime.AddDays(daysBefore).Date;
         }
     }
 }

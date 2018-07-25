@@ -27,6 +27,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 
@@ -91,6 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BaseData _lastInstanceBeforeAuxilliaryData;
         private readonly IDataProvider _dataProvider;
         private readonly IDataCacheProvider _dataCacheProvider;
+        private DateTime _delistingDate;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -245,6 +247,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            // Estimate delisting date.
+            switch (_config.Symbol.ID.SecurityType)
+            {
+                case SecurityType.Future:
+                    _delistingDate = _config.Symbol.ID.Date;
+                    break;
+                case SecurityType.Option:
+                    _delistingDate = OptionSymbol.GetLastDayOfTrading(_config.Symbol);
+                    break;
+                default:
+                    _delistingDate = _mapFile.DelistingDate;
+                    break;
+            }
             _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
         }
 
@@ -671,33 +686,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CheckForDelisting(DateTime date)
         {
-            DateTime delistingDate;
+            
 
-            switch (_config.Symbol.ID.SecurityType)
-            {
-                case SecurityType.Future:
-                    delistingDate = _config.Symbol.ID.Date;
-                    break;
-                case SecurityType.Option:
-                    delistingDate = OptionSymbol.GetLastDayOfTrading(_config.Symbol);
-                    break;
-                default:
-                    delistingDate = _mapFile.DelistingDate;
-                    break;
-            }
-
-            if (!_delistedWarning && date >= delistingDate)
+            if (!_delistedWarning && date >= _delistingDate)
             {
                 _delistedWarning = true;
                 var price = _previous != null ? _previous.Price : 0;
                 _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
             }
-            else if (!_delisted && date > delistingDate)
+            else if (!_delisted && date > _delistingDate)
             {
                 _delisted = true;
                 var price = _previous != null ? _previous.Price : 0;
                 // delisted at EOD
-                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, delistingDate.AddDays(1), price, DelistingType.Delisted));
+                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, _delistingDate.AddDays(1), price, DelistingType.Delisted));
             }
         }
 
