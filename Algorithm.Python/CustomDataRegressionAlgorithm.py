@@ -60,7 +60,7 @@ class Bitcoin(PythonData):
 
         #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip"
         # OR simply return a fixed small data file. Large files will slow down your backtest
-        return SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile)
+        return SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile)
 
 
     def Reader(self, config, line, date, isLiveMode):
