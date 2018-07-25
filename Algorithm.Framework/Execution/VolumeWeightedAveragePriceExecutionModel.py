@@ -22,7 +22,7 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import Tick, TradeBar
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm.Framework.Execution import ExecutionModel, OrderSizing
+from QuantConnect.Algorithm.Framework.Execution import ExecutionModel
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTargetCollection
 import numpy as np
 from datetime import datetime
@@ -62,9 +62,6 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
             data = self.symbolData.get(symbol, None)
             if data is None: return
 
-            # ensure we're receiving price data before submitting orders
-            if data.Security.Price == 0: return
-
             # check order entry conditions
             if self.PriceIsFavorable(data, unorderedQuantity):
                 # get the maximum order size based on total order value
@@ -76,10 +73,7 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
                 if orderSize != 0:
                     algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
 
-            # check to see if we're done with this target
-            unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
-            if unorderedQuantity == 0:
-                self.targetsCollection.Remove(target.Symbol)
+        self.targetsCollection.ClearFulfilled(algorithm)
 
 
     def OnSecuritiesChanged(self, algorithm, changes):

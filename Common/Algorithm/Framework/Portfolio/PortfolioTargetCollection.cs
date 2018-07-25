@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -46,6 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         /// <summary>
         /// Gets all portfolio targets in this collection
+        /// Careful, will return targets for securities that might have no data yet.
         /// </summary>
         public ICollection<IPortfolioTarget> Values => _targets.Values;
 
@@ -104,6 +106,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public void Clear()
         {
             _targets.Clear();
+        }
+
+        /// <summary>
+        /// Removes fulfilled portfolio targets from this collection.
+        /// Will only take into account actual holdings and ignore open orders.
+        /// </summary>
+        public void ClearFulfilled(IAlgorithm algorithm)
+        {
+            foreach (var target in _targets)
+            {
+                var security = algorithm.Securities[target.Key];
+                var holdings = security.Holdings.Quantity;
+                // check to see if we're done with this target
+                if (Math.Abs(target.Value.Quantity - holdings) < security.SymbolProperties.LotSize)
+                {
+                    Remove(target.Key);
+                }
+            }
         }
 
         /// <summary>
@@ -252,6 +272,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Gets an enumerator to iterator over all portfolio targets in this collection.
         /// This is the default enumerator for this collection.
+        /// Careful, will return targets for securities that might have no data yet.
         /// </summary>
         /// <returns>Portfolio targets enumerator</returns>
         IEnumerator IEnumerable.GetEnumerator()
@@ -278,12 +299,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Returned an ordered enumerable where position reducing orders are executed first
         /// and the remaining orders are executed in decreasing order value.
+        /// Will NOT return targets for securities that have no data yet.
+        /// Will NOT return targets for which current holdings + open orders quantity, sum up to the target quantity
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         public IEnumerable<IPortfolioTarget> OrderByMarginImpact(IAlgorithm algorithm)
         {
             return _targets
                 .Select(x => x.Value)
+                .Where(x => {
+                    var security = algorithm.Securities[x.Symbol];
+                    return security.HasData
+                            && Math.Abs(OrderSizing.GetUnorderedQuantity(algorithm, x)) >= security.SymbolProperties.LotSize;
+                })
                 .Select(x => new {
                     PortfolioTarget = x,
                     TargetQuantity = x.Quantity,

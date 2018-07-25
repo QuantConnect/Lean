@@ -44,4 +44,4 @@ class ImmediateExecutionModel(ExecutionModel):
             if quantity != 0:
                 algorithm.MarketOrder(target.Symbol, quantity)
 
-        self.targetsCollection.Clear()
+        self.targetsCollection.ClearFulfilled(algorithm)

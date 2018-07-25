@@ -22,6 +22,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -65,12 +66,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     continue;
                 }
 
-                // ensure we're receiving price data before submitting orders
-                if (data.Security.Price == 0m)
-                {
-                    continue;
-                }
-
                 // check order entry conditions
                 if (PriceIsFavorable(data, unorderedQuantity))
                 {
@@ -85,14 +80,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         algorithm.MarketOrder(data.Security.Symbol, Math.Sign(unorderedQuantity) * orderSize);
                     }
                 }
-
-                // check to see if we're done with this target
-                unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
-                if (unorderedQuantity == 0m)
-                {
-                    _targetsCollection.Remove(target.Symbol);
-                }
             }
+
+            _targetsCollection.ClearFulfilled(algorithm);
         }
 
         /// <summary>

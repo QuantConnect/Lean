@@ -16,9 +16,10 @@
 using System;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm.Framework.Execution
+namespace QuantConnect.Orders
 {
     /// <summary>
     /// Provides methods for computing a maximum order size.
@@ -60,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="target">The portfolio target</param>
         /// <returns>The remaining quantity to be ordered</returns>
-        public static decimal GetUnorderedQuantity(QCAlgorithmFramework algorithm, IPortfolioTarget target)
+        public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target)
         {
             var security = algorithm.Securities[target.Symbol];
             var holdings = security.Holdings.Quantity;
