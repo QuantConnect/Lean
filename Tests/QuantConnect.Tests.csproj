@@ -273,6 +273,7 @@
     <Compile Include="Engine\DataFeeds\AlgorithmStub.cs" />
     <Compile Include="Engine\DataFeeds\Auxiliary\MapFileResolverTests.cs" />
     <Compile Include="Engine\DataFeeds\BaseDataExchangeTests.cs" />
+    <Compile Include="Engine\DataFeeds\CollectionSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\CustomLiveDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\EnqueableEnumeratorTests.cs" />
