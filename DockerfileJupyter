@@ -1,5 +1,5 @@
 #
-#    LEAN Jupyter Docker Container 20180607
+#    LEAN Jupyter Docker Container 20180725
 #
 
 # Use base system for cleaning up wayward processes
@@ -33,9 +33,12 @@ RUN wget https://cdn.quantconnect.com/icsharp/iCSharp.Kernel.zip && \
 # Setting some environment variables
 ENV WORK /root/Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
+ENV SITEPACKAGES /opt/miniconda3/lib/python3.6/site-packages/
 
 # Copy Lean files to convenient locations
 COPY ./Launcher/bin/Debug/ ${WORK}
+COPY ./Launcher/bin/Debug/Python.Runtime.dll {SITEPACKAGES}/Python.Runtime.dll
+
 RUN rm -irf ${WORK}/*Python* && \
     find ${WORK} -type f -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -delete && \
     echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json
