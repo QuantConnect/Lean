@@ -131,9 +131,33 @@ namespace QuantConnect.Brokerages.Bitfinex
             return list;
         }
 
+        /// <summary>
+        /// Gets all open positions
+        /// </summary>
+        /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            throw new NotImplementedException();
+            var endpoint = GetEndpoint("positions");
+            var request = new RestRequest(endpoint, Method.POST);
+
+            JsonObject payload = new JsonObject();
+            payload.Add("request", endpoint);
+            payload.Add("nonce", GetNonce().ToString());
+
+            request.AddJsonBody(payload.ToString());
+            SignRequest(request, payload.ToString());
+
+            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"BitfinexBrokerage.GetAccountHoldings: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var positions = JsonConvert.DeserializeObject<Messages.Position[]>(response.Content);
+            return positions.Where(p=> p.Amount != 0)
+                .Select(ConvertHolding)
+                .ToList();
         }
 
         /// <summary>

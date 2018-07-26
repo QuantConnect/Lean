@@ -68,9 +68,23 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        private Holding ConvertHolding(Messages.Position position)
+        {
+            return new Holding()
+            {
+                Symbol = Symbol.Create(position.Symbol, SecurityType.Crypto, Market.Bitfinex),
+                AveragePrice = position.AveragePrice,
+                Quantity = position.Amount,
+                UnrealizedPnL = position.PL,
+                ConversionRate = 1.0m,
+                CurrencySymbol = "$",
+                Type = SecurityType.Crypto
+            };
+        }
+
         private Func<Messages.Order, bool> OrderFilter(AccountType accountType)
         {
-            return order => (order.IsExchange && accountType == AccountType.Cash) || 
+            return order => (order.IsExchange && accountType == AccountType.Cash) ||
                 (!order.IsExchange && accountType == AccountType.Margin);
         }
 

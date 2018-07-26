@@ -43,6 +43,18 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public bool IsExchange => Type.StartsWith("exchange", StringComparison.OrdinalIgnoreCase);
     }
 
+    public class Position
+    {
+        public int Id { get; set; }
+        public string Symbol { get; set; }
+        [JsonProperty("base")]
+        public decimal AveragePrice { get; set; }
+        public decimal Amount { get; set; }
+        public double Timestamp { get; set; }
+        public decimal Swap { get; set; }
+        public decimal PL { get; set; }
+    }
+
 #pragma warning restore 1591
 
 }
