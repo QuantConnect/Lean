@@ -68,6 +68,12 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        private Func<Messages.Order, bool> OrderFilter(AccountType accountType)
+        {
+            return order => (order.IsExchange && accountType == AccountType.Cash) || 
+                (!order.IsExchange && accountType == AccountType.Margin);
+        }
+
         private IRestResponse ExecuteRestRequest(IRestRequest request, BitfinexEndpointType endpointType)
         {
             const int maxAttempts = 10;
@@ -90,6 +96,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             foreach (byte b in ba)
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
+        }
+
+        private static Symbol CreateSymbol(string symbol)
+        {
+            return Symbol.Create(symbol, SecurityType.Crypto, Market.Bitfinex);
         }
     }
 }

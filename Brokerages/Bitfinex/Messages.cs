@@ -29,6 +29,20 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string Event { get; set; }
     }
 
+    public class Order
+    {
+        public string Id { get; set; }
+        public decimal Price { get; set; }
+        public string Symbol { get; set; }
+        public string Type { get; set; }
+        public string Side { get; set; }
+        public double Timestamp { get; set; }
+        [JsonProperty("remaining_amount")]
+        public decimal Quantity { get; set; }
+
+        public bool IsExchange => Type.StartsWith("exchange", StringComparison.OrdinalIgnoreCase);
+    }
+
 #pragma warning restore 1591
 
 }

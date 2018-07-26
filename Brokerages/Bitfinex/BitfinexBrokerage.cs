@@ -59,9 +59,76 @@ namespace QuantConnect.Brokerages.Bitfinex
             WebSocket.Close();
         }
 
+        /// <summary>
+        /// Gets all orders not yet closed
+        /// </summary>
+        /// <returns></returns>
         public override List<Order> GetOpenOrders()
         {
-            throw new NotImplementedException();
+            var list = new List<Order>();
+            var endpoint = "/v1/orders";
+            var request = new RestRequest(endpoint, Method.POST);
+
+            JsonObject payload = new JsonObject();
+            payload.Add("request", endpoint);
+            payload.Add("nonce", GetNonce().ToString());
+
+            request.AddJsonBody(payload.ToString());
+            SignRequest(request, payload.ToString());
+
+            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"BitfinexBrokerage.GetOpenOrders: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var orders = JsonConvert.DeserializeObject<Messages.Order[]>(response.Content)
+                .Where(OrderFilter(_algorithm.BrokerageModel.AccountType));
+            foreach (var item in orders)
+            {
+                Order order;
+                if (item.Type.Replace("exchange", "").Trim() == "market")
+                {
+                    order = new MarketOrder { Price = item.Price };
+                }
+                else if (item.Type.Replace("exchange", "").Trim() == "limit")
+                {
+                    order = new LimitOrder { LimitPrice = item.Price };
+                }
+                else if (item.Type.Replace("exchange", "").Trim() == "stop")
+                {
+                    order = new StopMarketOrder { StopPrice = item.Price };
+                }
+                else
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
+                        "BitfinexBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
+                    continue;
+                }
+
+                order.Quantity = item.Side == "sell" ? -item.Quantity : item.Quantity;
+                order.BrokerId = new List<string> { item.Id };
+                order.Symbol = CreateSymbol(item.Symbol);
+                order.Time = Time.UnixTimeStampToDateTime(item.Timestamp);
+                order.Status = OrderStatus.Submitted;
+                order.Price = item.Price;
+                list.Add(order);
+            }
+
+            foreach (var item in list)
+            {
+                if (item.Status.IsOpen())
+                {
+                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
+                    if (cached.Any())
+                    {
+                        CachedOrderIDs[cached.First().Key] = item;
+                    }
+                }
+            }
+
+            return list;
         }
 
         public override List<Holding> GetAccountHoldings()
@@ -82,7 +149,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             JsonObject payload = new JsonObject();
             payload.Add("request", endpoint);
             payload.Add("nonce", GetNonce().ToString());
-            
+
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
 
