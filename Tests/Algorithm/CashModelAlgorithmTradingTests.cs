@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Algorithm
             Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
             // $1 in fees, so slightly less than 2k from SetHoldings_ZeroToLong
-            Assert.AreEqual(1999.96, actual);
+            Assert.AreEqual(1999.96m, actual);
         }
 
         [Test]
@@ -390,7 +390,7 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
 
             //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares, -$1 in fees
-            Assert.AreEqual(-499.98, actual);
+            Assert.AreEqual(-499.98m, actual);
         }
 
         [Test]
