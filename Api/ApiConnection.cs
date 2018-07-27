@@ -115,7 +115,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error("Api.ApiConnection.TryRequest(): Failed to make REST request. Response content: " + responseContent + ", Error: " + err);
+                Log.Error($"Api.ApiConnection.TryRequest({request.Resource}): Failed to make REST request. Response content: {responseContent}, Error: {err}");
                 result = null;
                 return false;
             }
