@@ -807,7 +807,20 @@ namespace QuantConnect.Lean.Engine
                 var us = new UniverseSelection(feed, algorithm);
                 foreach (var universe in algorithm.UniverseManager.Values)
                 {
-                    us.ApplyUniverseSelection(universe, new DateTime(start), new BaseDataCollection());
+                    BaseDataCollection dataCollection;
+                    switch (universe.SecurityType)
+                    {
+                        case SecurityType.Option:
+                            dataCollection = new OptionChainUniverseDataCollection();
+                            break;
+                        case SecurityType.Future:
+                            dataCollection = new FuturesChainUniverseDataCollection();
+                            break;
+                        default:
+                            dataCollection = new BaseDataCollection();
+                            break;
+                    }
+                    us.ApplyUniverseSelection(universe, new DateTime(start), dataCollection);
                 }
 
                 // make the history request and build time slices
