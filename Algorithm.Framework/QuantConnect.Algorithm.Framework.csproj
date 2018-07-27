@@ -86,7 +86,6 @@
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="Execution\NullExecutionModel.cs" />
     <Compile Include="Execution\ExecutionModelPythonWrapper.cs" />
-    <Compile Include="Execution\OrderSizing.cs" />
     <Compile Include="Execution\StandardDeviationExecutionModel.cs" />
     <Compile Include="Execution\VolumeWeightedAveragePriceExecutionModel.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />

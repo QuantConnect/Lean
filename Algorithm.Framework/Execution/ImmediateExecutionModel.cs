@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                 }
             }
 
-            _targetsCollection.Clear();
+            _targetsCollection.ClearFulfilled(algorithm);
         }
 
         /// <summary>
