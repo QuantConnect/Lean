@@ -262,7 +262,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Gets the user settings for the algorithm
         /// </summary>
-        public AlgorithmSettings Settings => _baseAlgorithm.Settings;
+        public IAlgorithmSettings Settings => _baseAlgorithm.Settings;
 
         /// <summary>
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol

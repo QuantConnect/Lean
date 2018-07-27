@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             return _symbols.Take(last);
         }
 
-        public bool CanRunLocally => true;        
+        public bool CanRunLocally => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "11"},
             {"Average Win", "0.12%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1365.948%"},
+            {"Compounding Annual Return", "1366.273%"},
             {"Drawdown", "0.800%"},
             {"Expectancy", "0"},
             {"Net Profit", "3.747%"},
@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
-            {"Beta", "135.767"},
+            {"Beta", "135.779"},
             {"Annual Standard Deviation", "0.168"},
             {"Annual Variance", "0.028"},
             {"Information Ratio", "9.21"},

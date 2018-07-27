@@ -107,9 +107,12 @@ namespace QuantConnect.Securities
                     portfolio.CashBook.ConvertToAccountCurrency(totalQuantity - openOrdersReservedQuantity + holdingsValue,
                         security.QuoteCurrency.Symbol);
 
+                // convert the target into a percent in relation to TPV
+                var targetPercent = portfolio.TotalPortfolioValue == 0 ? 0 : targetValue / portfolio.TotalPortfolioValue;
+
                 // maximum quantity that can be bought (in quote currency)
                 var maximumQuantity =
-                    GetMaximumOrderQuantityForTargetValue(portfolio, security, targetValue).Quantity * GetOrderPrice(security, order);
+                    GetMaximumOrderQuantityForTargetValue(portfolio, security, targetPercent).Quantity * GetOrderPrice(security, order);
 
                 isSufficient = orderQuantity <= Math.Abs(maximumQuantity);
                 if (!isSufficient)
@@ -138,14 +141,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the maximum market order quantity to obtain a position with a given value in account currency
+        /// Get the maximum market order quantity to obtain a position with a given value in account currency. Will not take into account buying power.
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
-        /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
+        /// <param name="target">Target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue)
+        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal target)
         {
+            var targetPortfolioValue = target * portfolio.TotalPortfolioValue;
             // no shorting allowed
             if (targetPortfolioValue < 0)
             {
@@ -207,11 +211,9 @@ namespace QuantConnect.Securities
             }
 
             // continue iterating while we do not have enough cash for the order
-            decimal cashRequired;
-            decimal orderValue;
-            decimal orderFees;
-            var feeToPriceRatio = 0m;
-
+            decimal orderValue = 0;
+            decimal orderFees = 0;
+            decimal currentOrderValue = 0;
             // compute the initial order quantity
             var orderQuantity = targetOrderValue / unitPrice;
 
@@ -222,33 +224,46 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityForTargetValueResult(0, $"The order quantity is less than the lot size of {security.SymbolProperties.LotSize} and has been rounded to zero.", false);
             }
 
+            // Just in case...
+            var lastOrderQuantity = 0m;
             do
             {
-                // reduce order quantity by feeToPriceRatio, since it is faster than by lot size
-                // if it becomes nonpositive, return zero
-                orderQuantity -= feeToPriceRatio;
+                // Each loop will reduce the order quantity based on the difference between
+                // (cashRequired + orderFees) and targetOrderValue
+                if (currentOrderValue > targetOrderValue)
+                {
+                    var currentOrderValuePerUnit = currentOrderValue / orderQuantity;
+                    var amountOfOrdersToRemove = (currentOrderValue - targetOrderValue) / currentOrderValuePerUnit;
+                    if (amountOfOrdersToRemove < security.SymbolProperties.LotSize)
+                    {
+                        // we will always substract at leat 1 LotSize
+                        amountOfOrdersToRemove = security.SymbolProperties.LotSize;
+                    }
+                    orderQuantity -= amountOfOrdersToRemove;
+                }
+
+                // rounding off Order Quantity to the nearest multiple of Lot Size
+                orderQuantity -= orderQuantity % security.SymbolProperties.LotSize;
                 if (orderQuantity <= 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The portfolio does not hold enough {currency} including the order fees.");
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The order quantity is less than the lot size of {security.SymbolProperties.LotSize} and has been rounded to zero." +
+                                                                              $"Target order value {targetOrderValue}. Order fees {orderFees}. Order quantity {orderQuantity}.");
                 }
+
+                if (lastOrderQuantity == orderQuantity)
+                {
+                    throw new Exception($"GetMaximumOrderQuantityForTargetValue failed to converge to target order value {targetOrderValue}. " +
+                                        $"Current order value is {currentOrderValue}. Order quantity {orderQuantity}. Lot size is " +
+                                        $"{security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol {security.Symbol}");
+                }
+                lastOrderQuantity = orderQuantity;
 
                 // generate the order
                 var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
                 orderValue = orderQuantity * unitPrice;
                 orderFees = security.FeeModel.GetOrderFee(security, order);
-
-                // find an incremental delta value for the next iteration step
-                feeToPriceRatio = orderFees / unitPrice;
-                feeToPriceRatio -= feeToPriceRatio % security.SymbolProperties.LotSize;
-                if (feeToPriceRatio < security.SymbolProperties.LotSize)
-                {
-                    feeToPriceRatio = security.SymbolProperties.LotSize;
-                }
-
-                // calculate the cash required for the order
-                cashRequired = orderValue;
-
-            } while (cashRequired > cashRemaining || orderValue + orderFees > targetOrderValue);
+                currentOrderValue = orderValue + orderFees;
+            } while (currentOrderValue > targetOrderValue);
 
             // add directionality back in
             return new GetMaximumOrderQuantityForTargetValueResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);

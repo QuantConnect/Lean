@@ -39,10 +39,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var security = algorithm.Securities.Single().Value;
             security.SetMarketPrice(new Tick{Value = 1m});
             security.Holdings.SetHoldings(1m, holdings);
-            var tpv = algorithm.Portfolio.TotalPortfolioValue;
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
-            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, targetPercent * tpv))
+            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, targetPercent))
                 .Returns(new GetMaximumOrderQuantityForTargetValueResult(bpmQuantity, null, false));
             security.BuyingPowerModel = buyingPowerMock.Object;
 

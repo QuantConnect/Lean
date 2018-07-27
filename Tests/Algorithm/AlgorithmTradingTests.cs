@@ -21,14 +21,17 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Algorithm
 {
     [TestFixture]
     public class AlgorithmTradingTests
     {
+        private static FakeOrderProcessor _fakeOrderProcessor;
         public TestCaseData[] TestParameters
         {
             get
@@ -65,7 +68,8 @@ namespace QuantConnect.Tests.Algorithm
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(2000, actual);
+            Assert.AreEqual(1995m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -76,8 +80,9 @@ namespace QuantConnect.Tests.Algorithm
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            // $1 in fees, so 1 share less than 2k from SetHoldings_ZeroToLong
-            Assert.AreEqual(1999, actual);
+            // $100k total value * 0.5 target * 0.9975 SetHoldingsBuffer / 25 ~= 1995 - fees
+            Assert.AreEqual(1994m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -88,8 +93,10 @@ namespace QuantConnect.Tests.Algorithm
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            // 10k in fees = 400 shares (400*25), so 400 less than 2k from SetHoldings_ZeroToLong
-            Assert.AreEqual(1600, actual);
+
+            // ($100k total value - 10 k fees) * 0.5 target * 0.9975 SetHoldingsBuffer / 25 ~= 1795m
+            Assert.AreEqual(1795m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -100,7 +107,8 @@ namespace QuantConnect.Tests.Algorithm
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-2000, actual);
+            Assert.AreEqual(-1995m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -111,7 +119,8 @@ namespace QuantConnect.Tests.Algorithm
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-1999, actual);
+            Assert.AreEqual(-1994m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -122,7 +131,10 @@ namespace QuantConnect.Tests.Algorithm
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-1600, actual);
+
+            // ($100k total value - 10 k fees) * -0.5 target * 0.9975 SetHoldingsBuffer / 25 ~= -1795m
+            Assert.AreEqual(-1795m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -137,7 +149,8 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
             //Calculate the new holdings:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
-            Assert.AreEqual(1000, actual);
+            Assert.AreEqual(992m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -152,7 +165,8 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
             //Calculate the new holdings:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
-            Assert.AreEqual(999, actual);
+            Assert.AreEqual(992m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -167,7 +181,8 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
             //Calculate the new holdings:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
-            Assert.AreEqual(600, actual);
+            Assert.AreEqual(693m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -182,7 +197,8 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(-1000, actual);
+            Assert.AreEqual(-1005m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -197,7 +213,8 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(-999, actual);
+            Assert.AreEqual(-1005m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -212,7 +229,8 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(-600, actual);
+            Assert.AreEqual(-1204m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -228,6 +246,7 @@ namespace QuantConnect.Tests.Algorithm
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
             Assert.AreEqual(-2000, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -243,6 +262,7 @@ namespace QuantConnect.Tests.Algorithm
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
             Assert.AreEqual(-2000, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -258,6 +278,7 @@ namespace QuantConnect.Tests.Algorithm
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
             Assert.AreEqual(-2000, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -271,9 +292,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -2000 to get to -50%
+            //Need to sell to make position ($100k total value * -0.5 target * 0.9975 buffer - $50k current holdings) / 50 =~ -3995m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-4000, actual);
+            Assert.AreEqual(-3995m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -287,9 +309,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -1999 to get to -50%
+            //Need to sell to make position ($100k total value * -0.5 target * 0.9975 buffer - $50k current holdings) / 50 =~ -3995m - 1 due to fee
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-3999, actual);
+            Assert.AreEqual(-3994m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -303,9 +326,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -1600 to get to -50%
+            //Need to sell to make position (($100k total value - 10 K)* -0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ -3795m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-3600, actual);
+            Assert.AreEqual(-3795m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -319,9 +343,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -4000 to get to -100%
+            //Need to sell to make position ($100k total value * -1 target * 0.9975 buffer - $50k current holdings) / 50 =~ -5990m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1m);
-            Assert.AreEqual(-6000, actual);
+            Assert.AreEqual(-5990m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -335,9 +360,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -3999 to get to -100%
+            //Need to sell to make position ($100k total value * -1 target * 0.9975 buffer - $50k current holdings) / 50 =~ -5990m - 1 due to fee
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1m);
-            Assert.AreEqual(-5999, actual);
+            Assert.AreEqual(-5989m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -351,9 +377,11 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -3600 to get to -100%
+            // Fee is 10k / 25 ~= 400 shares
+            // Need to sell to make position (($100k total value - 10k fees) * -1 target * 0.9975 buffer - $50k current holdings) / 25 =~ -5591m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1m);
-            Assert.AreEqual(-5600, actual);
+            Assert.AreEqual(-5591m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -369,6 +397,7 @@ namespace QuantConnect.Tests.Algorithm
             //Buy 2000 to get to 0 holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
             Assert.AreEqual(2000, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -384,6 +413,7 @@ namespace QuantConnect.Tests.Algorithm
             //Buy 2000 to get to 0 holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
             Assert.AreEqual(2000, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -399,6 +429,7 @@ namespace QuantConnect.Tests.Algorithm
             //Buy 2000 to get to 0 holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
             Assert.AreEqual(2000, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -418,8 +449,10 @@ namespace QuantConnect.Tests.Algorithm
 
             // we should end with -3000 = -.75*(100k/25)
 
+            // ($100k total value * -0.75 target * 0.9975 buffer - $50k current holdings) / 25 =~ 992m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
-            Assert.AreEqual(-1000, actual);
+            Assert.AreEqual(-992m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -438,9 +471,10 @@ namespace QuantConnect.Tests.Algorithm
             // TPV:  100k
 
             // we should end with -3000 = -.75*(100k/25)
-
+            // ($100k total value * -0.75 target * 0.9975 buffer - $50k current holdings) / 25 =~ 992m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
-            Assert.AreEqual(-999, actual);
+            Assert.AreEqual(-992m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -459,9 +493,10 @@ namespace QuantConnect.Tests.Algorithm
             // TPV:  100k
 
             // we should end with -3000 = -.75*(100k/25)
-
+            // (($100k total value - 10k fees) * -0.75 target * 0.9975 buffer + $50k current holdings) / 25 =~ -693m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
-            Assert.AreEqual(-600, actual);
+            Assert.AreEqual(-693m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -474,9 +509,10 @@ namespace QuantConnect.Tests.Algorithm
             //Sold -2000 MSFT shares, +50k cash
             algo.Portfolio.SetCash(150000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
-            // TPV: 150k - 50k = 100k*.5=50k @ 25 = 2000, so we need 4000 since we start at -2k
+            // ($100k total value * 0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ 3995m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(4000, actual);
+            Assert.AreEqual(3995m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -489,9 +525,10 @@ namespace QuantConnect.Tests.Algorithm
             //Sold -2000 MSFT shares, +50k cash
             algo.Portfolio.SetCash(150000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
-            // TPV: 150k - 50k = 100k*.5=50k @ 25 = 2000, so we need 4000 since we start at -2k
+            // ($100k total value * 0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ 3995m - 1 cause order fee
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(3999, actual);
+            Assert.AreEqual(3994m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -504,9 +541,10 @@ namespace QuantConnect.Tests.Algorithm
             //Sold -2000 MSFT shares, +50k cash
             algo.Portfolio.SetCash(150000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
-            // TPV: 150k - 50k = 100k*.5=50k @ 25 = 2000, so we need 4000 since we start at -2k
+            // (($100k total value - 10 k fees) * 0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ 3995m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
-            Assert.AreEqual(3600, actual);
+            Assert.AreEqual(3795m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -521,8 +559,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
             //Sell all 2000 held + -2000 to get to -50%
+            // ($100k total value * -0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ 3995m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-4000, actual);
+            Assert.AreEqual(-3995m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -537,8 +577,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
             //Sell all 2000 held + -1999 to get to -50%
+            // ($100k total value * -0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ 3995m - 1 due to fees
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-3999, actual);
+            Assert.AreEqual(-3994m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -553,8 +595,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
             //Sell all 2000 held + -1600 to get to -50%
+            // ($100k total value * -0.5 target * 0.9975 buffer - $50k current holdings) / 25 =~ 3995m - 200 due to fees
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-3600, actual);
+            Assert.AreEqual(-3795m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -568,9 +612,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -4000 to get to -100%
+            //Need to sell to make position ($100k total value * -1 target * 0.9975 buffer - $50k current holdings) / 50 =~ -5990m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1m);
-            Assert.AreEqual(-6000, actual);
+            Assert.AreEqual(-5990m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -584,9 +629,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -3999 to get to -100%
+            //Need to sell to make position ($100k total value * -1 target * 0.9975 buffer - $50k current holdings) / 50 =~ -5990m - 1 due to fee
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1m);
-            Assert.AreEqual(-5999, actual);
+            Assert.AreEqual(-5989m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -600,9 +646,11 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(50000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
-            //Sell all 2000 held + -3600 to get to -100%
+            // Fee is 10k / 25 ~= 400 shares
+            //Need to sell to make position (($100k total value -10k fees) * -1 target * 0.9975 buffer - $50k current holdings) / 50 =~ -5591m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1m);
-            Assert.AreEqual(-5600, actual);
+            Assert.AreEqual(-5591m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -617,8 +665,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
             //Sell all 2000 held + -8000 to get to -200%
+            // ($100k total value * -2 target * 0.9975 buffer - $50k current holdings) / 25 =~ 9980m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -2m);
-            Assert.AreEqual(-10000, actual);
+            Assert.AreEqual(-9980m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -633,8 +683,10 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
             //Sell all 2000 held + -7999 to get to -200%
+            // ($100k total value * -2 target * 0.9975 buffer - $50k current holdings) / 25 =~ 9980m - 1 due to fees
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -2m);
-            Assert.AreEqual(-9999, actual);
+            Assert.AreEqual(-9979m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParametersDifferentMargins")]
@@ -649,8 +701,66 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
 
             //Sell all 2000 held + -7200 to get to -200%
+            // ($100k total value * -2 target * 0.9975 buffer - $50k current holdings) / 25 =~ 9980m - ~800 due to fees
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -2m);
-            Assert.AreEqual(-9200, actual);
+            Assert.AreEqual(-9182m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
+        }
+
+        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        public void SetHoldings_ZeroToFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            //Set price to $25
+            Update(msft, 25);
+
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -2m);
+            // ($100k total value * -2 target * 0.9975 buffer - $10k fees * 2) / 25 =~-7182m
+            Assert.AreEqual(-7182m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
+        }
+
+        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        public void SetHoldings_ZeroToAlmostFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            //Set price to $25
+            Update(msft, 25);
+
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -1.5m);
+            // ($100k total value * -1.5 target * 0.9975 buffer - $10k fees * 1.5) / 25 =~ -5386m
+            Assert.AreEqual(-5386m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
+        }
+
+        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        public void SetHoldings_ZeroToFullLong_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            //Set price to $25
+            Update(msft, 25);
+
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 2m);
+            // ($100k total value * 2 target * 0.9975 buffer - $10k fees * 2) / 25 =~ 7182m
+            Assert.AreEqual(7182m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
+        }
+
+        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        public void SetHoldings_ZeroToAlmostFullLong_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, initialMarginRequirement, maintenanceMarginRequirement, 10000);
+            //Set price to $25
+            Update(msft, 25);
+
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 1.5m);
+            // ($100k total value * 1.5 target * 0.9975 buffer - $10k fees * 1.5) / 25 =~ 5386m
+            Assert.AreEqual(5386m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
 
@@ -677,8 +787,9 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the new holdings for 50% MSFT::
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares
-            Assert.AreEqual(-500, actual);
+            // Need to sell ($150k total value * 0.5m  target * 0.9975 buffer - 100k current holdings) / 50 =~ -500
+            Assert.AreEqual(-503m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -700,8 +811,9 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the new holdings for 50% MSFT::
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares, -1 in fees
-            Assert.AreEqual(-499, actual);
+            // Need to sell ($150k total value * 0.5m  target * 0.9975 buffer - 100k current holdings) / 50 =~ -500
+            Assert.AreEqual(-503m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -723,8 +835,10 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the new holdings for 50% MSFT::
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares, -200 in fees
-            Assert.AreEqual(-300, actual);
+            // Need to sell (( $150k total value - 10 k fees) * 0.5m  target * 0.9975 buffer - 100k current holdings) / 50 =~ -603
+            Assert.AreEqual(-603, actual);
+            // After the trade: TPV 140k (due to fees), holdings at 1397 shares (2000 - 603) * $50 = 69850 value, which is 0.4989% holdings
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -745,8 +859,9 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 75% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
 
-            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares
-            Assert.AreEqual(250, actual);
+            //Need to buy to make position ($150k total value * 0.75  target * 0.9975 buffer - 100k current holdings) / 50 =~ 244
+            Assert.AreEqual(244m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -767,8 +882,9 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 75% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
 
-            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares, -1 in fees = 49
-            Assert.AreEqual(249, actual);
+            //Need to buy to make position (150K total value * 0.75  target * 0.9975 buffer - 100k current holdings) / 50 =~ 244
+            Assert.AreEqual(244m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -789,8 +905,9 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 75% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
 
-            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares, -10k in fees = 50
-            Assert.AreEqual(50, actual);
+            //Need to buy to make position ((150K total value - 10k fees) * 0.75  target * 0.9975 buffer - 100k current holdings) / 50 =~ 94
+            Assert.AreEqual(94m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -812,8 +929,9 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 50% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            //Need to sell to 50% = 87.5k target from $150k = 62.5 / $50-share = 1250
-            Assert.AreEqual(-1250, actual);
+            //Need to sell to make position ($175k total value * 0.5 target * 0.9975 buffer - $150k current holdings) / 50 =~ -1254m
+            Assert.AreEqual(-1254m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -833,8 +951,9 @@ namespace QuantConnect.Tests.Algorithm
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. MSFT is 66% of holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
 
-            // Need to hold -75k from $100k = delta: $175k / $50-share = -3500 shares.
-            Assert.AreEqual(-3500, actual);
+            //Need to sell to make position ($150k total value * -0.5 target * 0.9975 buffer - $100k current holdings) / 50 =~ -3496m
+            Assert.AreEqual(-3496m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -859,8 +978,9 @@ namespace QuantConnect.Tests.Algorithm
             // we should end with -750 shares (-.75*50000/50)
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
 
-            // currently -2000, so plus 1250
-            Assert.AreEqual(1250, actual);
+            // currently -2000, so plus 1251
+            Assert.AreEqual(1251m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -880,8 +1000,9 @@ namespace QuantConnect.Tests.Algorithm
             //Now: 2000 * 50 = $0k Net Holdings, $50k Cash: $50k. MSFT is 0% of holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            //We want to be 50% long, this is currently +2000 holdings + 50% 50k = $25k/ $50-share=500
-            Assert.AreEqual(2500, actual);
+            //We want to be 50% long, this is currently +2000 holdings + 50% 50k = $25k * 0.9975 buffer/ $50-share~=2498m
+            Assert.AreEqual(2498m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         [Test, TestCaseSource("TestParameters")]
@@ -906,8 +1027,9 @@ namespace QuantConnect.Tests.Algorithm
             // 50k*0.5=25k = 500 end holdings
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
-            // 500 will makes us 50% tpv, we hold -2000, so 2500 buy
-            Assert.AreEqual(2500, actual);
+            // ($50k total value * 0.5 target * 0.9975 buffer - (-$100k current holdings)) / 50 =~ 2498m
+            Assert.AreEqual(2498m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
 
@@ -932,12 +1054,10 @@ namespace QuantConnect.Tests.Algorithm
             // Cash: 150k
             // MSFT: -25k
             // TPV : 125k
-
-            // -50% of 125 = (62.5k) @ 12.5/share = -5000
-
-            // to get to -5000 we'll need to short another 3000
+            // ($125k total value * -0.5 target * 0.9975 buffer - (-$25k current holdings)) / 12.5 =~ -2987m
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
-            Assert.AreEqual(-3000, actual);
+            Assert.AreEqual(-2987m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
         /*************************************************************************/
@@ -964,9 +1084,9 @@ namespace QuantConnect.Tests.Algorithm
             btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
             // Set Price to $26
             Update(btcusd, 26);
-            // So 100000/26 = 3846.153846153846, After Rounding off becomes 3846.15384615, since lot size is 0.00000001
+            // (100000 * 0.9975) / 26 = 3836.53846153m
             actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, 1m);
-            Assert.AreEqual(3846.15384615m, actual);
+            Assert.AreEqual(3836.53846153m, actual);
         }
 
         [Test]
@@ -1119,7 +1239,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
-            algo.SetFinishedWarmingUp();
 
             //Set price to $25
             Update(msft, 25);
@@ -1188,7 +1307,10 @@ namespace QuantConnect.Tests.Algorithm
             var algo = new QCAlgorithm();
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
+            algo.SetFinishedWarmingUp();
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
+            _fakeOrderProcessor = new FakeOrderProcessor();
+            algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];
             msft.SetLeverage(leverage);
             return algo;
@@ -1200,7 +1322,10 @@ namespace QuantConnect.Tests.Algorithm
             var algo = new QCAlgorithm();
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
+            algo.SetFinishedWarmingUp();
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
+            _fakeOrderProcessor = new FakeOrderProcessor();
+            algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];
             msft.BuyingPowerModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement);
             return algo;
@@ -1217,6 +1342,15 @@ namespace QuantConnect.Tests.Algorithm
                 Low = close,
                 Close = close
             });
+        }
+
+        private bool HasSufficientBuyingPowerForOrder(decimal orderQuantity, Security security, IAlgorithm algo)
+        {
+            var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
+            _fakeOrderProcessor.AddTicket(order.ToOrderTicket(algo.Transactions));
+            var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
+                security, new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow));
+            return hashSufficientBuyingPower.IsSufficient;
         }
     }
 }

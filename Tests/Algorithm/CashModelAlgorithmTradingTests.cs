@@ -23,14 +23,15 @@ using Moq;
 using QuantConnect.Brokerages;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Algorithm
 {
     [TestFixture]
     public class CashModelAlgorithmTradingTests
     {
-        private readonly Symbol _symbol = Symbols.BTCUSD;
-        private readonly string _cashSymbol = "BTC";
+        private static readonly Symbol _symbol = Symbols.BTCUSD;
+        private static readonly string _cashSymbol = "BTC";
 
         /*****************************************************/
         //  Isostatic market conditions tests.
@@ -41,10 +42,11 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25 & Target 50%
-            Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
-            Assert.AreEqual(2000, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            Assert.AreEqual(1995m, actual);
         }
 
         [Test]
@@ -52,11 +54,12 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25 & Target 50%
-            Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
-            // $1 in fees, so slightly less than 2k from SetHoldings_ZeroToLong
-            Assert.AreEqual(1999.96, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            // $100k total value * 0.5 target * 0.9975 SetHoldingsBuffer / 25 ~= 1995 - fees
+            Assert.AreEqual(1994.96m, actual);
         }
 
         [Test]
@@ -64,11 +67,13 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25 & Target 50%
-            Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
-            // 10k in fees = 400 shares (400*25), so 400 less than 2k from SetHoldings_ZeroToLong
-            Assert.AreEqual(1600, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            // 10k in fees = 400 shares (400*25)
+            // $100k total value * 0.5 target * 0.9975 SetHoldingsBuffer / 25 ~= 1995 - 400 because of fees
+            Assert.AreEqual(1595m, actual);
         }
 
         [Test]
@@ -76,8 +81,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25 & Target 50%
-            Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, -0.5m);
             // no shorting allowed
             Assert.AreEqual(0, actual);
@@ -88,8 +91,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25 & Target 50%
-            Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, -0.5m);
             // no shorting allowed
             Assert.AreEqual(0, actual);
@@ -100,8 +101,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25 & Target 50%
-            Update(algo.Portfolio.CashBook, security, 25);
             var actual = algo.CalculateOrderQuantity(_symbol, -0.5m);
             // no shorting allowed
             Assert.AreEqual(0, actual);
@@ -112,14 +111,32 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
             //Calculate the new holdings:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
-            Assert.AreEqual(1000, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            Assert.AreEqual(992.5m, actual);
+        }
+
+        [Test]
+        public void SetHoldings_LongToFullLong()
+        {
+            Security security;
+            var algo = GetAlgorithm(out security, 10000);
+            //Half cash spent on 2000 shares.
+            algo.Portfolio.SetCash(50000);
+            algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
+            //Calculate the new holdings:
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            // 100k total value * 1 target * 0.9975 setHoldings buffer - 50K holdings -10K fees / @ 25 ~= 1590m
+            Assert.AreEqual(1590m, actual);
         }
 
         [Test]
@@ -127,15 +144,16 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
             //Calculate the new holdings:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
-            // 1000 - 0.04 fees = 999.96
-            Assert.AreEqual(999.96, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            // 100k total value * 0.75 target * 0.9975 setHoldings buffer - 50K holdings / @ 25 ~= 992m
+            Assert.AreEqual(992.46m, actual);
         }
 
         [Test]
@@ -143,14 +161,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
             //Calculate the new holdings:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
-            Assert.AreEqual(600, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            Assert.AreEqual(592.5m, actual);
         }
 
         [Test]
@@ -158,14 +177,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //75% cash spent on 3000 shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 3000, 25);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
-            Assert.AreEqual(-1000, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            Assert.AreEqual(-1005m, actual);
         }
 
         [Test]
@@ -173,14 +193,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //75% cash spent on 3000 shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 3000, 25);
-            // 50% of TPV is 50K = 2000 shares, need to sell slightly less than 1000 including $1 fee
+            // 100k total value * 0.5 target * 0.9975 setHoldings buffer - 75K holdings / @ 25 ~= -1005m
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
-            Assert.AreEqual(-999.96, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            Assert.AreEqual(-1004.96m, actual);
         }
 
         [Test]
@@ -188,14 +209,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //75% cash spent on 3000 shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 3000, 25);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
-            Assert.AreEqual(-600, actual);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+            Assert.AreEqual(-605m, actual);
         }
 
         [Test]
@@ -203,13 +225,14 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(_symbol, 0m);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
             Assert.AreEqual(-2000, actual);
         }
 
@@ -218,13 +241,14 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(_symbol, 0m);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
             Assert.AreEqual(-2000, actual);
         }
 
@@ -233,13 +257,14 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(_symbol, 0m);
+
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
             Assert.AreEqual(-2000, actual);
         }
 
@@ -248,8 +273,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -264,8 +287,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -280,8 +301,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -296,8 +315,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -312,8 +329,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -328,8 +343,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -348,8 +361,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
 
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
@@ -366,8 +377,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the new holdings for 50% security::
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
 
-            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares
-            Assert.AreEqual(-500, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // 150k total value * 0.5 target * 0.9975 setHoldings buffer - 100K holdings / @ 50 = -503.75m
+            Assert.AreEqual(-503.75m, actual);
         }
 
         [Test]
@@ -375,8 +389,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
 
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
@@ -389,8 +401,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the new holdings for 50% security::
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
 
-            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares, -$1 in fees
-            Assert.AreEqual(-499.98, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // 150k total value * 0.5 target * 0.9975 setHoldings buffer - 100K holdings / @ 50 = -503.75m - $1 in fees
+            Assert.AreEqual(-503.73m, actual);
         }
 
         [Test]
@@ -398,8 +413,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
 
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
@@ -412,8 +425,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the new holdings for 50% security::
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
 
-            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares, -200 in fees
-            Assert.AreEqual(-300, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // 150k total value * 0.5 target * 0.9975 setHoldings buffer - 100K holdings / @ 50 = -503.75m - -200 in fees
+            Assert.AreEqual(-303.75m, actual);
         }
 
         [Test]
@@ -421,8 +437,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -434,8 +448,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 75% security:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
 
-            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares
-            Assert.AreEqual(250, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // 150k total value * 0.75 target * 0.9975 setHoldings buffer - 100K holdings / @ 50 = 244.375m
+            Assert.AreEqual(244.375m, actual);
         }
 
         [Test]
@@ -443,8 +460,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 1);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -456,8 +471,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 75% security:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
 
-            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares, -$1 in fees = 249.98
-            Assert.AreEqual(249.98, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // 150k total value * 0.75 target * 0.9975 setHoldings buffer - 100K holdings / @ 50 = 244.375m -$1 in fees
+            Assert.AreEqual(244.355m, actual);
         }
 
         [Test]
@@ -465,8 +483,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 10000);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -478,8 +494,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 75% security:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
 
-            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares, -10k in fees = 50
-            Assert.AreEqual(50, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // 150k total value * 0.75 target * 0.9975 setHoldings buffer - 100K holdings -10k in fees / @ 50 = 44.375m
+            Assert.AreEqual(44.375m, actual);
         }
 
         [Test]
@@ -487,8 +506,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
 
             //75% cash spent on 3000 shares.
             algo.Portfolio.SetCash(25000);
@@ -501,8 +518,11 @@ namespace QuantConnect.Tests.Algorithm
             //Calculate the order for 50% security:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
 
-            //Need to sell to 50% = 87.5k target from $150k = 62.5 / $50-share = 1250
-            Assert.AreEqual(-1250, actual);
+            Assert.IsTrue(security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio, security,
+                new MarketOrder(_symbol, actual, DateTime.UtcNow)).IsSufficient);
+
+            // $175k total value * 0.5 target * 0.9975 setHoldings buffer - $150k holdings / @ 50 = -1254.375m
+            Assert.AreEqual(-1254.375m, actual);
         }
 
         [Test]
@@ -510,8 +530,6 @@ namespace QuantConnect.Tests.Algorithm
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -526,16 +544,72 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(0, actual);
         }
 
+        [Test]
+        public void SetHoldings_ZeroToFullLong()
+        {
+            Security security;
+            var algo = GetAlgorithm(out security, 0);
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
+            // 100000 * 0.9975 / 25 = 3990m
+            Assert.AreEqual(3990m, actual);
+            var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
+                security, new MarketOrder(_symbol, actual, DateTime.UtcNow));
+            Assert.IsTrue(hashSufficientBuyingPower.IsSufficient);
+        }
+
+        [Test]
+        public void SetHoldings_Long_TooBigOfATarget()
+        {
+            Security security;
+            var algo = GetAlgorithm(out security, 0);
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security) + 0.1m);
+
+            Assert.AreEqual(4389m, actual);
+            var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
+                security, new MarketOrder(_symbol, actual, DateTime.UtcNow));
+            Assert.IsFalse(hashSufficientBuyingPower.IsSufficient);
+        }
+
+        [Test]
+        public void SetHoldings_PriceRise_VolatilityCoveredByBuffer()
+        {
+            Security security;
+            var algo = GetAlgorithm(out security, 0);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m);
+            Assert.AreEqual(3990m, actual);
+
+            //Price rises to 0.25%. We should be covered by buffer
+            Update(algo.Portfolio.CashBook, security, security.Price * 1.0025m);
+
+            var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
+                security, new MarketOrder(_symbol, actual, DateTime.UtcNow));
+            Assert.IsTrue(hashSufficientBuyingPower.IsSufficient);
+        }
+
+        [Test]
+        public void SetHoldings_PriceRise_VolatilityNotCoveredByBuffer()
+        {
+            Security security;
+            var algo = GetAlgorithm(out security, 0);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m);
+            Assert.AreEqual(3990m, actual);
+
+            // Price rises to 0.26%. We will not be covered by buffer
+            Update(algo.Portfolio.CashBook, security, security.Price * 1.0026m);
+
+            var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
+                security, new MarketOrder(_symbol, actual, DateTime.UtcNow));
+            Assert.IsFalse(hashSufficientBuyingPower.IsSufficient);
+        }
+
 
         [Test]
         public void OrderQuantityConversionTest()
         {
             Security security;
             var algo = GetAlgorithm(out security, 0);
-            algo.SetFinishedWarmingUp();
-
-            //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
 
             algo.Portfolio.SetCash(150000);
 
@@ -592,16 +666,21 @@ namespace QuantConnect.Tests.Algorithm
 
         private static QCAlgorithm GetAlgorithm(out Security security, decimal fee)
         {
+            SymbolCache.Clear();
             // Initialize algorithm
             var algo = new QCAlgorithm();
             algo.SetCash(100000);
             algo.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            algo.SetFinishedWarmingUp();
             security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD");
             security.TransactionModel = new ConstantFeeTransactionModel(fee);
+            //Set price to $25
+            Update(algo.Portfolio.CashBook, security, 25);
             return algo;
         }
 
-        private void Update(CashBook cashBook, Security security, decimal close)
+        private static void Update(CashBook cashBook, Security security, decimal close)
         {
             security.SetMarketPrice(new TradeBar
             {

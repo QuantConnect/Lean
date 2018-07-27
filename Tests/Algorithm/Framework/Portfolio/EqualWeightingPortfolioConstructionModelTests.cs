@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -43,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             _algorithm = new QCAlgorithmFramework();
             _algorithm.SetDateTime(new DateTime(2018, 7, 31));
-            
+
             var prices = new Dictionary<Symbol, decimal>
             {
                 { Symbol.Create("AIG", SecurityType.Equity, Market.USA), 55.22m },
@@ -91,7 +92,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = _algorithm.Securities.Keys.Select(x => GetInsight(x, direction, _algorithm.UtcTime));
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
-            
+
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
 
             foreach (var expected in expectedTargets)
@@ -113,8 +114,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
-            // Equity will be divided by all securities minus 1, since its insight will have flat direction
-            var amount = _algorithm.Portfolio.TotalPortfolioValue / (_algorithm.Securities.Count - 1);
+            // Modifying fee model for a constant one so numbers are simplified
+            foreach (var security in _algorithm.Securities)
+            {
+                security.Value.FeeModel = new ConstantFeeModel(1);
+            }
+
+            // Equity, minus $1 for fees, will be divided by all securities minus 1, since its insight will have flat direction
+            var amount = (_algorithm.Portfolio.TotalPortfolioValue - 1 * (_algorithm.Securities.Count - 1))
+                         / (_algorithm.Securities.Count - 1);
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since its insight will have flat direction

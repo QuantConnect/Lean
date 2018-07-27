@@ -13,15 +13,24 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-
-namespace QuantConnect
+namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// This class includes user settings for the algorithm which can be changed in the <see cref="IAlgorithm.Initialize"/> method
+    ///  User settings for the algorithm which can be changed in the <see cref="IAlgorithm.Initialize"/> method
     /// </summary>
-    public class AlgorithmSettings : IAlgorithmSettings
+    public interface IAlgorithmSettings
     {
+        /// <summary>
+        /// Gets/sets the SetHoldings buffers value.
+        /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
+        /// </summary>
+        decimal SetHoldingsBuffer { get; set; }
+
+        /// <summary>
+        /// Gets/sets if Liquidate() is enabled
+        /// </summary>
+        bool LiquidateEnabled { get; set; }
+
         /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available
         /// </summary>
@@ -29,28 +38,6 @@ namespace QuantConnect
         /// All securities added with <see cref="IAlgorithm.AddSecurity"/> are counted as one,
         /// with the exception of options and futures where every single contract in a chain counts as one.
         /// </remarks>
-        public int DataSubscriptionLimit { get; set; }
-
-        /// <summary>
-        /// Gets/sets the SetHoldings buffers value.
-        /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
-        /// </summary>
-        public decimal SetHoldingsBuffer { get; set; }
-
-        /// <summary>
-        /// Gets/sets if Liquidate() is enabled
-        /// </summary>
-        public bool LiquidateEnabled { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
-        /// </summary>
-        public AlgorithmSettings()
-        {
-            // default is unlimited
-            DataSubscriptionLimit = int.MaxValue;
-            LiquidateEnabled = true;
-            SetHoldingsBuffer = 0.0025m;
-        }
+        int DataSubscriptionLimit { get; set; }
     }
 }
