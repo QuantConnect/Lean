@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,11 @@
 
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
-namespace QuantConnect.Logging 
+namespace QuantConnect.Logging
 {
     /// <summary>
     /// Logging management class.
@@ -63,14 +64,14 @@ namespace QuantConnect.Logging
         /// </summary>
         /// <param name="error">String Error</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
-        public static void Error(string error, bool overrideMessageFloodProtection = false) 
+        public static void Error(string error, bool overrideMessageFloodProtection = false)
         {
-            try 
+            try
             {
                 if (error == _lastErrorText && !overrideMessageFloodProtection) return;
                 _logHandler.Error(error);
                 _lastErrorText = error; //Stop message flooding filling diskspace.
-            } 
+            }
             catch (Exception err)
             {
                 Console.WriteLine("Log.Error(): Error writing error: " + err.Message);
@@ -96,6 +97,7 @@ namespace QuantConnect.Logging
         /// <param name="exception">The exception to be logged</param>
         /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
             Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
@@ -104,15 +106,15 @@ namespace QuantConnect.Logging
         /// <summary>
         /// Log trace
         /// </summary>
-        public static void Trace(string traceText, bool overrideMessageFloodProtection = false) 
-        { 
-            try 
+        public static void Trace(string traceText, bool overrideMessageFloodProtection = false)
+        {
+            try
             {
                 if (traceText == _lastTraceText && !overrideMessageFloodProtection) return;
                 _logHandler.Trace(traceText);
                 _lastTraceText = traceText;
-            } 
-            catch (Exception err) 
+            }
+            catch (Exception err)
             {
                 Console.WriteLine("Log.Trace(): Error writing trace: "  +err.Message);
             }
@@ -160,7 +162,7 @@ namespace QuantConnect.Logging
         /// <param name="obj"></param>
         /// <param name="recursion"></param>
         /// <returns></returns>
-        public static string VarDump(object obj, int recursion = 0) 
+        public static string VarDump(object obj, int recursion = 0)
         {
             var result = new StringBuilder();
 
@@ -173,7 +175,7 @@ namespace QuantConnect.Logging
                 // Get array with properties for this object
                 var properties = t.GetProperties();
 
-                foreach (var property in properties) 
+                foreach (var property in properties)
                 {
                     try
                     {
@@ -186,12 +188,12 @@ namespace QuantConnect.Logging
                         var spaces = "|   ";
                         var trail = "|...";
 
-                        if (recursion > 0) 
+                        if (recursion > 0)
                         {
                             indent = new StringBuilder(trail).Insert(0, spaces, recursion - 1).ToString();
                         }
 
-                        if (value != null) 
+                        if (value != null)
                         {
                             // If the value is a string, add quotation marks
                             var displayValue = value.ToString();
@@ -200,22 +202,22 @@ namespace QuantConnect.Logging
                             // Add property name and value to return string
                             result.AppendFormat("{0}{1} = {2}\n", indent, property.Name, displayValue);
 
-                            try 
+                            try
                             {
-                                if (!(value is ICollection)) 
+                                if (!(value is ICollection))
                                 {
                                     // Call var_dump() again to list child properties
                                     // This throws an exception if the current property value
                                     // is of an unsupported type (eg. it has not properties)
                                     result.Append(VarDump(value, recursion + 1));
-                                } 
-                                else 
+                                }
+                                else
                                 {
                                     // 2009-07-29: added support for collections
                                     // The value is a collection (eg. it's an arraylist or generic list)
                                     // so loop through its elements and dump their properties
                                     var elementCount = 0;
-                                    foreach (var element in ((ICollection)value)) 
+                                    foreach (var element in ((ICollection)value))
                                     {
                                         var elementName = String.Format("{0}[{1}]", property.Name, elementCount);
                                         indent = new StringBuilder(trail).Insert(0, spaces, recursion).ToString();
@@ -231,14 +233,14 @@ namespace QuantConnect.Logging
                                     result.Append(VarDump(value, recursion + 1));
                                 }
                             } catch { }
-                        } 
-                        else 
+                        }
+                        else
                         {
                             // Add empty (null) property to return string
                             result.AppendFormat("{0}{1} = {2}\n", indent, property.Name, "null");
                         }
-                    } 
-                    catch 
+                    }
+                    catch
                     {
                         // Some properties will throw an exception on property.GetValue()
                         // I don't know exactly why this happens, so for now i will ignore them...
