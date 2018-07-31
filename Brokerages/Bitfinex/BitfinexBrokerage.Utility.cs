@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Data.Market;
 using RestSharp;
 using System;
 using System.Linq;
@@ -66,6 +69,51 @@ namespace QuantConnect.Brokerages.Bitfinex
                 request.AddHeader(PayloadHeader, payloadBase64);
                 request.AddHeader(SignatureHeader, payloadSha384hmac);
             }
+        }
+        
+        private Func<Messages.Wallet, bool> WalletFilter(AccountType accountType)
+        {
+            return wallet => wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
+                wallet.Type.Equals("trading") && accountType == AccountType.Margin;
+        }
+
+        private decimal GetConversionRate(string currency)
+        {
+            var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: error returned from conversion rate service."));
+                return 0;
+            }
+
+            var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
+            var rate = raw.SelectToken("rates." + currency.ToUpper()).Value<decimal>();
+            if (rate == 0)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: zero value returned from conversion rate service."));
+                return 0;
+            }
+
+            return 1m / rate;
+        }
+
+        public Tick GetTick(Symbol symbol)
+        {
+            string endpoint = GetEndpoint($"pubticker/{symbol.Value}");
+            var req = new RestRequest(endpoint, Method.GET);
+            var response = ExecuteRestRequest(req, BitfinexEndpointType.Public);
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                throw new Exception($"BitfinexBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var tick = JsonConvert.DeserializeObject<Messages.Tick>(response.Content);
+            return new Tick(Time.UnixTimeStampToDateTime(tick.Timestamp), symbol, tick.Bid, tick.Ask) { Quantity = tick.Volume };
+        }
+
+        public string GetEndpoint(string method)
+        {
+            return $"/{ApiVersion}/{method}";
         }
 
         private Holding ConvertHolding(Messages.Position position)

@@ -66,7 +66,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override List<Order> GetOpenOrders()
         {
             var list = new List<Order>();
-            var endpoint = "/v1/orders";
+            var endpoint = GetEndpoint("orders");
             var request = new RestRequest(endpoint, Method.POST);
 
             JsonObject payload = new JsonObject();
@@ -167,7 +167,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override List<Cash> GetCashBalance()
         {
             var list = new List<Cash>();
-            var endpoint = "/v1/balances";
+            var endpoint = GetEndpoint("balances"); ;
             var request = new RestRequest(endpoint, Method.POST);
 
             JsonObject payload = new JsonObject();
@@ -184,30 +184,33 @@ namespace QuantConnect.Brokerages.Bitfinex
                 throw new Exception($"BitfinexBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
-            //foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))
-            //{
-            //    if (item.Balance > 0)
-            //    {
-            //        if (item.Currency == "USD")
-            //        {
-            //            list.Add(new Cash(item.Currency, item.Balance, 1));
-            //        }
-            //        else if (new[] { "GBP", "EUR" }.Contains(item.Currency))
-            //        {
-            //            var rate = GetConversionRate(item.Currency);
-            //            list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
-            //        }
-            //        else
-            //        {
-            //            var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
+            var availableWallets = JsonConvert.DeserializeObject<Messages.Wallet[]>(response.Content)
+                .Where(WalletFilter(_algorithm.BrokerageModel.AccountType));
+            foreach (var item in availableWallets)
+            {
+                if (item.Available > 0)
+                {
+                    if (string.Equals(item.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+                    {
+                        list.Add(new Cash(item.Currency, item.Available, 1));
+                    }
+                    else if (new[] { "JPY", "GBP", "EUR" }.Contains(item.Currency, StringComparer.OrdinalIgnoreCase))
+                    {
+                        var rate = GetConversionRate(item.Currency);
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Available, rate));
+                    }
+                    else
+                    {
+                        var tick = GetTick(Symbol.Create((item.Currency + "USD").ToUpper(), SecurityType.Crypto, Market.Bitfinex));
 
-            //            list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
-            //        }
-            //    }
-            //}
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Available, tick.Price));
+                    }
+                }
+            }
 
             return list;
         }
+
         #endregion
 
         #region IDataQueueHandler

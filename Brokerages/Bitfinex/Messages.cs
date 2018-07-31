@@ -55,6 +55,27 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public decimal PL { get; set; }
     }
 
+    public class Wallet
+    {
+        public string Type { get; set; }
+        public string Currency { get; set; }
+        public decimal Amount { get; set; }
+        public decimal Available { get; set; }
+    }
+
+    public class Tick
+    {
+        public decimal Mid { get; set; }
+        public decimal Bid { get; set; }
+        public decimal Ask { get; set; }
+        [JsonProperty("last_price")]
+        public decimal LastPrice { get; set; }
+        public decimal Low { get; set; }
+        public decimal High { get; set; }
+        public decimal Volume { get; set; }
+        public double Timestamp { get; set; }
+    }
+
 #pragma warning restore 1591
 
 }

@@ -31,10 +31,17 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexBrokerage
     {
+        private const string ApiVersion = "v1";
+        private readonly IAlgorithm _algorithm;
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
         internal enum BitfinexEndpointType { Public, Private }
         private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
+        
+        /// <summary>
+        /// Rest client used to call missing conversion rates
+        /// </summary>
+        public IRestClient RateClient { get; set; }
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -53,6 +60,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
+            _algorithm = algorithm;
+            RateClient = new RestClient("http://data.fixer.io/api/latest?base=usd&access_key=26a2eb9f13db3f14b6df6ec2379f9261");
         }
 
 
