@@ -340,14 +340,46 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(CompanyProfile previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(CompanyProfile update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterAddressLine1)) HeadquarterAddressLine1 = update.HeadquarterAddressLine1;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterAddressLine2)) HeadquarterAddressLine2 = update.HeadquarterAddressLine2;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterAddressLine3)) HeadquarterAddressLine3 = update.HeadquarterAddressLine3;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterAddressLine4)) HeadquarterAddressLine4 = update.HeadquarterAddressLine4;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterAddressLine5)) HeadquarterAddressLine5 = update.HeadquarterAddressLine5;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterCity)) HeadquarterCity = update.HeadquarterCity;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterProvince)) HeadquarterProvince = update.HeadquarterProvince;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterCountry)) HeadquarterCountry = update.HeadquarterCountry;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterPostalCode)) HeadquarterPostalCode = update.HeadquarterPostalCode;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterPhone)) HeadquarterPhone = update.HeadquarterPhone;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterFax)) HeadquarterFax = update.HeadquarterFax;
+			if (!string.IsNullOrWhiteSpace(update.HeadquarterHomepage)) HeadquarterHomepage = update.HeadquarterHomepage;
+			if (update.TotalEmployeeNumber != default(int)) TotalEmployeeNumber = update.TotalEmployeeNumber;
+			if (!string.IsNullOrWhiteSpace(update.ContactEmail)) ContactEmail = update.ContactEmail;
+			if (update.AverageEmployeeNumber != default(int)) AverageEmployeeNumber = update.AverageEmployeeNumber;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredAddressLine1)) RegisteredAddressLine1 = update.RegisteredAddressLine1;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredAddressLine2)) RegisteredAddressLine2 = update.RegisteredAddressLine2;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredAddressLine3)) RegisteredAddressLine3 = update.RegisteredAddressLine3;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredAddressLine4)) RegisteredAddressLine4 = update.RegisteredAddressLine4;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredCity)) RegisteredCity = update.RegisteredCity;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredProvince)) RegisteredProvince = update.RegisteredProvince;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredCountry)) RegisteredCountry = update.RegisteredCountry;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredPostalCode)) RegisteredPostalCode = update.RegisteredPostalCode;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredPhone)) RegisteredPhone = update.RegisteredPhone;
+			if (!string.IsNullOrWhiteSpace(update.RegisteredFax)) RegisteredFax = update.RegisteredFax;
+			if (update.IsHeadOfficeSameWithRegisteredOfficeFlag != default(bool)) IsHeadOfficeSameWithRegisteredOfficeFlag = update.IsHeadOfficeSameWithRegisteredOfficeFlag;
+			if (update.SharesOutstanding != default(long)) SharesOutstanding = update.SharesOutstanding;
+			if (update.MarketCap != default(long)) MarketCap = update.MarketCap;
+			if (update.EnterpriseValue != default(long)) EnterpriseValue = update.EnterpriseValue;
+			if (update.ShareClassLevelSharesOutstanding != default(long)) ShareClassLevelSharesOutstanding = update.ShareClassLevelSharesOutstanding;
+			if (update.SharesOutstandingWithBalanceSheetEndingDate != default(long)) SharesOutstandingWithBalanceSheetEndingDate = update.SharesOutstandingWithBalanceSheetEndingDate;
+			if (!string.IsNullOrWhiteSpace(update.ReasonofSharesChange)) ReasonofSharesChange = update.ReasonofSharesChange;
 		}
 	}
 }

@@ -365,39 +365,44 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(EarningReports previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(EarningReports update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
-			if (BasicContinuousOperations != null) BasicContinuousOperations.UpdateValues(previous.BasicContinuousOperations);
-			if (BasicDiscontinuousOperations != null) BasicDiscontinuousOperations.UpdateValues(previous.BasicDiscontinuousOperations);
-			if (BasicExtraordinary != null) BasicExtraordinary.UpdateValues(previous.BasicExtraordinary);
-			if (BasicAccountingChange != null) BasicAccountingChange.UpdateValues(previous.BasicAccountingChange);
-			if (BasicEPS != null) BasicEPS.UpdateValues(previous.BasicEPS);
-			if (DilutedContinuousOperations != null) DilutedContinuousOperations.UpdateValues(previous.DilutedContinuousOperations);
-			if (DilutedDiscontinuousOperations != null) DilutedDiscontinuousOperations.UpdateValues(previous.DilutedDiscontinuousOperations);
-			if (DilutedExtraordinary != null) DilutedExtraordinary.UpdateValues(previous.DilutedExtraordinary);
-			if (DilutedAccountingChange != null) DilutedAccountingChange.UpdateValues(previous.DilutedAccountingChange);
-			if (DilutedEPS != null) DilutedEPS.UpdateValues(previous.DilutedEPS);
-			if (BasicAverageShares != null) BasicAverageShares.UpdateValues(previous.BasicAverageShares);
-			if (DilutedAverageShares != null) DilutedAverageShares.UpdateValues(previous.DilutedAverageShares);
-			if (DividendPerShare != null) DividendPerShare.UpdateValues(previous.DividendPerShare);
-			if (BasicEPSOtherGainsLosses != null) BasicEPSOtherGainsLosses.UpdateValues(previous.BasicEPSOtherGainsLosses);
-			if (ContinuingAndDiscontinuedBasicEPS != null) ContinuingAndDiscontinuedBasicEPS.UpdateValues(previous.ContinuingAndDiscontinuedBasicEPS);
-			if (TaxLossCarryforwardBasicEPS != null) TaxLossCarryforwardBasicEPS.UpdateValues(previous.TaxLossCarryforwardBasicEPS);
-			if (DilutedEPSOtherGainsLosses != null) DilutedEPSOtherGainsLosses.UpdateValues(previous.DilutedEPSOtherGainsLosses);
-			if (ContinuingAndDiscontinuedDilutedEPS != null) ContinuingAndDiscontinuedDilutedEPS.UpdateValues(previous.ContinuingAndDiscontinuedDilutedEPS);
-			if (TaxLossCarryforwardDilutedEPS != null) TaxLossCarryforwardDilutedEPS.UpdateValues(previous.TaxLossCarryforwardDilutedEPS);
-			if (NormalizedBasicEPS != null) NormalizedBasicEPS.UpdateValues(previous.NormalizedBasicEPS);
-			if (NormalizedDilutedEPS != null) NormalizedDilutedEPS.UpdateValues(previous.NormalizedDilutedEPS);
-			if (TotalDividendPerShare != null) TotalDividendPerShare.UpdateValues(previous.TotalDividendPerShare);
-			if (ReportedNormalizedBasicEPS != null) ReportedNormalizedBasicEPS.UpdateValues(previous.ReportedNormalizedBasicEPS);
-			if (ReportedNormalizedDilutedEPS != null) ReportedNormalizedDilutedEPS.UpdateValues(previous.ReportedNormalizedDilutedEPS);
-			if (DividendCoverageRatio != null) DividendCoverageRatio.UpdateValues(previous.DividendCoverageRatio);
+			if (update.PeriodEndingDate != default(DateTime)) PeriodEndingDate = update.PeriodEndingDate;
+			if (update.FileDate != default(DateTime)) FileDate = update.FileDate;
+			if (!string.IsNullOrWhiteSpace(update.AccessionNumber)) AccessionNumber = update.AccessionNumber;
+			if (!string.IsNullOrWhiteSpace(update.FormType)) FormType = update.FormType;
+			BasicContinuousOperations?.UpdateValues(update.BasicContinuousOperations);
+			BasicDiscontinuousOperations?.UpdateValues(update.BasicDiscontinuousOperations);
+			BasicExtraordinary?.UpdateValues(update.BasicExtraordinary);
+			BasicAccountingChange?.UpdateValues(update.BasicAccountingChange);
+			BasicEPS?.UpdateValues(update.BasicEPS);
+			DilutedContinuousOperations?.UpdateValues(update.DilutedContinuousOperations);
+			DilutedDiscontinuousOperations?.UpdateValues(update.DilutedDiscontinuousOperations);
+			DilutedExtraordinary?.UpdateValues(update.DilutedExtraordinary);
+			DilutedAccountingChange?.UpdateValues(update.DilutedAccountingChange);
+			DilutedEPS?.UpdateValues(update.DilutedEPS);
+			BasicAverageShares?.UpdateValues(update.BasicAverageShares);
+			DilutedAverageShares?.UpdateValues(update.DilutedAverageShares);
+			DividendPerShare?.UpdateValues(update.DividendPerShare);
+			BasicEPSOtherGainsLosses?.UpdateValues(update.BasicEPSOtherGainsLosses);
+			ContinuingAndDiscontinuedBasicEPS?.UpdateValues(update.ContinuingAndDiscontinuedBasicEPS);
+			TaxLossCarryforwardBasicEPS?.UpdateValues(update.TaxLossCarryforwardBasicEPS);
+			DilutedEPSOtherGainsLosses?.UpdateValues(update.DilutedEPSOtherGainsLosses);
+			ContinuingAndDiscontinuedDilutedEPS?.UpdateValues(update.ContinuingAndDiscontinuedDilutedEPS);
+			TaxLossCarryforwardDilutedEPS?.UpdateValues(update.TaxLossCarryforwardDilutedEPS);
+			NormalizedBasicEPS?.UpdateValues(update.NormalizedBasicEPS);
+			NormalizedDilutedEPS?.UpdateValues(update.NormalizedDilutedEPS);
+			TotalDividendPerShare?.UpdateValues(update.TotalDividendPerShare);
+			ReportedNormalizedBasicEPS?.UpdateValues(update.ReportedNormalizedBasicEPS);
+			ReportedNormalizedDilutedEPS?.UpdateValues(update.ReportedNormalizedDilutedEPS);
+			DividendCoverageRatio?.UpdateValues(update.DividendCoverageRatio);
+			if (!string.IsNullOrWhiteSpace(update.PeriodType)) PeriodType = update.PeriodType;
 		}
 	}
 }
