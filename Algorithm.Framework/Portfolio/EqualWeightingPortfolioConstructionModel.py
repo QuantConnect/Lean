@@ -13,12 +13,13 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
-from QuantConnect.Algorithm.Framework.Alphas import InsightCollection
+from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
+from itertools import groupby
 
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
-    The target percent holdings of each security is 1/N where N is the number of securities. 
+    The target percent holdings of each security is 1/N where N is the number of securities.
     For insights of direction InsightDirection.Up, long targets are returned and
     for insights of direction InsightDirection.Down, short targets are returned.'''
     def __init__(self):
@@ -45,18 +46,22 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         if len(insights) == 0:
             return targets
 
-        # Get symbols that have emit insights and still in the universe
-        symbols = list(set([x.Symbol for x in self.insightCollection if x.CloseTimeUtc > algorithm.UtcTime]))
+        # Get last insight that haven't expired of each symbol that is still in the universe
+        activeInsights = list()
+        for symbol, g in groupby(self.insightCollection, lambda x: x.Symbol):
+            last = list(g)[-1]
+            if last.CloseTimeUtc > algorithm.UtcTime:
+                activeInsights.append(last)
 
-        if len(symbols) == 0:
+        if len(activeInsights) == 0:
             return targets
 
         # give equal weighting to each security
-        percent = 1.0 / len(symbols)
-        for symbol in symbols:
-            activeInsights = [ x for x in self.insightCollection if x.Symbol == symbol ]
-            direction = activeInsights[-1].Direction
-            targets.append(PortfolioTarget.Percent(algorithm, symbol, direction * percent))
+        count = sum(x.Direction != InsightDirection.Flat for x in activeInsights)
+        percent = 0 if count == 0 else 1.0 / count
+
+        for insight in activeInsights:
+            targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent))
 
         return targets
 
