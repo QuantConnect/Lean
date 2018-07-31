@@ -48,10 +48,12 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
 
         # Get last insight that haven't expired of each symbol that is still in the universe
         activeInsights = list()
-        for symbol, g in groupby(self.insightCollection, lambda x: x.Symbol):
-            last = list(g)[-1]
-            if last.CloseTimeUtc > algorithm.UtcTime:
-                activeInsights.append(last)
+        # Remove expired insights
+        validInsights = [ i for i in self.insightCollection if i.CloseTimeUtc > algorithm.UtcTime ]
+        # Force one group per symbol
+        for symbol, g in groupby(validInsights, lambda x: x.Symbol):
+            # For direction, we'll trust the most recent insight
+            activeInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
 
         if len(activeInsights) == 0:
             return targets
