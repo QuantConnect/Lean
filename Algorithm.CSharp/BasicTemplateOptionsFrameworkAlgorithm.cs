@@ -50,16 +50,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetRiskManagement(new NullRiskManagementModel());
         }
 
-        public override void OnOrderEvent(OrderEvent fill)
-        {
-            Log($"{UtcTime}:: {fill}");
-        }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            Log($"{UtcTime}:: {changes}");
-        }
-
         // option symbol universe selection function
         private static IEnumerable<Symbol> SelectOptionChainSymbols(DateTime utcTime)
         {

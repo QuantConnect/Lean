@@ -45,8 +45,6 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
     def CreateUniverses(self, algorithm):
         self.nextRefreshTimeUtc = algorithm.UtcTime + self.refreshInterval
 
-        algorithm.Log(f"FutureUniverseSelectionModel.CreateUniverse({algorithm.UtcTime}): Refreshing Universes")
-
         uniqueSymbols = set()
         for futureSymbol in self.futureChainSymbolSelector(algorithm.UtcTime):
             if futureSymbol.SecurityType != SecurityType.Future:
@@ -60,8 +58,6 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
     def CreateFutureChain(self, algorithm, symbol):
         if symbol.SecurityType != SecurityType.Future:
             raise ValueError("CreateFutureChain requires an future symbol.")
-
-        algorithm.Log(f"FutureUniverseSelectionModel.CreateFutureChain({algorithm.UtcTime}, {symbol}): Creating Future Chain")
 
         # rewrite non-canonical symbols to be canonical
         market = symbol.ID.Market
@@ -78,8 +74,6 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
         else:
             futureChain = securities[0]
 
-            algorithm.Log(f"FutureUniverseSelectionModel.CreateFutureChain({algorithm.UtcTime}, {symbol}): Resolved existing Future Chain Security")
-
         # set the future chain contract filter function
         futureChain.SetFilter(self.Filter)
 
@@ -89,8 +83,6 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
         return FuturesChainUniverse(futureChain, settings, algorithm.SubscriptionManager, initializer)
 
     def CreateFutureChainSecurity(self, algorithm, symbol, settings, initializer):
-
-        algorithm.Log(f"FutureUniverseSelectionModel.CreateFutureChainSecurity({algorithm.UtcTime}, {symbol}): Creating Future Chain Security")
 
         market = symbol.ID.Market
 

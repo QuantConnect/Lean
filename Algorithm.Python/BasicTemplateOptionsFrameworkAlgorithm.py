@@ -53,12 +53,6 @@ class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetRiskManagement(NullRiskManagementModel())
 
 
-    def OnOrderEvent(self, fill):
-        self.Log(f"{self.UtcTime}:: {fill}")
-
-    def OnSecuritiesChanged(self, changes):
-        self.Log(f"{self.UtcTime}:: {changes}")
-
     def SelectOptionChainSymbols(self, utcTime):
         newYorkTime = Extensions.ConvertFromUtc(utcTime, TimeZones.NewYork)
         ticker = "TWX" if newYorkTime.date() < date(2014, 6, 6) else "AAPL"

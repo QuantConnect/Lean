@@ -56,8 +56,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             _nextRefreshTimeUtc = algorithm.UtcTime + _refreshInterval;
 
-            algorithm.Log($"OptionUniverseSelectionModel.CreateUniverse({algorithm.UtcTime}): Refreshing Universes");
-
             var uniqueUnderlyingSymbols = new HashSet<Symbol>();
             foreach (var optionSymbol in _optionChainSymbolSelector(algorithm.UtcTime))
             {
@@ -76,8 +74,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
         protected virtual Option CreateOptionChainSecurity(QCAlgorithmFramework algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
         {
-            algorithm.Log($"OptionUniverseSelectionModel.CreateOptionChainSecurity({algorithm.UtcTime}, {symbol}): Creating Option Chain Security");
-
             var market = symbol.ID.Market;
             var underlying = symbol.Underlying;
 
@@ -111,8 +107,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 throw new ArgumentException("CreateOptionChain requires an option symbol.");
             }
 
-            algorithm.Log($"OptionUniverseSelectionModel.CreateOptionChain({algorithm.UtcTime}, {symbol}): Creating Option Chain");
-
             // rewrite non-canonical symbols to be canonical
             var market = symbol.ID.Market;
             var underlying = symbol.Underlying;
@@ -136,8 +130,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
             else
             {
                 optionChain = (Option)security;
-
-                algorithm.Log($"OptionUniverseSelectionModel.CreateOptionChain({algorithm.UtcTime}, {symbol}): Resolved existing Option Chain Security");
             }
 
             // set the option chain contract filter function

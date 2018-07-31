@@ -54,12 +54,6 @@ class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetRiskManagement(NullRiskManagementModel())
 
 
-    def OnOrderEvent(self, fill):
-        self.Log(f"{self.UtcTime}:: {fill}")
-
-    def OnSecuritiesChanged(self, changes):
-        pass#self.Log(f"{self.UtcTime}:: {changes}")
-
     def SelectFutureChainSymbols(self, utcTime):
         newYorkTime = Extensions.ConvertFromUtc(utcTime, TimeZones.NewYork)
         ticker = Futures.Indices.SP500EMini if newYorkTime.date() < date(2013, 10, 9) else Futures.Metals.Gold

@@ -56,8 +56,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             _nextRefreshTimeUtc = algorithm.UtcTime + _refreshInterval;
 
-            algorithm.Log($"FutureUniverseSelectionModel.CreateUniverse({algorithm.UtcTime}): Refreshing Universes");
-
             var uniqueSymbols = new HashSet<Symbol>();
             foreach (var futureSymbol in _futureChainSymbolSelector(algorithm.UtcTime))
             {
@@ -76,8 +74,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
         protected virtual Future CreateFutureChainSecurity(QCAlgorithmFramework algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
         {
-            algorithm.Log($"FutureUniverseSelectionModel.CreateFutureChainSecurity({algorithm.UtcTime}, {symbol}): Creating Future Chain Security");
-
             var market = symbol.ID.Market;
 
             var marketHoursEntry = MarketHoursDatabase.FromDataFolder()
@@ -108,8 +104,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 throw new ArgumentException("CreateFutureChain requires a future symbol.");
             }
 
-            algorithm.Log($"FutureUniverseSelectionModel.CreateFutureChain({algorithm.UtcTime}, {symbol}): Creating Future Chain");
-
             // rewrite non-canonical symbols to be canonical
             var market = symbol.ID.Market;
             if (!symbol.IsCanonical())
@@ -131,8 +125,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
             else
             {
                 futureChain = (Future)security;
-
-                algorithm.Log($"FutureUniverseSelectionModel.CreateFutureChain({algorithm.UtcTime}, {symbol}): Resolved existing Future Chain Security");
             }
 
             // set the future chain contract filter function
