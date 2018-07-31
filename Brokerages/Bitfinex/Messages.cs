@@ -84,6 +84,22 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public double Timestamp { get; set; }
     }
 
+    public class OrderBookSubscription : BaseMessage
+    {
+        public string Channel { get; set; }
+        [JsonProperty("chanId")]
+        public string ChannelId { get; set; }
+        [JsonProperty("pair")]
+        public string Symbol { get; set; }
+    }
+
+    public class OrderBookUnsubscribing : BaseMessage
+    {
+        public string Status { get; set; }
+        [JsonProperty("chanId")]
+        public string ChannelId { get; set; }
+    }
+
 #pragma warning restore 1591
 
 }
