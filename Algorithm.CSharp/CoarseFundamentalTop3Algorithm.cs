@@ -30,9 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="coarse universes" />
     /// <meta name="tag" content="regression test" />
-    public class CoarseFundamentalTop5Algorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseFundamentalTop3Algorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const int NumberOfSymbols = 5;
+        private const int NumberOfSymbols = 3;
 
         // initialize our changes to nothing
         private SecurityChanges _changes = SecurityChanges.None;
@@ -41,8 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 01, 01);
-            SetEndDate(2015, 01, 01);
+            SetStartDate(2014, 03, 24);
+            SetEndDate(2014, 04, 07);
             SetCash(50000);
 
             // this add universe method accepts a single parameter that is a function that
@@ -57,10 +57,10 @@ namespace QuantConnect.Algorithm.CSharp
             var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
 
             // take the top entries from our sorted collection
-            var top5 = sortedByDollarVolume.Take(NumberOfSymbols);
+            var top = sortedByDollarVolume.Take(NumberOfSymbols);
 
             // we need to return only the symbol objects
-            return top5.Select(x => x.Symbol);
+            return top.Select(x => x.Symbol);
         }
 
         //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
@@ -80,10 +80,10 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            // we want 20% allocation in each security in our universe
+            // we want 1/N allocation in each security in our universe
             foreach (var security in _changes.AddedSecurities)
             {
-                SetHoldings(security.Symbol, 0.2m);
+                SetHoldings(security.Symbol, 1m / NumberOfSymbols);
             }
 
             _changes = SecurityChanges.None;
@@ -93,6 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             _changes = changes;
+            Log($"OnSecuritiesChanged({UtcTime:o}):: {changes}");
         }
 
         public override void OnOrderEvent(OrderEvent fill)
@@ -115,25 +116,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "10"},
-            {"Average Win", "1.15%"},
-            {"Average Loss", "-0.47%"},
-            {"Compounding Annual Return", "-0.743%"},
-            {"Drawdown", "3.000%"},
-            {"Expectancy", "-0.312"},
-            {"Net Profit", "-0.743%"},
-            {"Sharpe Ratio", "-0.266"},
-            {"Loss Rate", "80%"},
-            {"Win Rate", "20%"},
-            {"Profit-Loss Ratio", "2.44"},
-            {"Alpha", "-0.008"},
-            {"Beta", "0.073"},
-            {"Annual Standard Deviation", "0.026"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-1.015"},
-            {"Tracking Error", "0.026"},
-            {"Treynor Ratio", "-0.097"},
-            {"Total Fees", "$10.76"}
+            {"Total Trades", "11"},
+            {"Average Win", "0.16%"},
+            {"Average Loss", "-1.39%"},
+            {"Compounding Annual Return", "-65.879%"},
+            {"Drawdown", "4.800%"},
+            {"Expectancy", "-0.444"},
+            {"Net Profit", "-4.323%"},
+            {"Sharpe Ratio", "-5.333"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "0.11"},
+            {"Alpha", "-1.062"},
+            {"Beta", "8.652"},
+            {"Annual Standard Deviation", "0.171"},
+            {"Annual Variance", "0.029"},
+            {"Information Ratio", "-5.434"},
+            {"Tracking Error", "0.171"},
+            {"Treynor Ratio", "-0.105"},
+            {"Total Fees", "$12.10"}
         };
     }
 }

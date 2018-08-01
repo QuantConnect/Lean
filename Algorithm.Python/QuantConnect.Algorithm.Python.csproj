@@ -70,7 +70,7 @@
     <None Include="build.bat" />
     <None Include="CoarseFineFundamentalComboAlgorithm.py" />
     <None Include="CoarseFineFundamentalRegressionAlgorithm.py" />
-    <None Include="CoarseFundamentalTop5Algorithm.py" />
+    <None Include="CoarseFundamentalTop3Algorithm.py" />
     <None Include="CompositeAlphaModelFrameworkAlgorithm.py" />
     <None Include="ConstituentsQC500GeneratorAlgorithm.py" />
     <None Include="CustomBenchmarkAlgorithm.py" />
