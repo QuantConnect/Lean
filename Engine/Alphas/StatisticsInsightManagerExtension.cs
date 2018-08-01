@@ -125,8 +125,8 @@ namespace QuantConnect.Lean.Engine.Alphas
                 var newMean = mean + (score - mean) / Statistics.TotalInsightsAnalysisCompleted;
                 Statistics.MeanPopulationScore.SetScore(scoreType, newMean, currentTime);
 
-                var newEma = score;
-                if (Statistics.TotalInsightsAnalysisCompleted > 1)
+                var newEma = newMean;
+                if (Statistics.TotalInsightsAnalysisCompleted > 4)
                 {
                     // compute the traditional ema
                     var ema = Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
