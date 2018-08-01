@@ -55,26 +55,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return targets;
             }
 
-            // Get symbols that have emit insights, are still in the universe, and insigths haven't expired
-            var symbols = _insightCollection
-                .Where(x => x.CloseTimeUtc > algorithm.UtcTime)
-                .Select(x => x.Symbol).Distinct().ToList();
+            // Get last insight that haven't expired of each symbol that is still in the universe
+            var activeInsights = (from insight in _insightCollection
+                                  // Remove expired insights
+                                  where insight.CloseTimeUtc > algorithm.UtcTime
+                                  // Force one group per symbol
+                                  group insight by insight.Symbol into g
+                                  // For direction, we'll trust the most recent insight
+                                  select g.OrderBy(x => x.GeneratedTimeUtc).LastOrDefault())
+                                  .ToList();
 
-            if (symbols.Count == 0)
+            if (activeInsights.Count == 0)
             {
                 return targets;
             }
 
             // give equal weighting to each security
-            var percent = 1m / symbols.Count;
-            foreach (var symbol in symbols)
+            var count = activeInsights.Count(x => x.Direction != InsightDirection.Flat);
+            var percent = count == 0 ? 0 : 1m / count;
+
+            foreach (var insight in activeInsights)
             {
-                List<Insight> activeInsights;
-                if (_insightCollection.TryGetValue(symbol, out activeInsights))
-                {
-                    var direction = activeInsights.Last().Direction;
-                    targets.Add(PortfolioTarget.Percent(algorithm, symbol, (int)direction * percent));
-                }
+                targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent));
             }
 
             return targets;
