@@ -25,13 +25,18 @@ from Selection.UniverseSelectionModel import UniverseSelectionModel
 from datetime import datetime
 
 class OptionUniverseSelectionModel(UniverseSelectionModel):
-
+    '''Provides an implementation of IUniverseSelectionMode that subscribes to option chains'''
     def __init__(self,
                  refreshInterval,
                  optionChainSymbolSelector,
                  universeSettings = None, 
                  securityInitializer = None):
-
+        '''Creates a new instance of OptionUniverseSelectionModel
+        Args:
+            refreshInterval: Time interval between universe refreshes</param>
+            optionChainSymbolSelector: Selects symbols from the provided option chain
+            universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
+            securityInitializer: Performs extra initialization (such as setting models) after we create a new security object'''
         self.nextRefreshTimeUtc = datetime.min
 
         self.refreshInterval = refreshInterval
@@ -40,9 +45,15 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
         self.securityInitializer = securityInitializer
 
     def GetNextRefreshTimeUtc(self):
+        '''Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.'''
         return self.nextRefreshTimeUtc
 
     def CreateUniverses(self, algorithm):
+        '''Creates a new fundamental universe using this class's selection functions
+        Args:
+            algorithm: The algorithm instance to create universes for
+        Returns:
+            The universe defined by this model'''
         self.nextRefreshTimeUtc = (algorithm.UtcTime + self.refreshInterval).date()
 
         uniqueUnderlyingSymbols = set()
@@ -56,6 +67,12 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
                 yield self.CreateOptionChain(algorithm, optionSymbol)
 
     def CreateOptionChain(self, algorithm, symbol):
+        '''Creates a OptionChainUniverse for a given symbol
+        Args:
+            algorithm: The algorithm instance to create universes for
+            symbol: Symbol of the option
+        Returns:
+            OptionChainUniverse for the given symbol'''
         if symbol.SecurityType != SecurityType.Option:
             raise ValueError("CreateOptionChain requires an option symbol.")
 
@@ -85,7 +102,14 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
         return OptionChainUniverse(optionChain, settings, initializer, algorithm.LiveMode)
 
     def CreateOptionChainSecurity(self, algorithm, symbol, settings, initializer):
-
+        '''Creates the canonical option chain security for a given symbol
+        Args:
+            algorithm: The algorithm instance to create universes for
+            symbol: Symbol of the option
+            settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
+            initializer: Performs extra initialization (such as setting models) after we create a new security object
+        Returns
+            Option for the given symbol'''
         market = symbol.ID.Market
         underlying = symbol.Underlying
 

@@ -25,13 +25,18 @@ from Selection.UniverseSelectionModel import UniverseSelectionModel
 from datetime import datetime
 
 class FutureUniverseSelectionModel(UniverseSelectionModel):
-
+    '''Provides an implementation of IUniverseSelectionMode that subscribes to future chains'''
     def __init__(self,
                  refreshInterval,
                  futureChainSymbolSelector,
                  universeSettings = None, 
                  securityInitializer = None):
-
+        '''Creates a new instance of FutureUniverseSelectionModel
+        Args:
+            refreshInterval: Time interval between universe refreshes</param>
+            futureChainSymbolSelector: Selects symbols from the provided future chain
+            universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
+            securityInitializer: Performs extra initialization (such as setting models) after we create a new security object'''
         self.nextRefreshTimeUtc = datetime.min
 
         self.refreshInterval = refreshInterval
@@ -40,9 +45,15 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
         self.securityInitializer = securityInitializer
 
     def GetNextRefreshTimeUtc(self):
+        '''Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.'''
         return self.nextRefreshTimeUtc
 
     def CreateUniverses(self, algorithm):
+        '''Creates a new fundamental universe using this class's selection functions
+        Args:
+            algorithm: The algorithm instance to create universes for
+        Returns:
+            The universe defined by this model'''
         self.nextRefreshTimeUtc = algorithm.UtcTime + self.refreshInterval
 
         uniqueSymbols = set()
@@ -56,6 +67,12 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
                 yield self.CreateFutureChain(algorithm, futureSymbol)
 
     def CreateFutureChain(self, algorithm, symbol):
+        '''Creates a FuturesChainUniverse for a given symbol
+        Args:
+            algorithm: The algorithm instance to create universes for
+            symbol: Symbol of the future
+        Returns:
+            FuturesChainUniverse for the given symbol'''
         if symbol.SecurityType != SecurityType.Future:
             raise ValueError("CreateFutureChain requires an future symbol.")
 
@@ -83,7 +100,14 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
         return FuturesChainUniverse(futureChain, settings, algorithm.SubscriptionManager, initializer)
 
     def CreateFutureChainSecurity(self, algorithm, symbol, settings, initializer):
-
+        '''Creates the canonical Future chain security for a given symbol
+        Args:
+            algorithm: The algorithm instance to create universes for
+            symbol: Symbol of the future
+            settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
+            initializer: Performs extra initialization (such as setting models) after we create a new security object
+        Returns
+            Future for the given symbol'''
         market = symbol.ID.Market
 
         marketHoursEntry = MarketHoursDatabase.FromDataFolder().GetEntry(market, symbol, SecurityType.Future)

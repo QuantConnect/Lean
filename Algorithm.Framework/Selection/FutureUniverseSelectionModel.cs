@@ -17,11 +17,15 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
+    /// <summary>
+    /// Provides an implementation of <see cref="IUniverseSelectionModel"/> that subscribes to future chains
+    /// </summary>
     public class FutureUniverseSelectionModel : UniverseSelectionModel
     {
         private DateTime _nextRefreshTimeUtc;
@@ -31,13 +35,28 @@ namespace QuantConnect.Algorithm.Framework.Selection
         private readonly ISecurityInitializer _securityInitializer;
         private readonly Func<DateTime, IEnumerable<Symbol>> _futureChainSymbolSelector;
 
+        /// <summary>
+        /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
+        /// </summary>
         public override DateTime GetNextRefreshTimeUtc() => _nextRefreshTimeUtc;
 
+        /// <summary>
+        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         public FutureUniverseSelectionModel(TimeSpan refreshInterval, Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector)
             : this(refreshInterval, futureChainSymbolSelector, null, null)
         {
         }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
+        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         public FutureUniverseSelectionModel(TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
             UniverseSettings universeSettings,
@@ -52,6 +71,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _futureChainSymbolSelector = futureChainSymbolSelector;
         }
 
+        /// <summary>
+        /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <returns>The universes to be used by the algorithm</returns>
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
         {
             _nextRefreshTimeUtc = algorithm.UtcTime + _refreshInterval;
@@ -72,6 +96,14 @@ namespace QuantConnect.Algorithm.Framework.Selection
             }
         }
 
+        /// <summary>
+        /// Creates the canonical <see cref="Future"/> chain security for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the future</param>
+        /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        /// <param name="initializer">Performs extra initialization (such as setting models) after we create a new security object</param>
+        /// <returns><see cref="Future"/> for the given symbol</returns>
         protected virtual Future CreateFutureChainSecurity(QCAlgorithmFramework algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
         {
             var market = symbol.ID.Market;
@@ -97,6 +129,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
             return filter;
         }
 
+        /// <summary>
+        /// Creates a <see cref="FuturesChainUniverse"/> for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the future</param>
+        /// <returns><see cref="FuturesChainUniverse"/> for the given symbol</returns>
         private FuturesChainUniverse CreateFutureChain(QCAlgorithmFramework algorithm, Symbol symbol)
         {
             if (symbol.SecurityType != SecurityType.Future)
