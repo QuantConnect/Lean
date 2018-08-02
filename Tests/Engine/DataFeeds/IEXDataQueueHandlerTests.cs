@@ -17,13 +17,18 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture, Ignore("Tests are dependent on network and are long")]
+    [TestFixture]
+    [Explicit("Tests are dependent on network and are long")]
     public class IEXDataQueueHandlerTests
     {
         private void ProcessFeed(IEXDataQueueHandler iex, Action<BaseData> callback = null)
@@ -211,5 +216,93 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(iex.IsConnected);
             iex.Dispose();
         }
+
+        #region History provider tests
+
+        public TestCaseData[] TestParameters
+        {
+            get
+            {
+                return new[]
+                {
+                    // valid parameters
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), true),
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(3), true),
+
+                    // invalid resolution == empty result.
+                    new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), false),
+                    new TestCaseData(Symbols.SPY, Resolution.Second, Time.OneMinute, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false),
+                    
+                    // invalid period == empty result
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(45), false), // beyond 30 days
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(-15), false), // date in future
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false), // beyond 5 years
+
+                    // invalid symbol: XYZ
+                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false)
+                        .Throws("System.Net.WebException"),
+
+                    // invalid security type, throws "System.ArgumentException : Invalid security type: Forex"
+                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false)
+                        .Throws("System.Net.WebException")
+                };
+            }
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received)
+        {
+            var historyProvider = new IEXDataQueueHandler();
+            historyProvider.Initialize(null, null, null, null, null, null);
+
+            var now = DateTime.UtcNow;
+
+            var requests = new[]
+            {
+                new HistoryRequest(now.Add(-period),
+                                   now,
+                                   typeof(QuoteBar),
+                                   symbol,
+                                   resolution,
+                                   SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                                   DateTimeZone.Utc,
+                                   Resolution.Minute,
+                                   false,
+                                   false,
+                                   DataNormalizationMode.Adjusted,
+                                   TickType.Quote)
+            };
+
+            var history = historyProvider.GetHistory(requests, TimeZones.Utc);
+
+            foreach (var slice in history)
+            {
+                if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
+                {
+                    Assert.IsNull(slice);
+                }
+                else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
+                {
+                    Assert.IsNotNull(slice);
+
+                    var bar = slice.Bars[symbol];
+
+                    Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}: {6}, {7}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, resolution, period);
+                }
+            }
+
+            Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
+            if (received)
+            {
+                Assert.IsTrue(historyProvider.DataPointCount > 0);
+            }
+            else
+            {
+                Assert.IsTrue(historyProvider.DataPointCount == 0);
+            }
+        }
+
+        #endregion
     }
 }

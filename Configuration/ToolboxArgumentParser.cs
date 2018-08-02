@@ -17,7 +17,7 @@ namespace QuantConnect.Configuration
             {
                 new CommandLineOption("app", CommandOptionType.SingleValue,
                                                      "[REQUIRED] Target tool, CASE INSENSITIVE: GDAXDownloader or GDAXDL/CryptoiqDownloader or CDL"
-                                                     + "/DukascopyDownloader or DDL"
+                                                     + "/DukascopyDownloader or DDL/IEXDownloader or IEXDL"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
                                                      + "/KrakenDownloader or KDL/OandaDownloader or ODL/QuandlBitfinexDownloader or QBDL"
                                                      + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC/AlgoSeekOptionsConverter or ASOC"
