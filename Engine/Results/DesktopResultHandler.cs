@@ -234,6 +234,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
         public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
+            // Sampling during warming up period skews statistics
+            if (_algorithm.IsWarmingUp)
+            {
+                return;
+            }
+
             lock (_chartLock)
             {
                 //Add a copy locally:

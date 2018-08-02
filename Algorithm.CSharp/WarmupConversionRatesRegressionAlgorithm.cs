@@ -49,7 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Conversion rate for BTC should not be zero.");
             }
-
+            if (!Portfolio.Invested && !IsWarmingUp)
+            {
+                SetHoldings("BTCUSD", 1);
+            }
             Log($"BTC current price: {Securities["BTCUSD"].Price}");
             Log($"BTC conversion rate: {conversionRate}");
         }
@@ -69,24 +72,24 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "3067.390%"},
+            {"Drawdown", "11.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"Net Profit", "16.171%"},
+            {"Sharpe Ratio", "3.223"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "0.006"},
+            {"Beta", "192.615"},
+            {"Annual Standard Deviation", "0.778"},
+            {"Annual Variance", "0.605"},
+            {"Information Ratio", "3.206"},
+            {"Tracking Error", "0.778"},
+            {"Treynor Ratio", "0.013"},
             {"Total Fees", "$0.00"}
         };
     }
