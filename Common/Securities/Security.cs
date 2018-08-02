@@ -312,7 +312,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(1m),
+                new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel())
         {
@@ -333,7 +333,7 @@ namespace QuantConnect.Securities
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(1m),
+                new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel()
                 )
