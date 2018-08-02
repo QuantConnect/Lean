@@ -20,27 +20,27 @@ AddReference("QuantConnect.Algorithm.Framework")
 from QuantConnect import *
 from QuantConnect.Securities import *
 from QuantConnect.Data.Auxiliary import ZipEntryName
-from QuantConnect.Data.UniverseSelection import OptionChainUniverse
+from QuantConnect.Data.UniverseSelection import FuturesChainUniverse
 from Selection.UniverseSelectionModel import UniverseSelectionModel
 from datetime import datetime
 
-class OptionUniverseSelectionModel(UniverseSelectionModel):
-    '''Provides an implementation of IUniverseSelectionMode that subscribes to option chains'''
+class FutureUniverseSelectionModel(UniverseSelectionModel):
+    '''Provides an implementation of IUniverseSelectionMode that subscribes to future chains'''
     def __init__(self,
                  refreshInterval,
-                 optionChainSymbolSelector,
+                 futureChainSymbolSelector,
                  universeSettings = None, 
                  securityInitializer = None):
-        '''Creates a new instance of OptionUniverseSelectionModel
+        '''Creates a new instance of FutureUniverseSelectionModel
         Args:
             refreshInterval: Time interval between universe refreshes</param>
-            optionChainSymbolSelector: Selects symbols from the provided option chain
+            futureChainSymbolSelector: Selects symbols from the provided future chain
             universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
             securityInitializer: Performs extra initialization (such as setting models) after we create a new security object'''
         self.nextRefreshTimeUtc = datetime.min
 
         self.refreshInterval = refreshInterval
-        self.optionChainSymbolSelector = optionChainSymbolSelector
+        self.futureChainSymbolSelector = futureChainSymbolSelector
         self.universeSettings = universeSettings
         self.securityInitializer = securityInitializer
 
@@ -54,34 +54,32 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
             algorithm: The algorithm instance to create universes for
         Returns:
             The universe defined by this model'''
-        self.nextRefreshTimeUtc = (algorithm.UtcTime + self.refreshInterval).date()
+        self.nextRefreshTimeUtc = algorithm.UtcTime + self.refreshInterval
 
-        uniqueUnderlyingSymbols = set()
-        for optionSymbol in self.optionChainSymbolSelector(algorithm.UtcTime):
-            if optionSymbol.SecurityType != SecurityType.Option:
-                raise ValueError("optionChainSymbolSelector must return option symbols.")
+        uniqueSymbols = set()
+        for futureSymbol in self.futureChainSymbolSelector(algorithm.UtcTime):
+            if futureSymbol.SecurityType != SecurityType.Future:
+                raise ValueError("futureChainSymbolSelector must return future symbols.")
 
-            # prevent creating duplicate option chains -- one per underlying
-            if optionSymbol.Underlying not in uniqueUnderlyingSymbols:
-                uniqueUnderlyingSymbols.add(optionSymbol.Underlying)
-                yield self.CreateOptionChain(algorithm, optionSymbol)
+            # prevent creating duplicate future chains -- one per symbol
+            if futureSymbol not in uniqueSymbols:
+                uniqueSymbols.add(futureSymbol)
+                yield self.CreateFutureChain(algorithm, futureSymbol)
 
-    def CreateOptionChain(self, algorithm, symbol):
-        '''Creates a OptionChainUniverse for a given symbol
+    def CreateFutureChain(self, algorithm, symbol):
+        '''Creates a FuturesChainUniverse for a given symbol
         Args:
             algorithm: The algorithm instance to create universes for
-            symbol: Symbol of the option
+            symbol: Symbol of the future
         Returns:
-            OptionChainUniverse for the given symbol'''
-        if symbol.SecurityType != SecurityType.Option:
-            raise ValueError("CreateOptionChain requires an option symbol.")
+            FuturesChainUniverse for the given symbol'''
+        if symbol.SecurityType != SecurityType.Future:
+            raise ValueError("CreateFutureChain requires an future symbol.")
 
         # rewrite non-canonical symbols to be canonical
         market = symbol.ID.Market
-        underlying = symbol.Underlying
         if not symbol.IsCanonical():
-            alias = f"?{underlying.Value}"
-            symbol = Symbol.Create(underlying.Value, SecurityType.Option, market, alias)
+            symbol = Symbol.Create(symbol.Value, SecurityType.Future, market, f"/{symbol.Value}")
 
         # resolve defaults if not specified
         settings = self.universeSettings if self.universeSettings is not None else algorithm.UniverseSettings
@@ -89,32 +87,31 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
         # create canonical security object, but don't duplicate if it already exists
         securities = [s for s in algorithm.Securities if s.Key == symbol]
         if len(securities) == 0:
-            optionChain = self.CreateOptionChainSecurity(algorithm, symbol, settings, initializer)
+            futureChain = self.CreateFutureChainSecurity(algorithm, symbol, settings, initializer)
         else:
-            optionChain = securities[0]
+            futureChain = securities[0]
 
-        # set the option chain contract filter function
-        optionChain.SetFilter(self.Filter)
+        # set the future chain contract filter function
+        futureChain.SetFilter(self.Filter)
 
-        # force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
-        optionChain.IsTradable = False
+        # force future chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
+        futureChain.IsTradable = False
 
-        return OptionChainUniverse(optionChain, settings, initializer, algorithm.LiveMode)
+        return FuturesChainUniverse(futureChain, settings, algorithm.SubscriptionManager, initializer)
 
-    def CreateOptionChainSecurity(self, algorithm, symbol, settings, initializer):
-        '''Creates the canonical option chain security for a given symbol
+    def CreateFutureChainSecurity(self, algorithm, symbol, settings, initializer):
+        '''Creates the canonical Future chain security for a given symbol
         Args:
             algorithm: The algorithm instance to create universes for
-            symbol: Symbol of the option
+            symbol: Symbol of the future
             settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
             initializer: Performs extra initialization (such as setting models) after we create a new security object
         Returns
-            Option for the given symbol'''
+            Future for the given symbol'''
         market = symbol.ID.Market
-        underlying = symbol.Underlying
 
-        marketHoursEntry = MarketHoursDatabase.FromDataFolder().GetEntry(market, underlying, SecurityType.Option)
-        symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency)
+        marketHoursEntry = MarketHoursDatabase.FromDataFolder().GetEntry(market, symbol, SecurityType.Future)
+        symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency)
 
         return SecurityManager.CreateSecurity(typeof(ZipEntryName), algorithm.Portfolio,
                 algorithm.SubscriptionManager, marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties,
@@ -122,6 +119,6 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
                 False, False, algorithm.LiveMode, False, False)
 
     def Filter(self, filter):
-        '''Defines the option chain universe filter'''
+        '''Defines the future chain universe filter'''
         # NOP
         return filter

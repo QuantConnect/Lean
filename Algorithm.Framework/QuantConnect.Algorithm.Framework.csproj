@@ -121,6 +121,7 @@
     <Compile Include="Alphas\ConstantAlphaModel.cs" />
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
+    <Compile Include="Selection\FutureUniverseSelectionModel.cs" />
     <Compile Include="Selection\OptionUniverseSelectionModel.cs" />
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModel.cs" />
@@ -198,6 +199,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Selection\EmaCrossUniverseSelectionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selection\FutureUniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Selection\OptionUniverseSelectionModel.py">

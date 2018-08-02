@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,81 +29,78 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template options framework algorithm uses framework components to define an algorithm
-    /// that trades options.
+    /// Basic template futures framework algorithm uses framework components to define an algorithm
+    /// that trades futures.
     /// </summary>
-    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class BasicTemplateFuturesFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Minute;
 
-            SetStartDate(2014, 06, 05);
-            SetEndDate(2014, 06, 06);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
             SetCash(100000);
 
             // set framework models
-            SetUniverseSelection(new EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(SelectOptionChainSymbols));
-            SetAlpha(new ConstantOptionContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromHours(0.5)));
+            SetUniverseSelection(new FrontMonthFutureUniverseSelectionModel(SelectFutureChainSymbols));
+            SetAlpha(new ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
             SetPortfolioConstruction(new SingleSharePortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
 
-        // option symbol universe selection function
-        private static IEnumerable<Symbol> SelectOptionChainSymbols(DateTime utcTime)
+        // future symbol universe selection function
+        private static IEnumerable<Symbol> SelectFutureChainSymbols(DateTime utcTime)
         {
             var newYorkTime = utcTime.ConvertFromUtc(TimeZones.NewYork);
-            if (newYorkTime.Date < new DateTime(2014, 06, 06))
+            if (newYorkTime.Date < new DateTime(2013, 10, 09))
             {
-                yield return QuantConnect.Symbol.Create("TWX", SecurityType.Option, Market.USA, "?TWX");
+                yield return QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA);
             }
 
-            if (newYorkTime.Date >= new DateTime(2014, 06, 06))
+            if (newYorkTime.Date >= new DateTime(2013, 10, 09))
             {
-                yield return QuantConnect.Symbol.Create("AAPL", SecurityType.Option, Market.USA, "?AAPL");
+                yield return QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA);
             }
         }
 
         /// <summary>
-        /// Creates option chain universes that select only the earliest expiry ATM weekly put contract
-        /// and runs a user defined optionChainSymbolSelector every day to enable choosing different option chains
+        /// Creates futures chain universes that select the front month contract and runs a user
+        /// defined futureChainSymbolSelector every day to enable choosing different futures chains
         /// </summary>
-        class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel : OptionUniverseSelectionModel
+        class FrontMonthFutureUniverseSelectionModel : FutureUniverseSelectionModel
         {
-            public EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector)
-                : base(TimeSpan.FromDays(1), optionChainSymbolSelector)
+            public FrontMonthFutureUniverseSelectionModel(Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector)
+                : base(TimeSpan.FromDays(1), futureChainSymbolSelector)
             {
             }
 
             /// <summary>
-            /// Defines the option chain universe filter
+            /// Defines the future chain universe filter
             /// </summary>
-            protected override OptionFilterUniverse Filter(OptionFilterUniverse filter)
+            protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
             {
                 return filter
-                    .Strikes(+1, +1)
-                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
-                    .WeeklysOnly()
-                    .PutsOnly()
+                    .FrontMonth()
                     .OnlyApplyFilterAtMarketOpen();
             }
         }
 
         /// <summary>
-        /// Implementation of a constant alpha model that only emits insights for option symbols
+        /// Implementation of a constant alpha model that only emits insights for future symbols
         /// </summary>
-        class ConstantOptionContractAlphaModel : ConstantAlphaModel
+        class ConstantFutureContractAlphaModel : ConstantAlphaModel
         {
-            public ConstantOptionContractAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
+            public ConstantFutureContractAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
                 : base(type, direction, period)
             {
             }
 
             protected override bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
             {
-                // only emit alpha for option symbols and not underlying equity symbols
-                if (symbol.SecurityType != SecurityType.Option)
+                // only emit alpha for future symbols and not underlying equity symbols
+                if (symbol.SecurityType != SecurityType.Future)
                 {
                     return false;
                 }
@@ -141,37 +138,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
-            {"Average Win", "0.14%"},
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "72.420%"},
-            {"Drawdown", "0.700%"},
+            {"Compounding Annual Return", "-96.005%"},
+            {"Drawdown", "5.400%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.274%"},
-            {"Sharpe Ratio", "9.165"},
+            {"Net Profit", "-4.069%"},
+            {"Sharpe Ratio", "-25.118"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "25.02"},
-            {"Annual Standard Deviation", "0.025"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "8.886"},
-            {"Tracking Error", "0.025"},
-            {"Treynor Ratio", "0.009"},
-            {"Total Fees", "$1.00"},
-            {"Total Insights Generated", "26"},
-            {"Total Insights Closed", "24"},
-            {"Total Insights Analysis Completed", "6"},
-            {"Long Insight Count", "26"},
+            {"Alpha", "0.101"},
+            {"Beta", "-197.745"},
+            {"Annual Standard Deviation", "0.083"},
+            {"Annual Variance", "0.007"},
+            {"Information Ratio", "-25.142"},
+            {"Tracking Error", "0.083"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$3.70"},
+            {"Total Insights Generated", "5"},
+            {"Total Insights Closed", "4"},
+            {"Total Insights Analysis Completed", "3"},
+            {"Long Insight Count", "5"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$28.43325"},
-            {"Total Accumulated Estimated Alpha Value", "$1.89555"},
-            {"Mean Population Estimated Insight Value", "$0.07898125"},
-            {"Mean Population Direction", "33.3333%"},
+            {"Estimated Monthly Alpha Value", "$-43.90462"},
+            {"Total Accumulated Estimated Alpha Value", "$-7.1345"},
+            {"Mean Population Estimated Insight Value", "$-1.783625"},
+            {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "48.0394%"},
+            {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"}
         };
     }

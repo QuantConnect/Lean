@@ -24,6 +24,7 @@
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <Compile Include="BasicTemplateCryptoAlgorithm.py" />
+    <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Compile Include="BasicTemplateIntrinioEconomicData.py" />
     <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
     <Compile Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />

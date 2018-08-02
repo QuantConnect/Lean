@@ -20,66 +20,64 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
+from QuantConnect.Securities import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.ConstantAlphaModel import ConstantAlphaModel
-from Selection.OptionUniverseSelectionModel import OptionUniverseSelectionModel
+from Selection.FutureUniverseSelectionModel import FutureUniverseSelectionModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from datetime import date, timedelta
 
 ### <summary>
-### Basic template options framework algorithm uses framework components
-### to define an algorithm that trades options.
+### Basic template futures framework algorithm uses framework components
+### to define an algorithm that trades futures.
 ### </summary>
-class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithmFramework):
+class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
 
         self.UniverseSettings.Resolution = Resolution.Minute
 
-        self.SetStartDate(2014, 6, 5)
-        self.SetEndDate(2014, 6, 6)
+        self.SetStartDate(2013, 10, 7)
+        self.SetEndDate(2013, 10, 11)
         self.SetCash(100000)
 
         # set framework models
-        self.SetUniverseSelection(EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(self.SelectOptionChainSymbols))
-        self.SetAlpha(ConstantOptionContractAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(hours = 0.5)))
+        self.SetUniverseSelection(FrontMonthFutureUniverseSelectionModel(self.SelectFutureChainSymbols))
+        self.SetAlpha(ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
         self.SetPortfolioConstruction(SingleSharePortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
 
 
-    def SelectOptionChainSymbols(self, utcTime):
+    def SelectFutureChainSymbols(self, utcTime):
         newYorkTime = Extensions.ConvertFromUtc(utcTime, TimeZones.NewYork)
-        ticker = "TWX" if newYorkTime.date() < date(2014, 6, 6) else "AAPL"
-        return [ Symbol.Create(ticker, SecurityType.Option, Market.USA, f"?{ticker}") ]
+        ticker = Futures.Indices.SP500EMini if newYorkTime.date() < date(2013, 10, 9) else Futures.Metals.Gold
+        return [ Symbol.Create(ticker, SecurityType.Future, Market.USA) ]
 
-class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(OptionUniverseSelectionModel):
-    '''Creates option chain universes that select only the earliest expiry ATM weekly put contract
-    and runs a user defined optionChainSymbolSelector every day to enable choosing different option chains'''
-    def __init__(self, select_option_chain_symbols):
-        super().__init__(timedelta(1), select_option_chain_symbols)
+class FrontMonthFutureUniverseSelectionModel(FutureUniverseSelectionModel):
+    '''Creates futures chain universes that select the front month contract and runs a user
+    defined futureChainSymbolSelector every day to enable choosing different futures chains'''
+    def __init__(self, select_future_chain_symbols):
+        super().__init__(timedelta(1), select_future_chain_symbols)
 
     def Filter(self, filter):
-        '''Defines the option chain universe filter'''
-        return (filter.Strikes(+1, +1)
-                      .Expiration(timedelta(0), timedelta(7))
-                      .WeeklysOnly()
-                      .PutsOnly()
+        '''Defines the futures chain universe filter'''
+        return (filter.FrontMonth()
                       .OnlyApplyFilterAtMarketOpen())
 
-class ConstantOptionContractAlphaModel(ConstantAlphaModel):
-    '''Implementation of a constant alpha model that only emits insights for option symbols'''
+class ConstantFutureContractAlphaModel(ConstantAlphaModel):
+    '''Implementation of a constant alpha model that only emits insights for future symbols'''
     def __init__(self, type, direction, period):
         super().__init__(type, direction, period)
 
     def ShouldEmitInsight(self, utcTime, symbol):
-        # only emit alpha for option symbols and not underlying equity symbols
-        if symbol.SecurityType != SecurityType.Option:
+        # only emit alpha for future symbols and not underlying equity symbols
+        if symbol.SecurityType != SecurityType.Future:
             return False
 
         return super().ShouldEmitInsight(utcTime, symbol)
