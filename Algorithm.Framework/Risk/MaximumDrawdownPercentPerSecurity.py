@@ -32,6 +32,7 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
         '''Manages the algorithm's risk at each time step
         Args:
             algorithm: The algorithm instance'''
+        targets = []
         for kvp in algorithm.Securities:
             security = kvp.Value
 
@@ -40,8 +41,7 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
 
             pnl = security.Holdings.UnrealizedProfitPercent
             if pnl < self.maximumDrawdownPercent:
-                # remove PortfolioTarget with symbol to be liquidated and add new PortfolioTarget
-                targets = list(filter(lambda x: x.Symbol != security.Symbol, targets))
+                # liquidate
                 targets.append(PortfolioTarget(security.Symbol, 0))
 
         return targets
