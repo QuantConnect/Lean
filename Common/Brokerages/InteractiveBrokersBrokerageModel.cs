@@ -37,6 +37,12 @@ namespace QuantConnect.Brokerages
         };
 
         /// <summary>
+        /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
+        /// IB required 5% of the buying power to be unused
+        /// </summary>
+        public override decimal RequiredFreeBuyingPowerPercent => 0.05m;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
