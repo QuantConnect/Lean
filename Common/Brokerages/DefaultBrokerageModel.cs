@@ -57,6 +57,12 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
+        /// From 1 to 0. Example: 0 means no unused buying power is required. 0.5 means 50% of the buying power should be left unused.
+        /// </summary>
+        public virtual decimal RequiredFreeBuyingPowerPercent => 0m;
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets
@@ -267,24 +273,35 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public virtual IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
+            IBuyingPowerModel model;
+
+            var requiredFreeBuyingPowerPercent = 0m;
+            if (AccountType == AccountType.Cash)
+            {
+                // By default it only applies for AccountType.Cash
+                requiredFreeBuyingPowerPercent = RequiredFreeBuyingPowerPercent;
+            }
+
             switch (security.Type)
             {
                 case SecurityType.Crypto:
-                    return new CashBuyingPowerModel();
-
+                    model = new CashBuyingPowerModel();
+                    break;
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    return new SecurityMarginModel(50m);
-
+                    model = new SecurityMarginModel(50m, requiredFreeBuyingPowerPercent);
+                    break;
                 case SecurityType.Option:
-                    return new OptionMarginModel();
-
+                    model = new OptionMarginModel(requiredFreeBuyingPowerPercent);
+                    break;
                 case SecurityType.Future:
-                    return new FutureMarginModel();
-
+                    model = new FutureMarginModel(requiredFreeBuyingPowerPercent);
+                    break;
                 default:
-                    return new SecurityMarginModel(2m);
+                    model = new SecurityMarginModel(2m, requiredFreeBuyingPowerPercent);
+                    break;
             }
+            return model;
         }
     }
 }

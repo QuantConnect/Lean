@@ -34,6 +34,15 @@ namespace QuantConnect.Securities.Future
         private int _marginCurrentIndex;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="FutureMarginModel"/>
+        /// </summary>
+        /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
+        public FutureMarginModel(decimal requiredFreeBuyingPowerPercent = 0)
+        {
+            RequiredFreeBuyingPowerPercent = requiredFreeBuyingPowerPercent;
+        }
+
+        /// <summary>
         /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
@@ -101,50 +110,50 @@ namespace QuantConnect.Securities.Future
         /// <returns>The margin available for the trade</returns>
         protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
-            var holdings = security.Holdings;
+            var result = portfolio.MarginRemaining;
 
-            if (direction == OrderDirection.Hold)
+            if (direction != OrderDirection.Hold)
             {
-                return portfolio.MarginRemaining;
-            }
-
-            //If the order is in the same direction as holdings, our remaining cash is our cash
-            //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
-            if (holdings.IsLong)
-            {
-                switch (direction)
+                var holdings = security.Holdings;
+                //If the order is in the same direction as holdings, our remaining cash is our cash
+                //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
+                if (holdings.IsLong)
                 {
-                    case OrderDirection.Buy:
-                        return portfolio.MarginRemaining;
-
-                    case OrderDirection.Sell:
-                        return
-                            // portion of margin to close the existing position
-                            GetMaintenanceMargin(security) +
-                            // portion of margin to open the new position
-                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue) +
-                            portfolio.MarginRemaining;
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:
+                            result = portfolio.MarginRemaining;
+                            break;
+                        case OrderDirection.Sell:
+                            result =
+                                // portion of margin to close the existing position
+                                GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue) +
+                                portfolio.MarginRemaining;
+                            break;
+                    }
+                }
+                else if (holdings.IsShort)
+                {
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:
+                            result =
+                                // portion of margin to close the existing position
+                                GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue) +
+                                portfolio.MarginRemaining;
+                            break;
+                        case OrderDirection.Sell:
+                            result = portfolio.MarginRemaining;
+                            break;
+                    }
                 }
             }
-            else if (holdings.IsShort)
-            {
-                switch (direction)
-                {
-                    case OrderDirection.Buy:
-                        return
-                            // portion of margin to close the existing position
-                            GetMaintenanceMargin(security) +
-                            // portion of margin to open the new position
-                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue) +
-                            portfolio.MarginRemaining;
 
-                    case OrderDirection.Sell:
-                        return portfolio.MarginRemaining;
-                }
-            }
-
-            //No holdings, return cash
-            return portfolio.MarginRemaining;
+            return result * (1 - RequiredFreeBuyingPowerPercent);
         }
 
         /// <summary>

@@ -1202,7 +1202,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetCash(100000);
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
             msft = algo.Securities[Symbols.MSFT];
-            msft.BuyingPowerModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement);
+            msft.BuyingPowerModel = new SecurityMarginModel(initialMarginRequirement, maintenanceMarginRequirement, 0);
             return algo;
         }
 

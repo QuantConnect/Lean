@@ -31,9 +31,18 @@ namespace QuantConnect.Brokerages
     public interface IBrokerageModel
     {
         /// <summary>
-        /// Gets or sets the account type used by this model
+        /// Gets the account type used by this model
         /// </summary>
         AccountType AccountType
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
+        /// From 1 to 0. Example: 0 means no unused buying power is required. 0.5 means 50% of the buying power should be left unused.
+        /// </summary>
+        decimal RequiredFreeBuyingPowerPercent
         {
             get;
         }
