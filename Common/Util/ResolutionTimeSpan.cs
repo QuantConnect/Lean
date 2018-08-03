@@ -22,7 +22,7 @@ namespace QuantConnect.Util
             return new ResolutionTimeSpan(timeSpan);
         }
 
-        //  User-defined conversion from TimeSpan to ResolutionTimeSpan
+        //  User-defined conversion from Resolution to ResolutionTimeSpan
         public static implicit operator ResolutionTimeSpan(Resolution resolution)
         {
             return new ResolutionTimeSpan(resolution.ToTimeSpan());
