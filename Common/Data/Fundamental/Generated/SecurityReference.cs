@@ -283,14 +283,39 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(SecurityReference previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(SecurityReference update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
+			if (!string.IsNullOrWhiteSpace(update.SecuritySymbol)) SecuritySymbol = update.SecuritySymbol;
+			if (!string.IsNullOrWhiteSpace(update.ExchangeId)) ExchangeId = update.ExchangeId;
+			if (!string.IsNullOrWhiteSpace(update.CurrencyId)) CurrencyId = update.CurrencyId;
+			if (!string.IsNullOrWhiteSpace(update.Valoren)) Valoren = update.Valoren;
+			if (update.IPODate != default(DateTime)) IPODate = update.IPODate;
+			if (update.IsDepositaryReceipt != default(bool)) IsDepositaryReceipt = update.IsDepositaryReceipt;
+			if (update.DepositaryReceiptRatio != default(decimal)) DepositaryReceiptRatio = update.DepositaryReceiptRatio;
+			if (!string.IsNullOrWhiteSpace(update.SecurityType)) SecurityType = update.SecurityType;
+			if (!string.IsNullOrWhiteSpace(update.ShareClassDescription)) ShareClassDescription = update.ShareClassDescription;
+			if (!string.IsNullOrWhiteSpace(update.ShareClassStatus)) ShareClassStatus = update.ShareClassStatus;
+			if (update.IsPrimaryShare != default(bool)) IsPrimaryShare = update.IsPrimaryShare;
+			if (update.IsDividendReinvest != default(bool)) IsDividendReinvest = update.IsDividendReinvest;
+			if (update.IsDirectInvest != default(bool)) IsDirectInvest = update.IsDirectInvest;
+			if (!string.IsNullOrWhiteSpace(update.InvestmentId)) InvestmentId = update.InvestmentId;
+			if (update.IPOOfferPrice != default(decimal)) IPOOfferPrice = update.IPOOfferPrice;
+			if (update.DelistingDate != default(DateTime)) DelistingDate = update.DelistingDate;
+			if (!string.IsNullOrWhiteSpace(update.DelistingReason)) DelistingReason = update.DelistingReason;
+			if (!string.IsNullOrWhiteSpace(update.MIC)) MIC = update.MIC;
+			if (!string.IsNullOrWhiteSpace(update.CommonShareSubType)) CommonShareSubType = update.CommonShareSubType;
+			if (!string.IsNullOrWhiteSpace(update.IPOOfferPriceRange)) IPOOfferPriceRange = update.IPOOfferPriceRange;
+			if (!string.IsNullOrWhiteSpace(update.ExchangeSubMarketGlobalId)) ExchangeSubMarketGlobalId = update.ExchangeSubMarketGlobalId;
+			if (update.ConversionRatio != default(decimal)) ConversionRatio = update.ConversionRatio;
+			if (update.ParValue != default(decimal)) ParValue = update.ParValue;
+			if (update.TradingStatus != default(bool)) TradingStatus = update.TradingStatus;
+			if (!string.IsNullOrWhiteSpace(update.MarketDataID)) MarketDataID = update.MarketDataID;
 		}
 	}
 }

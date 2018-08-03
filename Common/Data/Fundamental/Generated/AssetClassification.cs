@@ -258,14 +258,31 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(AssetClassification previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(AssetClassification update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
+			if (update.StockType != default(int)) StockType = update.StockType;
+			if (update.StyleBox != default(int)) StyleBox = update.StyleBox;
+			if (!string.IsNullOrWhiteSpace(update.GrowthGrade)) GrowthGrade = update.GrowthGrade;
+			if (!string.IsNullOrWhiteSpace(update.FinancialHealthGrade)) FinancialHealthGrade = update.FinancialHealthGrade;
+			if (!string.IsNullOrWhiteSpace(update.ProfitabilityGrade)) ProfitabilityGrade = update.ProfitabilityGrade;
+			if (update.MorningstarIndustryCode != default(int)) MorningstarIndustryCode = update.MorningstarIndustryCode;
+			if (update.MorningstarIndustryGroupCode != default(int)) MorningstarIndustryGroupCode = update.MorningstarIndustryGroupCode;
+			if (update.MorningstarSectorCode != default(int)) MorningstarSectorCode = update.MorningstarSectorCode;
+			if (update.MorningstarEconomySphereCode != default(int)) MorningstarEconomySphereCode = update.MorningstarEconomySphereCode;
+			if (update.SIC != default(int)) SIC = update.SIC;
+			if (update.NAICS != default(int)) NAICS = update.NAICS;
+			if (update.StyleScore != default(decimal)) StyleScore = update.StyleScore;
+			if (update.SizeScore != default(decimal)) SizeScore = update.SizeScore;
+			if (update.GrowthScore != default(decimal)) GrowthScore = update.GrowthScore;
+			if (update.ValueScore != default(decimal)) ValueScore = update.ValueScore;
+			if (update.NACE != default(decimal)) NACE = update.NACE;
+			if (update.CANNAICS != default(int)) CANNAICS = update.CANNAICS;
 		}
 	}
 }

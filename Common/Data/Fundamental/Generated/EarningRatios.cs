@@ -140,23 +140,23 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(EarningRatios previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(EarningRatios update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
-			if (DilutedEPSGrowth != null) DilutedEPSGrowth.UpdateValues(previous.DilutedEPSGrowth);
-			if (DilutedContEPSGrowth != null) DilutedContEPSGrowth.UpdateValues(previous.DilutedContEPSGrowth);
-			if (DPSGrowth != null) DPSGrowth.UpdateValues(previous.DPSGrowth);
-			if (EquityPerShareGrowth != null) EquityPerShareGrowth.UpdateValues(previous.EquityPerShareGrowth);
-			if (RegressionGrowthofDividends5Years != null) RegressionGrowthofDividends5Years.UpdateValues(previous.RegressionGrowthofDividends5Years);
-			if (FCFPerShareGrowth != null) FCFPerShareGrowth.UpdateValues(previous.FCFPerShareGrowth);
-			if (BookValuePerShareGrowth != null) BookValuePerShareGrowth.UpdateValues(previous.BookValuePerShareGrowth);
-			if (NormalizedDilutedEPSGrowth != null) NormalizedDilutedEPSGrowth.UpdateValues(previous.NormalizedDilutedEPSGrowth);
-			if (NormalizedBasicEPSGrowth != null) NormalizedBasicEPSGrowth.UpdateValues(previous.NormalizedBasicEPSGrowth);
+			DilutedEPSGrowth?.UpdateValues(update.DilutedEPSGrowth);
+			DilutedContEPSGrowth?.UpdateValues(update.DilutedContEPSGrowth);
+			DPSGrowth?.UpdateValues(update.DPSGrowth);
+			EquityPerShareGrowth?.UpdateValues(update.EquityPerShareGrowth);
+			RegressionGrowthofDividends5Years?.UpdateValues(update.RegressionGrowthofDividends5Years);
+			FCFPerShareGrowth?.UpdateValues(update.FCFPerShareGrowth);
+			BookValuePerShareGrowth?.UpdateValues(update.BookValuePerShareGrowth);
+			NormalizedDilutedEPSGrowth?.UpdateValues(update.NormalizedDilutedEPSGrowth);
+			NormalizedBasicEPSGrowth?.UpdateValues(update.NormalizedBasicEPSGrowth);
 		}
 	}
 }

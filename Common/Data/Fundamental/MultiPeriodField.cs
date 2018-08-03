@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -91,16 +91,16 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
-        /// Sets period values for non existing periods from a previous instance
+        /// Applies updated values from <paramref name="update"/> to this instance
         /// </summary>
-        /// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-        public void UpdateValues(MultiPeriodField previous)
+        /// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values.</remarks>
+        /// <param name="update">The next data update for this instance</param>
+        public void UpdateValues(MultiPeriodField update)
         {
-            if (previous == null)
+            if (update == null)
                 return;
 
-            foreach (var kvp in previous.Store.Where(kvp => !Store.ContainsKey(kvp.Key)))
+            foreach (var kvp in update.Store)
             {
                 SetPeriodValue(kvp.Key, kvp.Value);
             }

@@ -164,18 +164,27 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(FinancialStatements previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(FinancialStatements update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
-			if (TotalRiskBasedCapital != null) TotalRiskBasedCapital.UpdateValues(previous.TotalRiskBasedCapital);
-			if (IncomeStatement != null) IncomeStatement.UpdateValues(previous.IncomeStatement);
-			if (BalanceSheet != null) BalanceSheet.UpdateValues(previous.BalanceSheet);
-			if (CashFlowStatement != null) CashFlowStatement.UpdateValues(previous.CashFlowStatement);
+			if (update.PeriodEndingDate != default(DateTime)) PeriodEndingDate = update.PeriodEndingDate;
+			if (update.FileDate != default(DateTime)) FileDate = update.FileDate;
+			if (!string.IsNullOrWhiteSpace(update.AccessionNumber)) AccessionNumber = update.AccessionNumber;
+			if (!string.IsNullOrWhiteSpace(update.FormType)) FormType = update.FormType;
+			if (!string.IsNullOrWhiteSpace(update.PeriodAuditor)) PeriodAuditor = update.PeriodAuditor;
+			if (!string.IsNullOrWhiteSpace(update.AuditorReportStatus)) AuditorReportStatus = update.AuditorReportStatus;
+			if (!string.IsNullOrWhiteSpace(update.InventoryValuationMethod)) InventoryValuationMethod = update.InventoryValuationMethod;
+			if (update.NumberOfShareHolders != default(long)) NumberOfShareHolders = update.NumberOfShareHolders;
+			TotalRiskBasedCapital?.UpdateValues(update.TotalRiskBasedCapital);
+			if (!string.IsNullOrWhiteSpace(update.PeriodType)) PeriodType = update.PeriodType;
+			IncomeStatement?.UpdateValues(update.IncomeStatement);
+			BalanceSheet?.UpdateValues(update.BalanceSheet);
+			CashFlowStatement?.UpdateValues(update.CashFlowStatement);
 		}
 	}
 }

@@ -805,84 +805,84 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(OperationRatios previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(OperationRatios update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
-			if (RevenueGrowth != null) RevenueGrowth.UpdateValues(previous.RevenueGrowth);
-			if (OperationIncomeGrowth != null) OperationIncomeGrowth.UpdateValues(previous.OperationIncomeGrowth);
-			if (NetIncomeGrowth != null) NetIncomeGrowth.UpdateValues(previous.NetIncomeGrowth);
-			if (NetIncomeContOpsGrowth != null) NetIncomeContOpsGrowth.UpdateValues(previous.NetIncomeContOpsGrowth);
-			if (CFOGrowth != null) CFOGrowth.UpdateValues(previous.CFOGrowth);
-			if (FCFGrowth != null) FCFGrowth.UpdateValues(previous.FCFGrowth);
-			if (OperationRevenueGrowth3MonthAvg != null) OperationRevenueGrowth3MonthAvg.UpdateValues(previous.OperationRevenueGrowth3MonthAvg);
-			if (GrossMargin != null) GrossMargin.UpdateValues(previous.GrossMargin);
-			if (OperationMargin != null) OperationMargin.UpdateValues(previous.OperationMargin);
-			if (PretaxMargin != null) PretaxMargin.UpdateValues(previous.PretaxMargin);
-			if (NetMargin != null) NetMargin.UpdateValues(previous.NetMargin);
-			if (TaxRate != null) TaxRate.UpdateValues(previous.TaxRate);
-			if (EBITMargin != null) EBITMargin.UpdateValues(previous.EBITMargin);
-			if (EBITDAMargin != null) EBITDAMargin.UpdateValues(previous.EBITDAMargin);
-			if (SalesPerEmployee != null) SalesPerEmployee.UpdateValues(previous.SalesPerEmployee);
-			if (CurrentRatio != null) CurrentRatio.UpdateValues(previous.CurrentRatio);
-			if (QuickRatio != null) QuickRatio.UpdateValues(previous.QuickRatio);
-			if (LongTermDebtTotalCapitalRatio != null) LongTermDebtTotalCapitalRatio.UpdateValues(previous.LongTermDebtTotalCapitalRatio);
-			if (InterestCoverage != null) InterestCoverage.UpdateValues(previous.InterestCoverage);
-			if (LongTermDebtEquityRatio != null) LongTermDebtEquityRatio.UpdateValues(previous.LongTermDebtEquityRatio);
-			if (FinancialLeverage != null) FinancialLeverage.UpdateValues(previous.FinancialLeverage);
-			if (TotalDebtEquityRatio != null) TotalDebtEquityRatio.UpdateValues(previous.TotalDebtEquityRatio);
-			if (NormalizedNetProfitMargin != null) NormalizedNetProfitMargin.UpdateValues(previous.NormalizedNetProfitMargin);
-			if (DaysInSales != null) DaysInSales.UpdateValues(previous.DaysInSales);
-			if (DaysInInventory != null) DaysInInventory.UpdateValues(previous.DaysInInventory);
-			if (DaysInPayment != null) DaysInPayment.UpdateValues(previous.DaysInPayment);
-			if (CashConversionCycle != null) CashConversionCycle.UpdateValues(previous.CashConversionCycle);
-			if (ReceivableTurnover != null) ReceivableTurnover.UpdateValues(previous.ReceivableTurnover);
-			if (InventoryTurnover != null) InventoryTurnover.UpdateValues(previous.InventoryTurnover);
-			if (PaymentTurnover != null) PaymentTurnover.UpdateValues(previous.PaymentTurnover);
-			if (FixAssetsTuronver != null) FixAssetsTuronver.UpdateValues(previous.FixAssetsTuronver);
-			if (AssetsTurnover != null) AssetsTurnover.UpdateValues(previous.AssetsTurnover);
-			if (ROE != null) ROE.UpdateValues(previous.ROE);
-			if (ROA != null) ROA.UpdateValues(previous.ROA);
-			if (ROIC != null) ROIC.UpdateValues(previous.ROIC);
-			if (FCFSalesRatio != null) FCFSalesRatio.UpdateValues(previous.FCFSalesRatio);
-			if (FCFNetIncomeRatio != null) FCFNetIncomeRatio.UpdateValues(previous.FCFNetIncomeRatio);
-			if (CapExSalesRatio != null) CapExSalesRatio.UpdateValues(previous.CapExSalesRatio);
-			if (DebttoAssets != null) DebttoAssets.UpdateValues(previous.DebttoAssets);
-			if (CommonEquityToAssets != null) CommonEquityToAssets.UpdateValues(previous.CommonEquityToAssets);
-			if (CapitalExpenditureAnnual5YrGrowth != null) CapitalExpenditureAnnual5YrGrowth.UpdateValues(previous.CapitalExpenditureAnnual5YrGrowth);
-			if (GrossProfitAnnual5YrGrowth != null) GrossProfitAnnual5YrGrowth.UpdateValues(previous.GrossProfitAnnual5YrGrowth);
-			if (GrossMargin5YrAvg != null) GrossMargin5YrAvg.UpdateValues(previous.GrossMargin5YrAvg);
-			if (PostTaxMargin5YrAvg != null) PostTaxMargin5YrAvg.UpdateValues(previous.PostTaxMargin5YrAvg);
-			if (PreTaxMargin5YrAvg != null) PreTaxMargin5YrAvg.UpdateValues(previous.PreTaxMargin5YrAvg);
-			if (ProfitMargin5YrAvg != null) ProfitMargin5YrAvg.UpdateValues(previous.ProfitMargin5YrAvg);
-			if (ROE5YrAvg != null) ROE5YrAvg.UpdateValues(previous.ROE5YrAvg);
-			if (ROA5YrAvg != null) ROA5YrAvg.UpdateValues(previous.ROA5YrAvg);
-			if (AVG5YrsROIC != null) AVG5YrsROIC.UpdateValues(previous.AVG5YrsROIC);
-			if (NormalizedROIC != null) NormalizedROIC.UpdateValues(previous.NormalizedROIC);
-			if (RegressionGrowthOperatingRevenue5Years != null) RegressionGrowthOperatingRevenue5Years.UpdateValues(previous.RegressionGrowthOperatingRevenue5Years);
-			if (CashRatio != null) CashRatio.UpdateValues(previous.CashRatio);
-			if (CashtoTotalAssets != null) CashtoTotalAssets.UpdateValues(previous.CashtoTotalAssets);
-			if (CapitalExpendituretoEBITDA != null) CapitalExpendituretoEBITDA.UpdateValues(previous.CapitalExpendituretoEBITDA);
-			if (FCFtoCFO != null) FCFtoCFO.UpdateValues(previous.FCFtoCFO);
-			if (StockholdersEquityGrowth != null) StockholdersEquityGrowth.UpdateValues(previous.StockholdersEquityGrowth);
-			if (TotalAssetsGrowth != null) TotalAssetsGrowth.UpdateValues(previous.TotalAssetsGrowth);
-			if (TotalLiabilitiesGrowth != null) TotalLiabilitiesGrowth.UpdateValues(previous.TotalLiabilitiesGrowth);
-			if (TotalDebtEquityRatioGrowth != null) TotalDebtEquityRatioGrowth.UpdateValues(previous.TotalDebtEquityRatioGrowth);
-			if (CashRatioGrowth != null) CashRatioGrowth.UpdateValues(previous.CashRatioGrowth);
-			if (EBITDAGrowth != null) EBITDAGrowth.UpdateValues(previous.EBITDAGrowth);
-			if (CashFlowfromFinancingGrowth != null) CashFlowfromFinancingGrowth.UpdateValues(previous.CashFlowfromFinancingGrowth);
-			if (CashFlowfromInvestingGrowth != null) CashFlowfromInvestingGrowth.UpdateValues(previous.CashFlowfromInvestingGrowth);
-			if (CapExGrowth != null) CapExGrowth.UpdateValues(previous.CapExGrowth);
-			if (CurrentRatioGrowth != null) CurrentRatioGrowth.UpdateValues(previous.CurrentRatioGrowth);
-			if (WorkingCapitalTurnoverRatio != null) WorkingCapitalTurnoverRatio.UpdateValues(previous.WorkingCapitalTurnoverRatio);
-			if (NetIncomePerEmployee != null) NetIncomePerEmployee.UpdateValues(previous.NetIncomePerEmployee);
-			if (SolvencyRatio != null) SolvencyRatio.UpdateValues(previous.SolvencyRatio);
-			if (ExpenseRatio != null) ExpenseRatio.UpdateValues(previous.ExpenseRatio);
-			if (LossRatio != null) LossRatio.UpdateValues(previous.LossRatio);
+			RevenueGrowth?.UpdateValues(update.RevenueGrowth);
+			OperationIncomeGrowth?.UpdateValues(update.OperationIncomeGrowth);
+			NetIncomeGrowth?.UpdateValues(update.NetIncomeGrowth);
+			NetIncomeContOpsGrowth?.UpdateValues(update.NetIncomeContOpsGrowth);
+			CFOGrowth?.UpdateValues(update.CFOGrowth);
+			FCFGrowth?.UpdateValues(update.FCFGrowth);
+			OperationRevenueGrowth3MonthAvg?.UpdateValues(update.OperationRevenueGrowth3MonthAvg);
+			GrossMargin?.UpdateValues(update.GrossMargin);
+			OperationMargin?.UpdateValues(update.OperationMargin);
+			PretaxMargin?.UpdateValues(update.PretaxMargin);
+			NetMargin?.UpdateValues(update.NetMargin);
+			TaxRate?.UpdateValues(update.TaxRate);
+			EBITMargin?.UpdateValues(update.EBITMargin);
+			EBITDAMargin?.UpdateValues(update.EBITDAMargin);
+			SalesPerEmployee?.UpdateValues(update.SalesPerEmployee);
+			CurrentRatio?.UpdateValues(update.CurrentRatio);
+			QuickRatio?.UpdateValues(update.QuickRatio);
+			LongTermDebtTotalCapitalRatio?.UpdateValues(update.LongTermDebtTotalCapitalRatio);
+			InterestCoverage?.UpdateValues(update.InterestCoverage);
+			LongTermDebtEquityRatio?.UpdateValues(update.LongTermDebtEquityRatio);
+			FinancialLeverage?.UpdateValues(update.FinancialLeverage);
+			TotalDebtEquityRatio?.UpdateValues(update.TotalDebtEquityRatio);
+			NormalizedNetProfitMargin?.UpdateValues(update.NormalizedNetProfitMargin);
+			DaysInSales?.UpdateValues(update.DaysInSales);
+			DaysInInventory?.UpdateValues(update.DaysInInventory);
+			DaysInPayment?.UpdateValues(update.DaysInPayment);
+			CashConversionCycle?.UpdateValues(update.CashConversionCycle);
+			ReceivableTurnover?.UpdateValues(update.ReceivableTurnover);
+			InventoryTurnover?.UpdateValues(update.InventoryTurnover);
+			PaymentTurnover?.UpdateValues(update.PaymentTurnover);
+			FixAssetsTuronver?.UpdateValues(update.FixAssetsTuronver);
+			AssetsTurnover?.UpdateValues(update.AssetsTurnover);
+			ROE?.UpdateValues(update.ROE);
+			ROA?.UpdateValues(update.ROA);
+			ROIC?.UpdateValues(update.ROIC);
+			FCFSalesRatio?.UpdateValues(update.FCFSalesRatio);
+			FCFNetIncomeRatio?.UpdateValues(update.FCFNetIncomeRatio);
+			CapExSalesRatio?.UpdateValues(update.CapExSalesRatio);
+			DebttoAssets?.UpdateValues(update.DebttoAssets);
+			CommonEquityToAssets?.UpdateValues(update.CommonEquityToAssets);
+			CapitalExpenditureAnnual5YrGrowth?.UpdateValues(update.CapitalExpenditureAnnual5YrGrowth);
+			GrossProfitAnnual5YrGrowth?.UpdateValues(update.GrossProfitAnnual5YrGrowth);
+			GrossMargin5YrAvg?.UpdateValues(update.GrossMargin5YrAvg);
+			PostTaxMargin5YrAvg?.UpdateValues(update.PostTaxMargin5YrAvg);
+			PreTaxMargin5YrAvg?.UpdateValues(update.PreTaxMargin5YrAvg);
+			ProfitMargin5YrAvg?.UpdateValues(update.ProfitMargin5YrAvg);
+			ROE5YrAvg?.UpdateValues(update.ROE5YrAvg);
+			ROA5YrAvg?.UpdateValues(update.ROA5YrAvg);
+			AVG5YrsROIC?.UpdateValues(update.AVG5YrsROIC);
+			NormalizedROIC?.UpdateValues(update.NormalizedROIC);
+			RegressionGrowthOperatingRevenue5Years?.UpdateValues(update.RegressionGrowthOperatingRevenue5Years);
+			CashRatio?.UpdateValues(update.CashRatio);
+			CashtoTotalAssets?.UpdateValues(update.CashtoTotalAssets);
+			CapitalExpendituretoEBITDA?.UpdateValues(update.CapitalExpendituretoEBITDA);
+			FCFtoCFO?.UpdateValues(update.FCFtoCFO);
+			StockholdersEquityGrowth?.UpdateValues(update.StockholdersEquityGrowth);
+			TotalAssetsGrowth?.UpdateValues(update.TotalAssetsGrowth);
+			TotalLiabilitiesGrowth?.UpdateValues(update.TotalLiabilitiesGrowth);
+			TotalDebtEquityRatioGrowth?.UpdateValues(update.TotalDebtEquityRatioGrowth);
+			CashRatioGrowth?.UpdateValues(update.CashRatioGrowth);
+			EBITDAGrowth?.UpdateValues(update.EBITDAGrowth);
+			CashFlowfromFinancingGrowth?.UpdateValues(update.CashFlowfromFinancingGrowth);
+			CashFlowfromInvestingGrowth?.UpdateValues(update.CashFlowfromInvestingGrowth);
+			CapExGrowth?.UpdateValues(update.CapExGrowth);
+			CurrentRatioGrowth?.UpdateValues(update.CurrentRatioGrowth);
+			WorkingCapitalTurnoverRatio?.UpdateValues(update.WorkingCapitalTurnoverRatio);
+			NetIncomePerEmployee?.UpdateValues(update.NetIncomePerEmployee);
+			SolvencyRatio?.UpdateValues(update.SolvencyRatio);
+			ExpenseRatio?.UpdateValues(update.ExpenseRatio);
+			LossRatio?.UpdateValues(update.LossRatio);
 		}
 	}
 }
