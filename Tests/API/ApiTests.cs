@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.API
             // Delete the second file
             var deleteFile = _api.DeleteProjectFile(project.Projects.First().ProjectId, secondRealFile.Name);
             Assert.IsTrue(deleteFile.Success);
-            
+
             // Read files
             var readFilesAgain = _api.ReadProjectFiles(project.Projects.First().ProjectId);
             Assert.IsTrue(readFilesAgain.Success);
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.API
             BrokerageEnvironment environment = BrokerageEnvironment.Paper;
             string account = "";
 
-            // Oanda Custom Variables 
+            // Oanda Custom Variables
             string accessToken = "";
             var dateIssuedString = "20160920";
 
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.API
                         accessToken = Config.Get("oanda-access-token");
                         account     = Config.Get("oanda-account-id");
 
-                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account); 
+                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account);
                         Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
                         break;
                     case BrokerageName.TradierBrokerage:
@@ -384,7 +384,7 @@ namespace QuantConnect.Tests.API
                 Name = "main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
-             
+
 
             // Create a new project
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
@@ -594,6 +594,47 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(File.Exists(dailyPath));
             Assert.IsTrue(File.Exists(minutePath));
+        }
+
+        /// <summary>
+        /// Test read price API for given symbol
+        /// </summary>
+        [Test]
+        public void ReadPriceWorksCorrectlyFor1Symbol()
+        {
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var pricesList = _api.ReadPrices(new [] { spy });
+
+            Assert.IsTrue(pricesList.Success);
+            Assert.AreEqual(pricesList.Prices.Count, 1);
+
+            var price = pricesList.Prices.First();
+            Assert.AreEqual(price.Symbol, spy.ID.ToString());
+            Assert.AreNotEqual(price.Price, 0);
+            var updated = price.Updated;
+            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
+            Assert.IsTrue(updated > reference);
+        }
+
+        /// <summary>
+        /// Test read price API for multiple symbols
+        /// </summary>
+        [Test]
+        public void ReadPriceWorksCorrectlyForMultipleSymbols()
+        {
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var pricesList = _api.ReadPrices(new[] { spy, aapl });
+
+            Assert.IsTrue(pricesList.Success);
+            Assert.AreEqual(pricesList.Prices.Count, 2);
+
+            Assert.IsTrue(pricesList.Prices.All(x => x.Price != 0));
+            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == aapl.ID.ToString()), 1);
+            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == spy.ID.ToString()), 1);
+
+            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
+            Assert.IsTrue(pricesList.Prices.All(x => x.Updated > reference));
         }
 
         /// <summary>
