@@ -39,8 +39,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestFixtureSetUp]
         public void SetUp()
         {
-            var pythonPath = new DirectoryInfo("../../../Algorithm.Framework/Execution");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
+            AddFolderToPythonPath("../../../Algorithm.Framework/Execution");
         }
 
         [TestCase(Language.CSharp)]
@@ -158,6 +157,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
 
             return null;
+        }
+
+        private static void AddFolderToPythonPath(string folderPath)
+        {
+            var pythonPath = new[]
+            {
+                new DirectoryInfo(folderPath).FullName,
+                new DirectoryInfo(Environment.CurrentDirectory).FullName,
+                Environment.GetEnvironmentVariable("PYTHONPATH")
+            };
+
+            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
         }
     }
 }
