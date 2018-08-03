@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Moq;
 using NodaTime;
@@ -39,7 +38,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestFixtureSetUp]
         public void SetUp()
         {
-            AddFolderToPythonPath("../../../Algorithm.Framework/Execution");
+            PythonHelper.SetDefaultPythonPath();
         }
 
         [TestCase(Language.CSharp)]
@@ -54,6 +53,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
 
             var algorithm = new QCAlgorithmFramework();
+            algorithm.SetPandasConverter();
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
@@ -137,38 +137,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             if (language == Language.Python)
             {
-                try
+                using (Py.GIL())
                 {
-                    using (Py.GIL())
-                    {
-                        const string name = nameof(StandardDeviationExecutionModel);
-                        var instance = Py.Import(name).GetAttr(name).Invoke(period.ToPython(), deviations.ToPython());
-                        return new ExecutionModelPythonWrapper(instance);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Assert.Ignore(e.Message);
+                    const string name = nameof(StandardDeviationExecutionModel);
+                    var instance = Py.Import(name).GetAttr(name).Invoke(period.ToPython(), deviations.ToPython());
+                    return new ExecutionModelPythonWrapper(instance);
                 }
             }
-            else
-            {
-                return new StandardDeviationExecutionModel(period, deviations);
-            }
 
-            return null;
-        }
-
-        private static void AddFolderToPythonPath(string folderPath)
-        {
-            var pythonPath = new[]
-            {
-                new DirectoryInfo(folderPath).FullName,
-                new DirectoryInfo(Environment.CurrentDirectory).FullName,
-                Environment.GetEnvironmentVariable("PYTHONPATH")
-            };
-
-            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
+            return new StandardDeviationExecutionModel(period, deviations);
         }
     }
 }
