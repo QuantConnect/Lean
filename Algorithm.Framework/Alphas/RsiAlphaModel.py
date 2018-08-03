@@ -23,10 +23,10 @@ from datetime import timedelta
 from enum import Enum
 
 class RsiAlphaModel(AlphaModel):
-    '''Uses Wilder's RSI to create insights. 
+    '''Uses Wilder's RSI to create insights.
     Using default settings, a cross over below 30 or above 70 will trigger a new insight.'''
 
-    def __init__(self, 
+    def __init__(self,
                  period = 14,
                  resolution = Resolution.Daily):
         '''Initializes a new instance of the RsiAlphaModel class
@@ -85,18 +85,22 @@ class RsiAlphaModel(AlphaModel):
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
         if len(symbols) == 0: return
 
-        history = algorithm.History(symbols, self.period, self.resolution)
-        if history.empty: return
-
-        tickers = history.index.levels[0]
-        
-        for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
-
+        addedSymbols = []
+        for symbol in symbols:
             if symbol not in self.symbolDataBySymbol:
                 rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
                 symbolData = SymbolData(symbol, rsi)
                 self.symbolDataBySymbol[symbol] = symbolData
+                addedSymbols.append(symbol)
+
+        if len(addedSymbols) > 0:
+            history = algorithm.History(symbols, self.period, self.resolution)
+            if history.empty: return
+
+            tickers = history.index.levels[0]
+
+            for ticker in tickers:
+                symbol = SymbolCache.GetSymbol(ticker)
 
                 for tuple in history.loc[ticker].itertuples():
                     symbolData.RSI.Update(tuple.Index, tuple.close)
