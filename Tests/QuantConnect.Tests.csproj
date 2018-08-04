@@ -266,6 +266,7 @@
     <Compile Include="Common\Util\ObjectActivatorTests.cs" />
     <Compile Include="Common\Util\ObjectToListJsonConverterTests.cs" />
     <Compile Include="Common\Util\ReaderWriterLockSlimExtensionsTests.cs" />
+    <Compile Include="Common\Util\ResolutionTimeSpanTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
     <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
