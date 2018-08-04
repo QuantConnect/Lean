@@ -177,6 +177,7 @@
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Utility.cs" />
     <Compile Include="Bitfinex\Messages.cs" />
+    <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
     <Compile Include="Bitfinex\OrderBook.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />

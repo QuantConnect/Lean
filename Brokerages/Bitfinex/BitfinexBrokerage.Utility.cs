@@ -203,7 +203,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             return new Holding()
             {
-                Symbol = Symbol.Create(position.Symbol, SecurityType.Crypto, Market.Bitfinex),
+                Symbol = _symbolMapper.GetLeanSymbol(position.Symbol),
                 AveragePrice = position.AveragePrice,
                 Quantity = position.Amount,
                 UnrealizedPnL = position.PL,
@@ -250,7 +250,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             var payload = new JsonObject();
             payload.Add("request", endpoint);
             payload.Add("nonce", GetNonce().ToString());
-            payload.Add("symbol", order.Symbol.Value.ToLower());
+            payload.Add("symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol));
             payload.Add("amount", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture));
             payload.Add("side", ConvertOrderDirection(order.Direction));
             payload.Add("type", ConvertOrderType(_algorithm.BrokerageModel.AccountType, order.Type));
@@ -317,11 +317,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             UnlockStream();
             return true;
-        }
-
-        private static Symbol CreateSymbol(string symbol)
-        {
-            return Symbol.Create(symbol, SecurityType.Crypto, Market.Bitfinex);
         }
     }
 }

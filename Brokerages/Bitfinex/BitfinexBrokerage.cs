@@ -32,6 +32,8 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
+        private readonly BitfinexSymbolMapper _symbolMapper = new BitfinexSymbolMapper();
+
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
@@ -164,7 +166,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 order.Quantity = item.Side == "sell" ? -item.OriginalAmount : item.OriginalAmount;
                 order.BrokerId = new List<string> { item.Id };
-                order.Symbol = CreateSymbol(item.Symbol);
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol);
                 order.Time = Time.UnixTimeStampToDateTime(item.Timestamp);
                 order.Status = ConvertOrderStatus(item);
                 order.Price = item.Price;
@@ -210,7 +212,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
 
             var positions = JsonConvert.DeserializeObject<Messages.Position[]>(response.Content);
-            return positions.Where(p=> p.Amount != 0)
+            return positions.Where(p => p.Amount != 0)
                 .Select(ConvertHolding)
                 .ToList();
         }
@@ -249,14 +251,15 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         list.Add(new Cash(item.Currency, item.Available, 1));
                     }
-                    else if (new[] { "JPY", "GBP", "EUR" }.Contains(item.Currency, StringComparer.OrdinalIgnoreCase))
+                    else if (_symbolMapper.IsKnownBrokerageCurrency(item.Currency))
                     {
                         var rate = GetConversionRate(item.Currency);
                         list.Add(new Cash(item.Currency.ToUpper(), item.Available, rate));
                     }
                     else
                     {
-                        var tick = GetTick(Symbol.Create((item.Currency + "USD").ToUpper(), SecurityType.Crypto, Market.Bitfinex));
+                        var symbol = item.Currency + "USD";
+                        var tick = GetTick(_symbolMapper.GetLeanSymbol(symbol));
 
                         list.Add(new Cash(item.Currency.ToUpper(), item.Available, tick.Price));
                     }

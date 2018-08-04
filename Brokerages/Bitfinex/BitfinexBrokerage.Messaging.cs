@@ -131,7 +131,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             foreach (var symbol in symbols)
             {
-                if (symbol.Value.Contains("UNIVERSE") || symbol.SecurityType != SecurityType.Crypto)
+                if (symbol.Value.Contains("UNIVERSE") ||
+                    !_symbolMapper.IsKnownBrokerageSymbol(symbol.Value) ||
+                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
                 {
                     continue;
                 }
@@ -140,7 +142,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     @event = "subscribe",
                     channel = "book",
-                    pair = symbol.Value
+                    pair = _symbolMapper.GetBrokerageSymbol(symbol)
                 }));
             }
 
@@ -154,7 +156,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             if (WebSocket.IsOpen)
             {
-                var map = ChannelList.ToDictionary(k => k.Value.Symbol.ToUpper(), k => k.Key, StringComparer.InvariantCultureIgnoreCase);
+                var map = ChannelList.ToDictionary(k => k.Value.Symbol, k => k.Key, StringComparer.InvariantCultureIgnoreCase);
                 foreach (var symbol in symbols)
                 {
                     if (map.ContainsKey(symbol.Value))
@@ -292,7 +294,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             try
             {
                 Channel channel = ChannelList[channelId];
-                var symbol = Symbol.Create(channel.Symbol, SecurityType.Crypto, Market.Bitfinex);
+                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
 
                 OrderBook orderBook;
                 if (!_orderBooks.TryGetValue(symbol, out orderBook))
@@ -333,7 +335,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             try
             {
                 Channel channel = ChannelList[channelId];
-                var symbol = Symbol.Create(channel.Symbol, SecurityType.Crypto, Market.Bitfinex);
+                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
                 var orderBook = _orderBooks[symbol];
 
                 var price = decimal.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture);
@@ -413,7 +415,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                 }
 
-                var symbol = Symbol.Create(entries[2], SecurityType.Crypto, Market.Bitfinex);
+                var symbol = _symbolMapper.GetLeanSymbol(entries[2]);
                 var fillPrice = decimal.Parse(entries[6], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var fillQuantity = decimal.Parse(entries[5], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
