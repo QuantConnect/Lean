@@ -41,7 +41,7 @@ namespace QuantConnect.Securities
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
         public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
-            .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
+            .SelectMany(ukvp => ukvp.Value.Members.Where(mkvp => !mkvp.Value.IsInternalFeed()).Select(mkvp => mkvp.Value))
             .DistinctBy(s => s.Symbol).ToDictionary(s => s.Symbol);
 
         /// <summary>
