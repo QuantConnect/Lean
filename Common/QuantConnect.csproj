@@ -162,6 +162,7 @@
     <Compile Include="API\LiveAlgorithmResultsJsonConverter.cs" />
     <Compile Include="API\LiveAlgorithmSettings.cs" />
     <Compile Include="API\LiveLog.cs" />
+    <Compile Include="API\Prices.cs" />
     <Compile Include="API\Project.cs" />
     <Compile Include="API\ProjectFile.cs" />
     <Compile Include="API\RestResponse.cs" />
@@ -580,6 +581,7 @@
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\DisposableExtensions.cs" />
+    <Compile Include="Util\DoubleUnixSecondsDateTimeJsonConverter.cs" />
     <Compile Include="Util\EnumeratorExtensions.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />

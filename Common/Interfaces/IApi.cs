@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
 using QuantConnect.API;
@@ -260,6 +261,13 @@ namespace QuantConnect.Interfaces
         /// <param name="status">Status enum of the current worker</param>
         /// <param name="message">Message for the algorithm status event</param>
         void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "");
+
+        /// <summary>
+        /// Will get the prices for requested symbols
+        /// </summary>
+        /// <param name="symbols">Symbols for which the price is requested</param>
+        /// <returns><see cref="Prices"/></returns>
+        PricesList ReadPrices(IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Send the statistics to storage for performance tracking.

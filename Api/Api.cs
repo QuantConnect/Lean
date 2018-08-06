@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Interfaces;
@@ -580,6 +582,22 @@ namespace QuantConnect.Api
             BacktestReport report;
             ApiConnection.TryRequest(request, out report);
             return report;
+        }
+
+        /// <summary>
+        /// Will get the prices for requested symbols
+        /// </summary>
+        /// <param name="symbols">Symbols for which the price is requested</param>
+        /// <returns><see cref="Prices"/></returns>
+        public PricesList ReadPrices(IEnumerable<Symbol> symbols)
+        {
+            var request = new RestRequest("prices", Method.POST);
+            var symbolsToRequest = string.Join(",", symbols.Select(x => x.ID.ToString()));
+            request.AddParameter("symbols", symbolsToRequest);
+
+            PricesList pricesList;
+            ApiConnection.TryRequest(request, out pricesList);
+            return pricesList;
         }
 
         /// <summary>
