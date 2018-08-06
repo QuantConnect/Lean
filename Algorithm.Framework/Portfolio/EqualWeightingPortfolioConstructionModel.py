@@ -65,6 +65,11 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         for insight in activeInsights:
             targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent))
 
+        # add targets to remove invested securities
+        for kvp in algorithm.Portfolio:
+            if kvp.Value.Invested and all([kvp.Key != x.Symbol for x in targets]):
+                targets.append(PortfolioTarget(kvp.Key, 0))
+
         return targets
 
     def OnSecuritiesChanged(self, algorithm, changes):
