@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y wget bzip2 python3-pip python-opengl &&
 
 # Install miniconda and supported third party python packages
 ENV PATH="/opt/miniconda3/bin:${PATH}"
-RUN wget http://cdn.quantconnect.com.s3.amazonaws.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh && \
+RUN wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh && \
     bash Miniconda3-4.3.31-Linux-x86_64.sh -b -p /opt/miniconda3 && \
     rm -rf Miniconda3-latest-Linux-x86_64.sh && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6.so && \
