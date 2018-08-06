@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -105,12 +106,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             {
                 var actual = actualInsights[i];
                 var expected = expectedInsights[i];
-                Assert.AreEqual(actual.Symbol, expected.Symbol);
-                Assert.AreEqual(actual.Type, expected.Type);
-                Assert.AreEqual(actual.Direction, expected.Direction);
-                Assert.AreEqual(actual.Period, expected.Period);
-                Assert.AreEqual(actual.Magnitude, expected.Magnitude);
-                Assert.AreEqual(actual.Confidence, expected.Confidence);
+                Assert.AreEqual(expected.Symbol, actual.Symbol);
+                Assert.AreEqual(expected.Type, actual.Type);
+                Assert.AreEqual(expected.Direction, actual.Direction);
+                Assert.AreEqual(expected.Period, actual.Period);
+                Assert.AreEqual(expected.Magnitude, actual.Magnitude);
+                Assert.AreEqual(expected.Confidence, actual.Confidence);
             }
         }
 

@@ -302,47 +302,18 @@ namespace QuantConnect.Algorithm.Framework
         /// <param name="insights">The collection of insights generaed at the current time step</param>
         protected sealed override void OnInsightsGenerated(IEnumerable<Insight> insights)
         {
-            // set generated and close times on the insight object
-            base.OnInsightsGenerated(insights.Select(SetGeneratedAndClosedTimes));
-        }
-
-        private Insight SetGeneratedAndClosedTimes(Insight insight)
-        {
-            // function idempotency
-            if (insight.CloseTimeUtc != default(DateTime))
+            // set values not required to be set by alpha models
+            base.OnInsightsGenerated(insights.Select(insight =>
             {
+                insight.GeneratedTimeUtc = UtcTime;
+                insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
+                insight.SourceModel = string.IsNullOrEmpty(insight.SourceModel) ? Alpha.GetModelName() : insight.SourceModel;
+
+                var exchangeHours = MarketHoursDatabase.GetExchangeHours(insight.Symbol.ID.Market, insight.Symbol, insight.Symbol.SecurityType);
+                insight.SetPeriodAndCloseTime(exchangeHours);
+
                 return insight;
-            }
-
-            insight.GeneratedTimeUtc = UtcTime;
-            insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
-            if (string.IsNullOrEmpty(insight.SourceModel))
-            {
-                // set the source model name if not already set
-                insight.SourceModel = Alpha.GetModelName();
-            }
-
-            TimeSpan barSize;
-            Security security;
-            SecurityExchangeHours exchangeHours;
-            if (Securities.TryGetValue(insight.Symbol, out security))
-            {
-                exchangeHours = security.Exchange.Hours;
-                barSize = security.Resolution.ToTimeSpan();
-            }
-            else
-            {
-                barSize = insight.Period.ToHigherResolutionEquivalent(false).ToTimeSpan();
-                exchangeHours = MarketHoursDatabase.GetExchangeHours(insight.Symbol.ID.Market, insight.Symbol, insight.Symbol.SecurityType);
-            }
-
-            var localStart = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
-            barSize = QuantConnect.Time.Max(barSize, QuantConnect.Time.OneMinute);
-            var barCount = (int) (insight.Period.Ticks / barSize.Ticks);
-
-            insight.CloseTimeUtc = QuantConnect.Time.GetEndTimeForTradeBars(exchangeHours, localStart, barSize, barCount, false).ConvertToUtc(exchangeHours.TimeZone);
-
-            return insight;
+            }));
         }
 
         private void CheckModels()

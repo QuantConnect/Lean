@@ -431,13 +431,13 @@ namespace QuantConnect
         /// <summary>
         /// Determines the start time required to produce the requested number of bars and the given size
         /// </summary>
-        /// <param name="exchange">The exchange used to test for market open hours</param>
+        /// <param name="exchangeHours">The exchange hours used to test for market open hours</param>
         /// <param name="end">The end time of the last bar over the requested period</param>
         /// <param name="barSize">The length of each bar</param>
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchange, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours)
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -449,7 +449,7 @@ namespace QuantConnect
             {
                 var previous = current;
                 current = current - barSize;
-                if (exchange.IsOpen(current, previous, extendedMarketHours))
+                if (exchangeHours.IsOpen(current, previous, extendedMarketHours))
                 {
                     i++;
                 }
@@ -461,13 +461,13 @@ namespace QuantConnect
         /// Determines the end time at which the requested number of bars of the given  will have elapsed.
         /// NOTE: The start time is not discretized by barSize units like is done in <see cref="GetStartTimeForTradeBars"/>
         /// </summary>
-        /// <param name="exchange">The exchange used to test for market open hours</param>
+        /// <param name="exchangeHours">The exchange hours used to test for market open hours</param>
         /// <param name="start">The end time of the last bar over the requested period</param>
         /// <param name="barSize">The length of each bar</param>
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetEndTimeForTradeBars(SecurityExchangeHours exchange, DateTime start, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        public static DateTime GetEndTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime start, TimeSpan barSize, int barCount, bool extendedMarketHours)
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -475,16 +475,75 @@ namespace QuantConnect
             }
 
             var current = start;
+            if (barSize == OneDay)
+            {
+                for (int i = 0; i < barCount;)
+                {
+                    current = current + OneDay;
+                    if (exchangeHours.IsDateOpen(current))
+                    {
+                        i++;
+                    }
+                }
+
+                return current;
+            }
+
             for (int i = 0; i < barCount;)
             {
                 var previous = current;
                 current = current + barSize;
-                if (exchange.IsOpen(previous, current, extendedMarketHours))
+                if (exchangeHours.IsOpen(previous, current, extendedMarketHours))
                 {
                     i++;
                 }
             }
             return current;
+        }
+
+        /// <summary>
+        /// Gets the number of trade bars of the specified <paramref name="barSize"/> that fit between the <paramref name="start"/> and <paramref name="end"/>
+        /// </summary>
+        /// <param name="exchangeHours">The exchange used to test for market open hours</param>
+        /// <param name="start">The start time of the interval in the exchange time zone</param>
+        /// <param name="end">The end time of the interval in the exchange time zone</param>
+        /// <param name="barSize">The step size used to count number of bars between start and end</param>
+        /// <returns>The number of bars of the specified size between start and end times</returns>
+        public static int GetNumberOfTradeBarsInInterval(SecurityExchangeHours exchangeHours, DateTime start, DateTime end, TimeSpan barSize)
+        {
+            if (barSize <= TimeSpan.Zero)
+            {
+                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
+            }
+
+            var count = 0;
+            var current = start;
+            if (barSize == OneDay)
+            {
+                while (current < end)
+                {
+                    if (exchangeHours.IsDateOpen(current))
+                    {
+                        count++;
+                    }
+
+                    current = current + OneDay;
+                }
+
+                return count;
+            }
+
+            while (current < end)
+            {
+                var previous = current;
+                current = current + barSize;
+                if (exchangeHours.IsOpen(previous, current, false))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         /// <summary>
@@ -523,6 +582,16 @@ namespace QuantConnect
             }
 
             return stepSize.TotalSeconds / period.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Gets the absolute value of the specified time span
+        /// </summary>
+        /// <param name="timeSpan">Time span whose absolute value we seek</param>
+        /// <returns>The absolute value of the specified time span</returns>
+        public static TimeSpan Abs(this TimeSpan timeSpan)
+        {
+            return TimeSpan.FromTicks(Math.Abs(timeSpan.Ticks));
         }
     }
 }
