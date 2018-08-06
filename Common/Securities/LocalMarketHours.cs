@@ -44,6 +44,14 @@ namespace QuantConnect.Securities
         public DayOfWeek DayOfWeek { get; }
 
         /// <summary>
+        /// Gets the tradable time during the market day.
+        /// For a normal US equity trading day this is 6.5 hours.
+        /// This does NOT account for extended market hours and only
+        /// considers <see cref="MarketHoursState.Market"/>
+        /// </summary>
+        public TimeSpan MarketDuration { get; }
+
+        /// <summary>
         /// Gets the individual market hours segments that define the hours of operation for this day
         /// </summary>
         public IEnumerable<MarketHoursSegment> Segments => _segments;
@@ -80,9 +88,15 @@ namespace QuantConnect.Securities
                 {
                     _hasPreMarket = true;
                 }
+
                 if (segment.State == MarketHoursState.PostMarket)
                 {
                     _hasPostMarket = true;
+                }
+
+                if (segment.State == MarketHoursState.Market)
+                {
+                    MarketDuration += segment.End - segment.Start;
                 }
             }
         }
@@ -96,44 +110,8 @@ namespace QuantConnect.Securities
         /// <param name="marketClose">The regular market close time, must be greater than the regular market open time</param>
         /// <param name="extendedMarketClose">The extended market close time, must be greater than or equal to the regular market close time</param>
         public LocalMarketHours(DayOfWeek day, TimeSpan extendedMarketOpen, TimeSpan marketOpen, TimeSpan marketClose, TimeSpan extendedMarketClose)
+            : this(day, MarketHoursSegment.GetMarketHoursSegments(extendedMarketOpen, marketOpen, marketClose, extendedMarketClose))
         {
-            DayOfWeek = day;
-
-            var segments = new List<MarketHoursSegment>();
-
-            if (extendedMarketOpen != marketOpen)
-            {
-                _hasPreMarket = true;
-                segments.Add(new MarketHoursSegment(MarketHoursState.PreMarket, extendedMarketOpen, marketOpen));
-            }
-
-            if (marketOpen != TimeSpan.Zero || marketClose != TimeSpan.Zero)
-            {
-                segments.Add(new MarketHoursSegment(MarketHoursState.Market, marketOpen, marketClose));
-            }
-
-            if (marketClose != extendedMarketClose)
-            {
-                _hasPostMarket = true;
-                segments.Add(new MarketHoursSegment(MarketHoursState.PostMarket, marketClose, extendedMarketClose));
-            }
-
-            _segments = segments.ToArray();
-            IsClosedAllDay = _segments.Length == 0;
-
-            // perform some sanity checks
-            if (marketOpen < extendedMarketOpen)
-            {
-                throw new ArgumentException("Extended market open time must be less than or equal to market open time.");
-            }
-            if (marketClose < marketOpen)
-            {
-                throw new ArgumentException("Market close time must be after market open time.");
-            }
-            if (extendedMarketClose < marketClose)
-            {
-                throw new ArgumentException("Extended market close time must be greater than or equal to market close time.");
-            }
         }
 
         /// <summary>
