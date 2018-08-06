@@ -60,8 +60,8 @@ namespace QuantConnect.Securities
             security.FillModel = _brokerageModel.GetFillModel(security);
             security.FeeModel = _brokerageModel.GetFeeModel(security);
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
-            security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
-            security.BuyingPowerModel = _brokerageModel.GetBuyingPowerModel(security, _brokerageModel.AccountType);
+            security.SettlementModel = _brokerageModel.GetSettlementModel(security);
+            security.BuyingPowerModel = _brokerageModel.GetBuyingPowerModel(security);
 
             _securitySeeder.SeedSecurity(security);
         }

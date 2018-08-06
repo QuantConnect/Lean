@@ -138,5 +138,18 @@ namespace QuantConnect.Tests.Common.Securities
             // Assert
             Assert.IsTrue(_tradeBarSecurity.Price == 0);
         }
+
+        [Test]
+        public void BrokerageModelSecurityInitializer_SetLeverageForBuyingPowerModel_Successfully()
+        {
+            var brokerageModel = new DefaultBrokerageModel(AccountType.Cash);
+            var localBrokerageInitializer = new BrokerageModelSecurityInitializer(brokerageModel,
+                new FuncSecuritySeeder(_algo.GetLastKnownPrice));
+            Assert.AreEqual(1.0, _tradeBarSecurity.Leverage);
+            localBrokerageInitializer.Initialize(_tradeBarSecurity);
+            Assert.AreEqual(1.0, _tradeBarSecurity.Leverage);
+            Assert.AreEqual(1.0, _tradeBarSecurity.BuyingPowerModel.GetLeverage(_tradeBarSecurity));
+        }
+
     }
 }

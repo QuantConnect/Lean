@@ -117,9 +117,24 @@ namespace QuantConnect.Brokerages
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        ISettlementModel GetSettlementModel(Security security);
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
+
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        IBuyingPowerModel GetBuyingPowerModel(Security security);
 
         /// <summary>
         /// Gets a new buying power model for the security
@@ -127,6 +142,7 @@ namespace QuantConnect.Brokerages
         /// <param name="security">The security to get a buying power model for</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The buying power model for this brokerage/security</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType);
     }
 

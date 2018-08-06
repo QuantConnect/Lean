@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetBuyingPowerModelTest()
         {
-            Assert.IsInstanceOf<CashBuyingPowerModel>(_unit.GetBuyingPowerModel(GDAXTestsHelpers.GetSecurity(), AccountType.Cash));
+            Assert.IsInstanceOf<CashBuyingPowerModel>(_unit.GetBuyingPowerModel(GDAXTestsHelpers.GetSecurity()));
         }
 
         [Test]
