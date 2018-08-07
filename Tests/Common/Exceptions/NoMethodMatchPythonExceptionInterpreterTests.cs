@@ -23,7 +23,7 @@ using System.IO;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
-    [TestFixture, Ignore]
+    [TestFixture, Category("TravisExclude")]
     public class NoMethodMatchPythonExceptionInterpreterTests
     {
         private PythonException _pythonException;
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Exceptions
 
                 try
                 {
-                    // self.Log(1)
+                    // self.SetCash('SPY')
                     algorithm.no_method_match();
                 }
                 catch (PythonException pythonException)
@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var assembly = typeof(PythonExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
-            Assert.True(exception.Message.Contains("self.Log(1)"));
+            Assert.True(exception.Message.Contains("self.SetCash(\\'SPY\\')"));
         }
 
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
