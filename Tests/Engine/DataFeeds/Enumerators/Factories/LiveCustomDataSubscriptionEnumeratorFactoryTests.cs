@@ -228,21 +228,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsNotNull(_enumerator.Current);
                 Assert.AreEqual(_referenceLocal, _enumerator.Current.EndTime);
 
-                Assert.IsTrue(_enumerator.MoveNext());
-                Assert.IsNull(_enumerator.Current);
-
                 _timeProvider.AdvanceSeconds(1);
 
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNotNull(_enumerator.Current);
                 Assert.AreEqual(_referenceLocal.AddSeconds(1), _enumerator.Current.EndTime);
-
-                // these are rate limited by the refresh enumerator's func guard clause
-                Assert.IsTrue(_enumerator.MoveNext());
-                Assert.IsNull(_enumerator.Current);
-
-                Assert.IsTrue(_enumerator.MoveNext());
-                Assert.IsNull(_enumerator.Current);
 
                 _dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
                         sds.Source == "remote.file.source" &&
@@ -305,16 +295,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNotNull(_enumerator.Current);
                 Assert.AreEqual(_referenceLocal, _enumerator.Current.EndTime);
-                VerifyGetSourceInvocation(0);
-
-                // these are limitted by frontier aware enumerator preventing future data
-                Assert.IsTrue(_enumerator.MoveNext());
-                Assert.IsNull(_enumerator.Current);
-                VerifyGetSourceInvocation(0);
-
-                // still prevented by frontier aware
-                Assert.IsTrue(_enumerator.MoveNext());
-                Assert.IsNull(_enumerator.Current);
                 VerifyGetSourceInvocation(0);
 
                 _timeProvider.Advance(Time.OneDay);
