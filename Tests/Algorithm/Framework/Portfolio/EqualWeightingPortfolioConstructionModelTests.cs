@@ -35,6 +35,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     public class EqualWeightingPortfolioConstructionModelTests
     {
         private QCAlgorithmFramework _algorithm;
+        private const decimal _startingCash = 100000;
 
         [TestFixtureSetUp]
         public void SetUp()
@@ -43,6 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
 
             _algorithm = new QCAlgorithmFramework();
+            _algorithm.SetCash(_startingCash);
             _algorithm.SetDateTime(new DateTime(2018, 7, 31));
 
             var prices = new Dictionary<Symbol, decimal>
@@ -103,7 +105,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
-        [Test]
         [TestCase(Language.CSharp, InsightDirection.Up)]
         [TestCase(Language.CSharp, InsightDirection.Down)]
         [TestCase(Language.CSharp, InsightDirection.Flat)]
@@ -147,6 +148,49 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Assert.AreEqual(expected.Quantity, actual.Quantity);
             }
         }
+
+        [Test]
+        [TestCase(Language.CSharp, InsightDirection.Up)]
+        [TestCase(Language.CSharp, InsightDirection.Down)]
+        [TestCase(Language.CSharp, InsightDirection.Flat)]
+        [TestCase(Language.Python, InsightDirection.Up)]
+        [TestCase(Language.Python, InsightDirection.Down)]
+        [TestCase(Language.Python, InsightDirection.Flat)]
+        public void AutomaticallyRemoveInvested(Language language, InsightDirection direction)
+        {
+            SetPortfolioConstruction(language);
+
+            var spyHolding = _algorithm.Portfolio[Symbols.SPY];
+            spyHolding.SetHoldings(spyHolding.Price, 100);
+            _algorithm.Portfolio.SetCash(_startingCash - spyHolding.HoldingsValue);
+
+            // Equity will be divided by all securities minus 1, since SPY is already invested and we want to remove it
+            var amount = _algorithm.Portfolio.TotalPortfolioValue / (_algorithm.Securities.Count - 1);
+            var expectedTargets = _algorithm.Securities.Select(x =>
+            {
+                // Expected target quantity for SPY is zero, since it will be removed
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
+                return new PortfolioTarget(x.Key, quantity);
+            });
+
+            // Do no include SPY in the insights
+            var insights = _algorithm.Securities.Keys
+                .Where(x=> x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, _algorithm.UtcTime));
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
+
+            Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
+
+            foreach (var expected in expectedTargets)
+            {
+                var actual = actualTargets.FirstOrDefault(x => x.Symbol == expected.Symbol);
+                Assert.IsNotNull(actual);
+                Assert.AreEqual(expected.Quantity, actual.Quantity);
+            }
+        }
+
+
 
         private Security GetSecurity(Symbol symbol)
         {

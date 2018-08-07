@@ -79,6 +79,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent));
             }
 
+            // add targets to remove invested securities
+            targets.AddRange(from kvp in algorithm.Portfolio
+                             where kvp.Value.Invested
+                             where targets.All(x => kvp.Key != x.Symbol)
+                             select new PortfolioTarget(kvp.Key, 0));
+
             return targets;
         }
 
