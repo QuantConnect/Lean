@@ -28,7 +28,7 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
         x = dict()['SPY']
 
     def no_method_match(self):
-        self.Log(1)
+        self.AddCash('SPY')
 
     def unsupported_operand(self):
         x = decimal.Decimal(1) * 1.1
