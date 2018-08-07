@@ -53,9 +53,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security to be traded</param>
-        /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
+        /// <param name="target">Target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue);
+        GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal target);
 
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position

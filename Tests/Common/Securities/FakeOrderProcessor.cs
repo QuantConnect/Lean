@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
         private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();
+        public readonly ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests = new ConcurrentDictionary<int, OrderRequest>();
         public void AddOrder(Order order)
         {
             _orders[order.Id] = order;
@@ -80,7 +81,14 @@ namespace QuantConnect.Tests.Common.Securities
 
         public OrderTicket Process(OrderRequest request)
         {
-            throw new NotImplementedException();
+            ProcessedOrdersRequests.TryAdd(request.OrderId, request);
+            switch (request.OrderRequestType)
+            {
+                case OrderRequestType.Submit:
+                    return new OrderTicket(null, (SubmitOrderRequest) request);
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }

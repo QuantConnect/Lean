@@ -21,6 +21,7 @@ using NodaTime;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -31,7 +32,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        private readonly AlgorithmSettings _algorithmSettings;
+        private readonly IAlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -58,7 +59,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
-        public SubscriptionManager(AlgorithmSettings algorithmSettings, TimeKeeper timeKeeper)
+        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper)
         {
             _algorithmSettings = algorithmSettings;
             _timeKeeper = timeKeeper;

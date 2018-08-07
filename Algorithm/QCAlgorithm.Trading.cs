@@ -771,6 +771,12 @@ namespace QuantConnect.Algorithm
         public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             var orderIdList = new List<int>();
+            if (!Settings.LiquidateEnabled)
+            {
+                Debug("Liquidate() is currently disabled by settings. To re-enable please set 'Settings.LiquidateEnabled' to true");
+                return orderIdList;
+            }
+
 
             foreach (var symbol in Securities.Keys.OrderBy(x => x.Value))
             {
@@ -929,7 +935,7 @@ namespace QuantConnect.Algorithm
                     MarketOrder(symbol, quantity, false, tag);
                 }
                 else
-                { 
+                {
                     MarketOnOpenOrder(symbol, quantity, tag);
                 }
             }
@@ -965,10 +971,10 @@ namespace QuantConnect.Algorithm
                 return 0;
             }
 
-            // this is the value in account currency that we want our holdings to have
-            var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
+            // Factoring in SetHoldingsBuffer.
+            var adjustedTarget = target * (1 - Settings.SetHoldingsBuffer);
 
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, targetPortfolioValue);
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, adjustedTarget);
             if (result.Quantity == 0 && result.IsError)
             {
                 Error($"The order quantity for {symbol.Value} cannot be calculated: Reason: {result.Reason}.");

@@ -311,7 +311,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the user settings for the algorithm
         /// </summary>
-        public AlgorithmSettings Settings
+        public IAlgorithmSettings Settings
         {
             get;
             private set;

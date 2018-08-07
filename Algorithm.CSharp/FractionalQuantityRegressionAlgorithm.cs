@@ -99,24 +99,24 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "6"},
-            {"Average Win", "0.62%"},
-            {"Average Loss", "-2.41%"},
-            {"Compounding Annual Return", "80.657%"},
+            {"Average Win", "0.63%"},
+            {"Average Loss", "-2.39%"},
+            {"Compounding Annual Return", "82.917%"},
             {"Drawdown", "6.500%"},
-            {"Expectancy", "-0.161"},
-            {"Net Profit", "0.650%"},
-            {"Sharpe Ratio", "0.734"},
+            {"Expectancy", "-0.158"},
+            {"Net Profit", "0.664%"},
+            {"Sharpe Ratio", "0.743"},
             {"Loss Rate", "33%"},
             {"Win Rate", "67%"},
             {"Profit-Loss Ratio", "0.26"},
-            {"Alpha", "-1.388"},
-            {"Beta", "1.129"},
-            {"Annual Standard Deviation", "0.74"},
-            {"Annual Variance", "0.547"},
-            {"Information Ratio", "-8.413"},
-            {"Tracking Error", "0.139"},
-            {"Treynor Ratio", "0.481"},
-            {"Total Fees", "$2442.62"}
+            {"Alpha", "-1.38"},
+            {"Beta", "1.128"},
+            {"Annual Standard Deviation", "0.739"},
+            {"Annual Variance", "0.546"},
+            {"Information Ratio", "-8.422"},
+            {"Tracking Error", "0.138"},
+            {"Treynor Ratio", "0.487"},
+            {"Total Fees", "$2428.91"}
         };
     }
 }

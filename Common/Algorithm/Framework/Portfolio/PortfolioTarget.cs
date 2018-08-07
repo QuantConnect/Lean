@@ -71,8 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return new PortfolioTarget(symbol, 0);
             }
 
-            var targetValue = algorithm.Portfolio.TotalPortfolioValue * percent;
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, targetValue);
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, percent);
             if (result.IsError)
             {
                 algorithm.Log($"Unable to compute order quantity of {symbol}. Quantity set to zero. Reason: {result.Reason}");

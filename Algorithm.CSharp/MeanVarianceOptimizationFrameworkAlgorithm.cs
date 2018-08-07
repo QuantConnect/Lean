@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            
+
             // set algorithm framework models
             SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
             SetAlpha(new HistoricalReturnsAlphaModel(resolution: Resolution.Daily));
@@ -73,25 +73,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "11"},
+            {"Total Trades", "10"},
             {"Average Win", "0.50%"},
             {"Average Loss", "-0.14%"},
-            {"Compounding Annual Return", "564.274%"},
+            {"Compounding Annual Return", "573.292%"},
             {"Drawdown", "0.600%"},
             {"Expectancy", "1.248"},
-            {"Net Profit", "2.628%"},
-            {"Sharpe Ratio", "8.542"},
+            {"Net Profit", "2.647%"},
+            {"Sharpe Ratio", "8.544"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "3.50"},
             {"Alpha", "0"},
-            {"Beta", "95.538"},
+            {"Beta", "96.224"},
             {"Annual Standard Deviation", "0.129"},
             {"Annual Variance", "0.017"},
-            {"Information Ratio", "8.459"},
+            {"Information Ratio", "8.462"},
             {"Tracking Error", "0.129"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$23.99"},
+            {"Total Fees", "$23.04"},
             {"Total Insights Generated", "14"},
             {"Total Insights Closed", "4"},
             {"Total Insights Analysis Completed", "0"},

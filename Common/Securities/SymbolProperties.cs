@@ -1,17 +1,19 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
 
 namespace QuantConnect.Securities
 {
@@ -25,7 +27,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public string Description
         {
-            get; 
+            get;
             private set;
         }
 
@@ -34,7 +36,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public string QuoteCurrency
         {
-            get; 
+            get;
             private set;
         }
 
@@ -43,7 +45,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal ContractMultiplier
         {
-            get; 
+            get;
             protected set;
         }
 
@@ -52,7 +54,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal MinimumPriceVariation
         {
-            get; 
+            get;
             private set;
         }
 
@@ -75,6 +77,10 @@ namespace QuantConnect.Securities
             ContractMultiplier = contractMultiplier;
             MinimumPriceVariation = minimumPriceVariation;
             LotSize = lotSize;
+            if(LotSize <= 0)
+            {
+                throw new Exception("SymbolProperties LotSize can not be less than or equal to 0");
+            }
         }
 
         /// <summary>
