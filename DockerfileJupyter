@@ -26,7 +26,7 @@ RUN conda install -c conda-forge jupyterlab && \
     conda clean -y --all
 
 #Install ICSharp (Jupyter C# Kernel)
-RUN wget https://s3.amazonaws.com/data.quantconnect.com/builds/iCSharp/iCSharp.Kernel.zip && \
+RUN wget https://cdn.quantconnect.com/icsharp/iCSharp.Kernel.zip && \
     unzip iCSharp.Kernel.zip && rm -irf iCSharp.Kernel.zip && cd icsharp && \
     jupyter kernelspec install kernel-spec --name=csharp && cd ..
 
@@ -38,7 +38,7 @@ ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 COPY ./Launcher/bin/Debug/ ${WORK}
 RUN rm -irf ${WORK}/*Python* && \
     find ${WORK} -type f -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -delete && \
-    echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json 
+    echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json
 
 EXPOSE 8888
 WORKDIR $WORK

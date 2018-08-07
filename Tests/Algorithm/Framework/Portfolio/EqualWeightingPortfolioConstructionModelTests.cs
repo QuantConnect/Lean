@@ -25,7 +25,6 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using QuantConnect.Orders.Fees;
 
@@ -40,9 +39,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestFixtureSetUp]
         public void SetUp()
         {
-            var pythonPath = new DirectoryInfo("../../../Algorithm.Framework/Portfolio");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-
             _algorithm = new QCAlgorithmFramework();
             _algorithm.SetCash(_startingCash);
             _algorithm.SetDateTime(new DateTime(2018, 7, 31));
@@ -212,19 +208,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             if (language == Language.Python)
             {
-                try
+                using (Py.GIL())
                 {
-                    using (Py.GIL())
-                    {
-                        var name = nameof(EqualWeightingPortfolioConstructionModel);
-                        var instance = Py.Import(name).GetAttr(name).Invoke();
-                        var model = new PortfolioConstructionModelPythonWrapper(instance);
-                        _algorithm.SetPortfolioConstruction(model);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Assert.Ignore(e.Message);
+                    var name = nameof(EqualWeightingPortfolioConstructionModel);
+                    var instance = Py.Import(name).GetAttr(name).Invoke();
+                    var model = new PortfolioConstructionModelPythonWrapper(instance);
+                    _algorithm.SetPortfolioConstruction(model);
                 }
             }
 

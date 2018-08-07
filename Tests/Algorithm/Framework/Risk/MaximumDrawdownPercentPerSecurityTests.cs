@@ -14,8 +14,6 @@
  *
 */
 
-using System;
-using System.IO;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -30,13 +28,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
     [TestFixture]
     public class MaximumDrawdownPercentPerSecurityTests
     {
-        [TestFixtureSetUp]
-        public void SetUp()
-        {
-            var pythonPath = new DirectoryInfo("../../../Algorithm.Framework/Risk");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-        }
-
         [Test]
         [TestCase(Language.CSharp, 0.1, false, 0, 0, false)]
         [TestCase(Language.CSharp, 0.1, true, -50, 1000, false)]
@@ -68,23 +59,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             security.Object.Holdings = holding.Object;
 
             var algorithm = new QCAlgorithmFramework();
+            algorithm.SetPandasConverter();
             algorithm.Securities.Add(Symbols.AAPL, security.Object);
 
             if (language == Language.Python)
             {
-                try
+                using (Py.GIL())
                 {
-                    using (Py.GIL())
-                    {
-                        var name = nameof(MaximumDrawdownPercentPerSecurity);
-                        var instance = Py.Import(name).GetAttr(name).Invoke(maxDrawdownPercent.ToPython());
-                        var model = new RiskManagementModelPythonWrapper(instance);
-                        algorithm.SetRiskManagement(model);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Assert.Ignore(e.Message);
+                    const string name = nameof(MaximumDrawdownPercentPerSecurity);
+                    var instance = Py.Import(name).GetAttr(name).Invoke(maxDrawdownPercent.ToPython());
+                    var model = new RiskManagementModelPythonWrapper(instance);
+                    algorithm.SetRiskManagement(model);
                 }
             }
             else

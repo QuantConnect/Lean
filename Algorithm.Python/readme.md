@@ -25,7 +25,7 @@ Before we enable python support, follow the [installation instructions](https://
 By default, **miniconda** is installed in the users home directory (`$HOME`):
 ```
 export PATH="$HOME/miniconda3/bin:$PATH"
-wget http://cdn.quantconnect.com.s3.amazonaws.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
+wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
 bash Miniconda3-4.3.31-Linux-x86_64.sh -b
 rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
 sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
