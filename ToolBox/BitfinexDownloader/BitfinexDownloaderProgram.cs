@@ -41,7 +41,9 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             try
             {
                 var allResolutions = resolution.ToLower() == "all";
-                var castResolution = allResolutions ? Resolution.Minute : (Resolution)Enum.Parse(typeof(Resolution), resolution);
+                var resolutions = allResolutions ? 
+                    new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily } :
+                    new[] { (Resolution)Enum.Parse(typeof(Resolution), resolution) };
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-folder", "../../../Data");
@@ -51,35 +53,17 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                     foreach (var ticker in tickers)
                     {
                         // Download the data
-                        var startDate = fromDate;
                         var symbol = downloader.GetSymbol(ticker);
-                        var data = downloader.Get(symbol, castResolution, fromDate, toDate);
-                        var bars = data.Cast<TradeBar>().ToList();
-
-                        if (allResolutions)
+                        foreach (var castResolution in resolutions)
                         {
-                            // Save the data (second resolution)
-                            var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
-                            writer.Write(bars);
+                            var data = downloader.Get(symbol, castResolution, fromDate, toDate);
 
-                            // Save the data (other resolutions)
-                            foreach (var res in new[] { Resolution.Hour, Resolution.Daily })
-                            {
-                                var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
-
-                                writer = new LeanDataWriter(res, symbol, dataDirectory);
-                                writer.Write(resData);
-                            }
-                        }
-                        else
-                        {
                             // Save the data (single resolution)
                             var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                             writer.Write(data);
                         }
                     }
                 }
-
             }
             catch (Exception err)
             {

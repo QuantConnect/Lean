@@ -47,7 +47,6 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             _brokerage.Connect();
         }
 
-
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
@@ -99,6 +98,11 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         
         /// <summary>
         /// Aggregates a list of minute bars at the requested resolution
+        /// Warning. 
+        /// Aggregated data is not used as Volume of aggregated data doesn't match to Bitfinex API Response for same period of higher resolution.
+        /// Example:
+        /// https://api.bitfinex.com/v2/candles/trade:1h:tBTCUSD/hist?limit=1000&sort=1&start=1533150000000&end=1533153540000
+        /// https://api.bitfinex.com/v2/candles/trade:1m:tBTCUSD/hist?limit=1000&sort=1&start=1533150000000&end=1533153540000
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="bars"></param>
