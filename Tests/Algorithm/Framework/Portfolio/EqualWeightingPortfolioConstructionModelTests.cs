@@ -37,8 +37,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestFixtureSetUp]
         public void SetUp()
         {
-            PythonHelper.SetDefaultPythonPath();
-
             _algorithm = new QCAlgorithmFramework();
             _algorithm.SetDateTime(new DateTime(2018, 7, 31));
 

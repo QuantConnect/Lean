@@ -35,12 +35,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
     [TestFixture]
     public class StandardDeviationExecutionModelTests
     {
-        [TestFixtureSetUp]
-        public void SetUp()
-        {
-            PythonHelper.SetDefaultPythonPath();
-        }
-
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void OrdersAreNotSubmittedWhenNoTargetsToExecute(Language language)
@@ -79,12 +73,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
-            var i = 1;
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select(x =>
-                    new Slice(time.AddMinutes(i++),
+                .Returns(historicalPrices.Select((x,i) =>
+                    new Slice(time.AddMinutes(i),
                         new List<BaseData>
                         {
                             new TradeBar
@@ -128,6 +121,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             Assert.AreEqual(expectedOrdersSubmitted, actualOrdersSubmitted.Count);
             Assert.AreEqual(expectedTotalQuantity, actualOrdersSubmitted.Sum(x => x.Quantity));
+
+            if (actualOrdersSubmitted.Count == 1)
+            {
+                var request = actualOrdersSubmitted[0];
+                Assert.AreEqual(expectedTotalQuantity, request.Quantity);
+                Assert.AreEqual(algorithm.UtcTime, request.Time);
+            }
         }
 
         private static IExecutionModel GetExecutionModel(Language language)

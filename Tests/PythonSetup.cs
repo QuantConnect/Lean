@@ -14,18 +14,26 @@
 */
 
 using System;
+using NUnit.Framework;
 
-namespace QuantConnect.Tests.Algorithm.Framework
+namespace QuantConnect.Tests
 {
-    public static class PythonHelper
+    [SetUpFixture]
+    public class PythonSetup
     {
-        public static void SetDefaultPythonPath()
+        [SetUp]
+        public void SetUp()
         {
             var pythonPath = string.Join(
                 OS.IsLinux ? ":" : ";",
                 "./Alphas", "./Execution", "./Portfolio", "./Risk", "./Selection");
 
             Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
         }
     }
 }

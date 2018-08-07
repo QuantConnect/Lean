@@ -28,12 +28,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
     [TestFixture]
     public class MaximumDrawdownPercentPerSecurityTests
     {
-        [TestFixtureSetUp]
-        public void SetUp()
-        {
-            PythonHelper.SetDefaultPythonPath();
-        }
-
         [Test]
         [TestCase(Language.CSharp, 0.1, false, 0, 0, false)]
         [TestCase(Language.CSharp, 0.1, true, -50, 1000, false)]

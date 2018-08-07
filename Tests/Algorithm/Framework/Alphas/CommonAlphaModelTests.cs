@@ -40,8 +40,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         [TestFixtureSetUp]
         public void Initialize()
         {
-            PythonHelper.SetDefaultPythonPath();
-
             _algorithm = new QCAlgorithmFramework();
             _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
             _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
