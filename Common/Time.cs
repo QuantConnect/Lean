@@ -75,6 +75,14 @@ namespace QuantConnect
         public static readonly TimeSpan OneMillisecond = TimeSpan.FromMilliseconds(1);
 
         /// <summary>
+        /// The days of the week starting with Sunday
+        /// </summary>
+        public static readonly IReadOnlyList<DayOfWeek> DaysOfTheWeek = new[]
+        {
+            DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday
+        };
+
+        /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
         /// </summary>
         public struct DateTimeWithZone
@@ -514,6 +522,12 @@ namespace QuantConnect
             if (barSize <= TimeSpan.Zero)
             {
                 throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
+            }
+
+            Log.Trace($"Time.GetNumberOfTradeBarsInInterval(): {exchangeHours.TimeZone.Id} {start:o} {end:o} {barSize}");
+            foreach (var day in DaysOfTheWeek)
+            {
+                Log.Trace($"Time.GetNumberOfTradeBarsInInterval(): {exchangeHours.MarketHours[day]}");
             }
 
             var count = 0;
