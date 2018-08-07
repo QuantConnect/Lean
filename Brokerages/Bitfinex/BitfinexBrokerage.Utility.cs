@@ -318,5 +318,27 @@ namespace QuantConnect.Brokerages.Bitfinex
             UnlockStream();
             return true;
         }
+
+        /// <summary>
+        /// Maps Resolution to IB representation
+        /// </summary>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private string ConvertResolution(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                case Resolution.Second:
+                    throw new ArgumentException($"BitfinexBrokerage.ConvertResolution: Unsupported resolution type: {resolution}");
+                case Resolution.Minute:
+                    return "1m";
+                case Resolution.Hour:
+                    return "1h";
+                case Resolution.Daily:
+                default:
+                    return "1D";
+            }
+        }
     }
 }

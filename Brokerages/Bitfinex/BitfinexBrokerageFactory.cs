@@ -73,11 +73,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     throw new Exception($"BitfinexBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
             }
 
-            var restClient = new RestClient(job.BrokerageData["bitfinex-rest"]);
-            var webSocketClient = new WebSocketWrapper();
-
-            var brokerage = new BitfinexBrokerage(job.BrokerageData["bitfinex-url"], webSocketClient,
-                restClient, job.BrokerageData["bitfinex-api-key"], job.BrokerageData["bitfinex-api-secret"], algorithm);
+            var brokerage = new BitfinexBrokerage(job.BrokerageData["bitfinex-url"],
+                job.BrokerageData["bitfinex-rest"], job.BrokerageData["bitfinex-api-key"], job.BrokerageData["bitfinex-api-secret"], algorithm);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

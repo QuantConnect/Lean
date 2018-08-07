@@ -104,6 +104,26 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string ChannelId { get; set; }
     }
 
+    public class Candle
+    {
+        public long Timestamp { get; set; }
+        public decimal Open { get; set; }
+        public decimal Close { get; set; }
+        public decimal High { get; set; }
+        public decimal Low { get; set; }
+        public decimal Volume { get; set; }
+
+        public Candle(object[] entries)
+        {
+            Timestamp = Convert.ToInt64(entries[0]);
+            Open = Convert.ToDecimal(entries[1]);
+            Close = Convert.ToDecimal(entries[2]);
+            High = Convert.ToDecimal(entries[3]);
+            Low = Convert.ToDecimal(entries[4]);
+            Volume = Convert.ToDecimal(entries[5]);
+        }
+    }
+
 #pragma warning restore 1591
 
 }
