@@ -20,6 +20,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -340,5 +341,40 @@ namespace QuantConnect.Brokerages.Bitfinex
                     return "1D";
             }
         }
+
+        /// <summary>
+        /// Candles with Volume = 0 are not returned from service
+        /// restore them manually
+        /// </summary>
+        /// <param name="candles">List of returned candles</param>
+        /// <param name="start">TimeStamp in ms</param>
+        /// <param name="end">TimeStamp in ms</param>
+        /// <param name="resolution">TimeStamp in ms</param>
+        private void RestoreMissedCandles(List<Messages.Candle> candles, long start, long end, long resolution)
+        {
+            //restore middle candles
+            for (int i = 0; i < candles.Count - 1; i++)
+            {
+                while (candles[i + 1].Timestamp - candles[i].Timestamp > resolution)
+                {
+                    candles.Insert(i + 1, new Messages.Candle(candles[i].Timestamp + resolution, candles[i].Close));
+                    i++;
+                }
+            }
+
+            //restore starting candles
+            while (candles[0].Timestamp - start > resolution)
+            {
+                candles.Insert(0, new Messages.Candle(candles[0].Timestamp - resolution, candles[0].Open));
+            }
+
+            //restore starting candles
+            while (end - candles[candles.Count - 1].Timestamp > resolution)
+            {
+                var last = candles[candles.Count - 1];
+                candles.Add(new Messages.Candle(last.Timestamp + resolution, last.Close));
+            }
+        }
+
     }
 }

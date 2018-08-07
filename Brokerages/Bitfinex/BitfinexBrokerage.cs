@@ -279,13 +279,13 @@ namespace QuantConnect.Brokerages.Bitfinex
             string resolution = ConvertResolution(request.Resolution);
             long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
             string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
-            long mstart = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
-            long mend = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
+            long startMTS = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
+            long endMTS = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
             string endpoint = $"v2/candles/trade:{resolution}:t{symbol}/hist?limit=1000&sort=1";
 
-            while ((mend - mstart) > resolutionInMS)
+            while ((endMTS - startMTS) > resolutionInMS)
             {
-                var timeframe = $"&start={mstart}&end={mend}";
+                var timeframe = $"&start={startMTS}&end={endMTS}";
 
                 var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
                 var response = ExecuteRestRequest(restRequest, BitfinexEndpointType.Public);
@@ -296,9 +296,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
 
                 var candles = JsonConvert.DeserializeObject<object[][]>(response.Content)
-                    .Select(entries => new Messages.Candle(entries));
+                    .Select(entries => new Messages.Candle(entries))
+                    .ToList();
 
-                mstart = candles.Last().Timestamp + resolutionInMS;
+                RestoreMissedCandles(candles, startMTS, endMTS, resolutionInMS);
+
+                startMTS = candles.Last().Timestamp + resolutionInMS;
                 var period = request.Resolution.ToTimeSpan();
 
                 foreach (var candle in candles)

@@ -113,6 +113,15 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public decimal Low { get; set; }
         public decimal Volume { get; set; }
 
+        public Candle() { }
+
+        public Candle(long msts, decimal close)
+        {
+            Timestamp = msts;
+            Open = Close = High = Low = close;
+            Volume = 0;
+        }
+
         public Candle(object[] entries)
         {
             Timestamp = Convert.ToInt64(entries[0]);
