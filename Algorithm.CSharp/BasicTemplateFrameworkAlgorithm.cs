@@ -103,17 +103,17 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$9.80"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
-            {"Total Insights Analysis Completed", "86"},
+            {"Total Insights Analysis Completed", "99"},
             {"Long Insight Count", "100"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$158418.3850"},
             {"Total Accumulated Estimated Alpha Value", "$25522.9620"},
             {"Mean Population Estimated Insight Value", "$257.8077"},
-            {"Mean Population Direction", "48.8372%"},
-            {"Mean Population Magnitude", "48.8372%"},
-            {"Rolling Averaged Population Direction", "63.7759%"},
-            {"Rolling Averaged Population Magnitude", "63.7759%"}
+            {"Mean Population Direction", "54.5455%"},
+            {"Mean Population Magnitude", "54.5455%"},
+            {"Rolling Averaged Population Direction", "59.8056%"},
+            {"Rolling Averaged Population Magnitude", "59.8056%"}
         };
     }
 }

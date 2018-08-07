@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -93,18 +93,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0.011"},
             {"Total Fees", "$23.04"},
             {"Total Insights Generated", "14"},
-            {"Total Insights Closed", "4"},
-            {"Total Insights Analysis Completed", "0"},
+            {"Total Insights Closed", "11"},
+            {"Total Insights Analysis Completed", "11"},
             {"Long Insight Count", "6"},
             {"Short Insight Count", "4"},
             {"Long/Short Ratio", "150.0%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Estimated Monthly Alpha Value", "$-85612.32"},
+            {"Total Accumulated Estimated Alpha Value", "$-14744.34"},
+            {"Mean Population Estimated Insight Value", "$-1340.395"},
+            {"Mean Population Direction", "27.2727%"},
+            {"Mean Population Magnitude", "27.2727%"},
+            {"Rolling Averaged Population Direction", "5.8237%"},
+            {"Rolling Averaged Population Magnitude", "5.8237%"}
         };
     }
 }

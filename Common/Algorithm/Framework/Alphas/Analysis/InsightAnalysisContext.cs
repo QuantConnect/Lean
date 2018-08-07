@@ -95,9 +95,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
 
-            var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
-            var barCount = (int)(insight.Period.Ticks / barSize.Ticks);
-            AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, insight.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
+            // this will always be equal when the InsightManager is initialized with extraAnalysisPeriodRatio == 0
+            // this is the way LEAN run in the cloud and locally, but support for non-zero ratios are left in for posterity
+            // by short-circuiting this here, we guarantee that analysis end time and close time are identical
+            if (analysisPeriod == insight.Period)
+            {
+                AnalysisEndTimeUtc = insight.CloseTimeUtc;
+            }
+            else
+            {
+                var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
+                var barCount = (int)(insight.Period.Ticks / barSize.Ticks);
+                AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, insight.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
+            }
+
             _analysisPeriod = AnalysisEndTimeUtc - initialValues.TimeUtc;
         }
 
