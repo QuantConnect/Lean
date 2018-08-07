@@ -82,28 +82,22 @@ class RsiAlphaModel(AlphaModel):
 
         # initialize data for added securities
 
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        if len(symbols) == 0: return
+        addedSymbols = [ x.Symbol for x in changes.AddedSecurities if x.Symbol not in self.symbolDataBySymbol]
+        if len(addedSymbols) == 0: return
 
-        addedSymbols = []
-        for symbol in symbols:
-            if symbol not in self.symbolDataBySymbol:
-                rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
-                symbolData = SymbolData(symbol, rsi)
-                self.symbolDataBySymbol[symbol] = symbolData
-                addedSymbols.append(symbol)
+        history = algorithm.History(addedSymbols, self.period, self.resolution)
+        if history.empty: return
 
-        if len(addedSymbols) > 0:
-            history = algorithm.History(symbols, self.period, self.resolution)
-            if history.empty: return
+        tickers = history.index.levels[0]
+        for ticker in tickers:
 
-            tickers = history.index.levels[0]
+            symbol = SymbolCache.GetSymbol(ticker)
+            rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
 
-            for ticker in tickers:
-                symbol = SymbolCache.GetSymbol(ticker)
+            for tuple in history.loc[ticker].itertuples():
+                rsi.Update(tuple.Index, tuple.close)
 
-                for tuple in history.loc[ticker].itertuples():
-                    symbolData.RSI.Update(tuple.Index, tuple.close)
+            self.symbolDataBySymbol[symbol] = SymbolData(symbol, rsi)
 
 
     def GetState(self, rsi, previous):
