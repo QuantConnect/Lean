@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Util;
+using System.IO;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -41,6 +42,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         [TestFixtureSetUp]
         public void Initialize()
         {
+            var pythonPath = new DirectoryInfo("../../../Algorithm.Framework/Alphas");
+            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
+
             _algorithm = new QCAlgorithmFramework();
             _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
             _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
