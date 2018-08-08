@@ -86,16 +86,14 @@ class RsiAlphaModel(AlphaModel):
         if len(addedSymbols) == 0: return
 
         history = algorithm.History(addedSymbols, self.period, self.resolution)
-        if history.empty: return
 
-        tickers = history.index.levels[0]
-        for ticker in tickers:
-
-            symbol = SymbolCache.GetSymbol(ticker)
+        for symbol in addedSymbols:
             rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
 
-            for tuple in history.loc[ticker].itertuples():
-                rsi.Update(tuple.Index, tuple.close)
+            if not history.empty:
+                ticker = SymbolCache.GetTicker(symbol)
+                for tuple in history.loc[ticker].itertuples():
+                    rsi.Update(tuple.Index, tuple.close)
 
             self.symbolDataBySymbol[symbol] = SymbolData(symbol, rsi)
 
