@@ -336,7 +336,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreNotEqual(expected, actual);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertQuoteBar()
         {
             // Wrap a QuoteBar around a PyObject and convert it back
@@ -349,7 +349,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<QuoteBar>(quoteBar);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertSMA()
         {
             // Wrap a SimpleMovingAverage around a PyObject and convert it back
@@ -362,7 +362,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<SimpleMovingAverage>(indicatorBaseDataPoint);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertATR()
         {
             // Wrap a AverageTrueRange around a PyObject and convert it back
@@ -375,7 +375,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<AverageTrueRange>(indicatorBaseDataBar);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertAD()
         {
             // Wrap a AccumulationDistribution around a PyObject and convert it back
@@ -388,7 +388,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<AccumulationDistribution>(indicatorBaseTradeBar);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertSymbolArray()
         {
             PyObject value;
@@ -405,7 +405,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsAssignableFrom<Symbol[]>(symbols);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertFailCSharp()
         {
             // Try to convert a AccumulationDistribution as a QuoteBar
@@ -417,7 +417,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsNull(quoteBar);
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertFailPython()
         {
             using (Py.GIL())
@@ -434,7 +434,7 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         [TestCase("coarseSelector = lambda coarse: [ x.Symbol for x in coarse if x.Price % 2 == 0 ]")]
         [TestCase("def coarseSelector(coarse): return [ x.Symbol for x in coarse if x.Price % 2 == 0 ]")]
         public void PyObjectTryConvertToFunc(string code)
@@ -463,7 +463,7 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertToAction1()
         {
             Action<int> action;
@@ -487,7 +487,7 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertToAction2()
         {
             Action<int, decimal> action;
@@ -511,7 +511,7 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void PyObjectTryConvertToNonDelegateFail()
         {
             int action;
