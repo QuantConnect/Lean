@@ -27,7 +27,6 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -96,7 +95,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Console.WriteLine(insight);
             }
 
-            Assert.AreEqual(actualInsights.Count, expectedInsights.Count);
+            Assert.AreEqual(expectedInsights.Count, actualInsights.Count);
 
             for (var i = 0; i < actualInsights.Count; i++)
             {

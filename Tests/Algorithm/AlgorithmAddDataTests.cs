@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -21,7 +36,6 @@ using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
 {
-
     [TestFixture]
     public class AlgorithmAddDataTests
     {
@@ -128,12 +142,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(data2.Price, 3);
         }
 
-        [Test, Ignore]
+        [Test]
         public void PythonCustomDataTypes_AreAddedToSubscriptions_Successfully()
         {
-            var pythonPath = new System.IO.DirectoryInfo("RegressionAlgorithms");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-
             var qcAlgorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
 
             // Initialize contains the statements:
@@ -154,12 +165,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.DoesNotThrow(() => quandlFactory.GetSource(quandlSubscription, DateTime.UtcNow, false));
         }
 
-        [Test, Ignore]
+        [Test]
         public void PythonCustomDataTypes_AreAddedToConsolidator_Successfully()
         {
-            var pythonPath = new System.IO.DirectoryInfo("RegressionAlgorithms");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-
             var qcAlgorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
 
             // Initialize contains the statements:

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture, Ignore]
+    [TestFixture]
     public class PandasConverterTests
     {
         [Test]
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var converter = new PandasConverter();
             var rawBars = Enumerable.Empty<TradeBar>().ToArray();
 
-            // GetDataFrame with argument of type IEnumerable<TradeBar> 
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
             dynamic dataFrame = converter.GetDataFrame(rawBars);
 
             using (Py.GIL())
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Assert.IsTrue(dataFrame.empty.AsManagedObject(typeof(bool)));
             }
 
-            // GetDataFrame with argument of type IEnumerable<TradeBar> 
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
             var history = GetHistory(Symbols.SPY, Resolution.Minute, rawBars);
             dataFrame = converter.GetDataFrame(history);
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Select(i => new TradeBar(DateTime.UtcNow.AddMinutes(i), symbol, i + 101m, i + 102m, i + 100m, i + 101m, 0m))
                 .ToArray();
 
-            // GetDataFrame with argument of type IEnumerable<TradeBar> 
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
             dynamic dataFrame = converter.GetDataFrame(rawBars);
 
             using (Py.GIL())
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            // GetDataFrame with argument of type IEnumerable<TradeBar> 
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
             var history = GetHistory(symbol, Resolution.Minute, rawBars);
             dataFrame = converter.GetDataFrame(history);
 
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Select(i => new QuoteBar(DateTime.UtcNow.AddMinutes(i), symbol, new Bar(i + 1.01m, i + 1.02m, i + 1.00m, i + 1.01m), 0m, new Bar(i + 1.01m, i + 1.02m, i + 1.00m, i + 1.01m), 0m))
                 .ToArray();
 
-            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            // GetDataFrame with argument of type IEnumerable<QuoteBar>
             dynamic dataFrame = converter.GetDataFrame(rawBars);
 
             using (Py.GIL())
@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            // GetDataFrame with argument of type IEnumerable<QuoteBar>
             var history = GetHistory(symbol, Resolution.Minute, rawBars);
             dataFrame = converter.GetDataFrame(history);
 
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Select(i => new Tick(symbol, $"1440{i:D2}00,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
                 .ToArray();
 
-            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            // GetDataFrame with argument of type IEnumerable<QuoteBar>
             dynamic dataFrame = converter.GetDataFrame(rawBars);
 
             using (Py.GIL())
@@ -204,7 +204,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            // GetDataFrame with argument of type IEnumerable<QuoteBar>
             var history = GetHistory(symbol, Resolution.Tick, rawBars);
             dataFrame = converter.GetDataFrame(history);
 
@@ -241,7 +241,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Select(i => new Tick(DateTime.UtcNow.AddMilliseconds(100 * i), symbol, 0.99m, 1.01m))
                 .ToArray();
 
-            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            // GetDataFrame with argument of type IEnumerable<QuoteBar>
             dynamic dataFrame = converter.GetDataFrame(rawBars);
 
             using (Py.GIL())
@@ -265,7 +265,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            // GetDataFrame with argument of type IEnumerable<QuoteBar> 
+            // GetDataFrame with argument of type IEnumerable<QuoteBar>
             var history = GetHistory(symbol, Resolution.Tick, rawBars);
             dataFrame = converter.GetDataFrame(history);
 
@@ -361,7 +361,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 })
                 .ToArray();
 
-            // GetDataFrame with argument of type IEnumerable<BaseData> 
+            // GetDataFrame with argument of type IEnumerable<BaseData>
             dynamic dataFrame = converter.GetDataFrame(rawBars);
 
             using (Py.GIL())
@@ -386,7 +386,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            // GetDataFrame with argument of type IEnumerable<BaseData> 
+            // GetDataFrame with argument of type IEnumerable<BaseData>
             var history = GetHistory(symbol, Resolution.Daily, rawBars);
             dataFrame = converter.GetDataFrame(history);
 
@@ -398,7 +398,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
 
                 var count = subDataFrame.__len__().AsManagedObject(typeof(int));
-                Assert.AreEqual(count, 10);
+                Assert.AreEqual(10, count);
 
                 for (var i = 0; i < count; i++)
                 {
@@ -428,16 +428,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Act
             dynamic df = converter.GetDataFrame(data);
             // Assert
-            Assert.AreEqual(df.shape[0].AsManagedObject(typeof(int)), rowsInfile);
+            Assert.AreEqual(rowsInfile, df.shape[0].AsManagedObject(typeof(int)));
 
             int columnsNumber = df.shape[1].AsManagedObject(typeof(int));
             if (columnsNumber == 3 || columnsNumber == 6)
             {
-                Assert.AreEqual(df.get("lastprice").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+                Assert.AreEqual(sumValue, df.get("lastprice").sum().AsManagedObject(typeof(double)), 1e-4);
             }
             else
             {
-                Assert.AreEqual(df.get("close").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+                Assert.AreEqual(sumValue, df.get("close").sum().AsManagedObject(typeof(double)), 1e-4);
             }
         }
 
@@ -451,20 +451,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Act
             dynamic df = converter.GetDataFrame(data);
             // Assert
-            Assert.AreEqual(df.shape[0].AsManagedObject(typeof(int)), rowsInfile);
+            Assert.AreEqual(rowsInfile, df.shape[0].AsManagedObject(typeof(int)));
 
             int columnsNumber = df.shape[1].AsManagedObject(typeof(int));
             if (columnsNumber == 3 || columnsNumber == 6)
             {
-                Assert.AreEqual(df.get("lastprice").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+                Assert.AreEqual(sumValue, df.get("lastprice").sum().AsManagedObject(typeof(double)), 1e-4);
             }
             else if (columnsNumber == 1)
             {
-                Assert.AreEqual(df.get("openinterest").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+                Assert.AreEqual(sumValue, df.get("openinterest").sum().AsManagedObject(typeof(double)), 1e-4);
             }
             else
             {
-                Assert.AreEqual(df.get("close").sum().AsManagedObject(typeof(double)), sumValue, 1e-4);
+                Assert.AreEqual(sumValue, df.get("close").sum().AsManagedObject(typeof(double)), 1e-4);
             }
         }
 

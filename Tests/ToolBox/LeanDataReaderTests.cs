@@ -19,7 +19,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities;
@@ -27,7 +26,6 @@ using QuantConnect.ToolBox;
 using QuantConnect.Util;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.ToolBox
 {
@@ -224,7 +222,7 @@ namespace QuantConnect.Tests.ToolBox
         #endregion
 
 
-        [Test, TestCaseSource(nameof(OptionAndFuturesCases)), Category("TravisExclude")]
+        [Test, TestCaseSource(nameof(OptionAndFuturesCases))]
         public void ReadLeanFutureAndOptionDataFromFilePath(string composedFilePath, Symbol symbol,  int rowsInfile, double sumValue)
         {
             // Act
@@ -302,7 +300,7 @@ namespace QuantConnect.Tests.ToolBox
                                                 Resolution.Minute,
                                                 "20140606_aapl_minute_quote_american_put_7500000_20141018.csv"),
                 391,
-                44212.225
+                44210.7
             },
 
             new object[]
@@ -311,8 +309,8 @@ namespace QuantConnect.Tests.ToolBox
                 LeanData.ReadSymbolFromZipEntry(Symbol.Create("AAPL", SecurityType.Option, Market.USA),
                                                 Resolution.Minute,
                                                 "20140606_aapl_minute_trade_american_call_6475000_20140606.csv"),
-                377,
-                750.1
+                374,
+                745.35
             },
 
             new object[]
@@ -327,7 +325,7 @@ namespace QuantConnect.Tests.ToolBox
         };
 
 
-        [Test, TestCaseSource(nameof(SpotMarketCases)), Category("TravisExclude")]
+        [Test, TestCaseSource(nameof(SpotMarketCases))]
         public void ReadLeanSpotMarketsSecuritiesDataFromFilePath(string securityType, string market, string resolution, string ticker, string fileName, int rowsInfile, double sumValue)
         {
             // Arrange
@@ -342,26 +340,23 @@ namespace QuantConnect.Tests.ToolBox
             var data = ldr.Parse().ToArray();
             // Assert
             Assert.True(symbol.Equals(data.First().Symbol));
-            Assert.AreEqual(data.Length, rowsInfile);
-            Assert.AreEqual(data.Sum(c => c.Value), sumValue);
+            Assert.AreEqual(rowsInfile, data.Length);
+            Assert.AreEqual(sumValue, data.Sum(c => c.Value));
         }
 
         public static object[] SpotMarketCases =
         {
-            new object[] {"equity", "usa", "daily", "aig", "aig.zip", 4433, 267747.235},
+            new object[] {"equity", "usa", "daily", "aig", "aig.zip", 5157, 310723.935},
             new object[] {"equity", "usa", "minute", "aapl", "20140605_trade.zip", 658, 425068.8450},
             new object[] {"equity", "usa", "second", "ibm", "20131010_trade.zip", 4409, 809851.9580},
             new object[] {"equity", "usa", "tick", "bac", "20131011_trade.zip", 112230, 1592319.5871},
             new object[] {"forex", "fxcm", "minute", "eurusd", "20140502_quote.zip", 958, 1327.638085},
             new object[] {"forex", "fxcm", "second", "nzdusd", "20140514_quote.zip", 25895, 22432.757185},
-            new object[] {"forex", "fxcm", "tick", "eurusd", "20140507_quote.zip", 89826, 125073.092245},
-            new object[] {"cfd", "oanda", "hour", "xauusd", "xauusd.zip", 69081, 80935843.1265},
+            new object[] {"forex", "fxcm", "tick", "eurusd", "20140507_quote.zip", 89504, 124613.655665},
+            new object[] {"cfd", "oanda", "hour", "xauusd", "xauusd.zip", 74920, 88476989.559 },
             new object[] {"crypto", "gdax", "second", "btcusd", "20161008_trade.zip", 3453, 2137057.57},
-            new object[] {"crypto", "gdax", "second", "btcusd", "20161009_quote.zip", 1438, 889045.065},
             new object[] {"crypto", "gdax", "minute", "ethusd", "20170903_trade.zip", 1440, 510470.66},
-            new object[] {"crypto", "gdax", "minute", "btcusd", "20161007_quote.zip", 1438, 884448.535},
-            new object[] {"crypto", "gdax", "daily", "btcusd", "btcusd_trade.zip", 1025, 1020535.83},
-            new object[] {"crypto", "gdax", "daily", "btcusd", "btcusd_quote.zip", 788, 954122.585}
+            new object[] {"crypto", "gdax", "daily", "btcusd", "btcusd_trade.zip", 1276, 3429172.98},
         };
 
         public static string GenerateFilepathForTesting(string dataDirectory, string securityType, string market, string resolution, string ticker,

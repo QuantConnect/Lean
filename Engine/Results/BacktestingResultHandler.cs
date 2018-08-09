@@ -192,6 +192,9 @@ namespace QuantConnect.Lean.Engine.Results
             //Set the start time for the algorithm
             _startTime = DateTime.Now;
 
+            // Delay uploading first packet
+            _nextS3Update = _startTime.AddSeconds(30);
+
             //Default charts:
             Charts.AddOrUpdate("Strategy Equity", new Chart("Strategy Equity"));
             Charts["Strategy Equity"].Series.Add("Equity", new Series("Equity", SeriesType.Candle, 0, "$"));
