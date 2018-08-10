@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using QuantConnect.API;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -54,7 +55,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [SetUp]
         public void Setup()
         {
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object);
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, 0, "token");
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
@@ -79,14 +80,17 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             });
 
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
-            var rateMock = new Mock<IRestClient>();
+            var rateMock = new Mock<IApi>();
             _unit.RateClient = rateMock.Object;
-            rateMock.Setup(r => r.Execute(It.IsAny<IRestRequest>())).Returns(new RestResponse
+            rateMock.Setup(r => r.ReadPrices(It.IsAny<IEnumerable<Symbol>>())).Returns(new PricesList
             {
-                Content = @"{""base"":""USD"",""date"":""2001-01-01"",""rates"":{""GBP"":1.234 }}",
-                StatusCode = HttpStatusCode.OK
+                Prices = new List<Prices>
+                {
+                    new Prices { Symbol = "GBPUSD 5O", Price = 1.234m }
+                },
+                Errors = new List<string>(),
+                Success = true
             });
-
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
@@ -377,11 +381,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test]
         public void PollTickTest()
         {
-            _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX));
+            _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Forex, Market.FXCM));
             Thread.Sleep(1000);
 
-            // conversion rates are inverted: value = 1 / 1.234
-            Assert.AreEqual(0.8103727714748784440842787682m, _unit.Ticks.First().Price);
+            // conversion rate is the price returned by the QC pricing API
+            Assert.AreEqual(1.234m, _unit.Ticks.First().Price);
         }
 
         [Test]
