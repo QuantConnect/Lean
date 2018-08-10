@@ -24,6 +24,25 @@ namespace QuantConnect.Data.Market
     public class Dividend : BaseData
     {
         /// <summary>
+        /// Gets the dividend payment
+        /// </summary>
+        public decimal Distribution
+        {
+            get { return Value; }
+            set { Value = value; }
+        }
+
+        /// <summary>
+        /// Gets the price at which the dividend occurred.
+        /// This is typically the previous day's closing price
+        /// </summary>
+        public decimal ReferencePrice
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the Dividend class
         /// </summary>
         public Dividend()
@@ -36,14 +55,15 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
-        /// <param name="close">The close</param>
-        /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
-        public Dividend(Symbol symbol, DateTime date, decimal close, decimal priceFactorRatio)
+        /// <param name="distribution">The dividend amount</param>
+        /// <param name="referencePrice">The previous day's closing price</param>
+        public Dividend(Symbol symbol, DateTime date, decimal distribution, decimal referencePrice)
             : this()
         {
             Symbol = symbol;
             Time = date;
-            Distribution = close - (close * priceFactorRatio);
+            Distribution = distribution;
+            ReferencePrice = referencePrice;
         }
 
         /// <summary>
@@ -51,22 +71,24 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
-        /// <param name="distribution">The dividend amount</param>
-        public Dividend(Symbol symbol, DateTime date, decimal distribution)
-            : this()
+        /// <param name="referencePrice">The previous day's closing price</param>
+        /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
+        public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio)
         {
-            Symbol = symbol;
-            Time = date;
-            Distribution = distribution;
+            var distribution = ComputeDistribution(referencePrice, priceFactorRatio);
+            return new Dividend(symbol, date, distribution, referencePrice);
         }
 
         /// <summary>
-        /// Gets the dividend payment
+        /// Computes the price factor ratio given the previous day's closing price and the p
         /// </summary>
-        public decimal Distribution
+        /// <param name="close">Previous day's closing price</param>
+        /// <param name="priceFactorRatio">Price factor ratio pf_i/pf_i+1</param>
+        /// <param name="decimalPlaces">The number of decimal places to round the result to, defaulting to 2</param>
+        /// <returns>The distribution rounded to the specified number of decimal places, defaulting to 2</returns>
+        public static decimal ComputeDistribution(decimal close, decimal priceFactorRatio, int decimalPlaces = 2)
         {
-            get { return Value; }
-            set { Value = Math.Round(value, 2); }
+            return Math.Round(close - close * priceFactorRatio, decimalPlaces);
         }
 
         /// <summary>
@@ -106,7 +128,16 @@ namespace QuantConnect.Data.Market
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new Dividend(Symbol, Time, Distribution);
+            return new Dividend
+            {
+                Time = Time,
+                Value = Value,
+                Symbol = Symbol,
+                EndTime = EndTime,
+                DataType = DataType,
+                Distribution = Distribution,
+                ReferencePrice = ReferencePrice
+            };
         }
 
         /// <summary>

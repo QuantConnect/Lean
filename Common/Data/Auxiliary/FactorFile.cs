@@ -15,11 +15,14 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
@@ -27,7 +30,7 @@ namespace QuantConnect.Data.Auxiliary
     /// <summary>
     /// Represents an entire factor file for a specified symbol
     /// </summary>
-    public class FactorFile
+    public class FactorFile : IEnumerable<FactorFileRow>
     {
         /// <summary>
         /// The factor file data rows sorted by date
@@ -84,6 +87,15 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
+        /// Parses the specified lines as a factor file
+        /// </summary>
+        public static FactorFile Parse(string permtick, IEnumerable<string> lines)
+        {
+            DateTime? factorFileMinimumDate;
+            return new FactorFile(permtick, FactorFileRow.Parse(lines, out factorFileMinimumDate), factorFileMinimumDate);
+        }
+
+        /// <summary>
         /// Gets the price scale factor that includes dividend and split adjustments for the specified search date
         /// </summary>
         public decimal GetPriceScaleFactor(DateTime searchDate)
@@ -118,7 +130,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public FactorFileRow GetScalingFactors(DateTime searchDate)
         {
-            var factors = new FactorFileRow(searchDate, 1m, 1m);
+            var factors = new FactorFileRow(searchDate, 1m, 1m, 0m);
 
             // Iterate backwards to find the most recent factors
             foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
@@ -209,25 +221,136 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
+        /// Writes this factor file data to an enumerable of csv lines
+        /// </summary>
+        /// <returns>An enumerable of lines representing this factor file</returns>
+        public IEnumerable<string> ToCsvLines()
+        {
+            if (FactorFileMinimumDate != null)
+            {
+                var min = SortedFactorFileData.First().Value;
+                yield return $"{FactorFileMinimumDate:yyyyMMdd},{min.PriceFactor},{min.SplitFactor}";
+            }
+
+            foreach (var kvp in SortedFactorFileData)
+            {
+                yield return $"{kvp.Key:yyyyMMdd},{kvp.Value.PriceFactor},{kvp.Value.SplitFactor}";
+            }
+        }
+
+        /// <summary>
         /// Write the factor file to the correct place in the default Data folder
         /// </summary>
         /// <param name="symbol">The symbol this factor file represents</param>
         public void WriteToCsv(Symbol symbol)
         {
             var filePath = LeanData.GenerateRelativeFactorFilePath(symbol);
+            File.WriteAllLines(filePath, ToCsvLines());
+        }
 
-            var csv = new StringBuilder();
-
-            foreach (var kvp in SortedFactorFileData)
+        /// <summary>
+        /// Gets all of the splits and dividends represented by this factor file
+        /// </summary>
+        /// <param name="symbol">The symbol to ues for the dividend and split objects</param>
+        /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
+        /// <returns>All splits and diviends represented by this factor file in chronological order</returns>
+        public List<BaseData> GetSplitsAndDividends(Symbol symbol, SecurityExchangeHours exchangeHours)
+        {
+            var dividendsAndSplits = new List<BaseData>();
+            var futureFactorFileRow = SortedFactorFileData.Last().Value;
+            for (var i = SortedFactorFileData.Count - 2; i >= 0 ; i--)
             {
-                var newLine = string.Format("{0:yyyyMMdd},{1},{2}",
-                                             kvp.Key,
-                                             kvp.Value.PriceFactor,
-                                             kvp.Value.SplitFactor);
-                csv.AppendLine(newLine);
+                var row = SortedFactorFileData.Values[i];
+                var dividend = row.GetDividend(futureFactorFileRow, symbol, exchangeHours);
+                if (dividend.Distribution != 0m)
+                {
+                    dividendsAndSplits.Add(dividend);
+                }
+
+                var split = row.GetSplit(futureFactorFileRow, symbol, exchangeHours);
+                if (split.SplitFactor != 1m)
+                {
+                    dividendsAndSplits.Add(split);
+                }
+
+                futureFactorFileRow = row;
             }
 
-            File.WriteAllText(filePath, csv.ToString());
+            return dividendsAndSplits.OrderBy(d => d.Time.Date).ToList();
+        }
+
+        /// <summary>
+        /// Creates a new factor file with the specified data applied.
+        /// Only <see cref="Dividend"/> and <see cref="Split"/> data types
+        /// will be used.
+        /// </summary>
+        /// <param name="data">The data to apply</param>
+        /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
+        /// <returns>A new factor file that incorporates the specified dividend</returns>
+        public FactorFile Apply(List<BaseData> data, SecurityExchangeHours exchangeHours)
+        {
+            if (data.Count == 0)
+            {
+                return this;
+            }
+
+            var factorFileRows = new List<FactorFileRow>();
+            var lastEntry = SortedFactorFileData.Last().Value;
+            factorFileRows.Add(lastEntry);
+
+            var combinedData = GetSplitsAndDividends(data[0].Symbol, exchangeHours).Concat(data)
+                .OrderByDescending(d => d.Time.Date);
+
+            foreach (var datum in combinedData)
+            {
+                FactorFileRow nextEntry = null;
+                var split = datum as Split;
+                var dividend = datum as Dividend;
+                if (dividend != null)
+                {
+                    nextEntry = lastEntry.Apply(dividend, exchangeHours);
+                    lastEntry = nextEntry;
+                }
+                else if (split != null)
+                {
+                    nextEntry = lastEntry.Apply(split, exchangeHours);
+                    lastEntry = nextEntry;
+                }
+
+                if (nextEntry != null)
+                {
+                    // overwrite the latest entry -- this handles splits/dividends on the same date
+                    if (nextEntry.Date == factorFileRows.Last().Date)
+                    {
+                        factorFileRows[factorFileRows.Count - 1] = nextEntry;
+                    }
+                    else
+                    {
+                        factorFileRows.Add(nextEntry);
+                    }
+                }
+            }
+
+            return new FactorFile(Permtick, factorFileRows, FactorFileMinimumDate);
+        }
+
+        /// <summary>Returns an enumerator that iterates through the collection.</summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<FactorFileRow> GetEnumerator()
+        {
+            foreach (var kvp in SortedFactorFileData)
+            {
+                yield return kvp.Value;
+            }
+        }
+
+        /// <summary>Returns an enumerator that iterates through a collection.</summary>
+        /// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

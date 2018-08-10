@@ -666,7 +666,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_priceFactorRatio != null)
             {
                 var close = GetRawClose();
-                var dividend = new Dividend(_config.Symbol, date, close, _priceFactorRatio.Value);
+                var dividend = Dividend.Create(_config.Symbol, date, close, _priceFactorRatio.Value);
                 // let the config know about it for normalization
                 _config.SumOfDividends += dividend.Distribution;
                 _auxiliaryData.Enqueue(dividend);
@@ -686,7 +686,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CheckForDelisting(DateTime date)
         {
-            
+
 
             if (!_delistedWarning && date >= _delistingDate)
             {

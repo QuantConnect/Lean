@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Data
 {
     /// <summary>
-    /// Abstract base data class of QuantConnect. It is intended to be extended to define 
+    /// Abstract base data class of QuantConnect. It is intended to be extended to define
     /// generic user customizable data types while at the same time implementing the basics of data where possible
     /// </summary>
     public abstract class BaseData : IBaseData
@@ -39,11 +39,11 @@ namespace QuantConnect.Data
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
         public MarketDataType DataType
         {
-            get 
+            get
             {
                 return _dataType;
             }
-            set 
+            set
             {
                 _dataType = value;
             }
@@ -82,7 +82,7 @@ namespace QuantConnect.Data
             get { return _time; }
             set { _time = value; }
         }
-        
+
         /// <summary>
         /// Symbol representation for underlying Security
         /// </summary>
@@ -102,7 +102,7 @@ namespace QuantConnect.Data
         /// Value representation of this data packet. All data requires a representative value for this moment in time.
         /// For streams of data this is the price now, for OHLC packets this is the closing price.
         /// </summary>
-        public decimal Value
+        public virtual decimal Value
         {
             get
             {
@@ -119,7 +119,7 @@ namespace QuantConnect.Data
         /// </summary>
         public decimal Price
         {
-            get 
+            get
             {
                 return Value;
             }
@@ -128,13 +128,13 @@ namespace QuantConnect.Data
         /// <summary>
         /// Constructor for initialising the dase data class
         /// </summary>
-        public BaseData() 
-        { 
+        public BaseData()
+        {
             //Empty constructor required for fast-reflection initialization
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
         /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
@@ -152,7 +152,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
@@ -171,7 +171,7 @@ namespace QuantConnect.Data
                 // live trading by default always gets a rest endpoint
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest);
             }
-            
+
             // construct a uri to determine if we have a local or remote file
             var uri = new Uri(source, UriKind.RelativeOrAbsolute);
 
@@ -179,7 +179,7 @@ namespace QuantConnect.Data
             {
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
             }
-                
+
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
 
@@ -226,7 +226,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Update routine to build a bar/tick from a data update. 
+        /// Update routine to build a bar/tick from a data update.
         /// </summary>
         /// <param name="lastTrade">The last trade price</param>
         /// <param name="bidPrice">Current bid price</param>
@@ -276,8 +276,8 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
         /// <remarks>OBSOLETE:: This implementation is added for backward/forward compatibility purposes. This function is no longer called by the LEAN engine.</remarks>
         /// <param name="config">Subscription data config setup object</param>
@@ -292,7 +292,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <remarks>OBSOLETE:: This implementation is added for backward/forward compatibility purposes. This function is no longer called by the LEAN engine.</remarks>
         /// <param name="config">Configuration object</param>

@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void DeserializesDividend()
         {
-            var dividend = new Dividend(Symbols.AAPL, new DateTime(2014, 11, 6), 0.47m);
+            var dividend = new Dividend(Symbols.AAPL, new DateTime(2014, 11, 6), 0.47m, 108.60m);
 
             var json = JsonConvert.SerializeObject(dividend, _settings);
             var deserialized = (Dividend)JsonConvert.DeserializeObject(json, _settings);
