@@ -27,6 +27,11 @@ namespace QuantConnect.Securities
         private decimal _initialMarginRequirement;
         private decimal _maintenanceMarginRequirement;
         /// <summary>
+        /// The percentage used to determine the required unused buying power for the account.
+        /// </summary>
+        protected decimal RequiredFreeBuyingPowerPercent;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/> with no leverage (1x)
         /// </summary>
         public SecurityMarginModel() : this(1m)
@@ -40,7 +45,8 @@ namespace QuantConnect.Securities
         /// that must be held in free cash in order to place the order</param>
         /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute
         /// cost that must be held in free cash in order to avoid a margin call</param>
-        public SecurityMarginModel(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
+        /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
+        public SecurityMarginModel(decimal initialMarginRequirement, decimal maintenanceMarginRequirement, decimal requiredFreeBuyingPowerPercent)
         {
             if (initialMarginRequirement < 0 || initialMarginRequirement > 1)
             {
@@ -51,24 +57,35 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException("Maintenance margin requirement must be between 0 and 1");
             }
+            if (requiredFreeBuyingPowerPercent < 0 || requiredFreeBuyingPowerPercent > 1)
+            {
+                throw new ArgumentException("Free Buying Power Percent requirement must be between 0 and 1");
+            }
 
             _initialMarginRequirement = initialMarginRequirement;
             _maintenanceMarginRequirement = maintenanceMarginRequirement;
+            RequiredFreeBuyingPowerPercent = requiredFreeBuyingPowerPercent;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
         /// </summary>
         /// <param name="leverage">The leverage</param>
-        public SecurityMarginModel(decimal leverage)
+        /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
+        public SecurityMarginModel(decimal leverage, decimal requiredFreeBuyingPowerPercent = 0)
         {
             if (leverage < 1)
             {
                 throw new ArgumentException("Leverage must be greater than or equal to 1.");
             }
+            if (requiredFreeBuyingPowerPercent < 0 || requiredFreeBuyingPowerPercent > 1)
+            {
+                throw new ArgumentException("Free Buying Power Percent requirement must be between 0 and 1");
+            }
 
             _initialMarginRequirement = 1 / leverage;
             _maintenanceMarginRequirement = 1 / leverage;
+            RequiredFreeBuyingPowerPercent = requiredFreeBuyingPowerPercent;
         }
 
         /// <summary>
@@ -136,50 +153,43 @@ namespace QuantConnect.Securities
         /// <returns>The margin available for the trade</returns>
         protected virtual decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
-            var holdings = security.Holdings;
+            var result = portfolio.MarginRemaining;
 
-            if (direction == OrderDirection.Hold)
+            if (direction != OrderDirection.Hold)
             {
-                return portfolio.MarginRemaining;
-            }
-
-            //If the order is in the same direction as holdings, our remaining cash is our cash
-            //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
-            if (holdings.IsLong)
-            {
-                switch (direction)
+                var holdings = security.Holdings;
+                //If the order is in the same direction as holdings, our remaining cash is our cash
+                //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
+                if (holdings.IsLong)
                 {
-                    case OrderDirection.Buy:
-                        return portfolio.MarginRemaining;
-
-                    case OrderDirection.Sell:
-                        return
-                            // portion of margin to close the existing position
-                            GetMaintenanceMargin(security) +
-                            // portion of margin to open the new position
-                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) +
-                            portfolio.MarginRemaining;
+                    switch (direction)
+                    {
+                        case OrderDirection.Sell:
+                            result +=
+                                // portion of margin to close the existing position
+                                GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security);
+                            break;
+                    }
                 }
-            }
-            else if (holdings.IsShort)
-            {
-                switch (direction)
+                else if (holdings.IsShort)
                 {
-                    case OrderDirection.Buy:
-                        return
-                            // portion of margin to close the existing position
-                            GetMaintenanceMargin(security) +
-                            // portion of margin to open the new position
-                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) +
-                            portfolio.MarginRemaining;
-
-                    case OrderDirection.Sell:
-                        return portfolio.MarginRemaining;
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:
+                            result +=
+                                // portion of margin to close the existing position
+                                GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security);
+                            break;
+                    }
                 }
             }
 
-            //No holdings, return cash
-            return portfolio.MarginRemaining;
+            result -= portfolio.TotalPortfolioValue * RequiredFreeBuyingPowerPercent;
+            return result < 0 ? 0 : result;
         }
 
         /// <summary>
@@ -279,7 +289,9 @@ namespace QuantConnect.Securities
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal target)
         {
-            var targetPortfolioValue = target * portfolio.TotalPortfolioValue;
+            // adjust target portfolio value to comply with required Free Buying Power Percent
+            var targetPortfolioValue = target * (portfolio.TotalPortfolioValue - portfolio.TotalPortfolioValue * RequiredFreeBuyingPowerPercent);
+
             // if targeting zero, simply return the negative of the quantity
             if (targetPortfolioValue == 0)
             {
@@ -350,7 +362,8 @@ namespace QuantConnect.Securities
 
                 // The TPV, take out the fees(unscaled) => yields available value for trading(less fees) -- then scale that by the target
                 // finally remove currentHoldingsValue to get targetOrderValue
-                targetOrderValue = Math.Abs(target * (portfolio.TotalPortfolioValue - orderFees) - currentHoldingsValue);
+                targetOrderValue = Math.Abs((portfolio.TotalPortfolioValue - orderFees - portfolio.TotalPortfolioValue * RequiredFreeBuyingPowerPercent)
+                                            * target - currentHoldingsValue);
 
                 // After the first loop we need to recalculate order quantity since now we have fees included
                 if (loopCount == 0)
