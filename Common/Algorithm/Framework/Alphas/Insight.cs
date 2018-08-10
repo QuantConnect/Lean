@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas.Serialization;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
@@ -109,6 +110,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Gets the estimated value of this insight in the account currency
         /// </summary>
         public decimal EstimatedValue { get; internal set; }
+
+        /// <summary>
+        /// Determines whether or not this insight is considered expired at the specified <paramref name="utcTime"/>
+        /// </summary>
+        /// <param name="utcTime">The algorithm's current time in UTC. See <see cref="IAlgorithm.UtcTime"/></param>
+        /// <returns>True if this insight is expired, false otherwise</returns>
+        public bool IsExpired(DateTime utcTime)
+        {
+            return CloseTimeUtc < utcTime;
+        }
+
+        /// <summary>
+        /// Determines whether or not this insight is considered active at the specified <paramref name="utcTime"/>
+        /// </summary>
+        /// <param name="utcTime">The algorithm's current time in UTC. See <see cref="IAlgorithm.UtcTime"/></param>
+        /// <returns>True if this insight is active, false otherwise</returns>
+        public bool IsActive(DateTime utcTime)
+        {
+            return !IsExpired(utcTime);
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Insight"/> class
