@@ -335,5 +335,29 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.That(() => insight.SetPeriodAndCloseTime(exchangeHours),
                 Throws.Nothing);
         }
+
+        [Test]
+        public void IsExpiredUsesOpenIntervalSemantics()
+        {
+            var generatedTime = new DateTime(2000, 01, 01);
+            var insight = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
+            insight.GeneratedTimeUtc = generatedTime;
+            insight.CloseTimeUtc = insight.GeneratedTimeUtc + insight.Period;
+
+            Assert.IsFalse(insight.IsExpired(insight.CloseTimeUtc));
+            Assert.IsTrue(insight.IsExpired(insight.CloseTimeUtc.AddTicks(1)));
+        }
+
+        [Test]
+        public void IsActiveUsesClosedIntervalSemantics()
+        {
+            var generatedTime = new DateTime(2000, 01, 01);
+            var insight = Insight.Price(Symbols.SPY, Time.OneMinute, InsightDirection.Up);
+            insight.GeneratedTimeUtc = generatedTime;
+            insight.CloseTimeUtc = insight.GeneratedTimeUtc + insight.Period;
+
+            Assert.IsTrue(insight.IsActive(insight.CloseTimeUtc));
+            Assert.IsFalse(insight.IsActive(insight.CloseTimeUtc.AddTicks(1)));
+        }
     }
 }
