@@ -105,9 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 return enumerator;
             });
 
-            // prevent calls to the enumerator stack if current is in the future
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            return new FrontierAwareEnumerator(refresher, _timeProvider, timeZoneOffsetProvider);
+            return refresher;
         }
 
         private IEnumerator<BaseData> EnumerateDataSourceReader(SubscriptionDataConfig config, IDataProvider dataProvider, Ref<DateTime> localFrontier, SubscriptionDataSource source, DateTime localDate)
