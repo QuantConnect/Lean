@@ -26,20 +26,29 @@ namespace QuantConnect.Tests.Brokerages
     {
         public Symbol Symbol { get; private set; }
         public SecurityType SecurityType { get; private set; }
+        public IOrderProperties Properties { get; private set; }
+        public OrderSubmissionData OrderSubmissionData { get; internal set; }
 
-        protected OrderTestParameters(Symbol symbol)
+        protected OrderTestParameters(Symbol symbol, IOrderProperties properties = null)
         {
             Symbol = symbol;
             SecurityType = symbol.ID.SecurityType;
+            Properties = properties;
         }
 
         public MarketOrder CreateLongMarketOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now);
+            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
+            {
+                OrderSubmissionData = OrderSubmissionData
+            };
         }
         public MarketOrder CreateShortMarketOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now);
+            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
+            {
+                OrderSubmissionData = OrderSubmissionData
+            };
         }
 
         /// <summary>
