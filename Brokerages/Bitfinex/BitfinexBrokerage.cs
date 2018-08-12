@@ -269,6 +269,61 @@ namespace QuantConnect.Brokerages.Bitfinex
             return list;
         }
 
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public override IEnumerable<BaseData> GetHistory(Data.HistoryRequest request)
+        {
+            string resolution = ConvertResolution(request.Resolution);
+            long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
+            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+            long startMTS = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
+            long endMTS = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
+            string endpoint = $"v2/candles/trade:{resolution}:t{symbol}/hist?limit=1000&sort=1";
+
+            while ((endMTS - startMTS) > resolutionInMS)
+            {
+                var timeframe = $"&start={startMTS}&end={endMTS}";
+
+                var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
+                var response = ExecuteRestRequest(restRequest, BitfinexEndpointType.Public);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    throw new Exception($"BitfinexBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                }
+
+                var candles = JsonConvert.DeserializeObject<object[][]>(response.Content)
+                    .Select(entries => new Messages.Candle(entries))
+                    .ToList();
+
+                RestoreMissedCandles(candles, startMTS, endMTS, resolutionInMS);
+
+                startMTS = candles.Last().Timestamp + resolutionInMS;
+                var period = request.Resolution.ToTimeSpan();
+
+                foreach (var candle in candles)
+                {
+                    yield return new TradeBar()
+                    {
+                        Time = Time.UnixMillisecondTimeStampToDateTime(candle.Timestamp),
+                        Symbol = request.Symbol,
+                        Low = candle.Low,
+                        High = candle.High,
+                        Open = candle.Open,
+                        Close = candle.Close,
+                        Volume = candle.Volume,
+                        Value = candle.Close,
+                        DataType = MarketDataType.TradeBar,
+                        Period = period,
+                        EndTime = Time.UnixMillisecondTimeStampToDateTime(candle.Timestamp + (long)period.TotalMilliseconds)
+                    };
+                }
+            }
+        }
+
         #endregion
 
         #region IDataQueueHandler

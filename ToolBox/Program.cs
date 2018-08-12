@@ -16,9 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.Configuration;
+using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
+using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
@@ -110,6 +111,10 @@ namespace QuantConnect.ToolBox
                     case "ydl":
                     case "yahoodownloader":
                         YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
+                        break;
+                    case "bfxdl":
+                    case "bitfinexdownloader":
+                        BitfinexDownloaderProgram.BitfinexDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");

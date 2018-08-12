@@ -60,16 +60,15 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Constructor for brokerage
         /// </summary>
         /// <param name="wssUrl">websockets url</param>
-        /// <param name="websocket">instance of websockets client</param>
-        /// <param name="restClient">instance of rest client</param>
+        /// <param name="restUrl">rest api url</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
-        public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
+        public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm)
+            : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _algorithm = algorithm;
-            _securityProvider = algorithm.Portfolio;
+            _securityProvider = algorithm?.Portfolio;
             RateClient = new RestClient("http://data.fixer.io/api/latest?base=usd&access_key=26a2eb9f13db3f14b6df6ec2379f9261");
 
             WebSocket.Open += (sender, args) =>
@@ -108,6 +107,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public void SubscribeAuth()
         {
+            if (string.IsNullOrEmpty(ApiKey) || string.IsNullOrEmpty(ApiSecret))
+                return;
+
             var authNonce = GetNonce();
             var authPayload = "AUTH" + authNonce;
             var authSig = AuthenticationToken(authPayload);
