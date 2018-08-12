@@ -89,6 +89,6 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <summary>
         /// Gets the default order quantity
         /// </summary>
-        protected override decimal GetDefaultQuantity() => 0.02m;
+        protected override decimal GetDefaultQuantity() => 0.04m;
     }
 }
