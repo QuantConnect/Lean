@@ -21,19 +21,25 @@ namespace QuantConnect.Tests.Brokerages
 {
     public class MarketOrderTestParameters : OrderTestParameters
     {
-        public MarketOrderTestParameters(Symbol symbol)
-            : base(symbol)
+        public MarketOrderTestParameters(Symbol symbol, IOrderProperties properties = null)
+            : base(symbol, properties)
         {
         }
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now);
+            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
+            {
+                OrderSubmissionData = OrderSubmissionData
+            };
         }
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now);
+            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
+            {
+                OrderSubmissionData = OrderSubmissionData
+            };
         }
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
