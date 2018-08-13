@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, percent);
             if (result.IsError)
             {
-                algorithm.Log($"Unable to compute order quantity of {symbol}. Quantity set to existing holdings. Reason: {result.Reason}");
+                algorithm.Log($"Unable to compute order quantity of {symbol}. Reason: {result.Reason}. Returning null.");
                 return null;
             }
 
