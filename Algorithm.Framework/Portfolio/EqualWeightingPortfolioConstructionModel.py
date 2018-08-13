@@ -48,8 +48,8 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
 
         targets = []
 
-        if (algorithm.UtcTime < self.nextExpiryTime and
-            algorithm.UtcTime < self.rebalancingTime and
+        if (algorithm.UtcTime <= self.nextExpiryTime and
+            algorithm.UtcTime <= self.rebalancingTime and
             len(insights) == 0 and
             self.removedSymbols is None):
             return targets

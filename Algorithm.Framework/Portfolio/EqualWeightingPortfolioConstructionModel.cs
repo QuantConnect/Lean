@@ -55,8 +55,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             var targets = new List<IPortfolioTarget>();
 
-            if (algorithm.UtcTime < _nextExpiryTime &&
-                algorithm.UtcTime < _rebalancingTime &&
+            if (algorithm.UtcTime <= _nextExpiryTime &&
+                algorithm.UtcTime <= _rebalancingTime &&
                 insights.Length == 0 && 
                 _removedSymbols == null)
             {
