@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -85,12 +84,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var count = lastActiveInsights.Count(x => x.Direction != InsightDirection.Flat);
             var percent = count == 0 ? 0 : 1m / count;
 
-            foreach (var insight in lastActiveInsights)
+            var errorSymbols = new HashSet<Symbol>();
+
+            foreach (var insight in activeInsights)
             {
                 var target = PortfolioTarget.Percent(algorithm, insight.Symbol, (int) insight.Direction * percent);
                 if (target != null)
                 {
                     targets.Add(target);
+                }
+                else
+                {
+                    errorSymbols.Add(insight.Symbol);
                 }
             }
 
@@ -99,7 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var expiredTargets = from insight in expiredInsights
                                  group insight.Symbol by insight.Symbol into g
-                                 where !_insightCollection.HasActiveInsights(g.Key, algorithm.UtcTime)
+                                 where !_insightCollection.HasActiveInsights(g.Key, algorithm.UtcTime) && !errorSymbols.Contains(g.Key)
                                  select new PortfolioTarget(g.Key, 0);
 
             targets.AddRange(expiredTargets);

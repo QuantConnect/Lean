@@ -74,15 +74,20 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         count = sum(x.Direction != InsightDirection.Flat for x in lastActiveInsights)
         percent = 0 if count == 0 else 1.0 / count
 
-        for insight in lastActiveInsights:
-            targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent))
+        errorSymbols = {}
+        for insight in activeInsights:
+            target = PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent)
+            if not target is None:
+                targets.append(target)
+            else:
+                errorSymbols[insight.Symbol] = insight.Symbol
 
         # Get expired insights and create flatten targets for each symbol
         expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
 
         expiredTargets = []
         for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
+            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime) and not symbol in errorSymbols:
                 expiredTargets.append(PortfolioTarget(symbol, 0))
                 continue
 
