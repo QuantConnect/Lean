@@ -27,10 +27,15 @@ namespace QuantConnect.API
     public class Prices
     {
         /// <summary>
-        /// The requested symbol
+        /// The requested Symbol
+        /// </summary>
+        public Symbol Symbol { get; set; }
+
+        /// <summary>
+        /// The requested symbol ID
         /// </summary>
         [JsonProperty(PropertyName = "symbol")]
-        public string Symbol { get; set; }
+        public string SymbolID { get; set; }
 
         /// <summary>
         /// The requested price
