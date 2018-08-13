@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 Assert.IsTrue(insights.All(insight => insight.GeneratedTimeUtc != default(DateTime)));
                 Assert.IsTrue(insights.All(insight => insight.CloseTimeUtc != default(DateTime)));
             };
-            algo.AddEquity("SPY");
+            var security = algo.AddEquity("SPY");
             algo.SetUniverseSelection(new ManualUniverseSelectionModel(algo.Securities.Keys));
 
             var alpha = new FakeAlpha();
@@ -53,12 +53,15 @@ namespace QuantConnect.Tests.Algorithm.Framework
             var construction = new FakePortfolioConstruction();
             algo.SetPortfolioConstruction(construction);
 
-            algo.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), algo.Securities.Select(s => new Tick
+            var tick = new Tick
             {
-                Symbol = s.Key,
+                Symbol = security.Symbol,
                 Value = 1,
                 Quantity = 2
-            })));
+            };
+            security.SetMarketPrice(tick);
+
+            algo.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), algo.Securities.Select(s => tick)));
 
             Assert.IsTrue(eventFired);
             Assert.AreEqual(1, construction.Insights.Count);
