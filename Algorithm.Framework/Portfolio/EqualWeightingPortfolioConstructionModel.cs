@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -29,8 +30,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
+        private DateTime _rebalancingTime;
+        private readonly TimeSpan _rebalancingPeriod;
         private List<Symbol> _removedSymbols;
         private readonly InsightCollection _insightCollection = new InsightCollection();
+        private DateTime? _nextExpiryTime;
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="resolution">Rebalancing frequency</param>
+        public EqualWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
+        {
+            _rebalancingPeriod = resolution.ToTimeSpan();
+        }
 
         /// <summary>
         /// Create portfolio targets from the specified insights
@@ -40,50 +53,55 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
         {
+            var targets = new List<IPortfolioTarget>();
+
+            if (algorithm.UtcTime <= _nextExpiryTime &&
+                algorithm.UtcTime <= _rebalancingTime &&
+                insights.Length == 0 && 
+                _removedSymbols == null)
+            {
+                return targets;
+            }
+
             _insightCollection.AddRange(insights);
 
-            var targets = new List<IPortfolioTarget>();
+            // Create flatten target for each security that was removed from the universe
             if (_removedSymbols != null)
             {
-                // zero out securities removes from the universe
-                targets.AddRange(_removedSymbols.Select(s => new PortfolioTarget(s, 0)));
+                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
+                targets.AddRange(universeDeselectionTargets);
                 _removedSymbols = null;
             }
 
-            if (insights.Length == 0)
-            {
-                return targets;
-            }
+            // Get insight that haven't expired of each symbol that is still in the universe
+            var activeInsights = _insightCollection.GetActiveInsights(algorithm.UtcTime);
 
-            // Get last insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = (from insight in _insightCollection
-                                  // Remove expired insights
-                                  where insight.CloseTimeUtc > algorithm.UtcTime
-                                  // Force one group per symbol
-                                  group insight by insight.Symbol into g
-                                  // For direction, we'll trust the most recent insight
-                                  select g.OrderBy(x => x.GeneratedTimeUtc).LastOrDefault())
-                                  .ToList();
-
-            if (activeInsights.Count == 0)
-            {
-                return targets;
-            }
+            // Get the last generated active insight for each symbol
+            var lastActiveInsights = from insight in activeInsights
+                                     group insight by insight.Symbol into g
+                                     select g.OrderBy(x => x.GeneratedTimeUtc).Last();
 
             // give equal weighting to each security
-            var count = activeInsights.Count(x => x.Direction != InsightDirection.Flat);
+            var count = lastActiveInsights.Count(x => x.Direction != InsightDirection.Flat);
             var percent = count == 0 ? 0 : 1m / count;
 
-            foreach (var insight in activeInsights)
+            foreach (var insight in lastActiveInsights)
             {
                 targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent));
             }
 
-            // add targets to remove invested securities
-            targets.AddRange(from kvp in algorithm.Portfolio
-                             where kvp.Value.Invested
-                             where targets.All(x => kvp.Key != x.Symbol)
-                             select new PortfolioTarget(kvp.Key, 0));
+            // Get expired insights and create flatten targets for each symbol
+            var expiredInsights = _insightCollection.RemoveExpiredInsights(algorithm.UtcTime);
+
+            var expiredTargets = from insight in expiredInsights
+                                 group insight.Symbol by insight.Symbol into g
+                                 where !_insightCollection.HasActiveInsights(g.Key, algorithm.UtcTime)
+                                 select new PortfolioTarget(g.Key, 0);
+
+            targets.AddRange(expiredTargets);
+
+            _nextExpiryTime = _insightCollection.GetNextExpiryTime();
+            _rebalancingTime = algorithm.UtcTime.Add(_rebalancingPeriod);
 
             return targets;
         }
@@ -95,21 +113,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
         {
-            // save securities removed so we can zero out our holdings
+            // Get removed symbol and invalidate them in the insight collection
             _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-
-            // remove the insights of the removed symbol from the collection 
-            foreach (var removedSymbol in _removedSymbols)
-            {
-                List<Insight> insights;
-                if (_insightCollection.TryGetValue(removedSymbol, out insights))
-                {
-                    foreach (var insight in insights.ToList())
-                    {
-                        _insightCollection.Remove(insight);
-                    }
-                }
-            }
+            _insightCollection.Clear(_removedSymbols.ToArray());
         }
     }
 }

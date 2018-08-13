@@ -12,19 +12,31 @@
 # limitations under the License.
 
 from clr import AddReference
+AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
+from QuantConnect import Resolution, Extensions
 from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
 from itertools import groupby
+from datetime import datetime, timedelta
+from pytz import utc
+UTCMIN = datetime.min.replace(tzinfo=utc)
 
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
     The target percent holdings of each security is 1/N where N is the number of securities.
     For insights of direction InsightDirection.Up, long targets are returned and
     for insights of direction InsightDirection.Down, short targets are returned.'''
-    def __init__(self):
+
+    def __init__(self, resolution = Resolution.Daily):
+        '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
+        Args:
+            resolution: Rebalancing frequency'''
         self.insightCollection = InsightCollection()
         self.removedSymbols = []
+        self.nextExpiryTime = UTCMIN
+        self.rebalancingTime = UTCMIN
+        self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
 
     def CreateTargets(self, algorithm, insights):
         '''Create portfolio targets from the specified insights
@@ -33,42 +45,54 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             insights: The insights to create portoflio targets from
         Returns:
             An enumerable of portoflio targets to be sent to the execution model'''
-        self.insightCollection.AddRange(insights)
 
         targets = []
 
+        if (algorithm.UtcTime <= self.nextExpiryTime and
+            algorithm.UtcTime <= self.rebalancingTime and
+            len(insights) == 0 and
+            self.removedSymbols is None):
+            return targets
+
+        self.insightCollection.AddRange(insights)
+
+        # Create flatten target for each security that was removed from the universe
         if self.removedSymbols is not None:
-            # zero out securities removes from the universe
-            for symbol in self.removedSymbols:
-                targets.append(PortfolioTarget(symbol, 0))
-                self.removedSymbols = None
+            universeDeselectionTargets = [ PortfolioTarget(symbol, 0) for symbol in self.removedSymbols ]
+            targets.extend(universeDeselectionTargets)
+            self.removedSymbols = None
 
-        if len(insights) == 0:
-            return targets
+        # Get insight that haven't expired of each symbol that is still in the universe
+        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
 
-        # Get last insight that haven't expired of each symbol that is still in the universe
-        activeInsights = list()
-        # Remove expired insights
-        validInsights = [ i for i in self.insightCollection if i.CloseTimeUtc > algorithm.UtcTime ]
-        # Force one group per symbol
-        for symbol, g in groupby(validInsights, lambda x: x.Symbol):
-            # For direction, we'll trust the most recent insight
-            activeInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
-
-        if len(activeInsights) == 0:
-            return targets
+        # Get the last generated active insight for each symbol
+        lastActiveInsights = []
+        for symbol, g in groupby(activeInsights, lambda x: x.Symbol):
+            lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
 
         # give equal weighting to each security
-        count = sum(x.Direction != InsightDirection.Flat for x in activeInsights)
+        count = sum(x.Direction != InsightDirection.Flat for x in lastActiveInsights)
         percent = 0 if count == 0 else 1.0 / count
 
-        for insight in activeInsights:
+        for insight in lastActiveInsights:
             targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent))
 
-        # add targets to remove invested securities
-        for kvp in algorithm.Portfolio:
-            if kvp.Value.Invested and all([kvp.Key != x.Symbol for x in targets]):
-                targets.append(PortfolioTarget(kvp.Key, 0))
+        # Get expired insights and create flatten targets for each symbol
+        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
+
+        expiredTargets = []
+        for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
+            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
+                expiredTargets.append(PortfolioTarget(symbol, 0))
+                continue
+
+        targets.extend(expiredTargets)
+
+        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
+        if self.nextExpiryTime is None: 
+            self.nextExpiryTime = UTCMIN
+
+        self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
 
         return targets
 
@@ -78,11 +102,6 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
 
-        # save securities removed so we can zero out our holdings
+        # Get removed symbol and invalidate them in the insight collection
         self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-
-        # remove the insights of the removed symbol from the collection
-        for removedSymbol in self.removedSymbols:
-            if self.insightCollection.ContainsKey(removedSymbol):
-                for insight in self.insightCollection[removedSymbol]:
-                    self.insightCollection.Remove(insight)
+        self.insightCollection.Clear(self.removedSymbols)

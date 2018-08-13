@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -166,6 +167,92 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Removes the symbol and its insights
+        /// </summary>
+        /// <param name="symbols">List of symbols that will be removed</param>
+        public void Clear(Symbol[] symbols)
+        {
+            foreach (var symbol in symbols)
+            {
+                List<Insight> insights;
+                _insights.TryRemove(symbol, out insights);
+            }
+        }
+
+        /// <summary>
+        /// Gets the next expiry time
+        /// </summary>
+        public DateTime? GetNextExpiryTime()
+        {
+            if (Count == 0)
+            {
+                return null;
+            }
+            return _insights.Min(x => x.Value.Min(i => i.CloseTimeUtc));
+        }
+
+        /// <summary>
+        /// Gets the last generated active insight
+        /// </summary>
+        /// <returns>Collection of insights that are active</returns>
+        public ICollection<Insight> GetActiveInsights(DateTime utcTime)
+        {
+            var activeInsights = new List<Insight>();
+            foreach (var kvp in _insights)
+            {
+                foreach (var insight in kvp.Value)
+                {
+                    if (insight.IsActive(utcTime))
+                    {
+                        activeInsights.Add(insight);
+                    }
+                }
+            }
+            return activeInsights;
+        }
+
+        /// <summary>
+        /// Returns true if there are active insights for a given symbol and time
+        /// </summary>
+        /// <param name="symbol">The symbol key</param>
+        /// <param name="utcTime">Time that determines whether the insight has expired</param>
+        /// <returns></returns>
+        public bool HasActiveInsights(Symbol symbol, DateTime utcTime)
+        {
+            List<Insight> insights;
+            if (TryGetValue(symbol, out insights))
+            {
+                return insights.Any(i => i.IsActive(utcTime));
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Remove all expired insights from the collection and retuns them
+        /// </summary>
+        /// <param name="utcTime">Time that determines whether the insight has expired</param>
+        /// <returns>Expired insights that were removed</returns>
+        public ICollection<Insight> RemoveExpiredInsights(DateTime utcTime)
+        {
+            var removedInsights = new List<Insight>();
+            foreach (var kvp in _insights)
+            {
+                foreach (var insight in kvp.Value)
+                {
+                    if (insight.IsExpired(utcTime))
+                    {
+                        removedInsights.Add(insight);
+                    }
+                }
+            }
+            foreach (var insight in removedInsights)
+            {
+                Remove(insight);
+            }
+            return removedInsights;
         }
     }
 }
