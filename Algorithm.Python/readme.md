@@ -7,14 +7,18 @@ Before we enable python support, follow the [installation instructions](https://
 #### [Windows](https://github.com/QuantConnect/Lean#windows)
 1. Use the Windows x86-64 MSI installer from [python.org](https://www.python.org/downloads/release/python-365/) or [Anaconda](https://www.anaconda.com/download/) for Windows installer
 2. When asked to select the features to be installed, make sure you select "Add python.exe to Path"
-4. Create `PYTHONHOME` system variables which value must be the location of your python installation (e.g. `C:\Python36amd64` or `C:\Anaconda3`):
+3. `[Optional]` Create `PYTHONHOME` system variables which value must be the location of your python installation (e.g. `C:\Python36amd64` or `C:\Anaconda3`):
    1. Right mouse button on My Computer. Click Properties.
    2. Click Advanced System Settings -> Environment Variables -> System Variables
    3. Click **New**. 
         - Name of the variable: `PYTHONHOME`. 
         - Value of the variable: python installation path.
-5. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-6. Install [**Visual C++ for Python 2.7**](https://www.microsoft.com/en-us/download/details.aspx?id=44266)
+4. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+5. Install [**Visual C++ for Python 2.7**](https://www.microsoft.com/en-us/download/details.aspx?id=44266)
+6. Install .NET Framework 3.5:
+   1. Open the Control Panel
+   2. Click on Programs and Features, then Turn Windows Features On or Off
+   3. Mark ".NET Framework 3.5 (includes .NET 2.0 and 3.0)"
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
 1. Follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
@@ -33,10 +37,15 @@ conda update -y python conda pip
 conda install -y cython pandas
 ```
 
+Install clang and glib 2.0:
+```
+sudo apt-get -y install clang libglib2.0-dev
+```
+
 *Note:* There is a [known issue](https://github.com/pythonnet/pythonnet/issues/609) with python 3.6.5 that prevents pythonnet installation, please downgrade python to version 3.6.4:
 ```
 conda install -y python=3.6.4
-``` 
+```
 
 
 ### Run python algorithm
