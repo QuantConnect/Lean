@@ -41,13 +41,11 @@ def _check_output(cmd):
     return cmd
 
 def check_requirements():
-    extra = ''''''
+    extra = 'sudo apt-get -y install clang libglib2.0-dev'
     if WIN32:
-        extra = f'''
-        - Visual C++ for Python: {LINK}'''
+        extra = f'Visual C++ for Python: {LINK}'
     if MACOS:
-        extra = f'''
-        - pkg-config: {LINK}'''
+        extra = f'pkg-config: {LINK}'
 
     print(f'''
     Python support in Lean with pythonnet
@@ -55,7 +53,8 @@ def check_requirements():
 
     Prerequisites:
         - Python {VERSION} {ARCH} with pip
-        - LEAN: {README}{extra}
+        - LEAN: {README}
+        - {extra}
         - git
 
     It will update {', '.join(PACKAGES)} packages.
@@ -75,10 +74,24 @@ def check_requirements():
         exit('pip is required and not found in the path.')
 
     if LINUX:
+        if which('clang') is None:
+            exit(f'clang is required and not found in the path.{extra}')
+
         path = '/usr/lib/libpython3.6m.so'
         if not os.path.exists(path):
             print('Add symbolic link to python library in /usr/lib')
             exit(f'sudo ln -s /path/to/miniconda3/lib/libpython3.6m.so {path}')
+
+        _check_output(['pkg-config', '--libs', 'glib-2.0'])
+
+    if WIN32:
+        try:
+            from winreg import OpenKey, HKEY_LOCAL_MACHINE
+            tmp = OpenKey(HKEY_LOCAL_MACHINE, '')
+            OpenKey(tmp, r'SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5')
+        except:
+            tmp = 'https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#windows'
+            exit(f'.NET Frameworks 3.5 not installed.{os.linesep}Please visit {tmp} for details')
 
 def install_packages():
 
