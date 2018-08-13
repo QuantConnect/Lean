@@ -591,12 +591,22 @@ namespace QuantConnect.Api
         /// <returns><see cref="Prices"/></returns>
         public PricesList ReadPrices(IEnumerable<Symbol> symbols)
         {
+            var symbolByID = new Dictionary<string, Symbol>();
+            foreach (var symbol in symbols)
+            {
+                symbolByID[symbol.ID.ToString()] = symbol;
+            }
+
             var request = new RestRequest("prices", Method.POST);
-            var symbolsToRequest = string.Join(",", symbols.Select(x => x.ID.ToString()));
+            var symbolsToRequest = string.Join(",", symbolByID.Keys);
             request.AddParameter("symbols", symbolsToRequest);
 
             PricesList pricesList;
             ApiConnection.TryRequest(request, out pricesList);
+            foreach (var price in pricesList.Prices)
+            {
+                price.Symbol = symbolByID[price.SymbolID];
+            }
             return pricesList;
         }
 

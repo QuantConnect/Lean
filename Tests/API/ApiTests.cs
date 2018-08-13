@@ -609,7 +609,7 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(pricesList.Prices.Count, 1);
 
             var price = pricesList.Prices.First();
-            Assert.AreEqual(price.Symbol, spy.ID.ToString());
+            Assert.AreEqual(price.Symbol, spy);
             Assert.AreNotEqual(price.Price, 0);
             var updated = price.Updated;
             var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
@@ -630,8 +630,8 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(pricesList.Prices.Count, 2);
 
             Assert.IsTrue(pricesList.Prices.All(x => x.Price != 0));
-            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == aapl.ID.ToString()), 1);
-            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == spy.ID.ToString()), 1);
+            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == aapl), 1);
+            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == spy), 1);
 
             var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
             Assert.IsTrue(pricesList.Prices.All(x => x.Updated > reference));
