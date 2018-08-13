@@ -87,7 +87,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             foreach (var insight in lastActiveInsights)
             {
-                targets.Add(PortfolioTarget.Percent(algorithm, insight.Symbol, (int)insight.Direction * percent));
+                var target = PortfolioTarget.Percent(algorithm, insight.Symbol, (int) insight.Direction * percent);
+                if (target != null)
+                {
+                    targets.Add(target);
+                }
             }
 
             // Get expired insights and create flatten targets for each symbol

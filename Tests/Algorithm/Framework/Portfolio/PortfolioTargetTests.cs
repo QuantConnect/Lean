@@ -50,5 +50,46 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(security.Symbol, target.Symbol);
             Assert.AreEqual(bpmQuantity + holdings, target.Quantity);
         }
+
+        [Test]
+        public void PercentReturnsNullIfPriceIsZero()
+        {
+            const decimal holdings = 50;
+            const decimal targetPercent = 1m;
+
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            algorithm.Initialize();
+            algorithm.PostInitialize();
+            var security = algorithm.Securities.Single().Value;
+            security.SetMarketPrice(new Tick { Value = 0m });
+            security.Holdings.SetHoldings(1m, holdings);
+
+            var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
+
+            Assert.IsNull(target);
+        }
+
+        [Test]
+        public void PercentReturnsNullIfBuyingPowerModelError()
+        {
+            const decimal holdings = 50;
+            const decimal targetPercent = 1m;
+
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            algorithm.Initialize();
+            algorithm.PostInitialize();
+            var security = algorithm.Securities.Single().Value;
+            security.SetMarketPrice(new Tick { Value = 1m });
+            security.Holdings.SetHoldings(1m, holdings);
+
+            var buyingPowerMock = new Mock<IBuyingPowerModel>();
+            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, targetPercent))
+                .Returns(new GetMaximumOrderQuantityForTargetValueResult(0, "The portfolio does not have enough margin available."));
+            security.BuyingPowerModel = buyingPowerMock.Object;
+
+            var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
+
+            Assert.IsNull(target);
+        }
     }
 }

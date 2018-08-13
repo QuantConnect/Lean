@@ -155,7 +155,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 foreach (var symbol in symbols)
                 {
                     var weight = (decimal)W[sidx];
-                    targets.Add(PortfolioTarget.Percent(algorithm, symbol, weight));
+
+                    var target = PortfolioTarget.Percent(algorithm, symbol, weight);
+                    if (target != null)
+                    {
+                        targets.Add(target);
+                    }
+
                     sidx++;
                 }
             }
