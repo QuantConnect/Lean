@@ -59,10 +59,7 @@ namespace QuantConnect.Brokerages.GDAX
         private string _pendingGdaxMarketOrderId;
         private int _pendingLeanMarketOrderId;
 
-        /// <summary>
-        /// QC API client used to fetch missing conversion rates
-        /// </summary>
-        public IApi RateClient { get; set; } = new Api.Api();
+        private readonly IPriceProvider _priceProvider;
 
         #endregion
 
@@ -86,17 +83,15 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="apiSecret">api secret</param>
         /// <param name="passPhrase">pass phrase</param>
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
-        /// <param name="userId">QC user id</param>
-        /// <param name="userToken">QC user token</param>
+        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            int userId, string userToken)
+            IPriceProvider priceProvider)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _algorithm = algorithm;
-
-            RateClient.Initialize(userId, userToken, "");
+            _priceProvider = priceProvider;
 
             WebSocket.Open += (sender, args) =>
             {
@@ -596,21 +591,15 @@ namespace QuantConnect.Brokerages.GDAX
 
         private decimal GetConversionRate(Symbol symbol)
         {
-            var result = RateClient.ReadPrices(new[] { symbol });
-            if (!result.Success)
+            try
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: error returned from QC API ReadPrices: {string.Join(" - ", result.Errors)}"));
+                return _priceProvider.GetLastPrice(symbol);
+            }
+            catch (Exception e)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: {e.Message}"));
                 return 0;
             }
-
-            var priceData = result.Prices.FirstOrDefault(x => x.Symbol == symbol.ToString());
-            if (priceData == null)
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: no price data returned from QC API ReadPrices for {symbol.Value}"));
-                return 0;
-            }
-
-            return priceData.Price;
         }
 
         private bool IsSubscribeAvailable(Symbol symbol)

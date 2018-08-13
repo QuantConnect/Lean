@@ -27,7 +27,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using QuantConnect.API;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -55,7 +54,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [SetUp]
         public void Setup()
         {
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, 0, "token");
+            var priceProvider = new Mock<IPriceProvider>();
+            priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
+
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object);
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
@@ -80,17 +82,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             });
 
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
-            var rateMock = new Mock<IApi>();
-            _unit.RateClient = rateMock.Object;
-            rateMock.Setup(r => r.ReadPrices(It.IsAny<IEnumerable<Symbol>>())).Returns(new PricesList
-            {
-                Prices = new List<Prices>
-                {
-                    new Prices { Symbol = "GBPUSD 5O", Price = 1.234m }
-                },
-                Errors = new List<string>(),
-                Success = true
-            });
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)

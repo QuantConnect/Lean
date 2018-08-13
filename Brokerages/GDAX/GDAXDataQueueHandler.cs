@@ -31,8 +31,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            int userId, string userToken)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, userId, userToken)
+            IPriceProvider priceProvider)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider)
         {
         }
 
