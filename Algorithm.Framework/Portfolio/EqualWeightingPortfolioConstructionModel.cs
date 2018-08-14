@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             if (algorithm.UtcTime <= _nextExpiryTime &&
                 algorithm.UtcTime <= _rebalancingTime &&
-                insights.Length == 0 && 
+                insights.Length == 0 &&
                 _removedSymbols == null)
             {
                 return targets;
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var errorSymbols = new HashSet<Symbol>();
 
-            foreach (var insight in activeInsights)
+            foreach (var insight in lastActiveInsights)
             {
                 var target = PortfolioTarget.Percent(algorithm, insight.Symbol, (int) insight.Direction * percent);
                 if (target != null)

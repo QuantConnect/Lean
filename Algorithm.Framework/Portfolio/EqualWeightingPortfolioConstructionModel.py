@@ -75,7 +75,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         percent = 0 if count == 0 else 1.0 / count
 
         errorSymbols = {}
-        for insight in activeInsights:
+        for insight in lastActiveInsights:
             target = PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent)
             if not target is None:
                 targets.append(target)
@@ -94,7 +94,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         targets.extend(expiredTargets)
 
         self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None: 
+        if self.nextExpiryTime is None:
             self.nextExpiryTime = UTCMIN
 
         self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod

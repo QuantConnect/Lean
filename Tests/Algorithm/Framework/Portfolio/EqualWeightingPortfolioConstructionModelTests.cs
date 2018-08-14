@@ -137,7 +137,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Flat)]
         public void AutomaticallyRemoveInvestedWithNewInsights(Language language, InsightDirection direction)
         {
-            SetPortfolioConstruction(language);
+            SetPortfolioConstruction(language, _algorithm);
 
             // Let's create a position for SPY
             var insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime) };
@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void AutomaticallyRemoveInvestedWithoutNewInsights(Language language)
         {
-            SetPortfolioConstruction(language);
+            SetPortfolioConstruction(language, _algorithm);
 
             // Let's create a position for SPY
             var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime) };
@@ -201,9 +201,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void LongTermInsightPreservesPosition(Language language)
         {
-            SetPortfolioConstruction(language);
+            SetPortfolioConstruction(language, _algorithm);
 
-            // First emit long term insight 
+            // First emit long term insight
             var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
             Assert.AreEqual(1, targets.Count);
@@ -230,7 +230,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void DelistedSecurityEmitsFlatTargetWithoutNewInsights(Language language)
         {
-            SetPortfolioConstruction(language);
+            SetPortfolioConstruction(language, _algorithm);
 
             var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
@@ -305,6 +305,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var algorithm = new QCAlgorithmFramework();
             algorithm.AddEquity(Symbols.SPY.Value);
+            algorithm.SetDateTime(DateTime.MinValue.ConvertToUtc(_algorithm.TimeZone));
 
             SetPortfolioConstruction(language, algorithm);
 
