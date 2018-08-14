@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using QuantConnect.Data;
 using Python.Runtime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Indicators
 {
@@ -46,9 +47,8 @@ namespace QuantConnect.Indicators
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
         /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
-        public static TSecond Of<T, TSecond>(this TSecond second, IndicatorBase<T> first, bool waitForFirstToReady = true)
-            where T : IBaseData
-            where TSecond : IndicatorBase<IndicatorDataPoint>
+        public static T Of<T>(this T second, IIndicator first, bool waitForFirstToReady = true)
+            where T : IIndicator
         {
             first.Updated += (sender, consolidated) =>
             {
@@ -84,7 +84,7 @@ namespace QuantConnect.Indicators
                 if (x.Samples == y.Samples)
                 {
                     numerator.Update(consolidated.Time, consolidated.Value * y.Current.Value);
-                }  
+                }
             };
 
             weight.Updated += (sender, consolidated) =>
@@ -96,7 +96,7 @@ namespace QuantConnect.Indicators
                 }
                 denominator.Update(consolidated);
             };
-            
+
             return numerator.Over(denominator);
         }
 
@@ -109,9 +109,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The addend</param>
         /// <returns>The sum of the left and right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Plus(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        public static CompositeIndicator<T> Plus<T>(this IndicatorBase<T> left, decimal constant)
+            where T : IBaseData
         {
-            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            var constantIndicator = new ConstantIndicator<T>(constant.ToString(CultureInfo.InvariantCulture), constant);
             return left.Plus(constantIndicator);
         }
 
@@ -124,9 +125,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
         /// <returns>The sum of the left and right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Plus(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right)
+        public static CompositeIndicator<T> Plus<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l + r);
+            return new CompositeIndicator<T>(left, right, (l, r) => l + r);
         }
 
         /// <summary>
@@ -139,9 +141,10 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The sum of the left and right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Plus(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
+        public static CompositeIndicator<T> Plus<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l + r);
+            return new CompositeIndicator<T>(name, left, right, (l, r) => l + r);
         }
 
         /// <summary>
@@ -153,9 +156,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The subtrahend</param>
         /// <returns>The difference of the left and right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Minus(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        public static CompositeIndicator<T> Minus<T>(this IndicatorBase<T> left, decimal constant)
+            where T : IBaseData
         {
-            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            var constantIndicator = new ConstantIndicator<T>(constant.ToString(CultureInfo.InvariantCulture), constant);
             return left.Minus(constantIndicator);
         }
 
@@ -168,9 +172,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
         /// <returns>The difference of the left and right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Minus(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right)
+        public static CompositeIndicator<T> Minus<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l - r);
+            return new CompositeIndicator<T>(left, right, (l, r) => l - r);
         }
 
         /// <summary>
@@ -183,9 +188,10 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The difference of the left and right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Minus(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
+        public static CompositeIndicator<T> Minus<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l - r);
+            return new CompositeIndicator<T>(name, left, right, (l, r) => l - r);
         }
 
         /// <summary>
@@ -197,9 +203,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The constant value denominator</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        public static CompositeIndicator<T> Over<T>(this IndicatorBase<T> left, decimal constant)
+            where T : IBaseData
         {
-            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            var constantIndicator = new ConstantIndicator<T>(constant.ToString(CultureInfo.InvariantCulture), constant);
             return left.Over(constantIndicator);
         }
 
@@ -212,9 +219,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right)
+        public static CompositeIndicator<T> Over<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
+            return new CompositeIndicator<T>(left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
         }
 
         /// <summary>
@@ -227,9 +235,10 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
+        public static CompositeIndicator<T> Over<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
+            return new CompositeIndicator<T>(name, left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
         }
 
         /// <summary>
@@ -241,9 +250,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The constant value to multiple by</param>
         /// <returns>The product of the left to the right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Times(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        public static CompositeIndicator<T> Times<T>(this IndicatorBase<T> left, decimal constant)
+            where T : IBaseData
         {
-            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            var constantIndicator = new ConstantIndicator<T>(constant.ToString(CultureInfo.InvariantCulture), constant);
             return left.Times(constantIndicator);
         }
 
@@ -256,9 +266,10 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
         /// <returns>The product of the left to the right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Times(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right)
+        public static CompositeIndicator<T> Times<T>(this IndicatorBase<T> left, IndicatorBase<T> right)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l * r);
+            return new CompositeIndicator<T>(left, right, (l, r) => l * r);
         }
 
         /// <summary>
@@ -271,9 +282,10 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The product of the left to the right indicators</returns>
-        public static CompositeIndicator<IndicatorDataPoint> Times(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
+        public static CompositeIndicator<T> Times<T>(this IndicatorBase<T> left, IndicatorBase<T> right, string name)
+            where T : IBaseData
         {
-            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l * r);
+            return new CompositeIndicator<T>(name, left, right, (l, r) => l * r);
         }
 
         /// <summary>Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator
@@ -287,8 +299,7 @@ namespace QuantConnect.Indicators
             where T : IBaseData
         {
             decimal k = smoothingFactor.HasValue ? k = smoothingFactor.Value : ExponentialMovingAverage.SmoothingFactorDefault(period);
-            ExponentialMovingAverage emaOfLeft = new ExponentialMovingAverage(string.Format("EMA{0}_Of_{1}", period, left.Name), period, k).Of(left, waitForFirstToReady);
-            return emaOfLeft;
+            return new ExponentialMovingAverage($"EMA{period}_Of_{left.Name}", period, k).Of(left, waitForFirstToReady);
         }
 
         /// <summary>Creates a new Maximum indicator with the specified period from the left indicator
@@ -297,11 +308,9 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the Maximum indicator</param>
         /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
         /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
-        public static Maximum MAX<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
-            where T : IBaseData
+        public static Maximum MAX(this IIndicator left, int period, bool waitForFirstToReady = true)
         {
-            Maximum maxOfLeft = new Maximum(string.Format("MAX{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
-            return maxOfLeft;
+            return new Maximum($"MAX{period}_Of_{left.Name}", period).Of(left, waitForFirstToReady);
         }
 
         /// <summary>Creates a new Minimum indicator with the specified period from the left indicator
@@ -313,8 +322,7 @@ namespace QuantConnect.Indicators
         public static Minimum MIN<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
             where T : IBaseData
         {
-            Minimum minOfLeft = new Minimum(string.Format("MIN{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
-            return minOfLeft;
+            return new Minimum($"MIN{period}_Of_{left.Name}", period).Of(left, waitForFirstToReady);
         }
 
         /// <summary>Initializes a new instance of the SimpleMovingAverage class with the specified name and period from the left indicator
@@ -326,9 +334,12 @@ namespace QuantConnect.Indicators
         public static SimpleMovingAverage SMA<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
             where T : IBaseData
         {
-            SimpleMovingAverage smaOfLeft = new SimpleMovingAverage(string.Format("SMA{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
-            return smaOfLeft;
+            return new SimpleMovingAverage($"SMA{period}_Of_{left.Name}", period).Of(left, waitForFirstToReady);
         }
+
+
+
+        /// The methods overloads bellow are due to python.net not being able to correctly solve generic methods overload
 
         /// <summary>
         /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
@@ -410,6 +421,150 @@ namespace QuantConnect.Indicators
         {
             dynamic indicator = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
             return SMA(indicator, period, waitForFirstToReady);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the ratio of the left to the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left/constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The constant value denominator</param>
+        /// <returns>The ratio of the left to the right indicator</returns>
+        public static object Over(PyObject left, decimal constant)
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return Over(indicatorLeft, constant);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the ratio of the left to the right
+        /// </summary>
+        /// <remarks>
+        /// value = left/right
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="right">The right indicator</param>
+        /// <param name="name">The name of this indicator</param>
+        /// <returns>The ratio of the left to the right indicator</returns>
+        public static object Over(PyObject left, PyObject right, string name = "")
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            if (name.IsNullOrEmpty())
+            {
+                return Over(indicatorLeft, indicatorRight);
+            }
+            return Over(indicatorLeft, indicatorRight, name);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the difference of the left and constant
+        /// </summary>
+        /// <remarks>
+        /// value = left - constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The subtrahend</param>
+        /// <returns>The difference of the left and right indicators</returns>
+        public static object Minus(PyObject left, decimal constant)
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return Minus(indicatorLeft, constant);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the difference of the left and right
+        /// </summary>
+        /// <remarks>
+        /// value = left - right
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="right">The right indicator</param>
+        /// <param name="name">The name of this indicator</param>
+        /// <returns>The difference of the left and right indicators</returns>
+        public static object Minus(PyObject left, PyObject right, string name = "")
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            if (name.IsNullOrEmpty())
+            {
+                return Minus(indicatorLeft, indicatorRight);
+            }
+            return Minus(indicatorLeft, indicatorRight, name);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the product of the left and the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left*constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The constant value to multiple by</param>
+        /// <returns>The product of the left to the right indicators</returns>
+        public static object Times(PyObject left, decimal constant)
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return Times(indicatorLeft, constant);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the product of the left to the right
+        /// </summary>
+        /// <remarks>
+        /// value = left*right
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="right">The right indicator</param>
+        /// <param name="name">The name of this indicator</param>
+        /// <returns>The product of the left to the right indicators</returns>
+        public static object Times(PyObject left, PyObject right, string name = "")
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            if (name.IsNullOrEmpty())
+            {
+                return Times(indicatorLeft, indicatorRight);
+            }
+            return Times(indicatorLeft, indicatorRight, name);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the sum of the left and the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left + constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The addend</param>
+        /// <returns>The sum of the left and right indicators</returns>
+        public static object Plus(PyObject left, decimal constant)
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            return Plus(indicatorLeft, constant);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the sum of the left and right
+        /// </summary>
+        /// <remarks>
+        /// value = left + right
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="right">The right indicator</param>
+        /// <param name="name">The name of this indicator</param>
+        /// <returns>The sum of the left and right indicators</returns>
+        public static object Plus(PyObject left, PyObject right, string name = "")
+        {
+            dynamic indicatorLeft = left.AsManagedObject((Type)left.GetPythonType().AsManagedObject(typeof(Type)));
+            dynamic indicatorRight = right.AsManagedObject((Type)right.GetPythonType().AsManagedObject(typeof(Type)));
+            if (name.IsNullOrEmpty())
+            {
+                return Plus(indicatorLeft, indicatorRight);
+            }
+            return Plus(indicatorLeft, indicatorRight, name);
         }
     }
 }
