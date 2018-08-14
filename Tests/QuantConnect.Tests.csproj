@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -133,6 +133,8 @@
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\EqualWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
+    <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
+    <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="PythonSetup.cs" />
     <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />
     <Compile Include="Algorithm\Framework\Risk\MaximumDrawdownPercentPerSecurityTests.cs" />
@@ -314,7 +316,6 @@
     <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Common\Exceptions\StackExceptionInterpreterTests.cs" />
-    <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />

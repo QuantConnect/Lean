@@ -600,6 +600,7 @@
     <Compile Include="Util\RateGate.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
+    <Compile Include="Util\StreamReaderEnumerable.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\MemoizingEnumerable.cs" />

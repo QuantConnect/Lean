@@ -44,6 +44,7 @@ namespace QuantConnect.Data.Market
 
         /// <summary>
         /// Gets the price at which the split occurred
+        /// This is typically the previous day's closing price
         /// </summary>
         public decimal ReferencePrice
         {
@@ -71,11 +72,11 @@ namespace QuantConnect.Data.Market
         public Split(Symbol symbol, DateTime date, decimal price, decimal splitFactor, SplitType type)
              : this()
         {
-            Symbol = symbol;
+            Type = type;
             Time = date;
+            Symbol = symbol;
             ReferencePrice = price;
             SplitFactor = splitFactor;
-            Type = type;
         }
 
         /// <summary>

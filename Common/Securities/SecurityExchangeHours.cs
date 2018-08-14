@@ -335,5 +335,37 @@ namespace QuantConnect.Securities
             TimeSpan earlyCloseTime;
             return _earlyCloses.TryGetValue(localDateTime.Date, out earlyCloseTime) && localDateTime.TimeOfDay >= earlyCloseTime;
         }
+
+        /// <summary>
+        /// Gets the previous trading day
+        /// </summary>
+        /// <param name="localDate">The date to start searching at in this exchange's time zones</param>
+        /// <returns>The previous trading day</returns>
+        public DateTime GetPreviousTradingDay(DateTime localDate)
+        {
+            localDate = localDate.AddDays(-1);
+            while (!IsDateOpen(localDate))
+            {
+                localDate = localDate.AddDays(-1);
+            }
+
+            return localDate;
+        }
+
+        /// <summary>
+        /// Gets the next trading day
+        /// </summary>
+        /// <param name="date">The date to start searching at</param>
+        /// <returns>The next trading day</returns>
+        public DateTime GetNextTradingDay(DateTime date)
+        {
+            date = date.AddDays(1);
+            while (!IsDateOpen(date))
+            {
+                date = date.AddDays(1);
+            }
+
+            return date;
+        }
     }
 }
