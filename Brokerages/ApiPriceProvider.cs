@@ -22,17 +22,28 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// An implementation of <see cref="IPriceProvider"/> which uses QC API to fetch price data
     /// </summary>
-    public class QCPriceProvider : IPriceProvider
+    public class ApiPriceProvider : IPriceProvider
     {
-        private readonly IApi _api = new Api.Api();
+        private readonly IApi _api;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="QCPriceProvider"/> class
+        /// Initializes a new instance of the <see cref="ApiPriceProvider"/> class
+        /// </summary>
+        /// <param name="api">The <see cref="IApi"/> instance</param>
+        /// <remarks>The caller is responsible for calling <see cref="IApi.Initialize"/> before</remarks>
+        public ApiPriceProvider(IApi api)
+        {
+            _api = api;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApiPriceProvider"/> class
         /// </summary>
         /// <param name="userId">The QC user id</param>
         /// <param name="userToken">The QC user token</param>
-        public QCPriceProvider(int userId, string userToken)
+        public ApiPriceProvider(int userId, string userToken)
         {
+            _api = new Api.Api();
             _api.Initialize(userId, userToken, "");
         }
 
