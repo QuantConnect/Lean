@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,8 @@ namespace QuantConnect.Indicators
     /// the left and right indicators.
     /// </remarks>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    public class CompositeIndicator<T> : IndicatorBase<T>
-        where T : BaseData, new()
+    public class CompositeIndicator<T> : IndicatorBase<IndicatorDataPoint>
+        where T : IBaseData
     {
         /// <summary>
         /// Delegate type used to compose the output of two indicators into a new value.
@@ -107,7 +107,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>An IndicatorResult object including the status of the indicator</returns>
-        protected override IndicatorResult ValidateAndComputeNextValue(T input)
+        protected override IndicatorResult ValidateAndComputeNextValue(IndicatorDataPoint input)
         {
             return _composer.Invoke(Left, Right);
         }
@@ -120,7 +120,7 @@ namespace QuantConnect.Indicators
         /// </remarks>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(T input)
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             // this should never actually be invoked
             return _composer.Invoke(Left, Right).Value;
@@ -150,7 +150,8 @@ namespace QuantConnect.Indicators
                 // if we have left and right data (or if right is a constant) then we need to update
                 if (newRightData != null || rightIsConstant)
                 {
-                    Update(new T {Time = MaxTime(updated)});
+                    var dataPoint = new IndicatorDataPoint { Time = MaxTime(updated) };
+                    Update(dataPoint);
                     // reset these to null after each update
                     newLeftData = null;
                     newRightData = null;
@@ -164,7 +165,8 @@ namespace QuantConnect.Indicators
                 // if we have left and right data (or if left is a constant) then we need to update
                 if (newLeftData != null || leftIsConstant)
                 {
-                    Update(new T {Time = MaxTime(updated)});
+                    var dataPoint = new IndicatorDataPoint { Time = MaxTime(updated) };
+                    Update(dataPoint);
                     // reset these to null after each update
                     newLeftData = null;
                     newRightData = null;
