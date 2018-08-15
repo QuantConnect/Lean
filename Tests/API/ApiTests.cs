@@ -692,6 +692,31 @@ namespace QuantConnect.Tests.API
             Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
         }
 
+        [Test]
+        public void GetsSplits()
+        {
+            var date = new DateTime(2014, 06, 09);
+            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
+            var splits = _api.GetSplits(date, date);
+            var aapl = splits.Single(s => s.Symbol == AAPL);
+            Assert.AreEqual((1 / 7m).RoundToSignificantDigits(6), aapl.SplitFactor);
+            Assert.AreEqual(date, aapl.Time);
+            Assert.AreEqual(SplitType.SplitOccurred, aapl.Type);
+            Assert.AreEqual(645.57m, aapl.ReferencePrice);
+        }
+
+        [Test]
+        public void GetDividends()
+        {
+            var date = new DateTime(2018, 05, 11);
+            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
+            var dividends = _api.GetDividends(date, date);
+            var aapl = dividends.Single(s => s.Symbol == AAPL);
+            Assert.AreEqual(0.73m, aapl.Distribution);
+            Assert.AreEqual(date, aapl.Time);
+            Assert.AreEqual(190.03m, aapl.ReferencePrice);
+        }
+
         private void Perform_CreateCompileBactest_Tests(string projectName, Language language, string algorithmName, string code)
         {
             //Test create a new project successfully
