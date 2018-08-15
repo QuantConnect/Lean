@@ -94,7 +94,20 @@ namespace QuantConnect.Algorithm
 
                         if (LiveMode && underlyingSecurity.GetLastData() == null)
                         {
-                            requiredHistoryRequests.Add(underlyingSecurity, (Resolution)Math.Max((int)security.Resolution, (int)Resolution.Minute));
+                            if (requiredHistoryRequests.ContainsKey(underlyingSecurity))
+                            {
+                                // lets request the higher resolution
+                                var currentResolutionRequest = requiredHistoryRequests[underlyingSecurity];
+                                if (currentResolutionRequest != Resolution.Minute  // Can not be less than Minute
+                                    && security.Resolution < currentResolutionRequest)
+                                {
+                                    requiredHistoryRequests[underlyingSecurity] = (Resolution)Math.Max((int)security.Resolution, (int)Resolution.Minute);
+                                }
+                            }
+                            else
+                            {
+                                requiredHistoryRequests.Add(underlyingSecurity, (Resolution)Math.Max((int)security.Resolution, (int)Resolution.Minute));
+                            }
                         }
                         // set the underlying security on the derivative -- we do this in two places since it's possible
                         // to do AddOptionContract w/out the underlying already added and normalized properly

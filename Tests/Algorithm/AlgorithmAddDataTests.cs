@@ -143,6 +143,30 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void OnEndOfTimeStepDoesNotThrowWhenSeedsSameUnderlyingForTwoSecurities()
+        {
+            var qcAlgorithm = new QCAlgorithm();
+            qcAlgorithm.SetLiveMode(true);
+            var testHistoryProvider = new TestHistoryProvider();
+            qcAlgorithm.HistoryProvider = testHistoryProvider;
+            var option = qcAlgorithm.AddOption(testHistoryProvider.underlyingSymbol);
+
+            var symbol = Symbol.CreateOption(testHistoryProvider.underlyingSymbol, Market.USA, OptionStyle.American,
+                OptionRight.Call, 1, new DateTime(2015, 12, 24));
+            var symbol2 = Symbol.CreateOption(testHistoryProvider.underlyingSymbol, Market.USA, OptionStyle.American,
+                OptionRight.Put, 1, new DateTime(2015, 12, 24));
+
+            var optionContract = qcAlgorithm.AddOptionContract(symbol, Resolution.Daily);
+            var optionContract2 = qcAlgorithm.AddOptionContract(symbol2, Resolution.Minute);
+
+            qcAlgorithm.OnEndOfTimeStep();
+            var data = qcAlgorithm.Securities[testHistoryProvider.underlyingSymbol].GetLastData();
+            Assert.AreEqual(testHistoryProvider.LastResolutionRequest, Resolution.Minute);
+            Assert.IsNotNull(data);
+            Assert.AreEqual(data.Price, 2);
+        }
+
+        [Test]
         public void PythonCustomDataTypes_AreAddedToSubscriptions_Successfully()
         {
             var qcAlgorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
@@ -195,6 +219,7 @@ namespace QuantConnect.Tests.Algorithm
             public string underlyingSymbol = "GOOG";
             public string underlyingSymbol2 = "AAPL";
             public int DataPointCount { get; }
+            public Resolution LastResolutionRequest;
             public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider,
                 IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
             {
@@ -204,6 +229,7 @@ namespace QuantConnect.Tests.Algorithm
             public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 var now = DateTime.UtcNow;
+                LastResolutionRequest = requests.First().Resolution;
                 var tradeBar1 = new TradeBar(now, underlyingSymbol, 1, 1, 1, 1, 1, TimeSpan.FromDays(1));
                 var tradeBar2 = new TradeBar(now, underlyingSymbol2, 3, 3, 3, 3, 3, TimeSpan.FromDays(1));
                 var slice1 = new Slice(now, new List<BaseData> { tradeBar1, tradeBar2 },
