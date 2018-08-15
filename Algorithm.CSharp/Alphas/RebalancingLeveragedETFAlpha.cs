@@ -23,6 +23,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -34,8 +35,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 	/// <meta name="tag" content="alphastream" />
 	/// <meta name="tag" content="algorithm framework" />
 	/// <meta name="tag" content="etf" />
-	public class RebalancingLeveragedETFAlpha : QCAlgorithmFramework
-	{
+	public class RebalancingLeveragedETFAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    {
 		private readonly List<ETFGroup> Groups = new List<ETFGroup>();
 
 		public override void Initialize()
@@ -45,12 +46,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 			SetCash(100000);
 
 			var underlying = new List<string> 	{"SPY","QLD","DIA","IJR","MDY","IWM","QQQ","IYE","EEM","IYW","EFA","GAZB","SLV","IEF","IYM","IYF","IYH","IYR","IYC","IBB","FEZ","USO","TLT"};
-			var ultra = new List<string> 		{"SSO","UGL","DDM","SAA","MZZ","UWM","QLD","DIG","EET","ROM","EFO","BOIL","AGQ","UST","UYM","UYG","RXL","URE","UCC","BIB","ULE","UCO","UBT"};
+			var ultraLong = new List<string> 	{"SSO","UGL","DDM","SAA","MZZ","UWM","QLD","DIG","EET","ROM","EFO","BOIL","AGQ","UST","UYM","UYG","RXL","URE","UCC","BIB","ULE","UCO","UBT"};
 			var ultraShort = new List<string> 	{"SDS","GLL","DXD","SDD","MVV","TWM","QID","DUG","EEV","REW","EFU","KOLD","ZSL","PST","SMN","SKF","RXD","SRS","SCC","BIS","EPV","SCO","TBT"};
 
 			for (var i = 0; i < underlying.Count; i++)
 			{
-				Groups.Add(new ETFGroup(AddEquity(underlying[i]).Symbol, AddEquity(ultra[i]).Symbol, AddEquity(ultraShort[i]).Symbol));
+				Groups.Add(new ETFGroup(AddEquity(underlying[i]).Symbol, AddEquity(ultraLong[i]).Symbol, AddEquity(ultraShort[i]).Symbol));
 			}
 
 			// Manually curated universe
@@ -64,7 +65,42 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 			SetExecution(new ImmediateExecutionModel());
 			SetRiskManagement(new NullRiskManagementModel());
 		}
-	}
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = false;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2465"},
+            {"Average Win", "0.26%"},
+            {"Average Loss", "-0.24%"},
+            {"Compounding Annual Return", "8.143%"},
+            {"Drawdown", "17.600%"},
+            {"Expectancy", "0.036"},
+            {"Net Profit", "9.582%"},
+            {"Sharpe Ratio", "0.505"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "1.07"},
+            {"Alpha", "0.58"},
+            {"Beta", "-24.276"},
+            {"Annual Standard Deviation", "0.191"},
+            {"Annual Variance", "0.036"},
+            {"Information Ratio", "0.401"},
+            {"Tracking Error", "0.191"},
+            {"Treynor Ratio", "-0.004"},
+            {"Total Fees", "$9056.88"}
+        };
+    }
 
 	/// <summary>
 	/// If the underlying ETF has experienced a return >= 1% since the previous day's close up to the current time at 14:15,

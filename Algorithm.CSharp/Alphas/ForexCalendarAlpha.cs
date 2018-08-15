@@ -26,6 +26,7 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
@@ -34,8 +35,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 	// This demonstration alpha reads the DailyFx calendar and provides insights based upon
 	// the news outlook for the country associated currency pairs
 	// </summary>
-	public class ForexCalendarAlpha : QCAlgorithmFramework
-	{
+	public class ForexCalendarAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    {
 
 		public override void Initialize()
 		{
@@ -69,7 +70,43 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
 		//we create a DailyFx event handler but insights will be produced in the Alpha Model
 		public void OnData(DailyFx data) { }
-	}
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = false;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "647"},
+            {"Average Win", "0.07%"},
+            {"Average Loss", "-0.03%"},
+            {"Compounding Annual Return", "2.958%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "1.008"},
+            {"Net Profit", "9.285%"},
+            {"Sharpe Ratio", "1.572"},
+            {"Loss Rate", "43%"},
+            {"Win Rate", "57%"},
+            {"Profit-Loss Ratio", "2.50"},
+            {"Alpha", "0.051"},
+            {"Beta", "-1.878"},
+            {"Annual Standard Deviation", "0.014"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0.5"},
+            {"Tracking Error", "0.014"},
+            {"Treynor Ratio", "-0.012"},
+            {"Total Fees", "$0.00"}
+        };
+    }
 
 	/// <summary>
 	/// Generate Forex Insights for High Impact Calendar Events.
@@ -84,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
    		public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
 		{
 			var insights = new List<Insight>();
-			var period = TimeSpan.FromMinutes(60);
+			var period = TimeSpan.FromMinutes(5);
 			var magnitude = 0.0005;
 
 	   		// We will create our insights when we recieve news

@@ -115,3 +115,4 @@ class ETFGroup:
         self.underlying = underlying
         self.ultraLong = ultraLong
         self.ultraShort = ultraShort
+        self.yesterdayClose = 0
