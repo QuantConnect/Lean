@@ -44,7 +44,16 @@ class ForexCalendarAlgorithm(QCAlgorithmFramework):
                    Symbol.Create("USDCHF", SecurityType.Forex, Market.Oanda),
                    Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
                    Symbol.Create("USDCAD", SecurityType.Forex, Market.Oanda),
-                   Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda)]
+                   Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("AUDJPY", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("EURAUD", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("GBPJPY", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda),
+                   Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda)]
 
         # Initializes the class that provides DailyFx News
         self.AddData(DailyFx, "DFX", Resolution.Minute, TimeZones.Utc)

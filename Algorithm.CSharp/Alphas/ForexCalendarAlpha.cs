@@ -50,7 +50,16 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 								QuantConnect.Symbol.Create("USDCHF", SecurityType.Forex, Market.Oanda),
 								QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
 								QuantConnect.Symbol.Create("USDCAD", SecurityType.Forex, Market.Oanda),
-								QuantConnect.Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda)};
+								QuantConnect.Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("AUDJPY", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("EURAUD", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("GBPJPY", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda),
+                                QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda)};
 
 			// Initializes the class that provides DailyFx news
 			AddData<DailyFx>("DFX", Resolution.Minute, DateTimeZone.Utc);
