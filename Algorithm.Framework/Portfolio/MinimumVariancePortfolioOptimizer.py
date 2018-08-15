@@ -35,27 +35,30 @@ class MinimumVariancePortfolioOptimizer:
         self.maximum_weight = maximum_weight
         self.target_return = target_return
 
-    def Optimize(self, historicalReturns, expectedReturns = None):
+    def Optimize(self, historicalReturns, expectedReturns = None, covariance = None):
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
             historicalReturns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
             expectedReturns: Array of double with the portfolio annualized expected returns (size: K x 1).
+            covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).
         Returns:
             Array of double with the portfolio weights (size: K x 1)
         '''
+        if covariance is None:
+            covariance = historicalReturns.cov()
         if expectedReturns is None:
             expectedReturns = historicalReturns.mean()
 
-        cov = historicalReturns.cov()
         size = historicalReturns.columns.size   # K x 1
+        x0 = np.array(size * [1. / size])
 
         constraints = [
             {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)},
             {'type': 'eq', 'fun': lambda weights: self.get_target_constraint(weights, expectedReturns)}]
 
-        opt = minimize(lambda weights: self.portfolio_variance(weights, cov),     # Objective function
-                       self.get_initial_guess(size),                              # Initial guess
+        opt = minimize(lambda weights: self.portfolio_variance(weights, covariance),     # Objective function
+                       x0,                                                        # Initial guess
                        bounds = self.get_boundary_conditions(size),               # Bounds for variables
                        constraints = constraints,                                 # Constraints definition
                        method='SLSQP')        # Optimization method:  Sequential Least SQuares Programming
@@ -66,11 +69,10 @@ class MinimumVariancePortfolioOptimizer:
         Args:
             weighs: Portfolio weights
             covariance: Covariance matrix of historical returns'''
-        return np.dot(weights.T, np.dot(covariance, weights))
-
-    def get_initial_guess(self, size):
-        '''Computes an equally weighted portfolio'''
-        return np.array(size * [1. / size])
+        variance = np.dot(weights.T, np.dot(covariance, weights))
+        if variance == 0:
+            raise ValueError(f'MinimumVariancePortfolioOptimizer.portfolio_variance: Volatility cannot be zero. Weights: {weights}')
+        return variance
 
     def get_boundary_conditions(self, size):
         '''Creates the boundary condition for the portfolio weights'''

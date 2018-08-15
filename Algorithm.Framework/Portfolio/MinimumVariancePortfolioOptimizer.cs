@@ -81,11 +81,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="historicalReturns">Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
         /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
+        /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null)
+        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
         {
-            var cov = historicalReturns.Covariance();
-            var size = cov.GetLength(0);
+            covariance = covariance ?? historicalReturns.Covariance();
+            var size = covariance.GetLength(0);
             var returns = expectedReturns ?? historicalReturns.Mean(0);
 
             var constraints = new List<LinearConstraint>
@@ -106,7 +107,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             constraints.AddRange(GetBoundaryConditions(size));
 
             // Setup solver
-            var optfunc = new QuadraticObjectiveFunction(cov, Vector.Create(size, 0.0));
+            var optfunc = new QuadraticObjectiveFunction(covariance, Vector.Create(size, 0.0));
             var solver = new GoldfarbIdnani(optfunc, constraints);
 
             // Solve problem
