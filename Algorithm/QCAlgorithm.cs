@@ -518,16 +518,9 @@ namespace QuantConnect.Algorithm
             {
                 if (_benchmarkSymbol != null)
                 {
-                    // if the requested benchmark symbol wasn't already added, then add it now
-                    // we do a simple compare here for simplicity, also it avoids confusion over
-                    // the desired market.
-                    Security security;
-                    if (!Securities.TryGetValue(_benchmarkSymbol, out security))
-                    {
-                        // add the security as an internal feed so the algorithm doesn't receive the data
-                        security = CreateBenchmarkSecurity();
-                        AddToUserDefinedUniverse(security);
-                    }
+                    // add the security to its own universe as an internal feed so the algorithm doesn't receive the data
+                    var security = CreateBenchmarkSecurity();
+                    AddToBenchmarkUniverse(security);
 
                     // just return the current price
                     Benchmark = new SecurityBenchmark(security);
@@ -1704,15 +1697,6 @@ namespace QuantConnect.Algorithm
                 if (universe != null)
                 {
                     universe.Remove(symbol);
-
-                    // if we are removing the symbol which is also the benchmark, add it back as internal feed
-                    if (symbol == _benchmarkSymbol)
-                    {
-                        Securities.Remove(symbol);
-
-                        security = CreateBenchmarkSecurity();
-                        AddToUserDefinedUniverse(security);
-                    }
 
                     SubscriptionManager.HasCustomData = universe.Members.Any(x => x.Value.Subscriptions.Any(y => y.IsCustomData));
                 }

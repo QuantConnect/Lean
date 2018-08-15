@@ -433,6 +433,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds the benchmark security to the benchmark universe
+        /// </summary>
+        private void AddToBenchmarkUniverse(Security security)
+        {
+            var universeSymbol = BenchmarkUniverse.CreateSymbol(security.Type, security.Symbol.ID.Market);
+
+            Universe universe;
+            if (!UniverseManager.TryGetValue(universeSymbol, out universe))
+            {
+                var objectType = SubscriptionManager.LookupSubscriptionConfigDataTypes(security.Type, security.Resolution, false).First().Item1;
+                var marketHoursDbEntry = MarketHoursDatabase.GetEntry(security.Symbol.ID.Market, security.Symbol.Value, security.Type);
+                var dataTimeZone = marketHoursDbEntry.DataTimeZone;
+                var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
+                var config = new SubscriptionDataConfig(objectType, universeSymbol, security.Resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
+                universe = new BenchmarkUniverse(config);
+
+                UniverseManager.Add(universeSymbol, universe);
+            }
+
+            var benchmarkUniverse = universe as BenchmarkUniverse;
+            benchmarkUniverse?.AddBenchmarkSecurity(UtcTime, security);
+        }
+
+        /// <summary>
         /// Adds the security to the user defined universe for the specified
         /// </summary>
         private void AddToUserDefinedUniverse(Security security)

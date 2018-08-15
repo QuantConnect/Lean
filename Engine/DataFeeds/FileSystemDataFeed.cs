@@ -337,7 +337,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = request.Configuration;
 
             // define our data enumerator
-            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataProvider);
+            var factory = GetEnumeratorFactory(request);
+            if (factory == null) return null;
+
+            var enumerator = factory.CreateEnumerator(request, _dataProvider);
 
             var firstLoopCount = 5;
             var lowerThreshold = GetLowerThreshold(config.Resolution);
@@ -366,6 +369,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (request.IsUniverseSubscription)
             {
+                var benchmarkUniverse = request.Universe as BenchmarkUniverse;
+                if (benchmarkUniverse != null)
+                {
+                    // Trigger universe selection when benchmark security added
+                    benchmarkUniverse.CollectionChanged += (sender, args) =>
+                    {
+                        if (args.Action != NotifyCollectionChangedAction.Add) return;
+
+                        var items = args.NewItems;
+                        if (items == null) return;
+
+                        var symbol = items.OfType<Symbol>().FirstOrDefault();
+                        if (symbol == null) return;
+
+                        var collection = new BaseDataCollection(_algorithm.UtcTime, symbol);
+                        _universeSelection.ApplyUniverseSelection(benchmarkUniverse, _algorithm.UtcTime, collection);
+                    };
+
+                    return null;
+                }
+
                 if (request.Universe is ITimeTriggeredUniverse)
                 {
                     var universe = request.Universe as UserDefinedUniverse;

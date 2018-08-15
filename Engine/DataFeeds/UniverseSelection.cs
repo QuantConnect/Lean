@@ -22,7 +22,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -238,10 +237,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
-                if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+                if (!pendingAdditions.TryGetValue(symbol, out security))
                 {
-                    security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
-                    pendingAdditions.Add(symbol, security);
+                    security = universe.GetSecurity(symbol, _algorithm);
+                    if (security == null)
+                    {
+                        security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
+                        pendingAdditions.Add(symbol, security);
+                    }
                 }
 
                 var addedSubscription = false;
