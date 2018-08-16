@@ -67,12 +67,27 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Determines whether or not the specified security can be removed from
+        /// this universe. This is useful to prevent securities from being taken
+        /// out of a universe before the algorithm has had enough time to make
+        /// decisions on the security
+        /// </summary>
+        /// <param name="utcTime">The current utc time</param>
+        /// <param name="security">The security to check if its ok to remove</param>
+        /// <returns>True if we can remove the security, false otherwise</returns>
+        public override bool CanRemoveMember(DateTime utcTime, Security security)
+        {
+            // never allow removal of the benchmark security
+            return false;
+        }
+
+        /// <summary>
         /// Adds the specified symbol to this universe
         /// </summary>
         /// <param name="utcTime">The current UTC time</param>
         /// <param name="security">The symbol to be added to this universe</param>
         /// <returns>True if the symbol was added, false if it was already present</returns>
-        public bool AddBenchmarkSecurity(DateTime utcTime, Security security)
+        public bool SetBenchmarkSecurity(DateTime utcTime, Security security)
         {
             if (AddMember(utcTime, security))
             {
@@ -88,8 +103,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="e">The notify collection changed event arguments</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
-            handler?.Invoke(this, e);
+            CollectionChanged?.Invoke(this, e);
         }
 
         /// <summary>

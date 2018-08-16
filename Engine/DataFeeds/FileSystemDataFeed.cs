@@ -338,7 +338,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // define our data enumerator
             var factory = GetEnumeratorFactory(request);
-            if (factory == null) return null;
+            if (factory == null)
+            {
+                // Subscription not required for this universe type (e.g. benchmark universe)
+                return null;
+            }
 
             var enumerator = factory.CreateEnumerator(request, _dataProvider);
 
@@ -363,7 +367,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Creates the correct enumerator factory for the given request
+        /// Creates the correct enumerator factory for the given request.
+        /// Returns null if a subscription should not be created for this request.
         /// </summary>
         private ISubscriptionEnumeratorFactory GetEnumeratorFactory(SubscriptionRequest request)
         {
@@ -387,6 +392,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _universeSelection.ApplyUniverseSelection(benchmarkUniverse, _algorithm.UtcTime, collection);
                     };
 
+                    // we don't need a subscription for the benchmark universe,
+                    // since universe selection only needs to run once,
+                    // when we set the benchmark security.
                     return null;
                 }
 

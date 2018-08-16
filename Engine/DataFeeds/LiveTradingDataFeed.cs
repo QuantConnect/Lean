@@ -172,7 +172,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 ? CreateUniverseSubscription(request)
                 : CreateSubscription(request);
 
-            // for some reason we couldn't create the subscription
+            // for some reason we couldn't create the subscription,
+            // or subscription not required (e.g. benchmark universe)
             if (subscription == null)
             {
                 if (!request.IsUniverseSubscription)
@@ -616,6 +617,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _universeSelection.ApplyUniverseSelection(benchmarkUniverse, _frontierUtc, collection);
                 };
 
+                // Subscription not required for the benchmark universe
                 return null;
             }
 

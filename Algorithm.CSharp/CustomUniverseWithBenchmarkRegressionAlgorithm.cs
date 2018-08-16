@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -27,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
         private const int ExpectedLeverage = 2;
-        private const int ExpectedDataPoints = 4;
+        private const int ExpectedDataPoints = 2;
         private int _actualDatapoints;
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 4, 6);    //Set End Date
             SetCash(100000);           //Set End Date
 
-            AddUniverse("my-universe", x => new List<string> { "SPY" });
+            AddUniverse("my-universe", x => x.Day > 3 ? new List<string> {"SPY"} : Enumerable.Empty<string>());
 
             SetBenchmark("SPY");
         }
@@ -95,22 +96,22 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-74.620%"},
-            {"Drawdown", "1.300%"},
+            {"Compounding Annual Return", "-87.866%"},
+            {"Drawdown", "1.700%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-1.121%"},
-            {"Sharpe Ratio", "-7.177"},
+            {"Net Profit", "-1.719%"},
+            {"Sharpe Ratio", "-7.937"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.123"},
-            {"Beta", "0.938"},
-            {"Annual Standard Deviation", "0.098"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-7.799"},
-            {"Tracking Error", "0.011"},
-            {"Treynor Ratio", "-0.752"},
-            {"Total Fees", "$2.87"}
+            {"Alpha", "-0.309"},
+            {"Beta", "1.247"},
+            {"Annual Standard Deviation", "0.136"},
+            {"Annual Variance", "0.019"},
+            {"Information Ratio", "-9.576"},
+            {"Tracking Error", "0.048"},
+            {"Treynor Ratio", "-0.868"},
+            {"Total Fees", "$2.86"}
         };
     }
 }

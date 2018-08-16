@@ -453,7 +453,12 @@ namespace QuantConnect.Algorithm
             }
 
             var benchmarkUniverse = universe as BenchmarkUniverse;
-            benchmarkUniverse?.AddBenchmarkSecurity(UtcTime, security);
+            if (benchmarkUniverse == null)
+            {
+                throw new Exception($"Expected BenchmarkUniverse with symbol {universeSymbol} but received {universe.GetType().FullName}");
+            }
+
+            benchmarkUniverse.SetBenchmarkSecurity(UtcTime, security);
         }
 
         /// <summary>
