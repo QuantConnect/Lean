@@ -46,20 +46,19 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
 			// Selects a universe of popular currency pairs with USD
 			var symbols = new[] { QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
-								QuantConnect.Symbol.Create("USDJPY", SecurityType.Forex, Market.Oanda),
-								QuantConnect.Symbol.Create("USDCHF", SecurityType.Forex, Market.Oanda),
-								QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
-								QuantConnect.Symbol.Create("USDCAD", SecurityType.Forex, Market.Oanda),
-								QuantConnect.Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("AUDJPY", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("EURAUD", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("GBPJPY", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda),
-                                QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda)};
+		                          QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("EURAUD", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("USDJPY", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("USDCHF", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("USDCAD", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("AUDJPY", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("GBPJPY", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
+		                          QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda)};
 
 			// Initializes the class that provides DailyFx news
 			AddData<DailyFx>("DFX", Resolution.Minute, DateTimeZone.Utc);
@@ -95,24 +94,24 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "647"},
-            {"Average Win", "0.07%"},
-            {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "2.958%"},
+            {"Total Trades", "1426"},
+            {"Average Win", "0.05%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "4.988%"},
             {"Drawdown", "0.700%"},
-            {"Expectancy", "1.008"},
-            {"Net Profit", "9.285%"},
-            {"Sharpe Ratio", "1.572"},
-            {"Loss Rate", "43%"},
-            {"Win Rate", "57%"},
-            {"Profit-Loss Ratio", "2.50"},
-            {"Alpha", "0.051"},
-            {"Beta", "-1.878"},
-            {"Annual Standard Deviation", "0.014"},
+            {"Expectancy", "1.779"},
+            {"Net Profit", "15.982%"},
+            {"Sharpe Ratio", "2.135"},
+            {"Loss Rate", "49%"},
+            {"Win Rate", "51%"},
+            {"Profit-Loss Ratio", "4.48"},
+            {"Alpha", "0.076"},
+            {"Beta", "-2.48"},
+            {"Annual Standard Deviation", "0.018"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0.5"},
-            {"Tracking Error", "0.014"},
-            {"Treynor Ratio", "-0.012"},
+            {"Information Ratio", "1.261"},
+            {"Tracking Error", "0.018"},
+            {"Treynor Ratio", "-0.015"},
             {"Total Fees", "$0.00"}
         };
     }
