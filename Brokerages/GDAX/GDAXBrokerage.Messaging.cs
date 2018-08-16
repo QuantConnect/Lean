@@ -14,7 +14,6 @@
 */
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -60,10 +59,8 @@ namespace QuantConnect.Brokerages.GDAX
         private string _pendingGdaxMarketOrderId;
         private int _pendingLeanMarketOrderId;
 
-        /// <summary>
-        /// Rest client used to call missing conversion rates
-        /// </summary>
-        public IRestClient RateClient { get; set; }
+        private readonly IPriceProvider _priceProvider;
+
         #endregion
 
         /// <summary>
@@ -86,13 +83,15 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="apiSecret">api secret</param>
         /// <param name="passPhrase">pass phrase</param>
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
-        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
+        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
+        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
+            IPriceProvider priceProvider)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _algorithm = algorithm;
-            RateClient = new RestClient("http://data.fixer.io/api/latest?base=usd&access_key=26a2eb9f13db3f14b6df6ec2379f9261");
+            _priceProvider = priceProvider;
 
             WebSocket.Open += (sender, args) =>
             {
@@ -569,7 +568,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 while (true)
                 {
-                    var rate = GetConversionRate(symbol.Value.Replace("USD", ""));
+                    var rate = GetConversionRate(symbol);
 
                     lock (TickLocker)
                     {
@@ -590,24 +589,17 @@ namespace QuantConnect.Brokerages.GDAX
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        private decimal GetConversionRate(string currency)
+        private decimal GetConversionRate(Symbol symbol)
         {
-            var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            try
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: error returned from conversion rate service."));
+                return _priceProvider.GetLastPrice(symbol);
+            }
+            catch (Exception e)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: {e.Message}"));
                 return 0;
             }
-
-            var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
-            var rate = raw.SelectToken("rates." + currency).Value<decimal>();
-            if (rate == 0)
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: zero value returned from conversion rate service."));
-                return 0;
-            }
-
-            return 1m / rate;
         }
 
         private bool IsSubscribeAvailable(Symbol symbol)

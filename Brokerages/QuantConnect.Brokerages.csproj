@@ -191,6 +191,7 @@
     <Compile Include="GDAX\OrderBook.cs" />
     <Compile Include="IWebSocket.cs" />
     <Compile Include="GDAX\Messages.cs" />
+    <Compile Include="ApiPriceProvider.cs" />
     <Compile Include="WebSocketError.cs" />
     <Compile Include="WebSocketMessage.cs" />
     <Compile Include="WebSocketWrapper.cs" />
@@ -552,6 +553,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
+      <Project>{C5D44209-49A0-4505-A870-043C5EF5FDDF}</Project>
+      <Name>QuantConnect.Api</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
       <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
       <Name>QuantConnect</Name>

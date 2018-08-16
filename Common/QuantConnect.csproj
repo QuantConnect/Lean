@@ -197,6 +197,7 @@
     <Compile Include="Exceptions\ScheduledEventExceptionInterpreter.cs" />
     <Compile Include="Exceptions\UnsupportedOperandPythonExceptionInterpreter.cs" />
     <Compile Include="Interfaces\IAlgorithmSettings.cs" />
+    <Compile Include="Interfaces\IPriceProvider.cs" />
     <Compile Include="Interfaces\IFutureChainProvider.cs" />
     <Compile Include="Interfaces\IRegressionAlgorithmDefinition.cs" />
     <Compile Include="Interfaces\ITimeInForceHandler.cs" />

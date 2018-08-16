@@ -62,8 +62,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var apiSecret = Config.Get("gdax-api-secret");
             var passPhrase = Config.Get("gdax-passphrase");
             var algorithm = new QCAlgorithm();
+            var userId = Config.GetInt("job-user-id");
+            var userToken = Config.Get("api-access-token");
+            var priceProvider = new ApiPriceProvider(userId, userToken);
 
-            var brokerage = new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm);
+            var brokerage = new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider);
             brokerage.Connect();
 
             return brokerage;
