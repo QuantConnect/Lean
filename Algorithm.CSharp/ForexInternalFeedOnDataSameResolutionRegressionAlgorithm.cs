@@ -76,7 +76,8 @@ namespace QuantConnect.Algorithm.CSharp
                 // normal feed
                 { "EURGBP", 3 },
                 // internal feed on the first day, normal feed on the other two days
-                { "EURUSD", 2 },
+                // TODO: should be 2, will be fixed with a new dedicated universe for internal currency feeds
+                { "EURUSD", 3 },
                 // internal feed only
                 { "GBPUSD", 0 }
             };

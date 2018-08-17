@@ -54,8 +54,9 @@ namespace QuantConnect.Algorithm.CSharp
             // expect GOOG equity
             _expectedData.Add(goog.Symbol);
             _expectedSecurities.Add(goog.Symbol);
-            // expect user defined universe holding GOOG equity
+            // expect user defined universe holding GOOG equity + benchmark universe
             _expectedUniverses.Add(UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA));
+            _expectedUniverses.Add(BenchmarkUniverse.CreateSymbol(SecurityType.Equity, Market.USA));
         }
 
         public override void OnData(Slice data)
