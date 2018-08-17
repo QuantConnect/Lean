@@ -60,10 +60,6 @@ namespace QuantConnect.Lean.Engine.Results
         private double _lastDaysProcessed = 1;
         private bool _processingFinalPacket;
 
-        //Debug variables:
-        private const int DebugMessageMin = 100;
-        private int _debugMessageMax = 10;
-
         //Processing Time:
         private readonly DateTime _startTime = DateTime.Now;
         private DateTime _nextSample;
@@ -443,11 +439,6 @@ namespace QuantConnect.Lean.Engine.Results
             _jobDays = Algorithm.Securities.Count > 0
                 ? Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish)
                 : Convert.ToInt32((_job.PeriodFinish.Date - _job.PeriodStart.Date).TotalDays) + 1;
-
-            //Setup Debug Messaging:
-            _debugMessageMax = Convert.ToInt32(10 * _jobDays);
-            //Minimum 100 messages per backtest:
-            if (_debugMessageMax < DebugMessageMin) _debugMessageMax = DebugMessageMin;
 
             //Set the security / market types.
             var types = new List<SecurityType>();
