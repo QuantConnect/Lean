@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Benchmarks
 {
@@ -22,6 +23,16 @@ namespace QuantConnect.Benchmarks
     /// </summary>
     public class CompoundingAnnualReturnBenchmark : FuncBenchmark
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompoundingAnnualReturnBenchmark"/> class
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="annualReturnPercentage">The compounding annual return percentage</param>
+        public CompoundingAnnualReturnBenchmark(IAlgorithm algorithm, decimal annualReturnPercentage = 0.02m)
+            : this(algorithm.StartDate, algorithm.Portfolio.TotalPortfolioValue, annualReturnPercentage)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CompoundingAnnualReturnBenchmark"/> class
         /// </summary>
@@ -38,3 +49,4 @@ namespace QuantConnect.Benchmarks
         }
     }
 }
+

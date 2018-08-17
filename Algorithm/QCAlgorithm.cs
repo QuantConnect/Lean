@@ -1077,6 +1077,16 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the specified implementation as the benchmark, this function provides the value of
+        /// the benchmark at each date/time requested
+        /// </summary>
+        /// <param name="benchmark">The benchmark instance</param>
+        public void SetBenchmark(IBenchmark benchmark)
+        {
+            Benchmark = benchmark;
+        }
+
+        /// <summary>
         /// Benchmark
         /// </summary>
         /// <remarks>Use Benchmark to override default symbol based benchmark, and create your own benchmark. For example a custom moving average benchmark </remarks>
