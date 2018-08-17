@@ -527,13 +527,7 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    var start = StartDate;
-                    var startingCapital = Portfolio.TotalPortfolioValue;
-                    Benchmark = new FuncBenchmark(dt =>
-                    {
-                        var years = (dt - start).TotalDays / 365.25;
-                        return startingCapital * (decimal) Math.Exp(0.02 * years);
-                    });
+                    Benchmark = new CompoundingAnnualReturnBenchmark(StartDate, Portfolio.TotalPortfolioValue);
                 }
             }
 
