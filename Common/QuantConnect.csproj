@@ -177,6 +177,9 @@
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
+    <Compile Include="Chart.cs" />
+    <Compile Include="ChartPoint.cs" />
+    <Compile Include="Series.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
@@ -503,7 +506,6 @@
     <Compile Include="Data\Consolidators\IdentityDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\SequentialConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidator.cs" />
-    <Compile Include="Charting.cs" />
     <Compile Include="Orders\OrderEvent.cs" />
     <Compile Include="Packets\AlgorithmNodePacket.cs" />
     <Compile Include="Packets\AlgorithmStatusPacket.cs" />
