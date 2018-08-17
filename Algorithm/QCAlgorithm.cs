@@ -1987,6 +1987,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private Security CreateBenchmarkSecurity()
         {
+            // check if the benchmark symbol specified can be used as a benchmark
+            ValidateBenchmarkSymbol(_benchmarkSymbol);
+
             // add the security as an internal feed so the algorithm doesn't receive the data
             Resolution resolution;
             if (_liveMode)
@@ -2006,6 +2009,20 @@ namespace QuantConnect.Algorithm
                 resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
             }
             return SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
+        }
+
+        /// <summary>
+        /// Checks if the symbol can be used as a benchmark and throws if not
+        /// </summary>
+        private static void ValidateBenchmarkSymbol(Symbol symbol)
+        {
+            var invalidSecurityTypes = new[] { SecurityType.Future, SecurityType.Option };
+
+            var securityType = symbol.SecurityType;
+            if (invalidSecurityTypes.Contains(securityType))
+            {
+                throw new Exception($"Invalid security type for benchmark symbol: {securityType}");
+            }
         }
 
         /// <summary>
