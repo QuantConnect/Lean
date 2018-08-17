@@ -267,9 +267,10 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Writes this row to csv format
         /// </summary>
-        public string ToCsv()
+        public string ToCsv(string source = null)
         {
-            return $"{Date.ToString(DateFormat.EightCharacter)},{PriceFactor.Normalize()},{SplitFactor.Normalize()},{ReferencePrice.Normalize()}";
+            source = source == null ? "" : $",{source}";
+            return $"{Date.ToString(DateFormat.EightCharacter)},{PriceFactor.Normalize()},{SplitFactor.Normalize()},{ReferencePrice.Normalize()}{source}";
         }
 
         /// <summary>
