@@ -516,19 +516,17 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
-                if (_benchmarkSymbol != null)
+                if (_benchmarkSymbol == null)
                 {
-                    // add the security to its own universe as an internal feed so the algorithm doesn't receive the data
-                    var security = CreateBenchmarkSecurity();
-                    AddToBenchmarkUniverse(security);
+                    _benchmarkSymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+                }
 
-                    // just return the current price
-                    Benchmark = new SecurityBenchmark(security);
-                }
-                else
-                {
-                    Benchmark = new CompoundingAnnualReturnBenchmark(StartDate, Portfolio.TotalPortfolioValue);
-                }
+                // add the security to its own universe as an internal feed so the algorithm doesn't receive the data
+                var security = CreateBenchmarkSecurity();
+                AddToBenchmarkUniverse(security);
+
+                // just return the current price
+                Benchmark = new SecurityBenchmark(security);
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
