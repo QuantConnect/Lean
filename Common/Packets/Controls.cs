@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
@@ -73,6 +72,12 @@ namespace QuantConnect.Packets
         public int BacktestingMaxInsights;
 
         /// <summary>
+        /// Limits the amount of data points per chart series. Applies only for backtesting
+        /// </summary>
+        [JsonProperty(PropertyName = "iMaximumDataPointsPerChartSeries")]
+        public int MaximumDataPointsPerChartSeries;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -85,6 +90,7 @@ namespace QuantConnect.Packets
             DailyLogLimit = 3000000;
             RemainingLogAllowance = 10000;
             BacktestingMaxInsights = 10000;
+            MaximumDataPointsPerChartSeries = 4000;
         }
 
         /// <summary>

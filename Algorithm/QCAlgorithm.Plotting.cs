@@ -192,15 +192,7 @@ namespace QuantConnect.Algorithm
                 thisChart.AddSeries(new Series(series, SeriesType.Line, 0, "$"));
             }
 
-            var thisSeries = thisChart.Series[series];
-            if (thisSeries.Values.Count < 4000 || _liveMode)
-            {
-                thisSeries.AddPoint(UtcTime, value, _liveMode);
-            }
-            else
-            {
-                Debug("Exceeded maximum points per chart, data skipped.");
-            }
+            thisChart.Series[series].AddPoint(UtcTime, value);
         }
 
         /// <summary>

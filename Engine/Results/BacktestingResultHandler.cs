@@ -666,8 +666,17 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                             else
                             {
-                                //We already have this record, so just the new samples to the end:
-                                chart.Series[series.Name].Values.AddRange(series.Values);
+                                var values = chart.Series[series.Name].Values;
+                                if ((values.Count + series.Values.Count) <= _job.Controls.MaximumDataPointsPerChartSeries) // check chart data point limit first
+                                {
+                                    //We already have this record, so just the new samples to the end:
+                                    values.AddRange(series.Values);
+                                }
+                                else
+                                {
+                                    DebugMessage($"Exceeded maximum data points per series, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. " +
+                                                 $"Limit is currently set at {_job.Controls.MaximumDataPointsPerChartSeries}");
+                                }
                             }
                         }
                     }

@@ -96,7 +96,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _dailyInsightCountPerSymbol.Clear();
 
                 // add sum of daily insight counts to the total insight count series
-                _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, sumInsights, _liveMode);
+                _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, sumInsights);
 
                 // populate charts with the total insight counts per symbol, no need to reset
                 PopulateChartWithSeriesPerSymbol(_insightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Pie, frontierTimeUtc);
@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                         foreach (var scoreType in InsightManager.ScoreTypes)
                         {
                             var score = 100 * _statisticsManager.Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                            _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, (decimal)score, _liveMode);
+                            _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, (decimal)score);
                         }
                         _nextChartSampleAlgorithmTimeUtc = frontierTimeUtc + SampleInterval;
                     }
@@ -212,7 +212,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 }
 
                 sum += count;
-                series.AddPoint(frontierTimeUtc, count, _liveMode);
+                series.AddPoint(frontierTimeUtc, count);
             }
             return sum;
         }

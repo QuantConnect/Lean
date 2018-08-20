@@ -196,15 +196,8 @@ namespace QuantConnect
         /// </summary>
         /// <param name="time">Time of the chart point</param>
         /// <param name="value">Value of the chart point</param>
-        /// <param name="liveMode">This is a live mode point</param>
-        public void AddPoint(DateTime time, decimal value, bool liveMode = false)
+        public void AddPoint(DateTime time, decimal value)
         {
-            if (Values.Count >= 4000 && !liveMode)
-            {
-                // perform rate limiting in backtest mode
-                return;
-            }
-
             var chartPoint = new ChartPoint(time, value);
             if (Values.Count > 0 && Values[Values.Count - 1].x == chartPoint.x)
             {
