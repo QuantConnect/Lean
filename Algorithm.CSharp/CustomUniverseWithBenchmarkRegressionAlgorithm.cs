@@ -15,27 +15,36 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm is a test case for validation of conversion rates during warm up.
+    /// Regression algorithm with a custom universe and benchmark, both using the same security.
     /// </summary>
-    public class WarmupConversionRatesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomUniverseWithBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private const int ExpectedLeverage = 2;
+        private const int ExpectedDataPoints = 2;
+        private int _actualDatapoints;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2018, 4, 1);
-            SetEndDate(2018, 4, 15);
-            SetCash(10000);
+            UniverseSettings.Resolution = Resolution.Daily;
 
-            SetWarmUp(5);
-            AddCrypto("BTCUSD", Resolution.Daily);
+            SetStartDate(2014, 4, 2);  //Set Start Date
+            SetEndDate(2014, 4, 6);    //Set End Date
+            SetCash(100000);           //Set End Date
+
+            AddUniverse("my-universe", x => x.Day > 3 ? new List<string> {"SPY"} : Enumerable.Empty<string>());
+
+            SetBenchmark("SPY");
         }
 
         /// <summary>
@@ -44,17 +53,29 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            var conversionRate = Portfolio.CashBook["BTC"].ConversionRate;
-            if (conversionRate == 0)
+            Securities.Security security;
+            if (!Securities.TryGetValue(_spy, out security))
+                return;
+
+            _actualDatapoints++;
+
+            if (security.Leverage != ExpectedLeverage)
             {
-                throw new Exception("Conversion rate for BTC should not be zero.");
+                throw new Exception($"Leverage error - expected: {ExpectedLeverage}, actual: {security.Leverage}");
             }
-            if (!Portfolio.Invested && !IsWarmingUp)
+
+            if (!Portfolio.Invested)
             {
-                SetHoldings("BTCUSD", 1);
+                SetHoldings(_spy, 1);
             }
-            Log($"BTC current price: {Securities["BTCUSD"].Price}");
-            Log($"BTC conversion rate: {conversionRate}");
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_actualDatapoints != ExpectedDataPoints)
+            {
+                throw new Exception($"DataPoint count error - expected: {ExpectedDataPoints}, actual: {_actualDatapoints}");
+            }
         }
 
         /// <summary>
@@ -75,22 +96,22 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3042.078%"},
-            {"Drawdown", "11.600%"},
+            {"Compounding Annual Return", "-87.866%"},
+            {"Drawdown", "1.700%"},
             {"Expectancy", "0"},
-            {"Net Profit", "16.131%"},
-            {"Sharpe Ratio", "3.222"},
+            {"Net Profit", "-1.719%"},
+            {"Sharpe Ratio", "-7.937"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "2.058"},
-            {"Beta", "1.003"},
-            {"Annual Standard Deviation", "0.776"},
-            {"Annual Variance", "0.603"},
-            {"Information Ratio", "2.694"},
-            {"Tracking Error", "0.764"},
-            {"Treynor Ratio", "2.494"},
-            {"Total Fees", "$0.00"}
+            {"Alpha", "-0.309"},
+            {"Beta", "1.247"},
+            {"Annual Standard Deviation", "0.136"},
+            {"Annual Variance", "0.019"},
+            {"Information Ratio", "-9.576"},
+            {"Tracking Error", "0.048"},
+            {"Treynor Ratio", "-0.868"},
+            {"Total Fees", "$2.86"}
         };
     }
 }

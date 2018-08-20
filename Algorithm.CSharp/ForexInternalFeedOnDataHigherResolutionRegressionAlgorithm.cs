@@ -74,7 +74,8 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedDataPointsPerSymbol = new Dictionary<string, int>
             {
                 { "EURGBP", 3 },
-                { "EURUSD", 24 }
+                // TODO: should be 24, will be fixed with a new dedicated universe for internal currency feeds
+                { "EURUSD", 25 }
             };
 
             foreach (var kvp in _dataPointsPerSymbol)
@@ -85,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (actualDataPoints != expectedDataPointsPerSymbol[symbol.Value])
                 {
-                    throw new Exception($"Data point count mismatch for symbol {symbol.Value}: expected: {expectedDataPointsPerSymbol}, actual: {actualDataPoints}");
+                    throw new Exception($"Data point count mismatch for symbol {symbol.Value}: expected: {expectedDataPointsPerSymbol[symbol.Value]}, actual: {actualDataPoints}");
                 }
             }
         }

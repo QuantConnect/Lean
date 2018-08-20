@@ -172,10 +172,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 ? CreateUniverseSubscription(request)
                 : CreateSubscription(request);
 
-            // for some reason we couldn't create the subscription
+            // for some reason we couldn't create the subscription,
+            // or subscription not required (e.g. benchmark universe)
             if (subscription == null)
             {
-                Log.Trace("Unable to add subscription for: " + request.Configuration);
+                if (!request.IsUniverseSubscription)
+                {
+                    Log.Trace("Unable to add subscription for: " + request.Configuration);
+                }
+
                 return false;
             }
 
@@ -593,6 +598,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator;
+
+            var benchmarkUniverse = request.Universe as BenchmarkUniverse;
+            if (benchmarkUniverse != null)
+            {
+                // Trigger universe selection when benchmark security added
+                benchmarkUniverse.CollectionChanged += (sender, args) =>
+                {
+                    if (args.Action != NotifyCollectionChangedAction.Add) return;
+
+                    var items = args.NewItems;
+                    if (items == null) return;
+
+                    var symbol = items.OfType<Symbol>().FirstOrDefault();
+                    if (symbol == null) return;
+
+                    var collection = new BaseDataCollection(_frontierUtc, symbol);
+                    _universeSelection.ApplyUniverseSelection(benchmarkUniverse, _frontierUtc, collection);
+                };
+
+                // Subscription not required for the benchmark universe
+                return null;
+            }
 
             var timeTriggered = request.Universe as ITimeTriggeredUniverse;
             if (timeTriggered != null)

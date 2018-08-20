@@ -170,6 +170,7 @@
     <Compile Include="API\Split.cs" />
     <Compile Include="Benchmarks\FuncBenchmark.cs" />
     <Compile Include="Benchmarks\IBenchmark.cs" />
+    <Compile Include="Benchmarks\CompoundingAnnualReturnBenchmark.cs" />
     <Compile Include="Benchmarks\SecurityBenchmark.cs" />
     <Compile Include="Brokerages\BrokerageFactoryAttribute.cs" />
     <Compile Include="Brokerages\BrokerageName.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="Data\Fundamental\Fundamentals.cs" />
     <Compile Include="Data\Fundamental\Generated\AssetClassification.cs" />
     <Compile Include="Data\Fundamental\Generated\CompanyProfile.cs" />
+    <Compile Include="Data\UniverseSelection\BenchmarkUniverse.cs" />
     <Compile Include="Data\UniverseSelection\ITimeTriggeredUniverse.cs" />
     <Compile Include="Data\UniverseSelection\ScheduledUniverse.cs" />
     <Compile Include="Exceptions\DllNotFoundPythonExceptionInterpreter.cs" />

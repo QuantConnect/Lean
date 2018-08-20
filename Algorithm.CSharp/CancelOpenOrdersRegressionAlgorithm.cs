@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Orders;
@@ -41,6 +42,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddCrypto("BTCUSD");
             AddCrypto("ETHUSD");
+
+            // the backtest date is a Sunday and we don't have SPY data,
+            // so we use the 2% benchmark instead
+            SetBenchmark(new CompoundingAnnualReturnBenchmark(this));
         }
 
         /// <summary>

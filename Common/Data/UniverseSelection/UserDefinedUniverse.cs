@@ -106,44 +106,7 @@ namespace QuantConnect.Data.UniverseSelection
         public static Symbol CreateSymbol(SecurityType securityType, string market)
         {
             var ticker = string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType);
-            SecurityIdentifier sid;
-            switch (securityType)
-            {
-                case SecurityType.Base:
-                    sid = SecurityIdentifier.GenerateBase(ticker, market);
-                    break;
-
-                case SecurityType.Equity:
-                    sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-                    break;
-
-                case SecurityType.Option:
-                    var underlying = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
-                    break;
-
-                case SecurityType.Forex:
-                    sid = SecurityIdentifier.GenerateForex(ticker, market);
-                    break;
-
-                case SecurityType.Cfd:
-                    sid = SecurityIdentifier.GenerateCfd(ticker, market);
-                    break;
-
-                case SecurityType.Future:
-                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
-                    break;
-
-                case SecurityType.Crypto:
-                    sid = SecurityIdentifier.GenerateCrypto(ticker, market);
-                    break;
-
-                case SecurityType.Commodity:
-                default:
-                    throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
-            }
-
-            return new Symbol(sid, ticker);
+            return CreateSymbol(ticker, securityType, market);
         }
 
         /// <summary>

@@ -207,6 +207,17 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Returns an existing security for this universe
+        /// </summary>
+        public virtual Security GetSecurity(Symbol symbol, IAlgorithm algorithm)
+        {
+            // by default return the security from the algorithm security collection
+            Security security;
+            algorithm.Securities.TryGetValue(symbol, out security);
+            return security;
+        }
+
+        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>
@@ -294,6 +305,55 @@ namespace QuantConnect.Data.UniverseSelection
         public void Dispose()
         {
             DisposeRequested = true;
+        }
+
+        /// <summary>
+        /// Creates a universe symbol
+        /// </summary>
+        /// <param name="ticker">The ticker</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The market</param>
+        /// <returns>A symbol for universe of the specified security type and market</returns>
+        public static Symbol CreateSymbol(string ticker, SecurityType securityType, string market)
+        {
+            SecurityIdentifier sid;
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    break;
+
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
+
+                case SecurityType.Option:
+                    var underlying = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
+                    break;
+
+                case SecurityType.Forex:
+                    sid = SecurityIdentifier.GenerateForex(ticker, market);
+                    break;
+
+                case SecurityType.Cfd:
+                    sid = SecurityIdentifier.GenerateCfd(ticker, market);
+                    break;
+
+                case SecurityType.Future:
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
+
+                case SecurityType.Crypto:
+                    sid = SecurityIdentifier.GenerateCrypto(ticker, market);
+                    break;
+
+                case SecurityType.Commodity:
+                default:
+                    throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
+            }
+
+            return new Symbol(sid, ticker);
         }
 
         /// <summary>

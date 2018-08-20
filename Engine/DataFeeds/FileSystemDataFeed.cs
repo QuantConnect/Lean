@@ -337,7 +337,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = request.Configuration;
 
             // define our data enumerator
-            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataProvider);
+            var factory = GetEnumeratorFactory(request);
+            if (factory == null)
+            {
+                // Subscription not required for this universe type (e.g. benchmark universe)
+                return null;
+            }
+
+            var enumerator = factory.CreateEnumerator(request, _dataProvider);
 
             var firstLoopCount = 5;
             var lowerThreshold = GetLowerThreshold(config.Resolution);
@@ -360,12 +367,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Creates the correct enumerator factory for the given request
+        /// Creates the correct enumerator factory for the given request.
+        /// Returns null if a subscription should not be created for this request.
         /// </summary>
         private ISubscriptionEnumeratorFactory GetEnumeratorFactory(SubscriptionRequest request)
         {
             if (request.IsUniverseSubscription)
             {
+                var benchmarkUniverse = request.Universe as BenchmarkUniverse;
+                if (benchmarkUniverse != null)
+                {
+                    // Trigger universe selection when benchmark security added
+                    benchmarkUniverse.CollectionChanged += (sender, args) =>
+                    {
+                        if (args.Action != NotifyCollectionChangedAction.Add) return;
+
+                        var items = args.NewItems;
+                        if (items == null) return;
+
+                        var symbol = items.OfType<Symbol>().FirstOrDefault();
+                        if (symbol == null) return;
+
+                        var collection = new BaseDataCollection(_algorithm.UtcTime, symbol);
+                        _universeSelection.ApplyUniverseSelection(benchmarkUniverse, _algorithm.UtcTime, collection);
+                    };
+
+                    // we don't need a subscription for the benchmark universe,
+                    // since universe selection only needs to run once,
+                    // when we set the benchmark security.
+                    return null;
+                }
+
                 if (request.Universe is ITimeTriggeredUniverse)
                 {
                     var universe = request.Universe as UserDefinedUniverse;

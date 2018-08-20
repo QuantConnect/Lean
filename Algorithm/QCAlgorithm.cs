@@ -516,32 +516,17 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
-                if (_benchmarkSymbol != null)
+                if (_benchmarkSymbol == null)
                 {
-                    // if the requested benchmark symbol wasn't already added, then add it now
-                    // we do a simple compare here for simplicity, also it avoids confusion over
-                    // the desired market.
-                    Security security;
-                    if (!Securities.TryGetValue(_benchmarkSymbol, out security))
-                    {
-                        // add the security as an internal feed so the algorithm doesn't receive the data
-                        security = CreateBenchmarkSecurity();
-                        AddToUserDefinedUniverse(security);
-                    }
+                    _benchmarkSymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+                }
 
-                    // just return the current price
-                    Benchmark = new SecurityBenchmark(security);
-                }
-                else
-                {
-                    var start = StartDate;
-                    var startingCapital = Portfolio.TotalPortfolioValue;
-                    Benchmark = new FuncBenchmark(dt =>
-                    {
-                        var years = (dt - start).TotalDays / 365.25;
-                        return startingCapital * (decimal) Math.Exp(0.02 * years);
-                    });
-                }
+                // add the security to its own universe as an internal feed so the algorithm doesn't receive the data
+                var security = CreateBenchmarkSecurity();
+                AddToBenchmarkUniverse(security);
+
+                // just return the current price
+                Benchmark = new SecurityBenchmark(security);
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
@@ -1089,6 +1074,16 @@ namespace QuantConnect.Algorithm
         public void SetBenchmark(Func<DateTime, decimal> benchmark)
         {
             Benchmark = new FuncBenchmark(benchmark);
+        }
+
+        /// <summary>
+        /// Sets the specified implementation as the benchmark, this function provides the value of
+        /// the benchmark at each date/time requested
+        /// </summary>
+        /// <param name="benchmark">The benchmark instance</param>
+        public void SetBenchmark(IBenchmark benchmark)
+        {
+            Benchmark = benchmark;
         }
 
         /// <summary>
@@ -1705,15 +1700,6 @@ namespace QuantConnect.Algorithm
                 {
                     universe.Remove(symbol);
 
-                    // if we are removing the symbol which is also the benchmark, add it back as internal feed
-                    if (symbol == _benchmarkSymbol)
-                    {
-                        Securities.Remove(symbol);
-
-                        security = CreateBenchmarkSecurity();
-                        AddToUserDefinedUniverse(security);
-                    }
-
                     SubscriptionManager.HasCustomData = universe.Members.Any(x => x.Value.Subscriptions.Any(y => y.IsCustomData));
                 }
             }
@@ -2001,6 +1987,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private Security CreateBenchmarkSecurity()
         {
+            // check if the benchmark symbol specified can be used as a benchmark
+            ValidateBenchmarkSymbol(_benchmarkSymbol);
+
             // add the security as an internal feed so the algorithm doesn't receive the data
             Resolution resolution;
             if (_liveMode)
@@ -2020,6 +2009,20 @@ namespace QuantConnect.Algorithm
                 resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
             }
             return SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
+        }
+
+        /// <summary>
+        /// Checks if the symbol can be used as a benchmark and throws if not
+        /// </summary>
+        private static void ValidateBenchmarkSymbol(Symbol symbol)
+        {
+            var invalidSecurityTypes = new[] { SecurityType.Future, SecurityType.Option };
+
+            var securityType = symbol.SecurityType;
+            if (invalidSecurityTypes.Contains(securityType))
+            {
+                throw new Exception($"Invalid security type for benchmark symbol: {securityType}");
+            }
         }
 
         /// <summary>
