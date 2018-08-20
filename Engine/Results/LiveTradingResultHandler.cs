@@ -644,23 +644,18 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         //If we don't already have this record, its the first packet
                         var chart = Charts[update.Name];
-                        if (!chart.Series.ContainsKey(series.Name))
-                        {
-                            chart.Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit)
-                            {
-                                Color = series.Color, ScatterMarkerSymbol = series.ScatterMarkerSymbol
-                            });
-                        }
 
-                        var thisSeries = chart.Series[series.Name];
+                        var thisSeries = chart.TryAddAndGetSeries(series.Name, series.SeriesType, series.Index,
+                                                               series.Unit, series.Color, series.ScatterMarkerSymbol);
                         if (series.Values.Count > 0)
                         {
-                            // only keep last point for pie charts
                             if (series.SeriesType == SeriesType.Pie)
                             {
-                                var lastValue = series.Values.Last();
-                                thisSeries.Purge();
-                                thisSeries.Values.Add(lastValue);
+                                var dataPoint = series.ConsolidateChartPoints();
+                                if (dataPoint != null)
+                                {
+                                    thisSeries.AddPoint(dataPoint);
+                                }
                             }
                             else
                             {

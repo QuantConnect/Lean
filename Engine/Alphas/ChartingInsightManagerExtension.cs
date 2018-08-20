@@ -39,7 +39,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         private readonly Chart _dailyInsightCountPerSymbolChart = new Chart("Alpha Asset Breakdown"); // stacked area
         private readonly Series _totalInsightCountSeries = new Series("Count", SeriesType.Bar, "#");
 
-        private readonly Dictionary<Symbol, int> _insightCountPerSymbol = new Dictionary<Symbol, int>();
         private readonly Dictionary<Symbol, int> _dailyInsightCountPerSymbol = new Dictionary<Symbol, int>();
         private readonly Dictionary<InsightScoreType, Series> _insightScoreSeriesByScoreType = new Dictionary<InsightScoreType, Series>();
 
@@ -91,15 +90,17 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 _lastInsightCountSampleDateUtc = frontierTimeUtc.Date;
 
-                // populate charts with the daily insight counts per symbol, resetting our storage
+                // populate charts with the daily insight counts per symbol
                 var sumInsights = PopulateChartWithSeriesPerSymbol(_dailyInsightCountPerSymbol, _dailyInsightCountPerSymbolChart, SeriesType.StackedArea, frontierTimeUtc);
-                _dailyInsightCountPerSymbol.Clear();
 
                 // add sum of daily insight counts to the total insight count series
                 _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, sumInsights);
 
-                // populate charts with the total insight counts per symbol, no need to reset
-                PopulateChartWithSeriesPerSymbol(_insightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Pie, frontierTimeUtc);
+                // populate charts with the daily insight counts per symbol diff
+                PopulateChartWithSeriesPerSymbol(_dailyInsightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Pie, frontierTimeUtc);
+
+                // Resetting our storage
+                _dailyInsightCountPerSymbol.Clear();
             }
 
             // sample average population scores
@@ -164,14 +165,10 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             if (!_dailyInsightCountPerSymbol.ContainsKey(context.Symbol))
             {
-                _insightCountPerSymbol[context.Symbol] = 1;
                 _dailyInsightCountPerSymbol[context.Symbol] = 1;
             }
             else
             {
-                // track total assets for life of backtest
-                _insightCountPerSymbol[context.Symbol] += 1;
-
                 // track daily assets
                 _dailyInsightCountPerSymbol[context.Symbol] += 1;
             }

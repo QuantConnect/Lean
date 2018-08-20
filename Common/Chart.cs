@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
 
@@ -79,6 +80,32 @@ namespace QuantConnect
             {
                 throw new Exception("Chart.AddSeries(): Chart series name already exists");
             }
+        }
+
+        /// <summary>
+        /// Gets Series if already present in chart, else will add a new series and return it
+        /// </summary>
+        /// <param name="name">Name of the series</param>
+        /// <param name="type">Type of the series</param>
+        /// <param name="index">Index position on the chart of the series</param>
+        /// <param name="unit">Unit for the series axis</param>
+        /// <param name="color">Color of the series</param>
+        /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
+        public Series TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
+                                      Color color, ScatterMarkerSymbol symbol)
+        {
+            Series series;
+            if (!Series.TryGetValue(name, out series))
+            {
+                series = new Series(name, type, index, unit)
+                {
+                    Color = color,
+                    ScatterMarkerSymbol = symbol
+                };
+                Series[name] = series;
+            }
+
+            return series;
         }
 
         /// <summary>
