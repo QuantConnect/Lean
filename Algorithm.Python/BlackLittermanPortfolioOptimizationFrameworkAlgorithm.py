@@ -27,6 +27,8 @@ from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from Portfolio.BlackLittermanOptimizationPortfolioConstructionModel import *
+from Portfolio.UnconstrainedMeanVariancePortfolioOptimizer import UnconstrainedMeanVariancePortfolioOptimizer
+
 
 ### <summary>
 ### Black-Litterman framework algorithm
@@ -50,10 +52,12 @@ class BlackLittermanPortfolioOptimizationFrameworkAlgorithm(QCAlgorithmFramework
 
         self.symbols = [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in [ 'AIG', 'BAC', 'IBM', 'SPY' ] ]
 
+        optimizer = UnconstrainedMeanVariancePortfolioOptimizer()
+
         # set algorithm framework models
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.coarseSelector))
         self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
-        self.SetPortfolioConstruction(BlackLittermanOptimizationPortfolioConstructionModel())
+        self.SetPortfolioConstruction(BlackLittermanOptimizationPortfolioConstructionModel(optimizer = optimizer))
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
 

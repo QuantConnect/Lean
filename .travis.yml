@@ -10,7 +10,7 @@ before_install:
   - rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
   - sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
   - conda update -y python conda pip
-  - conda install -y cython pandas
+  - conda install -y cython pandas scipy
 install:
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
