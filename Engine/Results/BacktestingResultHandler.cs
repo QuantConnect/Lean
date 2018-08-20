@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.Results
         private bool _processingFinalPacket;
 
         //Processing Time:
-        private readonly DateTime _startTime = DateTime.Now;
+        private readonly DateTime _startTime = DateTime.UtcNow;
         private DateTime _nextSample;
         private IMessagingHandler _messagingHandler;
         private ITransactionHandler _transactionHandler;
@@ -210,7 +210,7 @@ namespace QuantConnect.Lean.Engine.Results
                     return;
                 }
 
-                if (DateTime.Now <= _nextUpdate || !(_daysProcessed > (_lastDaysProcessed + 1))) return;
+                if (DateTime.UtcNow <= _nextUpdate || !(_daysProcessed > (_lastDaysProcessed + 1))) return;
 
                 //Extract the orders since last update
                 var deltaOrders = new Dictionary<int, Order>();
@@ -232,9 +232,9 @@ namespace QuantConnect.Lean.Engine.Results
                 //Reset loop variables:
                 try
                 {
-                    _lastUpdate = Algorithm.Time.Date;
+                    _lastUpdate = Algorithm.UtcTime.Date;
                     _lastDaysProcessed = _daysProcessed;
-                    _nextUpdate = DateTime.Now.AddSeconds(0.5);
+                    _nextUpdate = DateTime.UtcNow.AddSeconds(0.5);
                 }
                 catch (Exception err)
                 {
@@ -276,9 +276,9 @@ namespace QuantConnect.Lean.Engine.Results
                 var completeResult = new BacktestResult(Algorithm.IsFrameworkAlgorithm, Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), runtimeStatistics, new Dictionary<string, AlgorithmPerformance>());
                 var complete = new BacktestResultPacket(_job, completeResult, progress);
 
-                if (DateTime.Now > _nextS3Update)
+                if (DateTime.UtcNow > _nextS3Update)
                 {
-                    _nextS3Update = DateTime.Now.AddSeconds(30);
+                    _nextS3Update = DateTime.UtcNow.AddSeconds(30);
                     StoreResult(complete);
                 }
 
@@ -401,7 +401,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var result = new BacktestResultPacket((BacktestNodePacket) job,
                     new BacktestResult(Algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance))
                 {
-                    ProcessingTime = (DateTime.Now - _startTime).TotalSeconds,
+                    ProcessingTime = (DateTime.UtcNow - _startTime).TotalSeconds,
                     DateFinished = DateTime.Now,
                     Progress = 1
                 };
