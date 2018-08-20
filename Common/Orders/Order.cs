@@ -64,7 +64,7 @@ namespace QuantConnect.Orders
         public string PriceCurrency { get; internal set; }
 
         /// <summary>
-        /// Time the order was created.
+        /// Gets the utc time the order was created.
         /// </summary>
         public DateTime Time { get; internal set; }
 

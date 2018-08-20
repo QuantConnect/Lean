@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
         private IAlgorithm _algorithm;
         private volatile bool _exitTriggered;
-        private readonly DateTime _startTime = DateTime.Now;
+        private readonly DateTime _startTime = DateTime.UtcNow;
         private readonly Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
         //Update loop:
@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             try
             {
-                if (DateTime.Now > _nextUpdate || _exitTriggered)
+                if (DateTime.UtcNow > _nextUpdate || _exitTriggered)
                 {
                     //Extract the orders created since last update
                     OrderEvent orderEvent;
@@ -274,10 +274,10 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Send full packet to storage.
-                    if (DateTime.Now > _nextChartsUpdate || _exitTriggered)
+                    if (DateTime.UtcNow > _nextChartsUpdate || _exitTriggered)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
-                        _nextChartsUpdate = DateTime.Now.AddMinutes(1);
+                        _nextChartsUpdate = DateTime.UtcNow.AddMinutes(1);
                         var chartComplete = new Dictionary<string, Chart>();
                         lock (_chartLock)
                         {
@@ -295,7 +295,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     // Upload the logs every 1-2 minutes; this can be a heavy operation depending on amount of live logging and should probably be done asynchronously.
-                    if (DateTime.Now > _nextLogStoreUpdate || _exitTriggered)
+                    if (DateTime.UtcNow > _nextLogStoreUpdate || _exitTriggered)
                     {
                         List<LogEntry> logs;
                         Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
@@ -309,12 +309,12 @@ namespace QuantConnect.Lean.Engine.Results
                             _logStore = logs;
                         }
                         StoreLog(logs);
-                        _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
+                        _nextLogStoreUpdate = DateTime.UtcNow.AddMinutes(2);
                         Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
                     }
 
                     // Every minute send usage statistics:
-                    if (DateTime.Now > _nextStatisticsUpdate || _exitTriggered)
+                    if (DateTime.UtcNow > _nextStatisticsUpdate || _exitTriggered)
                     {
                         try
                         {
@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             Log.Error(err, "Error sending statistics:");
                         }
-                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(1);
+                        _nextStatisticsUpdate = DateTime.UtcNow.AddMinutes(1);
                     }
 
 
@@ -357,7 +357,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Set the new update time after we've finished processing.
                     // The processing can takes time depending on how large the packets are.
-                    _nextUpdate = DateTime.Now.AddSeconds(2);
+                    _nextUpdate = DateTime.UtcNow.AddSeconds(2);
 
                 } // End Update Charts:
             }
@@ -760,7 +760,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var result = new LiveResultPacket((LiveNodePacket) job,
                     new LiveResult(_algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime))
                 {
-                    ProcessingTime = (DateTime.Now - _startTime).TotalSeconds
+                    ProcessingTime = (DateTime.UtcNow - _startTime).TotalSeconds
                 };
 
                 //Save the processing time:
@@ -1098,8 +1098,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send all the notification messages but timeout within a second, or if this is a force process, wait till its done.
-            var start = DateTime.Now;
-            while (_algorithm.Notify.Messages.Count > 0 && (DateTime.Now < start.AddSeconds(1) || forceProcess))
+            var start = DateTime.UtcNow;
+            while (_algorithm.Notify.Messages.Count > 0 && (DateTime.UtcNow < start.AddSeconds(1) || forceProcess))
             {
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
