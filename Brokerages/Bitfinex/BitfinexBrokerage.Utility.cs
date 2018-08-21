@@ -124,10 +124,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
-            string endpoint = GetEndpoint($"pubticker/{symbol.Value}");
+            string endpoint = GetEndpoint($"pubticker/{_symbolMapper.GetBrokerageSymbol(symbol)}");
             var req = new RestRequest(endpoint, Method.GET);
             var response = ExecuteRestRequest(req);
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception($"BitfinexBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }

@@ -254,7 +254,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         list.Add(new Cash(item.Currency, item.Available, 1));
                     }
-                    else if (_symbolMapper.IsKnownBrokerageCurrency(item.Currency))
+                    else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
                     {
                         var rate = GetConversionRate(item.Currency);
                         list.Add(new Cash(item.Currency.ToUpper(), item.Available, rate));
