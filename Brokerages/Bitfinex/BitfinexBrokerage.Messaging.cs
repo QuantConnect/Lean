@@ -14,22 +14,19 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using RestSharp;
 using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Net;
-using QuantConnect.Logging;
-using QuantConnect.Interfaces;
 using System.Collections.Concurrent;
-using QuantConnect.Util;
-using Newtonsoft.Json.Linq;
-using com.sun.corba.se.impl.protocol.giopmsgheaders;
+using System.Collections.Generic;
 using System.Globalization;
-using QuantConnect.Data.Market;
+using System.Linq;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -41,7 +38,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private readonly object channelLocker = new object();
         private volatile bool _streamLocked;
-        internal enum BitfinexEndpointType { Public, Private }
         private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
         private readonly object closeLocker = new object();

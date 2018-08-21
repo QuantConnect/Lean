@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
 
-            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+            var response = ExecuteRestRequest(request);
             var cancellationSubmitted = false;
             if (response.StatusCode == HttpStatusCode.OK && !(response.Content?.IndexOf("None to cancel", StringComparison.OrdinalIgnoreCase) >= 0))
             {
@@ -133,7 +133,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
 
-            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+            var response = ExecuteRestRequest(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -204,7 +204,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
 
-            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+            var response = ExecuteRestRequest(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -234,7 +234,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
 
-            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+            var response = ExecuteRestRequest(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -288,7 +288,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var timeframe = $"&start={startMTS}&end={endMTS}";
 
                 var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
-                var response = ExecuteRestRequest(restRequest, BitfinexEndpointType.Public);
+                var response = ExecuteRestRequest(restRequest);
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {

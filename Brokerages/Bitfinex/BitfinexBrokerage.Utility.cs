@@ -119,7 +119,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             string endpoint = GetEndpoint($"pubticker/{symbol.Value}");
             var req = new RestRequest(endpoint, Method.GET);
-            var response = ExecuteRestRequest(req, BitfinexEndpointType.Public);
+            var response = ExecuteRestRequest(req);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 throw new Exception($"BitfinexBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
@@ -220,7 +220,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 (!order.IsExchange && accountType == AccountType.Margin);
         }
 
-        private IRestResponse ExecuteRestRequest(IRestRequest request, BitfinexEndpointType endpointType)
+        private IRestResponse ExecuteRestRequest(IRestRequest request)
         {
             const int maxAttempts = 10;
             var attempts = 0;
@@ -276,7 +276,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
 
-            var response = ExecuteRestRequest(request, BitfinexEndpointType.Private);
+            var response = ExecuteRestRequest(request);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
