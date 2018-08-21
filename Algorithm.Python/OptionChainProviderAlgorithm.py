@@ -41,6 +41,7 @@ class OptionChainProviderAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         # add the underlying asset
         self.equity = self.AddEquity("GOOG", Resolution.Minute)
+        self.equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
         # initialize the option contract with empty string
         self.contract = str()
         self.contractsAdded = set()

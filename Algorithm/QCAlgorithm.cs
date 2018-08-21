@@ -1588,7 +1588,8 @@ namespace QuantConnect.Algorithm
             }
             else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
             {
-                Debug($"Warning: The {underlying.ToString()} equity security was set the raw price normalization mode to work with options.");
+                throw new ArgumentException($"The underlying equity asset ({underlying.Value}) is set to {equity.DataNormalizationMode}, " +
+                                            "please change this to DataNormalizationMode.Raw with the SetDataNormalization() method");
             }
             equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
 
