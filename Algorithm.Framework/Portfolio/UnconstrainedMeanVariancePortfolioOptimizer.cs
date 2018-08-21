@@ -13,12 +13,15 @@
  * limitations under the License.
 */
 
+using Accord.Math;
+using Accord.Statistics;
+
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Interface for portfolio optimization algorithms
+    /// Provides an implementation of a portfolio optimizer with unconstrained mean variance.
     /// </summary>
-    public interface IPortfolioOptimizer
+    public class UnconstrainedMeanVariancePortfolioOptimizer : IPortfolioOptimizer
     {
         /// <summary>
         /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
@@ -27,6 +30,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null);
+        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
+        {
+            var Π = (expectedReturns ?? historicalReturns.Mean(0));
+            var Σ = covariance ?? historicalReturns.Covariance();
+            return Π.Dot(Σ.Inverse());
+        }
     }
 }

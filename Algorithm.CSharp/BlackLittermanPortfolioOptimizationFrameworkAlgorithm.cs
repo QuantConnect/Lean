@@ -47,10 +47,12 @@ namespace QuantConnect.Algorithm.CSharp
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
 
+            var optimizer = new UnconstrainedMeanVariancePortfolioOptimizer();
+
             // set algorithm framework models
             SetUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
             SetAlpha(new HistoricalReturnsAlphaModel(resolution: Resolution.Daily));
-            SetPortfolioConstruction(new BlackLittermanOptimizationPortfolioConstructionModel());
+            SetPortfolioConstruction(new BlackLittermanOptimizationPortfolioConstructionModel(optimizer: optimizer));
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
         }
@@ -73,25 +75,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "11"},
-            {"Average Win", "0.12%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "1366.273%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "3.747%"},
-            {"Sharpe Ratio", "9.273"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Total Trades", "21"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.38%"},
+            {"Compounding Annual Return", "-82.902%"},
+            {"Drawdown", "4.300%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-2.390%"},
+            {"Sharpe Ratio", "-6.467"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
-            {"Beta", "135.779"},
-            {"Annual Standard Deviation", "0.168"},
-            {"Annual Variance", "0.028"},
-            {"Information Ratio", "9.21"},
-            {"Tracking Error", "0.168"},
+            {"Beta", "-87.309"},
+            {"Annual Standard Deviation", "0.155"},
+            {"Annual Variance", "0.024"},
+            {"Information Ratio", "-6.538"},
+            {"Tracking Error", "0.155"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$23.61"},
+            {"Total Fees", "$72.57"},
             {"Total Insights Generated", "14"},
             {"Total Insights Closed", "11"},
             {"Total Insights Analysis Completed", "11"},

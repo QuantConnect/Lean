@@ -22,14 +22,17 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
 from Portfolio.MaximumSharpeRatioPortfolioOptimizer import MaximumSharpeRatioPortfolioOptimizer
-from datetime import timedelta
+from datetime import datetime, timedelta
 from itertools import groupby
 import pandas as pd
 import numpy as np
 from numpy import dot, transpose
 from numpy.linalg import inv
+from pytz import utc
+UTCMIN = datetime.min.replace(tzinfo=utc)
 
 ### <summary>
 ### Provides an implementation of Black-Litterman portfolio optimization. The model adjusts equilibrium market 
@@ -46,7 +49,8 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                  period = 63,
                  resolution = Resolution.Daily,
                  risk_free_rate = 0,
-                 tau = 0.025,
+                 delta = 2.5,
+                 tau = 0.05,
                  optimizer = None):
         """Initialize the model
         Args:
@@ -54,16 +58,23 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
             risk_free_rate(float): The risk free rate
+            delta(float): The risk aversion coeffficient of the market portfolio
             tau(float): The model parameter indicating the uncertainty of the CAPM prior"""
         self.lookback = lookback
         self.period = period
         self.resolution = resolution
         self.risk_free_rate = risk_free_rate
+        self.delta = delta
         self.tau = tau
         self.optimizer = MaximumSharpeRatioPortfolioOptimizer(risk_free_rate = risk_free_rate) if optimizer is None else optimizer
 
+        self.removedSymbols = []
         self.symbolDataBySymbol = {}
-        self.pendingRemoval = []
+        
+        self.insightCollection = InsightCollection()
+        self.nextExpiryTime = UTCMIN
+        self.rebalancingTime = UTCMIN
+        self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
 
     def CreateTargets(self, algorithm, insights):
         """ 
@@ -76,103 +87,79 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         """
         targets = []
 
-        for symbol in self.pendingRemoval:
-            targets.append(PortfolioTarget.Percent(algorithm, symbol, 0))
-        self.pendingRemoval.clear()
-
-        symbols = [insight.Symbol for insight in insights]
-        if len(symbols) == 0 or all([insight.Magnitude == 0 for insight in insights]):
+        if (algorithm.UtcTime <= self.nextExpiryTime and
+            algorithm.UtcTime <= self.rebalancingTime and
+            len(insights) == 0 and
+            self.removedSymbols is None):
             return targets
 
-        for insight in insights:
-            symbolData = self.symbolDataBySymbol.get(insight.Symbol)
-            if insight.Magnitude is None:
-                algorithm.SetRunTimeError(ArgumentNullException('BlackLittermanOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set.'))
-            symbolData.Add(algorithm.Time, insight.Magnitude)
+        self.insightCollection.AddRange(insights)
 
-        # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
-        historical_returns = { str(symbol) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
-        historical_returns = pd.DataFrame(historical_returns)
+        # Create flatten target for each security that was removed from the universe
+        if self.removedSymbols is not None:
+            universeDeselectionTargets = [ PortfolioTarget(symbol, 0) for symbol in self.removedSymbols ]
+            targets.extend(universeDeselectionTargets)
+            self.removedSymbols = None
+
+        # Get insight that haven't expired of each symbol that is still in the universe
+        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
+
+        # Get the last generated active insight for each symbol
+        lastActiveInsights = []
+        for sourceModel, f in groupby(sorted(activeInsights, key = lambda ff: ff.SourceModel), lambda fff: fff.SourceModel):
+            for symbol, g in groupby(sorted(list(f), key = lambda gg: gg.Symbol), lambda ggg: ggg.Symbol):
+                lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
 
         # Get view vectors
-        P, Q = self.get_views(insights)
+        P, Q = self.get_views(lastActiveInsights)
+        if P is not None:
 
-        # Get the implied excess equilibrium return vector 
-        equilibrium_return, cov = self.get_equilibrium_return(historical_returns)
+            returns = dict()
 
-        # If view is empty, use equilibrium return as the expected return instead
-        if P.size == 0:
-            investors_views_aggregation_returns = equilibrium_return
-        else:
-            # Create the diagonal covariance matrix of error terms from the expressed views
-            omega = dot(dot(dot(self.tau, P), cov), transpose(P))
-    
-            if np.linalg.det(omega) == 0:
-                investors_views_aggregation_returns = equilibrium_return
-            else:
-                A = inv(dot(self.tau, cov)) + dot(dot(np.transpose(P), inv(omega)), P)
-                B = dot(inv(dot(self.tau, cov)), equilibrium_return) + dot(dot(np.transpose(P), inv(omega)), Q)
-                # the new combined expected return vector
-                investors_views_aggregation_returns = dot(inv(A), B)
+            # Updates the BlackLittermanSymbolData with insights
+            # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
+            for insight in lastActiveInsights:
+                symbol = insight.Symbol
+                symbolData = self.symbolDataBySymbol.get(symbol, self.BlackLittermanSymbolData(insight.Symbol, self.lookback, self.period))
+                if insight.Magnitude is None:
+                    algorithm.SetRunTimeError(ArgumentNullExceptionArgumentNullException('BlackLittermanOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set.'))
+                symbolData.Add(algorithm.Time, insight.Magnitude)
+                returns[symbol] = symbolData.Return
+            
+            returns = pd.DataFrame(returns)
 
-        # The portfolio optimizer finds the optional weights for the given data
-        weights = self.optimizer.Optimize(historical_returns, investors_views_aggregation_returns)
-        weights = pd.Series(weights, index = historical_returns.columns)
+            # Calculate prior estimate of the mean and covariance
+            Pi, Sigma = self.get_equilibrium_return(returns)
 
-        # create portfolio targets from the specified insights
-        for insight in insights:
-            weight = weights[str(insight.Symbol)]
-            targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, weight))
+            # Calculate posterior estimate of the mean and covariance
+            Pi, Sigma = self.apply_blacklitterman_master_formula(Pi, Sigma, P, Q)
+
+            # Create portfolio targets from the specified insights
+            weights = self.optimizer.Optimize(returns, Pi, Sigma)
+            weights = pd.Series(weights, index = Sigma.columns)
+
+            for symbol, weight in weights.items():
+                targets.append(PortfolioTarget.Percent(algorithm, symbol, weight))
+
+        # Get expired insights and create flatten targets for each symbol
+        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
+
+        expiredTargets = []
+        for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
+            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
+                expiredTargets.append(PortfolioTarget(symbol, 0))
+                continue
+
+        targets.extend(expiredTargets)
+
+        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
+        if self.nextExpiryTime is None: 
+            self.nextExpiryTime = UTCMIN
+
+        self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
 
         return targets
 
-    def get_equilibrium_return(self, returns):
-        ''' Calculate the implied excess equilibrium return '''
-
-        size = len(returns.columns)
-        # equal weighting scheme
-        W = np.array([1/size]*size)
-        # annualized return
-        annual_return = np.sum(returns.mean() * W)
-        # annualized variance of return
-        annual_variance = dot(W.T, dot(returns.cov(), W))
-        # the risk aversion coefficient
-        risk_aversion = (annual_return - self.risk_free_rate ) / annual_variance
-        # the covariance matrix of excess returns (N x N matrix)
-        cov = returns.cov()
-        # the implied excess equilibrium return Vector (N x 1 column vector)
-        equilibrium_return = dot(dot(risk_aversion, cov), W)
-        
-        return equilibrium_return, cov 
-
-    def get_views(self, insights):
-        ''' Generate the view variables P and Q from insights in different alpha models  '''
-        
-        # generate the link matrix of views: P
-        view = {}
-        insights = sorted(insights, key = lambda x: x.SourceModel)
-        for model, group in groupby(insights, lambda x: x.SourceModel):
-            view[model] = {str(symbol): 0 for symbol in self.symbolDataBySymbol.keys()}
-            for insight in group:
-                view[model][str(insight.Symbol)] = insight.Direction 
-        view = pd.DataFrame(view).T
-        # normalize the view matrix by row
-        up_view = view[view>0].fillna(0) 
-        down_view = view[view<0].fillna(0)
-        normalize_up_view = up_view.apply(lambda x: x/sum(x), axis=1).fillna(0)
-        normalize_down_view = down_view.apply(lambda x: -x/sum(x), axis=1).fillna(0)
-        # link matrix: a matrix that identifies the assets involved in the views (K x N matrix)
-        P = normalize_up_view + normalize_down_view
-        # drop the rows with all zero views (flat direction)
-        P = P[~(P == 0).all(axis=1)]
-
-        # generate the estimated return vector for every different view (K x 1 column vector)
-        Q = []
-        for model, group in groupby(insights, lambda x: x.SourceModel):
-            if model in P.index:
-                Q.append(sum([P.loc[model][str(insight.Symbol)]*insight.Magnitude for insight in group if insight.Magnitude is not None]))
-                
-        return np.array(P), np.array(Q)
 
     def OnSecuritiesChanged(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
@@ -180,25 +167,125 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
 
-        # clean up data for removed securities
-        for removed in changes.RemovedSecurities:
-            self.pendingRemoval.append(removed.Symbol)
-            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            symbolData.Reset()
+        # Get removed symbol and invalidate them in the insight collection
+        self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
+        self.insightCollection.Clear(self.removedSymbols)
+
+        for symbol in self.removedSymbols:
+            symbolData = self.symbolDataBySymbol.pop(symbol, None)
+            if symbolData is not None:
+                symbolData.Reset()
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(symbols, self.lookback * self.period, self.resolution)
-        if history.empty: return
+        addedSymbols = [ x.Symbol for x in changes.AddedSecurities ]
+        history = algorithm.History(addedSymbols, self.lookback * self.period, self.resolution)
 
-        tickers = history.index.levels[0]
-        for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
+        for symbol in addedSymbols:
+            symbolData = self.BlackLittermanSymbolData(symbol, self.lookback, self.period)
 
-            if symbol not in self.symbolDataBySymbol:
-                symbolData = self.BlackLittermanSymbolData(symbol, self.lookback, self.period)
+            if not history.empty:
+                ticker = SymbolCache.GetTicker(symbol)
                 symbolData.WarmUpIndicators(history.loc[ticker])
-                self.symbolDataBySymbol[symbol] = symbolData
+
+            self.symbolDataBySymbol[symbol] = symbolData
+
+    def apply_blacklitterman_master_formula(self, Pi, Sigma, P, Q):
+        '''Apply Black-Litterman master formula
+        http://www.blacklitterman.org/cookbook.html
+        Args:
+            Pi: Prior/Posterior mean array
+            Sigma: Prior/Posterior covariance matrix
+            P: A matrix that identifies the assets involved in the views (size: K x N)
+            Q: A view vector (size: K x 1)'''
+        ts = self.tau * Sigma
+
+        # Create the diagonal Sigma matrix of error terms from the expressed views
+        omega = np.dot(np.dot(P, ts), P.T) * np.eye(Q.shape[0])
+        if np.linalg.det(omega) == 0:
+            return Pi, Sigma
+
+        A = np.dot(np.dot(ts, P.T), inv(np.dot(np.dot(P, ts), P.T) + omega))
+
+        Pi = np.squeeze(np.asarray((
+            np.expand_dims(Pi, axis=0).T + 
+            np.dot(A, (Q - np.expand_dims(np.dot(P, Pi.T), axis=1))))
+            ))
+
+        M = ts - np.dot(np.dot(A, P), ts)
+        Sigma = (Sigma + M) * self.delta
+
+        return Pi, Sigma
+
+    def get_equilibrium_return(self, returns):
+        '''Calculate equilibrium returns and covariance
+        Args:
+            returns: Matrix of returns where each column represents a security and each row returns for the given date/time (size: K x N)
+        Returns:
+            equilibrium_return: Array of double of equilibrium returns
+            cov: Multi-dimensional array of double with the portfolio covariance of returns (size: K x K)'''
+
+        size = len(returns.columns)
+        # equal weighting scheme
+        W = np.array([1/size]*size)
+        # the covariance matrix of excess returns (N x N matrix)
+        cov = returns.cov()*252
+        # annualized return
+        annual_return = np.sum(((1 + returns.mean())**252 -1) * W)
+        # annualized variance of return
+        annual_variance = dot(W.T, dot(cov, W))
+        # the risk aversion coefficient
+        risk_aversion = (annual_return - self.risk_free_rate ) / annual_variance
+        # the implied excess equilibrium return Vector (N x 1 column vector)
+        equilibrium_return = dot(dot(risk_aversion, cov), W)
+
+        return equilibrium_return, cov 
+
+    def get_views(self, insights):
+        '''Generate views from multiple alpha models
+        Args
+            insights: Array of insight that represent the investors' views
+        Returns
+            P: A matrix that identifies the assets involved in the views (size: K x N)
+            Q: A view vector (size: K x 1)'''
+        try:
+            P = {}
+            Q = {}
+            for model, group in groupby(insights, lambda x: x.SourceModel):
+                group = list(group)
+
+                up_insights_sum = 0.0
+                dn_insights_sum = 0.0
+                for insight in group:
+                    if insight.Direction == InsightDirection.Up:
+                        up_insights_sum = up_insights_sum + np.abs(insight.Magnitude)
+                    if insight.Direction == InsightDirection.Down:
+                        dn_insights_sum = dn_insights_sum + np.abs(insight.Magnitude)
+
+                q = up_insights_sum if up_insights_sum > dn_insights_sum else dn_insights_sum
+                if q == 0:
+                    continue
+
+                Q[model] = q
+
+                # generate the link matrix of views: P
+                P[model] = dict()
+                for insight in group:
+                    value = insight.Direction * np.abs(insight.Magnitude)
+                    P[model][insight.Symbol] = value / q
+                # Add zero for other symbols that are listed but active insight
+                for symbol in self.symbolDataBySymbol.keys():
+                    if symbol not in P[model]:
+                        P[model][symbol] = 0
+
+            Q = np.array([[x] for x in Q.values()])
+            if len(Q) > 0:
+                P = np.array([list(x.values()) for x in P.values()])
+                return P, Q
+        except:
+            pass
+
+        return None, None
+
 
     class BlackLittermanSymbolData:
         '''Contains data specific to a symbol required by this model'''
@@ -228,7 +315,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         @property
         def Return(self):
             return pd.Series(
-                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                data = [float(x.Value) for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property

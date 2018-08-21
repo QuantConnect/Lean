@@ -38,46 +38,53 @@ class MaximumSharpeRatioPortfolioOptimizer:
         self.risk_free_rate = risk_free_rate
         self.expected_returns = []
 
-    def Optimize(self, historicalReturns, expectedReturns = None):
+    def Optimize(self, historicalReturns, expectedReturns = None, covariance = None):
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
             historicalReturns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
             expectedReturns: Array of double with the portfolio annualized expected returns (size: K x 1).
+            covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).
         Returns:
             Array of double with the portfolio weights (size: K x 1)
         '''
+        if covariance is None:
+            covariance = historicalReturns.cov()
         if expectedReturns is None:
             expectedReturns = historicalReturns.mean()
+        expectedReturns = expectedReturns - self.risk_free_rate
 
-        cov = historicalReturns.cov()
-        size = historicalReturns.columns.size   # K x 1
+        size = covariance.columns.size   # K x 1
+        x0 = np.array(size * [1. / size])
+        k = expectedReturns.dot(x0)
 
-        constraints = {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)}
+        # Sharpe Maximization under Quadratic Constraints
+        # https://quant.stackexchange.com/questions/18521/sharpe-maximization-under-quadratic-constraints
+        # (µ − r_f)^T w = k
+        constraints = [
+            {'type': 'eq', 'fun': lambda weights: expectedReturns.dot(weights) - k}]
 
-        opt = minimize(lambda weights: -self.sharpe_ratio(weights, expectedReturns, cov),   # Objective function
-                       self.get_initial_guess(size),                              # Initial guess
-                       bounds = self.get_boundary_conditions(size),               # Bounds for variables
+        # Σw = 1
+        constraints.append(
+            {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)})
+
+        opt = minimize(lambda weights: self.portfolio_variance(weights, covariance),   # Objective function
+                       x0,                                                        # Initial guess
+                       bounds = self.get_boundary_conditions(size),               # Bounds for variables: lw ≤ w ≤ up
                        constraints = constraints,                                 # Constraints definition
                        method='SLSQP')        # Optimization method:  Sequential Least SQuares Programming
+        sharpe_ratio = expectedReturns.dot(opt['x']) / opt.fun
         return opt['x']
 
-    def sharpe_ratio(self, weights, expected_returns, covariance):
-        '''Computes the portfolio sharpe ratio
+    def portfolio_variance(self, weights, covariance):
+        '''Computes the portfolio variance
         Args:
             weighs: Portfolio weights
-            expected_returns: Portfolio expected return
             covariance: Covariance matrix of historical returns'''
-        annual_volatility = np.sqrt(np.dot(weights.T, np.dot(covariance, weights)))
-        if annual_volatility == 0:
-            raise ValueError(f'MaximumSharpeRatioPortfolioOptimizer.sharpe_ratio: Volatility cannot be zero. Weights: {weights}')
-
-        annual_return = np.dot(np.matrix(expected_returns), np.matrix(weights).T).item()
-        return (annual_return - self.risk_free_rate)/annual_volatility
-
-    def get_initial_guess(self, size):
-        '''Computes an equally weighted portfolio'''
-        return np.array(size * [1. / size])
+        variance = np.dot(weights.T, np.dot(covariance, weights))
+        if variance == 0:
+            raise ValueError(f'MaximumSharpeRatioPortfolioOptimizer.portfolio_variance: Volatility cannot be zero. Weights: {weights}')
+        return variance
 
     def get_boundary_conditions(self, size):
         '''Creates the boundary condition for the portfolio weights'''
