@@ -35,10 +35,10 @@ from pytz import utc
 UTCMIN = datetime.min.replace(tzinfo=utc)
 
 ### <summary>
-### Provides an implementation of Black-Litterman portfolio optimization. The model adjusts equilibrium market 
-### returns by incorporating views from multiple alpha models and therefore to get the optimal risky portfolio 
-### reflecting those views. If insights of all alpha models have None magnitude or there are linearly dependent 
-### vectors in link matrix of views, the expected return would be the implied excess equilibrium return. 
+### Provides an implementation of Black-Litterman portfolio optimization. The model adjusts equilibrium market
+### returns by incorporating views from multiple alpha models and therefore to get the optimal risky portfolio
+### reflecting those views. If insights of all alpha models have None magnitude or there are linearly dependent
+### vectors in link matrix of views, the expected return would be the implied excess equilibrium return.
 ### The interval of weights in optimization method can be changed based on the long-short algorithm.
 ### The default model uses the 0.0025 as weight-on-views scalar parameter tau and
 ### MaximumSharpeRatioPortfolioOptimizer that accepts a 63-row matrix of 1-day returns.
@@ -70,19 +70,19 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
         self.removedSymbols = []
         self.symbolDataBySymbol = {}
-        
+
         self.insightCollection = InsightCollection()
         self.nextExpiryTime = UTCMIN
         self.rebalancingTime = UTCMIN
         self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
 
     def CreateTargets(self, algorithm, insights):
-        """ 
+        """
         Create portfolio targets from the specified insights
         Args:
             algorithm: The algorithm instance
             insights: The insights to create portoflio targets from
-        Returns: 
+        Returns:
             An enumerable of portoflio targets to be sent to the execution model
         """
         targets = []
@@ -125,7 +125,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                     algorithm.SetRunTimeError(ArgumentNullExceptionArgumentNullException('BlackLittermanOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set.'))
                 symbolData.Add(algorithm.Time, insight.Magnitude)
                 returns[symbol] = symbolData.Return
-            
+
             returns = pd.DataFrame(returns)
 
             # Calculate prior estimate of the mean and covariance
@@ -139,7 +139,9 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             weights = pd.Series(weights, index = Sigma.columns)
 
             for symbol, weight in weights.items():
-                targets.append(PortfolioTarget.Percent(algorithm, symbol, weight))
+                target = PortfolioTarget.Percent(algorithm, symbol, weight)
+                if target is not None:
+                    targets.append(target)
 
         # Get expired insights and create flatten targets for each symbol
         expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
@@ -153,7 +155,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         targets.extend(expiredTargets)
 
         self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None: 
+        if self.nextExpiryTime is None:
             self.nextExpiryTime = UTCMIN
 
         self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
@@ -207,7 +209,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         A = np.dot(np.dot(ts, P.T), inv(np.dot(np.dot(P, ts), P.T) + omega))
 
         Pi = np.squeeze(np.asarray((
-            np.expand_dims(Pi, axis=0).T + 
+            np.expand_dims(Pi, axis=0).T +
             np.dot(A, (Q - np.expand_dims(np.dot(P, Pi.T), axis=1))))
             ))
 
@@ -238,7 +240,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         # the implied excess equilibrium return Vector (N x 1 column vector)
         equilibrium_return = dot(dot(risk_aversion, cov), W)
 
-        return equilibrium_return, cov 
+        return equilibrium_return, cov
 
     def get_views(self, insights):
         '''Generate views from multiple alpha models

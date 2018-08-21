@@ -30,10 +30,10 @@ import pandas as pd
 
 ### <summary>
 ### Provides an implementation of Mean-Variance portfolio optimization based on modern portfolio theory.
-### The default model uses the MinimumVariancePortfolioOptimizer that accepts a 63-row matrix of 1-day returns. 
+### The default model uses the MinimumVariancePortfolioOptimizer that accepts a 63-row matrix of 1-day returns.
 ### </summary>
 class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
-    def __init__(self, 
+    def __init__(self,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
@@ -53,12 +53,12 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         self.pendingRemoval = []
 
     def CreateTargets(self, algorithm, insights):
-        """ 
+        """
         Create portfolio targets from the specified insights
         Args:
             algorithm: The algorithm instance
             insights: The insights to create portoflio targets from
-        Returns: 
+        Returns:
             An enumerable of portoflio targets to be sent to the execution model
         """
         targets = []
@@ -81,14 +81,16 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         returns = { str(symbol) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
         returns = pd.DataFrame(returns)
 
-        # The portfolio optimizer finds the optional weights for the given data 
+        # The portfolio optimizer finds the optional weights for the given data
         weights = self.optimizer.Optimize(returns)
         weights = pd.Series(weights, index = returns.columns)
 
         # Create portfolio targets from the specified insights
         for insight in insights:
             weight = weights[str(insight.Symbol)]
-            targets.append(PortfolioTarget.Percent(algorithm, insight.Symbol, weight))
+            target = PortfolioTarget.Percent(algorithm, insight.Symbol, weight)
+            if target is not None:
+                targets.append(target)
 
         return targets
 
