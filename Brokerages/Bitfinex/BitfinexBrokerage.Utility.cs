@@ -51,18 +51,19 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public const string PayloadHeader = "X-BFX-PAYLOAD";
 
-        public long GetNonce()
+        private long GetNonce()
         {
             return (DateTime.UtcNow - dt1970).Ticks;
         }
 
         /// <summary>
         /// Creates an auth token and adds to the request
+        /// https://docs.bitfinex.com/docs/rest-auth
         /// </summary>
         /// <param name="request">the rest request</param>
         /// <param name="payload">the body of the request</param>
         /// <returns>a token representing the request params</returns>
-        public void SignRequest(IRestRequest request, string payload)
+        private void SignRequest(IRestRequest request, string payload)
         {
             using (HMACSHA384 hmac = new HMACSHA384(Encoding.UTF8.GetBytes(ApiSecret)))
             {
@@ -78,6 +79,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         /// <summary>
         /// Creates an auth token for ws auth endppoints
+        /// https://docs.bitfinex.com/docs/ws-auth
         /// </summary>
         /// <param name="payload">the body of the request</param>
         /// <returns>a token representing the request params</returns>
@@ -115,6 +117,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             return 1m / rate;
         }
 
+        /// <summary>
+        /// Provides the current best bid and ask
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
             string endpoint = GetEndpoint($"pubticker/{symbol.Value}");
@@ -129,7 +136,12 @@ namespace QuantConnect.Brokerages.Bitfinex
             return new Tick(Time.UnixTimeStampToDateTime(tick.Timestamp), symbol, tick.Bid, tick.Ask) { Quantity = tick.Volume };
         }
 
-        public string GetEndpoint(string method)
+        /// <summary>
+        /// Returns relative endpoint for current Bitfinex API version
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        private string GetEndpoint(string method)
         {
             return $"/{ApiVersion}/{method}";
         }
@@ -185,6 +197,12 @@ namespace QuantConnect.Brokerages.Bitfinex
             throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
         }
 
+        /// <summary>
+        /// Return a relevant price for order depending on order type
+        /// Price must be positive
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
         private static decimal GetOrderPrice(Order order)
         {
             switch (order.Type)
@@ -192,6 +210,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                 case OrderType.Limit:
                     return ((LimitOrder)order).LimitPrice;
                 case OrderType.Market:
+                    // Order price must be positive for market order too; 
+                    // refuses for price = 0
                     return 1;
                 case OrderType.StopMarket:
                     return ((StopMarketOrder)order).StopPrice;
@@ -220,6 +240,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                 (!order.IsExchange && accountType == AccountType.Margin);
         }
 
+        /// <summary>
+        /// If an IP address exceeds a certain number of requests per minute 
+        /// the 429 status code and JSON response {"error": "ERR_RATE_LIMIT"} will be returned
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private IRestResponse ExecuteRestRequest(IRestRequest request)
         {
             const int maxAttempts = 10;
@@ -368,7 +394,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 candles.Insert(0, new Messages.Candle(candles[0].Timestamp - resolution, candles[0].Open));
             }
 
-            //restore starting candles
+            //restore ending candles
             while (end - candles[candles.Count - 1].Timestamp > resolution)
             {
                 var last = candles[candles.Count - 1];

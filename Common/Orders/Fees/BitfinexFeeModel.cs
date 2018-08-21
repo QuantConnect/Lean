@@ -49,7 +49,7 @@ namespace QuantConnect.Orders.Fees
                 props?.Hidden != true && 
                 (props?.PostOnly == true || !order.IsMarketable))
             {
-                // limit order posted to the order book, 0% maker fee
+                // limit order posted to the order book
                 fee = MakerFee;
             }
 
@@ -57,15 +57,13 @@ namespace QuantConnect.Orders.Fees
             var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             if (order.Type == OrderType.Limit)
             {
-                // limit order posted to the order book, 0% maker fee
+                // limit order posted to the order book
                 unitPrice = ((LimitOrder)order).LimitPrice;
             }
 
-            // apply  fee factor
             unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
 
-            // currently we do not model 30-day volume, so we use the first tier
-
+            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
             return unitPrice * order.AbsoluteQuantity * fee;
         }
     }

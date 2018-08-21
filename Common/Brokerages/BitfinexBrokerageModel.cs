@@ -31,13 +31,17 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="AccountType.Margin"/></param>
+        /// <param name="accountType">The type of account to be modelled, defaults to <see cref="AccountType.Margin"/></param>
         public BitfinexBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
         }
 
+        /// <summary>
+        /// Provides Bitfinex fee model
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
         public override IFeeModel GetFeeModel(Security security)
         {
             return new BitfinexFeeModel();
