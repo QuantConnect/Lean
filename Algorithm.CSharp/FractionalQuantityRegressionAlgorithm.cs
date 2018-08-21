@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // The default buying power model for the Crypto security type is now CashBuyingPowerModel.
             // Since this test algorithm uses leverage we need to set a buying power model with margin.
-            security.BuyingPowerModel = new SecurityMarginModel(3.3m);
+            security.SetBuyingPowerModel(new SecurityMarginModel(3.3m));
 
             var con = new TradeBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
