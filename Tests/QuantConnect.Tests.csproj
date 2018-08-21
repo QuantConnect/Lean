@@ -385,6 +385,7 @@
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
     <Compile Include="Python\AlgorithmPythonWrapperTests.cs" />
     <Compile Include="Python\MethodOverloadTests.cs" />
+    <Compile Include="Python\SecurityCustomModelTests.cs" />
     <Compile Include="Python\PandasConverterTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Symbols.cs" />

@@ -712,6 +712,42 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the buying power model
+        /// </summary>
+        /// <param name="buyingPowerModel">Model that represents a security's model of buying power</param>
+        public void SetBuyingPowerModel(IBuyingPowerModel buyingPowerModel)
+        {
+            BuyingPowerModel = buyingPowerModel;
+        }
+
+        /// <summary>
+        /// Sets the buying power model
+        /// </summary>
+        /// <param name="pyObject">Model that represents a security's model of buying power</param>
+        public void SetBuyingPowerModel(PyObject pyObject)
+        {
+            SetBuyingPowerModel(new BuyingPowerModelPythonWrapper(pyObject));
+        }
+
+        /// <summary>
+        /// Sets the margin model
+        /// </summary>
+        /// <param name="marginModel">Model that represents a security's model of buying power</param>
+        public void SetMarginModel(IBuyingPowerModel marginModel)
+        {
+            MarginModel = marginModel;
+        }
+
+        /// <summary>
+        /// Sets the margin model
+        /// </summary>
+        /// <param name="pyObject">Model that represents a security's model of buying power</param>
+        public void SetMarginModel(PyObject pyObject)
+        {
+            SetMarginModel(new BuyingPowerModelPythonWrapper(pyObject));
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>
