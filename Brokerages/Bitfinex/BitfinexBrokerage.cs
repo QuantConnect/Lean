@@ -256,7 +256,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                     else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
                     {
-                        var rate = GetConversionRate(item.Currency);
+                        var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
+                        var rate = GetConversionRate(symbol);
                         list.Add(new Cash(item.Currency.ToUpper(), item.Available, rate));
                     }
                     else

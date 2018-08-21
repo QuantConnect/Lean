@@ -42,10 +42,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
         private readonly object closeLocker = new object();
         private readonly List<string> _pendingClose = new List<string>();
-        /// <summary>
-        /// Rest client used to call missing conversion rates
-        /// </summary>
-        public IRestClient RateClient { get; set; }
+        private readonly IPriceProvider _priceProvider;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -60,12 +57,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
-        public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm)
+        public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
             : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _algorithm = algorithm;
             _securityProvider = algorithm?.Portfolio;
-            RateClient = new RestClient("http://data.fixer.io/api/latest?base=usd&access_key=26a2eb9f13db3f14b6df6ec2379f9261");
+            _priceProvider = priceProvider;
 
             WebSocket.Open += (sender, args) =>
             {

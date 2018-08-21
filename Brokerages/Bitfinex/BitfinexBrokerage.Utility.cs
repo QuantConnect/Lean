@@ -97,24 +97,17 @@ namespace QuantConnect.Brokerages.Bitfinex
                 wallet.Type.Equals("trading") && accountType == AccountType.Margin;
         }
 
-        private decimal GetConversionRate(string currency)
+        private decimal GetConversionRate(Symbol symbol)
         {
-            var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            try
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: error returned from conversion rate service."));
-                return 0;
+                return _priceProvider.GetLastPrice(symbol);
             }
-
-            var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
-            var rate = raw.SelectToken("rates." + currency.ToUpper()).Value<decimal>();
-            if (rate == 0)
+            catch (Exception e)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: zero value returned from conversion rate service."));
-                return 0;
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: {e.Message}"));
+                return 0; 
             }
-
-            return 1m / rate;
         }
 
         /// <summary>
