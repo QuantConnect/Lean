@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -99,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
                 var market = grp.Key.Market;
                 var securityType = grp.Key.SecurityType;
-                var universeSymbol = Symbol.Create($"manual-portfolio-selection-model-{securityType}-{market}", securityType, market);
+                var universeSymbol = Symbol.Create($"manual-universe-selection-model-{securityType}-{market}", securityType, market);
                 if (securityType == SecurityType.Base)
                 {
                     // add an entry for this custom universe symbol -- we don't really know the time zone for sure,
