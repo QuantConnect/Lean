@@ -68,14 +68,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var security = algorithm.Securities[symbol];
             if (security.Price == 0)
             {
-                return new PortfolioTarget(symbol, 0);
+                return null;
             }
 
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, percent);
             if (result.IsError)
             {
-                algorithm.Log($"Unable to compute order quantity of {symbol}. Quantity set to zero. Reason: {result.Reason}");
-                return new PortfolioTarget(symbol, 0);
+                algorithm.Log($"Unable to compute order quantity of {symbol}. Reason: {result.Reason}. Returning null.");
+                return null;
             }
 
             // be sure to back out existing holdings quantity since the buying power model yields
