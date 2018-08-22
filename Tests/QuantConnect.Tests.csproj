@@ -105,8 +105,8 @@
       <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="WebSocket4Net, Version=0.14.1.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocket4Net.0.14.1\lib\net45\WebSocket4Net.dll</HintPath>
+    <Reference Include="WebSocket4Net, Version=0.15.2.11, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocket4Net.0.15.2\lib\net45\WebSocket4Net.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -153,6 +153,9 @@
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageHistoryProviderTests.cs" />
+    <Compile Include="Brokerages\Alpaca\AlpacaBrokerageDataQueueHandlerTests.cs" />
+    <Compile Include="Brokerages\Alpaca\AlpacaBrokerageHistoryProviderTests.cs" />
+    <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
