@@ -116,6 +116,11 @@
     // To get your access token go to https://www.tiingo.com
     "tiingo-auth-token": "",
 
+    // alpaca configuration
+    "alpaca-key-id": "",
+    "alpaca-secret-key": "",
+    "alpaca-base-url": "",
+
     // parameters to set in the algorithm (the below are just samples)
     "parameters": {
         // Intrinio account user and password
@@ -297,6 +302,21 @@
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
             "history-provider": "BrokerageHistoryProvider"
         }
+
+        // defines the 'live-alpaca' environment
+        "live-alpaca": {
+            "live-mode": true,
+
+            // real brokerage implementations require the BrokerageTransactionHandler
+            "live-mode-brokerage": "AlpacaBrokerage",
+            "data-queue-handler": "AlpacaBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+            "history-provider": "BrokerageHistoryProvider"
+        },
 
     }
 }
