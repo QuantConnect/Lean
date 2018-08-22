@@ -224,6 +224,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                         case "unsubscribed":
                             OnUnsubscribe(token.ToObject<Messages.OrderBookUnsubscribing>());
                             return;
+                        case "auth":
+                            var auth = token.ToObject<Messages.AuthResponseMessage>();
+                            var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "succeed" : "failed";
+                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Subscribing to authenticated channels {result}");
+                            return;
                         case "info":
                         case "ping":
                             return;

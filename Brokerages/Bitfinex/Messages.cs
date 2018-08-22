@@ -104,6 +104,11 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string ChannelId { get; set; }
     }
 
+    public class AuthResponseMessage: BaseMessage
+    {
+        public string Status { get; set; }
+    }
+
     public class Candle
     {
         public long Timestamp { get; set; }
