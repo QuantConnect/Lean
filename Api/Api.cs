@@ -603,11 +603,14 @@ namespace QuantConnect.Api
             request.AddParameter("symbols", symbolsToRequest);
 
             PricesList pricesList;
-            ApiConnection.TryRequest(request, out pricesList);
-            foreach (var price in pricesList.Prices)
+            if (ApiConnection.TryRequest(request, out pricesList))
             {
-                price.Symbol = symbolByID[price.SymbolID];
+                foreach (var price in pricesList.Prices)
+                {
+                    price.Symbol = symbolByID[price.SymbolID];
+                }
             }
+
             return pricesList;
         }
 
