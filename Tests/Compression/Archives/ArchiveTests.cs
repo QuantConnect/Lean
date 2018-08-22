@@ -124,28 +124,5 @@ namespace QuantConnect.Tests.Compression.Archives
                 Assert.AreEqual(UpdatedEntryContents, contents);
             }
         }
-
-        [Test]
-        [TestCase(ArchiveImplementation.DotNetFramework)]
-        [TestCase(ArchiveImplementation.Ionic)]
-        [TestCase(ArchiveImplementation.SharpZipLib, ExpectedException = typeof(NotSupportedException))]
-        public void UpdatesArchiveEntryInSameInstance(ArchiveImplementation impl)
-        {
-            using (var archive = Archive.OpenWrite(ArchivePath, impl))
-            {
-                var entry = archive.GetEntry(ArchiveEntryKey);
-                entry.WriteString(EntryContents);
-                entry.WriteString(UpdatedEntryContents);
-            }
-
-            using (var archive = Archive.OpenReadOnly(ArchivePath, impl))
-            {
-                var entry = archive.GetEntry(ArchiveEntryKey);
-                Assert.IsNotNull(entry);
-
-                var contents = entry.ReadAsString();
-                Assert.AreEqual(UpdatedEntryContents, contents);
-            }
-        }
     }
 }

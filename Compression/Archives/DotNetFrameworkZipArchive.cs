@@ -121,8 +121,10 @@ namespace QuantConnect.Archives
             /// <param name="stream">The data stream to write</param>
             public void Write(Stream stream)
             {
-                var entryStream = OpenEntryStream();
-                stream.CopyTo(entryStream);
+                using (var entryStream = OpenEntryStream())
+                {
+                    stream.CopyTo(entryStream);
+                }
             }
 
             private Stream OpenEntryStream()

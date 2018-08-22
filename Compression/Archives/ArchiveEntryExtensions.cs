@@ -33,9 +33,11 @@ namespace QuantConnect.Archives
         {
             encoding = encoding ?? Encoding.Default;
 
-            var entryStream = entry.Read();
             var memoryStream = new MemoryStream();
-            entryStream.CopyTo(memoryStream);
+            using (var entryStream = entry.Read())
+            {
+                entryStream.CopyTo(memoryStream);
+            }
 
             return encoding.GetString(memoryStream.ToArray());
         }
