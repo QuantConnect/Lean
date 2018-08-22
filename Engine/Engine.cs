@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -199,11 +198,11 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("         Results:      " + _algorithmHandlers.Results.GetType().FullName);
                 Log.Trace("         Transactions: " + _algorithmHandlers.Transactions.GetType().FullName);
                 Log.Trace("         Alpha:        " + _algorithmHandlers.Alphas.GetType().FullName);
-                if (algorithm != null && algorithm.HistoryProvider != null)
+                if (algorithm?.HistoryProvider != null)
                 {
                     Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
                 }
-                if (job is LiveNodePacket) Log.Trace("         Brokerage:      " + brokerage.GetType().FullName);
+                if (job is LiveNodePacket) Log.Trace("         Brokerage:      " + brokerage?.GetType().FullName);
 
                 //-> Using the job + initialization: load the designated handlers:
                 if (initializeComplete)
