@@ -63,7 +63,7 @@ namespace QuantConnect.Archives
         /// <summary>
         /// Diposes of all archives at the specified path that are currently returned
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">The archive's path to be disposed.</param>
         public void Dispose(string path)
         {
             CacheEntry entry;
@@ -80,12 +80,11 @@ namespace QuantConnect.Archives
         {
             foreach (var kvp in _archives)
             {
-                var path = kvp.Key;
-                var cache = kvp.Value;
-
-                cache.DisposeSafely();
-
-                _archives.TryRemove(path, out cache);
+                CacheEntry cache;
+                if (_archives.TryRemove(kvp.Key, out cache))
+                {
+                    cache.DisposeSafely();
+                }
             }
         }
 
