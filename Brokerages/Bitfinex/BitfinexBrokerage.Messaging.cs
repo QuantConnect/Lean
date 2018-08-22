@@ -247,7 +247,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                         case "ping":
                             return;
                         case "error":
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Error: {e.Message}");
+                            var error = token.ToObject<Messages.ErrorMessage>();
+                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: {error.Level}: {error.Message}");
                             return;
                         default:
                             Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Unexpected message format: {e.Message}");

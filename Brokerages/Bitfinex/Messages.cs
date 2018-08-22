@@ -31,6 +31,19 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string Event { get; set; }
     }
 
+    public class ErrorMessage: BaseMessage
+    {
+        [JsonProperty("msg")]
+        public string Message { get; set; }
+
+        public int Code { get; set; }
+
+        /// <summary>
+        /// 10301 : Already subscribed
+        /// </summary>
+        public string Level => Code == 10301 ? "Warning" : "Error";
+    }
+
     public class Order
     {
         public string Id { get; set; }
