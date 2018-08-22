@@ -50,6 +50,12 @@ namespace QuantConnect.Data.Auxiliary
         public DateTime? FactorFileMinimumDate { get; set; }
 
         /// <summary>
+        /// Gets the most recent factor change in the factor file
+        /// </summary>
+        public DateTime MostRecentFactorChange => SortedFactorFileData.Reverse()
+            .FirstOrDefault(kvp => kvp.Key != Time.EndOfTime).Key;
+
+        /// <summary>
         /// Gets the symbol this factor file represents
         /// </summary>
         public string Permtick { get; }
@@ -257,6 +263,12 @@ namespace QuantConnect.Data.Auxiliary
         public List<BaseData> GetSplitsAndDividends(Symbol symbol, SecurityExchangeHours exchangeHours)
         {
             var dividendsAndSplits = new List<BaseData>();
+            if (SortedFactorFileData.Count == 0)
+            {
+                Log.Trace($"{symbol} has no factors!");
+                return dividendsAndSplits;
+            }
+
             var futureFactorFileRow = SortedFactorFileData.Last().Value;
             for (var i = SortedFactorFileData.Count - 2; i >= 0 ; i--)
             {

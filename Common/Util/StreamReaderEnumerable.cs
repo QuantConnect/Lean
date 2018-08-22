@@ -24,7 +24,7 @@ namespace QuantConnect.Util
     /// <summary>
     /// Converts a <see cref="StreamReader"/> into an enumerable of string
     /// </summary>
-    public class StreamReaderEnumerable : IEnumerable<string>
+    public class StreamReaderEnumerable : IEnumerable<string>, IDisposable
     {
         private int _createdEnumerator;
         private readonly StreamReader _reader;
@@ -71,7 +71,6 @@ namespace QuantConnect.Util
 
         private class Enumerator : IEnumerator<string>
         {
-            private string _current;
             private readonly StreamReader _reader;
 
             public Enumerator(StreamReader reader)
@@ -92,7 +91,7 @@ namespace QuantConnect.Util
                     return false;
                 }
 
-                _current = line;
+                Current = line;
                 return true;
             }
 
@@ -106,13 +105,16 @@ namespace QuantConnect.Util
                 _reader.BaseStream.Seek(0, SeekOrigin.Begin);
             }
 
-            public string Current
-            {
-                get { return _current; }
-                private set { _current = value; }
-            }
+            public string Current { get; private set; }
 
             object IEnumerator.Current => Current;
+        }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            _reader.DisposeSafely();
         }
     }
 }

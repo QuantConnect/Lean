@@ -39,7 +39,7 @@ namespace QuantConnect.Data.Market
         public decimal ReferencePrice
         {
             get;
-            private set;
+            set;
         }
 
         /// <summary>
