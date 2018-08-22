@@ -180,14 +180,14 @@ namespace QuantConnect.Data.Auxiliary
                 throw new ArgumentException("Unable to apply split with reference price of zero.");
             }
 
+            var previousTradingDay = exchangeHours.GetPreviousTradingDay(split.Time);
+
             // this instance must be chronologically at or in front of the split
             // this is because the factors are defined working from current to past
-            if (Date < split.Time.Date)
+            if (Date < previousTradingDay)
             {
                 throw new ArgumentException($"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'.");
             }
-
-            var previousTradingDay = exchangeHours.GetPreviousTradingDay(split.Time);
 
             return new FactorFileRow(
                 previousTradingDay,
