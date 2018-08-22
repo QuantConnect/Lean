@@ -20,6 +20,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -28,6 +29,11 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class BitfinexBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexBrokerageModel"/> class
         /// </summary>
@@ -45,6 +51,13 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new BitfinexFeeModel();
+        }
+
+        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        {
+            var map = DefaultMarketMap.ToDictionary();
+            map[SecurityType.Crypto] = Market.Bitfinex;
+            return map.ToReadOnlyDictionary();
         }
     }
 }
