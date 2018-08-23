@@ -231,7 +231,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));
                 var symbol = Symbol.CreateFuture(underlying, Market.USA, expirationYearMonth);
 
-                var price = csv[_columnPrice].ToDecimal() / 10000000000m;
+                // All futures but VIX are delivered with a scale factor of 10000000000.
+                var scaleFactor = symbol.ID.Symbol == "VX" ? decimal.One : 10000000000m;
+
+                var price = csv[_columnPrice].ToDecimal() / scaleFactor;
                 var quantity = csv[_columnQuantity].ToInt32();
 
                 price *= _symbolMultipliers.ContainsKey(underlying) ? _symbolMultipliers[underlying] : 1.0m;
