@@ -83,11 +83,6 @@ namespace QuantConnect.Brokerages.Alpaca
 		protected readonly object LockerSubscriptions = new object();
 
 		/// <summary>
-		/// The symbol mapper
-		/// </summary>
-		//protected OandaSymbolMapper SymbolMapper;
-
-		/// <summary>
 		/// The order provider
 		/// </summary>
 		protected IOrderProvider OrderProvider;
@@ -98,19 +93,14 @@ namespace QuantConnect.Brokerages.Alpaca
 		protected ISecurityProvider SecurityProvider;
 
 		/// <summary>
-		/// The Alpaca enviroment
+		/// The Alpaca api key
 		/// </summary>
-		protected Environment Environment;
+		protected string AccountKeyId;
 
 		/// <summary>
-		/// The Alpaca access token
+		/// The Alpaca api secret
 		/// </summary>
-		protected string AccessToken;
-
-		/// <summary>
-		/// The Alpaca account ID
-		/// </summary>
-		protected string AccountId;
+		protected string SecretKey;
 
 		/// <summary>
 		/// The Alpaca base url
@@ -128,21 +118,19 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// </summary>
 		/// <param name="orderProvider">The order provider.</param>
 		/// <param name="securityProvider">The holdings provider.</param>
-		/// <param name="environment">The Alpaca environment (Trade or Practice)</param>
-		/// <param name="accessToken">The Alpaca access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
-		/// <param name="accountId">The account identifier.</param>
+		/// <param name="keyId">The Alpaca api key</param>
+		/// <param name="secretKey">The api secret</param>
 		/// <param name="baseUrl">The Alpaca base url</param>
-		public AlpacaApiBase(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string baseUrl)
+		public AlpacaApiBase(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
 			: base("Alpaca Brokerage")
 		{
 			OrderProvider = orderProvider;
 			SecurityProvider = securityProvider;
-			Environment = environment;
-			AccessToken = accessToken;
-			AccountId = accountId;
+            AccountKeyId = keyId;
+			SecretKey = secretKey;
 			BaseUrl = baseUrl;
 
-			restClient = new Markets.RestClient(accountId, accessToken, baseUrl);
+			restClient = new Markets.RestClient(AccountKeyId, SecretKey, baseUrl);
 		}
 
 		/// <summary>
@@ -598,8 +586,12 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// <returns>The list of bars</returns>
 		public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
 		{
-			var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
-			var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+			var startUtc = startTimeUtc.ToString("yyyy-MM-dd");
+			var endUtc = endTimeUtc.ToString("yyyy-MM-dd");
+
+            // This is due to the polygon API logic.
+            // If start and end date is equal, then the result is null
+            var endTimeUtcForAPI = endTimeUtc.Add(TimeSpan.FromDays(1));
 
 			var period = resolution.ToTimeSpan();
 
@@ -610,94 +602,89 @@ namespace QuantConnect.Brokerages.Alpaca
 			}
 
 			List<Markets.IBar> bars = new List<Markets.IBar>();
-			DateTime startTime = startTimeUtc;
 
-			while (true)
+            DateTime startTime = startTimeUtc;
+            DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            Console.WriteLine("History Bar - Start: {0}, End: {1}, Period: {2}", startTime, endTimeUtc, period);
+
+            TradeBar currentBar = new TradeBar();
+            while (true)
 			{
-				var newBars = (period.Days < 1)? restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtc).Result : restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc).Result;
-				if (startTime == newBars.Items.Last().Time)
-					break;
-				List<Markets.IBar> asList = newBars.Items.ToList<Markets.IBar>();
-				bars.AddRange(asList);
-				startTime = asList.Last().Time;
+                List<Markets.IBar> newBars = new List<Markets.IBar>();
+                try
+                {
+                    newBars = (period.Days < 1) ? restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI).Result.Items.ToList() : restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc).Result.Items.ToList();
+                }
+                catch (Exception e)
+                {
+                    if (e.InnerException != null && e.InnerException.Message.Contains("ticks")) break;
+                    throw;
+                }
+
+                if (newBars.Count == 0)
+                {
+                    if (currentBar.Symbol != Symbol.Empty) yield return currentBar;
+                    break;
+                }
+                if (startTime == newBars.Last().Time)
+                {
+                    yield return currentBar;
+                    break;
+                }
+
+                startTime = newBars.Last().Time;
+
+                var result = newBars
+                        .GroupBy(x => x.Time.RoundDown(period))
+                        .Select(x => new TradeBar(
+                            x.Key.ConvertFromUtc(requestedTimeZone),
+                            symbol,
+                            x.First().Open,
+                            x.Max(t => t.High),
+                            x.Min(t => t.Low),
+                            x.Last().Close,
+                            0,
+                            period
+                            ))
+                         .ToList();
+                Console.WriteLine("Agg result: {0}", result.Count);
+                if (currentBar.Symbol == Symbol.Empty) currentBar = result[0];
+                if (currentBar.Time == result[0].Time)
+                {
+                    // Update the last QuoteBar
+                    var newBar = result[0];
+                    currentBar.High = currentBar.High > newBar.High ? currentBar.High : newBar.High;
+                    currentBar.Low = currentBar.Low < newBar.Low ? currentBar.Low : newBar.Low;
+                    currentBar.Close = newBar.Close;
+                    result[0] = currentBar;
+                }
+                else
+                {
+                    result.Insert(0, currentBar);
+                }
+                if (result.Count == 1 && result[0].Time == currentBar.Time) continue;
+                bool isEnd = false;
+                for (int i = 0; i < result.Count-1; i++)
+                {
+                    if (result[i].Time < startTimeWithTZ) continue;
+                    if (result[i].Time > endTimeWithTZ)
+                    {
+                        isEnd = true;
+                        break;
+                    }
+                    yield return result[i];
+                }
+                currentBar = result[result.Count - 1];
+
+                if (isEnd) break;
+                if (currentBar.Time == endTimeWithTZ)
+                {
+                    yield return currentBar;
+                    break;
+                }
 			}
 
-			var convertedCandles = to_larger_timeframe(bars, period);
-
-			foreach (var candle in convertedCandles)
-			{
-				var time = candle.Time;
-				if (time > endTimeUtc)
-					break;
-
-				yield return new TradeBar(
-					time.ConvertFromUtc(requestedTimeZone),
-					symbol,
-					candle.Open,
-					candle.High,
-					candle.Low,
-					candle.Close,
-					0,
-					period);
-			}
-		}
-
-		// Convert 1m candles to the required timeframe
-		private List<Markets.IBar> to_larger_timeframe(List<Markets.IBar> bars_to_convert, TimeSpan time)
-		{
-			var bars_converted = new List<Markets.IBar>();
-			long current_tick_interval = -1;
-			DateTime boundary_adjusted_time = default(DateTime);
-			decimal current_bar_open = default(decimal);
-			decimal current_bar_high = default(decimal);
-			decimal current_bar_low = default(decimal);
-			decimal current_bar_close = default(decimal);
-
-			if (bars_to_convert.Count == 0)
-				return bars_converted;
-
-			foreach (var bar in bars_to_convert)
-			{
-				var this_tick_interval = bar.Time.Ticks / time.Ticks;
-				if (this_tick_interval != current_tick_interval)
-				{
-					if (current_tick_interval != -1)
-					{
-						JsonBar barTemp = new JsonBar
-						{
-							Time = boundary_adjusted_time,
-							Open = current_bar_open,
-							High = current_bar_high,
-							Low = current_bar_low,
-							Close = current_bar_close
-						};
-						bars_converted.Add(barTemp);
-					}
-					current_tick_interval = this_tick_interval;
-					boundary_adjusted_time = new DateTime(current_tick_interval * time.Ticks);
-					current_bar_open = bar.Open;
-					current_bar_high = bar.High;
-					current_bar_low = bar.Low;
-					current_bar_close = bar.Close;
-				}
-				else
-				{
-					current_bar_high = bar.High > current_bar_high ? bar.High : current_bar_high;
-					current_bar_low = bar.Low < current_bar_low ? bar.Low : current_bar_low;
-					current_bar_close = bar.Close;
-				}
-			}
-			// Add the final bar
-			JsonBar nbar = new JsonBar
-			{
-				Time = boundary_adjusted_time,
-				Open = current_bar_open,
-				High = current_bar_high,
-				Low = current_bar_low,
-				Close = current_bar_close
-			};
-			bars_converted.Add(nbar);
-			return bars_converted;
 		}
 
 		/// <summary>
@@ -716,139 +703,179 @@ namespace QuantConnect.Brokerages.Alpaca
 
 			var period = resolution.ToTimeSpan();
 
-			// No seconds resolution
-			if (period.Seconds < 60)
-			{
-				yield return null;
-			}
-
-			List<Markets.IHistoricalQuote> bars = new List<Markets.IHistoricalQuote>();
 			DateTime startTime = startTimeUtc;
+            DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            long offsets = 0;
+            Console.WriteLine("History Quote - Start: {0}, End: {1}, Period: {2}", startTime, endTimeUtc, period);
 
+            QuoteBar currentBar = new QuoteBar();
 			while (true)
 			{
-				var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime).Result;
-				var asList = newBars.Items.ToList();
-				if (startTime == DateTimeHelper.FromUnixTimeMilliseconds(asList.Last().TimeOffset))
-					break;
-				bars.AddRange(asList);
-				startTime = DateTimeHelper.FromUnixTimeMilliseconds(asList.Last().TimeOffset);
+                
+                List<IHistoricalQuote> asList = new List<IHistoricalQuote>();
+                try
+                {
+                    var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
+                    asList = newBars.Items.ToList();
+                    
+                    // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
+                    asList.RemoveAt(0); 
+
+                    offsets = asList.Last().TimeOffset;
+                    Console.WriteLine("Current Offset: {0}", DateTimeHelper.FromUnixTimeMilliseconds(offsets));
+                    if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
+                }
+                catch (Exception e)
+                {
+                    if (e.InnerException != null && e.InnerException.Message.Contains("ticks"))
+                    {
+                        startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
+                        startTime = startTime.AddDays(1);
+                        if (startTime > endTimeUtc) break;
+                        offsets = 0;
+                    }
+                    else
+                        throw;
+                }
+                var result = asList
+                        .GroupBy(x => DateTimeHelper.FromUnixTimeMilliseconds(x.TimeOffset).RoundDown(period))
+                        .Select(x => new QuoteBar(
+                            x.Key.ConvertFromUtc(requestedTimeZone),
+                            symbol,
+                            new Bar(
+                                x.First().BidPrice,
+                                x.Max(t => t.BidPrice),
+                                x.Min(t => t.BidPrice),
+                                x.Last().BidPrice
+                            ),
+                            x.Last().BidSize,
+                            new Bar(
+                                x.First().AskPrice,
+                                x.Max(t => t.AskPrice),
+                                x.Min(t => t.AskPrice),
+                                x.Last().AskPrice
+                            ),
+                            x.Last().AskPrice,
+                            period
+                            ))
+                         .ToList();
+                if (currentBar.Symbol == Symbol.Empty) currentBar = result[0];
+                if (currentBar.Time == result[0].Time)
+                {
+                    // Update the last QuoteBar
+                    var newBar = result[0];
+                    currentBar.Bid.High = currentBar.Bid.High > newBar.Bid.High ? currentBar.Bid.High : newBar.Bid.High;
+                    currentBar.Bid.Low = currentBar.Bid.Low < newBar.Bid.Low ? currentBar.Bid.Low : newBar.Bid.Low;
+                    currentBar.Bid.Close = newBar.Bid.Close;
+
+                    currentBar.Ask.High = currentBar.Ask.High > newBar.Ask.High ? currentBar.Ask.High : newBar.Ask.High;
+                    currentBar.Ask.Low = currentBar.Ask.Low < newBar.Ask.Low ? currentBar.Ask.Low : newBar.Ask.Low;
+                    currentBar.Ask.Close = newBar.Ask.Close;
+                    result[0] = currentBar;
+                }
+                else
+                {
+                    result.Insert(0, currentBar);
+                }
+                if (result.Count == 1 && result[0].Time == currentBar.Time) continue;
+                bool isEnd = false;
+                for (int i = 0; i < result.Count-1; i++)
+                {
+                    if (startTimeWithTZ > result[i].Time) continue;
+                    if (endTimeWithTZ < result[i].Time)
+                    {
+                        isEnd = true;
+                        break;
+                    }
+                    yield return result[i];
+                }
+                currentBar = result[result.Count - 1];
+
+                if (isEnd) break;
+                if (currentBar.Time == endTimeWithTZ)
+                {
+                    yield return currentBar;
+                    break;
+                }
 			}
-
-			var bidaskList = to_larger_timeframe(bars, period);
-
-			foreach (var bidask in bidaskList)
-			{
-				var bidBar = bidask.First();
-				var askBar = bidask.Last();
-				var time = bidBar.Time;
-				if (time > endTimeUtc)
-					break;
-
-				yield return new QuoteBar(
-					time.ConvertFromUtc(requestedTimeZone),
-					symbol,
-					new Bar(
-						bidBar.Open,
-						bidBar.High,
-						bidBar.Low,
-						bidBar.Close
-					),
-					0,
-					new Bar(
-						askBar.Open,
-						askBar.High,
-						askBar.Low,
-						askBar.Close
-					),
-					0,
-					period);
-			}
+            
 		}
 
-		private List<List<Markets.IBar>> to_larger_timeframe(List<Markets.IHistoricalQuote> bars, TimeSpan time)
-		{
-			var bars_converted = new List<List<Markets.IBar>>();
-			long current_tick_interval = -1;
-			DateTime boundary_adjusted_time = default(DateTime);
-			decimal current_bar_open = default(decimal);
-			decimal current_bar_high = default(decimal);
-			decimal current_bar_low = default(decimal);
-			decimal current_bar_close = default(decimal);
-			decimal current_bar_open_ask = default(decimal);
-			decimal current_bar_high_ask = default(decimal);
-			decimal current_bar_low_ask = default(decimal);
-			decimal current_bar_close_ask = default(decimal);
-
-			if (bars.Count == 0)
-				return null;
-
-			foreach (var bar in bars)
-			{
-				var this_tick_interval = DateTimeHelper.FromUnixTimeMilliseconds(bar.TimeOffset).Ticks / time.Ticks;
-				if (this_tick_interval != current_tick_interval)
-				{
-					if (current_tick_interval != -1)
-					{
-						JsonBar barTemp = new JsonBar
-						{
-							Time = boundary_adjusted_time,
-							Open = current_bar_open,
-							High = current_bar_high,
-							Low = current_bar_low,
-							Close = current_bar_close
-						};
-						JsonBar barTemp1 = new JsonBar
-						{
-							Time = boundary_adjusted_time,
-							Open = current_bar_open_ask,
-							High = current_bar_high_ask,
-							Low = current_bar_low_ask,
-							Close = current_bar_close_ask
-						};
-						bars_converted.Add(new List<Markets.IBar>() { barTemp, barTemp1 });
-					}
-					current_tick_interval = this_tick_interval;
-					boundary_adjusted_time = new DateTime(current_tick_interval * time.Ticks);
-					current_bar_open = current_bar_high = current_bar_low = current_bar_close = bar.BidPrice;
-					current_bar_open_ask = current_bar_high_ask = current_bar_low_ask = current_bar_close_ask = bar.AskPrice;
-				}
-				else
-				{
-					current_bar_high = bar.BidPrice > current_bar_high ? bar.BidPrice : current_bar_high;
-					current_bar_low = bar.BidPrice < current_bar_low ? bar.BidPrice : current_bar_low;
-					current_bar_close = bar.BidPrice;
-					current_bar_high_ask = bar.AskPrice > current_bar_high_ask ? bar.AskPrice : current_bar_high_ask;
-					current_bar_low_ask = bar.AskPrice < current_bar_low_ask ? bar.AskPrice : current_bar_low_ask;
-					current_bar_close_ask = bar.AskPrice;
-				}
-			}
-			// Add the final bar
-			JsonBar nbar1 = new JsonBar
-			{
-				Time = boundary_adjusted_time,
-				Open = current_bar_open,
-				High = current_bar_high,
-				Low = current_bar_low,
-				Close = current_bar_close
-			};
-			JsonBar nbar2 = new JsonBar
-			{
-				Time = boundary_adjusted_time,
-				Open = current_bar_open_ask,
-				High = current_bar_high_ask,
-				Low = current_bar_low_ask,
-				Close = current_bar_close_ask
-			};
-			bars_converted.Add(new List<Markets.IBar>() { nbar1, nbar2});
-			return bars_converted;
-		}
-
-		/// <summary>
-		/// Get the next ticks from the live trading data queue
+        /// <summary>
+		/// Downloads a list of Ticks for the requested period
 		/// </summary>
-		/// <returns>IEnumerable list of ticks since the last update.</returns>
-		public IEnumerable<BaseData> GetNextTicks()
+		/// <param name="symbol">The symbol</param>
+		/// <param name="startTimeUtc">The starting time (UTC)</param>
+		/// <param name="endTimeUtc">The ending time (UTC)</param>
+		/// <param name="requestedTimeZone">The requested timezone for the data</param>
+		/// <returns>The list of ticks</returns>
+		public IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
+        {
+            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+            DateTime startTime = startTimeUtc;
+            DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone);
+            DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone);
+            long offsets = 0;
+            Console.WriteLine("History Ticks - Start: {0}, End: {1}", startTime, endTimeUtc);
+
+            Tick currentTick = new Tick();
+            while (true)
+            {
+                List<IHistoricalQuote> asList = new List<IHistoricalQuote>();
+                try
+                {
+                    var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
+                    asList = newBars.Items.ToList();
+
+                    // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
+                    asList.RemoveAt(0);
+
+                    offsets = asList.Last().TimeOffset;
+                    Console.WriteLine("Current Offset: {0}", DateTimeHelper.FromUnixTimeMilliseconds(offsets));
+                    if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
+                }
+                catch (Exception e)
+                {
+                    if (e.InnerException != null && e.InnerException.Message.Contains("ticks"))
+                    {
+                        startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
+                        startTime = startTime.AddDays(1);
+                        if (startTime > endTimeUtc) break;
+                        offsets = 0;
+                    }
+                    else
+                        throw;
+                }
+                bool isEnd = false;
+                for (int i = 0; i < asList.Count; i++)
+                {
+                    var currentTime = DateTimeHelper.FromUnixTimeMilliseconds(asList[i].TimeOffset).ConvertFromUtc(requestedTimeZone);
+                    if (startTimeWithTZ > currentTime) continue;
+                    if (endTimeWithTZ < currentTime)
+                    {
+                        isEnd = true;
+                        break;
+                    }
+                    currentTick.Time = currentTime;
+                    currentTick.Symbol = symbol;
+                    currentTick.BidPrice = asList[i].BidPrice;
+                    currentTick.AskPrice = asList[i].AskPrice;
+                    yield return currentTick;
+                }
+                asList.Clear();
+                if (isEnd) break;
+            }
+
+        }
+
+        /// <summary>
+        /// Get the next ticks from the live trading data queue
+        /// </summary>
+        /// <returns>IEnumerable list of ticks since the last update.</returns>
+        public IEnumerable<BaseData> GetNextTicks()
 		{
 			lock (Ticks)
 			{
@@ -1076,7 +1103,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// </summary>
 		internal SockClient GetSockClient()
 		{
-			var sockClient = new SockClient(AccountId, AccessToken, BaseUrl);
+			var sockClient = new SockClient(AccountKeyId, SecretKey, BaseUrl);
 			return sockClient;
 		}
 
@@ -1085,7 +1112,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// </summary>
 		internal NatsClient GetNatsClient()
 		{
-            var accId = BaseUrl.Contains("staging") ? AccountId + "-staging" : AccountId;
+            var accId = BaseUrl.Contains("staging") ? AccountKeyId + "-staging" : AccountKeyId;
 
             var natsClient = new NatsClient(accId);
 			return natsClient;
