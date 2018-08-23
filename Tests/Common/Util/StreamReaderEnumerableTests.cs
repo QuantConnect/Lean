@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Util;
 
@@ -36,6 +37,58 @@ namespace QuantConnect.Tests.Common.Util
                 var actualLines = enumerable.ToList();
                 CollectionAssert.AreEqual(lines, actualLines);
             }
+        }
+
+        [Test]
+        public void DisposesWhenEnumerationIsCompleted()
+        {
+            var disposable = new TestDisposable();
+            var memoryStream = new TestMemoryStream(Encoding.Default.GetBytes("line1\r\nline2\r\nline3"));
+            var streamReader = new TestStreamReader(memoryStream);
+            var enumerable = new StreamReaderEnumerable(streamReader, disposable);
+
+            // complete enumeration
+            var lines = enumerable.ToList();
+
+            Assert.IsTrue(streamReader.DisposeCalled);
+            Assert.IsTrue(streamReader.DisposeCalledDisposingValue);
+
+            Assert.IsTrue(memoryStream.DisposeCalled);
+            Assert.IsTrue(memoryStream.DisposeCalledDisposingValue);
+
+            Assert.IsTrue(disposable.DisposeCalled);
+        }
+
+        class TestMemoryStream : MemoryStream
+        {
+            public bool DisposeCalled { get; private set; }
+            public bool DisposeCalledDisposingValue { get; private set; }
+            public TestMemoryStream(byte[] bytes) : base(bytes) { }
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+                DisposeCalled = true;
+                DisposeCalledDisposingValue = disposing;
+            }
+        }
+
+        class TestStreamReader : StreamReader
+        {
+            public bool DisposeCalled { get; private set; }
+            public bool DisposeCalledDisposingValue { get; private set; }
+            public TestStreamReader(Stream stream) : base(stream) { }
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+                DisposeCalled = true;
+                DisposeCalledDisposingValue = disposing;
+            }
+        }
+
+        class TestDisposable : IDisposable
+        {
+            public bool DisposeCalled { get; private set; }
+            public void Dispose() { DisposeCalled = true; }
         }
     }
 }
