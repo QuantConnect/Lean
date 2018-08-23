@@ -248,24 +248,24 @@ namespace QuantConnect.Brokerages.Bitfinex
                 .Where(WalletFilter(_algorithm.BrokerageModel.AccountType));
             foreach (var item in availableWallets)
             {
-                if (item.Available > 0)
+                if (item.Amount > 0)
                 {
                     if (string.Equals(item.Currency, "USD", StringComparison.OrdinalIgnoreCase))
                     {
-                        list.Add(new Cash(item.Currency, item.Available, 1));
+                        list.Add(new Cash(item.Currency, item.Amount, 1));
                     }
                     else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
                     {
                         var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Available, rate));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate));
                     }
                     else
                     {
                         var symbol = item.Currency + "USD";
                         var tick = GetTick(_symbolMapper.GetLeanSymbol(symbol));
 
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Available, tick.Price));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price));
                     }
                 }
             }
