@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -53,6 +54,13 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BitfinexOrderProperties() { Hidden = true })),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BitfinexOrderProperties() { PostOnly = true, Hidden = true }))
         };
+
+        [Test]
+        public void GetFeeModelTest()
+        {
+            BitfinexBrokerageModel model = new BitfinexBrokerageModel();
+            Assert.IsInstanceOf<BitfinexFeeModel>(model.GetFeeModel(Security));
+        }
 
         [Test]
         [TestCaseSource("MakerOrders")]
