@@ -24,17 +24,25 @@ namespace QuantConnect.Util
     /// <summary>
     /// Converts a <see cref="StreamReader"/> into an enumerable of string
     /// </summary>
-    public class StreamReaderEnumerable : IEnumerable<string>
+    public class StreamReaderEnumerable : IEnumerable<string>, IDisposable
     {
+        private int _disposed;
         private int _createdEnumerator;
         private readonly StreamReader _reader;
+        private readonly IDisposable[] _disposables;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamReaderEnumerable"/> class
         /// </summary>
         /// <param name="stream">The stream to be read</param>
-        public StreamReaderEnumerable(Stream stream)
+        /// <param name="disposables">Allows specifying other resources that should be disposed when this instance is disposed</param>
+        public StreamReaderEnumerable(Stream stream, params IDisposable[] disposables)
         {
+            _disposables = disposables;
+
+            // this StreamReader constructor gives ownership of the stream to the StreamReader
+            // which is mediated by the LeaveOpen property, so when _reader is disposed, stream
+            // will also be disposed
             _reader = new StreamReader(stream);
         }
 
@@ -42,9 +50,11 @@ namespace QuantConnect.Util
         /// Initializes a new instance of the <see cref="StreamReaderEnumerable"/> class
         /// </summary>
         /// <param name="reader">The stream reader instance to convert to an enumerable of string</param>
-        public StreamReaderEnumerable(StreamReader reader)
+        /// <param name="disposables">Allows specifying other resources that should be disposed when this instance is disposed</param>
+        public StreamReaderEnumerable(StreamReader reader, params IDisposable[] disposables)
         {
             _reader = reader;
+            _disposables = disposables;
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
@@ -58,7 +68,7 @@ namespace QuantConnect.Util
                 throw new InvalidOperationException("A StreamReaderEnumerable may only be enumerated once. Consider using memoization or materialization.");
             }
 
-            return new Enumerator(_reader);
+            return new Enumerator(this);
         }
 
         /// <summary>Returns an enumerator that iterates through a collection.</summary>
@@ -69,50 +79,77 @@ namespace QuantConnect.Util
             return GetEnumerator();
         }
 
-        private class Enumerator : IEnumerator<string>
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
         {
-            private string _current;
-            private readonly StreamReader _reader;
-
-            public Enumerator(StreamReader reader)
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
             {
-                _reader = reader;
+                return;
             }
 
-            public void Dispose()
+            _reader.DisposeSafely();
+            if (_disposables != null)
             {
-                _reader.DisposeSafely();
+                foreach (var disposable in _disposables)
+                {
+                    disposable.DisposeSafely();
+                }
+            }
+        }
+
+        /// <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
+        ~StreamReaderEnumerable()
+        {
+            // be sure to clean up unmanaged resources via finalizer if
+            // dispose wasn't explicitly called by consuming code
+            Dispose();
+        }
+
+        private class Enumerator : IEnumerator<string>
+        {
+            private readonly StreamReaderEnumerable _enumerable;
+
+            public string Current { get; private set; }
+
+            object IEnumerator.Current => Current;
+
+            public Enumerator(StreamReaderEnumerable enumerable)
+            {
+                _enumerable = enumerable;
             }
 
             public bool MoveNext()
             {
-                var line = _reader.ReadLine();
+                var line = _enumerable._reader.ReadLine();
                 if (line == null)
                 {
                     return false;
                 }
 
-                _current = line;
+                Current = line;
                 return true;
             }
 
             public void Reset()
             {
-                if (!_reader.BaseStream.CanSeek)
+                if (!_enumerable._reader.BaseStream.CanSeek)
                 {
                     throw new InvalidOperationException("The underlying stream is unseekable");
                 }
 
-                _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                _enumerable._reader.BaseStream.Seek(0, SeekOrigin.Begin);
             }
 
-            public string Current
+            public void Dispose()
             {
-                get { return _current; }
-                private set { _current = value; }
+                _enumerable.Dispose();
             }
 
-            object IEnumerator.Current => Current;
+            ~Enumerator()
+            {
+                _enumerable.Dispose();
+            }
         }
     }
 }
