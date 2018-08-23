@@ -129,52 +129,5 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 Assert.DoesNotThrow(test);
             }
         }
-
-        [Test]
-        [TestCaseSource("ValidHistory")]
-        public void GetsFullPeriodTickHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool throwsException)
-        {
-            resolution = Resolution.Minute;
-            period = TimeSpan.FromDays(1);
-
-            var startDate = new DateTime(2018, 8, 1);
-            var endDate = startDate.Add(period);
-
-            var brokerage = (BitfinexBrokerage)Brokerage;
-
-            var historyProvider = new BrokerageHistoryProvider();
-            historyProvider.SetBrokerage(brokerage);
-            historyProvider.Initialize(null, null, null, null, null, null);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            var requests = new[]
-            {
-                new HistoryRequest(startDate,
-                    endDate,
-                    typeof(TradeBar),
-                    symbol,
-                    resolution,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                    DateTimeZone.Utc,
-                    Resolution.Minute,
-                    false,
-                    false,
-                    DataNormalizationMode.Adjusted,
-                    TickType.Quote)
-            };
-
-            var history = historyProvider.GetHistory(requests, TimeZones.Utc);
-            var tickCount = history.Count();
-
-            stopwatch.Stop();
-            Log.Trace("Download time: " + stopwatch.Elapsed);
-
-            Log.Trace("History ticks returned: " + tickCount);
-            Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
-
-            Assert.AreEqual(tickCount, historyProvider.DataPointCount);
-            Assert.AreEqual(period.TotalMinutes / resolution.ToTimeSpan().TotalMinutes, tickCount);
-        }
     }
 }

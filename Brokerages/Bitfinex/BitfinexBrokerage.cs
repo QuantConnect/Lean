@@ -303,8 +303,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     .Select(entries => new Messages.Candle(entries))
                     .ToList();
 
-                RestoreMissedCandles(candles, startMTS, endMTS, resolutionInMS);
-
                 startMTS = candles.Last().Timestamp + resolutionInMS;
                 var period = request.Resolution.ToTimeSpan();
 
