@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 new MapFileRow(new DateTime(2050, 12, 31), "goog")
             });
 
-            Assert.AreEqual("goocv", mapFile.FirstTicker);
+            Assert.AreEqual("GOOCV", mapFile.FirstTicker);
         }
 
         [Test]

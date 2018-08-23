@@ -270,7 +270,7 @@ namespace QuantConnect.Data.Auxiliary
         public string ToCsv(string source = null)
         {
             source = source == null ? "" : $",{source}";
-            return $"{Date.ToString(DateFormat.EightCharacter)},{PriceFactor.Normalize()},{SplitFactor.Normalize()},{ReferencePrice.Normalize()}{source}";
+            return $"{Date.ToString(DateFormat.EightCharacter)},{Math.Round(PriceFactor, 6).Normalize()},{Math.Round(SplitFactor, 7).Normalize()},{ReferencePrice.Normalize()}{source}";
         }
 
         /// <summary>
