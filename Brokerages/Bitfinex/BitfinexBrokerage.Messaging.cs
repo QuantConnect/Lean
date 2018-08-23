@@ -508,7 +508,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="entries"></param>
@@ -644,6 +644,23 @@ namespace QuantConnect.Brokerages.Bitfinex
             Log.Trace("BItfinexBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
             // Once dequeued in order; unlock stream.
             _streamLocked = false;
+        }
+
+        /// <summary>
+        /// Gets a list of current subscriptions
+        /// </summary>
+        /// <returns></returns>
+        protected override IList<Symbol> GetSubscribed()
+        {
+            IList<Symbol> list = new List<Symbol>();
+            lock (ChannelList)
+            {
+                foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
+                {
+                    list.Add(Symbol.Create(ticker, SecurityType.Crypto, Market.Bitfinex));
+                }
+            }
+            return list;
         }
 
         /// <summary>
