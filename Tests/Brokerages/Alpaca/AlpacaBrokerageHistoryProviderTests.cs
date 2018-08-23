@@ -88,14 +88,14 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                         resolution,
                         SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                         DateTimeZone.Utc,
-                        Resolution.Minute,
+                        Resolution.Daily,
                         false,
                         false,
                         DataNormalizationMode.Adjusted,
                         TickType.Trade)
                 };
 
-                var history = brokerage.GetHistory(requests);
+                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
 
                 foreach (var slice in history)
                 {
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                     }
                     else
                     {
-                        var bar = slice.QuoteBars[symbol];
+                        var bar = slice.Bars[symbol];
 
                         Console.WriteLine("{0}: {1} - O={2}, H={3}, L={4}, C={5}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close);
                     }
