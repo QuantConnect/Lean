@@ -77,6 +77,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
         {
+            LastHeartbeatUtcTime = DateTime.UtcNow;
+
             // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
             // stream processing a touch.
             try
