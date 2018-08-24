@@ -214,7 +214,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             // remove directory pathing characters from chart names
                             var safeName = chart.Value.Name.Replace('/', '-');
-                            deltaCharts.Add(safeName, chart.Value.GetUpdates());
+                            DictionarySafeAdd(deltaCharts, safeName, chart.Value.GetUpdates(), "deltaCharts");
                         }
                     }
                     Log.Debug("LiveTradingResultHandler.Update(): End build delta charts");
@@ -235,7 +235,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                         if (!security.IsInternalFeed() && !security.Symbol.IsCanonical())
                         {
-                            holdings.Add(security.Symbol.Value, new Holding(security));
+                            DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
                         }
                     }
 
@@ -256,13 +256,13 @@ namespace QuantConnect.Lean.Engine.Results
                                     : 0;
 
                     //Add other fixed parameters.
-                    runtimeStatistics.Add("Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                    runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
-                    runtimeStatistics.Add("Net Profit:", "$" + (_algorithm.Portfolio.TotalProfit - _algorithm.Portfolio.TotalFees).ToString("N2"));
-                    runtimeStatistics.Add("Return:", netReturn.ToString("P"));
-                    runtimeStatistics.Add("Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
-                    runtimeStatistics.Add("Holdings:", "$" + _algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
-                    runtimeStatistics.Add("Volume:", "$" + _algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
+                    DictionarySafeAdd(runtimeStatistics, "Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"), "runtimeStatistics");
+                    DictionarySafeAdd(runtimeStatistics, "Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"), "runtimeStatistics");
+                    DictionarySafeAdd(runtimeStatistics, "Net Profit:", "$" + (_algorithm.Portfolio.TotalProfit - _algorithm.Portfolio.TotalFees).ToString("N2"), "runtimeStatistics");
+                    DictionarySafeAdd(runtimeStatistics, "Return:", netReturn.ToString("P"), "runtimeStatistics");
+                    DictionarySafeAdd(runtimeStatistics, "Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"), "runtimeStatistics");
+                    DictionarySafeAdd(runtimeStatistics, "Holdings:", "$" + _algorithm.Portfolio.TotalHoldingsValue.ToString("N2"), "runtimeStatistics");
+                    DictionarySafeAdd(runtimeStatistics, "Volume:", "$" + _algorithm.Portfolio.TotalSaleVolume.ToString("N2"), "runtimeStatistics");
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
@@ -285,7 +285,7 @@ namespace QuantConnect.Lean.Engine.Results
                             {
                                 // remove directory pathing characters from chart names
                                 var safeName = chart.Value.Name.Replace('/', '-');
-                                chartComplete.Add(safeName, chart.Value.Clone());
+                                DictionarySafeAdd(chartComplete, safeName, chart.Value.Clone(), "chartComplete");
                             }
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
@@ -1113,6 +1113,18 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Exit");
+        }
+
+        private static void DictionarySafeAdd<T>(Dictionary<string, T> dictionary, string key, T value, string dictionaryName)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                Log.Error($"LiveTradingResultHandler.DictionarySafeAdd(): dictionary {dictionaryName} already contains key {key}");
+            }
+            else
+            {
+                dictionary.Add(key, value);
+            }
         }
     }
 }
