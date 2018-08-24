@@ -75,6 +75,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
+        private Exception _accountHoldingsLastException;
 
         // tracks executions before commission reports, map: execId -> execution
         private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
@@ -356,11 +357,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var manualResetEvent = new ManualResetEvent(false);
 
+            Exception exception = null;
+
             // define our handlers
             EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) =>
             {
-                // convert IB order objects returned from RequestOpenOrders
-                orders.Add(ConvertOrder(args.Order, args.Contract));
+                try
+                {
+                    // convert IB order objects returned from RequestOpenOrders
+                    orders.Add(ConvertOrder(args.Order, args.Contract));
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
             };
             EventHandler clientOnOpenOrderEnd = (sender, args) =>
             {
@@ -376,14 +386,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ClientSocket.reqAllOpenOrders();
 
             // wait for our end signal
-            if (!manualResetEvent.WaitOne(15000))
-            {
-                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 15 seconds.");
-            }
+            var timedOut = !manualResetEvent.WaitOne(15000);
 
             // remove our handlers
             _client.OpenOrder -= clientOnOpenOrder;
             _client.OpenOrderEnd -= clientOnOpenOrderEnd;
+
+            if (exception != null)
+            {
+                throw new Exception("InteractiveBrokersBrokerage.GetOpenOrders(): ", exception);
+            }
+
+            if (timedOut)
+            {
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 15 seconds.");
+            }
 
             return orders;
         }
@@ -605,6 +622,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                             Disconnect();
 
+                            if (_accountHoldingsLastException != null)
+                            {
+                                // if an exception was thrown during account download, do not retry but exit immediately
+                                attempt = maxAttempts;
+                                throw new Exception("InteractiveBrokersBrokerage.Connect(): ", _accountHoldingsLastException);
+                            }
+
                             if (attempt++ < maxAttempts)
                             {
                                 Thread.Sleep(1000);
@@ -621,6 +645,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
 
                             Disconnect();
+
+                            if (_accountHoldingsLastException != null)
+                            {
+                                // if an exception was thrown during account download, do not retry but exit immediately
+                                attempt = maxAttempts;
+                                throw new Exception("InteractiveBrokersBrokerage.DownloadAccount(): ", _accountHoldingsLastException);
+                            }
 
                             if (attempt++ < maxAttempts)
                             {
@@ -677,9 +708,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // https://interactivebrokers.github.io/tws-api/account_updates.html#gsc.tab=0
 
             // subscribe to the FA account
-            DownloadAccount(account + "A");
-
-            return true;
+            return DownloadAccount(account + "A");
         }
 
         /// <summary>
@@ -688,6 +717,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private bool DownloadAccount(string account)
         {
+            _accountHoldingsLastException = null;
+
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
             EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
             {
@@ -731,7 +762,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
             _client.UpdateAccountValue -= clientOnUpdateAccountValue;
 
-            return true;
+            return _accountHoldingsLastException == null;
         }
 
         /// <summary>
@@ -1609,9 +1640,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
-            _accountHoldingsResetEvent.Reset();
-            var holding = CreateHolding(e);
-            _accountData.AccountHoldings[holding.Symbol.Value] = holding;
+            try
+            {
+                _accountHoldingsResetEvent.Reset();
+                var holding = CreateHolding(e);
+                _accountData.AccountHoldings[holding.Symbol.Value] = holding;
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"InteractiveBrokersBrokerage.HandlePortfolioUpdates(): {exception}");
+                _accountHoldingsLastException = exception;
+            }
         }
 
         /// <summary>
@@ -2066,29 +2105,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.Option:
                     return IB.SecurityType.Option;
 
-                case SecurityType.Commodity:
-                    return IB.SecurityType.Commodity;
-
                 case SecurityType.Forex:
                     return IB.SecurityType.Cash;
 
                 case SecurityType.Future:
                     return IB.SecurityType.Future;
 
-                case SecurityType.Base:
-                    throw new ArgumentException("InteractiveBrokers does not support SecurityType.Base");
-
                 default:
-                    throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
+                    throw new ArgumentException($"The {type} security type is not currently supported.");
             }
         }
 
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>
-        private static SecurityType ConvertSecurityType(string type)
+        private static SecurityType ConvertSecurityType(Contract contract)
         {
-            switch (type)
+            switch (contract.SecType)
             {
                 case IB.SecurityType.Stock:
                     return SecurityType.Equity;
@@ -2096,27 +2129,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.SecurityType.Option:
                     return SecurityType.Option;
 
-                case IB.SecurityType.Commodity:
-                    return SecurityType.Commodity;
-
                 case IB.SecurityType.Cash:
                     return SecurityType.Forex;
 
                 case IB.SecurityType.Future:
                     return SecurityType.Future;
 
-                // we don't map these security types to anything specific yet, load them as custom data instead of throwing
-                case IB.SecurityType.Index:
-                case IB.SecurityType.FutureOption:
-                case IB.SecurityType.Bag:
-                case IB.SecurityType.Bond:
-                case IB.SecurityType.Warrant:
-                case IB.SecurityType.Bill:
-                case IB.SecurityType.Undefined:
-                    return SecurityType.Base;
-
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw new NotSupportedException(
+                        $"An existing position or open order for an unsupported security type was found: {contract}. " +
+                        "Please manually close the position or cancel the order before restarting the algorithm.");
             }
         }
 
@@ -2188,7 +2210,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return new Holding
             {
                 Symbol = symbol,
-                Type = ConvertSecurityType(e.Contract.SecType),
+                Type = ConvertSecurityType(e.Contract),
                 Quantity = e.Position,
                 AveragePrice = Convert.ToDecimal(e.AverageCost) / multiplier,
                 MarketPrice = Convert.ToDecimal(e.MarketPrice),
@@ -2202,7 +2224,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private Symbol MapSymbol(Contract contract)
         {
-            var securityType = ConvertSecurityType(contract.SecType);
+            var securityType = ConvertSecurityType(contract);
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
 

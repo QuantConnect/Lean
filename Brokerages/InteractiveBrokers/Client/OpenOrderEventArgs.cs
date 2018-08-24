@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         public override string ToString()
         {
-            return $"OrderId: {OrderId}, Symbol: {Contract.Symbol}, OrderStatus: {OrderState.Status}";
+            return $"OrderId: {OrderId}, Contract: {Contract}, OrderStatus: {OrderState.Status}";
         }
     }
 }
