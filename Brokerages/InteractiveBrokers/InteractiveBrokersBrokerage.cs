@@ -1649,8 +1649,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             catch (Exception exception)
             {
                 Log.Error($"InteractiveBrokersBrokerage.HandlePortfolioUpdates(): {exception}");
-                _accountHoldingsLastException = exception;
-                _accountHoldingsResetEvent.Set();
+
+                if (e.Position != 0)
+                {
+                    // Force a runtime error only with a nonzero position for an unsupported security type,
+                    // because after the user has manually closed the position and restarted the algorithm,
+                    // he'll have a zero position but a nonzero realized PNL, so this event handler will be called again.
+
+                    _accountHoldingsLastException = exception;
+                    _accountHoldingsResetEvent.Set();
+                }
             }
         }
 
