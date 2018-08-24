@@ -659,7 +659,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
                 {
-                    list.Add(Symbol.Create(ticker, SecurityType.Crypto, Market.Bitfinex));
+                    list.Add(_symbolMapper.GetLeanSymbol(ticker));
                 }
             }
             return list;
