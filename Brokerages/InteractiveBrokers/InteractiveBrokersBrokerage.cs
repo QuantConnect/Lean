@@ -626,7 +626,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             {
                                 // if an exception was thrown during account download, do not retry but exit immediately
                                 attempt = maxAttempts;
-                                throw new Exception("InteractiveBrokersBrokerage.Connect(): ", _accountHoldingsLastException);
+                                throw new Exception(_accountHoldingsLastException.Message, _accountHoldingsLastException);
                             }
 
                             if (attempt++ < maxAttempts)
@@ -650,7 +650,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             {
                                 // if an exception was thrown during account download, do not retry but exit immediately
                                 attempt = maxAttempts;
-                                throw new Exception("InteractiveBrokersBrokerage.DownloadAccount(): ", _accountHoldingsLastException);
+                                throw new Exception(_accountHoldingsLastException.Message, _accountHoldingsLastException);
                             }
 
                             if (attempt++ < maxAttempts)
@@ -1650,6 +1650,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error($"InteractiveBrokersBrokerage.HandlePortfolioUpdates(): {exception}");
                 _accountHoldingsLastException = exception;
+                _accountHoldingsResetEvent.Set();
             }
         }
 
