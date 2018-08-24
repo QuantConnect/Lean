@@ -28,7 +28,8 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account")]
+    // , Ignore("This test requires a configured and testable Alpaca practice account")
+    [TestFixture]
     public partial class AlpacaBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -37,14 +38,15 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
+            System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
             // default: Config.Get("alpaca-access-token");
-            var accountKeyId = "";
+            var accountKeyId = "AKQ3RV62767QRT5NMO9O";
             // default: Config.Get("alpaca-account-id");
-            var secretKey = "";
+            var secretKey = "WkhqrpVkaYW6Olr3WwQBVMDpKRQnr3qprRgQkARJ";
             // default: Config.Get("alpaca-base-url");
-            var baseUrl = "";
+            var baseUrl = "https://staging-api.tradetalk.us";
             Console.WriteLine("ok");
-            var brokerage = new AlpacaBrokerage(null, null, accountKeyId, secretKey, baseUrl);
+            var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, accountKeyId, secretKey, baseUrl);
 
             return brokerage;
         }

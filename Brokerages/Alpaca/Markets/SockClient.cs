@@ -61,13 +61,19 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             };
             uriBuilder.Path += "/stream";
 
-            _webSocket = new WebSocket(uriBuilder.Uri.ToString());
+            //_webSocket = new WebSocket(uriBuilder.Uri.ToString());
+            _webSocket = new WebSocket(uriBuilder.Uri.ToString(), "", null, null, "", "", WebSocketVersion.None,
+                null, System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls12, 0);
 
             _webSocket.Opened += handleOpened;
             _webSocket.Closed += handleClosed;
 
             _webSocket.DataReceived += handleDataReceived;
-            _webSocket.Error += (sender, args) => OnError?.Invoke(args.Exception);
+            _webSocket.Error += (sender, args) =>
+            {
+                Console.WriteLine(args.Exception);
+                OnError?.Invoke(args.Exception);
+            };
         }
 
         /// <summary>
