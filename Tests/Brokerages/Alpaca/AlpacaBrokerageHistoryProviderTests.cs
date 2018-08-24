@@ -43,8 +43,8 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                     new TestCaseData(aapl, Resolution.Hour, Time.OneDay, false),
                     new TestCaseData(aapl, Resolution.Daily, TimeSpan.FromDays(5), false),
 
-                    // invalid resolution, throws "System.ArgumentException : Unsupported resolution: Tick"
-                    new TestCaseData(aapl, Resolution.Tick, TimeSpan.FromSeconds(15), true),
+                    // invalid resolution, no error, empty result
+                    new TestCaseData(aapl, Resolution.Tick, TimeSpan.FromSeconds(15), false),
 
                     // invalid period, no error, empty result
                     new TestCaseData(aapl, Resolution.Daily, TimeSpan.FromDays(-15), false),
@@ -105,6 +105,12 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                         {
                             Console.WriteLine("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol, tick.BidPrice, tick.AskPrice);
                         }
+                    }
+                    else if (resolution == Resolution.Second)
+                    {
+                        var bar = slice.QuoteBars[symbol];
+
+                        Console.WriteLine("{0}: {1} - O={2}, H={3}, L={4}, C={5}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close);
                     }
                     else
                     {

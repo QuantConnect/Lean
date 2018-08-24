@@ -183,6 +183,12 @@ namespace QuantConnect.Brokerages.Alpaca
 			//	yield break;
 			//}
 
+            if (request.Resolution == Resolution.Tick)
+            {
+                Log.Trace("AlpacaBrokerage.GetHistory(): invalid resolution: tick");
+                yield break;
+            }
+
 			var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, request.Symbol, request.Symbol.SecurityType).TimeZone;
 
 			var period = request.Resolution.ToTimeSpan();

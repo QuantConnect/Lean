@@ -361,11 +361,11 @@ namespace QuantConnect.Brokerages.Alpaca
 				// if the order was Filled/PartiallyFilled, find fill quantity and price and inform the user
 				if (order.Type == Orders.OrderType.Market)
 				{
-					marketOrderFillPrice = apOrder.AverageFillPrice.Value;
+                    marketOrderFillQuantity = Convert.ToInt32(apOrder.FilledQuantity);
 
-					marketOrderFillQuantity = Convert.ToInt32(apOrder.FilledQuantity);
-					
-
+                    marketOrderFillPrice = 0;
+                    if (marketOrderFillQuantity != 0) marketOrderFillPrice = apOrder.AverageFillPrice.Value;
+                                        
 					marketOrderRemainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - Math.Abs(marketOrderFillQuantity));
 					if (marketOrderRemainingQuantity > 0)
 					{
@@ -397,6 +397,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
 			var quantity = (long)order.Quantity;
 			var side = order.Quantity > 0 ? OrderSide.Buy : OrderSide.Sell;
+            if (order.Quantity < 0) quantity = -quantity;
 			Markets.OrderType type;
 			decimal? limitPrice = null;
 			decimal? stopPrice = null;
@@ -472,6 +473,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		{
 			_eventsSession = new TransactionStreamSession(this);
 			_eventsSession.TradeReceived += new Action<Markets.ITradeUpdate>(OnTransactionDataReceived);
+            Console.WriteLine("TransactionStream started");
 			_eventsSession.StartSession();
 		}
 
@@ -482,6 +484,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		{
 			if (_eventsSession != null)
 			{
+                Console.WriteLine("Stop Transaction Stream");
 				_eventsSession.StopSession();
 			}
 		}
@@ -492,7 +495,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// <param name="trade">The event object</param>
 		private void OnTransactionDataReceived(Markets.ITradeUpdate trade)
 		{
-			
+            Console.WriteLine("OnTransactionData");
 			Order order;
 			lock (Locker)
 			{
@@ -542,6 +545,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		{
 			if (_ratesSession != null)
 			{
+                Log.Trace("End Pricing Stream");
 				_ratesSession.StopSession();
 			}
 		}
@@ -553,7 +557,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		private void OnPricingDataReceived(Markets.IStreamQuote quote)
 		{
             LastHeartbeatUtcTime = DateTime.UtcNow;
-			var symbol = quote.Symbol;
+			var symbol = Symbol.Create(quote.Symbol, SecurityType.Equity, Market.USA);
 			var time = quote.Time;
 
 			// live ticks timestamps must be in exchange time zone
@@ -720,7 +724,8 @@ namespace QuantConnect.Brokerages.Alpaca
                     asList = newBars.Items.ToList();
                     
                     // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
-                    asList.RemoveAt(0); 
+                    asList.RemoveAt(0);
+                    if (asList.Count == 0) break;
 
                     offsets = asList.Last().TimeOffset;
                     Console.WriteLine("Current Offset: {0}", DateTimeHelper.FromUnixTimeMilliseconds(offsets));
