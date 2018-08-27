@@ -268,7 +268,31 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(1m, thirdRow.PriceFactor);
             Assert.AreEqual(1m, thirdRow.SplitFactor);
             Assert.AreEqual(0m, firstRow.ReferencePrice);
+        }
 
+        [Test]
+        public void ResolvesCorrectMostRecentFactorChangeDate()
+        {
+            var lines = new[]
+            {
+                "19980102,1.0000000,0.5",
+                "20130828,1.0000000,0.5",
+                "20501231,1.0000000,1"
+            };
+
+            var factorFile = FactorFile.Parse("bno", lines);
+            Assert.AreEqual(new DateTime(2013, 08, 28), factorFile.MostRecentFactorChange);
+        }
+
+        [Test]
+        [TestCase("")]
+        [TestCase("20501231,1.0000000,1")]
+        public void EmptyFactorFileReturnsEmptyListForSplitsAndDividends(string contents)
+        {
+            var lines = contents.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l));
+
+            var factorFile = FactorFile.Parse("bno", lines);
+            Assert.IsEmpty(factorFile.GetSplitsAndDividends(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)));
         }
 
         private static FactorFile GetTestFactorFile(string symbol, DateTime reference)

@@ -36,7 +36,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the entity's unique symbol, i.e OIH.1
         /// </summary>
-        public string Permtick { get; private set; }
+        public string Permtick { get; }
 
         /// <summary>
         /// Gets the last date in the map file which is indicative of a delisting event
@@ -55,12 +55,34 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
+        /// Gets the first ticker for the security represented by this map file
+        /// </summary>
+        public string FirstTicker { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MapFile"/> class.
         /// </summary>
         public MapFile(string permtick, IEnumerable<MapFileRow> data)
         {
             Permtick = permtick.ToUpper();
             _data = new SortedDictionary<DateTime, MapFileRow>(data.Distinct().ToDictionary(x => x.Date));
+
+            var firstTicker = GetMappedSymbol(FirstDate, Permtick);
+            if (char.IsDigit(firstTicker.Last()))
+            {
+                var dotIndex = firstTicker.LastIndexOf(".", StringComparison.Ordinal);
+                if (dotIndex > 0)
+                {
+                    int value;
+                    var number = firstTicker.Substring(dotIndex + 1);
+                    if (int.TryParse(number, out value))
+                    {
+                        firstTicker = firstTicker.Substring(0, dotIndex);
+                    }
+                }
+            }
+
+            FirstTicker = firstTicker;
         }
 
         /// <summary>

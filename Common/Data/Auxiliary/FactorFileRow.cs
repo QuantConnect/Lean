@@ -180,14 +180,14 @@ namespace QuantConnect.Data.Auxiliary
                 throw new ArgumentException("Unable to apply split with reference price of zero.");
             }
 
+            var previousTradingDay = exchangeHours.GetPreviousTradingDay(split.Time);
+
             // this instance must be chronologically at or in front of the split
             // this is because the factors are defined working from current to past
-            if (Date < split.Time.Date)
+            if (Date < previousTradingDay)
             {
                 throw new ArgumentException($"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'.");
             }
-
-            var previousTradingDay = exchangeHours.GetPreviousTradingDay(split.Time);
 
             return new FactorFileRow(
                 previousTradingDay,
@@ -267,9 +267,10 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Writes this row to csv format
         /// </summary>
-        public string ToCsv()
+        public string ToCsv(string source = null)
         {
-            return $"{Date.ToString(DateFormat.EightCharacter)},{PriceFactor.Normalize()},{SplitFactor.Normalize()},{ReferencePrice.Normalize()}";
+            source = source == null ? "" : $",{source}";
+            return $"{Date.ToString(DateFormat.EightCharacter)},{Math.Round(PriceFactor, 6).Normalize()},{Math.Round(SplitFactor, 7).Normalize()},{ReferencePrice.Normalize()}{source}";
         }
 
         /// <summary>
