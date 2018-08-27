@@ -58,6 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             var algorithm = new QCAlgorithm();
+            var dataManager = new DataManager();
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             var symbols = tickers.Select(ticker => algorithm.AddData<TestableQuandlFuture>(ticker, Resolution.Daily).Symbol).ToList();
 
@@ -67,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timeProvider.SetCurrentTime(startDate);
 
             var dataPointsEmitted = 0;
-            var feed = RunLiveDataFeed(algorithm, startDate, symbols, timeProvider);
+            var feed = RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager);
 
             var lastFileWriteDate = DateTime.MinValue;
 
@@ -172,6 +174,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var startDate = new DateTime(2018, 4, 2);
             var endDate = new DateTime(2018, 4, 19);
             var algorithm = new QCAlgorithm();
+            var dataManager = new DataManager();
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
             var symbols = new List<Symbol>
             {
                 algorithm.AddData<Quandl>("CBOE/VXV", Resolution.Daily).Symbol,
@@ -200,7 +204,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return new[] { tick, tick2 };
             });
 
-            var feed = RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataQueueHandler);
+            var feed = RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager, dataQueueHandler);
             Thread.Sleep(5000); // Give remote sources a handicap, so the data is available in time
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
@@ -255,6 +259,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DateTime startDate,
             IEnumerable<Symbol> symbols,
             ITimeProvider timeProvider,
+            DataManager dataManager,
             FuncDataQueueHandler funcDataQueueHandler  = null)
         {
             var feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>()),
@@ -262,7 +267,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider());
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), dataManager.DataFeedSubscriptions);
 
             foreach (var symbol in symbols)
             {

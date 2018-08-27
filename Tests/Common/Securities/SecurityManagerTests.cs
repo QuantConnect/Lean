@@ -21,6 +21,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 
@@ -44,7 +45,7 @@ namespace QuantConnect.Tests.Common.Securities
             _securityManager = new SecurityManager(timeKeeper);
             _securityTransactionManager = new SecurityTransactionManager(null, _securityManager);
             _securityPortfolioManager = new SecurityPortfolioManager(_securityManager, _securityTransactionManager);
-            _subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
+            _subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper, new DataManager());
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _securityInitializer = SecurityInitializer.Null;

@@ -52,6 +52,8 @@ namespace QuantConnect.Tests.Engine
         {
             var algorithmManager = new AlgorithmManager(false);
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            var dataManager = new DataManager();
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(AlgorithmManagerTests)}.{nameof(TestAlgorithmManagerSpeed)}");
             var feed = new MockDataFeed();
             var transactions = new BacktestingTransactionHandler();
@@ -67,7 +69,7 @@ namespace QuantConnect.Tests.Engine
             results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), feed, new BacktestingSetupHandler(), transactions);
             results.SetAlgorithm(algorithm);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
-            feed.Initialize(algorithm, job, results, null, null, null);
+            feed.Initialize(algorithm, job, results, null, null, null, dataManager.DataFeedSubscriptions);
 
             Log.Trace("Starting algorithm manager loop to process " + feed.Count + " time slices");
             var sw = Stopwatch.StartNew();
@@ -133,7 +135,8 @@ namespace QuantConnect.Tests.Engine
                 IResultHandler resultHandler,
                 IMapFileProvider mapFileProvider,
                 IFactorFileProvider factorFileProvider,
-                IDataProvider dataProvider)
+                IDataProvider dataProvider,
+                SubscriptionCollection subscriptionCollection)
             {
                 _frontierUtc = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone);
                 _endTimeUtc = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone);

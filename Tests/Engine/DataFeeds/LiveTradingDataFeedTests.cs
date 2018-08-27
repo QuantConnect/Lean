@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EmitsData()
         {
-            var algorithm = new AlgorithmStub(forex: new List<string> {"EURUSD"});
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager, forex: new List<string> {"EURUSD"});
 
             // job is used to send into DataQueueHandler
             var job = new LiveNodePacket();
@@ -60,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider, dataManager.DataFeedSubscriptions);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -89,11 +90,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesMultipleSecurities()
         {
-            var algorithm = new AlgorithmStub(
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager,
                 equities: new List<string> {"SPY", "IBM", "AAPL", "GOOG", "MSFT", "BAC", "GS"},
                 forex: new List<string> {"EURUSD", "USDJPY", "GBPJPY", "AUDUSD", "NZDUSD"}
                 );
-            var feed = RunDataFeed(algorithm);
+            var feed = RunDataFeed(algorithm, dataManager);
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
@@ -105,8 +107,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void PerformanceBenchmark()
         {
+            DataManager dataManager;
             var symbolCount = 600;
-            var algorithm = new AlgorithmStub(Resolution.Tick,
+            var algorithm = new AlgorithmStub(out dataManager, Resolution.Tick,
                 equities: Enumerable.Range(0, symbolCount).Select(x => "E"+x.ToString()).ToList()
                 );
 
@@ -117,8 +120,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             FuncDataQueueHandler queue;
             var count = new Count();
             var stopwatch = Stopwatch.StartNew();
-            var feed = RunDataFeed(algorithm, out queue, null, fdqh => ProduceBenchmarkTicks(fdqh, count));
-             
+            var feed = RunDataFeed(algorithm, out queue, dataManager, null, fdqh => ProduceBenchmarkTicks(fdqh, count));
+
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 Console.WriteLine("Count: " + ts.Slice.Keys.Count + " " + DateTime.UtcNow.ToString("o"));
@@ -161,11 +164,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // new impl sends all, the restriction shouldn't live in the feed, but rather in the
             // queue handler impl
 
-            var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             algorithm.AddData<RemoteFileBaseData>("RemoteFile");
             var remoteFile = SymbolCache.GetSymbol("RemoteFile");
             FuncDataQueueHandler dataQueueHandler;
-            RunDataFeed(algorithm, out dataQueueHandler);
+            RunDataFeed(algorithm, out dataQueueHandler, dataManager);
 
             Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
             Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
@@ -176,11 +180,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void Unsubscribes()
         {
-            var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             algorithm.AddData<RemoteFileBaseData>("RemoteFile");
             var remoteFile = SymbolCache.GetSymbol("RemoteFile");
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler);
+            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
 
             feed.RemoveSubscription(feed.Subscriptions.Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
 
@@ -193,10 +198,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesAtLeast10kTicksPerSecondWithTwentySymbols()
         {
+            DataManager dataManager;
             // this ran at ~25k ticks/per symbol for 20 symbols
-            var algorithm = new AlgorithmStub(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
+            var algorithm = new AlgorithmStub(out dataManager, Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             var t = Enumerable.Range(0, 20).Select(x => new Tick {Symbol = SymbolCache.GetSymbol(x.ToString())}).ToList();
-            var feed = RunDataFeed(algorithm, handler => t);
+            var feed = RunDataFeed(algorithm, dataManager, handler => t);
             var flag = false;
             int ticks = 0;
             var averages = new List<decimal>();
@@ -222,9 +228,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EmitsForexDataWithRoundedUtcTimes()
         {
-            var algorithm = new AlgorithmStub(forex: new List<string> { "EURUSD" });
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager, forex: new List<string> { "EURUSD" });
 
-            var feed = RunDataFeed(algorithm);
+            var feed = RunDataFeed(algorithm, dataManager);
 
             var emittedData = false;
             var lastTime = DateTime.UtcNow;
@@ -249,14 +256,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesManyCustomDataSubscriptions()
         {
+            DataManager dataManager;
             var resolution = Resolution.Second;
-            var algorithm = new AlgorithmStub();
+            var algorithm = new AlgorithmStub(out dataManager);
             for (int i = 0; i < 5; i++)
             {
                 algorithm.AddData<RemoteFileBaseData>((100+ i).ToString(), resolution, fillDataForward: false);
             }
 
-            var feed = RunDataFeed(algorithm);
+            var feed = RunDataFeed(algorithm, dataManager);
 
             int count = 0;
             //bool receivedData = false;
@@ -293,8 +301,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesRestApi()
         {
+            DataManager dataManager;
             var resolution = Resolution.Second;
-            var algorithm = new AlgorithmStub();
+            var algorithm = new AlgorithmStub(out dataManager);
             algorithm.AddData<RestApiBaseData>("RestApi", resolution);
             var symbol = SymbolCache.GetSymbol("RestApi");
             FuncDataQueueHandler dqgh;
@@ -337,12 +346,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesCoarseFundamentalData()
         {
-            var algorithm = new AlgorithmStub();
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager);
             Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             algorithm.AddUniverse(new FuncUniverse(
                 new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero), SecurityInitializer.Null,
-                coarse => coarse.Take(10).Select(x => x.Symbol) 
+                coarse => coarse.Take(10).Select(x => x.Symbol)
                 ));
 
             var lck = new object();
@@ -365,7 +375,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, lck, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(500));
 
             bool yieldedUniverseData = false;
-            var feed = RunDataFeed(algorithm, fdqh =>
+            var feed = RunDataFeed(algorithm, dataManager, fdqh =>
             {
                 lock (lck)
                 {
@@ -401,12 +411,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FastExitsDoNotThrowUnhandledExceptions()
         {
-            var algorithm = new AlgorithmStub(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
+            DataManager dataManager;
+            var algorithm = new AlgorithmStub(out dataManager, Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
 
             // job is used to send into DataQueueHandler
             var job = new LiveNodePacket();
-            
+
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
@@ -415,7 +426,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, null);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager.DataFeedSubscriptions);
 
             var feedThreadStarted = new ManualResetEvent(false);
 
@@ -442,13 +453,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(unhandledExceptionWasThrown);
         }
 
-        private IDataFeed RunDataFeed(IAlgorithm algorithm, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
+        private IDataFeed RunDataFeed(IAlgorithm algorithm, DataManager dataManager, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
             FuncDataQueueHandler dataQueueHandler;
-            return RunDataFeed(algorithm, out dataQueueHandler, null, getNextTicksFunction);
+            return RunDataFeed(algorithm, out dataQueueHandler, dataManager, null, getNextTicksFunction);
         }
 
-        private IDataFeed RunDataFeed(IAlgorithm algorithm, out FuncDataQueueHandler dataQueueHandler, ITimeProvider timeProvider = null, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
+        private IDataFeed RunDataFeed(IAlgorithm algorithm, out FuncDataQueueHandler dataQueueHandler, DataManager dataManager, ITimeProvider timeProvider = null, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
             getNextTicksFunction = getNextTicksFunction ?? (fdqh => fdqh.Subscriptions.Select(symbol => new Tick(DateTime.Now, symbol, 1, 2){Quantity = 1}));
 
@@ -462,7 +473,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager.DataFeedSubscriptions);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>

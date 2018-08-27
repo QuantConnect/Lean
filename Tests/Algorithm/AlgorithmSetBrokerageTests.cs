@@ -1,11 +1,12 @@
 ﻿using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Algorithm;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
     /// <summary>
-    /// Test class for 
+    /// Test class for
     ///  - SetBrokerageModel() in QCAlgorithm
     ///  - Default market for new securities
     /// </summary>
@@ -24,6 +25,7 @@ namespace QuantConnect.Tests.Algorithm
         public void Setup()
         {
             _algo = new QCAlgorithm();
+            _algo.SubscriptionManager.SetDataManager(new DataManager());
             SymbolCache.TryRemove(ForexSym);
             SymbolCache.TryRemove(Sym);
         }
@@ -69,7 +71,7 @@ namespace QuantConnect.Tests.Algorithm
 
         /// <summary>
         /// Brokerage model for an algorithm can be changed using <see cref="QCAlgorithm.SetBrokerageModel(IBrokerageModel)"/>
-        /// This changes the brokerage models used when forex currency pairs are added via AddForex and no brokerage is specified. 
+        /// This changes the brokerage models used when forex currency pairs are added via AddForex and no brokerage is specified.
         /// </summary>
         [Test]
         public void BrokerageModel_CanBeSpecifiedWith_SetBrokerageModel()

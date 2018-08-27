@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // since data is pre-generated, it's important to use the larger resolutions with large security counts
 
             var algorithm = PerformanceBenchmarkAlgorithms.CreateBenchmarkAlgorithm(securityCount, resolution);
+            algorithm.SubscriptionManager.SetDataManager(new DataManager());
             TestSubscriptionSynchronizerSpeed(algorithm);
         }
 

@@ -43,8 +43,11 @@ namespace QuantConnect.Tests.Engine
             };
 
             var algo = new TestAlgorithm();
+            var dataManager = new DataManager();
+            algo.SubscriptionManager.SetDataManager(dataManager);
 
-            _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(), null, new DefaultDataProvider());
+            _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(),
+                                            null, new DefaultDataProvider(), dataManager.DataFeedSubscriptions);
 
             algo.Initialize();
         }

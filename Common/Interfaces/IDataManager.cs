@@ -20,7 +20,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Subscription handler interface
+    /// DataManager interface will manage the subscriptions for both the DataFeeds and the SubscriptionManager
     /// </summary>
     public interface IDataManager
     {

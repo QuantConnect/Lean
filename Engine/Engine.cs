@@ -125,7 +125,7 @@ namespace QuantConnect.Lean.Engine
 
                     var dataManager = new DataManager();
 
-                    algorithm.SubscriptionManager.SetSubscriptionHandler(dataManager);
+                    algorithm.SubscriptionManager.SetDataManager(dataManager);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider,

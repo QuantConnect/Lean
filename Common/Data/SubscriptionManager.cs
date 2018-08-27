@@ -65,6 +65,18 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Initialise the Generic Data Manager Class
+        /// </summary>
+        /// <param name="algorithmSettings">The algorithm settings instance</param>
+        /// <param name="timeKeeper">The algorithm's time keeper</param>
+        /// <param name="dataManager">The data manager</param>
+        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper, IDataManager dataManager)
+            : this(algorithmSettings, timeKeeper)
+        {
+            _dataManager = dataManager;
+        }
+
+        /// <summary>
         /// Get the count of assets:
         /// </summary>
         public int Count => _dataManager.SubscriptionManagerCount();
