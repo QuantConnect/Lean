@@ -35,7 +35,7 @@ namespace QuantConnect
         /// Gets/sets the SetHoldings buffers value.
         /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
         /// </summary>
-        public decimal SetHoldingsBuffer { get; set; }
+        public decimal FreePortfolioValuePercentage { get; set; }
 
         /// <summary>
         /// Gets/sets if Liquidate() is enabled
@@ -50,7 +50,7 @@ namespace QuantConnect
             // default is unlimited
             DataSubscriptionLimit = int.MaxValue;
             LiquidateEnabled = true;
-            SetHoldingsBuffer = 0.0025m;
+            FreePortfolioValuePercentage = 0.0025m;
         }
     }
 }

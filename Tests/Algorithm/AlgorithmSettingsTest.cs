@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SettingSetHoldingsBufferWorksCorrectly()
         {
             var algo = new QCAlgorithm();
-            algo.Settings.SetHoldingsBuffer = 0;
+            algo.Settings.FreePortfolioValuePercentage = 0;
             InitializeAndGetFakeOrderProcessor(algo);
 
             var actual = algo.CalculateOrderQuantity(Symbols.SPY, 1m);
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Algorithm
             InitializeAndGetFakeOrderProcessor(algo);
 
             var actual = algo.CalculateOrderQuantity(Symbols.SPY, 1m);
-            // 100000 / 20 - 1 due to fee - effect of the target being reduced because of SetHoldingsBuffer
+            // 100000 / 20 - 1 due to fee - effect of the target being reduced because of FreePortfolioValuePercentage
             Assert.AreEqual(4986m, actual);
         }
 
