@@ -86,7 +86,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
+                               IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider,
+                               IDataProvider dataProvider, SubscriptionCollection subscriptionCollection)
         {
             if (!(job is LiveNodePacket))
             {
@@ -108,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
             _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
             _exchange.AddEnumerator(DataQueueHandlerSymbol, GetNextTicksEnumerator());
-            _subscriptions = new SubscriptionCollection();
+            _subscriptions = subscriptionCollection;
 
             _bridge = new BusyBlockingCollection<TimeSlice>();
             _universeSelection = new UniverseSelection(this, algorithm);

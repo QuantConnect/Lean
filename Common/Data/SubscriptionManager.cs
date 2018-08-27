@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
@@ -34,15 +33,12 @@ namespace QuantConnect.Data
     {
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
-
-        /// There is no ConcurrentHashSet collection in .NET,
-        /// so we use ConcurrentDictionary with byte value to minimize memory usage
-        private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptions = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
+        private IDataManager _dataManager;
 
         /// <summary>
         /// Returns an IEnumerable of Subscriptions
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptions.Select(x => x.Key);
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _dataManager.SubscriptionManagerSubscriptions;
 
         /// <summary>
         /// Flags the existence of custom data in the subscriptions
@@ -71,7 +67,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count => _subscriptions.Skip(0).Count();
+        public int Count => _dataManager.SubscriptionManagerCount();
 
         /// <summary>
         /// Add Market Data Required (Overloaded method for backwards compatibility).
@@ -128,13 +124,13 @@ namespace QuantConnect.Data
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
 
             //Add to subscription list: make sure we don't have this symbol:
-            if (_subscriptions.ContainsKey(newConfig))
+            if (_dataManager.SubscriptionManagerContainsKey(newConfig))
             {
                 Log.Trace("SubscriptionManager.Add(): subscription already added: " + newConfig);
                 return newConfig;
             }
 
-            _subscriptions.TryAdd(newConfig, 0);
+            _dataManager.SubscriptionManagerTryAdd(newConfig);
 
             // count data subscriptions by symbol, ignoring multiple data types
             var uniqueCount = Subscriptions
@@ -247,5 +243,12 @@ namespace QuantConnect.Data
             return AvailableDataTypes[symbolSecurityType].Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
+        /// <summary>
+        /// Sets the data manager
+        /// </summary>
+        public void SetDataManager(IDataManager dataManager)
+        {
+            _dataManager = dataManager;
+        }
     }
 }

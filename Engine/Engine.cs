@@ -123,8 +123,13 @@ namespace QuantConnect.Lean.Engine
                     IBrokerageFactory factory;
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
+                    var dataManager = new DataManager();
+
+                    algorithm.SubscriptionManager.SetSubscriptionHandler(dataManager);
+
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
-                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider);
+                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider,
+                                                            _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider, dataManager.DataFeedSubscriptions);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
                     algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
