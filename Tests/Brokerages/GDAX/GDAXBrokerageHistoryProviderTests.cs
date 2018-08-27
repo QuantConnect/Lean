@@ -29,8 +29,7 @@ using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture]
-    //[Ignore("This test requires a configured and testable GDAX account")]
+    [TestFixture, Ignore("This test requires a configured and testable GDAX account")]
     public class GDAXBrokerageHistoryProviderTests
     {
         [Test, TestCaseSource(nameof(TestParameters))]

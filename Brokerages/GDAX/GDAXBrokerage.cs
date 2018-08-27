@@ -311,13 +311,15 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (request.EndTimeUtc < request.StartTimeUtc)
             {
-                Log.Error("GDAXBrokerage.GetHistory(): The start date must precede the end date, no history returned");
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange", 
+                    "The history request start date must precede the end date, no history returned"));
                 yield break;
             }
 
             if (request.Resolution == Resolution.Tick || request.Resolution == Resolution.Second)
             {
-                Log.Error($"GDAXBrokerage.GetHistory(): {request.Resolution} resolution not supported, no history returned");
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution", 
+                    $"{request.Resolution} resolution not supported, no history returned"));
                 yield break;
             }
 
@@ -355,7 +357,8 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    Log.Error($"GDAXBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "HistoryError", 
+                        $"History request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}"));
                     yield break;
                 }
 
@@ -379,38 +382,40 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         private static IEnumerable<TradeBar> ParseCandleData(Symbol symbol, int granularity, string data, DateTime startTimeUtc)
         {
-            if (data.Length > 0)
+            if (data.Length == 0)
             {
-                var parsedData = JsonConvert.DeserializeObject<string[][]>(data);
-                var period = TimeSpan.FromSeconds(granularity);
+                yield break;
+            }
 
-                foreach (var datapoint in parsedData)
+            var parsedData = JsonConvert.DeserializeObject<string[][]>(data);
+            var period = TimeSpan.FromSeconds(granularity);
+
+            foreach (var datapoint in parsedData)
+            {
+                var time = Time.UnixTimeStampToDateTime(double.Parse(datapoint[0], CultureInfo.InvariantCulture));
+
+                if (time < startTimeUtc)
                 {
-                    var time = Time.UnixTimeStampToDateTime(double.Parse(datapoint[0], CultureInfo.InvariantCulture));
-
-                    if (time < startTimeUtc)
-                    {
-                        // Note from GDAX docs:
-                        // If data points are readily available, your response may contain as many as 300 candles
-                        // and some of those candles may precede your declared start value.
-                        yield break;
-                    }
-
-                    var close = datapoint[4].ToDecimal();
-
-                    yield return new TradeBar
-                    {
-                        Symbol = symbol,
-                        Time = time,
-                        Period = period,
-                        Open = datapoint[3].ToDecimal(),
-                        High = datapoint[2].ToDecimal(),
-                        Low = datapoint[1].ToDecimal(),
-                        Close = close,
-                        Value = close,
-                        Volume = decimal.Parse(datapoint[5], NumberStyles.Float, CultureInfo.InvariantCulture)
-                    };
+                    // Note from GDAX docs:
+                    // If data points are readily available, your response may contain as many as 300 candles
+                    // and some of those candles may precede your declared start value.
+                    yield break;
                 }
+
+                var close = datapoint[4].ToDecimal();
+
+                yield return new TradeBar
+                {
+                    Symbol = symbol,
+                    Time = time,
+                    Period = period,
+                    Open = datapoint[3].ToDecimal(),
+                    High = datapoint[2].ToDecimal(),
+                    Low = datapoint[1].ToDecimal(),
+                    Close = close,
+                    Value = close,
+                    Volume = decimal.Parse(datapoint[5], NumberStyles.Float, CultureInfo.InvariantCulture)
+                };
             }
         }
 
