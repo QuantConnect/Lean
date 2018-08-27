@@ -106,7 +106,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             catch (Exception e)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: {e.Message}"));
-                return 0; 
+                return 0;
             }
         }
 
@@ -203,7 +203,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 case OrderType.Limit:
                     return ((LimitOrder)order).LimitPrice;
                 case OrderType.Market:
-                    // Order price must be positive for market order too; 
+                    // Order price must be positive for market order too;
                     // refuses for price = 0
                     return 1;
                 case OrderType.StopMarket:
@@ -234,7 +234,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// If an IP address exceeds a certain number of requests per minute 
+        /// If an IP address exceeds a certain number of requests per minute
         /// the 429 status code and JSON response {"error": "ERR_RATE_LIMIT"} will be returned
         /// </summary>
         /// <param name="request"></param>
@@ -247,7 +247,14 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             do
             {
-                _restRateLimiter.WaitToProceed();
+                if (!_restRateLimiter.WaitToProceed(TimeSpan.Zero))
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                        "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+
+                    _restRateLimiter.WaitToProceed();
+                }
+
                 response = RestClient.Execute(request);
                 // 429 status code: Too Many Requests
             } while (++attempts < maxAttempts && (int)response.StatusCode == 429);
