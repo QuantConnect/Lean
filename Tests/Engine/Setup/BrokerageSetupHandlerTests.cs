@@ -1,10 +1,23 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
@@ -13,7 +26,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -43,7 +55,7 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
-        public void BrokerageSetupHanlder_CanGetOpenOrders()
+        public void BrokerageSetupHandler_CanGetOpenOrders()
         {
             _brokerageSetupHandler.PublicGetOpenOrders(_algorithm, _resultHanlder, _transactionHandler, _brokerage);
 
@@ -73,12 +85,15 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(_transactionHandler.OrderTickets.First(x => x.Value.OrderType == OrderType.StopLimit).Value.Quantity, 100);
             Assert.AreEqual(_transactionHandler.OrderTickets.First(x => x.Value.OrderType == OrderType.StopLimit).Value.SubmitRequest.LimitPrice, 0.2345m);
             Assert.AreEqual(_transactionHandler.OrderTickets.First(x => x.Value.OrderType == OrderType.StopLimit).Value.SubmitRequest.StopPrice, 2.2345m);
+
+            // SPY security should be added to the algorithm
+            Assert.Contains(Symbols.SPY, _algorithm.Securities.Select(x => x.Key).ToList());
         }
 
-        class NonDequeingTestResultsHandler : TestResultHandler
+        private class NonDequeingTestResultsHandler : TestResultHandler
         {
-            private AlgorithmNodePacket _job = new BacktestNodePacket();
-            public ConcurrentQueue<Packet> PersistentMessages  = new ConcurrentQueue<Packet>();
+            private readonly AlgorithmNodePacket _job = new BacktestNodePacket();
+            public readonly ConcurrentQueue<Packet> PersistentMessages  = new ConcurrentQueue<Packet>();
 
             public override void DebugMessage(string message)
             {
@@ -86,16 +101,21 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
-        class TestableBrokerageSetupHandler : BrokerageSetupHandler
+        private class TestableBrokerageSetupHandler : BrokerageSetupHandler
         {
+            private readonly HashSet<SecurityType> _supportedSecurityTypes = new HashSet<SecurityType>
+            {
+                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.Crypto
+            };
+
             public void PublicGetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
             {
-                GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage);
+                GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage, _supportedSecurityTypes, Resolution.Second);
             }
         }
     }
 
-    class TestBrokerage : IBrokerage
+    internal class TestBrokerage : IBrokerage
     {
         public event EventHandler<OrderEvent> OrderStatusChanged;
         public event EventHandler<OrderEvent> OptionPositionAssigned;
