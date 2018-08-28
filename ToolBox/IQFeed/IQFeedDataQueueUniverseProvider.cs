@@ -128,20 +128,23 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             Func<Symbol, string> lookupFunc;
 
-            // for option, futures contract we search the underlying
-            if (securityType == SecurityType.Option ||
-                securityType == SecurityType.Future)
+            switch (securityType)
             {
-                lookupFunc = symbol => symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
-            }
-            else
-            {
-                lookupFunc = symbol => symbol.Value;
+                case SecurityType.Option:
+                    // for option, futures contract we search the underlying
+                    lookupFunc = symbol => symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                    break;
+                case SecurityType.Future:
+                    lookupFunc = symbol => symbol.ID.Symbol;
+                    break;
+                default:
+                    lookupFunc = symbol => symbol.Value;
+                    break;
             }
 
             var result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
-                                            x.Symbol.ID.SecurityType == securityType && 
-                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) && 
+                                            x.Symbol.ID.SecurityType == securityType &&
+                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
                                             (securityExchange == null || x.SecurityExchange == securityExchange))
                                          .ToList();
 
@@ -149,12 +152,12 @@ namespace QuantConnect.ToolBox.IQFeed
 
             if (onDemandRequests)
             {
-                var exchanges = securityType == SecurityType.Future ? 
-                                    _futuresExchanges.Values.Reverse().ToArray() : 
+                var exchanges = securityType == SecurityType.Future ?
+                                    _futuresExchanges.Values.Reverse().ToArray() :
                                     new string[] { };
 
                 // sorting list of available contracts by exchange priority, taking the top 1
-                var symbolData = 
+                var symbolData =
                     result
                     .OrderByDescending(e => Array.IndexOf(exchanges, e))
                     .First();
@@ -164,7 +167,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 // Replace placeholder item in _symbolUniverse with the data loaded on demand
                 UpdateCollectionsOnDemand(symbolData, loadedData);
-                
+
                 // if we found some data that was loaded on demand, then we have to re-run the query to include that data into method output
 
                 result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
@@ -271,11 +274,18 @@ namespace QuantConnect.ToolBox.IQFeed
 
             long currentPosition = 0;
             long prevPosition = 0;
-
+            long lineCounter = 0;
             reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, todayFullCsvName);
 
             while (!reader.EndOfStream)
             {
+                lineCounter++;
+
+                if (lineCounter % 100000 == 0)
+                {
+                    Log.Trace($"{lineCounter} lines read.");
+                }
+
                 prevPosition = currentPosition;
 
                 var line = reader.ReadLine();
@@ -283,6 +293,8 @@ namespace QuantConnect.ToolBox.IQFeed
                 currentPosition += line.Length + NewLine.Length; // file position 'estimator' for ASCII file of IQFeed universe
 
                 var columns = line.Split(Tabulation);
+
+                if (columns[columnSymbol] == "TST$Y") continue;
 
                 if (columns.Length != totalColumns)
                 {
@@ -355,7 +367,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         if (columns[columnSymbol].EndsWith("#"))
                             continue;
 
-                        var futuresTicker = columns[columnSymbol].TrimStart(new [] { '@' });
+                        var futuresTicker = columns[columnSymbol].TrimStart(new[] { '@' });
 
                         var parsed = SymbolRepresentation.ParseFutureTicker(futuresTicker);
                         var underlyingString = parsed.Underlying;
@@ -438,7 +450,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
             var reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, todayFullCsvName, placeholder.StartPosition);
 
-            Log.Trace("Loading data on demand for {0}...", placeholder.Symbol.Underlying.Value);
+            Log.Trace("Loading data on demand for {0}...", placeholder.Symbol.ID);
 
             var symbolUniverse = new List<SymbolData>();
 
@@ -495,7 +507,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         if (_iqFeedNameMap.ContainsKey(underlyingString))
                             underlyingString = _iqFeedNameMap[underlyingString];
 
-                        if (underlyingString != placeholder.Symbol.Underlying.Value)
+                        if (underlyingString != placeholder.Symbol.Value)
                         {
                             continue;
                         }
@@ -503,7 +515,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         // Futures contracts have different idiosyncratic expiration dates that IQFeed symbol universe file doesn't contain
                         // We request IQFeed explicitly for the exact expiration data of each contract
 
-                        var expirationDate = _symbolFundamentalData.Request(columns[columnSymbol]).Item1; 
+                        var expirationDate = _symbolFundamentalData.Request(columns[columnSymbol]).Item1;
 
                         if (expirationDate == DateTime.MinValue)
                         {
@@ -596,7 +608,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         public class SymbolFundamentalData : IQLevel1Client
         {
-            public SymbolFundamentalData(): base(80)
+            public SymbolFundamentalData() : base(80)
             {
             }
 
@@ -649,6 +661,11 @@ namespace QuantConnect.ToolBox.IQFeed
                 return Tuple.Create(expiry, rootSymbol);
             }
         }
-        
+
+        public IEnumerable<string> GetBrokerageContractSymbol(Symbol subscribeSymbol)
+        {
+            return _symbols.Where(kpv => kpv.Key.SecurityType == SecurityType.Future && kpv.Key.ID.Symbol == subscribeSymbol.ID.Symbol)
+                .Select(kpv => kpv.Value);
+        }
     }
 }
