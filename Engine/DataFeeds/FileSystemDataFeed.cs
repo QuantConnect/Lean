@@ -69,14 +69,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
                                IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider,
-                               IDataProvider dataProvider, SubscriptionCollection subscriptionCollection)
+                               IDataProvider dataProvider, IDataFeedSubscriptionManager subscriptionManager)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataProvider = dataProvider;
-            _subscriptions = subscriptionCollection;
+            _subscriptions = subscriptionManager.DataFeedSubscriptions;
             _universeSelection = new UniverseSelection(this, algorithm);
             _cancellationTokenSource = new CancellationTokenSource();
             _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);

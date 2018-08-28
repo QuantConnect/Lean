@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Engine
             results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), feed, new BacktestingSetupHandler(), transactions);
             results.SetAlgorithm(algorithm);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
-            feed.Initialize(algorithm, job, results, null, null, null, dataManager.DataFeedSubscriptions);
+            feed.Initialize(algorithm, job, results, null, null, null, dataManager);
 
             Log.Trace("Starting algorithm manager loop to process " + feed.Count + " time slices");
             var sw = Stopwatch.StartNew();
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Engine
                 IMapFileProvider mapFileProvider,
                 IFactorFileProvider factorFileProvider,
                 IDataProvider dataProvider,
-                SubscriptionCollection subscriptionCollection)
+                IDataFeedSubscriptionManager subscriptionManager)
             {
                 _frontierUtc = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone);
                 _endTimeUtc = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone);

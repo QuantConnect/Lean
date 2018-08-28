@@ -25,25 +25,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// DataManager will manage the subscriptions for both the DataFeeds and the SubscriptionManager
     /// </summary>
-    public class DataManager : IDataManager
+    public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager
     {
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
         private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptionManagerSubscriptions
             = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
 
+        #region IDataFeedSubscriptionManager
+
         /// <summary>
         /// Gets the data feed subscription collection
         /// </summary>
-        public readonly SubscriptionCollection DataFeedSubscriptions = new SubscriptionCollection();
+        public SubscriptionCollection DataFeedSubscriptions { get; } = new SubscriptionCollection();
+
+        #endregion
+
+        #region IAlgorithmSubscriptionManager
 
         /// <summary>
-        /// Gets all the current data config subscriptions that are being processed
+        /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions => _subscriptionManagerSubscriptions.Select(x => x.Key);
 
         /// <summary>
-        /// Returns true if the given subscription data config is already present
+        /// Returns true if the given subscription data config is already present for the SubscriptionManager
         /// </summary>
         public bool SubscriptionManagerTryAdd(SubscriptionDataConfig config)
         {
@@ -51,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Returns true if the given subscription data config is already present
+        /// Returns true if the given subscription data config is already present for the SubscriptionManager
         /// </summary>
         public bool SubscriptionManagerContainsKey(SubscriptionDataConfig config)
         {
@@ -59,11 +65,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Returns the amount of data config subscriptions processed
+        /// Returns the amount of data config subscriptions processed for the SubscriptionManager
         /// </summary>
         public int SubscriptionManagerCount()
         {
             return _subscriptionManagerSubscriptions.Skip(0).Count();
         }
+
+        #endregion
     }
 }

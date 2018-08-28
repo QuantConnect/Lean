@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider,
-                                                            _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider, dataManager.DataFeedSubscriptions);
+                                                            _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider, dataManager);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
                     algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);

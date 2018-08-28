@@ -20,28 +20,28 @@ using QuantConnect.Data;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// DataManager interface will manage the subscriptions for both the DataFeeds and the SubscriptionManager
+    /// AlgorithmSubscriptionManager interface will manage the subscriptions for the SubscriptionManager
     /// </summary>
-    public interface IDataManager
+    public interface IAlgorithmSubscriptionManager
     {
         /// <summary>
-        /// Gets all the current data config subscriptions that are being processed
+        /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
         /// </summary>
         IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions { get; }
 
         /// <summary>
-        /// Adds a new subscription data config
+        /// Adds a new subscription data config for the SubscriptionManager
         /// </summary>
         /// <returns>True, if the configuration was added successfully</returns>
         bool SubscriptionManagerTryAdd(SubscriptionDataConfig config);
 
         /// <summary>
-        /// Returns true if the given subscription data config is already present
+        /// Returns true if the given subscription data config is already present for the SubscriptionManager
         /// </summary>
         bool SubscriptionManagerContainsKey(SubscriptionDataConfig config);
 
         /// <summary>
-        /// Returns the amount of data config subscriptions processed
+        /// Returns the amount of data config subscriptions processed for the SubscriptionManager
         /// </summary>
         int SubscriptionManagerCount();
     }

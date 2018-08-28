@@ -33,12 +33,12 @@ namespace QuantConnect.Data
     {
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
-        private IDataManager _dataManager;
+        private IAlgorithmSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Returns an IEnumerable of Subscriptions
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _dataManager.SubscriptionManagerSubscriptions;
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions;
 
         /// <summary>
         /// Flags the existence of custom data in the subscriptions
@@ -69,17 +69,17 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
-        /// <param name="dataManager">The data manager</param>
-        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper, IDataManager dataManager)
+        /// <param name="subscriptionManager">The subscription manager</param>
+        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
             : this(algorithmSettings, timeKeeper)
         {
-            _dataManager = dataManager;
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count => _dataManager.SubscriptionManagerCount();
+        public int Count => _subscriptionManager.SubscriptionManagerCount();
 
         /// <summary>
         /// Add Market Data Required (Overloaded method for backwards compatibility).
@@ -136,13 +136,13 @@ namespace QuantConnect.Data
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
 
             //Add to subscription list: make sure we don't have this symbol:
-            if (_dataManager.SubscriptionManagerContainsKey(newConfig))
+            if (_subscriptionManager.SubscriptionManagerContainsKey(newConfig))
             {
                 Log.Trace("SubscriptionManager.Add(): subscription already added: " + newConfig);
                 return newConfig;
             }
 
-            _dataManager.SubscriptionManagerTryAdd(newConfig);
+            _subscriptionManager.SubscriptionManagerTryAdd(newConfig);
 
             // count data subscriptions by symbol, ignoring multiple data types
             var uniqueCount = Subscriptions
@@ -256,11 +256,11 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Sets the data manager
+        /// Sets the Subscription Manager
         /// </summary>
-        public void SetDataManager(IDataManager dataManager)
+        public void SetDataManager(IAlgorithmSubscriptionManager subscriptionManager)
         {
-            _dataManager = dataManager;
+            _subscriptionManager = subscriptionManager;
         }
     }
 }

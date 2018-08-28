@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider, dataManager.DataFeedSubscriptions);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider, dataManager);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -426,7 +426,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, null);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager.DataFeedSubscriptions);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
 
             var feedThreadStarted = new ManualResetEvent(false);
 
@@ -473,7 +473,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager.DataFeedSubscriptions);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
