@@ -170,6 +170,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
+    <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloaderProgram.cs" />
     <Compile Include="GzipStreamProvider.cs" />

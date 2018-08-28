@@ -144,6 +144,10 @@
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\EqualWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
+    <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
@@ -153,6 +157,7 @@
     <Compile Include="Algorithm\Framework\Risk\MaximumDrawdownPercentPerSecurityTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\ManualUniverseSelectionModelTests.cs" />
     <Compile Include="API\ApiTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />

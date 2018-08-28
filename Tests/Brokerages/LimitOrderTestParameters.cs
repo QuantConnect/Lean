@@ -24,8 +24,8 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public LimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit)
-            : base(symbol)
+        public LimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
+            : base(symbol, properties)
         {
             _highLimit = highLimit;
             _lowLimit = lowLimit;
@@ -33,12 +33,18 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new LimitOrder(Symbol, -Math.Abs(quantity), _highLimit, DateTime.Now);
+            return new LimitOrder(Symbol, -Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
+            {
+                OrderSubmissionData = OrderSubmissionData
+            };
         }
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new LimitOrder(Symbol, Math.Abs(quantity), _lowLimit, DateTime.Now);
+            return new LimitOrder(Symbol, Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
+            {
+                OrderSubmissionData = OrderSubmissionData
+            };
         }
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)

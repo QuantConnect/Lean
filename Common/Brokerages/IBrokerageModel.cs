@@ -186,7 +186,7 @@ namespace QuantConnect.Brokerages
                     return new FxcmBrokerageModel(accountType);
 
                 case BrokerageName.Bitfinex:
-                    return new DefaultBrokerageModel(accountType);
+                    return new BitfinexBrokerageModel(accountType);
 
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
