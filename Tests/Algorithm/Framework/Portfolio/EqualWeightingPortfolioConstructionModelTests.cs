@@ -83,7 +83,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             // Equity will be divided by all securities
             var amount = _algorithm.Portfolio.TotalPortfolioValue / _algorithm.Securities.Count;
             var expectedTargets = _algorithm.Securities
-                .Select(x => new PortfolioTarget(x.Key, (int)direction * Math.Floor(amount / x.Value.Price)));
+                .Select(x => new PortfolioTarget(x.Key, (int)direction
+                                                        * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                                                     / x.Value.Price)));
 
             var insights = _algorithm.Securities.Keys.Select(x => GetInsight(x, direction, _algorithm.UtcTime));
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
@@ -113,7 +115,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since its insight will have flat direction
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
+                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                                                       / x.Value.Price);
                 return new PortfolioTarget(x.Key, quantity);
             });
 
@@ -156,7 +160,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
+                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                                                       / x.Value.Price);
                 return new PortfolioTarget(x.Key, quantity);
             });
 
@@ -271,7 +277,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedTargets = _algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
+                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
+                                                                       / x.Value.Price);
                 return new PortfolioTarget(x.Key, quantity);
             });
 
