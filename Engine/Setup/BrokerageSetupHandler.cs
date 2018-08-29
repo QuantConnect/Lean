@@ -309,12 +309,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     var holdings = brokerage.GetAccountHoldings();
 
                     // add options first to ensure raw data normalization mode is set on the equity underlyings
-                    holdings = holdings
-                        .Where(x => x.Type == SecurityType.Option)
-                        .Union(holdings.Where(x => x.Type != SecurityType.Option))
-                        .ToList();
-
-                    foreach (var holding in holdings)
+                    foreach (var holding in holdings.OrderByDescending(x => x.Type))
                     {
                         Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
 
@@ -411,12 +406,7 @@ namespace QuantConnect.Lean.Engine.Setup
             var openOrders = brokerage.GetOpenOrders();
 
             // add options first to ensure raw data normalization mode is set on the equity underlyings
-            openOrders = openOrders
-                .Where(x => x.SecurityType == SecurityType.Option)
-                .Union(openOrders.Where(x => x.SecurityType != SecurityType.Option))
-                .ToList();
-
-            foreach (var order in openOrders)
+            foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
                 // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
                 Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.Value + " - " + order.Quantity);
