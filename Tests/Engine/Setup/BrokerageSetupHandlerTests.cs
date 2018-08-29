@@ -18,14 +18,17 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -38,7 +41,7 @@ namespace QuantConnect.Tests.Engine.Setup
     {
         private IAlgorithm _algorithm;
         private ITransactionHandler _transactionHandler;
-        private NonDequeingTestResultsHandler _resultHanlder;
+        private NonDequeingTestResultsHandler _resultHandler;
         private IBrokerage _brokerage;
 
         private TestableBrokerageSetupHandler _brokerageSetupHandler;
@@ -48,23 +51,23 @@ namespace QuantConnect.Tests.Engine.Setup
         {
             _algorithm = new QCAlgorithm();
             _transactionHandler = new BrokerageTransactionHandler();
-            _resultHanlder = new NonDequeingTestResultsHandler();
+            _resultHandler = new NonDequeingTestResultsHandler();
             _brokerage = new TestBrokerage();
 
             _brokerageSetupHandler = new TestableBrokerageSetupHandler();
         }
 
         [Test]
-        public void BrokerageSetupHandler_CanGetOpenOrders()
+        public void CanGetOpenOrders()
         {
-            _brokerageSetupHandler.PublicGetOpenOrders(_algorithm, _resultHanlder, _transactionHandler, _brokerage);
+            _brokerageSetupHandler.PublicGetOpenOrders(_algorithm, _resultHandler, _transactionHandler, _brokerage);
 
             Assert.AreEqual(_transactionHandler.Orders.Count, 4);
 
             Assert.AreEqual(_transactionHandler.OrderTickets.Count, 4);
 
             // Warn the user about each open order
-            Assert.AreEqual(_resultHanlder.PersistentMessages.Count, 4);
+            Assert.AreEqual(_resultHandler.PersistentMessages.Count, 4);
 
             // Market order
             Assert.AreEqual(_transactionHandler.OrderTickets.First(x => x.Value.OrderType == OrderType.Market).Value.Quantity, 100);
@@ -88,6 +91,125 @@ namespace QuantConnect.Tests.Engine.Setup
 
             // SPY security should be added to the algorithm
             Assert.Contains(Symbols.SPY, _algorithm.Securities.Select(x => x.Key).ToList());
+        }
+
+        [Test, TestCaseSource(nameof(GetExistingHoldingsAndOrdersTestCaseData))]
+        public void LoadsExistingHoldingsAndOrders(List<Holding> holdings, List<Order> orders)
+        {
+            var algorithm = new TestAlgorithm();
+            var job = new LiveNodePacket { UserId = 1, ProjectId = 1, DeployId = "1", Brokerage = "PaperBrokerage", DataQueueHandler = "none"};
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+
+            var brokerage = new Mock<IBrokerage>();
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<Cash>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(holdings);
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(orders);
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+            var result = setupHandler.Setup(algorithm, brokerage.Object, job, resultHandler.Object, transactionHandler.Object, realTimeHandler.Object);
+
+            Assert.IsTrue(result);
+        }
+
+        public TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
+        {
+            return new []
+            {
+                new TestCaseData(new List<Holding>(), new List<Order>())
+                    .SetName("None"),
+
+                new TestCaseData(
+                    new List<Holding>
+                    {
+                        new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1 }
+                    },
+                    new List<Order>
+                    {
+                        new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
+                    })
+                    .SetName("Equity"),
+
+                new TestCaseData(
+                    new List<Holding>
+                    {
+                        new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
+                    },
+                    new List<Order>
+                    {
+                        new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow)
+                    })
+                    .SetName("Option"),
+
+                new TestCaseData(
+                        new List<Holding>
+                        {
+                            new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1 },
+                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
+                        },
+                        new List<Order>
+                        {
+                            new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow),
+                            new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow)
+                        })
+                    .SetName("Equity + Option"),
+
+                new TestCaseData(
+                        new List<Holding>
+                        {
+                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 },
+                            new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1 }
+                        },
+                        new List<Order>
+                        {
+                            new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow),
+                            new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
+                        })
+                    .SetName("Option + Equity"),
+
+                new TestCaseData(
+                        new List<Holding>
+                        {
+                            new Holding { Type = SecurityType.Forex, Symbol = Symbols.EURUSD, Quantity = 1 }
+                        },
+                        new List<Order>
+                        {
+                            new LimitOrder(Symbols.EURUSD, 1, 1, DateTime.UtcNow)
+                        })
+                    .SetName("Forex"),
+
+                new TestCaseData(
+                        new List<Holding>
+                        {
+                            new Holding { Type = SecurityType.Crypto, Symbol = Symbols.BTCUSD, Quantity = 1 }
+                        },
+                        new List<Order>
+                        {
+                            new LimitOrder(Symbols.BTCUSD, 1, 1, DateTime.UtcNow)
+                        })
+                    .SetName("Crypto"),
+
+                new TestCaseData(
+                        new List<Holding>
+                        {
+                            new Holding { Type = SecurityType.Future, Symbol = Symbols.Fut_SPY_Feb19_2016, Quantity = 1 }
+                        },
+                        new List<Order>
+                        {
+                            new LimitOrder(Symbols.Fut_SPY_Feb19_2016, 1, 1, DateTime.UtcNow)
+                        })
+                    .SetName("Future"),
+            };
+        }
+
+        private class TestAlgorithm : QCAlgorithm
+        {
+            public override void Initialize() {}
         }
 
         private class NonDequeingTestResultsHandler : TestResultHandler
