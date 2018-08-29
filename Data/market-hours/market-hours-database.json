@@ -6966,65 +6966,76 @@
     },
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "Asia/Hong_Kong",
-      "sunday": [],
-      "monday": [
+      "exchangeTimeZone": "UTC",
+      "sunday": [
         {
-          "start": "09:00:00",
-          "end": "12:00:00",
+          "start": "00:30:00",
+          "end": "09:10:00",
           "state": "market"
         },
         {
-          "start": "13:00:00",
-          "end": "17:00:00",
+          "start": "10:15:00",
+          "end": "18:00:00",
           "state": "market"
         }
       ],
-      "tuesday": [
+      "monday": [
         {
-          "start": "09:00:00",
-          "end": "12:00:00",
+          "start": "00:30:00",
+          "end": "09:10:00",
           "state": "market"
         },
         {
-          "start": "13:00:00",
-          "end": "17:00:00",
+          "start": "10:15:00",
+          "end": "18:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [        
+        {
+          "start": "00:30:00",
+          "end": "09:10:00",
+          "state": "market"
+        },
+        {
+          "start": "10:15:00",
+          "end": "18:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "09:00:00",
-          "end": "12:00:00",
+          "start": "00:30:00",
+          "end": "09:10:00",
           "state": "market"
         },
         {
-          "start": "13:00:00",
-          "end": "17:00:00",
+          "start": "10:15:00",
+          "end": "18:00:00",
           "state": "market"
         }
       ],
       "thursday": [
        {
-          "start": "09:00:00",
-          "end": "12:00:00",
+          "start": "00:30:00",
+          "end": "09:10:00",
           "state": "market"
         },
         {
-          "start": "13:00:00",
-          "end": "17:00:00",
+          "start": "10:15:00",
+          "end": "18:00:00",
           "state": "market"
         }
       ],
       "friday": [
         {
-          "start": "09:00:00",
-          "end": "12:00:00",
+          "start": "00:30:00",
+          "end": "09:10:00",
           "state": "market"
         },
         {
-          "start": "13:00:00",
-          "end": "17:00:00",
+          "start": "10:15:00",
+          "end": "18:00:00",
           "state": "market"
         }
       ],
