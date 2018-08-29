@@ -43,6 +43,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol ETHBTC = CreateCryptoSymbol("ETHBTC");
 
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
+        public static readonly Symbol DE30EUR = CreateCfdSymbol("DE30EUR", Market.FXCM);
         public static readonly Symbol XAGUSD = CreateCfdSymbol("XAGUSD", Market.FXCM);
         public static readonly Symbol XAUUSD = CreateCfdSymbol("XAUUSD", Market.FXCM);
 
