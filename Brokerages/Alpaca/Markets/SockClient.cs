@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WebSocket4Net;
+using System.Security.Authentication;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
@@ -61,9 +62,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             };
             uriBuilder.Path += "/stream";
 
-            //_webSocket = new WebSocket(uriBuilder.Uri.ToString());
-            _webSocket = new WebSocket(uriBuilder.Uri.ToString(), "", null, null, "", "", WebSocketVersion.None,
-                null, System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls12, 0);
+            _webSocket = new WebSocket(uriBuilder.Uri.ToString(),
+                sslProtocols: SslProtocols.Tls11 | SslProtocols.Tls12);
 
             _webSocket.Opened += handleOpened;
             _webSocket.Closed += handleClosed;
@@ -172,6 +172,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 case "account_updates":
                     handleAccountUpdates(
                         data.ToObject<JsonAccountUpdate>());
+                    break;
+
+                default:
+                    OnError?.Invoke(new InvalidOperationException(
+                        $"Unexpected message type '{stream}' received."));
                     break;
             }
         }

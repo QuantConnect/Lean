@@ -225,9 +225,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
         private QueryBuilder getDefaultPolygonApiQueryBuilder()
         {
-            return new QueryBuilder()
-                .AddParameter("apiKey", _polygonApiKey)
-                .AddParameter("staging", "true");
+            var builder = new QueryBuilder()
+                .AddParameter("apiKey", _polygonApiKey);
+
+            if (_isPolygonStaging)
+            {
+                builder.AddParameter("staging", "true");
+            }
+
+            return builder;
         }
     }
 }
