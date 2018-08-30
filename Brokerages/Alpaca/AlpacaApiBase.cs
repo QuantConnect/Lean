@@ -280,7 +280,6 @@ namespace QuantConnect.Brokerages.Alpaca
 		public Dictionary<string, Tick> GetRates(List<string> instruments)
 		{
 			var response = restClient.ListQuotesAsync(instruments).Result;
-            Log.Trace(response.ToList().ToString());
 			return response
 				.ToDictionary(
 					x => x.Symbol,
@@ -350,11 +349,21 @@ namespace QuantConnect.Brokerages.Alpaca
 			var marketOrderFillPrice = 0m;
 			var marketOrderRemainingQuantity = 0;
 			var marketOrderStatus = Orders.OrderStatus.Filled;
-			order.PriceCurrency = "$";
+			order.PriceCurrency = "USD";
 
 			lock (Locker)
 			{
-				var apOrder = GenerateAndPlaceOrder(order);
+                IOrder apOrder = null;
+                try
+                {
+                    apOrder = GenerateAndPlaceOrder(order);
+                }
+                catch (Exception e)
+                {
+                    Log.Trace(e.Message);
+                    return false;
+                }
+
 				order.BrokerId.Add(apOrder.OrderId.ToString());
 
 				// Market orders are special, due to the callback not being triggered always,
@@ -460,7 +469,7 @@ namespace QuantConnect.Brokerages.Alpaca
 			foreach (var orderId in order.BrokerId)
 			{
 				var res = restClient.DeleteOrderAsync(new Guid(orderId)).Result;
-				OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.Canceled });
+				OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.CancelPending });
 			}
 
 			return true;
@@ -495,30 +504,44 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// <param name="trade">The event object</param>
 		private void OnTransactionDataReceived(Markets.ITradeUpdate trade)
 		{
-            Console.WriteLine("OnTransactionData");
+            Console.WriteLine("OnTransactionData: {0} {1} {2}", trade.Event, trade.Order.OrderSide, trade.Order.OrderStatus);
 			Order order;
+            string tradeEvent = trade.Event.ToUpper();
 			lock (Locker)
 			{
 				order = OrderProvider.GetOrderByBrokerageId(trade.Order.OrderId.ToString());
 			}
-			if (order != null && trade.Order.OrderStatus == Markets.OrderStatus.Filled)
+			if (order != null)
 			{
 				Orders.OrderStatus status;
-				// Market orders are special: if the order was not in 'PartiallyFilledMarketOrders', means
-				// we already sent the fill event with OrderStatus.Filled, else it means we already informed the user
-				// of a partiall fill, or didn't inform the user, so we need to do it now
-				if (order.Type != Orders.OrderType.Market || PendingFilledMarketOrders.TryRemove(order.Id, out status))
-				{
-					order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+                // Market orders are special: if the order was not in 'PartiallyFilledMarketOrders', means
+                // we already sent the fill event with OrderStatus.Filled, else it means we already informed the user
+                // of a partiall fill, or didn't inform the user, so we need to do it now
+                if (tradeEvent == "FILL")
+                {
+                    if (order.Type != Orders.OrderType.Market || PendingFilledMarketOrders.TryRemove(order.Id, out status))
+                    {
+                        order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+                        
+                        status = Orders.OrderStatus.Filled;
+                        if (trade.Order.FilledQuantity < trade.Order.Quantity) status = Orders.OrderStatus.PartiallyFilled;
+                        Console.WriteLine("Filled Quantity: {0}", trade.Order.Quantity);
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Fill Event")
+                        {
+                            Status = status,
+                            FillPrice = trade.Price.Value,
+                            FillQuantity = Convert.ToInt32(trade.Order.Quantity)
+                        });
+                    }
+                }
+                else if (tradeEvent == "CANCEL")
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.Canceled });
+                }
+                else if (tradeEvent == "ORDER_CANCEL_REJECTED")
+                {
 
-					const int orderFee = 0;
-					OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Alpaca Fill Event")
-					{
-						Status = Orders.OrderStatus.Filled,
-						FillPrice = trade.Price.Value,
-						FillQuantity = Convert.ToInt32(trade.Quantity)
-					});
-				}
+                }
 			}
 			else
 			{
@@ -722,6 +745,15 @@ namespace QuantConnect.Brokerages.Alpaca
                 {
                     var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
                     asList = newBars.Items.ToList();
+
+                    if (asList.Count == 0)
+                    {
+                        startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
+                        startTime = startTime.AddDays(1);
+                        if (startTime > endTimeUtc) break;
+                        offsets = 0;
+                        continue;
+                    }
                     
                     // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
                     asList.RemoveAt(0);
@@ -733,15 +765,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
-                    if (e.InnerException != null && e.InnerException.Message.Contains("ticks"))
-                    {
-                        startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
-                        startTime = startTime.AddDays(1);
-                        if (startTime > endTimeUtc) break;
-                        offsets = 0;
-                    }
-                    else
-                        throw;
+                    throw e;
                 }
                 var result = asList
                         .GroupBy(x => DateTimeHelper.FromUnixTimeMilliseconds(x.TimeOffset).RoundDown(period))
@@ -1065,7 +1089,7 @@ namespace QuantConnect.Brokerages.Alpaca
 			var id = order.OrderId.ToString();
 			
 			qcOrder.Symbol = Symbol.Create(instrument, SecurityType.Equity, Market.USA);
-			qcOrder.Time = order.SubmittedAt.Value;
+            qcOrder.Time = order.SubmittedAt.Value;
 			qcOrder.Quantity = order.Quantity;
 			qcOrder.Status = Orders.OrderStatus.None;
 			qcOrder.BrokerId.Add(id);
@@ -1117,9 +1141,9 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// </summary>
 		internal NatsClient GetNatsClient()
 		{
-            var accId = BaseUrl.Contains("staging") ? AccountKeyId + "-staging" : AccountKeyId;
+            var isStaging = BaseUrl.Contains("staging") ? true : false;
 
-            var natsClient = new NatsClient(accId);
+            var natsClient = new NatsClient(AccountKeyId, isStaging);
 			return natsClient;
 		}
 	}

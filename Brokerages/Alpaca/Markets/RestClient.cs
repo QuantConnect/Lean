@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
         private readonly HttpClient _polygonHttpClient = new HttpClient();
 
+        private readonly Boolean _isPolygonStaging;
+
         private readonly String _polygonApiKey;
 
         /// <summary>
@@ -26,16 +29,19 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="secretKey">Application secret key.</param>
         /// <param name="alpacaRestApi">Alpaca REST API endpoint URL.</param>
         /// <param name="polygonRestApi">Polygon REST API ennpoint URL.</param>
+        /// <param name="isStagingEnvironment">If <c>true</c> use staging.</param>
         public RestClient(
             String keyId,
             String secretKey,
             String alpacaRestApi = null,
-            String polygonRestApi = null)
+            String polygonRestApi = null,
+            Boolean? isStagingEnvironment = null)
             : this(
                 keyId,
                 secretKey,
                 new Uri(alpacaRestApi ?? "https://api.alpaca.markets"),
-                new Uri(polygonRestApi ?? "https://api.polygon.io"))
+                new Uri(polygonRestApi ?? "https://api.polygon.io"),
+                isStagingEnvironment ?? false)
         {
         }
 
@@ -46,11 +52,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="secretKey">Application secret key.</param>
         /// <param name="alpacaRestApi">Alpaca REST API endpoint URL.</param>
         /// <param name="polygonRestApi">Polygon REST API ennpoint URL.</param>
+        /// <param name="isStagingEnvironment">If <c>true</c> use staging.</param>
         public RestClient(
             String keyId,
             String secretKey,
             Uri alpacaRestApi,
-            Uri polygonRestApi)
+            Uri polygonRestApi,
+            Boolean isStagingEnvironment)
         {
 			if (keyId == null)
 				throw new ArgumentException(nameof(keyId));
@@ -72,6 +80,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 .Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _polygonHttpClient.BaseAddress =
                 polygonRestApi ?? new Uri("https://api.polygon.io");
+
+            _isPolygonStaging = isStagingEnvironment ||
+                _alpacaHttpClient.BaseAddress.Host.Contains("staging");
+
+            ServicePointManager.SecurityProtocol =
+                SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
         }
 
         private async Task<TApi> getSingleObjectAsync<TApi, TJson>(

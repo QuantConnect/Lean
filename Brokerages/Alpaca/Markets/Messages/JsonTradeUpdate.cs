@@ -15,7 +15,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         [JsonProperty(PropertyName = "qty", Required = Required.Default)]
         public Int64? Quantity { get; set; }
 
-        [JsonProperty(PropertyName = "timestamp", Required = Required.Always)]
+        [JsonProperty(PropertyName = "timestamp", Required = Required.Default)]
         public DateTime Timestamp { get; set; }
 
         [JsonProperty(PropertyName = "order", Required = Required.Always)]

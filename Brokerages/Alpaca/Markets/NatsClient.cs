@@ -23,9 +23,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Creates new instance of <see cref="NatsClient"/> object.
         /// </summary>
         /// <param name="keyId">Application key identifier.</param>
+        /// <param name="isStagingEnvironment">If <c>true</c> use staging.</param>"
         /// <param name="natsServers">List of NATS servers/ports.</param>
         public NatsClient(
             String keyId,
+            Boolean isStagingEnvironment,
             IEnumerable<String> natsServers = null)
         {
             _options = ConnectionFactory.GetDefaultOptions();
@@ -41,6 +43,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     "nats2.polygon.io:31102",
                     "nats3.polygon.io:31103"
                 };
+            }
+
+            if (isStagingEnvironment && 
+                !keyId.EndsWith("-staging"))
+            {
+                keyId += "-staging";
             }
 
             _options.Servers = natsServers
