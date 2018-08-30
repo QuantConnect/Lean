@@ -114,6 +114,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
+            var objectStore = new Mock<IObjectStore>();
             var brokerage = new Mock<IBrokerage>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
@@ -127,7 +128,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
 
             Assert.AreEqual(expected, result);
 
@@ -167,6 +168,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
@@ -182,7 +184,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
@@ -213,6 +215,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
@@ -228,7 +231,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
@@ -266,6 +269,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
@@ -278,7 +282,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
             Assert.Greater(algorithm.UtcTime, time);
         }

@@ -158,6 +158,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     // set the future chain provider
                     algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
 
+                    // set the object store
+                    algorithm.SetObjectStore(parameters.ObjectStore);
+
                     var isolator = new Isolator();
                     isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
                         () =>

@@ -309,6 +309,7 @@
     <Compile Include="Indicators\IIndicatorWarmUpPeriodProvider.cs" />
     <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
+    <Compile Include="Interfaces\IObjectStore.cs" />
     <Compile Include="Interfaces\IBrokerageCashSynchronizer.cs" />
     <Compile Include="Interfaces\IBusyCollection.cs" />
     <Compile Include="Interfaces\IDataProviderEvents.cs" />
@@ -745,6 +746,8 @@
     <Compile Include="Statistics\TradeStatistics.cs" />
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
+    <Compile Include="Storage\LocalObjectStore.cs" />
+    <Compile Include="Storage\ObjectStore.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Parse.cs" />
     <Compile Include="Symbol.cs" />
