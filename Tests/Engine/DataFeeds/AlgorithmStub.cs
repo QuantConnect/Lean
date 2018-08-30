@@ -31,6 +31,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             dataManager = new DataManager();
             SubscriptionManager.SetDataManager(dataManager);
+            AddSecurities(resolution, equities, forex);
+        }
+
+        public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
+        {
             foreach (var ticker in equities ?? new List<string>())
             {
                 AddSecurity(SecurityType.Equity, ticker, resolution);
