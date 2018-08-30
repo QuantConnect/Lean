@@ -156,13 +156,14 @@ namespace QuantConnect.Brokerages.GDAX
 
             do
             {
-                if (endpointType == GdaxEndpointType.Private)
+                var rateLimiter = endpointType == GdaxEndpointType.Private ? _privateEndpointRateLimiter : _publicEndpointRateLimiter;
+
+                if (!rateLimiter.WaitToProceed(TimeSpan.Zero))
                 {
-                    _privateEndpointRateLimiter.WaitToProceed();
-                }
-                else
-                {
-                    _publicEndpointRateLimiter.WaitToProceed();
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                        "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+
+                    rateLimiter.WaitToProceed();
                 }
 
                 response = RestClient.Execute(request);
