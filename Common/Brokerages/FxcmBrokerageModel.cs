@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -91,16 +92,16 @@ namespace QuantConnect.Brokerages
             }
 
             // validate order quantity
-            if (order.Quantity % 1000 != 0)
+            if (order.Quantity % security.SymbolProperties.LotSize != 0)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "The order quantity must be a multiple of 1000."
-                    );
+                    $"The order quantity must be a multiple of LotSize: [{security.SymbolProperties.LotSize}]."
+                );
 
                 return false;
             }
 
-            // validate stop/limit orders= prices
+            // validate stop/limit orders prices
             var limit = order as LimitOrder;
             if (limit != null)
             {
@@ -111,12 +112,6 @@ namespace QuantConnect.Brokerages
             if (stopMarket != null)
             {
                 return IsValidOrderPrices(security, OrderType.StopMarket, stopMarket.Direction, stopMarket.StopPrice, security.Price, ref message);
-            }
-
-            var stopLimit = order as StopLimitOrder;
-            if (stopLimit != null)
-            {
-                return IsValidOrderPrices(security, OrderType.StopLimit, stopLimit.Direction, stopLimit.StopPrice, stopLimit.LimitPrice, ref message);
             }
 
             // validate time in force
@@ -145,11 +140,11 @@ namespace QuantConnect.Brokerages
             message = null;
 
             // validate order quantity
-            if (request.Quantity != null && request.Quantity % 1000 != 0)
+            if (request.Quantity != null && request.Quantity % security.SymbolProperties.LotSize != 0)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "The order quantity must be a multiple of 1000."
-                    );
+                    $"The order quantity must be a multiple of LotSize: [{security.SymbolProperties.LotSize}]."
+                );
 
                 return false;
             }
@@ -211,6 +206,33 @@ namespace QuantConnect.Brokerages
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "Limit Buy orders and Stop Sell orders must be below market, Limit Sell orders and Stop Buy orders must be above market."
                     );
+
+                return false;
+            }
+
+            // Validate FXCM maximum distance for limit and stop orders:
+            // there are two different Max Limits, 15000 pips and 50% rule,
+            // whichever comes first (for most pairs, 50% rule comes first)
+            var maxDistance = Math.Min(
+                // MinimumPriceVariation is 1/10th of a pip
+                security.SymbolProperties.MinimumPriceVariation * 10 * 15000,
+                security.Price / 2);
+            var currentPrice = security.Price;
+            var minPrice = currentPrice - maxDistance;
+            var maxPrice = currentPrice + maxDistance;
+
+            var outOfRangePrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice < minPrice ||
+                                  orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice > maxPrice ||
+                                  orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice > maxPrice ||
+                                  orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice < minPrice;
+
+            if (outOfRangePrice)
+            {
+                var orderPrice = orderType == OrderType.Limit ? limitPrice : stopPrice;
+
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    $"The {orderType} {orderDirection} order price ({orderPrice}) is too far from the current market price ({currentPrice})."
+                );
 
                 return false;
             }
