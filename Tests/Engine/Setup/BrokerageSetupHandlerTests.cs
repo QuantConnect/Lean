@@ -25,6 +25,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -49,6 +50,7 @@ namespace QuantConnect.Tests.Engine.Setup
         public void Setup()
         {
             _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManager());
             _transactionHandler = new BrokerageTransactionHandler();
             _resultHandler = new NonDequeingTestResultsHandler();
             _brokerage = new TestBrokerage();
@@ -208,6 +210,11 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private class TestAlgorithm : QCAlgorithm
         {
+            public TestAlgorithm()
+            {
+                SubscriptionManager.SetDataManager(new DataManager());
+            }
+
             public override void Initialize() {}
         }
 

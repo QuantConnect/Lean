@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data;
@@ -22,7 +21,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -51,7 +49,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider);
+        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
+                        IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider,
+                        IDataProvider dataProvider, IDataFeedSubscriptionManager subscriptionManager);
 
         /// <summary>
         /// Adds a new subscription to provide data for the specified security.

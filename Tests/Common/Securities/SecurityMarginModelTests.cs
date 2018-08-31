@@ -19,6 +19,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -36,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ZeroTargetWithZeroHoldingsIsNotAnError()
         {
             var algorithm = GetAlgorithm();
-            var security = GetSecurity(algorithm, 0);
+            var security = InitAndGetSecurity(algorithm, 0);
 
             var model = new SecurityMarginModel();
             var result = model.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, 0);
@@ -50,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ZeroTargetWithNonZeroHoldingsReturnsNegativeOfQuantity()
         {
             var algorithm = GetAlgorithm();
-            var security = GetSecurity(algorithm, 0);
+            var security = InitAndGetSecurity(algorithm, 0);
             security.Holdings.SetHoldings(200, 10);
 
             var model = new SecurityMarginModel();
@@ -65,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_ZeroToFullLong()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5);
+            var security = InitAndGetSecurity(algo, 5);
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
             // (100000 * 2 * 0.9975 setHoldingsBuffer) / 25 - fee ~=7979m
             Assert.AreEqual(7979m, actual);
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_Long_TooBigOfATarget()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5);
+            var security = InitAndGetSecurity(algo, 5);
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security) + 0.1m);
             // (100000 * 2.1* 0.9975 setHoldingsBuffer) / 25 - fee ~=8378m
             Assert.AreEqual(8378m, actual);
@@ -87,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_ZeroToFullShort()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5);
+            var security = InitAndGetSecurity(algo, 5);
             var actual = algo.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security));
             // (100000 * 2 * 0.9975 setHoldingsBuffer) / 25 - fee~=-7979m
             Assert.AreEqual(-7979m, actual);
@@ -98,7 +99,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_Short_TooBigOfATarget()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5);
+            var security = InitAndGetSecurity(algo, 5);
             var actual = algo.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security) - 0.1m);
             // (100000 * - 2.1m * 0.9975 setHoldingsBuffer) / 25 - fee~=-8378m
             Assert.AreEqual(-8378m, actual);
@@ -109,7 +110,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_ZeroToFullLong_NoFee()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 0);
+            var security = InitAndGetSecurity(algo, 0);
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
             // (100000 * 2 * 0.9975 setHoldingsBuffer) / 25 =7980m
             Assert.AreEqual(7980m, actual);
@@ -120,7 +121,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_Long_TooBigOfATarget_NoFee()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 0);
+            var security = InitAndGetSecurity(algo, 0);
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security) + 0.1m);
             // (100000 * 2.1m* 0.9975 setHoldingsBuffer) / 25 = 8379m
             Assert.AreEqual(8379m, actual);
@@ -131,7 +132,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_ZeroToFullShort_NoFee()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 0);
+            var security = InitAndGetSecurity(algo, 0);
             var actual = algo.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security));
             var order = new MarketOrder(_symbol, actual, DateTime.UtcNow);
             // (100000 * 2 * 0.9975 setHoldingsBuffer) / 25 = -7980m
@@ -143,7 +144,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetHoldings_Short_TooBigOfATarget_NoFee()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 0);
+            var security = InitAndGetSecurity(algo, 0);
             var actual = algo.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security) - 0.1m);
             // (100000 * -2.1 * 0.9975 setHoldingsBuffer) / 25 =  -8379m
             Assert.AreEqual(-8379m, actual);
@@ -154,7 +155,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void FreeBuyingPowerPercentDefault_Equity()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5, SecurityType.Equity);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
             var model = security.BuyingPowerModel;
 
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
@@ -169,7 +170,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
-            var security = GetSecurity(algo, 5, SecurityType.Equity);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
 
@@ -187,7 +188,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            var security = GetSecurity(algo, 5, SecurityType.Equity);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
 
@@ -205,7 +206,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
-            var security = GetSecurity(algo, 5, SecurityType.Equity);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, 2000);
@@ -229,7 +230,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            var security = GetSecurity(algo, 5, SecurityType.Equity);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, 2000);
@@ -253,7 +254,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            var security = GetSecurity(algo, 5, SecurityType.Equity);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, -2000);
@@ -276,7 +277,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void FreeBuyingPowerPercentDefault_Option()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5, SecurityType.Option);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Option);
             var model = security.BuyingPowerModel;
 
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
@@ -291,7 +292,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
-            var security = GetSecurity(algo, 5, SecurityType.Option);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Option);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
 
@@ -308,7 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            var security = GetSecurity(algo, 5, SecurityType.Option);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Option);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
 
@@ -324,7 +325,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void FreeBuyingPowerPercentDefault_Future()
         {
             var algo = GetAlgorithm();
-            var security = GetSecurity(algo, 5, SecurityType.Future);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future);
             var model = security.BuyingPowerModel;
 
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
@@ -339,7 +340,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
-            var security = GetSecurity(algo, 5, SecurityType.Future);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
 
@@ -356,7 +357,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algo = GetAlgorithm();
             algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            var security = GetSecurity(algo, 5, SecurityType.Future);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future);
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
 
@@ -380,8 +381,9 @@ namespace QuantConnect.Tests.Common.Securities
             return algo;
         }
 
-        private static Security GetSecurity(QCAlgorithm algo, decimal fee, SecurityType securityType = SecurityType.Equity, string symbol = "SPY")
+        private static Security InitAndGetSecurity(QCAlgorithm algo, decimal fee, SecurityType securityType = SecurityType.Equity, string symbol = "SPY")
         {
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             Security security;
             if (securityType == SecurityType.Equity)
             {

@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
@@ -34,15 +33,12 @@ namespace QuantConnect.Data
     {
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
-
-        /// There is no ConcurrentHashSet collection in .NET,
-        /// so we use ConcurrentDictionary with byte value to minimize memory usage
-        private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptions = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
+        private IAlgorithmSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Returns an IEnumerable of Subscriptions
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptions.Select(x => x.Key);
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions;
 
         /// <summary>
         /// Flags the existence of custom data in the subscriptions
@@ -69,9 +65,21 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Initialise the Generic Data Manager Class
+        /// </summary>
+        /// <param name="algorithmSettings">The algorithm settings instance</param>
+        /// <param name="timeKeeper">The algorithm's time keeper</param>
+        /// <param name="subscriptionManager">The subscription manager</param>
+        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
+            : this(algorithmSettings, timeKeeper)
+        {
+            _subscriptionManager = subscriptionManager;
+        }
+
+        /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count => _subscriptions.Skip(0).Count();
+        public int Count => _subscriptionManager.SubscriptionManagerCount();
 
         /// <summary>
         /// Add Market Data Required (Overloaded method for backwards compatibility).
@@ -128,13 +136,13 @@ namespace QuantConnect.Data
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
 
             //Add to subscription list: make sure we don't have this symbol:
-            if (_subscriptions.ContainsKey(newConfig))
+            if (_subscriptionManager.SubscriptionManagerContainsKey(newConfig))
             {
                 Log.Trace("SubscriptionManager.Add(): subscription already added: " + newConfig);
                 return newConfig;
             }
 
-            _subscriptions.TryAdd(newConfig, 0);
+            _subscriptionManager.SubscriptionManagerTryAdd(newConfig);
 
             // count data subscriptions by symbol, ignoring multiple data types
             var uniqueCount = Subscriptions
@@ -247,5 +255,12 @@ namespace QuantConnect.Data
             return AvailableDataTypes[symbolSecurityType].Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
+        /// <summary>
+        /// Sets the Subscription Manager
+        /// </summary>
+        public void SetDataManager(IAlgorithmSubscriptionManager subscriptionManager)
+        {
+            _subscriptionManager = subscriptionManager;
+        }
     }
 }

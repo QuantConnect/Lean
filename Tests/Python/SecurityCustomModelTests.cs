@@ -24,6 +24,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Common.Securities;
 using System;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
@@ -36,15 +37,16 @@ namespace QuantConnect.Tests.Python
         public void SetBuyingPowerModelSuccess(bool isChild)
         {
             var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManager());
             algorithm.SetDateTime(new DateTime(2018, 8, 20, 15, 0, 0));
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
 
             var spy = algorithm.AddEquity("SPY", Resolution.Daily);
             spy.SetMarketPrice(new Tick(algorithm.Time, Symbols.SPY, 100m, 100m));
 
-            // Test two custom buying power models. 
+            // Test two custom buying power models.
             // The first inherits from C# SecurityMarginModel and the other is 100% python
-            var code = isChild 
+            var code = isChild
                 ? CreateCustomBuyingPowerModelFromSecurityMarginModelCode()
                 : CreateCustomBuyingPowerModelCode();
 

@@ -149,9 +149,11 @@
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\DataManager.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\LiveBaseDataSynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
     <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
     <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />

@@ -23,6 +23,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Algorithm.Framework
@@ -35,6 +36,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
         {
             var eventFired = false;
             var algo = new QCAlgorithmFramework();
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algo.InsightsGenerated += (algorithm, data) =>
             {

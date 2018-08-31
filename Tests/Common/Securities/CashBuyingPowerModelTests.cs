@@ -21,6 +21,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -47,6 +48,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void Initialize()
         {
             _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManager());
             _portfolio = _algorithm.Portfolio;
             _portfolio.CashBook.Add("EUR", 0, 1.20m);
             _portfolio.CashBook.Add("BTC", 0, 15000m);

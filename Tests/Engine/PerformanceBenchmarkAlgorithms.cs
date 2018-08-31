@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using QuantConnect.Algorithm;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -47,6 +48,11 @@ namespace QuantConnect.Tests.Engine
 
         private class SingleSecurity_Second_BenchmarkTest : QCAlgorithm
         {
+            public SingleSecurity_Second_BenchmarkTest()
+            {
+                SubscriptionManager.SetDataManager(new DataManager());
+            }
+
             public override void Initialize()
             {
                 SetStartDate(2008, 01, 01);

@@ -23,6 +23,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SetHoldingsTakesIntoAccountPendingMarketOrders()
         {
             var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManager());
             var security = algorithm.AddEquity("SPY");
             security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             security.SetMarketPrice(new Tick { Value = 270m });

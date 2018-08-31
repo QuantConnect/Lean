@@ -22,6 +22,7 @@ using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Common.Securities;
@@ -1068,6 +1069,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SetHoldings_Long_RoundOff()
         {
             var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             algo.AddSecurity(SecurityType.Forex, "EURUSD");
             algo.SetCash(100000);
             algo.SetCash("BTC", 0, 8000);
@@ -1093,6 +1095,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SetHoldings_Short_RoundOff()
         {
             var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             algo.AddSecurity(SecurityType.Forex, "EURUSD");
             algo.SetCash(100000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
@@ -1117,6 +1120,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SetHoldings_Long_ToZero_RoundOff()
         {
             var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             algo.AddSecurity(SecurityType.Forex, "EURUSD");
             algo.SetCash(10000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
@@ -1305,6 +1309,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
             algo.SetFinishedWarmingUp();
@@ -1320,6 +1325,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManager());
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
             algo.SetFinishedWarmingUp();
