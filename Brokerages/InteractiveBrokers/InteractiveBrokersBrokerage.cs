@@ -332,7 +332,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     _requestInformation[orderId] = "CancelOrder: " + order;
 
-                    _messagingRateLimiter.WaitToProceed();
+                    CheckRateLimiting();
 
                     _client.ClientSocket.cancelOrder(orderId);
                 }
@@ -381,7 +381,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
 
-            _messagingRateLimiter.WaitToProceed();
+            CheckRateLimiting();
 
             _client.ClientSocket.reqAllOpenOrders();
 
@@ -503,7 +503,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ExecutionDetails += clientOnExecDetails;
             _client.ExecutionDetailsEnd += clientOnExecutionDataEnd;
 
-            _messagingRateLimiter.WaitToProceed();
+            CheckRateLimiting();
 
             // no need to be fancy with request id since that's all this client does is 1 request
             _client.ClientSocket.reqExecutions(requestId, filter);
@@ -844,7 +844,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _requestInformation[ibOrderId] = "IBPlaceOrder: " + contract;
 
-            _messagingRateLimiter.WaitToProceed();
+            CheckRateLimiting();
 
             if (order.Type == OrderType.OptionExercise)
             {
@@ -941,7 +941,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.ContractDetails += clientOnContractDetails;
 
-            _messagingRateLimiter.WaitToProceed();
+            CheckRateLimiting();
 
             // make the request for data
             _client.ClientSocket.reqContractDetails(requestId, contract);
@@ -992,7 +992,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ContractDetails += clientOnContractDetails;
             _client.ContractDetailsEnd += clientOnContractDetailsEnd;
 
-            _messagingRateLimiter.WaitToProceed();
+            CheckRateLimiting();
 
             // make the request for data
             _client.ClientSocket.reqContractDetails(requestId, contract);
@@ -1074,7 +1074,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting market data for " + currencyPair);
             _client.TickPrice += clientOnTickPrice;
 
-            _messagingRateLimiter.WaitToProceed();
+            CheckRateLimiting();
 
             _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
 
@@ -1138,7 +1138,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _client.HistoricalDataEnd += clientOnHistoricalDataEnd;
                     _client.Error += clientOnError;
 
-                    _messagingRateLimiter.WaitToProceed();
+                    CheckRateLimiting();
 
                     // request some historical data, IB's api takes into account weekends/market opening hours
                     const string requestSpan = "100 S";
@@ -2399,7 +2399,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                                 _requestInformation[id] = "Subscribe: " + contract;
 
-                                _messagingRateLimiter.WaitToProceed();
+                                CheckRateLimiting();
 
                                 // track subscription time for minimum delay in unsubscribe
                                 _subscriptionTimes[id] = DateTime.UtcNow;
@@ -2454,7 +2454,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             int id;
                             if (_subscribedSymbols.TryRemove(symbol, out id))
                             {
-                                _messagingRateLimiter.WaitToProceed();
+                                CheckRateLimiting();
 
                                 // ensure minimum time span has elapsed since the symbol was subscribed
                                 DateTime subscriptionTime;
@@ -2865,7 +2865,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Client.HistoricalData += clientOnHistoricalData;
                 Client.HistoricalDataEnd += clientOnHistoricalDataEnd;
 
-                _messagingRateLimiter.WaitToProceed();
+                CheckRateLimiting();
 
                 Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss UTC"),
                     duration, resolution, dataType, useRegularTradingHours, 2, false, new List<TagValue>());
@@ -2984,6 +2984,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _resetEventRestartGateway.Set();
             }
             Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): end");
+        }
+
+        private void CheckRateLimiting()
+        {
+            if (!_messagingRateLimiter.WaitToProceed(TimeSpan.Zero))
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                    "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+
+                _messagingRateLimiter.WaitToProceed();
+            }
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
