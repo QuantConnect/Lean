@@ -62,25 +62,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance, used for getting total portfolio value and current security price</param>
         /// <param name="symbol">The symbol the target is for</param>
         /// <param name="percent">The requested target percent of total portfolio value</param>
+        /// <param name="returnDeltaQuantity">True, result quantity will be the Delta required to reach target percent.
+        /// False, the result quantity will be the Total quantity to reach the target percent, including current holdings</param>
         /// <returns>A portfolio target for the specified symbol/percent</returns>
-        public static IPortfolioTarget Percent(IAlgorithm algorithm, Symbol symbol, decimal percent)
+        public static IPortfolioTarget Percent(IAlgorithm algorithm, Symbol symbol, decimal percent, bool returnDeltaQuantity = false)
         {
             var security = algorithm.Securities[symbol];
             if (security.Price == 0)
             {
+                algorithm.Error($"The order quantity for {symbol.Value} cannot be calculated: the price of the security is zero.");
                 return null;
             }
 
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, percent);
+            // Factoring in FreePortfolioValuePercentage.
+            var adjustedPercent = percent * (1 - algorithm.Settings.FreePortfolioValuePercentage);
+
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, adjustedPercent);
             if (result.IsError)
             {
-                algorithm.Log($"Unable to compute order quantity of {symbol}. Reason: {result.Reason}. Returning null.");
+                algorithm.Error($"Unable to compute order quantity of {symbol}. Reason: {result.Reason}. Returning null.");
                 return null;
             }
 
             // be sure to back out existing holdings quantity since the buying power model yields
             // the required delta quantity to reach a final target portfolio value for a symbol
-            return new PortfolioTarget(symbol, result.Quantity + security.Holdings.Quantity);
+            var quantity = result.Quantity + (returnDeltaQuantity ? 0 : security.Holdings.Quantity);
+
+            return new PortfolioTarget(symbol, quantity);
         }
 
         /// <summary>Returns a string that represents the current object.</summary>

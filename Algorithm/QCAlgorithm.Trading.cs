@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -956,31 +957,19 @@ namespace QuantConnect.Algorithm
         /// Calculate the order quantity to achieve target-percent holdings.
         /// </summary>
         /// <param name="symbol">Security object we're asking for</param>
-        /// <param name="target">Target percentag holdings, this is an unlevered value, so
+        /// <param name="target">Target percentage holdings, this is an unlevered value, so
         /// if you have 2x leverage and request 100% holdings, it will utilize half of the
         /// available margin</param>
         /// <returns>Order quantity to achieve this percentage</returns>
         public decimal CalculateOrderQuantity(Symbol symbol, decimal target)
         {
-            var security = Securities[symbol];
+            var percent = PortfolioTarget.Percent(this, symbol, target, true);
 
-            // can't order it if we don't have data
-            if (security.Price == 0)
+            if (percent == null)
             {
-                Error($"The order quantity for {symbol.Value} cannot be calculated: the price of the security is zero.");
                 return 0;
             }
-
-            // Factoring in SetHoldingsBuffer.
-            var adjustedTarget = target * (1 - Settings.SetHoldingsBuffer);
-
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(Portfolio, security, adjustedTarget);
-            if (result.Quantity == 0 && result.IsError)
-            {
-                Error($"The order quantity for {symbol.Value} cannot be calculated: Reason: {result.Reason}.");
-            }
-
-            return result.Quantity;
+            return percent.Quantity;
         }
 
         /// <summary>
