@@ -162,6 +162,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Log.Trace($"Error: {exception}");
             }
 
+            timer.Value.Dispose();
             Assert.AreEqual(14 * tickers.Length, dataPointsEmitted);
         }
 
@@ -250,6 +251,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Log.Trace($"Error: {exception}");
             }
 
+            timer.Value.Dispose();
             Assert.AreEqual(14, slicesEmitted);
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }

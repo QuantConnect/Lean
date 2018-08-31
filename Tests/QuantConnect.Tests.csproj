@@ -325,7 +325,7 @@
     <Compile Include="Engine\DataFeeds\FillForwardEnumeratorTest.cs" />
     <Compile Include="Engine\DataFeeds\IEXDataQueueHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\IQFeedRealtimeDataFeedTests.cs" />
-    <Compile Include="Engine\DataFeeds\RemoteFileBaseData.cs" />
+    <Compile Include="Engine\DataFeeds\CustomMockedFileBaseData.cs" />
     <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />

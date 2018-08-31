@@ -99,10 +99,11 @@ namespace QuantConnect.Tests.Engine.Setup
         {
             var algorithm = new TestAlgorithm();
             var job = new LiveNodePacket { UserId = 1, ProjectId = 1, DeployId = "1", Brokerage = "PaperBrokerage", DataQueueHandler = "none"};
+            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
+            job.Controls.RamAllocation = 1024 * 1024 * 1024;
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
-
             var brokerage = new Mock<IBrokerage>();
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<Cash>());
