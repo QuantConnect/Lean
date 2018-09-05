@@ -16,8 +16,8 @@ from QuantConnect import *
 from QuantConnect.Data.Consolidators import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import OrderStatus
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Indicators import *
+from QCAlgorithm import QCAlgorithm
 import numpy as np
 from datetime import timedelta, datetime
 

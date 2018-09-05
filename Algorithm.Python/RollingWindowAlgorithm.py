@@ -13,14 +13,13 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import TradeBar
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Using rolling windows for efficient storage of historical data; which automatically clears after a period of time.

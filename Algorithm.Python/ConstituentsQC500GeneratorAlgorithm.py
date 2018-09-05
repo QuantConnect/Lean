@@ -15,13 +15,12 @@ from clr import AddReference
 AddReference("System.Core")
 AddReference("System.Collections")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from System.Collections.Generic import List
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
+from QCAlgorithm import QCAlgorithm
 from math import ceil
 import numpy as np
 import pandas as pd

@@ -14,17 +14,16 @@
 from clr import AddReference
 AddReference("System.Core")
 AddReference("System.Collections")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from System.Linq import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Orders import *
 from QuantConnect.Securities import *
 from QuantConnect.Util import *
+from QCAlgorithm import QCAlgorithm
 import decimal as d
 from math import copysign
 from datetime import datetime

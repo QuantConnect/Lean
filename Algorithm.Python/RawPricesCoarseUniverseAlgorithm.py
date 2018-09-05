@@ -14,14 +14,13 @@
 from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Orders import OrderStatus
 from QuantConnect.Orders.Fees import ConstantFeeModel
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### In this algorithm we demonstrate how to use the coarse fundamental data to define a universe as the top dollar volume and set the algorithm to use raw prices

@@ -703,6 +703,126 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Create a pandas dataframe from history request with information from a PyObject
+        /// </summary>
+        /// <param name="pyObject">PyObject containing elements to create a history request</param>
+        public PyObject PandasDataFrameHistory(PyObject pyObject)
+        {
+            var requests = CreateHistoryRequests(pyObject);
+            var history = HistoryProvider.GetHistory(requests, TimeZone).Memoize();
+            return PandasConverter.GetDataFrame(history);
+        }
+
+        /// <summary>
+        /// Get history requests with information to create pandas dataframe from local files
+        /// </summary>
+        /// <param name="pyObject">PyObject containing elements to create a history request</param>
+        public IEnumerable<PandasHistoryRequest> GetPandasHistoryRequests(PyObject pyObject)
+        {
+            return CreateHistoryRequests(pyObject)
+                .SelectMany(request =>
+                {
+                    var config = GetSubscription(request.Symbol, request.TickType);
+                    var hours = request.ExchangeHours;
+                    var resolution = request.Resolution;
+
+                    var start = request.StartTimeUtc.ConvertFromUtc(TimeZone);
+                    var end = request.EndTimeUtc.ConvertFromUtc(TimeZone);
+
+                    var tradeableDays = QuantConnect.Time.EachTradeableDay(hours, start, end);
+                    if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                    {
+                        tradeableDays = new[] { tradeableDays.Last() };
+                    }
+
+                    return tradeableDays.Select(date =>
+                    {
+                        var id = config.Symbol.ID;
+
+                        if (id.SecurityType == SecurityType.Equity)
+                        {
+                            //var resolver = _mapFileProvider.Get(id.Market);
+                            //var mapFile = resolver.ResolveMapFile(id.Symbol, id.Date);
+                            //config.Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, id.Symbol));
+
+                            //var factorFile = _factorFileProvider.Get(config.Symbol);
+                            //var factorFileRow = factorFile.GetScalingFactors(date);
+                            //config.PriceScaleFactor = factorFileRow.PriceScaleFactor;
+                        }
+                        return new PandasHistoryRequest(config, hours, request.StartTimeUtc, request.EndTimeUtc, resolution, date);
+                    });
+                });
+        }
+
+        /// <summary>
+        /// Create history requests from a PyObject
+        /// </summary>
+        /// <param name="pyObject">PyObject containing elements to create a history request</param>
+        private IEnumerable<HistoryRequest> CreateHistoryRequests(PyObject pyObject)
+        {
+            var dict = new PyDict(pyObject);
+            var requests = new List<HistoryRequest>();
+
+            using (Py.GIL())
+            {
+                var symbols = Securities.Keys;
+                if (dict.HasKey("symbols"))
+                {
+                    symbols = GetSymbolsFromPyObject(dict["symbols"]).ToList();
+                }
+
+                Resolution? resolution = null;
+                if (dict.HasKey("resolution"))
+                {
+                    resolution = (Resolution)dict["resolution"].AsManagedObject(typeof(int));
+                }
+
+                foreach (var symbol in symbols)
+                {
+                    var config = GetSubscription(symbol);
+
+                    // Check whether the symbol has the requested data type
+                    if (dict.HasKey("type"))
+                    {
+                        var requestedType = CreateType(dict["type"]);
+                        config = Securities[symbol].Subscriptions
+                            .OrderByDescending(s => s.Resolution)
+                            .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
+
+                        if (config == null)
+                        {
+                            continue;
+                        }
+                    }
+
+                    resolution = GetResolution(symbol, resolution);
+
+                    DateTime start;
+                    var end = Time.RoundDown(resolution.Value.ToTimeSpan());
+
+                    if (dict.HasKey("periods"))
+                    {
+                        var periods = (int)dict["periods"].AsManagedObject(typeof(int));
+                        start = GetStartTimeAlgoTz(symbol, periods, resolution);
+                    }
+                    else if (dict.HasKey("span"))
+                    {
+                        var span = (TimeSpan)dict["span"].AsManagedObject(typeof(TimeSpan));
+                        start = end - span;
+                    }
+                    else
+                    {
+                        start = (DateTime)dict["start"].AsManagedObject(typeof(DateTime));
+                        end = (DateTime)dict["end"].AsManagedObject(typeof(DateTime));
+                    }
+
+                    requests.Add(CreateHistoryRequest(config, start, end, resolution));
+                }
+            }
+            return requests;
+        }
+
+        /// <summary>
         /// Sets the specified function as the benchmark, this function provides the value of
         /// the benchmark at each date/time requested
         /// </summary>
@@ -803,7 +923,11 @@ namespace QuantConnect.Algorithm
             Symbol symbol;
             Symbol[] symbols;
 
-            if (pyObject.TryConvert(out symbol))
+            if (PyString.IsStringType(pyObject))
+            {
+                yield return pyObject.As<string>();
+            }
+            else if (pyObject.TryConvert(out symbol))
             {
                 if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
                 yield return symbol;

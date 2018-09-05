@@ -13,17 +13,15 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
 
-
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Data.Custom.Intrinio import *
+from QCAlgorithm import QCAlgorithm
 from numpy import sign
 
 class BasicTemplateIntrinioEconomicData(QCAlgorithm):

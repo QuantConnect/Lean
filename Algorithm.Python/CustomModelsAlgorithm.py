@@ -13,14 +13,13 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Orders import OrderStatus
 from QuantConnect.Orders.Fills import ImmediateFillModel
+from QCAlgorithm import QCAlgorithm
 import numpy as np
 import decimal as d
 import random

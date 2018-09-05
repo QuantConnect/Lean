@@ -13,7 +13,6 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
 
@@ -22,7 +21,7 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
-from QuantConnect.Algorithm import *
+from QCAlgorithm import QCAlgorithm
 import numpy as np
 from datetime import datetime
 

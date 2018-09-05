@@ -13,14 +13,13 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
-from QuantConnect.Algorithm import *
+from QCAlgorithm import QCAlgorithm
 from collections import deque
 from datetime import datetime, timedelta
 from numpy import sum

@@ -13,14 +13,13 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Brokerages import *
 from QuantConnect.Orders import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Demonstrate the usage of the BrokerageModel property to help improve backtesting

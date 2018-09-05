@@ -13,16 +13,15 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Brokerages import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Demonstration of payments for cash dividends in backtesting. When data normalization mode is set

@@ -13,15 +13,14 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Parameters import *
+from QCAlgorithm import QCAlgorithm
 import decimal as d
 
 ### <summary>

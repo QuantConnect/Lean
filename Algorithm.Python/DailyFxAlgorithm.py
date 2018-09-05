@@ -14,12 +14,11 @@
 from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.Custom import DailyFx
+from QCAlgorithm import QCAlgorithm
 import numpy as np
 
 ### <summary>

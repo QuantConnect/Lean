@@ -13,16 +13,15 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Brokerages import *
 from QuantConnect.Data import BaseData
 from QuantConnect.Data.Market import *
 from QuantConnect.Securities import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### This algorithm shows how to set a custom security initializer.

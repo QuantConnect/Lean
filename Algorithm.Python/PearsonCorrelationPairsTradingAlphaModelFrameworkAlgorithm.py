@@ -12,11 +12,9 @@
 # limitations under the License.
 
 from clr import AddReference
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import *

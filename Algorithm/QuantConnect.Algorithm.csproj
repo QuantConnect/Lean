@@ -99,6 +99,7 @@
     <Compile Include="QCAlgorithm.Plotting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithm.Universe.cs" />
+    <Compile Include="QCPyAlgorithm.cs" />
     <Compile Include="UniverseDefinitions.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +123,11 @@
   <ItemGroup>
     <None Include="packages.config">
       <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="QCAlgorithm.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
