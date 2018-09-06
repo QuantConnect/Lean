@@ -357,14 +357,14 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     apOrder = GenerateAndPlaceOrder(order);
+                    order.BrokerId.Add(apOrder.OrderId.ToString());
                 }
                 catch (Exception e)
-                {
+                { 
                     Log.Trace(e.Message);
+                    if (e.InnerException != null) Log.Trace(e.InnerException.Message);
                     return false;
                 }
-
-				order.BrokerId.Add(apOrder.OrderId.ToString());
 
 				// Market orders are special, due to the callback not being triggered always,
 				// if the order was Filled/PartiallyFilled, find fill quantity and price and inform the user
@@ -482,8 +482,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		{
 			_eventsSession = new TransactionStreamSession(this);
 			_eventsSession.TradeReceived += new Action<Markets.ITradeUpdate>(OnTransactionDataReceived);
-            Console.WriteLine("TransactionStream started");
-			_eventsSession.StartSession();
+            _eventsSession.StartSession();
 		}
 
 		/// <summary>
@@ -493,8 +492,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		{
 			if (_eventsSession != null)
 			{
-                Console.WriteLine("Stop Transaction Stream");
-				_eventsSession.StopSession();
+            	_eventsSession.StopSession();
 			}
 		}
 
@@ -504,7 +502,7 @@ namespace QuantConnect.Brokerages.Alpaca
 		/// <param name="trade">The event object</param>
 		private void OnTransactionDataReceived(Markets.ITradeUpdate trade)
 		{
-            Console.WriteLine("OnTransactionData: {0} {1} {2}", trade.Event, trade.Order.OrderSide, trade.Order.OrderStatus);
+            Log.Trace("OnTransactionData: {0} {1} {2}", trade.Event, trade.Order.OrderId, trade.Order.OrderStatus);
 			Order order;
             string tradeEvent = trade.Event.ToUpper();
 			lock (Locker)
@@ -525,7 +523,6 @@ namespace QuantConnect.Brokerages.Alpaca
                         
                         status = Orders.OrderStatus.Filled;
                         if (trade.Order.FilledQuantity < trade.Order.Quantity) status = Orders.OrderStatus.PartiallyFilled;
-                        Console.WriteLine("Filled Quantity: {0}", trade.Order.Quantity);
                         OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Fill Event")
                         {
                             Status = status,
@@ -534,7 +531,7 @@ namespace QuantConnect.Brokerages.Alpaca
                         });
                     }
                 }
-                else if (tradeEvent == "CANCEL")
+                else if (tradeEvent == "CANCELED")
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.Canceled });
                 }
@@ -633,8 +630,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTime startTime = startTimeUtc;
             DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
             DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-            Console.WriteLine("History Bar - Start: {0}, End: {1}, Period: {2}", startTime, endTimeUtc, period);
-
+            
             TradeBar currentBar = new TradeBar();
             while (true)
 			{
@@ -675,7 +671,6 @@ namespace QuantConnect.Brokerages.Alpaca
                             period
                             ))
                          .ToList();
-                Console.WriteLine("Agg result: {0}", result.Count);
                 if (currentBar.Symbol == Symbol.Empty) currentBar = result[0];
                 if (currentBar.Time == result[0].Time)
                 {
@@ -734,8 +729,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
             DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
             long offsets = 0;
-            Console.WriteLine("History Quote - Start: {0}, End: {1}, Period: {2}", startTime, endTimeUtc, period);
-
+            
             QuoteBar currentBar = new QuoteBar();
 			while (true)
 			{
@@ -760,7 +754,6 @@ namespace QuantConnect.Brokerages.Alpaca
                     if (asList.Count == 0) break;
 
                     offsets = asList.Last().TimeOffset;
-                    Console.WriteLine("Current Offset: {0}", DateTimeHelper.FromUnixTimeMilliseconds(offsets));
                     if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
                 }
                 catch (Exception e)
@@ -848,8 +841,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone);
             DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone);
             long offsets = 0;
-            Console.WriteLine("History Ticks - Start: {0}, End: {1}", startTime, endTimeUtc);
-
+            
             Tick currentTick = new Tick();
             while (true)
             {
@@ -863,7 +855,6 @@ namespace QuantConnect.Brokerages.Alpaca
                     asList.RemoveAt(0);
 
                     offsets = asList.Last().TimeOffset;
-                    Console.WriteLine("Current Offset: {0}", DateTimeHelper.FromUnixTimeMilliseconds(offsets));
                     if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
                 }
                 catch (Exception e)
@@ -1002,8 +993,7 @@ namespace QuantConnect.Brokerages.Alpaca
 							{
 								// no more subscriptions pending, task finished
 								_subscriptionsPending = false;
-                                Console.WriteLine("subscription ended");
-								break;
+                                break;
 							}
 						}
 					}

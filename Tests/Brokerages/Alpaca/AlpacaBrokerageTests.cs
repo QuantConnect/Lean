@@ -28,8 +28,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    // , Ignore("This test requires a configured and testable Alpaca practice account")
-    [TestFixture]
+    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account")]
     public partial class AlpacaBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -38,13 +37,10 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
-            // default: Config.Get("alpaca-access-token");
-            var accountKeyId = "AKQ3RV62767QRT5NMO9O";
-            // default: Config.Get("alpaca-account-id");
-            var secretKey = "WkhqrpVkaYW6Olr3WwQBVMDpKRQnr3qprRgQkARJ";
-            // default: Config.Get("alpaca-base-url");
-            var baseUrl = "https://staging-api.tradetalk.us";
+            var accountKeyId = Config.Get("alpaca-key-id"); ;
+            var secretKey = Config.Get("alpaca-secret-key");
+            var baseUrl = Config.Get("alpaca-base-url");
+
             var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, accountKeyId, secretKey, baseUrl);
 
             return brokerage;
@@ -119,7 +115,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                 orderEventTracker.Add(e);
             };
             alpaca.OrderStatusChanged += orderStatusChangedCallback;
-            const int numberOfOrders = 10;
+            const int numberOfOrders = 2;
             for (var i = 0; i < numberOfOrders; i++)
             { 
                 var order = new MarketOrder(symbol, 10, DateTime.Now);
@@ -152,13 +148,13 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             };
             alpaca.OrderStatusChanged += orderStatusChangedCallback;
 
-            // Buy Limit order below market
-            var limitPrice = quote.BidPrice - 0.5m;
+            // Buy Limit order above market - should be filled immediately
+            var limitPrice = quote.BidPrice + 0.5m;
             var order = new LimitOrder(symbol, 1, limitPrice, DateTime.Now);
             OrderProvider.Add(order);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
-            Thread.Sleep(2000);
+            Thread.Sleep(10000);
 
             alpaca.OrderStatusChanged -= orderStatusChangedCallback;
             Assert.AreEqual(orderEventTracker.Count(x => x.Status == OrderStatus.Submitted), 1);
@@ -211,6 +207,11 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             limitPrice = stopPrice + 0.05m;
             order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.Now);
             Assert.IsTrue(alpaca.PlaceOrder(order));
+
+            // In case there is no position, the following sell orders would not be placed
+            // So build a position for them.
+            var marketOrder = new MarketOrder(symbol, 2, DateTime.Now);
+            Assert.IsTrue(alpaca.PlaceOrder(marketOrder));
 
             Thread.Sleep(20000);
             // Sell StopLimit order below market
