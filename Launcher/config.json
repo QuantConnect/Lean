@@ -301,7 +301,7 @@
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
             "history-provider": "BrokerageHistoryProvider"
-        }
+        },
 
         // defines the 'live-alpaca' environment
         "live-alpaca": {
@@ -316,7 +316,7 @@
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
             "history-provider": "BrokerageHistoryProvider"
-        },
+        }
 
     }
 }
