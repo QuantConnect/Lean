@@ -24,7 +24,7 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account")]
+    [TestFixture]
     public partial class AlpacaBrokerageTests
     {
         [Test]
