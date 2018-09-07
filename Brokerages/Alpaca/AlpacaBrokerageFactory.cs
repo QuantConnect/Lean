@@ -55,9 +55,8 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 return new Dictionary<string, string>
                 {
-                    { "alpaca-environment", Config.Get("alpaca-environment") },
-                    { "alpaca-access-token", Config.Get("alpaca-access-token") },
-                    { "alpaca-account-id", Config.Get("alpaca-account-id") },
+                    { "alpaca-key-id", Config.Get("alpaca-key-id") },
+                    { "alpaca-secret-key", Config.Get("alpaca-secret-key") },
 					{ "alpaca-base-url", Config.Get("alpaca-base-url") }
                 };
             }
@@ -82,9 +81,8 @@ namespace QuantConnect.Brokerages.Alpaca
             var errors = new List<string>();
 
             // read values from the brokerage data
-            var environment = Read<Environment>(job.BrokerageData, "alpaca-environment", errors);
-            var accessToken = Read<string>(job.BrokerageData, "alpaca-access-token", errors);
-            var accountId = Read<string>(job.BrokerageData, "alpaca-account-id", errors);
+            var keyId= Read<string>(job.BrokerageData, "alpaca-key-id", errors);
+            var secretKey = Read<string>(job.BrokerageData, "alpaca-secret-key", errors);
 			var baseUrl = Read<string>(job.BrokerageData, "alpaca-base-url", errors);
 
 			if (errors.Count != 0)
@@ -93,7 +91,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId, baseUrl);
+            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, keyId, secretKey, baseUrl);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
