@@ -63,14 +63,9 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         {
             TestDelegate test = () =>
             {
-                System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
-                // default: Config.Get("alpaca-access-token");
-                var accountKeyId = "AKFZXJH833U18SHHDRFO";
-                // default: Config.Get("alpaca-account-id");
-                var secretKey = "pnq4YHlpMF3LhfLyOvmdfLmlz6BnEToCPQIASeiU";
-                // default: Config.Get("alpaca-base-url");
-                var baseUrl = "https://staging-api.tradetalk.us";
-                Console.WriteLine("ok");
+                var accountKeyId = Config.Get("alpaca-access-token");
+                var secretKey = Config.Get("alpaca-account-id");
+                var baseUrl = Config.Get("alpaca-base-url");
                 var brokerage = new AlpacaBrokerage(null, null, accountKeyId, secretKey, baseUrl);
 
                 var historyProvider = new BrokerageHistoryProvider();
