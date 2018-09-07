@@ -20,10 +20,10 @@ from QuantConnect.Algorithm import *
 from datetime import datetime, timedelta
 import pandas as pd
 
-
 class QCAlgorithm(QCPyAlgorithm):
     def History(self, *args, **kwargs):
 
+        # Convert args into kwargs since the class methods expect a dictionary
         if len(args) > 0:
             index = 0
             item = args[index]
@@ -60,12 +60,16 @@ class QCAlgorithm(QCPyAlgorithm):
             return self.PandasDataFrameHistory(kwargs)
 
         requests = self.GetPandasHistoryRequests(kwargs)
-             
+
         df_list = []
 
         for request in requests:
+            if not request.IsValid:
+                self.Error(f"QCAlgorithm.History: File does not exist: {request.Source}")
+                continue
+
             df = pd.read_csv(request.Source, header = None, index_col = 0, names = request.Names)
-            
+
             if request.PriceScaleFactor != 1.0:
                 df.iloc[:, 0:4] = df.iloc[:, 0:4] * request.PriceScaleFactor
 
@@ -74,8 +78,13 @@ class QCAlgorithm(QCPyAlgorithm):
             else:
                 df.index = (request.Date + request.Period + timedelta(microseconds = 1000 * i) for i in df.index)
 
-            df = df[(request.StartTime < df.index) & (df.index <= request.EndTime)]
+            openHours = pd.DatetimeIndex(request.MarketOpenHours)
+            df = df[df.index.isin(openHours)]
+
             df.index = pd.MultiIndex.from_product([[request.Symbol.Value], df.index], names=['symbol', 'time'])
             df_list.append(df)
 
-        return pd.concat(df_list)
+        if len(df_list) == 0:
+            return pd.DataFrame()
+        else:
+            return pd.concat(df_list)

@@ -726,8 +726,8 @@ namespace QuantConnect.Algorithm
                     var hours = request.ExchangeHours;
                     var resolution = request.Resolution;
 
-                    var start = request.StartTimeUtc.ConvertFromUtc(TimeZone);
-                    var end = request.EndTimeUtc.ConvertFromUtc(TimeZone);
+                    var start = request.StartTimeUtc.ConvertFromUtc(config.DataTimeZone);
+                    var end = request.EndTimeUtc.ConvertFromUtc(config.DataTimeZone);
 
                     var tradeableDays = QuantConnect.Time.EachTradeableDay(hours, start, end);
                     if (resolution == Resolution.Daily || resolution == Resolution.Hour)
@@ -735,22 +735,8 @@ namespace QuantConnect.Algorithm
                         tradeableDays = new[] { tradeableDays.Last() };
                     }
 
-                    return tradeableDays.Select(date =>
-                    {
-                        var id = config.Symbol.ID;
-
-                        if (id.SecurityType == SecurityType.Equity)
-                        {
-                            //var resolver = _mapFileProvider.Get(id.Market);
-                            //var mapFile = resolver.ResolveMapFile(id.Symbol, id.Date);
-                            //config.Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, id.Symbol));
-
-                            //var factorFile = _factorFileProvider.Get(config.Symbol);
-                            //var factorFileRow = factorFile.GetScalingFactors(date);
-                            //config.PriceScaleFactor = factorFileRow.PriceScaleFactor;
-                        }
-                        return new PandasHistoryRequest(config, hours, request.StartTimeUtc, request.EndTimeUtc, resolution, date);
-                    });
+                    return tradeableDays
+                        .Select(date => new PandasHistoryRequest(config, hours, request.StartTimeUtc, request.EndTimeUtc, resolution, date));
                 });
         }
 

@@ -16,7 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -27,14 +30,43 @@ namespace QuantConnect.Data
     /// </summary>
     public class PandasHistoryRequest : HistoryRequest
     {
+        private static readonly IMapFileProvider _mapFileProvider = new LocalDiskMapFileProvider();
+        private static readonly IFactorFileProvider _factorFileProvider = new LocalDiskFactorFileProvider(_mapFileProvider);
+
+        /// <summary>
+        /// Date in the local file path
+        /// </summary>
         public DateTime Date { get; }
-        public DateTime StartTime { get; }
-        public DateTime EndTime { get; }
+
+        /// <summary>
+        /// List of date/time with the hours that the market was open
+        /// </summary>
+        public List<DateTime> MarketOpenHours { get; }
+
+        /// <summary>
+        /// Source file path
+        /// </summary>
         public string Source { get; }
-        public double PriceScaleFactor { get; }
+
+        /// <summary>
+        /// Factor used to create adjusted prices from raw prices
+        /// </summary>
+        public double PriceScaleFactor { get; } = 1;
+
+        /// <summary>
+        /// Columns names
+        /// </summary>
         public string[] Names { get; }
 
+        /// <summary>
+        /// Requested data resolution in TimeSpan
+        /// </summary>
         public TimeSpan Period => Resolution.ToTimeSpan();
+
+        /// <summary>
+        /// Gets a flag indicating whether the file exists
+        /// </summary>
+        public bool IsValid => File.Exists(Source);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified config and exchange hours
@@ -52,41 +84,80 @@ namespace QuantConnect.Data
             DateTime date)
             : base(config, hours, startTimeUtc, endTimeUtc)
         {
-            Date = date;
-            Resolution = resolution;
-            
-            Source = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbol, Date, Resolution, TickType);
 
-            StartTime = StartTimeUtc.ConvertFromUtc(config.DataTimeZone);
-            EndTime = EndTimeUtc.ConvertFromUtc(config.DataTimeZone);
-
-            if (Resolution != Resolution.Daily)
+            var id = config.Symbol.ID;
+            if (id.SecurityType == SecurityType.Equity)
             {
-                if (IncludeExtendedMarketHours)
-                {
-                    FillForwardResolution = Resolution;
-                }
+                var resolver = _mapFileProvider.Get(id.Market);
+                var mapFile = resolver.ResolveMapFile(id.Symbol, id.Date);
+                Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, id.Symbol));
 
-                var marketHours = ExchangeHours.GetMarketHours(Date);
-                var marketOpen = marketHours.GetMarketOpen(TimeSpan.Zero, IncludeExtendedMarketHours);
-                var marketClose = marketHours.GetMarketClose(marketOpen.Value, IncludeExtendedMarketHours);
-
-                var startTime = Date.Add(marketOpen.Value);
-                StartTime = startTime > StartTime ? startTime : StartTime;
-
-                var endTime = Date.Add(marketClose.Value);
-                EndTime = endTime < EndTime ? endTime : EndTime;
+                var factorFile = _factorFileProvider.Get(Symbol);
+                var factorFileRow = factorFile.GetScalingFactors(date);
+                PriceScaleFactor = (double)factorFileRow.PriceScaleFactor;
             }
-
-            DataType = IsCustomData ? config.Type : LeanData.GetDataType(resolution, TickType);
-
-            PriceScaleFactor = (double)config.PriceScaleFactor;
 
             // Include TradeBar._scaleFactor
             if (DataType == typeof(TradeBar))
             {
                 PriceScaleFactor /= 10000;
             }
+
+            MarketOpenHours = new List<DateTime>();
+
+            if (IncludeExtendedMarketHours)
+            {
+                FillForwardResolution = Resolution;
+            }
+
+            Date = date;
+            Resolution = resolution;
+            Source = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbol, Date, Resolution, TickType);
+
+            var startTime = StartTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var endTime = EndTimeUtc.ConvertFromUtc(config.DataTimeZone);
+
+            if (Resolution == Resolution.Daily)
+            {
+                var localDateTime = startTime.Date;
+                while (localDateTime < endTime.Date)
+                {
+                    localDateTime = localDateTime.Add(Period);
+                    MarketOpenHours.Add(localDateTime);
+                }
+            }
+            else
+            {
+                var localDateTime = Date > startTime ? startTime : Date;
+
+                // If market is open, use the previsous day to compute the next market open
+                if (ExchangeHours.IsOpen(localDateTime, IncludeExtendedMarketHours))
+                {
+                    localDateTime = localDateTime.AddDays(-1);
+                }
+                localDateTime = ExchangeHours.GetNextMarketOpen(localDateTime.Date, IncludeExtendedMarketHours);
+
+                // Define an earlier end time for high resolution to avoid extended market hours
+                if (Resolution != Resolution.Hour && Date > endTime)
+                {
+                    endTime = ExchangeHours.GetNextMarketClose(localDateTime, IncludeExtendedMarketHours);
+                }
+
+                while (localDateTime < endTime)
+                {
+                    if (ExchangeHours.IsOpen(localDateTime, IncludeExtendedMarketHours))
+                    {
+                        var openHours = localDateTime.Add(Period).RoundDown(Period);
+                        if (openHours > startTime)
+                        {
+                            MarketOpenHours.Add(openHours);
+                        }
+                    }
+                    localDateTime = localDateTime.Add(Period);
+                }
+            }
+
+            DataType = IsCustomData ? config.Type : LeanData.GetDataType(resolution, TickType);
 
             var namesByType = new Dictionary<Type, string[]>
             {
@@ -100,5 +171,10 @@ namespace QuantConnect.Data
                 Names = names;
             }
         }
+
+        /// <summary>
+        /// Returns the source file path to represent the current object.
+        /// </summary>
+        public override string ToString() => Source;
     }
 }
