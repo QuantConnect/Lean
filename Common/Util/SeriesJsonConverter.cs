@@ -49,6 +49,9 @@ namespace QuantConnect.Util
                 values = series.Values;
             }
 
+            // have to add the converter we want to use, else will use default
+            serializer.Converters.Add(new ColorJsonConverter());
+
             writer.WritePropertyName("Name");
             writer.WriteValue(series.Name);
             writer.WritePropertyName("Unit");
@@ -75,5 +78,10 @@ namespace QuantConnect.Util
         {
             return objectType == typeof(Series);
         }
+
+        /// <summary>
+        /// This converter wont be used to read JSON. Will throw exception if manually called.
+        /// </summary>
+        public override bool CanRead => false;
     }
 }
