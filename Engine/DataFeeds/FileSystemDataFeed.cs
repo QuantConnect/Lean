@@ -50,6 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
         private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionfactory;
+        private IDataFeedSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -76,6 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataProvider = dataProvider;
+            _subscriptionManager = subscriptionManager;
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
             _universeSelection = new UniverseSelection(this, algorithm);
             _cancellationTokenSource = new CancellationTokenSource();
@@ -433,13 +435,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontierUtc = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontierUtc));
 
-            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, frontierUtc);
+            var subscriptionFrontierTimeProvider = new SubscriptionFrontierTimeProvider(frontierUtc, _subscriptionManager);
+            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, subscriptionFrontierTimeProvider);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 RemoveSubscription(subscription.Configuration);
-                Log.Debug($"FileSystemDataFeed.GetEnumerator(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
+                Log.Debug($"FileSystemDataFeed.SubscriptionFinished(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
             };
 
+            var previousDateTime = DateTime.MaxValue;
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 TimeSlice timeSlice;
@@ -459,9 +463,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
                 }
 
-                // syncer returns MaxValue on failure/end of data
-                if (timeSlice.Time != DateTime.MaxValue)
+                // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
+                if (timeSlice.Time != previousDateTime)
                 {
+                    previousDateTime = timeSlice.Time;
                     yield return timeSlice;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
