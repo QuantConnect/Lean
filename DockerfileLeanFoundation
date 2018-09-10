@@ -63,6 +63,7 @@ RUN wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.s
     conda install -y jsonschema lxml plotly quandl && \
     conda install -y blaze cvxopt keras nltk tensorflow theano && \
     conda install -y pytorch torchvision -c pytorch && \
+    conda install -y -c conda-forge rauth && \
     pip install --upgrade pip && \
     pip install arch copulalib cvxpy deap gym pykalman pyro-ppl  && \
     pip install sklearn statistics tensorforce xgboost && \
