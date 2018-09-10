@@ -16,11 +16,10 @@
 using NUnit.Framework;
 using Python.Runtime;
 using System;
-using System.IO;
 
 namespace QuantConnect.Tests.Jupyter
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture]
     public class QuantBookIndicatorsTests
     {
         dynamic _module;
@@ -28,8 +27,6 @@ namespace QuantConnect.Tests.Jupyter
         [TestFixtureSetUp]
         public void Setup()
         {
-            var pythonPath = new DirectoryInfo("Jupyter/RegressionScripts");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
             using (Py.GIL())
             {
                 _module = Py.Import("Test_QuantBookIndicator");
