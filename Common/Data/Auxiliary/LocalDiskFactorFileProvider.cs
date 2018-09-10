@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Concurrent;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -86,14 +85,19 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         private FactorFile GetFactorFile(Symbol symbol, string permtick, string market)
         {
+            FactorFile factorFile = null;
             if (FactorFile.HasScalingFactors(permtick, market))
             {
-                var factorFile = FactorFile.Read(permtick, market);
+                factorFile = FactorFile.Read(permtick, market);
                 _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
-                return factorFile;
             }
-            // return null if not found
-            return null;
+            else
+            {
+                // add null value to the cache, we don't want to check the disk multiple times
+                // but keep existing value if it exists, just in case
+                _cache.AddOrUpdate(symbol, factorFile, (s, oldValue) => oldValue);
+            }
+            return factorFile;
         }
     }
 }
