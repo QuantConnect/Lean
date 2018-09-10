@@ -255,6 +255,7 @@
     <Compile Include="Benchmarks\SecurityBenchmark.cs" />
     <Compile Include="Brokerages\AlpacaBrokerageModel.cs" />
     <Compile Include="Brokerages\AlphaStreamsBrokerageModel.cs" />
+    <Compile Include="Brokerages\BinanceBrokerageModel.cs" />
     <Compile Include="Brokerages\BrokerageFactoryAttribute.cs" />
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageMessageHandler.cs" />
