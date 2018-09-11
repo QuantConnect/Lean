@@ -337,9 +337,11 @@
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
     <Compile Include="Backtesting\IBacktestingMarketSimulation.cs" />
     <Compile Include="BaseWebsocketsBrokerage.cs" />
+    <Compile Include="Binance\BinanceBrokerage.Utility.cs" />
     <Compile Include="Binance\BinanceBrokerage.cs" />
     <Compile Include="Binance\BinanceBrokerageFactory.cs" />
     <Compile Include="Binance\BinanceSymbolMapper.cs" />
+    <Compile Include="Binance\Messages.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
