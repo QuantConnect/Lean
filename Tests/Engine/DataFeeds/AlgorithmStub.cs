@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 
@@ -26,6 +27,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// </summary>
     public class AlgorithmStub : QCAlgorithm
     {
+        public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
+
         public AlgorithmStub(out DataManager dataManager, Resolution resolution = Resolution.Second,
                              List<string> equities = null, List<string> forex = null)
         {
@@ -48,6 +51,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var symbol = SymbolCache.GetSymbol(ticker);
                 Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard));
             }
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            SecurityChangesRecord.Add(changes);
         }
     }
 }
