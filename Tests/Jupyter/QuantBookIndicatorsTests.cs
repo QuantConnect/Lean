@@ -27,6 +27,8 @@ namespace QuantConnect.Tests.Jupyter
         [TestFixtureSetUp]
         public void Setup()
         {
+            SymbolCache.Clear();
+
             using (Py.GIL())
             {
                 _module = Py.Import("Test_QuantBookIndicator");

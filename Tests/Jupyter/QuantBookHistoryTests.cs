@@ -25,9 +25,11 @@ namespace QuantConnect.Tests.Jupyter
     {
         dynamic _module;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
+            SymbolCache.Clear();
+
             using (Py.GIL())
             {
                 _module = Py.Import("Test_QuantBookHistory");
