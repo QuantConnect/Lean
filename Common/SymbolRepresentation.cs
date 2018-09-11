@@ -44,6 +44,11 @@ namespace QuantConnect
             /// Expiration month
             /// </summary>
             public int ExpirationMonth { get; set; }
+
+            /// <summary>
+            /// Expiration day
+            /// </summary>
+            public int ExpirationDay { get; set; }
         }
 
         /// <summary>
@@ -81,63 +86,47 @@ namespace QuantConnect
         /// <returns>Results containing 1) underlying name, 2) short expiration year, 3) expiration month</returns>
         public static FutureTickerProperties ParseFutureTicker(string ticker)
         {
-            // we first check if we have XYZH6 or XYZH16 format
-            if (char.IsDigit(ticker.Substring(ticker.Length - 2, 1)[0]))
+            var doubleDigitYear = char.IsDigit(ticker.Substring(ticker.Length - 2, 1)[0]);
+            var doubleDigitOffset = doubleDigitYear ? 1 : 0;
+
+            var expirationDayOffset = 0;
+            var expirationDay = 1;
+            if (ticker.Length > 4 + doubleDigitOffset)
             {
-                // XYZH16 format
-                var expirationYearString = ticker.Substring(ticker.Length - 2, 2);
-                var expirationMonthString = ticker.Substring(ticker.Length - 3, 1);
-                var underlyingString = ticker.Substring(0, ticker.Length - 3);
-
-                int expirationYearShort;
-
-                if (!int.TryParse(expirationYearString, out expirationYearShort))
+                var potentialExpirationDay = ticker.Substring(ticker.Length - 4 - doubleDigitOffset, 2);
+                var containsExpirationDay = char.IsDigit(potentialExpirationDay[0]) && char.IsDigit(potentialExpirationDay[1]);
+                expirationDayOffset = containsExpirationDay ? 2 : 0;
+                if (containsExpirationDay && !int.TryParse(potentialExpirationDay, out expirationDay))
                 {
                     return null;
                 }
-
-                if (!_futuresMonthCodeLookup.ContainsKey(expirationMonthString))
-                {
-                    return null;
-                }
-
-                var expirationMonth = _futuresMonthCodeLookup[expirationMonthString];
-
-                return new FutureTickerProperties
-                {
-                    Underlying = underlyingString,
-                    ExpirationYearShort = expirationYearShort,
-                    ExpirationMonth = expirationMonth
-                };
             }
-            else
+
+            var expirationYearString = ticker.Substring(ticker.Length - 1 - doubleDigitOffset, 1 + doubleDigitOffset);
+            var expirationMonthString = ticker.Substring(ticker.Length - 2 - doubleDigitOffset, 1);
+            var underlyingString = ticker.Substring(0, ticker.Length - 2 - doubleDigitOffset - expirationDayOffset);
+
+            int expirationYearShort;
+
+            if (!int.TryParse(expirationYearString, out expirationYearShort))
             {
-                // XYZH6 format
-                var expirationYearString = ticker.Substring(ticker.Length - 1, 1);
-                var expirationMonthString = ticker.Substring(ticker.Length - 2, 1);
-                var underlyingString = ticker.Substring(0, ticker.Length - 2);
-
-                int expirationYearShort;
-
-                if (!int.TryParse(expirationYearString, out expirationYearShort))
-                {
-                    return null;
-                }
-
-                if (!_futuresMonthCodeLookup.ContainsKey(expirationMonthString))
-                {
-                    return null;
-                }
-
-                var expirationMonth = _futuresMonthCodeLookup[expirationMonthString];
-
-                return new FutureTickerProperties
-                {
-                    Underlying = underlyingString,
-                    ExpirationYearShort = expirationYearShort,
-                    ExpirationMonth = expirationMonth
-                };
+                return null;
             }
+
+            if (!_futuresMonthCodeLookup.ContainsKey(expirationMonthString))
+            {
+                return null;
+            }
+
+            var expirationMonth = _futuresMonthCodeLookup[expirationMonthString];
+
+            return new FutureTickerProperties
+            {
+                Underlying = underlyingString,
+                ExpirationYearShort = expirationYearShort,
+                ExpirationMonth = expirationMonth,
+                ExpirationDay = expirationDay
+            };
         }
 
         /// <summary>
@@ -169,7 +158,7 @@ namespace QuantConnect
                 }
             }
 
-            return $"{underlying}{_futuresMonthLookup[month]}{year}";
+            return $"{underlying}{expiration.Day:00}{_futuresMonthLookup[month]}{year}";
         }
 
         /// <summary>

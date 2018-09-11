@@ -53,15 +53,31 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ParseFuturesTickers()
         {
-            // ticker contains two digits year of expiration
-            var result = SymbolRepresentation.ParseFutureTicker("EDX20");
-            Assert.AreEqual(result.Underlying, "ED");
+            // ticker contains two digits year of expiration, no day expiration
+            var result = SymbolRepresentation.ParseFutureTicker("EX20");
+            Assert.AreEqual(result.Underlying, "E");
+            Assert.AreEqual(result.ExpirationDay, 1);
             Assert.AreEqual(result.ExpirationYearShort, 20);
             Assert.AreEqual(result.ExpirationMonth, 11); // November
 
-            // ticker contains one digit year of expiration
+            // ticker contains one digit year of expiration, no day expiration
             result = SymbolRepresentation.ParseFutureTicker("ABCZ1");
             Assert.AreEqual(result.Underlying, "ABC");
+            Assert.AreEqual(result.ExpirationDay, 1);
+            Assert.AreEqual(result.ExpirationYearShort, 1);
+            Assert.AreEqual(result.ExpirationMonth, 12); // December
+
+            // ticker contains two digits year of expiration, with day expiration
+            result = SymbolRepresentation.ParseFutureTicker("ED01X20");
+            Assert.AreEqual(result.Underlying, "ED");
+            Assert.AreEqual(result.ExpirationDay, 1);
+            Assert.AreEqual(result.ExpirationYearShort, 20);
+            Assert.AreEqual(result.ExpirationMonth, 11); // November
+
+            // ticker contains one digit year of expiration, with day expiration
+            result = SymbolRepresentation.ParseFutureTicker("ABC11Z1");
+            Assert.AreEqual(result.Underlying, "ABC");
+            Assert.AreEqual(result.ExpirationDay, 11);
             Assert.AreEqual(result.ExpirationYearShort, 1);
             Assert.AreEqual(result.ExpirationMonth, 12); // December
         }
@@ -73,21 +89,21 @@ namespace QuantConnect.Tests.Common
             var result = SymbolRepresentation.GenerateFutureTicker(ticker, new DateTime(2016, 12, 12));
 
             // ticker contains two digits year of expiration
-            Assert.AreEqual(result, "EDZ16");
+            Assert.AreEqual(result, "ED12Z16");
 
             // ticker contains one digit year of expiration
             result = SymbolRepresentation.GenerateFutureTicker(ticker, new DateTime(2016, 12, 12), false);
-            Assert.AreEqual(result, "EDZ6");
+            Assert.AreEqual(result, "ED12Z6");
         }
 
         [Test]
         public void GenerateFuturesTickersBackAndForth()
         {
-            const string expected = @"EDZ16";
+            const string expected = @"ED01Z16";
             var result = SymbolRepresentation.ParseFutureTicker(expected);
-            var ticker = SymbolRepresentation.GenerateFutureTicker(result.Underlying, new DateTime(2000 + result.ExpirationYearShort, result.ExpirationMonth, 1));
+            var ticker = SymbolRepresentation.GenerateFutureTicker(result.Underlying, new DateTime(2000 + result.ExpirationYearShort, result.ExpirationMonth, result.ExpirationDay));
 
-            Assert.AreEqual(ticker, expected);
+            Assert.AreEqual(expected, ticker);
         }
 
         [Test]
@@ -103,7 +119,7 @@ namespace QuantConnect.Tests.Common
             // CL Dec17 expires in Nov17
             var result = SymbolRepresentation.GenerateFutureTicker("CL", new DateTime(2017, 11, 20));
 
-            Assert.AreEqual("CLZ17", result);
+            Assert.AreEqual("CL20Z17", result);
         }
     }
 }
