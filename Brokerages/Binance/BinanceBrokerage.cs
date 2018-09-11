@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
+using Newtonsoft.Json;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Util;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Data;
-using QuantConnect.Packets;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using RestSharp;
+using System.Net;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -33,6 +34,14 @@ namespace QuantConnect.Brokerages.Binance
     [BrokerageFactory(typeof(BinanceBrokerageFactory))]
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
+        /// <summary>
+        /// Key Header
+        /// </summary>
+        public const string KeyHeader = "X-MBX-APIKEY";
+
+        private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
+
+        private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
@@ -81,7 +90,29 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<CashAmount> GetCashBalance()
         {
-            throw new NotImplementedException();
+            var list = new List<CashAmount>();
+            var queryString = $"timestamp={GetNonce()}";
+            var endpoint = $"/api/v3/account?{queryString}&signature={AuthenticationToken(queryString)}";
+            var request = new RestRequest(endpoint, Method.GET);
+            request.AddHeader(KeyHeader, ApiKey);
+
+            var response = ExecuteRestRequest(request);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var account = JsonConvert.DeserializeObject<Messages.AccountInformation>(response.Content);
+            var balances = account.Balances?.Where(balance => balance.Amount > 0);
+            if (balances == null || !balances.Any())
+                return list;
+
+            foreach (var balance in balances)
+            {
+                list.Add(new CashAmount(balance.Amount, balance.Asset.ToUpper()));
+            }
+
+            return list;
         }
 
         /// <summary>
@@ -191,7 +222,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public override void Dispose()
         {
-            base.Dispose();
+            _restRateLimiter.Dispose();
         }
     }
 }
