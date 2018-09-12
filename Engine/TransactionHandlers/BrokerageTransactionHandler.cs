@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Trace("BrokerageTransactionHandler.Process(): " + request);
 
-                _algorithm.Portfolio.LogMarginInformation();
+                _algorithm.Portfolio.LogMarginInformation(request);
             }
 
             switch (request.OrderRequestType)
