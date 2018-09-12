@@ -99,6 +99,28 @@ namespace QuantConnect.Brokerages.Binance
             return JsonConvert.DeserializeObject<Messages.PriceTicker[]>(response.Content);
         }
 
+        private static OrderStatus ConvertOrderStatus(string raw)
+        {
+            switch (raw.ToUpper())
+            {
+                case "NEW":
+                    return OrderStatus.New;
+                case "PARTIALLY_FILLED":
+                    return OrderStatus.PartiallyFilled;
+                case "FILLED":
+                    return OrderStatus.Filled;
+                case "PENDING_CANCEL":
+                    return OrderStatus.CancelPending;
+                case "CANCELED":
+                    return OrderStatus.Canceled;
+                case "REJECTED":
+                case "EXPIRED":
+                    return OrderStatus.Invalid;
+                default:
+                    return Orders.OrderStatus.None;
+            }
+        }
+
         private static string ByteArrayToString(byte[] ba)
         {
             StringBuilder hex = new StringBuilder(ba.Length * 2);

@@ -121,7 +121,59 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Order> GetOpenOrders()
         {
-            throw new NotImplementedException();
+            var list = new List<Order>();
+            var queryString = $"timestamp={GetNonce()}";
+            var endpoint = $"/api/v3/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
+            var request = new RestRequest(endpoint, Method.GET);
+            request.AddHeader(KeyHeader, ApiKey);
+
+            var response = ExecuteRestRequest(request);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var orders = JsonConvert.DeserializeObject<Messages.Order[]>(response.Content);
+            foreach (var item in orders)
+            {
+                Order order;
+                switch (item.Type.ToUpper())
+                {
+                    case "MARKET":
+                        order = new MarketOrder { Price = item.Price };
+                        break;
+                    case "LIMIT":
+                    case "LIMIT_MAKER":
+                        order = new LimitOrder { LimitPrice = item.Price };
+                        break;
+                    default:
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
+                            "BinanceBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
+                        continue;
+                }
+
+                order.Quantity = item.Quantity;
+                order.BrokerId = new List<string> { item.Id };
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol);
+                order.Time = Time.UnixMillisecondTimeStampToDateTime(item.Time);
+                order.Status = ConvertOrderStatus(item.Status);
+                order.Price = item.Price;
+                list.Add(order);
+            }
+
+            foreach (var item in list)
+            {
+                if (item.Status.IsOpen())
+                {
+                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
+                    if (cached.Any())
+                    {
+                        CachedOrderIDs[cached.First().Key] = item;
+                    }
+                }
+            }
+
+            return list;
         }
 
         /// <summary>

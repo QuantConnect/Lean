@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace QuantConnect.Brokerages.Binance.Messages
 {
@@ -21,6 +22,24 @@ namespace QuantConnect.Brokerages.Binance.Messages
     {
         public string Symbol { get; set; }
         public decimal Price { get; set; }
+    }
+
+    public class Order
+    {
+        [JsonProperty("orderId")]
+        public string Id { get; set; }
+        public string Symbol { get; set; }
+        public decimal Price { get; set; }
+        [JsonProperty("origQty")]
+        public decimal OriginalAmount { get; set; }
+        [JsonProperty("executedQty")]
+        public decimal ExecutedAmount { get; set; }
+        public string Status { get; set; }
+        public string Type { get; set; }
+        public string Side { get; set; }
+        public long Time { get; set; }
+
+        public decimal Quantity => string.Equals(Side, "buy", StringComparison.OrdinalIgnoreCase) ? OriginalAmount : -OriginalAmount;
     }
 
 #pragma warning restore 1591
