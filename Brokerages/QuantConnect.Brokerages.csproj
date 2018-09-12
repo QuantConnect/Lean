@@ -339,6 +339,7 @@
     <Compile Include="BaseWebsocketsBrokerage.cs" />
     <Compile Include="Binance\BinanceBrokerage.cs" />
     <Compile Include="Binance\BinanceBrokerageFactory.cs" />
+    <Compile Include="Binance\BinanceSymbolMapper.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
