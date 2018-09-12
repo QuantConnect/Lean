@@ -16,9 +16,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -692,5 +694,14 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Logs margin information for debugging
+        /// </summary>
+        public void LogMarginInformation()
+        {
+            Log.Trace("Margin information: " +
+                      $"TotalMarginUsed: {TotalMarginUsed.ToString("F2", CultureInfo.InvariantCulture)}, " +
+                      $"MarginRemaining: {MarginRemaining.ToString("F2", CultureInfo.InvariantCulture)}");
+        }
     }
 }
