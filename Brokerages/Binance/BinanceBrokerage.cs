@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            throw new NotImplementedException();
+            return new List<Holding>();
         }
 
         /// <summary>
