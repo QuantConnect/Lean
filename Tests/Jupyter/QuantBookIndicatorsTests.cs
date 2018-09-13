@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using Python.Runtime;
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Jupyter
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Tests.Jupyter
         public void Setup()
         {
             SymbolCache.Clear();
+            MarketHoursDatabase.Reset();
 
             using (Py.GIL())
             {

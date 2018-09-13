@@ -92,6 +92,19 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Resets the market hours database, forcing a reload when reused.
+        /// Called in tests where multiple algorithms are run sequentially,
+        /// and we need to guarantee that every test starts with the same environment.
+        /// </summary>
+        public static void Reset()
+        {
+            lock (DataFolderMarketHoursDatabaseLock)
+            {
+                _dataFolderMarketHoursDatabase = null;
+            }
+        }
+
+        /// <summary>
         /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
         /// data found in /Data/market-hours/
         /// </summary>
