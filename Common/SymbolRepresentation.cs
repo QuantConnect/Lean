@@ -79,8 +79,9 @@ namespace QuantConnect
 
 
         /// <summary>
-        /// Function returns underlying name, expiration year, expiration month for the future contract ticker. Function detects if
-        /// the format is used either XYZH6 or XYZH16. Returns null, if parsing failed.
+        /// Function returns underlying name, expiration year, expiration month, expiration day for the future contract ticker. Function detects if
+        /// the format used is either 1 or 2 digits year, and if day code is present (will default to 1rst day of month). Returns null, if parsing failed.
+        /// Format [Ticker][2 digit day code OPTIONAL][1 char month code][2/1 digit year code]
         /// </summary>
         /// <param name="ticker"></param>
         /// <returns>Results containing 1) underlying name, 2) short expiration year, 3) expiration month</returns>
@@ -130,7 +131,8 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns future symbol ticker from underlying and expiration date. Function can generate tickers of two formats: one and two digits year
+        /// Returns future symbol ticker from underlying and expiration date. Function can generate tickers of two formats: one and two digits year.
+        /// Format [Ticker][2 digit day code][1 char month code][2/1 digit year code], more information at http://help.tradestation.com/09_01/tradestationhelp/symbology/futures_symbology.htm
         /// </summary>
         /// <param name="underlying">String underlying</param>
         /// <param name="expiration">Expiration date</param>
