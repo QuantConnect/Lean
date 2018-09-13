@@ -251,7 +251,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in ResetGatewayConnection: " + exception);
                             }
 
-                            Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end.");
+                            Log.Trace($"InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end. Current IsConnected state: {IsConnected}");
                         }
                     }
 
@@ -534,6 +534,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             const int maxAttempts = 5;
             var existingSessionDetected = false;
             var securityDialogDetected = false;
+
+            var subscribedSymbolsCount = _subscribedSymbols.Skip(0).Count();
+            if (subscribedSymbolsCount > 0)
+            {
+                Log.Trace($"InteractiveBrokersBrokerage.Connect(): Data subscription count {subscribedSymbolsCount}, restoring data subscriptions is required");
+            }
+
             while (true)
             {
                 try
