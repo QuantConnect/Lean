@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Util;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -64,11 +65,13 @@ class MyAlgo(QCAlgorithm):
             {
                 return new[]
                 {
+                    new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Tick, 10),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Second, 10),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Minute, 10),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Hour, 10),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Daily, 10),
-
+     
+                    new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Tick, 10),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Second, 10),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Minute, 10),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Hour, 10),
@@ -84,8 +87,17 @@ class MyAlgo(QCAlgorithm):
             var expectedAlgorithm = GetExpectedAlgorithm(startDate, ticker, resolution);
             expectedAlgorithm.AddSecurity(securityType, ticker, resolution, fillDataForward: false);
 
-            var expectedHistory = expectedAlgorithm.History(new Symbol[] { ticker }, period)
-                .Select(x => (BaseData)x[ticker]).ToArray();
+            var expectedHistory = new List<BaseData>();
+            if (resolution == Resolution.Tick)
+            {
+                expectedHistory.AddRange(expectedAlgorithm.History(new Symbol[] { ticker }, period)
+                    .SelectMany(x => (List<Tick>)x[ticker]));
+            }
+            else
+            {
+                expectedHistory.AddRange(expectedAlgorithm.History(new Symbol[] { ticker }, period)
+                    .Select(x => (BaseData)x[ticker]));
+            }
 
             using (Py.GIL())
             {
@@ -96,7 +108,7 @@ class MyAlgo(QCAlgorithm):
                 algorithm.AddSecurity(securityType, ticker, resolution);
                 dynamic df = algorithm.History(ticker, period);
 
-                AssertHistory(securityType, expectedHistory, df);
+                AssertHistory(securityType, expectedHistory.ToArray(), df);
             }
         }
 
@@ -108,11 +120,13 @@ class MyAlgo(QCAlgorithm):
 
                 return new[]
                 {
+                    new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Tick, TimeSpan.FromHours(2)),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Second, span),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Minute, span),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Hour, span),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Daily, span),
 
+                    new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Tick, TimeSpan.FromHours(2)),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Second, span),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Minute, span),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Hour, span),
@@ -128,8 +142,17 @@ class MyAlgo(QCAlgorithm):
             var expectedAlgorithm = GetExpectedAlgorithm(startDate, ticker, resolution);
             expectedAlgorithm.AddSecurity(securityType, ticker, resolution, fillDataForward: false);
 
-            var expectedHistory = expectedAlgorithm.History(new Symbol[] { ticker }, span)
-                .Select(x => (BaseData)x[ticker]).ToArray();
+            var expectedHistory = new List<BaseData>();
+            if (resolution == Resolution.Tick)
+            {
+                expectedHistory.AddRange(expectedAlgorithm.History(new Symbol[] { ticker }, span)
+                    .SelectMany(x => (List<Tick>)x[ticker]));
+            }
+            else
+            {
+                expectedHistory.AddRange(expectedAlgorithm.History(new Symbol[] { ticker }, span)
+                    .Select(x => (BaseData)x[ticker]));
+            }
 
             using (Py.GIL())
             {
@@ -140,7 +163,7 @@ class MyAlgo(QCAlgorithm):
                 algorithm.AddSecurity(securityType, ticker, resolution);
                 dynamic df = algorithm.History(ticker, span);
 
-                AssertHistory(securityType, expectedHistory, df);
+                AssertHistory(securityType, expectedHistory.ToArray(), df);
             }
         }
 
@@ -153,11 +176,13 @@ class MyAlgo(QCAlgorithm):
 
                 return new[]
                 {
+                    new TestCaseData(spyDates.Item1, SecurityType.Equity, "SPY", Resolution.Tick, spyDates.Item2, spyDates.Item2.AddHours(2)),
                     new TestCaseData(spyDates.Item1, SecurityType.Equity, "SPY", Resolution.Second, spyDates.Item2, spyDates.Item3),
                     new TestCaseData(spyDates.Item1, SecurityType.Equity, "SPY", Resolution.Minute, spyDates.Item2, spyDates.Item3),
                     new TestCaseData(spyDates.Item1, SecurityType.Equity, "SPY", Resolution.Hour, spyDates.Item2, spyDates.Item3),
                     new TestCaseData(spyDates.Item1, SecurityType.Equity, "SPY", Resolution.Daily, spyDates.Item2, spyDates.Item3),
 
+                    new TestCaseData(eurDates.Item1, SecurityType.Forex, "EURUSD", Resolution.Tick, eurDates.Item2, eurDates.Item2.AddHours(2)),
                     new TestCaseData(eurDates.Item1, SecurityType.Forex, "EURUSD", Resolution.Second, eurDates.Item2, eurDates.Item3),
                     new TestCaseData(eurDates.Item1, SecurityType.Forex, "EURUSD", Resolution.Minute, eurDates.Item2, eurDates.Item3),
                     new TestCaseData(eurDates.Item1, SecurityType.Forex, "EURUSD", Resolution.Hour, eurDates.Item2, eurDates.Item3),
@@ -173,8 +198,17 @@ class MyAlgo(QCAlgorithm):
             var expectedAlgorithm = GetExpectedAlgorithm(startDate, ticker, resolution);
             expectedAlgorithm.AddSecurity(securityType, ticker, resolution, fillDataForward: false);
 
-            var expectedHistory = expectedAlgorithm.History(new Symbol[] { ticker }, start, end)
-                .Select(x => (BaseData)x[ticker]).ToArray();
+            var expectedHistory = new List<BaseData>();
+            if (resolution == Resolution.Tick)
+            {
+                expectedHistory.AddRange(expectedAlgorithm.History(new Symbol[] { ticker }, start, end)
+                    .SelectMany(x => (List<Tick>)x[ticker]));
+            }
+            else
+            {
+                expectedHistory.AddRange(expectedAlgorithm.History(new Symbol[] { ticker }, start, end)
+                    .Select(x => (BaseData)x[ticker]));
+            }
 
             using (Py.GIL())
             {
@@ -185,7 +219,7 @@ class MyAlgo(QCAlgorithm):
                 algorithm.AddSecurity(securityType, ticker, resolution);
                 dynamic df = algorithm.History(ticker, start, end);
 
-                AssertHistory(securityType, expectedHistory, df);
+                AssertHistory(securityType, expectedHistory.ToArray(), df);
             }
         }
 
@@ -195,6 +229,7 @@ class MyAlgo(QCAlgorithm):
             {
                 return new[]
                 {
+                    new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Tick, 10),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Second, 10),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Minute, 10),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Hour, 10),
@@ -235,6 +270,7 @@ class MyAlgo(QCAlgorithm):
             {
                 return new[]
                 {
+                    new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Tick, TimeSpan.FromHours(2)),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Second, TimeSpan.FromDays(2)),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Minute, TimeSpan.FromDays(2)),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Hour, TimeSpan.FromDays(2)),
@@ -289,22 +325,33 @@ class MyAlgo(QCAlgorithm):
                 for (var i = 0; i < expectedLength; i++)
                 {
                     var expectedBar = expectedHistory[i];
+                    var actualBar = df.iloc[i];
 
-                    var actualEndTime = (DateTime)df.index.levels[1][i];
+                    var actualEndTime = (DateTime)actualBar.name[1];
                     Assert.AreEqual(expectedBar.EndTime, actualEndTime);
 
-                    var actualBar = df.iloc[i];
+                    var index = actualBar.index;
                     var actualValue = 0.0;
 
-                    if (securityType == SecurityType.Equity)
+                    if (index.contains("close"))
                     {
                         actualValue = (double)actualBar.close;
                     }
-                    else
+                    else if (index.contains("lastprice"))
+                    {
+                        actualValue = (double)actualBar.lastprice;
+                    }
+                    else if (index.contains("bidclose"))
                     {
                         var bidclose = (double)actualBar.bidclose;
                         var askclose = (double)actualBar.askclose;
                         actualValue = (bidclose + askclose) / 2;
+                    }
+                    else if (index.contains("bidprice"))
+                    {
+                        var bidprice = (double)actualBar.bidprice;
+                        var askprice = (double)actualBar.askprice;
+                        actualValue = (bidprice + askprice) / 2;
                     }
                     Assert.AreEqual((double)expectedBar.Value, actualValue, 1e-6);
                 }

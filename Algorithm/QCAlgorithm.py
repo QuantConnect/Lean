@@ -20,6 +20,14 @@ from QuantConnect.Algorithm import *
 from datetime import datetime, timedelta
 import pandas as pd
 
+def get_milliseconds(start, timestamp):
+    hours = timestamp.hour
+    minutes = timestamp.minute
+    seconds = timestamp.second
+    microseconds = timestamp.microsecond
+    milliseconds = ((hours * 60 + minutes) * 60 + seconds) * 1000 + microseconds / 1000
+    return milliseconds if milliseconds >= start else 86400000
+
 class QCAlgorithm(QCPyAlgorithm):
     def History(self, *args, **kwargs):
 
@@ -70,16 +78,32 @@ class QCAlgorithm(QCPyAlgorithm):
 
             df = pd.read_csv(request.Source, header = None, index_col = 0, names = request.Names)
 
-            if request.PriceScaleFactor != 1.0:
-                df.iloc[:, 0:4] = df.iloc[:, 0:4] * request.PriceScaleFactor
+            period = request.Period
 
-            if request.Period >= timedelta(hours = 1):
-                df.index = pd.to_datetime(df.index) + request.Period
+            # Convert datetime to pandas DatetimeIndex
+            # Subtract one microsecond in tick resolution case
+            openHours = request.MarketOpenHours
+            if period == timedelta(0):
+                openHours[-1] = openHours[-1] - timedelta(microseconds = 1)
+            openHours = pd.DatetimeIndex(openHours)
+
+            price_scale_factor = request.PriceScaleFactor
+            if price_scale_factor != 1.0:
+                i = 4 if period > timedelta(0) else 1
+                df.iloc[:, 0:i] = df.iloc[:, 0:i] * price_scale_factor
+
+            if period >= timedelta(hours = 1):
+                df.index = pd.to_datetime(df.index) + period
+                df = df[df.index.isin(openHours)]
             else:
-                df.index = (request.Date + request.Period + timedelta(microseconds = 1000 * i) for i in df.index)
+                # remove some data before converting the index into datetime
+                lower_bound = get_milliseconds(0, openHours[0])
+                upper_bound = get_milliseconds(1 + lower_bound, openHours[1])
+                
+                df = df[(lower_bound <= df.index) & (df.index <= upper_bound)]
 
-            openHours = pd.DatetimeIndex(request.MarketOpenHours)
-            df = df[df.index.isin(openHours)]
+                df.index = (request.Date + period + timedelta(microseconds = 1000 * i) for i in df.index)
+                df = df[(openHours[0] <= df.index) & (df.index <= openHours[1])]
 
             df.index = pd.MultiIndex.from_product([[request.Symbol.Value], df.index], names=['symbol', 'time'])
             df_list.append(df)

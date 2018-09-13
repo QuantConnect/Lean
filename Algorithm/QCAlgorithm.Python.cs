@@ -29,12 +29,16 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
 using System.Linq;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
         private readonly Dictionary<IntPtr, PythonActivator> _pythonActivators = new Dictionary<IntPtr, PythonActivator>();
+        private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+        private readonly IFactorFileProvider _factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
 
         public PandasConverter PandasConverter { get; private set; }
 
@@ -736,7 +740,7 @@ namespace QuantConnect.Algorithm
                     }
 
                     return tradeableDays
-                        .Select(date => new PandasHistoryRequest(config, hours, request.StartTimeUtc, request.EndTimeUtc, resolution, date));
+                        .Select(date => new PandasHistoryRequest(config, hours, request.StartTimeUtc, request.EndTimeUtc, resolution, date, _mapFileProvider, _factorFileProvider));
                 });
         }
 

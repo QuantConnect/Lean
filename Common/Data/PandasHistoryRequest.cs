@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -28,10 +27,12 @@ namespace QuantConnect.Data
     /// <summary>
     /// Represents a request for historical data using pandas
     /// </summary>
-    public class PandasHistoryRequest : HistoryRequest
+    public class PandasHistoryRequest
     {
-        private static readonly IMapFileProvider _mapFileProvider = new LocalDiskMapFileProvider();
-        private static readonly IFactorFileProvider _factorFileProvider = new LocalDiskFactorFileProvider(_mapFileProvider);
+        /// <summary>
+        /// Gets the symbol to request data for
+        /// </summary>
+        public Symbol Symbol { get; }
 
         /// <summary>
         /// Date in the local file path
@@ -51,7 +52,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Factor used to create adjusted prices from raw prices
         /// </summary>
-        public double PriceScaleFactor { get; } = 1;
+        public double PriceScaleFactor { get; set; } = 1;
 
         /// <summary>
         /// Columns names
@@ -61,7 +62,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Requested data resolution in TimeSpan
         /// </summary>
-        public TimeSpan Period => Resolution.ToTimeSpan();
+        public TimeSpan Period { get; }
 
         /// <summary>
         /// Gets a flag indicating whether the file exists
@@ -75,49 +76,44 @@ namespace QuantConnect.Data
         /// <param name="hours">The exchange hours used for fill forward processing</param>
         /// <param name="startTimeUtc">The start time for this request,</param>
         /// <param name="endTimeUtc">The start time for this request</param>
-        /// <param name="date"></param>
+        /// <param name="resolution">Requested data resolution</param>
+        /// <param name="date">Date of this request</param>
+        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
+        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
         public PandasHistoryRequest(SubscriptionDataConfig config,
             SecurityExchangeHours hours,
             DateTime startTimeUtc,
             DateTime endTimeUtc,
             Resolution resolution,
-            DateTime date)
-            : base(config, hours, startTimeUtc, endTimeUtc)
+            DateTime date,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider)
         {
+            Symbol = config.Symbol;
 
-            var id = config.Symbol.ID;
+            var id = Symbol.ID;
             if (id.SecurityType == SecurityType.Equity)
             {
-                var resolver = _mapFileProvider.Get(id.Market);
+                var resolver = mapFileProvider.Get(id.Market);
                 var mapFile = resolver.ResolveMapFile(id.Symbol, id.Date);
                 Symbol.UpdateMappedSymbol(mapFile.GetMappedSymbol(date, id.Symbol));
 
-                var factorFile = _factorFileProvider.Get(Symbol);
+                var factorFile = factorFileProvider.Get(Symbol);
                 var factorFileRow = factorFile.GetScalingFactors(date);
-                PriceScaleFactor = (double)factorFileRow.PriceScaleFactor;
-            }
-
-            // Include TradeBar._scaleFactor
-            if (DataType == typeof(TradeBar))
-            {
-                PriceScaleFactor /= 10000;
+                PriceScaleFactor = (double)factorFileRow.PriceScaleFactor / 10000;
             }
 
             MarketOpenHours = new List<DateTime>();
 
-            if (IncludeExtendedMarketHours)
-            {
-                FillForwardResolution = Resolution;
-            }
-
             Date = date;
-            Resolution = resolution;
-            Source = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbol, Date, Resolution, TickType);
+            Period = resolution.ToTimeSpan();
+            Source = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbol, Date, resolution, config.TickType);
+            Names = GetNames(resolution, config.TickType);
 
-            var startTime = StartTimeUtc.ConvertFromUtc(config.DataTimeZone);
-            var endTime = EndTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var startTime = startTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var endTime = endTimeUtc.ConvertFromUtc(config.DataTimeZone);
 
-            if (Resolution == Resolution.Daily)
+            if (resolution == Resolution.Daily)
             {
                 var localDateTime = startTime.Date;
                 while (localDateTime < endTime.Date)
@@ -126,26 +122,20 @@ namespace QuantConnect.Data
                     MarketOpenHours.Add(localDateTime);
                 }
             }
-            else
+            else if (resolution == Resolution.Hour)
             {
                 var localDateTime = Date > startTime ? startTime : Date;
 
                 // If market is open, use the previsous day to compute the next market open
-                if (ExchangeHours.IsOpen(localDateTime, IncludeExtendedMarketHours))
+                if (hours.IsOpen(localDateTime, config.ExtendedMarketHours))
                 {
                     localDateTime = localDateTime.AddDays(-1);
                 }
-                localDateTime = ExchangeHours.GetNextMarketOpen(localDateTime.Date, IncludeExtendedMarketHours);
-
-                // Define an earlier end time for high resolution to avoid extended market hours
-                if (Resolution != Resolution.Hour && Date > endTime)
-                {
-                    endTime = ExchangeHours.GetNextMarketClose(localDateTime, IncludeExtendedMarketHours);
-                }
+                localDateTime = hours.GetNextMarketOpen(localDateTime.Date, config.ExtendedMarketHours);
 
                 while (localDateTime < endTime)
                 {
-                    if (ExchangeHours.IsOpen(localDateTime, IncludeExtendedMarketHours))
+                    if (hours.IsOpen(localDateTime, config.ExtendedMarketHours))
                     {
                         var openHours = localDateTime.Add(Period).RoundDown(Period);
                         if (openHours > startTime)
@@ -156,20 +146,77 @@ namespace QuantConnect.Data
                     localDateTime = localDateTime.Add(Period);
                 }
             }
-
-            DataType = IsCustomData ? config.Type : LeanData.GetDataType(resolution, TickType);
-
-            var namesByType = new Dictionary<Type, string[]>
+            // High resolution requests will only record the lower and upper boundary
+            else
             {
-                { typeof(TradeBar), new[]{ "open", "hight", "low", "close", "volume" } },
-                { typeof(QuoteBar), new[]{ "bidopen", "bidhigh", "bidlow", "bidclose", "bidsize", "askopen", "askhigh", "asklow", "askclose", "asksize", } },
-            };
-            
-            string[] names;
-            if (namesByType.TryGetValue(DataType, out names))
-            {
-                Names = names;
+                var lowerBound = Date;
+                if (!hours.IsOpen(Date, config.ExtendedMarketHours))
+                {
+                    lowerBound = hours.GetNextMarketOpen(Date, config.ExtendedMarketHours);
+                }
+                lowerBound = startTime > lowerBound ? startTime : lowerBound;
+                var upperBound = hours.GetNextMarketClose(lowerBound, config.ExtendedMarketHours);
+                upperBound = endTime < upperBound ? endTime : upperBound;
+
+                if (lowerBound > upperBound)
+                {
+                    lowerBound = upperBound;
+                }
+
+                MarketOpenHours.Add(lowerBound);
+                MarketOpenHours.Add(upperBound);
             }
+        }
+
+        private string[] GetNames(Resolution resolution, TickType tickType)
+        {
+            var dataType = LeanData.GetDataType(resolution, tickType);
+
+            if (dataType == typeof(TradeBar))
+            {
+                return new[] { "open", "hight", "low", "close", "volume" };
+            }
+
+            if (dataType == typeof(QuoteBar))
+            {
+                return new[] { "bidopen", "bidhigh", "bidlow", "bidclose", "bidsize", "askopen", "askhigh", "asklow", "askclose", "asksize" };
+            }
+
+            if (dataType == typeof(Tick))
+            {
+                var securityType = Symbol.ID.SecurityType;
+                switch (securityType)
+                {
+                    case SecurityType.Equity:
+                        return new[] { "lastprice", "quantity", "exchange", "salecondition", "suspicious" };
+                    case SecurityType.Forex:
+                    case SecurityType.Cfd:
+                        return new[] { "bidprice", "askprice" };
+                    case SecurityType.Option:
+                    case SecurityType.Future:
+                        if (tickType == TickType.Trade)
+                        {
+                            return new[] { "lastprice", "quantity", "exchange", "salecondition", "suspicious" };
+                        }
+                        else
+                        {
+                            return new[] { "bidprice", "bidsize", "askprice", "asksize", "exchange", "suspicious" };
+                        }
+                    case SecurityType.Crypto:
+                        if (tickType == TickType.Trade)
+                        {
+                            return new[] { "lastprice", "quantity" };
+                        }
+                        else
+                        {
+                            return new[] { "bidprice", "bidsize", "askprice", "asksize" };
+                        }
+                    default:
+                        throw new ArgumentOutOfRangeException($"PandasHistoryRequest.GetNames: invalid data type {nameof(dataType)}");
+
+                }
+            }
+            throw new ArgumentOutOfRangeException($"PandasHistoryRequest.GetNames: invalid data type {nameof(dataType)}");
         }
 
         /// <summary>
