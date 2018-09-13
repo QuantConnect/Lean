@@ -111,13 +111,14 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var orderEventTracker = new ConcurrentBag<OrderEvent>();
             var alpaca = (AlpacaBrokerage)Brokerage;
             var symbol = Symbol;
-            EventHandler<OrderEvent> orderStatusChangedCallback = (s, e) => {
+            EventHandler<OrderEvent> orderStatusChangedCallback = (s, e) =>
+            {
                 orderEventTracker.Add(e);
             };
             alpaca.OrderStatusChanged += orderStatusChangedCallback;
             const int numberOfOrders = 2;
             for (var i = 0; i < numberOfOrders; i++)
-            { 
+            {
                 var order = new MarketOrder(symbol, 10, DateTime.Now);
                 OrderProvider.Add(order);
                 Console.WriteLine("Buy Order");
@@ -143,7 +144,8 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var alpaca = (AlpacaBrokerage)Brokerage;
             var symbol = Symbol;
             var quote = alpaca.GetRates(symbol.Value);
-            EventHandler<OrderEvent> orderStatusChangedCallback = (s, e) => {
+            EventHandler<OrderEvent> orderStatusChangedCallback = (s, e) =>
+            {
                 orderEventTracker.Add(e);
             };
             alpaca.OrderStatusChanged += orderStatusChangedCallback;

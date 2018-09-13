@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             String keyId,
             String secretKey,
             String alpacaRestApi = null)
-            :this (
+            : this(
                 keyId,
                 secretKey,
                 new Uri(alpacaRestApi ?? "https://api.alpaca.markets"))
@@ -49,10 +49,10 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             String secretKey,
             Uri alpacaRestApi)
         {
-			if (keyId == null) throw new ArgumentException(nameof(keyId));
-			_keyId = keyId;
-			if (secretKey == null) throw new ArgumentException(nameof(secretKey));
-			_secretKey = secretKey;
+            if (keyId == null) throw new ArgumentException(nameof(keyId));
+            _keyId = keyId;
+            if (secretKey == null) throw new ArgumentException(nameof(secretKey));
+            _secretKey = secretKey;
 
             alpacaRestApi = alpacaRestApi ?? new Uri("https://api.alpaca.markets");
 
