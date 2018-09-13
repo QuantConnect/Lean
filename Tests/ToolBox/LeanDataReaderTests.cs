@@ -44,9 +44,9 @@ namespace QuantConnect.Tests.ToolBox
             var canonicalFutures = new Dictionary<Symbol, string>()
             {
                 { Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
-                    "ESZ13|ESH14|ESM14|ESU14|ESZ14" },
+                    "ES20Z13|ES21H14|ES20M14|ES19U14|ES19Z14" },
                 {Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA),
-                    "GCV13|GCX13|GCZ13|GCG14|GCJ14|GCM14|GCQ14|GCV14|GCZ14|GCG15|GCJ15|GCM15|GCQ15|GCZ15|GCM16|GCZ16|GCM17|GCZ17|GCM18|GCZ18|GCM19"},
+                    "GC29V13|GC26X13|GC27Z13|GC26G14|GC28J14|GC26M14|GC27Q14|GC29V14|GC29Z14|GC25G15|GC28J15|GC26M15|GC27Q15|GC29Z15|GC28M16|GC28Z16|GC28M17|GC27Z17|GC27M18|GC27Z18|GC26M19"},
             };
 
             var tickTypes = new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest };
