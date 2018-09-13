@@ -177,6 +177,17 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new List<Holding>
                         {
+                            new Holding { Type = SecurityType.Option, Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
+                        },
+                        new List<Order>
+                        {
+                            new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow),
+                        })
+                    .SetName("Equity open order + Option holding"),
+
+                new TestCaseData(
+                        new List<Holding>
+                        {
                             new Holding { Type = SecurityType.Forex, Symbol = Symbols.EURUSD, Quantity = 1 }
                         },
                         new List<Order>
