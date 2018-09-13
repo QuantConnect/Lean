@@ -25,12 +25,12 @@ namespace QuantConnect.Brokerages.Alpaca
     /// <summary>
     /// Provides an implementations of <see cref="IBrokerageFactory"/> that produces a <see cref="AlpacaBrokerage"/>
     /// </summary>
-    public class AlpacaBrokerageFactory: BrokerageFactory
+    public class AlpacaBrokerageFactory : BrokerageFactory
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaBrokerageFactory"/> class.
         /// </summary>
-        public AlpacaBrokerageFactory() 
+        public AlpacaBrokerageFactory()
             : base(typeof(AlpacaBrokerage))
         {
         }
@@ -57,7 +57,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 {
                     { "alpaca-key-id", Config.Get("alpaca-key-id") },
                     { "alpaca-secret-key", Config.Get("alpaca-secret-key") },
-					{ "alpaca-base-url", Config.Get("alpaca-base-url") }
+                    { "alpaca-base-url", Config.Get("alpaca-base-url") }
                 };
             }
         }
@@ -81,11 +81,11 @@ namespace QuantConnect.Brokerages.Alpaca
             var errors = new List<string>();
 
             // read values from the brokerage data
-            var keyId= Read<string>(job.BrokerageData, "alpaca-key-id", errors);
+            var keyId = Read<string>(job.BrokerageData, "alpaca-key-id", errors);
             var secretKey = Read<string>(job.BrokerageData, "alpaca-secret-key", errors);
-			var baseUrl = Read<string>(job.BrokerageData, "alpaca-base-url", errors);
+            var baseUrl = Read<string>(job.BrokerageData, "alpaca-base-url", errors);
 
-			if (errors.Count != 0)
+            if (errors.Count != 0)
             {
                 // if we had errors then we can't create the instance
                 throw new Exception(string.Join(System.Environment.NewLine, errors));

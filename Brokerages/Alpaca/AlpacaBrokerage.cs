@@ -29,172 +29,161 @@ using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Alpaca
 {
-	/// <summary>
-	/// Alpaca Brokerage implementation
-	/// </summary>
-	[BrokerageFactory(typeof(AlpacaBrokerageFactory))]
-	public class AlpacaBrokerage : Brokerage, IDataQueueHandler
-	{
-		//private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
-		private readonly AlpacaApiBase _api;
+    /// <summary>
+    /// Alpaca Brokerage implementation
+    /// </summary>
+    [BrokerageFactory(typeof(AlpacaBrokerageFactory))]
+    public class AlpacaBrokerage : Brokerage, IDataQueueHandler
+    {
+        //private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
+        private readonly AlpacaApiBase _api;
 
-		/// <summary>
-		/// The maximum number of bars per historical data request
-		/// </summary>
-		public const int MaxBarsPerRequest = 5000;
+        /// <summary>
+        /// The maximum number of bars per historical data request
+        /// </summary>
+        public const int MaxBarsPerRequest = 5000;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="AlpacaBrokerage"/> class.
-		/// </summary>
-		/// <param name="orderProvider">The order provider.</param>
-		/// <param name="securityProvider">The holdings provider.</param>
-		/// <param name="keyId">The Alpaca api key</param>
-		/// <param name="secretKey">The api secret</param>
-		/// /// <param name="baseUrl">The Alpaca server url.</param>
-		public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
-			: base("Alpaca Brokerage")
-		{
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AlpacaBrokerage"/> class.
+        /// </summary>
+        /// <param name="orderProvider">The order provider.</param>
+        /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="keyId">The Alpaca api key</param>
+        /// <param name="secretKey">The api secret</param>
+        /// /// <param name="baseUrl">The Alpaca server url.</param>
+        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
+            : base("Alpaca Brokerage")
+        {
 
-			_api = new AlpacaApiBase(orderProvider, securityProvider, keyId, secretKey, baseUrl);
+            _api = new AlpacaApiBase(orderProvider, securityProvider, keyId, secretKey, baseUrl);
 
-			//// forward events received from API
-			_api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
-			_api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
-			_api.Message += (sender, messageEvent) => OnMessage(messageEvent);
-		}
+            //// forward events received from API
+            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
+            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
+        }
 
-		#region IBrokerage implementation
+        #region IBrokerage implementation
 
-		/// <summary>
-		/// Returns true if we're currently connected to the broker
-		/// </summary>
-		public override bool IsConnected
-		{
-			get { return _api.IsConnected; }
-		}
+        /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public override bool IsConnected
+        {
+            get { return _api.IsConnected; }
+        }
 
-		/// <summary>
-		/// Connects the client to the broker's remote servers
-		/// </summary>
-		public override void Connect()
-		{
-			if (IsConnected) return;
+        /// <summary>
+        /// Connects the client to the broker's remote servers
+        /// </summary>
+        public override void Connect()
+        {
+            if (IsConnected) return;
 
-			_api.Connect();
-		}
+            _api.Connect();
+        }
 
-		/// <summary>
-		/// Disconnects the client from the broker's remote servers
-		/// </summary>
-		public override void Disconnect()
-		{
-			_api.Disconnect();
-		}
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
+        public override void Disconnect()
+        {
+            _api.Disconnect();
+        }
 
-		/// <summary>
-		/// Gets all open orders on the account.
-		/// NOTE: The order objects returned do not have QC order IDs.
-		/// </summary>
-		/// <returns>The open orders returned from Alpaca</returns>
-		public override List<Order> GetOpenOrders()
-		{
-			return _api.GetOpenOrders();
-		}
+        /// <summary>
+        /// Gets all open orders on the account.
+        /// NOTE: The order objects returned do not have QC order IDs.
+        /// </summary>
+        /// <returns>The open orders returned from Alpaca</returns>
+        public override List<Order> GetOpenOrders()
+        {
+            return _api.GetOpenOrders();
+        }
 
-		/// <summary>
-		/// Gets all holdings for the account
-		/// </summary>
-		/// <returns>The current holdings from the account</returns>
-		public override List<Holding> GetAccountHoldings()
-		{
-			var holdings = _api.GetAccountHoldings();
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public override List<Holding> GetAccountHoldings()
+        {
+            var holdings = _api.GetAccountHoldings();
 
-			// Set MarketPrice in each Holding
-			var alpacaSymbols = holdings
-				.Select(x => x.Symbol.Value)
-				.ToList();
+            // Set MarketPrice in each Holding
+            var alpacaSymbols = holdings
+                .Select(x => x.Symbol.Value)
+                .ToList();
 
-			if (alpacaSymbols.Count > 0)
-			{
-				var quotes = _api.GetRates(alpacaSymbols);
-				foreach (var holding in holdings)
-				{
-					var alpacaSymbol = holding.Symbol;
-					Tick tick;
-					if (quotes.TryGetValue(alpacaSymbol.Value, out tick))
-					{
-						holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
-					}
-				}
-			}
-
-			return holdings;
-		}
-
-		/// <summary>
-		/// Gets the current cash balance for each currency held in the brokerage account
-		/// </summary>
-		/// <returns>The current cash balance for each currency available for trading</returns>
-		public override List<Cash> GetCashBalance()
-		{
-			return _api.GetCashBalance();
-		}
-
-		/// <summary>
-		/// Places a new order and assigns a new broker ID to the order
-		/// </summary>
-		/// <param name="order">The order to be placed</param>
-		/// <returns>True if the request for a new order has been placed, false otherwise</returns>
-		public override bool PlaceOrder(Order order)
-		{
-			return _api.PlaceOrder(order);
-		}
-
-		/// <summary>
-		/// Updates the order with the same id
-		/// </summary>
-		/// <param name="order">The new order information</param>
-		/// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-		public override bool UpdateOrder(Order order)
-		{
-			return _api.UpdateOrder(order);
-		}
-
-		/// <summary>
-		/// Cancels the order with the specified ID
-		/// </summary>
-		/// <param name="order">The order to cancel</param>
-		/// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
-		public override bool CancelOrder(Order order)
-		{
-			return _api.CancelOrder(order);
-		}
-
-		/// <summary>
-		/// Gets the history for the requested security
-		/// </summary>
-		/// <param name="request">The historical data request</param>
-		/// <returns>An enumerable of bars covering the span specified in the request</returns>
-		public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
-		{
-			//if (!_symbolmapper.isknownleansymbol(request.symbol))
-			//{
-			//	log.trace("alpacabrokerage.gethistory(): invalid symbol: {0}, no history returned", request.symbol.value);
-			//	yield break;
-			//}
-
-            if (request.Resolution == Resolution.Tick)
+            if (alpacaSymbols.Count > 0)
             {
-                Log.Trace("AlpacaBrokerage.GetHistory(): invalid resolution: tick");
-                yield break;
+                var quotes = _api.GetRates(alpacaSymbols);
+                foreach (var holding in holdings)
+                {
+                    var alpacaSymbol = holding.Symbol;
+                    Tick tick;
+                    if (quotes.TryGetValue(alpacaSymbol.Value, out tick))
+                    {
+                        holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
+                    }
+                }
             }
 
-			var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, request.Symbol, request.Symbol.SecurityType).TimeZone;
+            return holdings;
+        }
 
-			var period = request.Resolution.ToTimeSpan();
+        /// <summary>
+        /// Gets the current cash balance for each currency held in the brokerage account
+        /// </summary>
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        public override List<Cash> GetCashBalance()
+        {
+            return _api.GetCashBalance();
+        }
 
-			// set the starting date/time
-			var startDateTime = request.StartTimeUtc;
+        /// <summary>
+        /// Places a new order and assigns a new broker ID to the order
+        /// </summary>
+        /// <param name="order">The order to be placed</param>
+        /// <returns>True if the request for a new order has been placed, false otherwise</returns>
+        public override bool PlaceOrder(Order order)
+        {
+            return _api.PlaceOrder(order);
+        }
+
+        /// <summary>
+        /// Updates the order with the same id
+        /// </summary>
+        /// <param name="order">The new order information</param>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
+        public override bool UpdateOrder(Order order)
+        {
+            return _api.UpdateOrder(order);
+        }
+
+        /// <summary>
+        /// Cancels the order with the specified ID
+        /// </summary>
+        /// <param name="order">The order to cancel</param>
+        /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
+        public override bool CancelOrder(Order order)
+        {
+            return _api.CancelOrder(order);
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+
+            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, request.Symbol, request.Symbol.SecurityType).TimeZone;
+
+            var period = request.Resolution.ToTimeSpan();
+
+            // set the starting date/time
+            var startDateTime = request.StartTimeUtc;
 
             if (request.Resolution == Resolution.Tick)
             {
@@ -230,90 +219,90 @@ namespace QuantConnect.Brokerages.Alpaca
                         yield return tradeBar;
                     }
                 }
-            }	
-		}
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region IDataQueueHandler implementation
+        #region IDataQueueHandler implementation
 
-		/// <summary>
-		/// Get the next ticks from the live trading data queue
-		/// </summary>
-		/// <returns>IEnumerable list of ticks since the last update.</returns>
-		public IEnumerable<BaseData> GetNextTicks()
-		{
-			return _api.GetNextTicks();
-		}
+        /// <summary>
+        /// Get the next ticks from the live trading data queue
+        /// </summary>
+        /// <returns>IEnumerable list of ticks since the last update.</returns>
+        public IEnumerable<BaseData> GetNextTicks()
+        {
+            return _api.GetNextTicks();
+        }
 
-		/// <summary>
-		/// Adds the specified symbols to the subscription
-		/// </summary>
-		/// <param name="job">Job we're subscribing for:</param>
-		/// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-		public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
-		{
-			_api.Subscribe(job, symbols);
-		}
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="job">Job we're subscribing for:</param>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        {
+            _api.Subscribe(job, symbols);
+        }
 
-		/// <summary>
-		/// Removes the specified symbols from the subscription
-		/// </summary>
-		/// <param name="job">Job we're processing.</param>
-		/// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-		public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
-		{
-			_api.Unsubscribe(job, symbols);
-		}
+        /// <summary>
+        /// Removes the specified symbols from the subscription
+        /// </summary>
+        /// <param name="job">Job we're processing.</param>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        {
+            _api.Unsubscribe(job, symbols);
+        }
 
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Returns a DateTime from an RFC3339 string (with microsecond resolution)
-		/// </summary>
-		/// <param name="time">The time string</param>
-		public static DateTime GetDateTimeFromString(string time)
-		{
-			return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture);
-		}
+        /// <summary>
+        /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
+        /// </summary>
+        /// <param name="time">The time string</param>
+        public static DateTime GetDateTimeFromString(string time)
+        {
+            return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture);
+        }
 
-		/// <summary>
-		/// Retrieves the current quotes for an instrument
-		/// </summary>
-		/// <param name="instrument">the instrument to check</param>
-		/// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
-		public Tick GetRates(string instrument)
-		{
-			return _api.GetRates(new List<string> { instrument }).Values.First();
-		}
+        /// <summary>
+        /// Retrieves the current quotes for an instrument
+        /// </summary>
+        /// <param name="instrument">the instrument to check</param>
+        /// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
+        public Tick GetRates(string instrument)
+        {
+            return _api.GetRates(new List<string> { instrument }).Values.First();
+        }
 
-		/// <summary>
-		/// Downloads a list of TradeBars at the requested resolution
-		/// </summary>
-		/// <param name="symbol">The symbol</param>
-		/// <param name="startTimeUtc">The starting time (UTC)</param>
-		/// <param name="endTimeUtc">The ending time (UTC)</param>
-		/// <param name="resolution">The requested resolution</param>
-		/// <param name="requestedTimeZone">The requested timezone for the data</param>
-		/// <returns>The list of bars</returns>
-		public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
-		{
-			return _api.DownloadTradeBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
-		}
+        /// <summary>
+        /// Downloads a list of TradeBars at the requested resolution
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="startTimeUtc">The starting time (UTC)</param>
+        /// <param name="endTimeUtc">The ending time (UTC)</param>
+        /// <param name="resolution">The requested resolution</param>
+        /// <param name="requestedTimeZone">The requested timezone for the data</param>
+        /// <returns>The list of bars</returns>
+        public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
+        {
+            return _api.DownloadTradeBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
+        }
 
-		/// <summary>
-		/// Downloads a list of QuoteBars at the requested resolution
-		/// </summary>
-		/// <param name="symbol">The symbol</param>
-		/// <param name="startTimeUtc">The starting time (UTC)</param>
-		/// <param name="endTimeUtc">The ending time (UTC)</param>
-		/// <param name="resolution">The requested resolution</param>
-		/// <param name="requestedTimeZone">The requested timezone for the data</param>
-		/// <returns>The list of bars</returns>
-		public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
-		{
-			return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
-		}
+        /// <summary>
+        /// Downloads a list of QuoteBars at the requested resolution
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="startTimeUtc">The starting time (UTC)</param>
+        /// <param name="endTimeUtc">The ending time (UTC)</param>
+        /// <param name="resolution">The requested resolution</param>
+        /// <param name="requestedTimeZone">The requested timezone for the data</param>
+        /// <returns>The list of bars</returns>
+        public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
+        {
+            return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
+        }
 
-	}
+    }
 }
