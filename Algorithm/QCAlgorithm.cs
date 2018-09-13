@@ -1586,8 +1586,10 @@ namespace QuantConnect.Algorithm
             {
                 equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
             }
-            else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
+            else if (equity.DataNormalizationMode != DataNormalizationMode.Raw && _locked)
             {
+                // We check the "locked" flag here because during initialization we need to load existing open orders and holdings from brokerages.
+                // There is no data streaming yet, so it is safe to change the data normalization mode to Raw.
                 throw new ArgumentException($"The underlying equity asset ({underlying.Value}) is set to {equity.DataNormalizationMode}, " +
                                             "please change this to DataNormalizationMode.Raw with the SetDataNormalization() method");
             }
