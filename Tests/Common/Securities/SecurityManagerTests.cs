@@ -38,9 +38,11 @@ namespace QuantConnect.Tests.Common.Securities
         private SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private ISecurityInitializer _securityInitializer;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
+            SymbolCache.Clear();
+
             var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
             _securityManager = new SecurityManager(timeKeeper);
             _securityTransactionManager = new SecurityTransactionManager(null, _securityManager);

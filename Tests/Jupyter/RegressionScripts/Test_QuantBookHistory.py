@@ -29,7 +29,7 @@ class SecurityHistoryTest():
         self.qb = QuantBook()
         self.qb.SetStartDate(start_date)
         self.symbol = self.qb.AddSecurity(security_type, symbol).Symbol
-        self.column = 'close' if security_type == SecurityType.Equity else 'bidclose'
+        self.column = 'close'
 
     def __str__(self):
         return "{} on {}".format(self.symbol.ID, self.qb.StartDate)
