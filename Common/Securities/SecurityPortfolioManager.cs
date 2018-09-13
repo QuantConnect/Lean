@@ -16,9 +16,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -692,5 +694,28 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Logs margin information for debugging
+        /// </summary>
+        public void LogMarginInformation(OrderRequest orderRequest = null)
+        {
+            Log.Trace("Total margin information: " +
+                      $"TotalMarginUsed: {TotalMarginUsed.ToString("F2", CultureInfo.InvariantCulture)}, " +
+                      $"MarginRemaining: {MarginRemaining.ToString("F2", CultureInfo.InvariantCulture)}");
+
+            var orderSubmitRequest = orderRequest as SubmitOrderRequest;
+            if (orderSubmitRequest != null)
+            {
+                var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+                var security = Securities[orderSubmitRequest.Symbol];
+
+                var marginUsed = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
+                var marginRemaining = security.BuyingPowerModel.GetBuyingPower(this, security, direction);
+
+                Log.Trace("Order request margin information: " +
+                          $"MarginUsed: {marginUsed.ToString("F2", CultureInfo.InvariantCulture)}, " +
+                          $"MarginRemaining: {marginRemaining.ToString("F2", CultureInfo.InvariantCulture)}");
+            }
+        }
     }
 }

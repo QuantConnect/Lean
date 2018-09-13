@@ -186,6 +186,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (_algorithm.LiveMode)
             {
                 Log.Trace("BrokerageTransactionHandler.Process(): " + request);
+
+                _algorithm.Portfolio.LogMarginInformation(request);
             }
 
             switch (request.OrderRequestType)
@@ -654,6 +656,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
                     Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Verified cash sync.");
+
+                    _algorithm.Portfolio.LogMarginInformation();
                 }
             });
         }
