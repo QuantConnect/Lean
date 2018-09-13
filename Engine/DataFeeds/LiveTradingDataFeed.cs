@@ -44,7 +44,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveTradingDataFeed : IDataFeed
     {
-        private SecurityChanges _changes = SecurityChanges.None;
         private static readonly Symbol DataQueueHandlerSymbol = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
 
         private LiveNodePacket _job;
@@ -191,13 +190,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _dataQueueHandler.Subscribe(_job, new[] {request.Security.Symbol});
             }
 
-            // keep track of security changes, we emit these to the algorithm
-            // as notifications, used in universe selection
-            if (!request.IsUniverseSubscription)
-            {
-                _changes += SecurityChanges.Added(request.Security);
-            }
-
             return true;
         }
 
@@ -250,13 +242,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 subscription.MarkAsRemovedFromUniverse();
             }
             subscription.Dispose();
-
-            // keep track of security changes, we emit these to the algorithm
-            // as notications, used in universe selection
-            if (!subscription.IsUniverseSelectionSubscription)
-            {
-                _changes += SecurityChanges.Removed(security);
-            }
 
             Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration);
 
