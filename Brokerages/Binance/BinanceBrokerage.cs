@@ -288,7 +288,44 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            var success = new List<bool>();
+            IDictionary<string, object> body = new Dictionary<string, object>()
+            {
+                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) }
+            };
+            foreach (var id in order.BrokerId)
+            {
+                if (body.ContainsKey("signature"))
+                {
+                    body.Remove("signature");
+                }
+                body["orderId"] = id;
+                body["timestamp"] = GetNonce();
+                body["signature"] = AuthenticationToken(body.ToQueryString());
+
+                var request = new RestRequest("/api/v3/order", Method.DELETE);
+                request.AddHeader(KeyHeader, ApiKey);
+                request.AddParameter(
+                    "application/x-www-form-urlencoded",
+                    Encoding.UTF8.GetBytes(body.ToQueryString()),
+                    ParameterType.RequestBody
+                );
+
+                var response = ExecuteRestRequest(request);
+                success.Add(response.StatusCode == HttpStatusCode.OK);
+            }
+
+            var canceled = false;
+            if (success.All(a => a))
+            {
+                OnOrderEvent(new OrderEvent(order,
+                    DateTime.UtcNow,
+                    OrderFee.Zero,
+                    "Binance Order Event") { Status = OrderStatus.Canceled });
+
+                canceled = true;
+            }
+            return canceled;
         }
 
         /// <summary>
