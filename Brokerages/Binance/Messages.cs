@@ -37,9 +37,19 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public string Status { get; set; }
         public string Type { get; set; }
         public string Side { get; set; }
-        public long Time { get; set; }
 
         public decimal Quantity => string.Equals(Side, "buy", StringComparison.OrdinalIgnoreCase) ? OriginalAmount : -OriginalAmount;
+    }
+
+    public class OpenOrder : Order
+    {
+        public long Time { get; set; }
+    }
+
+    public class NewOrder : Order
+    {
+        [JsonProperty("transactTime")]
+        public long TransactionTime { get; set; }
     }
 
 #pragma warning restore 1591

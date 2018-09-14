@@ -121,6 +121,32 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
+        private static string ConvertOrderDirection(OrderDirection orderDirection)
+        {
+            if (orderDirection == OrderDirection.Buy || orderDirection == OrderDirection.Sell)
+            {
+                return orderDirection.ToString().ToUpper();
+            }
+
+            throw new NotSupportedException($"BinanceBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
+        }
+
+        private static string ConvertOrderType(Order order)
+        {
+            string outputOrderType = string.Empty;
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    return (order.Properties as BinanceOrderProperties)?.PostOnly == true
+                        ? "LIMIT_MAKER"
+                        : "LIMIT";
+                case OrderType.Market:
+                    return "MARKET";
+                default:
+                    throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+            }
+        }
+
         private static string ByteArrayToString(byte[] ba)
         {
             StringBuilder hex = new StringBuilder(ba.Length * 2);
