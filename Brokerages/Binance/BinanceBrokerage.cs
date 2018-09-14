@@ -16,15 +16,19 @@
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Text;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -133,7 +137,7 @@ namespace QuantConnect.Brokerages.Binance
                 throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
-            var orders = JsonConvert.DeserializeObject<Messages.Order[]>(response.Content);
+            var orders = JsonConvert.DeserializeObject<Messages.OpenOrder[]>(response.Content);
             foreach (var item in orders)
             {
                 Order order;
@@ -183,7 +187,88 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            // supported time in force values {GTC, IOC, FOK}
+            // use GTC as LEAN doesn't support others yet
+            IDictionary<string, object> body = new Dictionary<string, object>()
+            {
+                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
+                { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
+                { "side", ConvertOrderDirection(order.Direction) },
+                { "type", ConvertOrderType(order) },
+                { "timestamp", GetNonce() }
+            };
+
+            if (order.Type == OrderType.Limit)
+            {
+                body["price"] = (order as LimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                // timeInForce is not required for LIMIT_MAKER
+                if (Equals(body["type"], "LIMIT"))
+                {
+                    body["timeInForce"] = "GTC";
+                }
+            }
+
+            var endpoint = $"/api/v3/order";
+            body["signature"] = AuthenticationToken(body.ToQueryString());
+            var request = new RestRequest(endpoint, Method.POST);
+            request.AddHeader(KeyHeader, ApiKey);
+            request.AddParameter(
+                "application/x-www-form-urlencoded",
+                Encoding.UTF8.GetBytes(body.ToQueryString()),
+                ParameterType.RequestBody
+            );
+
+            var response = ExecuteRestRequest(request);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var raw = JsonConvert.DeserializeObject<Messages.NewOrder>(response.Content);
+
+                if (string.IsNullOrEmpty(raw?.Id))
+                {
+                    var errorMessage = $"Error parsing response from place order: {response.Content}";
+                    OnOrderEvent(new OrderEvent(
+                        order,
+                        DateTime.UtcNow,
+                        OrderFee.Zero,
+                        "Binance Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
+
+                    return true;
+                }
+
+                var brokerId = raw.Id;
+                if (CachedOrderIDs.ContainsKey(order.Id))
+                {
+                    order.BrokerId.Clear();
+                    order.BrokerId.Add(brokerId);
+                }
+                else
+                {
+                    order.BrokerId.Add(brokerId);
+                    CachedOrderIDs.TryAdd(order.Id, order);
+                }
+
+                // Generate submitted event
+                OnOrderEvent(new OrderEvent(
+                    order,
+                    Time.UnixMillisecondTimeStampToDateTime(raw.TransactionTime),
+                    OrderFee.Zero,
+                    "Binance Order Event") { Status = OrderStatus.Submitted }
+                );
+                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+
+                return true;
+            }
+
+            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
+            OnOrderEvent(new OrderEvent(
+                order,
+                DateTime.UtcNow,
+                OrderFee.Zero,
+                "Binance Order Event") { Status = OrderStatus.Invalid });
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
+
+            return true;
         }
 
         /// <summary>
