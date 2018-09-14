@@ -278,7 +278,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("BinanceBrokerage.UpdateOrder: Order update not supported. Please cancel and re-create.");
         }
 
         /// <summary>
