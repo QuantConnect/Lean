@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Data.Market;
@@ -47,7 +48,12 @@ namespace QuantConnect.Data
         /// <summary>
         /// Source file path
         /// </summary>
-        public string Source { get; }
+        public string ZipFilePath { get; }
+
+        /// <summary>
+        /// Entry in the source file
+        /// </summary>
+        public string ZipEntryName { get; }
 
         /// <summary>
         /// Factor used to create adjusted prices from raw prices
@@ -67,7 +73,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets a flag indicating whether the file exists
         /// </summary>
-        public bool IsValid => File.Exists(Source);
+        public bool IsValid => File.Exists(ZipFilePath);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified config and exchange hours
@@ -102,16 +108,21 @@ namespace QuantConnect.Data
                 var factorFileRow = factorFile.GetScalingFactors(date);
                 PriceScaleFactor = (double)factorFileRow.PriceScaleFactor / 10000;
             }
+            else if (id.SecurityType == SecurityType.Option)
+            {
+                PriceScaleFactor /= 10000;
+            }
 
             MarketOpenHours = new List<DateTime>();
 
-            Date = date;
             Period = resolution.ToTimeSpan();
-            Source = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbol, Date, resolution, config.TickType);
+            ZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbol, date, resolution, config.TickType);
+            ZipEntryName = LeanData.GenerateZipEntryName(Symbol, date, resolution, config.TickType);
+
             Names = GetNames(resolution, config.TickType);
 
-            var startTime = startTimeUtc.ConvertFromUtc(config.DataTimeZone);
-            var endTime = endTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var startTime = startTimeUtc.ConvertFromUtc(config.ExchangeTimeZone);
+            var endTime = endTimeUtc.ConvertFromUtc(config.ExchangeTimeZone);
 
             if (resolution == Resolution.Daily)
             {
@@ -124,7 +135,7 @@ namespace QuantConnect.Data
             }
             else if (resolution == Resolution.Hour)
             {
-                var localDateTime = Date > startTime ? startTime : Date;
+                var localDateTime = date > startTime ? startTime : date;
 
                 // If market is open, use the previsous day to compute the next market open
                 if (hours.IsOpen(localDateTime, config.ExtendedMarketHours))
@@ -149,22 +160,50 @@ namespace QuantConnect.Data
             // High resolution requests will only record the lower and upper boundary
             else
             {
-                var lowerBound = Date;
-                if (!hours.IsOpen(Date, config.ExtendedMarketHours))
+                // Loop through market hours segments, since the security can 
+                // have more than one open period each day (e.g. futures)
+                var segments = hours.GetMarketHours(date).Segments;
+                foreach (var segment in segments)
                 {
-                    lowerBound = hours.GetNextMarketOpen(Date, config.ExtendedMarketHours);
-                }
-                lowerBound = startTime > lowerBound ? startTime : lowerBound;
-                var upperBound = hours.GetNextMarketClose(lowerBound, config.ExtendedMarketHours);
-                upperBound = endTime < upperBound ? endTime : upperBound;
+                    if (segment.State != MarketHoursState.Market)
+                    {
+                        if (segment.State == MarketHoursState.Closed ||
+                            !config.ExtendedMarketHours)
+                        {
+                            continue;
+                        }
+                    }
 
-                if (lowerBound > upperBound)
+                    var lowerBound = date.Add(segment.Start);
+                    lowerBound = startTime > lowerBound ? startTime : lowerBound;
+
+                    var upperBound = date.Add(segment.End);
+                    upperBound = endTime < upperBound ? endTime : upperBound;
+
+                    if (lowerBound > upperBound)
+                    {
+                        lowerBound = upperBound;
+                    }
+
+                    MarketOpenHours.Add(lowerBound);
+                    MarketOpenHours.Add(upperBound);
+                }
+            }
+            Date = date.ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+
+            // Handles previous day data
+            // If current date/time in MarketOpenHours are all the same and
+            // Date at data time zone if from the previous day, we add that pair
+            var distinct = MarketOpenHours.Distinct().ToList();
+            if (distinct.Count == 1)
+            {
+                var upperBound = distinct[0];
+                if (Date.Date != upperBound.Date)
                 {
-                    lowerBound = upperBound;
+                    MarketOpenHours.Clear();
+                    MarketOpenHours.Add(Date);
+                    MarketOpenHours.Add(upperBound);
                 }
-
-                MarketOpenHours.Add(lowerBound);
-                MarketOpenHours.Add(upperBound);
             }
         }
 
@@ -180,6 +219,11 @@ namespace QuantConnect.Data
             if (dataType == typeof(QuoteBar))
             {
                 return new[] { "bidopen", "bidhigh", "bidlow", "bidclose", "bidsize", "askopen", "askhigh", "asklow", "askclose", "asksize" };
+            }
+
+            if (dataType == typeof(OpenInterest))
+            {
+                return new[] { "openinterest" };
             }
 
             if (dataType == typeof(Tick))
@@ -222,6 +266,6 @@ namespace QuantConnect.Data
         /// <summary>
         /// Returns the source file path to represent the current object.
         /// </summary>
-        public override string ToString() => Source;
+        public override string ToString() => $"{ZipFilePath}#{ZipEntryName}";
     }
 }

@@ -84,7 +84,7 @@ class MyAlgo(QCAlgorithm):
         [TestCaseSource("TestIntOverload")]
         public void GetsHistoryIntOverload(DateTime startDate, SecurityType securityType, string ticker, Resolution resolution, int period)
         {
-            var expectedAlgorithm = GetExpectedAlgorithm(startDate, ticker, resolution);
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
             expectedAlgorithm.AddSecurity(securityType, ticker, resolution, fillDataForward: false);
 
             var expectedHistory = new List<BaseData>();
@@ -120,13 +120,13 @@ class MyAlgo(QCAlgorithm):
 
                 return new[]
                 {
-                    new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Tick, TimeSpan.FromHours(2)),
+                    new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Tick, TimeSpan.FromHours(10)),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Second, span),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Minute, span),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Hour, span),
                     new TestCaseData(new DateTime(2013,10,10), SecurityType.Equity, "SPY", Resolution.Daily, span),
 
-                    new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Tick, TimeSpan.FromHours(2)),
+                    new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Tick, TimeSpan.FromHours(10)),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Second, span),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Minute, span),
                     new TestCaseData(new DateTime(2014,5,8), SecurityType.Forex, "EURUSD", Resolution.Hour, span),
@@ -139,7 +139,7 @@ class MyAlgo(QCAlgorithm):
         [TestCaseSource("TestTimeSpanOverload")]
         public void GetsHistoryTimeSpanOverload(DateTime startDate, SecurityType securityType, string ticker, Resolution resolution, TimeSpan span)
         {
-            var expectedAlgorithm = GetExpectedAlgorithm(startDate, ticker, resolution);
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
             expectedAlgorithm.AddSecurity(securityType, ticker, resolution, fillDataForward: false);
 
             var expectedHistory = new List<BaseData>();
@@ -195,7 +195,7 @@ class MyAlgo(QCAlgorithm):
         [TestCaseSource("TestDateTimeOverload")]
         public void GetsHistoryDateTimeOverload(DateTime startDate, SecurityType securityType, string ticker, Resolution resolution, DateTime start, DateTime end)
         {
-            var expectedAlgorithm = GetExpectedAlgorithm(startDate, ticker, resolution);
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
             expectedAlgorithm.AddSecurity(securityType, ticker, resolution, fillDataForward: false);
 
             var expectedHistory = new List<BaseData>();
@@ -242,7 +242,7 @@ class MyAlgo(QCAlgorithm):
         [TestCaseSource("TestTwoSymbolIntOverload")]
         public void GetsHistoryTwoSymbolIntOverload(DateTime startDate, string tickerA, string tickerB, Resolution resolution, int periods)
         {
-            var expectedAlgorithm = GetExpectedAlgorithm(startDate, tickerA, resolution);
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
             expectedAlgorithm.AddEquity(tickerA, resolution, fillDataForward: false);
             expectedAlgorithm.AddEquity(tickerB, resolution, fillDataForward: false);
 
@@ -270,7 +270,7 @@ class MyAlgo(QCAlgorithm):
             {
                 return new[]
                 {
-                    new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Tick, TimeSpan.FromHours(2)),
+                    new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Tick, TimeSpan.FromHours(10)),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Second, TimeSpan.FromDays(2)),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Minute, TimeSpan.FromDays(2)),
                     new TestCaseData(new DateTime(2013,10,10), "SPY", "IBM", Resolution.Hour, TimeSpan.FromDays(2)),
@@ -283,7 +283,7 @@ class MyAlgo(QCAlgorithm):
         [TestCaseSource("TestTwoSymbolTimeSpanOverload")]
         public void GetsHistoryTwoSymbolTimeSpanOverload(DateTime startDate, string tickerA, string tickerB, Resolution resolution, TimeSpan span)
         {
-            var expectedAlgorithm = GetExpectedAlgorithm(startDate, tickerA, resolution);
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
             expectedAlgorithm.AddEquity(tickerA, resolution, fillDataForward: false);
             expectedAlgorithm.AddEquity(tickerB, resolution, fillDataForward: false);
 
@@ -305,9 +305,75 @@ class MyAlgo(QCAlgorithm):
             }
         }
 
-        private QCAlgorithm GetExpectedAlgorithm(DateTime startDate, string ticker, Resolution resolution)
+        public TestCaseData[] TestOptions
+        {
+            get
+            {
+                var symbol = Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Put, 745m, new DateTime(2016, 1, 15));
+                return Enumerable.Range(0, 5).Select(x => new TestCaseData(new DateTime(2015, 12, 25), symbol, (Resolution)x, TimeSpan.FromDays(1))).ToArray();
+            }
+        }
+
+        [Test]
+        [TestCaseSource("TestOptions")]
+        public void GetsHistoryOptions(DateTime startDate, Symbol symbol, Resolution resolution, TimeSpan span)
+        {
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
+            expectedAlgorithm.AddOptionContract(symbol, resolution, fillDataForward: false);
+
+            var expectedHistory = expectedAlgorithm.History(new Symbol[] { symbol }, span)
+                .Select(x => (BaseData)x[symbol]).ToArray();
+
+            using (Py.GIL())
+            {
+                dynamic algorithm = _module.GetAttr("MyAlgo").Invoke();
+                algorithm.SubscriptionManager.SetDataManager(new DataManager());
+                algorithm.SetHistoryProvider(_historyProvider);
+                algorithm.SetStartDate(startDate);
+                algorithm.AddOptionContract(symbol, resolution, fillDataForward: false);
+                dynamic df = algorithm.History(symbol, span);
+
+                AssertHistory(SecurityType.Option, expectedHistory, df);
+            }
+        }
+
+        public TestCaseData[] TestFutures
+        {
+            get
+            {
+                var symbol = Symbol.CreateFuture("ES", Market.USA, new DateTime(2013, 12, 31));
+                return Enumerable.Range(0, 5).Select(x => new TestCaseData(new DateTime(2013, 10, 10), symbol, (Resolution)x, TimeSpan.FromDays(1))).ToArray();
+            }
+        }
+
+        [Test]
+        [TestCaseSource("TestFutures")]
+        public void GetsHistoryFutures(DateTime startDate, Symbol symbol, Resolution resolution, TimeSpan span)
+        {
+            var expectedAlgorithm = GetExpectedAlgorithm(startDate, resolution);
+            expectedAlgorithm.AddFutureContract(symbol, resolution, fillDataForward: false);
+
+            var expectedHistory = expectedAlgorithm.History(new Symbol[] { symbol }, span)
+                .Select(x => (BaseData)x[symbol]).ToArray();
+
+            using (Py.GIL())
+            {
+                dynamic algorithm = _module.GetAttr("MyAlgo").Invoke();
+                algorithm.SubscriptionManager.SetDataManager(new DataManager());
+                algorithm.SetHistoryProvider(_historyProvider);
+                algorithm.SetStartDate(startDate);
+                algorithm.AddFutureContract(symbol, resolution, fillDataForward: false);
+                dynamic df = algorithm.History(symbol, span);
+
+                AssertHistory(SecurityType.Option, expectedHistory, df);
+            }
+        }
+
+        private QCAlgorithm GetExpectedAlgorithm(DateTime startDate, Resolution resolution)
         {
             var algorithm = new QCAlgorithm();
+            algorithm.SetOptionChainProvider(new BacktestingOptionChainProvider());
+            algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider());
             algorithm.SubscriptionManager.SetDataManager(new DataManager());
             algorithm.SetHistoryProvider(_historyProvider);
             algorithm.SetStartDate(startDate);
@@ -320,7 +386,12 @@ class MyAlgo(QCAlgorithm):
             {
                 var expectedLength = expectedHistory.Length;
                 var actualLength = (int)df.index.__len__();
+                
+                System.IO.File.WriteAllLines("endtimes.txt", expectedHistory.Select(x => x.EndTime.ToString()));
+                System.IO.File.WriteAllText("endtimesdf.txt", (string)df.to_string());
+
                 Assert.AreEqual(expectedLength, actualLength);
+
 
                 for (var i = 0; i < expectedLength; i++)
                 {
@@ -331,31 +402,49 @@ class MyAlgo(QCAlgorithm):
                     Assert.AreEqual(expectedBar.EndTime, actualEndTime);
 
                     var index = actualBar.index;
-                    var actualValue = 0.0;
+                    var expectedValue = (double)expectedBar.Value;
+                    double? actualValue;
+                    double? bidValue;
+                    double? askValue;
 
-                    if (index.contains("close"))
+                    if (TryGetValue("bidclose", actualBar, out bidValue) |
+                        TryGetValue("askclose", actualBar, out askValue))
                     {
-                        actualValue = (double)actualBar.close;
+                        bidValue = bidValue ?? askValue;
+                        askValue = askValue ?? bidValue;
+                        actualValue = (bidValue + askValue) / 2;
+                        Assert.AreEqual(expectedValue, actualValue, 1e-6);
                     }
-                    else if (index.contains("lastprice"))
+                    else if (TryGetValue("close", actualBar, out actualValue))
                     {
-                        actualValue = (double)actualBar.lastprice;
+                        Assert.AreEqual(expectedValue, actualValue, 1e-6);
                     }
-                    else if (index.contains("bidclose"))
+                    if (TryGetValue("bidprice", actualBar, out bidValue) |
+                        TryGetValue("askprice", actualBar, out askValue))
                     {
-                        var bidclose = (double)actualBar.bidclose;
-                        var askclose = (double)actualBar.askclose;
-                        actualValue = (bidclose + askclose) / 2;
+                        bidValue = bidValue ?? askValue;
+                        askValue = askValue ?? bidValue;
+                        actualValue = (bidValue + askValue) / 2;
+                        Assert.AreEqual(expectedValue, actualValue, 1e-6);
                     }
-                    else if (index.contains("bidprice"))
+                    else if (TryGetValue("lastprice", actualBar, out actualValue))
                     {
-                        var bidprice = (double)actualBar.bidprice;
-                        var askprice = (double)actualBar.askprice;
-                        actualValue = (bidprice + askprice) / 2;
+                        Assert.AreEqual(expectedValue, actualValue, 1e-6);
                     }
-                    Assert.AreEqual((double)expectedBar.Value, actualValue, 1e-6);
                 }
             }
+        }
+
+        private bool TryGetValue(string name, dynamic actual, out double? value)
+        {
+            var index = actual.index;
+            if (index.contains(name) && actual[name].ToString() != "nan")
+            {
+                value = (double)actual[name];
+                return true;
+            }
+            value = null;
+            return false;
         }
 
         private void AssertTwoSymbolsHistory(TradeBars[] expectedHistory, dynamic df)
@@ -387,7 +476,7 @@ class MyAlgo(QCAlgorithm):
             }
         }
 
-        [Test]
+        [Test, Ignore]
         [TestCase("from QCAlgorithm import QCAlgorithm")]
         [TestCase("AddReference('QuantConnect.Algorithm'); from QuantConnect.Algorithm import *")]
         public void PandasHistoryBenchmark(string statement)

@@ -18,15 +18,10 @@ AddReference('QuantConnect.Common')
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from datetime import datetime, timedelta
+import numpy as np
 import pandas as pd
+from zipfile import ZipFile
 
-def get_milliseconds(start, timestamp):
-    hours = timestamp.hour
-    minutes = timestamp.minute
-    seconds = timestamp.second
-    microseconds = timestamp.microsecond
-    milliseconds = ((hours * 60 + minutes) * 60 + seconds) * 1000 + microseconds / 1000
-    return milliseconds if milliseconds >= start else 86400000
 
 class QCAlgorithm(QCPyAlgorithm):
     def History(self, *args, **kwargs):
@@ -73,10 +68,12 @@ class QCAlgorithm(QCPyAlgorithm):
 
         for request in requests:
             if not request.IsValid:
-                self.Error(f"QCAlgorithm.History: File does not exist: {request.Source}")
+                self.Error(f"QCAlgorithm.History: File does not exist: {request.ZipFilePath}")
                 continue
 
-            df = pd.read_csv(request.Source, header = None, index_col = 0, names = request.Names)
+            with ZipFile(request.ZipFilePath) as zip_file:
+                with zip_file.open(request.ZipEntryName) as buffer:
+                    df = pd.read_csv(buffer, header = None, index_col = 0, names = request.Names)
 
             period = request.Period
 
@@ -84,31 +81,48 @@ class QCAlgorithm(QCPyAlgorithm):
             # Subtract one microsecond in tick resolution case
             openHours = request.MarketOpenHours
             if period == timedelta(0):
-                openHours[-1] = openHours[-1] - timedelta(microseconds = 1)
+                openHours = [x - timedelta(microseconds = 1) for x in openHours]
             openHours = pd.DatetimeIndex(openHours)
-
-            price_scale_factor = request.PriceScaleFactor
-            if price_scale_factor != 1.0:
-                i = 4 if period > timedelta(0) else 1
-                df.iloc[:, 0:i] = df.iloc[:, 0:i] * price_scale_factor
 
             if period >= timedelta(hours = 1):
                 df.index = pd.to_datetime(df.index) + period
                 df = df[df.index.isin(openHours)]
             else:
-                # remove some data before converting the index into datetime
-                lower_bound = get_milliseconds(0, openHours[0])
-                upper_bound = get_milliseconds(1 + lower_bound, openHours[1])
-                
-                df = df[(lower_bound <= df.index) & (df.index <= upper_bound)]
+                date = request.Date + period
+                df.index = (date + timedelta(microseconds = 1000 * i) for i in df.index)
 
-                df.index = (request.Date + period + timedelta(microseconds = 1000 * i) for i in df.index)
-                df = df[(openHours[0] <= df.index) & (df.index <= openHours[1])]
+                # only include market hours
+                mask = []
+                for i in range(0, len(openHours), 2):
+                    if i == 0:
+                        mask = (openHours[i] < df.index) & (df.index <= openHours[i+1])
+                    else:
+                        mask = (openHours[i] < df.index) & (df.index <= openHours[i+1]) | mask
+
+                df = df[mask]
+
+            # Do not include empty dataframe
+            if df.empty: continue
+
+            price_scale_factor = request.PriceScaleFactor
+            if price_scale_factor != 1.0:
+                ignore_factor_list = ['bidsize', 'asksize', 'quantity', 'volume']
+                for name in df:
+                    if name in ignore_factor_list:
+                        continue
+                    if np.issubdtype(df[name].dtype, np.number):
+                        df[name] = df[name] * price_scale_factor
 
             df.index = pd.MultiIndex.from_product([[request.Symbol.Value], df.index], names=['symbol', 'time'])
             df_list.append(df)
 
         if len(df_list) == 0:
             return pd.DataFrame()
-        else:
+
+        # If we have data frames with different columns
+        # we need to align them in axis 1
+        column_count = set([len(df.columns) for df in df_list])
+        if len(column_count) == 1:
             return pd.concat(df_list)
+
+        return pd.concat(df_list, axis=1).groupby(level=0, axis=1).mean()

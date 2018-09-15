@@ -769,17 +769,15 @@ namespace QuantConnect.Algorithm
 
                 foreach (var symbol in symbols)
                 {
-                    var config = GetSubscription(symbol);
-
                     // Check whether the symbol has the requested data type
                     if (dict.HasKey("type"))
                     {
                         var requestedType = CreateType(dict["type"]);
-                        config = Securities[symbol].Subscriptions
+                        var customDataConfig = Securities[symbol].Subscriptions
                             .OrderByDescending(s => s.Resolution)
                             .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
 
-                        if (config == null)
+                        if (customDataConfig == null)
                         {
                             continue;
                         }
@@ -806,7 +804,10 @@ namespace QuantConnect.Algorithm
                         end = (DateTime)dict["end"].AsManagedObject(typeof(DateTime));
                     }
 
-                    requests.Add(CreateHistoryRequest(config, start, end, resolution));
+                    foreach (var config in GetMatchingSubscriptions(symbol, typeof(BaseData)))
+                    {
+                        requests.Add(CreateHistoryRequest(config, start, end, resolution));
+                    }
                 }
             }
             return requests;
