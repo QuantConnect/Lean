@@ -63,13 +63,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
-        public override bool IsConnected
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public override bool IsConnected => WebSocket.IsOpen;
 
         /// <summary>
         /// Closes the websockets connection
@@ -187,6 +181,8 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
+            LockStream();
+
             // supported time in force values {GTC, IOC, FOK}
             // use GTC as LEAN doesn't support others yet
             IDictionary<string, object> body = new Dictionary<string, object>()
@@ -233,6 +229,7 @@ namespace QuantConnect.Brokerages.Binance
                         "Binance Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
+                    UnlockStream();
                     return true;
                 }
 
@@ -257,6 +254,7 @@ namespace QuantConnect.Brokerages.Binance
                 );
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
+                UnlockStream();
                 return true;
             }
 
@@ -268,6 +266,7 @@ namespace QuantConnect.Brokerages.Binance
                 "Binance Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
+            UnlockStream();
             return true;
         }
 
@@ -288,6 +287,8 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
+            LockStream();
+
             var success = new List<bool>();
             IDictionary<string, object> body = new Dictionary<string, object>()
             {
@@ -325,6 +326,7 @@ namespace QuantConnect.Brokerages.Binance
 
                 canceled = true;
             }
+            UnlockStream();
             return canceled;
         }
 
@@ -354,7 +356,24 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
         {
-            throw new NotImplementedException();
+            LastHeartbeatUtcTime = DateTime.UtcNow;
+
+            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
+            // stream processing a touch.
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageBuffer.Enqueue(e);
+                    return;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            OnMessageImpl(sender, e);
         }
 
         #endregion
@@ -366,7 +385,12 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>IEnumerable list of ticks since the last update.</returns>
         public IEnumerable<BaseData> GetNextTicks()
         {
-            throw new NotImplementedException();
+            lock (TickLocker)
+            {
+                var copy = Ticks.ToArray();
+                Ticks.Clear();
+                return copy;
+            }
         }
 
         /// <summary>

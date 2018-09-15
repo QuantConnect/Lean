@@ -52,5 +52,31 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public long TransactionTime { get; set; }
     }
 
+    public class BaseMessage
+    {
+        [JsonProperty("e")]
+        public string @Event { get; set; }
+
+        [JsonProperty("E")]
+        public long Time { get; set; }
+
+        [JsonProperty("s")]
+        public string Symbol { get; set; }
+    }
+
+    public class SymbolTicker : BaseMessage
+    {
+        [JsonProperty("b")]
+        public decimal BestBidPrice { get; private set; }
+
+        [JsonProperty("B")]
+        public decimal BestBidSize { get; private set; }
+
+        [JsonProperty("a")]
+        public decimal BestAskPrice { get; private set; }
+
+        [JsonProperty("A")]
+        public decimal BestAskSize { get; private set; }
+    }
 #pragma warning restore 1591
 }
