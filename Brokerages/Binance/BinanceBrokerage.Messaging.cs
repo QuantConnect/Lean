@@ -66,6 +66,15 @@ namespace QuantConnect.Brokerages.Binance
                             ticker.BestAskSize
                         );
                         break;
+                    case "trade":
+                        var trade = token.ToObject<Messages.Trade>();
+                        EmitTradeTick(
+                            _symbolMapper.GetLeanSymbol(trade.Symbol),
+                            Time.UnixMillisecondTimeStampToDateTime(trade.Time),
+                            trade.Price,
+                            trade.Quantity
+                        );
+                        break;
                     default:
                         return;
                 }
@@ -91,6 +100,21 @@ namespace QuantConnect.Brokerages.Binance
                     TickType = TickType.Quote,
                     AskSize = askSize,
                     BidSize = bidSize
+                });
+            }
+        }
+
+        private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal quantity)
+        {
+            lock (TickLocker)
+            {
+                Ticks.Add(new Tick
+                {
+                    Symbol = symbol,
+                    Value = price,
+                    Quantity = Math.Abs(quantity),
+                    Time = time,
+                    TickType = TickType.Trade
                 });
             }
         }
