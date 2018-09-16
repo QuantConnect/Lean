@@ -78,5 +78,17 @@ namespace QuantConnect.Brokerages.Binance.Messages
         [JsonProperty("A")]
         public decimal BestAskSize { get; private set; }
     }
+
+    public class Trade : BaseMessage
+    {
+        [JsonProperty("T")]
+        public new long Time { get; set; }
+
+        [JsonProperty("p")]
+        public decimal Price { get; private set; }
+
+        [JsonProperty("q")]
+        public decimal Quantity { get; private set; }
+    }
 #pragma warning restore 1591
 }
