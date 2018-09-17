@@ -431,7 +431,7 @@ namespace QuantConnect.Brokerages.Binance
             WebSocket.Close();
             Wait(() => !WebSocket.IsOpen);
 
-            var streams = ChannelList.Select((pair) => string.Format("{0}@ticker/{0}@trade", pair.Value.Name));
+            var streams = ChannelList.Select((pair) => string.Format("{0}@depth/{0}@trade", pair.Value.Name));
             WebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
 
             // connect to new endpoing

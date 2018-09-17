@@ -64,19 +64,28 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public string Symbol { get; set; }
     }
 
-    public class SymbolTicker : BaseMessage
+    public class OrderBookSnapshotMessage
     {
-        [JsonProperty("b")]
-        public decimal BestBidPrice { get; private set; }
+        public long LastUpdateId { get; set; }
 
-        [JsonProperty("B")]
-        public decimal BestBidSize { get; private set; }
+        public object[][] Bids { get; set; }
+
+        public object[][] Asks { get; set; }
+    }
+
+    public class OrderBookUpdateMessage : BaseMessage
+    {
+        [JsonProperty("U")]
+        public long FirstUpdate { get; set; }
+
+        [JsonProperty("u")]
+        public long FinalUpdate { get; set; }
+
+        [JsonProperty("b")]
+        public object[][] Bids { get; set; }
 
         [JsonProperty("a")]
-        public decimal BestAskPrice { get; private set; }
-
-        [JsonProperty("A")]
-        public decimal BestAskSize { get; private set; }
+        public object[][] Asks { get; set; }
     }
 
     public class Trade : BaseMessage
