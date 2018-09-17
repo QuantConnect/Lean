@@ -363,7 +363,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     if (amount > 0)
                         orderBook.UpdateBidRow(price, amount);
                     else
-                        orderBook.UpdateAskRow(price, amount);
+                        orderBook.UpdateAskRow(price, Math.Abs(amount));
                 }
 
                 orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
@@ -447,7 +447,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                     else if (amount < 0)
                     {
-                        orderBook.UpdateAskRow(price, amount);
+                        orderBook.UpdateAskRow(price, Math.Abs(amount));
                     }
                 }
             }
@@ -611,8 +611,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
                     TickType = TickType.Quote,
-                    AskSize = askSize,
-                    BidSize = bidSize
+                    AskSize = Math.Abs(askSize),
+                    BidSize = Math.Abs(bidSize)
                 });
             }
         }
