@@ -215,9 +215,6 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
 
-                        //Finalize Initialization
-                        algorithm.PostInitialize();
-
                         if (liveJob.Brokerage != "PaperBrokerage")
                         {
                             //Zero the CashBook - we'll populate directly from brokerage
@@ -346,6 +343,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     AddInitializationError("Error getting account holdings from brokerage: " + err.Message, err);
                     return false;
                 }
+
+                //Finalize Initialization
+                algorithm.PostInitialize();
 
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
