@@ -25,6 +25,22 @@ from zipfile import ZipFile
 
 class QCAlgorithm(QCPyAlgorithm):
     def History(self, *args, **kwargs):
+        '''Executes the specified history request
+        Args:
+            Arguments must be presented in the following order or passed with a dictionary
+            type: The data type of the symbols [optional]
+            tickers: The symbols to retrieve historical data for [optional]
+
+            periods [int]: The number of bars to request
+            or
+            span [timedelta]: The span over which to retrieve recent historical data
+            or
+            start [datetime]: The start time in the algorithm's time zone
+            end [datetime]: The end time in the algorithm's time zone [optional]
+
+            resolution: The resolution to request  [optional]
+        Returns:
+            pandas DataFrame with data satisfying the specified history request'''
 
         # Convert args into kwargs since the class methods expect a dictionary
         if len(args) > 0:
@@ -72,8 +88,12 @@ class QCAlgorithm(QCPyAlgorithm):
                 continue
 
             with ZipFile(request.ZipFilePath) as zip_file:
-                with zip_file.open(request.ZipEntryName) as buffer:
-                    df = pd.read_csv(buffer, header = None, index_col = 0, names = request.Names)
+                try:
+                    with zip_file.open(request.ZipEntryName) as buffer:
+                        df = pd.read_csv(buffer, header = None, index_col = 0, names = request.Names)
+                except KeyError:
+                    self.Error(f"QCAlgorithm.History: File entry does not exist: {request.ZipEntryName}")
+                    continue
 
             period = request.Period
 

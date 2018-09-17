@@ -755,14 +755,23 @@ namespace QuantConnect.Algorithm
 
             using (Py.GIL())
             {
+                var kwargs = (string[])dict.Keys().AsManagedObject(typeof(string[]));
+
+                // Check whether the python dictionary has any of the required arguments
+                var requiredArgs = new string[] { "periods", "span", "start" };
+                if (requiredArgs.Intersect(kwargs).Count() == 0)
+                {
+                    throw new ArgumentOutOfRangeException("QCAlgorithm.CreateHistoryRequests(): History request must define the lookback period with following keys: \'periods\' or \'span\' or \'start\'.");
+                }
+
                 var symbols = Securities.Keys;
-                if (dict.HasKey("symbols"))
+                if (kwargs.Contains("symbols"))
                 {
                     symbols = GetSymbolsFromPyObject(dict["symbols"]).ToList();
                 }
 
                 Resolution? resolution = null;
-                if (dict.HasKey("resolution"))
+                if (kwargs.Contains("resolution"))
                 {
                     resolution = (Resolution)dict["resolution"].AsManagedObject(typeof(int));
                 }
@@ -770,12 +779,11 @@ namespace QuantConnect.Algorithm
                 foreach (var symbol in symbols)
                 {
                     // Check whether the symbol has the requested data type
-                    if (dict.HasKey("type"))
+                    if (kwargs.Contains("type"))
                     {
-                        var requestedType = CreateType(dict["type"]);
                         var customDataConfig = Securities[symbol].Subscriptions
                             .OrderByDescending(s => s.Resolution)
-                            .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
+                            .FirstOrDefault(s => s.Type.IsSubclassOf(typeof(DynamicData)));
 
                         if (customDataConfig == null)
                         {
@@ -788,12 +796,12 @@ namespace QuantConnect.Algorithm
                     DateTime start;
                     var end = Time.RoundDown(resolution.Value.ToTimeSpan());
 
-                    if (dict.HasKey("periods"))
+                    if (kwargs.Contains("periods"))
                     {
                         var periods = (int)dict["periods"].AsManagedObject(typeof(int));
                         start = GetStartTimeAlgoTz(symbol, periods, resolution);
                     }
-                    else if (dict.HasKey("span"))
+                    else if (kwargs.Contains("span"))
                     {
                         var span = (TimeSpan)dict["span"].AsManagedObject(typeof(TimeSpan));
                         start = end - span;
@@ -801,7 +809,10 @@ namespace QuantConnect.Algorithm
                     else
                     {
                         start = (DateTime)dict["start"].AsManagedObject(typeof(DateTime));
-                        end = (DateTime)dict["end"].AsManagedObject(typeof(DateTime));
+                        if (kwargs.Contains("end"))
+                        {
+                            end = (DateTime)dict["end"].AsManagedObject(typeof(DateTime));
+                        }
                     }
 
                     foreach (var config in GetMatchingSubscriptions(symbol, typeof(BaseData)))
