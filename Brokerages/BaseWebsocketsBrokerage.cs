@@ -270,6 +270,15 @@ namespace QuantConnect.Brokerages
             }
         }
 
+        /// <summary>
+        /// Releases the lock of current thread until state
+        /// </summary>
+        /// <param name="state"></param>
+        protected void Wait(Func<bool> state)
+        {
+            Wait(_connectionTimeout, state);
+        }
+
         private void Wait(int timeout, Func<bool> state)
         {
             var StartTime = Environment.TickCount;
