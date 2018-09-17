@@ -44,8 +44,9 @@ namespace QuantConnect.Brokerages.Binance
         public const string KeyHeader = "X-MBX-APIKEY";
 
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
-
+        private readonly string _wssUrl;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
+
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
@@ -56,8 +57,12 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public BinanceBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
-        { }
+            : base($"{wssUrl}/ws/open", new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
+        {
+            // connect to fake /open stream channel on init
+
+            _wssUrl = wssUrl;
+        }
 
         #region IBrokerage
         /// <summary>
@@ -71,6 +76,8 @@ namespace QuantConnect.Brokerages.Binance
         public override void Disconnect()
         {
             base.Disconnect();
+
+            WebSocket.Close();
         }
 
         /// <summary>
@@ -346,7 +353,29 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="symbols">The list of symbols to subscribe</param>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
-            throw new NotImplementedException();
+            bool refresh = false;
+            foreach (var symbol in symbols)
+            {
+                if (symbol.Value.Contains("UNIVERSE") ||
+                    string.IsNullOrEmpty(_symbolMapper.GetBrokerageSymbol(symbol)) ||
+                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
+                {
+                    continue;
+                }
+
+                if (!ChannelList.ContainsKey(symbol.Value))
+                {
+                    ChannelList.Add(symbol.Value, new Channel()
+                    {
+                        Name = _symbolMapper.GetBrokerageSymbol(symbol).ToLower(),
+                        Symbol = _symbolMapper.GetBrokerageSymbol(symbol)
+                    });
+                    refresh = true;
+                }
+            }
+
+            if (refresh)
+                ConnectStream();
         }
 
         /// <summary>
@@ -376,6 +405,41 @@ namespace QuantConnect.Brokerages.Binance
             OnMessageImpl(sender, e);
         }
 
+        /// <summary>
+        /// Gets a list of current subscriptions
+        /// </summary>
+        /// <returns></returns>
+        protected override IList<Symbol> GetSubscribed()
+        {
+            IList<Symbol> list = new List<Symbol>();
+            lock (ChannelList)
+            {
+                foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
+                {
+                    list.Add(_symbolMapper.GetLeanSymbol(ticker));
+                }
+            }
+            return list;
+        }
+
+        private void ConnectStream()
+        {
+            if (ChannelList.Count == 0)
+                return;
+
+            //close current connection
+            WebSocket.Close();
+            Wait(() => !WebSocket.IsOpen);
+
+            var streams = ChannelList.Select((pair) => string.Format("{0}@ticker/{0}@trade", pair.Value.Name));
+            WebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
+
+            // connect to new endpoing
+            Reconnect();
+
+            Log.Trace("BinanceBrokerage.Subscribe: Sent subscribe.");
+        }
+
         #endregion
 
         #region IDataQueueHandler
@@ -400,7 +464,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            throw new NotImplementedException();
+            Subscribe(symbols);
         }
 
         /// <summary>
@@ -410,7 +474,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            throw new NotImplementedException();
+            Unsubscribe(symbols);
         }
 
         #endregion
@@ -421,6 +485,25 @@ namespace QuantConnect.Brokerages.Binance
         public override void Dispose()
         {
             _restRateLimiter.Dispose();
+        }
+
+        /// <summary>
+        /// Ends current subscriptions
+        /// </summary>
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
+        {
+            if (WebSocket.IsOpen)
+            {
+                foreach (var symbol in symbols)
+                {
+                    if (ChannelList.ContainsKey(symbol.Value))
+                    {
+                        ChannelList.Remove(symbol.Value);
+                    }
+                }
+
+                ConnectStream();
+            }
         }
     }
 }

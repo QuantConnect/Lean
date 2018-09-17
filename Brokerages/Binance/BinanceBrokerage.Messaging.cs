@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using System;
@@ -49,14 +50,12 @@ namespace QuantConnect.Brokerages.Binance
         {
             try
             {
-                var token = JToken.Parse(e.Message);
-                if (!(token is JObject))
-                    throw new Exception("Invalid message format was recieved");
-
-                switch (token.ToObject<Messages.BaseMessage>().Event)
+                var wrapped = JObject.Parse(e.Message);
+                var message = wrapped.GetValue("data").ToObject<Messages.BaseMessage>();
+                switch (message.Event)
                 {
                     case "24hrTicker":
-                        var ticker = token.ToObject<Messages.SymbolTicker>();
+                        var ticker = wrapped.GetValue("data").ToObject<Messages.SymbolTicker>();
                         EmitQuoteTick(
                             _symbolMapper.GetLeanSymbol(ticker.Symbol),
                             Time.UnixMillisecondTimeStampToDateTime(ticker.Time),
@@ -67,7 +66,7 @@ namespace QuantConnect.Brokerages.Binance
                         );
                         break;
                     case "trade":
-                        var trade = token.ToObject<Messages.Trade>();
+                        var trade = wrapped.GetValue("data").ToObject<Messages.Trade>();
                         EmitTradeTick(
                             _symbolMapper.GetLeanSymbol(trade.Symbol),
                             Time.UnixMillisecondTimeStampToDateTime(trade.Time),
@@ -118,5 +117,6 @@ namespace QuantConnect.Brokerages.Binance
                 });
             }
         }
+
     }
 }
