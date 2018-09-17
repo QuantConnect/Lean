@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // we don't need to do this today because we just initialized/synced
             _resultHandler = resultHandler;
             _syncedLiveBrokerageCashToday = true;
-            _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
+            _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
 
             _brokerage = brokerage;
             _brokerage.OrderStatusChanged += (sender, fill) =>
@@ -512,7 +512,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
 
             // every morning flip this switch back
-            var currentTimeNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+            var currentTimeNewYork = CurrentTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
             {
                 _syncedLiveBrokerageCashToday = false;
@@ -634,6 +634,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     }
                 }
                 _syncedLiveBrokerageCashToday = true;
+                _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
             }
             finally
             {
@@ -654,7 +655,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 else
                 {
-                    _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
                     Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Verified cash sync.");
 
                     _algorithm.Portfolio.LogMarginInformation();
@@ -996,7 +996,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 //Apply the filled order to our portfolio:
                 if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
                 {
-                    Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.UtcNow.Ticks);
+                    Interlocked.Exchange(ref _lastFillTimeTicks, CurrentTimeUtc.Ticks);
 
                     // check if the fill currency and the order currency match the symbol currency
                     var security = _algorithm.Securities[fill.Symbol];
@@ -1086,18 +1086,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Gets the amount of time since the last call to algorithm.Portfolio.ProcessFill(fill)
         /// </summary>
-        private TimeSpan TimeSinceLastFill
+        protected virtual TimeSpan TimeSinceLastFill
         {
-            get { return DateTime.UtcNow - new DateTime(Interlocked.Read(ref _lastFillTimeTicks)); }
+            get { return CurrentTimeUtc - new DateTime(Interlocked.Read(ref _lastFillTimeTicks)); }
         }
 
         /// <summary>
         /// Gets the date of the last sync (New York time zone)
         /// </summary>
-        private DateTime LastSyncDate
+        protected DateTime LastSyncDate
         {
             get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).ConvertFromUtc(TimeZones.NewYork).Date; }
         }
+
+        /// <summary>
+        /// Gets current time UTC. This is here to facilitate testing
+        /// </summary>
+        protected virtual DateTime CurrentTimeUtc => DateTime.UtcNow;
 
         /// <summary>
         /// Rounds off the order towards 0 to the nearest multiple of Lot Size
