@@ -40,7 +40,7 @@ class CustomSecurityInitializerAlgorithm(QCAlgorithm):
         # set our initializer to our custom type
         self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage)
         
-        func_security_seeder = FuncSecuritySeeder(Func[Security, BaseData](self.GetLastKnownPrice))
+        func_security_seeder = FuncSecuritySeeder(Func[Security, BaseData](self.custom_seed_function))
         self.SetSecurityInitializer(CustomSecurityInitializer(self.BrokerageModel, func_security_seeder, DataNormalizationMode.Raw))
         
         self.SetStartDate(2013,10,1)
@@ -51,6 +51,23 @@ class CustomSecurityInitializerAlgorithm(QCAlgorithm):
     def OnData(self, data):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
+
+    def custom_seed_function(self, security):
+
+        resolution = Resolution.Hour
+
+        df = self.History(security.Symbol, 1, resolution)
+        if df.empty:
+            return None
+
+        last_bar = df.unstack(level=0).iloc[-1]
+        date_time = last_bar.name.to_pydatetime()
+        open = last_bar.open.values[0]
+        high = last_bar.high.values[0]
+        low = last_bar.low.values[0]
+        close = last_bar.close.values[0]
+        volume = last_bar.volume.values[0]
+        return TradeBar(date_time, security.Symbol, open, high, low, close, volume, Extensions.ToTimeSpan(resolution))
 
 
 class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
