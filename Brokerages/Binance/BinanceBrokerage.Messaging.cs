@@ -8,6 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using QuantConnect.Brokerages.Binance.Messages;
+using System.Globalization;
+using RestSharp;
+using System.Net;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -15,6 +19,7 @@ namespace QuantConnect.Brokerages.Binance
     {
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
+        private readonly ConcurrentDictionary<Symbol, BinanceOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, BinanceOrderBook>();
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
         /// </summary>
@@ -54,16 +59,9 @@ namespace QuantConnect.Brokerages.Binance
                 var message = wrapped.GetValue("data").ToObject<Messages.BaseMessage>();
                 switch (message.Event)
                 {
-                    case "24hrTicker":
-                        var ticker = wrapped.GetValue("data").ToObject<Messages.SymbolTicker>();
-                        EmitQuoteTick(
-                            _symbolMapper.GetLeanSymbol(ticker.Symbol),
-                            Time.UnixMillisecondTimeStampToDateTime(ticker.Time),
-                            ticker.BestBidPrice,
-                            ticker.BestBidSize,
-                            ticker.BestAskPrice,
-                            ticker.BestAskSize
-                        );
+                    case "depthUpdate":
+                        var updates = wrapped.GetValue("data").ToObject<Messages.OrderBookUpdateMessage>();
+                        OnOrderBookUpdate(updates);
                         break;
                     case "trade":
                         var trade = wrapped.GetValue("data").ToObject<Messages.Trade>();
@@ -85,7 +83,59 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
-        private void EmitQuoteTick(Symbol symbol, DateTime time, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        private void OnOrderBookUpdate(OrderBookUpdateMessage ticker)
+        {
+            try
+            {
+                var symbol = _symbolMapper.GetLeanSymbol(ticker.Symbol);
+                BinanceOrderBook orderBook = null;
+                if (_orderBooks.ContainsKey(symbol))
+                {
+                    orderBook = _orderBooks[symbol] as BinanceOrderBook;
+                }
+                else
+                {
+                    orderBook = new BinanceOrderBook(symbol);
+                    _orderBooks.AddOrUpdate(symbol, orderBook);
+                }
+
+                //take snapshot
+                if (orderBook.LastUpdateId == 0)
+                {
+                    FetchOrderBookSnapshot(symbol, orderBook);
+                }
+
+                // check incoming events order
+                // new event should start from (last_final + 1)
+                if (ticker.FirstUpdate - orderBook.LastUpdateId > 1)
+                {
+                    orderBook.Reset();
+                    return;
+                }
+
+                // ignore event from the past
+                if (ticker.FinalUpdate < orderBook.LastUpdateId)
+                {
+                    return;
+                }
+
+                ProcessOrderBookEvents(orderBook, ticker.Bids, ticker.Asks);
+
+                orderBook.LastUpdateId = ticker.FinalUpdate;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
+        }
+
+        private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)
+        {
+            EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
+        }
+
+        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             lock (TickLocker)
             {
@@ -94,7 +144,7 @@ namespace QuantConnect.Brokerages.Binance
                     AskPrice = askPrice,
                     BidPrice = bidPrice,
                     Value = (askPrice + bidPrice) / 2m,
-                    Time = time,
+                    Time = DateTime.UtcNow,
                     Symbol = symbol,
                     TickType = TickType.Quote,
                     AskSize = askSize,
@@ -118,5 +168,57 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
+        private void FetchOrderBookSnapshot(Symbol symbol, BinanceOrderBook orderBook)
+        {
+            LockStream();
+
+            var endpoint = $"/api/v1/depth?symbol={_symbolMapper.GetBrokerageSymbol(symbol)}&limit=1000";
+            var request = new RestRequest(endpoint, Method.GET);
+            var response = ExecuteRestRequest(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Can't fetch snapshot for symbol {symbol.Value}"));
+                return;
+            }
+
+            var snapshot = JsonConvert.DeserializeObject<Messages.OrderBookSnapshotMessage>(response.Content);
+
+            orderBook.BestBidAskUpdated -= OnBestBidAskUpdated;
+            orderBook.LastUpdateId = snapshot.LastUpdateId;
+            ProcessOrderBookEvents(orderBook, snapshot.Bids, snapshot.Asks);
+
+            EmitQuoteTick(
+                symbol,
+                orderBook.BestBidPrice,
+                orderBook.BestBidSize,
+                orderBook.BestAskPrice,
+                orderBook.BestAskSize);
+            orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
+            UnlockStream();
+        }
+
+        private void ProcessOrderBookEvents(DefaultOrderBook orderBook, object[][] bids, object[][] asks)
+        {
+            foreach (var item in bids)
+            {
+                var price = (item[0] as string).ToDecimal();
+                var quantity = (item[1] as string).ToDecimal();
+                if (quantity == 0)
+                    orderBook.RemoveBidRow(price);
+                else
+                    orderBook.UpdateBidRow(price, quantity);
+            }
+
+            foreach (var item in asks)
+            {
+                var price = (item[0] as string).ToDecimal();
+                var quantity = (item[1] as string).ToDecimal();
+                if (quantity == 0)
+                    orderBook.RemoveAskRow(price);
+                else
+                    orderBook.UpdateAskRow(price, quantity);
+            }
+        }
     }
 }
