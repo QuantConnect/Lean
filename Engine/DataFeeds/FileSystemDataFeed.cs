@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataProvider = dataProvider;
             _subscriptionManager = subscriptionManager;
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
-            _universeSelection = new UniverseSelection(this, algorithm);
+            _universeSelection = subscriptionManager.UniverseSelection;
             _cancellationTokenSource = new CancellationTokenSource();
             _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
 
