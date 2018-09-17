@@ -697,6 +697,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw;
                 }
             }
+
+            // if we reached here we should be connected, check just in case
+            if (IsConnected)
+            {
+                Log.Trace("InteractiveBrokersBrokerage.Connect(): Restoring data subscriptions...");
+                RestoreDataSubscriptions();
+            }
+            else
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "ConnectionState", "Unexpected, not connected state. Unable to connect to Interactive Brokers. Terminating algorithm."));
+            }
         }
 
         /// <summary>
@@ -1306,9 +1317,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
             Connect();
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restoring data subscriptions...");
-            RestoreDataSubscriptions();
 
             // notify the BrokerageMessageHandler after the restart, because
             // it could have received a disconnect event during the steps above
