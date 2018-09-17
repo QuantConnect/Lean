@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ * The official C# API client for alpaca brokerage
+ * https://github.com/alpacahq/alpaca-trade-api-csharp
+*/
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -15,7 +20,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <returns>Read-only account information.</returns>
         public Task<IAccount> GetAccountAsync()
         {
-            return getSingleObjectAsync<IAccount, JsonAccount>(_alpacaHttpClient, "v1/account");
+            return getSingleObjectAsync<IAccount, JsonAccount>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, "v1/account");
         }
 
         /// <summary>
@@ -36,7 +42,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("asset_class", assetClass)
             };
 
-            return getObjectsListAsync<IAsset, JsonAsset>(_alpacaHttpClient, builder);
+            return getObjectsListAsync<IAsset, JsonAsset>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -47,7 +54,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Task<IAsset> GetAssetAsync(
             String symbol)
         {
-            return getSingleObjectAsync<IAsset, JsonAsset>(_alpacaHttpClient, $"v1/assets/{symbol}");
+            return getSingleObjectAsync<IAsset, JsonAsset>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/assets/{symbol}");
         }
 
         /// <summary>
@@ -71,7 +79,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("limit", limitOrderNumber)
             };
 
-            return getObjectsListAsync<IOrder, JsonOrder>(_alpacaHttpClient, builder);
+            return getObjectsListAsync<IOrder, JsonOrder>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -114,6 +123,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 ClientOrderId = clientOrderId
             };
 
+            _alpacaRestApiThrottler.WaitToProceed();
+
             var serializer = new JsonSerializer();
             using (var stringWriter = new StringWriter())
             {
@@ -151,7 +162,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("client_order_id", clientOrderId)
             };
 
-            return getSingleObjectAsync<IOrder, JsonOrder>(_alpacaHttpClient, builder);
+            return getSingleObjectAsync<IOrder, JsonOrder>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -162,7 +174,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Task<IOrder> GetOrderAsync(
             Guid orderId)
         {
-            return getSingleObjectAsync<IOrder, JsonOrder>(_alpacaHttpClient, $"v1/orders/{orderId:D}");
+            return getSingleObjectAsync<IOrder, JsonOrder>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/orders/{orderId:D}");
         }
 
         /// <summary>
@@ -173,6 +186,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public async Task<Boolean> DeleteOrderAsync(
             Guid orderId)
         {
+            _alpacaRestApiThrottler.WaitToProceed();
+
             using (var response = await _alpacaHttpClient.DeleteAsync($"v1/orders/{orderId:D}"))
             {
                 return response.IsSuccessStatusCode;
@@ -185,7 +200,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <returns>Read-only list of position information objects.</returns>
         public Task<IEnumerable<IPosition>> ListPositionsAsync()
         {
-            return getObjectsListAsync<IPosition, JsonPosition>(_alpacaHttpClient, "v1/positions");
+            return getObjectsListAsync<IPosition, JsonPosition>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, "v1/positions");
         }
 
         /// <summary>
@@ -196,7 +212,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Task<IPosition> GetPositionAsync(
             String symbol)
         {
-            return getSingleObjectAsync<IPosition, JsonPosition>(_alpacaHttpClient, $"v1/positions/{symbol}");
+            return getSingleObjectAsync<IPosition, JsonPosition>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/positions/{symbol}");
         }
 
         /// <summary>
@@ -205,7 +222,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <returns>Read-only clock information object.</returns>
         public Task<IClock> GetClockAsync()
         {
-            return getSingleObjectAsync<IClock, JsonClock>(_alpacaHttpClient, "v1/clock");
+            return getSingleObjectAsync<IClock, JsonClock>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, "v1/clock");
         }
 
         /// <summary>
@@ -226,7 +244,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("end", endDateInclusive, "yyyy-MM-dd")
             };
 
-            return getObjectsListAsync<ICalendar, JsonCalendar>(_alpacaHttpClient, builder);
+            return getObjectsListAsync<ICalendar, JsonCalendar>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
     }
 }
