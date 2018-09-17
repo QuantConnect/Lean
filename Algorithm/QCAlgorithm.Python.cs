@@ -761,7 +761,7 @@ namespace QuantConnect.Algorithm
                 var requiredArgs = new string[] { "periods", "span", "start" };
                 if (requiredArgs.Intersect(kwargs).Count() == 0)
                 {
-                    throw new ArgumentOutOfRangeException("QCAlgorithm.CreateHistoryRequests(): History request must define the lookback period with following keys: \'periods\' or \'span\' or \'start\'.");
+                    throw new ArgumentOutOfRangeException("QCAlgorithm.CreateHistoryRequests(): History request must define the lookback period with following keys: 'periods' or 'span' or 'start'.");
                 }
 
                 var symbols = Securities.Keys;
