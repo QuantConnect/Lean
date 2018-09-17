@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ * The official C# API client for alpaca brokerage
+ * https://github.com/alpacahq/alpaca-trade-api-csharp
+*/
+
+using System;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {

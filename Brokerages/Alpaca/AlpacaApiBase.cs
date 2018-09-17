@@ -267,9 +267,19 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         public List<string> GetInstrumentList()
         {
-            var response = restClient.ListAssetsAsync().Result;
+            try
+            {
+                var response = restClient.ListAssetsAsync().Result;
 
-            return response.Select(x => x.Symbol).ToList();
+                return response.Select(x => x.Symbol).ToList();
+            }
+            catch (Exception e)
+            {
+                if (e.InnerException != null)
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
+                return new List<string>();
+            }
+            
         }
 
         /// <summary>
@@ -279,12 +289,22 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>Dictionary containing the current quotes for each instrument</returns>
         public Dictionary<string, Tick> GetRates(List<string> instruments)
         {
-            var response = restClient.ListQuotesAsync(instruments).Result;
-            return response
-                .ToDictionary(
-                    x => x.Symbol,
-                    x => new Tick { BidPrice = x.BidPrice, AskPrice = x.AskPrice }
-                );
+            try
+            {
+                var response = restClient.ListQuotesAsync(instruments).Result;
+                return response
+                    .ToDictionary(
+                        x => x.Symbol,
+                        x => new Tick { BidPrice = x.BidPrice, AskPrice = x.AskPrice }
+                    );
+            }
+            catch (Exception e)
+            {
+                if (e.InnerException != null)
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
+                throw e;
+            }
+            
         }
 
         /// <summary>
@@ -294,14 +314,24 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The open orders returned from Alpaca</returns>
         public override List<Order> GetOpenOrders()
         {
-            var orders = restClient.ListOrdersAsync().Result;
-
-            var qcOrders = new List<Order>();
-            foreach (var order in orders)
+            try
             {
-                qcOrders.Add(ConvertOrder(order));
+                var orders = restClient.ListOrdersAsync().Result;
+
+                var qcOrders = new List<Order>();
+                foreach (var order in orders)
+                {
+                    qcOrders.Add(ConvertOrder(order));
+                }
+                return qcOrders;
             }
-            return qcOrders;
+            catch (Exception e)
+            {
+                if (e.InnerException != null)
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
+                throw e;
+            }
+
         }
 
         /// <summary>
@@ -310,15 +340,25 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = restClient.ListPositionsAsync().Result;
-
-            var qcHoldings = new List<Holding>();
-            foreach (var holds in holdings)
+            try
             {
-                qcHoldings.Add(ConvertHolding(holds));
-            }
+                var holdings = restClient.ListPositionsAsync().Result;
 
-            return qcHoldings;
+                var qcHoldings = new List<Holding>();
+                foreach (var holds in holdings)
+                {
+                    qcHoldings.Add(ConvertHolding(holds));
+                }
+
+                return qcHoldings;
+            }
+            catch (Exception e)
+            {
+                if (e.InnerException != null)
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
+                throw e;
+            }
+            
         }
 
         /// <summary>
@@ -327,14 +367,24 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            var balance = restClient.GetAccountAsync().Result;
-
-            return new List<Cash>
+            try
             {
-                new Cash("USD",
-                    balance.TradableCash,
-                    1m)
-            };
+                var balance = restClient.GetAccountAsync().Result;
+
+                return new List<Cash>
+                    {
+                        new Cash("USD",
+                            balance.TradableCash,
+                            1m)
+                    };
+            }
+            catch (Exception e)
+            {
+                if (e.InnerException != null)
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
+                throw;
+            }
+            
         }
 
         /// <summary>
@@ -613,7 +663,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
-                    if (e.InnerException != null && e.InnerException.Message.Contains("ticks")) break;
+                    if (e.InnerException != null)
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     throw;
                 }
 
@@ -730,6 +781,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
+                    if (e.InnerException != null)
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     throw e;
                 }
                 var result = asList

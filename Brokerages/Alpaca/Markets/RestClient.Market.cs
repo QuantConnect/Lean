@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ * The official C# API client for alpaca brokerage
+ * https://github.com/alpacahq/alpaca-trade-api-csharp
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -30,7 +35,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("end_dt", endTimeInclusive)
             };
 
-            return getObjectsListAsync<IAssetBars, JsonAssetBars>(_alpacaHttpClient, builder);
+            return getObjectsListAsync<IAssetBars, JsonAssetBars>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -56,7 +62,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("end_dt", endTimeInclusive)
             };
 
-            return getSingleObjectAsync<IAssetBars, JsonAssetBars>(_alpacaHttpClient, builder);
+            return getSingleObjectAsync<IAssetBars, JsonAssetBars>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -74,7 +81,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("symbols", String.Join(",", symbols))
             };
 
-            return getObjectsListAsync<IQuote, JsonQuote>(_alpacaHttpClient, builder);
+            return getObjectsListAsync<IQuote, JsonQuote>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -86,7 +94,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             String symbol)
         {
             return getSingleObjectAsync<IQuote, JsonQuote>(
-                _alpacaHttpClient, $"v1/assets/{symbol}/quote");
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/assets/{symbol}/quote");
         }
 
         /// <summary>
@@ -104,7 +112,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     .AddParameter("symbols", String.Join(",", symbols))
             };
 
-            return getObjectsListAsync<IFundamental, JsonFundamental>(_alpacaHttpClient, builder);
+            return getObjectsListAsync<IFundamental, JsonFundamental>(
+                _alpacaHttpClient, _alpacaRestApiThrottler, builder);
         }
 
         /// <summary>
@@ -116,7 +125,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             String symbol)
         {
             return getSingleObjectAsync<IFundamental, JsonFundamental>(
-                _alpacaHttpClient, $"v1/assets/{symbol}/fundamental");
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/assets/{symbol}/fundamental");
         }
     }
 }

@@ -196,6 +196,7 @@
     <Compile Include="Alpaca\Markets\Enums\PositionSide.cs" />
     <Compile Include="Alpaca\Markets\Enums\TickType.cs" />
     <Compile Include="Alpaca\Markets\Enums\TimeInForce.cs" />
+    <Compile Include="Alpaca\Markets\FakeThrottler.cs" />
     <Compile Include="Alpaca\Markets\Helpers\CustomTimeZone.cs" />
     <Compile Include="Alpaca\Markets\Helpers\DateConverter.cs" />
     <Compile Include="Alpaca\Markets\Helpers\DateTimeHelper.cs" />
@@ -225,6 +226,7 @@
     <Compile Include="Alpaca\Markets\Interfaces\IStreamQuote.cs" />
     <Compile Include="Alpaca\Markets\Interfaces\IStreamTrade.cs" />
     <Compile Include="Alpaca\Markets\Interfaces\ITradeUpdate.cs" />
+    <Compile Include="Alpaca\Markets\IThrottler.cs" />
     <Compile Include="Alpaca\Markets\Messages\JsonAccount.cs" />
     <Compile Include="Alpaca\Markets\Messages\JsonAccountUpdate.cs" />
     <Compile Include="Alpaca\Markets\Messages\JsonAggHistoricalItems.cs" />
@@ -256,6 +258,7 @@
     <Compile Include="Alpaca\Markets\Messages\JsonStreamTrade.cs" />
     <Compile Include="Alpaca\Markets\Messages\JsonTradeUpdate.cs" />
     <Compile Include="Alpaca\Markets\NatsClient.cs" />
+    <Compile Include="Alpaca\Markets\RateThrottler.cs" />
     <Compile Include="Alpaca\Markets\RestClient.cs" />
     <Compile Include="Alpaca\Markets\RestClient.General.cs" />
     <Compile Include="Alpaca\Markets\RestClient.Market.cs" />
