@@ -47,6 +47,9 @@ namespace QuantConnect.Brokerages.Alpaca
         private volatile bool _connectionLost;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
+        // Rest API requests must be limited to a maximum of 200 messages/minute
+        private readonly RateGate _messagingRateLimiter = new RateGate(200, TimeSpan.FromMinutes(1));
+
         private Markets.RestClient restClient;
         /// <summary>
         /// This lock is used to sync 'PlaceOrder' and callback 'OnTransactionDataReceived'
@@ -269,6 +272,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             try
             {
+                CheckRateLimiting();
                 var response = restClient.ListAssetsAsync().Result;
 
                 return response.Select(x => x.Symbol).ToList();
@@ -291,6 +295,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             try
             {
+                CheckRateLimiting();
                 var response = restClient.ListQuotesAsync(instruments).Result;
                 return response
                     .ToDictionary(
@@ -316,6 +321,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             try
             {
+                CheckRateLimiting();
                 var orders = restClient.ListOrdersAsync().Result;
 
                 var qcOrders = new List<Order>();
@@ -342,6 +348,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             try
             {
+                CheckRateLimiting();
                 var holdings = restClient.ListPositionsAsync().Result;
 
                 var qcHoldings = new List<Holding>();
@@ -369,6 +376,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             try
             {
+                CheckRateLimiting();
                 var balance = restClient.GetAccountAsync().Result;
 
                 return new List<Cash>
@@ -460,6 +468,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 default:
                     throw new NotSupportedException("The order type " + order.Type + " is not supported.");
             }
+            CheckRateLimiting();
             var apOrder = restClient.PostOrderAsync(order.Symbol.Value, quantity, side, type, timeInForce,
                 limitPrice, stopPrice).Result;
 
@@ -493,6 +502,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
             foreach (var orderId in order.BrokerId)
             {
+                CheckRateLimiting();
                 var res = restClient.DeleteOrderAsync(new Guid(orderId)).Result;
             }
 
@@ -659,6 +669,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 List<Markets.IBar> newBars = new List<Markets.IBar>();
                 try
                 {
+                    CheckRateLimiting();
                     newBars = (period.Days < 1) ? restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI).Result.Items.ToList() : restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc).Result.Items.ToList();
                 }
                 catch (Exception e)
@@ -760,6 +771,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 List<IHistoricalQuote> asList = new List<IHistoricalQuote>();
                 try
                 {
+                    CheckRateLimiting();
                     var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
                     asList = newBars.Items.ToList();
 
@@ -873,6 +885,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 List<IHistoricalQuote> asList = new List<IHistoricalQuote>();
                 try
                 {
+                    CheckRateLimiting();
                     var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
                     asList = newBars.Items.ToList();
 
@@ -1161,6 +1174,17 @@ namespace QuantConnect.Brokerages.Alpaca
 
             var natsClient = new NatsClient(AccountKeyId, isStaging);
             return natsClient;
+        }
+
+        private void CheckRateLimiting()
+        {
+            if (!_messagingRateLimiter.WaitToProceed(TimeSpan.Zero))
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                    "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+
+                _messagingRateLimiter.WaitToProceed();
+            }
         }
     }
 }
