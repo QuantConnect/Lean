@@ -37,7 +37,6 @@ namespace QuantConnect.Securities
         public const string AccountCurrency = "USD";
 
         private readonly ConcurrentDictionary<string, Cash> _currencies;
-        private readonly NullCurrencyConverter _nullCurrencyConverter = new NullCurrencyConverter();
 
         /// <summary>
         /// Gets the total value of the cash book in units of the base currency
@@ -328,8 +327,13 @@ namespace QuantConnect.Securities
         /// <returns>A new <see cref="CashAmount"/> instance denominated in the account currency</returns>
         public CashAmount ConvertToAccountCurrency(CashAmount cashAmount)
         {
+            if (cashAmount.Currency == AccountCurrency)
+            {
+                return cashAmount;
+            }
+
             var amount = Convert(cashAmount.Amount, cashAmount.Currency, AccountCurrency);
-            return new CashAmount(amount, AccountCurrency, _nullCurrencyConverter);
+            return new CashAmount(amount, AccountCurrency, this);
         }
 
         #endregion

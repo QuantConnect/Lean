@@ -49,12 +49,12 @@ namespace QuantConnect.Securities
         {
             if (string.IsNullOrWhiteSpace(currency))
             {
-                throw new ArgumentException("Invalid currency", nameof(currency));
+                throw new ArgumentNullException(nameof(currency), "Invalid currency");
             }
 
             if (currencyConverter == null)
             {
-                throw new ArgumentException("Invalid currency converter", nameof(currencyConverter));
+                throw new ArgumentNullException(nameof(currencyConverter), "Invalid currency converter");
             }
 
             Amount = amount;

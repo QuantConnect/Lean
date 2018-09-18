@@ -186,7 +186,6 @@
     <Compile Include="Securities\ICurrencyConverter.cs" />
     <Compile Include="Python\BuyingPowerModelPythonWrapper.cs" />
     <Compile Include="Securities\CashAmount.cs" />
-    <Compile Include="Securities\NullCurrencyConverter.cs" />
     <Compile Include="Series.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
