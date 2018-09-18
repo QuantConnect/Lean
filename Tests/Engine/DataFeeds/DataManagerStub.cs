@@ -21,13 +21,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     internal class DataManagerStub : DataManager
     {
         public DataManagerStub()
-        : base(null, null)
+        : base(new NullDataFeed(), null)
         {
 
         }
 
         public DataManagerStub(IAlgorithm algorithm)
-            : base(null, algorithm)
+            : base(new NullDataFeed(), algorithm)
         {
 
         }
