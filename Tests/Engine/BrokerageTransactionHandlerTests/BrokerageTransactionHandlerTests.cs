@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -754,6 +755,94 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(transactionHandler.GetOpenOrders().Count, 0);
         }
 
+        [Test]
+        public void ProcessSynchronousEventsShouldPerformCashSyncOnce()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var broker = new Mock<IBrokerage>();
+
+            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash("USD", 10, 10) });
+            transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
+            _algorithm.SetLiveMode(true);
+
+            var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
+
+            // Advance current time UTC so cash sync is performed
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
+
+            transactionHandler.ProcessSynchronousEvents();
+            var lastSyncDateAfter = transactionHandler.GetLastSyncDate();
+
+            Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
+
+            transactionHandler.ProcessSynchronousEvents();
+            var lastSyncDateAfterAgain = transactionHandler.GetLastSyncDate();
+            Assert.AreEqual(lastSyncDateAfter, lastSyncDateAfterAgain);
+
+            broker.Verify(m => m.GetCashBalance(), Times.Once);
+        }
+
+        [Test]
+        public void OrderFillShouldTriggerRePerformingCashSync()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var broker = new Mock<IBrokerage>();
+
+            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash("USD", 10, 10) });
+            transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
+            _algorithm.SetLiveMode(true);
+
+            var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
+
+            // Advance current time UTC so cash sync is performed
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
+
+            transactionHandler.ProcessSynchronousEvents();
+            var lastSyncDateAfter = transactionHandler.GetLastSyncDate();
+
+            // cash sync happened
+            Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
+
+            // update last fill time
+            transactionHandler.TestTimeSinceLastFill = TimeSpan.FromSeconds(15);
+            // delayed task should take ~10 seconds to set the perform cash sync flag up, due to TimeSinceLastFill
+            Thread.Sleep(15000);
+
+            transactionHandler.ProcessSynchronousEvents();
+
+            broker.Verify(m => m.GetCashBalance(), Times.Exactly(2));
+        }
+
+        [Test]
+        public void ProcessSynchronousEventsShouldPerformCashSyncOnlyAtExpectedTime()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var broker = new Mock<IBrokerage>();
+
+            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash("USD", 10, 10) });
+
+            // This is 2 am New York
+            transactionHandler.TestCurrentTimeUtc = new DateTime(1, 1, 1, 7, 0, 0);
+
+            transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
+            _algorithm.SetLiveMode(true);
+
+            var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
+
+            // Advance current time UTC
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
+
+            transactionHandler.ProcessSynchronousEvents();
+            var lastSyncDateAfter = transactionHandler.GetLastSyncDate();
+
+            Assert.AreEqual(lastSyncDateAfter, lastSyncDateBefore);
+
+            broker.Verify(m => m.GetCashBalance(), Times.Exactly(0));
+        }
+
         internal class EmptyHistoryProvider : IHistoryProvider
         {
             public int DataPointCount
@@ -805,7 +894,19 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         internal class TestBrokerageTransactionHandler : BrokerageTransactionHandler
         {
             public int CancelPendingOrdersSize => _cancelPendingOrders.GetCancelPendingOrdersSize;
-        }
 
+            public TimeSpan TestTimeSinceLastFill = TimeSpan.FromDays(1);
+            public DateTime TestCurrentTimeUtc = new DateTime(13, 1, 13, 13, 13, 13);
+
+            // modifying current time so cash sync is triggered
+            protected override DateTime CurrentTimeUtc => TestCurrentTimeUtc;
+
+            protected override TimeSpan TimeSinceLastFill => TestTimeSinceLastFill;
+
+            public DateTime GetLastSyncDate()
+            {
+                return LastSyncDate;
+            }
+        }
     }
 }
