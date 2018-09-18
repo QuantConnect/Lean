@@ -41,9 +41,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataProvider = new DefaultDataProvider();
 
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
-            var dataManager = new DataManager();
-            algorithm.SubscriptionManager.SetDataManager(dataManager);
             var feed = new FileSystemDataFeed();
+            var dataManager = new DataManager(feed, algorithm);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager);
             algorithm.Initialize();
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void TestDataFeedEnumeratorStackSpeed()
         {
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.Initialize();
             algorithm.PostInitialize();
 

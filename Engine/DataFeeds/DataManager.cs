@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Returns an enumerable which provides the data to stream to the algorithm
         /// </summary>
-        public IEnumerable<TimeSlice> DataStream()
+        public IEnumerable<TimeSlice> StreamData()
         {
             return _dataFeed;
         }

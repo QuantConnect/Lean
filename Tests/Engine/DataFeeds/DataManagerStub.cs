@@ -11,26 +11,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    /// <summary>
-    /// IDataManager is the engines view of the Data Manager.
-    /// </summary>
-    public interface IDataManager
+    internal class DataManagerStub : DataManager
     {
-        /// <summary>
-        /// Get the universe selection instance
-        /// </summary>
-        UniverseSelection UniverseSelection { get; }
+        public DataManagerStub()
+        : base(null, null)
+        {
 
-        /// <summary>
-        /// Returns an enumerable which provides the data to stream to the algorithm
-        /// </summary>
-        IEnumerable<TimeSlice> StreamData();
+        }
+
+        public DataManagerStub(IAlgorithm algorithm)
+            : base(null, algorithm)
+        {
+
+        }
     }
 }

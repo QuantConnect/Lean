@@ -24,7 +24,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Common.Securities;
 using System;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Python
         public void SetBuyingPowerModelSuccess(bool isChild)
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetDateTime(new DateTime(2018, 8, 20, 15, 0, 0));
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
 

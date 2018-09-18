@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             var algorithm = new QCAlgorithm();
-            var dataManager = new DataManager();
+            var dataManager = new DataManagerStub(algorithm);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             var symbols = tickers.Select(ticker => algorithm.AddData<TestableQuandlFuture>(ticker, Resolution.Daily).Symbol).ToList();
@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var startDate = new DateTime(2018, 4, 2);
             var endDate = new DateTime(2018, 4, 19);
             var algorithm = new QCAlgorithm();
-            var dataManager = new DataManager();
+            var dataManager = new DataManagerStub(algorithm);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var symbols = new List<Symbol>
             {

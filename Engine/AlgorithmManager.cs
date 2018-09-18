@@ -903,7 +903,7 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
-            foreach (var timeSlice in dataManager.DataStream())
+            foreach (var timeSlice in dataManager.StreamData())
             {
                 if (!setStartTime)
                 {

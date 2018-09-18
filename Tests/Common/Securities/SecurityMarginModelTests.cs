@@ -19,9 +19,9 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -383,7 +383,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static Security InitAndGetSecurity(QCAlgorithm algo, decimal fee, SecurityType securityType = SecurityType.Equity, string symbol = "SPY")
         {
-            algo.SubscriptionManager.SetDataManager(new DataManager());
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             Security security;
             if (securityType == SecurityType.Equity)
             {

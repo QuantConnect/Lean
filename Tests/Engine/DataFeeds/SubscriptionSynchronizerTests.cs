@@ -44,12 +44,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // since data is pre-generated, it's important to use the larger resolutions with large security counts
 
             var algorithm = PerformanceBenchmarkAlgorithms.CreateBenchmarkAlgorithm(securityCount, resolution);
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
             TestSubscriptionSynchronizerSpeed(algorithm);
         }
 
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
         {
+            var feed = new AlgorithmManagerTests.MockDataFeed();
+            var dataManager = new DataManager(feed, algorithm);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+
             algorithm.Initialize();
             algorithm.PostInitialize();
 
@@ -62,20 +65,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var endTimeUtc = algorithm.EndDate.ConvertToUtc(TimeZones.NewYork);
             var startTimeUtc = algorithm.StartDate.ConvertToUtc(TimeZones.NewYork);
-            var dataFeedSubscriptionManager = new DataFeedSubscriptionManager
-            {
-                DataFeedSubscriptions = new SubscriptionCollection()
-            };
-            var subscriptionBasedTimeProvider = new SubscriptionFrontierTimeProvider(startTimeUtc, dataFeedSubscriptionManager);
-
-            var feed = new AlgorithmManagerTests.MockDataFeed();
-            var universeSelection = new UniverseSelection(feed, algorithm);
-            var synchronizer = new SubscriptionSynchronizer(universeSelection, algorithm.TimeZone,
+            var subscriptionBasedTimeProvider = new SubscriptionFrontierTimeProvider(startTimeUtc, dataManager);
+            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection, algorithm.TimeZone,
                                                             algorithm.Portfolio.CashBook,
                                                             subscriptionBasedTimeProvider);
 
             var totalDataPoints = 0;
-            var subscriptions = dataFeedSubscriptionManager.DataFeedSubscriptions;
+            var subscriptions = dataManager.DataFeedSubscriptions;
             foreach (var kvp in algorithm.Securities)
             {
                 int dataPointCount;
@@ -131,11 +127,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private class DataPoint : BaseData
         {
             // bare bones base data to minimize memory footprint
-        }
-
-        private class DataFeedSubscriptionManager : IDataFeedSubscriptionManager
-        {
-            public SubscriptionCollection DataFeedSubscriptions { get; set; }
         }
     }
 }

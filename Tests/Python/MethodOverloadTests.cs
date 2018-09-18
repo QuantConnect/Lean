@@ -16,7 +16,7 @@
 
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Python
             {
                 var module = Py.Import("Test_MethodOverload");
                 _algorithm = module.GetAttr("Test_MethodOverload").Invoke();
-                _algorithm.SubscriptionManager.SetDataManager(new DataManager());
+                _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
                 _algorithm.Initialize();
             }
         }

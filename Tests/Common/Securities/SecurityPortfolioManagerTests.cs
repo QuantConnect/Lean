@@ -33,7 +33,7 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             security.SetLeverage(10m);
@@ -149,7 +149,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);

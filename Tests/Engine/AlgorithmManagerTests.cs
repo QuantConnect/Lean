@@ -52,10 +52,10 @@ namespace QuantConnect.Tests.Engine
         {
             var algorithmManager = new AlgorithmManager(false);
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
-            var dataManager = new DataManager();
-            algorithm.SubscriptionManager.SetDataManager(dataManager);
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(AlgorithmManagerTests)}.{nameof(TestAlgorithmManagerSpeed)}");
             var feed = new MockDataFeed();
+            var dataManager = new DataManager(feed, algorithm);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
             var transactions = new BacktestingTransactionHandler();
             var results = new BacktestingResultHandler();
             var realtime = new BacktestingRealTimeHandler();
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Engine
 
             Log.Trace("Starting algorithm manager loop to process " + feed.Count + " time slices");
             var sw = Stopwatch.StartNew();
-            algorithmManager.Run(job, algorithm, feed, transactions, results, realtime, leanManager, alphas, token);
+            algorithmManager.Run(job, algorithm, dataManager, transactions, results, realtime, leanManager, alphas, token);
             sw.Stop();
 
             var thousands = feed.Count / 1000d;

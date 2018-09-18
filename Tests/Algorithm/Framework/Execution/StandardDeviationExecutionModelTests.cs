@@ -27,9 +27,9 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Execution
 {
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             var algorithm = new QCAlgorithmFramework();
             algorithm.SetPandasConverter();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var algorithm = new QCAlgorithmFramework();
             algorithm.SetPandasConverter();
             algorithm.SetHistoryProvider(historyProvider.Object);
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetDateTime(time.AddMinutes(5));
 
             var security = algorithm.AddEquity(Symbols.AAPL.Value);

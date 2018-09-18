@@ -29,8 +29,8 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Packets;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         public void Initialize()
         {
             _algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
-            _algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.SetBrokerageModel(BrokerageName.FxcmBrokerage);
             _algorithm.SetCash(100000);
             _algorithm.AddSecurity(SecurityType.Forex, Ticker);
@@ -256,7 +256,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         public void RoundOff_Long_Fractional_Orders()
         {
             var algo = new QCAlgorithm();
-            algo.SubscriptionManager.SetDataManager(new DataManager());
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetBrokerageModel(BrokerageName.Default);
             algo.SetCash(100000);
 
@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         public void RoundOff_Short_Fractional_Orders()
         {
             var algo = new QCAlgorithm();
-            algo.SubscriptionManager.SetDataManager(new DataManager());
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetBrokerageModel(BrokerageName.Default);
             algo.SetCash(100000);
 
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         public void RoundOff_LessThanLotSize_Fractional_Orders()
         {
             var algo = new QCAlgorithm();
-            algo.SubscriptionManager.SetDataManager(new DataManager());
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetBrokerageModel(BrokerageName.Default);
             algo.SetCash(100000);
 
