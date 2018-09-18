@@ -13,8 +13,10 @@
 
 from clr import AddReference
 AddReference("System")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
+
 
 from System import *
 from QuantConnect import *
@@ -22,7 +24,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Custom import *
-from QCAlgorithm import QCAlgorithm
+from QuantConnect.Algorithm import *
 
 ### <summary>
 ### Basic template algorithm simply initializes the date range and cash. This is a skeleton

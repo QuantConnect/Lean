@@ -11,15 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Common")
+import clr
+clr.AddReference("System")
+clr.AddReference("QuantConnect.Algorithm")
+clr.AddReference("QuantConnect.Indicators")
+clr.AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-from QCAlgorithm import QCAlgorithm
 import decimal as d
 
 ### <summary>

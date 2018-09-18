@@ -13,14 +13,15 @@
 
 from clr import AddReference
 AddReference("System")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import Tick
-from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Example algorithm of the Identity indicator with the filtering enhancement. Filtering is used to check

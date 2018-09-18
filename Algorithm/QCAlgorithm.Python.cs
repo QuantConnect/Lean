@@ -29,16 +29,12 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
 using System.Linq;
 using QuantConnect.Util;
-using QuantConnect.Interfaces;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
         private readonly Dictionary<IntPtr, PythonActivator> _pythonActivators = new Dictionary<IntPtr, PythonActivator>();
-        private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-        private readonly IFactorFileProvider _factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
 
         public PandasConverter PandasConverter { get; private set; }
 
@@ -707,124 +703,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Create a pandas dataframe from history request with information from a PyObject
-        /// </summary>
-        /// <param name="pyObject">PyObject containing elements to create a history request</param>
-        public PyObject PandasDataFrameHistory(PyObject pyObject)
-        {
-            var requests = CreateHistoryRequests(pyObject);
-            var history = HistoryProvider.GetHistory(requests, TimeZone).Memoize();
-            return PandasConverter.GetDataFrame(history);
-        }
-
-        /// <summary>
-        /// Get history requests with information to create pandas dataframe from local files
-        /// </summary>
-        /// <param name="pyObject">PyObject containing elements to create a history request</param>
-        public IEnumerable<PandasHistoryRequest> GetPandasHistoryRequests(PyObject pyObject)
-        {
-            return CreateHistoryRequests(pyObject)
-                .SelectMany(request =>
-                {
-                    var config = GetSubscription(request.Symbol, request.TickType);
-                    var hours = request.ExchangeHours;
-                    var resolution = request.Resolution;
-
-                    var start = request.StartTimeUtc.ConvertFromUtc(config.DataTimeZone);
-                    var end = request.EndTimeUtc.ConvertFromUtc(config.DataTimeZone);
-
-                    var tradeableDays = QuantConnect.Time.EachTradeableDay(hours, start, end);
-                    if (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                    {
-                        tradeableDays = new[] { tradeableDays.Last() };
-                    }
-
-                    return tradeableDays
-                        .Select(date => new PandasHistoryRequest(config, hours, request.StartTimeUtc, request.EndTimeUtc, resolution, date, _mapFileProvider, _factorFileProvider));
-                });
-        }
-
-        /// <summary>
-        /// Create history requests from a PyObject
-        /// </summary>
-        /// <param name="pyObject">PyObject containing elements to create a history request</param>
-        private IEnumerable<HistoryRequest> CreateHistoryRequests(PyObject pyObject)
-        {
-            var dict = new PyDict(pyObject);
-            var requests = new List<HistoryRequest>();
-
-            using (Py.GIL())
-            {
-                var kwargs = (string[])dict.Keys().AsManagedObject(typeof(string[]));
-
-                // Check whether the python dictionary has any of the required arguments
-                var requiredArgs = new string[] { "periods", "span", "start" };
-                if (requiredArgs.Intersect(kwargs).Count() == 0)
-                {
-                    throw new ArgumentOutOfRangeException("QCAlgorithm.CreateHistoryRequests(): History request must define the lookback period with following keys: 'periods' or 'span' or 'start'.");
-                }
-
-                var symbols = Securities.Keys;
-                if (kwargs.Contains("symbols"))
-                {
-                    symbols = GetSymbolsFromPyObject(dict["symbols"]).ToList();
-                }
-
-                Resolution? resolution = null;
-                if (kwargs.Contains("resolution"))
-                {
-                    resolution = (Resolution)dict["resolution"].AsManagedObject(typeof(int));
-                }
-
-                foreach (var symbol in symbols)
-                {
-                    // Check whether the symbol has the requested data type
-                    if (kwargs.Contains("type"))
-                    {
-                        var customDataConfig = Securities[symbol].Subscriptions
-                            .OrderByDescending(s => s.Resolution)
-                            .FirstOrDefault(s => s.Type.IsSubclassOf(typeof(DynamicData)));
-
-                        if (customDataConfig == null)
-                        {
-                            continue;
-                        }
-                    }
-
-                    resolution = GetResolution(symbol, resolution);
-
-                    DateTime start;
-                    var end = Time.RoundDown(resolution.Value.ToTimeSpan());
-
-                    if (kwargs.Contains("periods"))
-                    {
-                        var periods = (int)dict["periods"].AsManagedObject(typeof(int));
-                        start = GetStartTimeAlgoTz(symbol, periods, resolution);
-                    }
-                    else if (kwargs.Contains("span"))
-                    {
-                        var span = (TimeSpan)dict["span"].AsManagedObject(typeof(TimeSpan));
-                        start = end - span;
-                    }
-                    else
-                    {
-                        start = (DateTime)dict["start"].AsManagedObject(typeof(DateTime));
-                        if (kwargs.Contains("end"))
-                        {
-                            end = (DateTime)dict["end"].AsManagedObject(typeof(DateTime));
-                        }
-                    }
-
-                    foreach (var config in GetMatchingSubscriptions(symbol, typeof(BaseData)))
-                    {
-                        requests.Add(CreateHistoryRequest(config, start, end, resolution));
-                    }
-                }
-            }
-            return requests;
-        }
-
-        /// <summary>
         /// Sets the specified function as the benchmark, this function provides the value of
         /// the benchmark at each date/time requested
         /// </summary>
@@ -925,11 +803,7 @@ namespace QuantConnect.Algorithm
             Symbol symbol;
             Symbol[] symbols;
 
-            if (PyString.IsStringType(pyObject))
-            {
-                yield return pyObject.As<string>();
-            }
-            else if (pyObject.TryConvert(out symbol))
+            if (pyObject.TryConvert(out symbol))
             {
                 if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
                 yield return symbol;

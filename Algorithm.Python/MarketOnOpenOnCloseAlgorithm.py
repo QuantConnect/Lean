@@ -13,14 +13,15 @@
 
 from clr import AddReference
 AddReference("System")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Algorithm import *
 from QuantConnect.Securities import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
-from QCAlgorithm import QCAlgorithm
 from datetime import datetime
 
 ### <summary>
