@@ -13,15 +13,14 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Demonstration of using the Delisting event in your algorithm. Assets are delisted on their last day of trading, or when their contract expires.

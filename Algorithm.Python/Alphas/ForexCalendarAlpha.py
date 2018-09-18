@@ -14,18 +14,17 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
 from datetime import timedelta, datetime
 from decimal import Decimal
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from QuantConnect.Data.Custom import DailyFx
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### This demonstration alpha reads the DailyFx calendar and provides insights based upon

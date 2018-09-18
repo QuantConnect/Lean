@@ -14,12 +14,11 @@
 from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Demonstration of using coarse and fine universe selection together to filter down a smaller universe of stocks.

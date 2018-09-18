@@ -13,7 +13,6 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
 
@@ -24,8 +23,8 @@ from QuantConnect.Indicators import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Custom import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Python import PythonQuandl
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### The algorithm creates new indicator value with the existing indicator method by Indicator Extensions

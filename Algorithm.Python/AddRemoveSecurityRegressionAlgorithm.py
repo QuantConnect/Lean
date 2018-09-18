@@ -14,12 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### This algorithm demonstrates the runtime addition and removal of securities from your algorithm.

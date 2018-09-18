@@ -181,6 +181,7 @@
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
+    <Compile Include="Data\PandasHistoryRequest.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
     <Compile Include="Python\BuyingPowerModelPythonWrapper.cs" />
     <Compile Include="Series.cs" />

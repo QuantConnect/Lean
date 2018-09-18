@@ -13,16 +13,15 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Python import PythonQuandl
+from QCAlgorithm import QCAlgorithm
 from datetime import datetime, timedelta
 
 ### <summary>

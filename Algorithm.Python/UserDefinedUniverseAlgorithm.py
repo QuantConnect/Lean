@@ -15,13 +15,12 @@ from clr import AddReference
 AddReference("System.Core")
 AddReference("System.Collections")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from System.Collections.Generic import List
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### This algorithm shows how you can handle universe selection in anyway you like,
@@ -33,26 +32,26 @@ from QuantConnect.Data.UniverseSelection import *
 ### <meta name="tag" content="custom universes" />
 class UserDefinedUniverseAlgorithm(QCAlgorithm):
 
-	def Initialize(self):
-		self.SetCash(100000)
-		self.SetStartDate(2015,1,1)
-		self.SetEndDate(2015,12,1)
-		self.symbols = [ "SPY", "GOOG", "IBM", "AAPL", "MSFT", "CSCO", "ADBE", "WMT"]
+    def Initialize(self):
+        self.SetCash(100000)
+        self.SetStartDate(2015,1,1)
+        self.SetEndDate(2015,12,1)
+        self.symbols = [ "SPY", "GOOG", "IBM", "AAPL", "MSFT", "CSCO", "ADBE", "WMT"]
 
-		self.UniverseSettings.Resolution = Resolution.Hour
-		self.AddUniverse('my_universe_name', Resolution.Hour, self.selection)
+        self.UniverseSettings.Resolution = Resolution.Hour
+        self.AddUniverse('my_universe_name', Resolution.Hour, self.selection)
 
-	def selection(self, time):
-		index = time.hour%len(self.symbols)
-		return self.symbols[index]
+    def selection(self, time):
+        index = time.hour%len(self.symbols)
+        return self.symbols[index]
 
-	def OnData(self, slice):
-		pass
+    def OnData(self, slice):
+        pass
 
-	def OnSecuritiesChanged(self, changes):
-		for removed in changes.RemovedSecurities:
-			if removed.Invested:
-				self.Liquidate(removed.Symbol)
+    def OnSecuritiesChanged(self, changes):
+        for removed in changes.RemovedSecurities:
+            if removed.Invested:
+                self.Liquidate(removed.Symbol)
 
-		for added in changes.AddedSecurities:
-			self.SetHoldings(added.Symbol, 1/float(len(changes.AddedSecurities)))
+        for added in changes.AddedSecurities:
+            self.SetHoldings(added.Symbol, 1/float(len(changes.AddedSecurities)))

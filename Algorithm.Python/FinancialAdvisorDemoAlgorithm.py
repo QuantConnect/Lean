@@ -13,12 +13,11 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### This algorithm demonstrates how to submit orders to a Financial Advisor account group, allocation profile or a single managed account.

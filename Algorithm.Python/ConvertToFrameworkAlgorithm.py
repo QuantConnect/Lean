@@ -13,14 +13,12 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import QCAlgorithmFrameworkBridge
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Indicators import *

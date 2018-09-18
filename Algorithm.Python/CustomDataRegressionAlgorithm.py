@@ -14,13 +14,12 @@
 from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
+from QCAlgorithm import QCAlgorithm
 
 from datetime import datetime
 import decimal

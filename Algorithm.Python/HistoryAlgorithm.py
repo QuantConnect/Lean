@@ -13,13 +13,12 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
+from QCAlgorithm import QCAlgorithm
 from QuantConnect.Indicators import *
 from QuantConnect.Python import PythonQuandl
 from QuantConnect.Securities.Equity import EquityExchange

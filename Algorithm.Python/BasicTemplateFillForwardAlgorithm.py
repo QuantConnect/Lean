@@ -13,12 +13,11 @@
 
 import clr
 clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
 clr.AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
+from QCAlgorithm import QCAlgorithm
 
 
 class BasicTemplateFillForwardAlgorithm(QCAlgorithm):

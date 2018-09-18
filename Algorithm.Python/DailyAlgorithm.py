@@ -13,14 +13,13 @@
 
 from clr import AddReference
 AddReference("System")
-AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
+from QCAlgorithm import QCAlgorithm
 
 ### <summary>
 ### Uses daily data and a simple moving average cross to place trades and an ema for stop placement
