@@ -15,10 +15,10 @@
 
 using System;
 
-namespace QuantConnect.Brokerages.Bitfinex
+namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Event arguments class for the <see cref="OrderBook.BestBidAskUpdated"/> event
+    /// Event arguments class for the <see cref="DefaultOrderBook.BestBidAskUpdated"/> event
     /// </summary>
     public sealed class BestBidAskUpdatedEventArgs : EventArgs
     {

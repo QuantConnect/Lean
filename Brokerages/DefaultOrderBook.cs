@@ -17,19 +17,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Brokerages.GDAX
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Represents a full order book for a security.
     /// It contains prices and order sizes for each bid and ask level.
     /// The best bid and ask prices are also kept up to date.
     /// </summary>
-    public class OrderBook
+    public class DefaultOrderBook : IOrderBook<decimal, decimal>
     {
         private readonly object _locker = new object();
         private readonly Symbol _symbol;
-        private readonly SortedDictionary<decimal, decimal> _bids = new SortedDictionary<decimal, decimal>();
-        private readonly SortedDictionary<decimal, decimal> _asks = new SortedDictionary<decimal, decimal>();
+        protected readonly SortedDictionary<decimal, decimal> _bids = new SortedDictionary<decimal, decimal>();
+        protected readonly SortedDictionary<decimal, decimal> _asks = new SortedDictionary<decimal, decimal>();
 
         /// <summary>
         /// Event fired each time <see cref="BestBidPrice"/> or <see cref="BestAskPrice"/> are changed
@@ -57,10 +57,10 @@ namespace QuantConnect.Brokerages.GDAX
         public decimal BestAskSize { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderBook"/> class
+        /// Initializes a new instance of the <see cref="DefaultOrderBook"/> class
         /// </summary>
         /// <param name="symbol">The symbol for the order book</param>
-        public OrderBook(Symbol symbol)
+        public DefaultOrderBook(Symbol symbol)
         {
             _symbol = symbol;
         }
@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="size">The new size at the bid price level</param>
         public void UpdateBidRow(decimal price, decimal size)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _bids[price] = size;
             }
@@ -110,7 +110,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="size">The new size at the ask price level</param>
         public void UpdateAskRow(decimal price, decimal size)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _asks[price] = size;
             }
@@ -130,14 +130,14 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="price">The bid price level to be removed</param>
         public void RemoveBidRow(decimal price)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _bids.Remove(price);
             }
 
             if (price == BestBidPrice)
             {
-                lock(_locker)
+                lock (_locker)
                 {
                     BestBidPrice = _bids.Keys.LastOrDefault();
                     BestBidSize = BestBidPrice > 0 ? _bids[BestBidPrice] : 0;
@@ -153,20 +153,36 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="price">The ask price level to be removed</param>
         public void RemoveAskRow(decimal price)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _asks.Remove(price);
             }
 
             if (price == BestAskPrice)
             {
-                lock(_locker)
+                lock (_locker)
                 {
                     BestAskPrice = _asks.Keys.FirstOrDefault();
                     BestAskSize = BestAskPrice > 0 ? _asks[BestAskPrice] : 0;
                 }
 
                 BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
+            }
+        }
+
+        /// <summary>
+        /// Common price level removal method
+        /// </summary>
+        /// <param name="priceLevel"></param>
+        public void RemovePriceLevel(decimal priceLevel)
+        {
+            if (_asks.ContainsKey(priceLevel))
+            {
+                RemoveAskRow(priceLevel);
+            }
+            else if (_bids.ContainsKey(priceLevel))
+            {
+                RemoveBidRow(priceLevel);
             }
         }
     }

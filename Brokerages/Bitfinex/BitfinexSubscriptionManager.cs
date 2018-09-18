@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly RateGate _connectionRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>>();
         private readonly ConcurrentDictionary<BitfinexWebSocketWrapper, List<BitfinexChannel>> _channelsByWebSocket = new ConcurrentDictionary<BitfinexWebSocketWrapper, List<BitfinexChannel>>();
-        private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
+        private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexSubscriptionManager"/> class.
@@ -450,10 +450,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
 
-                OrderBook orderBook;
+                DefaultOrderBook orderBook;
                 if (!_orderBooks.TryGetValue(symbol, out orderBook))
                 {
-                    orderBook = new OrderBook(symbol);
+                    orderBook = new DefaultOrderBook(symbol);
                     _orderBooks[symbol] = orderBook;
                 }
                 else

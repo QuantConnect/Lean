@@ -47,7 +47,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
-        private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
+        private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
         private readonly bool _isDataQueueHandler;
 
         // GDAX has different rate limits for public and private endpoints
@@ -227,10 +227,10 @@ namespace QuantConnect.Brokerages.GDAX
 
                 var symbol = ConvertProductId(message.ProductId);
 
-                OrderBook orderBook;
+                DefaultOrderBook orderBook;
                 if (!_orderBooks.TryGetValue(symbol, out orderBook))
                 {
-                    orderBook = new OrderBook(symbol);
+                    orderBook = new DefaultOrderBook(symbol);
                     _orderBooks[symbol] = orderBook;
                 }
                 else
