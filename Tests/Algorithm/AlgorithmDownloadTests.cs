@@ -22,7 +22,8 @@ using System.Text;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    // For now these tests are excluded from the Travis build because of occasional web server errors.
+    [TestFixture, Category("TravisExclude")]
     public class AlgorithmDownloadTests
     {
         [Test]
