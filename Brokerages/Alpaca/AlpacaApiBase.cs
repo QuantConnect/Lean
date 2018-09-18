@@ -583,7 +583,8 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             Log.Trace("Start Pricing Stream");
             _ratesSession = new PricingStreamSession(this, instruments);
-            _ratesSession.QuoteReceived += new Action<Markets.IStreamQuote>(OnPricingDataReceived);
+            _ratesSession.QuoteReceived += new Action<Markets.IStreamQuote>(OnQuoteDataReceived);
+            _ratesSession.TradeReceived += new Action<Markets.IStreamTrade>(OnTradeDataReceived);
             _ratesSession.StartSession();
         }
 
@@ -603,7 +604,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// Event handler for streaming ticks
         /// </summary>
         /// <param name="quote">The data object containing the received tick</param>
-        private void OnPricingDataReceived(Markets.IStreamQuote quote)
+        private void OnQuoteDataReceived(Markets.IStreamQuote quote)
         {
             LastHeartbeatUtcTime = DateTime.UtcNow;
             var symbol = Symbol.Create(quote.Symbol, SecurityType.Equity, Market.USA);
@@ -624,6 +625,34 @@ namespace QuantConnect.Brokerages.Alpaca
             tick.TickType = TickType.Quote;
             tick.BidSize = quote.BidSize;
             tick.AskSize = quote.AskSize;
+            lock (Ticks)
+            {
+                Ticks.Add(tick);
+            }
+        }
+
+        /// <summary>
+        /// Event handler for streaming ticks
+        /// </summary>
+        /// <param name="trade">The data object containing the received tick</param>
+        private void OnTradeDataReceived(Markets.IStreamTrade trade)
+        {
+            LastHeartbeatUtcTime = DateTime.UtcNow;
+            var symbol = Symbol.Create(trade.Symbol, SecurityType.Equity, Market.USA);
+            var time = trade.Time;
+
+            // live ticks timestamps must be in exchange time zone
+            DateTimeZone exchangeTimeZone;
+            if (!_symbolExchangeTimeZones.TryGetValue(key: symbol, value: out exchangeTimeZone))
+            {
+                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
+                _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
+            }
+            time = time.ConvertFromUtc(exchangeTimeZone);
+
+            var tick = new Tick(time, symbol, trade.Price, trade.Price, trade.Price);
+            tick.TickType = TickType.Trade;
+            tick.Quantity = trade.Size;
             lock (Ticks)
             {
                 Ticks.Add(tick);
