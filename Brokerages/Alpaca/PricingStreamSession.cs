@@ -30,9 +30,14 @@ namespace QuantConnect.Brokerages.Alpaca
         private Markets.NatsClient _client;
 
         /// <summary>
-        /// The event fired when a new message is received
+        /// The event fired when a new quote message is received
         /// </summary>
         public event Action<Markets.IStreamQuote> QuoteReceived;
+
+        /// <summary>
+        /// The event fired when a new quote message is received
+        /// </summary>
+        public event Action<Markets.IStreamTrade> TradeReceived;
 
         public PricingStreamSession(AlpacaApiBase alpacaApiBase, List<string> instruments)
         {
@@ -51,9 +56,11 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 _client.Open();
                 _client.QuoteReceived += QuoteReceived;
+                _client.TradeReceived += TradeReceived;
                 foreach (var instrument in _instruments)
                 {
                     _client.SubscribeQuote(instrument);
+                    _client.SubscribeTrade(instrument);
                 }
                 while (!_shutdown)
                 {
