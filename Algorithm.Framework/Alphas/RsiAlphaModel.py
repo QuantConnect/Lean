@@ -14,10 +14,12 @@
 from clr import AddReference
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Logging")
 AddReference("QuantConnect.Common")
 
 from QuantConnect import *
 from QuantConnect.Indicators import *
+from QuantConnect.Logging import Log
 from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta
 from enum import Enum
@@ -94,7 +96,7 @@ class RsiAlphaModel(AlphaModel):
                 ticker = SymbolCache.GetTicker(symbol)
                 
                 if ticker not in history.index.levels[0]:
-                    algorithm.Log(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
+                    Log.Trace(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
                     continue
 
                 for tuple in history.loc[ticker].itertuples():
