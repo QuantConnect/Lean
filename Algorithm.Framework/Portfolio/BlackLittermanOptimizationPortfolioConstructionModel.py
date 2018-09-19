@@ -187,6 +187,11 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
             if not history.empty:
                 ticker = SymbolCache.GetTicker(symbol)
+
+                if ticker not in history.index.levels[0]:
+                    algorithm.Log(f'BlackLittermanOptimizationPortfolioConstructionModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
+                    continue
+
                 symbolData.WarmUpIndicators(history.loc[ticker])
 
             self.symbolDataBySymbol[symbol] = symbolData

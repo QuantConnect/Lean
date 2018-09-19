@@ -92,6 +92,11 @@ class RsiAlphaModel(AlphaModel):
 
             if not history.empty:
                 ticker = SymbolCache.GetTicker(symbol)
+                
+                if ticker not in history.index.levels[0]:
+                    algorithm.Log(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
+                    continue
+
                 for tuple in history.loc[ticker].itertuples():
                     rsi.Update(tuple.Index, tuple.close)
 
