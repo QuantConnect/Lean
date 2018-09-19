@@ -153,6 +153,7 @@
     <Compile Include="Brokerages\GDAX\GDAXBrokerageHistoryProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
+    <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="PythonSetup.cs" />
