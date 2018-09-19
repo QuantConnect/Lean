@@ -283,7 +283,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
                         && !security.Subscriptions.Contains(request.Configuration))
                     {
-                        // this is required for retro compatibility with security.Subscriptions
+                        // for now this is required for retro compatibility with usages of security.Subscriptions
                         security.AddData(request.Configuration);
                     }
                     _dataFeed.AddSubscription(request);

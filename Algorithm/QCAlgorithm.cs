@@ -531,7 +531,6 @@ namespace QuantConnect.Algorithm
                     {
                         // add the security as an internal feed so the algorithm doesn't receive the data
                         security = CreateBenchmarkSecurity();
-                        AddToUserDefinedUniverse(security);
                     }
 
                     // just return the current price
@@ -1436,7 +1435,7 @@ namespace QuantConnect.Algorithm
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
 
-                AddToUserDefinedUniverse(security);
+                AddToUserDefinedUniverse(security, resolution, leverage, market, fillDataForward, extendedMarketHours, isInternalFeed: false);
                 return security;
             }
             catch (Exception err)
@@ -1566,8 +1565,7 @@ namespace QuantConnect.Algorithm
             var future = (Future)SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                 symbol, resolution, fillDataForward, leverage, false, false, false, LiveMode);
 
-            AddToUserDefinedUniverse(future);
-
+            AddToUserDefinedUniverse(future, resolution, leverage, symbol.ID.Market, fillDataForward, isExtendedMarketHours: false, isInternalFeed: false);
             return future;
         }
 
@@ -1602,7 +1600,7 @@ namespace QuantConnect.Algorithm
 
             option.Underlying = equity;
 
-            AddToUserDefinedUniverse(option);
+            AddToUserDefinedUniverse(option, resolution, leverage, symbol.ID.Market, fillDataForward, isExtendedMarketHours: false, isInternalFeed: false);
 
             return option;
         }
@@ -1719,7 +1717,6 @@ namespace QuantConnect.Algorithm
                         Securities.Remove(symbol);
 
                         security = CreateBenchmarkSecurity();
-                        AddToUserDefinedUniverse(security);
                     }
 
                     SubscriptionManager.HasCustomData = universe.Members.Any(x => x.Value.Subscriptions.Any(y => y.IsCustomData));
@@ -1787,7 +1784,7 @@ namespace QuantConnect.Algorithm
             var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
-            AddToUserDefinedUniverse(security);
+            AddToUserDefinedUniverse(security, resolution, leverage, symbolObject.ID.Market, fillDataForward, isExtendedMarketHours: true, isInternalFeed: false);
             return security;
         }
 
@@ -2000,7 +1997,8 @@ namespace QuantConnect.Algorithm
 
             var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                 symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
-            AddToUserDefinedUniverse(security);
+
+            AddToUserDefinedUniverse(security, resolution, leverage, market, fillDataForward, extendedMarketHours, isInternalFeed: false);
             return (T)security;
         }
 
@@ -2027,7 +2025,15 @@ namespace QuantConnect.Algorithm
 
                 resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
             }
-            return SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
+
+            var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase,
+                                                          SecurityInitializer, _benchmarkSymbol, resolution, fillDataForward: true,
+                                                          leverage: 1m, extendedMarketHours: false, isInternalFeed: true,
+                                                          isCustomData: false, isLiveMode: LiveMode);
+
+            AddToUserDefinedUniverse(security, resolution, 1m, security.Symbol.ID.Market, isFillDataForward: true, isExtendedMarketHours: false, isInternalFeed: true);
+
+            return security;
         }
 
         /// <summary>

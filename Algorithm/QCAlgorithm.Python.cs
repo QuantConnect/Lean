@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm
             var security = SecurityManager.CreateSecurity(dataType, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
-            AddToUserDefinedUniverse(security);
+            AddToUserDefinedUniverse(security, resolution, leverage, symbolObject.ID.Market, fillDataForward, isExtendedMarketHours:true, isInternalFeed:false);
             return security;
         }
 
