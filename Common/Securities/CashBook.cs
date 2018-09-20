@@ -29,7 +29,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Provides a means of keeping track of the different cash holdings of an algorithm
     /// </summary>
-    public class CashBook : IDictionary<string, Cash>
+    public class CashBook : IDictionary<string, Cash>, ICurrencyConverter
     {
         /// <summary>
         /// Gets the base currency used
@@ -314,6 +314,26 @@ namespace QuantConnect.Securities
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable) _currencies).GetEnumerator();
+        }
+
+        #endregion
+
+        #region ICurrencyConverter Implementation
+
+        /// <summary>
+        /// Converts a cash amount to the account currency
+        /// </summary>
+        /// <param name="cashAmount">The <see cref="CashAmount"/> instance to convert</param>
+        /// <returns>A new <see cref="CashAmount"/> instance denominated in the account currency</returns>
+        public CashAmount ConvertToAccountCurrency(CashAmount cashAmount)
+        {
+            if (cashAmount.Currency == AccountCurrency)
+            {
+                return cashAmount;
+            }
+
+            var amount = Convert(cashAmount.Amount, cashAmount.Currency, AccountCurrency);
+            return new CashAmount(amount, AccountCurrency, this);
         }
 
         #endregion
