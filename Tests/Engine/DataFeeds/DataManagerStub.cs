@@ -11,24 +11,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-namespace QuantConnect.Lean.Engine.DataFeeds
-{
-    /// <summary>
-    /// DataFeedSubscriptionManager interface will manage the subscriptions for the Data Feed
-    /// </summary>
-    public interface IDataFeedSubscriptionManager
-    {
-        /// <summary>
-        /// Gets the data feed subscription collection
-        /// </summary>
-        SubscriptionCollection DataFeedSubscriptions { get; }
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 
-        /// <summary>
-        /// Get the universe selection instance
-        /// </summary>
-        UniverseSelection UniverseSelection { get; }
+namespace QuantConnect.Tests.Engine.DataFeeds
+{
+    internal class DataManagerStub : DataManager
+    {
+        public DataManagerStub()
+        : base(new NullDataFeed(), null)
+        {
+
+        }
+
+        public DataManagerStub(IAlgorithm algorithm)
+            : base(new NullDataFeed(), algorithm)
+        {
+
+        }
     }
 }

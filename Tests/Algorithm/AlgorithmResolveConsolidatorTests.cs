@@ -16,7 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Algorithm
         public void TradeBarToTradeBar()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
             var security = algorithm.AddEquity("SPY");
             var consolidator = algorithm.ResolveConsolidator("SPY", Resolution.Minute);
 
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Algorithm
         public void QuoteBarToQuoteBar()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
             var security = algorithm.AddForex("EURUSD");
             var consolidator = algorithm.ResolveConsolidator("EURUSD", Resolution.Minute);
 
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Algorithm
         public void TickTypeTradeToTradeBar()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
             var security = algorithm.AddEquity("SPY", Resolution.Tick);
             var consolidator = algorithm.ResolveConsolidator("SPY", Resolution.Minute);
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Algorithm
         public void TickTypeQuoteToQuoteBar()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
             var security = algorithm.AddForex("EURUSD", Resolution.Tick);
             var consolidator = algorithm.ResolveConsolidator("EURUSD", Resolution.Minute);
 
@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Algorithm
         public void TickTypeTradeToTick()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
             var security = algorithm.AddEquity("SPY", Resolution.Tick);
             var consolidator = algorithm.ResolveConsolidator("SPY", Resolution.Tick);
 
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Algorithm
         public void TickTypeQuoteToTick()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
             var security = algorithm.AddForex("EURUSD", Resolution.Tick);
             var consolidator = algorithm.ResolveConsolidator("EURUSD", Resolution.Tick);
 

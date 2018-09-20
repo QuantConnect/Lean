@@ -19,7 +19,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             bool eventHandlerFired = false;
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddEquity("SPY");
             var consolidator = new IdentityDataConsolidator<BaseData>();
             consolidator.DataConsolidated += (sender, consolidated) => eventHandlerFired = true;

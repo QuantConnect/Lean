@@ -112,7 +112,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
 
             _bridge = new BusyBlockingCollection<TimeSlice>();
-            _universeSelection = new UniverseSelection(this, algorithm);
+            _universeSelection = subscriptionManager.UniverseSelection;
 
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));

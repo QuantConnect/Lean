@@ -25,12 +25,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// DataManager will manage the subscriptions for both the DataFeeds and the SubscriptionManager
     /// </summary>
-    public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager
+    public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
+        private readonly IDataFeed _dataFeed;
+
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
         private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptionManagerSubscriptions
             = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
+
+        /// <summary>
+        /// Creates a new instance of the DataManager
+        /// </summary>
+        public DataManager(IDataFeed dataFeed, IAlgorithm algorithm)
+        {
+            _dataFeed = dataFeed;
+            UniverseSelection = new UniverseSelection(dataFeed, algorithm);
+        }
 
         #region IDataFeedSubscriptionManager
 
@@ -70,6 +81,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public int SubscriptionManagerCount()
         {
             return _subscriptionManagerSubscriptions.Skip(0).Count();
+        }
+
+        #endregion
+
+        #region IDataManager
+
+        /// <summary>
+        /// Get the universe selection instance
+        /// </summary>
+        public UniverseSelection UniverseSelection { get; }
+
+        /// <summary>
+        /// Returns an enumerable which provides the data to stream to the algorithm
+        /// </summary>
+        public IEnumerable<TimeSlice> StreamData()
+        {
+            return _dataFeed;
         }
 
         #endregion

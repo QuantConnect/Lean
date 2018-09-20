@@ -19,7 +19,6 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -32,9 +31,10 @@ namespace QuantConnect.Tests.Engine
         [Test]
         public void DoesNotSetAlgorithmRunTimeErrorOnDisconnectIfAllSecuritiesClosed()
         {
-            DataManager dataManager;
             var referenceTime = DateTime.UtcNow;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" });
+            var algorithm = new AlgorithmStub();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.SetDateTime(referenceTime);
             algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(Enumerable.Empty<MarketHoursSegment>(), referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
             var job = new LiveNodePacket();
@@ -54,8 +54,9 @@ namespace QuantConnect.Tests.Engine
         [Test]
         public void DoesNotSetRunTimeErrorWhenReconnectMessageComesThrough()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" });
+            var algorithm = new AlgorithmStub();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             var referenceTime = DateTime.UtcNow;
             algorithm.SetDateTime(referenceTime);
             var localReferencTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);

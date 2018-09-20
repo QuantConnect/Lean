@@ -22,7 +22,7 @@ using QuantConnect.Tests.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Algorithm
         public void Setup()
         {
             _algorithm = new QCAlgorithm();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _spy = _algorithm.AddEquity("SPY").Symbol;
 
             _indicatorTestsTypes =
@@ -163,7 +163,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Lean.Engine.DataFeeds import *
 
 algo = QCAlgorithm()
-algo.SubscriptionManager.SetDataManager(DataManager())
+algo.SubscriptionManager.SetDataManager(DataManager(None, algo))
 forex = algo.AddForex('EURUSD', Resolution.Daily)
 indicator = IchimokuKinkoHyo('EURUSD', 9, 26, 26, 52, 26, 26)
 algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";

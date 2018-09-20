@@ -21,7 +21,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -41,6 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         private static bool LogsEnabled = false; // this is for travis log no to fill up and reach the max size.
         private ManualTimeProvider _manualTimeProvider;
+        private AlgorithmStub _algorithm;
         private readonly DateTime _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
 
         [SetUp]
@@ -49,6 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider = new ManualTimeProvider();
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            _algorithm = new AlgorithmStub();
         }
 
         [TearDown]
@@ -61,13 +62,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EmitsData()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, forex: new List<string> { Symbols.EURUSD });
-
-            var feed = RunDataFeed(algorithm, dataManager);
+            var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD });
 
             var emittedData = false;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(10), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), true, ts =>
             {
                 if (ts.Slice.HasData)
                 {
@@ -84,15 +82,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesMultipleSecurities()
         {
-            DataManager dataManager;
             var equities = new List<string> { "SPY", "IBM", "AAPL", "GOOG", "MSFT", "BAC", "GS" };
             var forex = new List<string> { "EURUSD", "USDJPY", "GBPJPY", "AUDUSD", "NZDUSD" };
-            var algorithm = new AlgorithmStub(out dataManager, equities: equities, forex: forex);
 
-            var feed = RunDataFeed(algorithm, dataManager);
+            var feed = RunDataFeed(equities: equities, forex: forex);
 
             var emittedData = false;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 var delta = (DateTime.UtcNow - ts.Time).TotalMilliseconds;
                 var values = ts.Slice.Keys.Select(x => x.Value).ToList();
@@ -107,22 +103,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void PerformanceBenchmark()
         {
-            DataManager dataManager;
             var symbolCount = 600;
-            var algorithm = new AlgorithmStub(out dataManager, Resolution.Tick,
-                equities: Enumerable.Range(0, symbolCount).Select(x => "E" + x.ToString()).ToList()
-                );
-
-            var securitiesCount = algorithm.Securities.Count;
-            var expected = algorithm.Securities.Keys.ToHashSet();
-            Console.WriteLine("Securities.Count: " + securitiesCount);
 
             FuncDataQueueHandler queue;
             var count = new Count();
             var stopwatch = Stopwatch.StartNew();
-            var feed = RunDataFeed(algorithm, out queue, dataManager, fdqh => ProduceBenchmarkTicks(fdqh, count));
+            var feed = RunDataFeed(out queue, fdqh => ProduceBenchmarkTicks(fdqh, count), Resolution.Tick,
+                equities: Enumerable.Range(0, symbolCount).Select(x => "E" + x.ToString()).ToList());
 
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), ts =>
+            var securitiesCount = _algorithm.Securities.Count;
+            var expected = _algorithm.Securities.Keys.ToHashSet();
+            Console.WriteLine("Securities.Count: " + securitiesCount);
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 ConsoleWriteLine("Count: " + ts.Slice.Keys.Count + " " + DateTime.UtcNow.ToString("o"));
                 if (ts.Slice.Keys.Count != securitiesCount)
@@ -151,15 +144,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Current implementation only sends equity/forex subscriptions to the queue handler,
             // new impl sends all, the restriction shouldn't live in the feed, but rather in the
             // queue handler impl
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
-            algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
-            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
+            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
+            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
             var emittedData = false;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(2), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
             {
                 ConsoleWriteLine("Count: " + ts.Slice.Keys.Count + " " + DateTime.UtcNow.ToString("o"));
                 Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
@@ -174,17 +165,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void AddsSubscription_NewUserUniverse()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" });
-
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
+            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" });
 
             var forexFxcmUserUniverse = UserDefinedUniverse.CreateSymbol(SecurityType.Forex, Market.FXCM);
             var emittedData = false;
             var newDataCount = 0;
             var securityChanges = 0;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 securityChanges += ts.SecurityChanges.Count;
                 if (!emittedData)
@@ -196,7 +184,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
 
-                    algorithm.AddSecurities(forex: new List<string> { "EURUSD" });
+                    _algorithm.AddSecurities(forex: new List<string> { "EURUSD" });
                     emittedData = true;
                 }
                 else
@@ -234,24 +222,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void AddsNewUniverse()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, forex: new List<string> { "EURUSD" });
-            algorithm.UniverseSettings.Resolution = Resolution.Second; // Default is Minute and we need something faster
-            algorithm.UniverseSettings.ExtendedMarketHours = true; // Current _startDate is at extended market hours
+            _algorithm.UniverseSettings.Resolution = Resolution.Second; // Default is Minute and we need something faster
+            _algorithm.UniverseSettings.ExtendedMarketHours = true; // Current _startDate is at extended market hours
 
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
-
+            var feed = RunDataFeed(out dataQueueHandler, forex: new List<string> { "EURUSD" });
             var firstTime = false;
             var securityChanges = 0;
             var newDataCount = 0;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 securityChanges += ts.SecurityChanges.Count;
                 if (!firstTime)
                 {
                     Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
-                    algorithm.AddUniverse("TestUniverse", time => new List<string> { "AAPL", "SPY" });
+                    _algorithm.AddUniverse("TestUniverse", time => new List<string> { "AAPL", "SPY" });
                     firstTime = true;
                 }
                 else
@@ -290,16 +275,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void AddsSubscription_SameUserUniverse()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" });
-
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
+            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" });
 
             var emittedData = false;
             var newDataCount = 0;
             var securityChanges = 0;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 securityChanges += ts.SecurityChanges.Count;
                 if (!emittedData)
@@ -311,7 +293,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
 
-                    algorithm.AddSecurities(equities: new List<string> { "AAPL" });
+                    _algorithm.AddSecurities(equities: new List<string> { "AAPL" });
                     emittedData = true;
                 }
                 else
@@ -340,23 +322,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.GreaterOrEqual(newDataCount, 1000);
             Assert.IsTrue(emittedData);
-            Assert.AreEqual(2, securityChanges + algorithm.SecurityChangesRecord.Count);
-            Assert.AreEqual(Symbols.AAPL, algorithm.SecurityChangesRecord.First().AddedSecurities.First().Symbol);
+            Assert.AreEqual(2, securityChanges + _algorithm.SecurityChangesRecord.Count);
+            Assert.AreEqual(Symbols.AAPL, _algorithm.SecurityChangesRecord.First().AddedSecurities.First().Symbol);
         }
 
         [Test]
         public void Unsubscribes()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
-            algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
             var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
+            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), false, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
             {
                 Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
                 if (!emittedData)
@@ -381,19 +361,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RemoveSecurity()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
-            algorithm.SetFinishedWarmingUp();
-            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
+            _algorithm.SetFinishedWarmingUp();
+            _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(algorithm, out dataQueueHandler, dataManager);
+            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
             var securityChanges = 0;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 securityChanges += ts.SecurityChanges.Count;
                 Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
@@ -402,7 +380,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     currentSubscriptionCount = dataQueueHandler.Subscriptions.Count;
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
-                    algorithm.RemoveSecurity(Symbols.SPY);
+                    _algorithm.RemoveSecurity(Symbols.SPY);
                     emittedData = true;
                 }
                 else
@@ -414,18 +392,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             Assert.IsTrue(emittedData);
-            Assert.AreEqual(4, securityChanges + algorithm.SecurityChangesRecord.Count);
-            Assert.AreEqual(Symbols.SPY, algorithm.SecurityChangesRecord.First().RemovedSecurities.First().Symbol);
+            Assert.AreEqual(4, securityChanges + _algorithm.SecurityChangesRecord.Count);
+            Assert.AreEqual(Symbols.SPY, _algorithm.SecurityChangesRecord.First().RemovedSecurities.First().Symbol);
         }
 
         [Test]
         public void BenchmarkTicksPerSecondWithTwentySymbols()
         {
-            DataManager dataManager;
             // this ran at ~25k ticks/per symbol for 20 symbols
-            var algorithm = new AlgorithmStub(out dataManager, Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
 
-            var feed = RunDataFeed(algorithm, dataManager);
+            var feed = RunDataFeed(Resolution.Tick, equities: Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             int ticks = 0;
             var averages = new List<decimal>();
             var timer = new Timer(state =>
@@ -436,7 +412,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 averages.Add(avg);
             }, null, Time.OneSecond, Time.OneSecond);
 
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), false, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
             {
                 Interlocked.Add(ref ticks, ts.Slice.Ticks.Sum(x => x.Value.Count));
             });
@@ -450,14 +426,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EmitsForexDataWithRoundedUtcTimes()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, forex: new List<string> { "EURUSD" });
-
-            var feed = RunDataFeed(algorithm, dataManager);
+            var feed = RunDataFeed(forex: new List<string> { "EURUSD" });
 
             var emittedData = false;
             var lastTime = DateTime.UtcNow;
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 if (!emittedData)
                 {
@@ -477,15 +450,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesManyCustomDataSubscriptions()
         {
-            DataManager dataManager;
-            var resolution = Resolution.Second;
-            var algorithm = new AlgorithmStub(out dataManager);
+            var feed = RunDataFeed();
             for (int i = 0; i < 100; i++)
             {
-                algorithm.AddData<CustomMockedFileBaseData>((100 + i).ToString(), resolution, fillDataForward: false);
+                _algorithm.AddData<CustomMockedFileBaseData>((100 + i).ToString(), Resolution.Second, fillDataForward: false);
             }
-
-            var feed = RunDataFeed(algorithm, dataManager);
 
             int count = 0;
             var emittedData = false;
@@ -493,7 +462,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var previousTime = DateTime.Now;
             Console.WriteLine("start: " + previousTime.ToString("o"));
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), false, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
             {
                 // because this is a remote file we may skip data points while the newest
                 // version of the file is downloading [internet speed] and also we decide
@@ -522,17 +491,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test, Ignore("These tests depend on a remote server")]
         public void HandlesRestApi()
         {
-            DataManager dataManager;
             var resolution = Resolution.Second;
-            var algorithm = new AlgorithmStub(out dataManager);
-            algorithm.AddData<RestApiBaseData>("RestApi", resolution);
             var symbol = SymbolCache.GetSymbol("RestApi");
             FuncDataQueueHandler dqgh;
-            var feed = RunDataFeed(algorithm, out dqgh, dataManager);
+            var feed = RunDataFeed(out dqgh);
+            _algorithm.AddData<RestApiBaseData>("RestApi", resolution);
 
             var count = 0;
             var receivedData = false;
-            var timeZone = algorithm.Securities[symbol].Exchange.TimeZone;
+            var timeZone = _algorithm.Securities[symbol].Exchange.TimeZone;
             RestApiBaseData last = null;
 
             foreach (var ts in feed)
@@ -562,10 +529,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesCoarseFundamentalData()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager);
             Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            algorithm.AddUniverse(new FuncUniverse(
+            _algorithm.AddUniverse(new FuncUniverse(
                 new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero), SecurityInitializer.Null,
                 coarse => coarse.Take(10).Select(x => x.Symbol)
@@ -591,7 +556,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, lck, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(500));
 
             bool yieldedUniverseData = false;
-            var feed = RunDataFeed(algorithm, dataManager, fdqh =>
+            var feed = RunDataFeed(getNextTicksFunction : fdqh =>
             {
                 lock (lck)
                 {
@@ -611,7 +576,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
 
-            ConsumeBridge(algorithm, feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 Assert.IsTrue(feed.Subscriptions.Any(x => x.IsUniverseSelectionSubscription));
             });
@@ -624,9 +589,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FastExitsDoNotThrowUnhandledExceptions()
         {
-            DataManager dataManager;
-            var algorithm = new AlgorithmStub(out dataManager, Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
-            var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
+            var algorithm = new AlgorithmStub();
 
             // job is used to send into DataQueueHandler
             var job = new LiveNodePacket();
@@ -634,9 +597,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            var dataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction);
-
-            var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
+            var feed = new TestableLiveTradingDataFeed();
+            var dataManager = new DataManager(feed, algorithm);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
+            var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
+            feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
@@ -666,15 +632,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(unhandledExceptionWasThrown);
         }
 
-        private IDataFeed RunDataFeed(QCAlgorithm algorithm, DataManager dataManager, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
+        private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second,
+                                    List<string> equities = null,
+                                    List<string> forex = null,
+                                    Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
             FuncDataQueueHandler dataQueueHandler;
-            return RunDataFeed(algorithm, out dataQueueHandler, dataManager, getNextTicksFunction);
+            return RunDataFeed(out dataQueueHandler, getNextTicksFunction, resolution, equities, forex);
         }
 
-        private IDataFeed RunDataFeed(QCAlgorithm algorithm, out FuncDataQueueHandler dataQueueHandler, DataManager dataManager, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
+        private IDataFeed RunDataFeed(out FuncDataQueueHandler dataQueueHandler, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
+            Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
         {
-            algorithm.SetStartDate(_startDate);
+            _algorithm.SetStartDate(_startDate);
 
             var lastTime = _manualTimeProvider.GetUtcNow();
             getNextTicksFunction = getNextTicksFunction ?? (fdqh =>
@@ -682,12 +652,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var time = _manualTimeProvider.GetUtcNow();
                 if (time == lastTime) return Enumerable.Empty<BaseData>();
                 lastTime = time;
-                return fdqh.Subscriptions.Where(symbol => !algorithm.UniverseManager.ContainsKey(symbol)) // its not a universe
+                return fdqh.Subscriptions.Where(symbol => !_algorithm.UniverseManager.ContainsKey(symbol)) // its not a universe
                     .Select(symbol => new Tick(lastTime.ConvertFromUtc(TimeZones.NewYork), symbol, 1, 2)
                     {
                         Quantity = 1,
                         // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.
-                        TickType = algorithm.Securities.ContainsKey(symbol) ? algorithm.Securities[symbol].SubscriptionDataConfig.TickType : TickType.Trade
+                        TickType = _algorithm.Securities.ContainsKey(symbol) ? _algorithm.Securities[symbol].SubscriptionDataConfig.TickType : TickType.Trade
                     });
             });
 
@@ -701,9 +671,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, _manualTimeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
+            var dataManager = new DataManager(feed, _algorithm);
+            _algorithm.SubscriptionManager.SetDataManager(dataManager);
+            _algorithm.AddSecurities(resolution, equities, forex);
 
-            algorithm.PostInitialize();
+            feed.Initialize(_algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
+
+            _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
 
             var feedThreadStarted = new ManualResetEvent(false);
@@ -719,12 +693,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return feed;
         }
 
-        private void ConsumeBridge(IAlgorithm algorithm, IDataFeed feed, TimeSpan timeout, Action<TimeSlice> handler)
+        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, Action<TimeSlice> handler)
         {
-            ConsumeBridge(algorithm, feed, timeout, false, handler);
+            ConsumeBridge(feed, timeout, false, handler);
         }
 
-        private void ConsumeBridge(IAlgorithm algorithm, IDataFeed feed, TimeSpan timeout, bool alwaysInvoke, Action<TimeSlice> handler, bool noOutput = true)
+        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, bool alwaysInvoke, Action<TimeSlice> handler, bool noOutput = true)
         {
             var endTime = DateTime.UtcNow.Add(timeout);
             bool startedReceivingata = false;
@@ -744,7 +718,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     handler(timeSlice);
                 }
-                algorithm.OnEndOfTimeStep();
+                _algorithm.OnEndOfTimeStep();
                 _manualTimeProvider.AdvanceSeconds(1);
                 if (endTime <= DateTime.UtcNow)
                 {
@@ -783,17 +757,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class TestableLiveTradingDataFeed : LiveTradingDataFeed
     {
         private readonly ITimeProvider _timeProvider;
-        private readonly IDataQueueHandler _dataQueueHandler;
+        public IDataQueueHandler DataQueueHandler;
 
-        public TestableLiveTradingDataFeed(IDataQueueHandler dataQueueHandler, ITimeProvider timeProvider = null)
+        public TestableLiveTradingDataFeed(IDataQueueHandler dataQueueHandler = null, ITimeProvider timeProvider = null)
         {
-            _dataQueueHandler = dataQueueHandler;
+            DataQueueHandler = dataQueueHandler;
             _timeProvider = timeProvider ?? new RealTimeProvider();
         }
 
         protected override IDataQueueHandler GetDataQueueHandler()
         {
-            return _dataQueueHandler;
+            return DataQueueHandler;
         }
 
         protected override ITimeProvider GetTimeProvider()

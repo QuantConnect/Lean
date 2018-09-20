@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Algorithm;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Algorithm
         public void Setup()
         {
             _algo = new QCAlgorithm();
-            _algo.SubscriptionManager.SetDataManager(new DataManager());
+            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
             SymbolCache.TryRemove(ForexSym);
             SymbolCache.TryRemove(Sym);
         }

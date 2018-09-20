@@ -23,7 +23,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             var timeKeeper = new TimeKeeper(DateTime.UtcNow);
             var subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
-            subscriptionManager.SetDataManager(new DataManager());
+            subscriptionManager.SetDataManager(new DataManagerStub());
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(5);
             var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.ToList();

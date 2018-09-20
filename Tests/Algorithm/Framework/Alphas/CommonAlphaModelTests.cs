@@ -27,6 +27,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -43,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             _algorithm = new QCAlgorithmFramework();
             _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
             _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
-            _algorithm.SubscriptionManager.SetDataManager(new DataManager());
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             InitializeAlgorithm(_algorithm);
         }
 

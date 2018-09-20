@@ -21,10 +21,10 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using Moq;
 using QuantConnect.Brokerages;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -670,7 +670,7 @@ namespace QuantConnect.Tests.Algorithm
             SymbolCache.Clear();
             // Initialize algorithm
             var algo = new QCAlgorithm();
-            algo.SubscriptionManager.SetDataManager(new DataManager());
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetCash(100000);
             algo.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
             algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());

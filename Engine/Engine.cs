@@ -108,6 +108,7 @@ namespace QuantConnect.Lean.Engine
                 threadResults.Start();
 
                 IBrokerage brokerage = null;
+                DataManager dataManager = null;
                 try
                 {
                     // Save algorithm to cache, load algorithm instance:
@@ -123,7 +124,7 @@ namespace QuantConnect.Lean.Engine
                     IBrokerageFactory factory;
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
-                    var dataManager = new DataManager();
+                    dataManager = new DataManager(_algorithmHandlers.DataFeed, algorithm);
 
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 
@@ -276,7 +277,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Alphas, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, dataManager, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Alphas, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {

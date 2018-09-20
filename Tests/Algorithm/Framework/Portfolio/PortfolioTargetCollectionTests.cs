@@ -18,10 +18,10 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -217,7 +217,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             public FakeAlgorithm()
             {
-                SubscriptionManager.SetDataManager(new DataManager());
+                SubscriptionManager.SetDataManager(new DataManagerStub(this));
             }
         }
     }

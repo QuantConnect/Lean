@@ -23,8 +23,8 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, abcConfig, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, abcConfig, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, minimumResolution, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
 
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.USDJPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
 
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var symbol = Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM);
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(symbol, new Security(SecurityExchangeHours, subscriptions.Add(symbol, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
 
@@ -214,7 +214,7 @@ namespace QuantConnect.Tests.Common.Securities
                 {"XAU", new Cash("XAU", 100, 17) }
             };
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
 
             book.EnsureCurrencyDataFeeds(securities, subscriptions, AlwaysOpenMarketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, SecurityChanges.None);
@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.USDJPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
 
@@ -268,7 +268,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("GBP", cash);
 
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.GBPUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.GBPUSD, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
 
@@ -300,7 +300,7 @@ namespace QuantConnect.Tests.Common.Securities
                 {"USD", new Cash("USD", 100, 1) },
                 {"EUR", new Cash("EUR", 100, 1.2m) }
             };
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManager());
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper, new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
 
             book.EnsureCurrencyDataFeeds(securities, subscriptions, AlwaysOpenMarketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, SecurityChanges.None);

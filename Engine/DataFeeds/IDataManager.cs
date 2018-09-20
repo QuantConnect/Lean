@@ -14,21 +14,23 @@
  *
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// DataFeedSubscriptionManager interface will manage the subscriptions for the Data Feed
+    /// IDataManager is the engines view of the Data Manager.
     /// </summary>
-    public interface IDataFeedSubscriptionManager
+    public interface IDataManager
     {
-        /// <summary>
-        /// Gets the data feed subscription collection
-        /// </summary>
-        SubscriptionCollection DataFeedSubscriptions { get; }
-
         /// <summary>
         /// Get the universe selection instance
         /// </summary>
         UniverseSelection UniverseSelection { get; }
+
+        /// <summary>
+        /// Returns an enumerable which provides the data to stream to the algorithm
+        /// </summary>
+        IEnumerable<TimeSlice> StreamData();
     }
 }
