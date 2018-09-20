@@ -114,7 +114,7 @@ namespace QuantConnect.Data.Market
         public override string ToString()
         {
             var type = Type == SplitType.Warning ? "Split Warning" : "Split";
-            return $"{type}: {Symbol}: {SplitFactor}";
+            return $"{type}: {Symbol}: {SplitFactor} | {ReferencePrice}";
         }
 
         /// <summary>
