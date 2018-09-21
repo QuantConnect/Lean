@@ -35,7 +35,7 @@ namespace QuantConnect.Brokerages.Alpaca
         public event Action<Markets.IStreamQuote> QuoteReceived;
 
         /// <summary>
-        /// The event fired when a new quote message is received
+        /// The event fired when a new trade message is received
         /// </summary>
         public event Action<Markets.IStreamTrade> TradeReceived;
 

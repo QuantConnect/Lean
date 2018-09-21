@@ -83,7 +83,7 @@ namespace QuantConnect.Brokerages.Alpaca
             // read values from the brokerage data
             var keyId = Read<string>(job.BrokerageData, "alpaca-key-id", errors);
             var secretKey = Read<string>(job.BrokerageData, "alpaca-secret-key", errors);
-            var baseUrl = Read<string>(job.BrokerageData, "alpaca-base-url", errors);
+            var tradingMode = Read<string>(job.BrokerageData, "alpaca-trading-mode", errors);
 
             if (errors.Count != 0)
             {
@@ -91,7 +91,14 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, keyId, secretKey, baseUrl);
+            tradingMode = tradingMode.ToLower();
+            if (!tradingMode.Equals("live") && !tradingMode.Equals("paper"))
+            {
+                // if the trading mode is invalid, do not proceed further
+                throw new Exception("Available trading mode: paper/live");
+            }
+
+            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, keyId, secretKey, tradingMode);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
