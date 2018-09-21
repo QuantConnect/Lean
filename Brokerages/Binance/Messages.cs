@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using QuantConnect.Orders;
 using System;
 
 namespace QuantConnect.Brokerages.Binance.Messages
@@ -98,6 +99,44 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
         [JsonProperty("q")]
         public decimal Quantity { get; private set; }
+    }
+
+    public class Execution : BaseMessage
+    {
+        [JsonProperty("i")]
+        public string OrderId { get; set; }
+
+        [JsonProperty("t")]
+        public string TradeId { get; set; }
+
+        [JsonProperty("I")]
+        public string Ignore { get; set; }
+
+        [JsonProperty("x")]
+        public string ExecutionType { get; private set; }
+
+        [JsonProperty("X")]
+        public string OrderStatus { get; private set; }
+
+        [JsonProperty("T")]
+        public long TransactionTime { get; set; }
+
+        [JsonProperty("L")]
+        public decimal LastExecutedPrice { get; set; }
+
+        [JsonProperty("l")]
+        public decimal LastExecutedQuantity { get; set; }
+
+        [JsonProperty("S")]
+        public string Side { get; set; }
+
+        [JsonProperty("n")]
+        public decimal Fee { get; set; }
+
+        [JsonProperty("N")]
+        public string FeeCurrency { get; set; }
+
+        public OrderDirection Direction => Side.Equals("BUY", StringComparison.OrdinalIgnoreCase) ? OrderDirection.Buy : OrderDirection.Sell;
     }
 #pragma warning restore 1591
 }

@@ -80,6 +80,23 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates an instance of a websockets brokerage
         /// </summary>
+        /// <param name="restClient">Rest client instance</param>
+        /// <param name="apiKey">Brokerage api auth key</param>
+        /// <param name="apiSecret">Brokerage api auth secret</param>
+        /// <param name="market">Name of market</param>
+        /// <param name="name">Name of brokerage</param>
+        public BaseWebsocketsBrokerage(IRestClient restClient, string apiKey, string apiSecret, string market, string name)
+            : base(name)
+        {
+            RestClient = restClient;
+            _market = market;
+            ApiSecret = apiSecret;
+            ApiKey = apiKey;
+        }
+
+        /// <summary>
+        /// Creates an instance of a websockets brokerage
+        /// </summary>
         /// <param name="wssUrl">Websockets base url</param>
         /// <param name="websocket">Websocket client instance</param>
         /// <param name="restClient">Rest client instance</param>
@@ -87,7 +104,8 @@ namespace QuantConnect.Brokerages
         /// <param name="apiSecret">Brokerage api auth secret</param>
         /// <param name="market">Name of market</param>
         /// <param name="name">Name of brokerage</param>
-        public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) : base(name)
+        public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) 
+            : this(restClient, apiKey, apiSecret, market, name)
         {
             WebSocket = websocket;
 
@@ -95,11 +113,6 @@ namespace QuantConnect.Brokerages
 
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
-
-            RestClient = restClient;
-            _market = market;
-            ApiSecret = apiSecret;
-            ApiKey = apiKey;
         }
 
         /// <summary>

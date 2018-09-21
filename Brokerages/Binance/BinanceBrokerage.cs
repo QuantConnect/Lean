@@ -45,6 +45,8 @@ namespace QuantConnect.Brokerages.Binance
 
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
         private readonly string _wssUrl;
+        private readonly IAlgorithm _algorithm;
+        private readonly ISecurityProvider _securityProvider;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
 
         /// <summary>
@@ -57,18 +59,26 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public BinanceBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base($"{wssUrl}/ws/open", new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
+            : base(new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
         {
-            // connect to fake /open stream channel on init
+            _algorithm = algorithm;
+            _securityProvider = algorithm?.Portfolio;
 
             _wssUrl = wssUrl;
+            StartSession();
+
+            WebSocket = new WebSocketWrapper();
+            WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}");
+
+            WebSocket.Message += OnMessage;
+            WebSocket.Error += OnError;
         }
 
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
-        public override bool IsConnected => WebSocket.IsOpen;
+        public override bool IsConnected => !string.IsNullOrEmpty(SessionId) && WebSocket.IsOpen;
 
         /// <summary>
         /// Closes the websockets connection
@@ -78,6 +88,7 @@ namespace QuantConnect.Brokerages.Binance
             base.Disconnect();
 
             WebSocket.Close();
+            StopSession();
         }
 
         /// <summary>
@@ -432,7 +443,7 @@ namespace QuantConnect.Brokerages.Binance
             Wait(() => !WebSocket.IsOpen);
 
             var streams = ChannelList.Select((pair) => string.Format("{0}@depth/{0}@trade", pair.Value.Name));
-            WebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
+            WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}/{string.Join("/", streams)}");
 
             // connect to new endpoing
             Reconnect();
