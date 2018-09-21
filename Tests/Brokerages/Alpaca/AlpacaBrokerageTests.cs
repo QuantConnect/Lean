@@ -39,9 +39,9 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         {
             var accountKeyId = Config.Get("alpaca-key-id"); ;
             var secretKey = Config.Get("alpaca-secret-key");
-            var baseUrl = Config.Get("alpaca-base-url");
+            var tradingMode = Config.Get("alpaca-trading-mode");
 
-            var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, accountKeyId, secretKey, baseUrl);
+            var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, accountKeyId, secretKey, tradingMode);
 
             return brokerage;
         }
