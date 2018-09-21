@@ -18,10 +18,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Python;
 
 namespace QuantConnect.Securities
 {
@@ -716,6 +718,24 @@ namespace QuantConnect.Securities
                           $"MarginUsed: {marginUsed.ToString("F2", CultureInfo.InvariantCulture)}, " +
                           $"MarginRemaining: {marginRemaining.ToString("F2", CultureInfo.InvariantCulture)}");
             }
+        }
+
+        /// <summary>
+        /// Sets the margin call model
+        /// </summary>
+        /// <param name="marginCallModel">Model that represents a portfolio's model to executed margin call orders.</param>
+        public void SetMarginCallModel(IMarginCallModel marginCallModel)
+        {
+            MarginCallModel = marginCallModel;
+        }
+
+        /// <summary>
+        /// Sets the margin call model
+        /// </summary>
+        /// <param name="pyObject">Model that represents a portfolio's model to executed margin call orders.</param>
+        public void SetMarginCallModel(PyObject pyObject)
+        {
+            SetMarginCallModel(new MarginCallModelPythonWrapper(pyObject));
         }
     }
 }
