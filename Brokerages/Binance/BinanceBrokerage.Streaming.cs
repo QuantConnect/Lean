@@ -103,13 +103,17 @@ namespace QuantConnect.Brokerages.Binance
             _userDataCancellationTokenSource?.Cancel();
             _userDataMonitorThread?.Join();
 
-            var ping = new RestRequest(userDataStreamEndpoint, Method.DELETE);
-            ping.AddHeader(KeyHeader, ApiKey);
-            ping.AddParameter(
-                "application/x-www-form-urlencoded",
-                Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
-                ParameterType.RequestBody
-            );
+            if (!string.IsNullOrEmpty(SessionId))
+            {
+                var request = new RestRequest(userDataStreamEndpoint, Method.DELETE);
+                request.AddHeader(KeyHeader, ApiKey);
+                request.AddParameter(
+                    "application/x-www-form-urlencoded",
+                    Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
+                    ParameterType.RequestBody
+                );
+                ExecuteRestRequest(request);
+            }
         }
     }
 }

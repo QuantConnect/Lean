@@ -51,19 +51,6 @@ namespace QuantConnect.Brokerages.Binance
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
 
         /// <summary>
-        /// Constructor for brokerage (public methods)
-        /// </summary>
-        /// <param name="restUrl">rest api url</param>
-        /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
-        /// <param name="priceProvider">Lean price provider</param>
-        public BinanceBrokerage(string restUrl, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base(new RestClient(restUrl), null, null, Market.Binance, "Binance")
-        {
-            _algorithm = algorithm;
-            _securityProvider = algorithm?.Portfolio;
-        }
-
-        /// <summary>
         /// Constructor for brokerage
         /// </summary>
         /// <param name="wssUrl">websockets url</param>
@@ -79,10 +66,7 @@ namespace QuantConnect.Brokerages.Binance
             _securityProvider = algorithm?.Portfolio;
 
             _wssUrl = wssUrl;
-            StartSession();
-
             WebSocket = new WebSocketWrapper();
-            WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}");
 
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
@@ -95,13 +79,27 @@ namespace QuantConnect.Brokerages.Binance
         public override bool IsConnected => !string.IsNullOrEmpty(SessionId) && WebSocket.IsOpen;
 
         /// <summary>
+        /// Creates wss connection
+        /// </summary>
+        public override void Connect()
+        {
+            if (IsConnected)
+                return;
+
+            StartSession();
+            WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}");
+
+            base.Connect();
+        }
+
+        /// <summary>
         /// Closes the websockets connection
         /// </summary>
         public override void Disconnect()
         {
             base.Disconnect();
 
-            WebSocket.Close();
+            WebSocket?.Close();
             StopSession();
         }
 
