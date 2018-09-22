@@ -317,6 +317,8 @@
     <Compile Include="Benzinga\BenzingaNewsDataConverter.cs" />
     <Compile Include="Benzinga\BenzingaProgram.cs" />
     <Compile Include="Benzinga\BenzingaNewsDataDownloader.cs" />
+    <Compile Include="BinanceDownloader\BinanceDownloaderProgram.cs" />
+    <Compile Include="BinanceDownloader\BinanceDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="CoarseUniverseGenerator\SecurityIdentifierContext.cs" />

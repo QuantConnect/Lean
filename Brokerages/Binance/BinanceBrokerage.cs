@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -48,6 +49,19 @@ namespace QuantConnect.Brokerages.Binance
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityProvider _securityProvider;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
+
+        /// <summary>
+        /// Constructor for brokerage (public methods)
+        /// </summary>
+        /// <param name="restUrl">rest api url</param>
+        /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
+        /// <param name="priceProvider">Lean price provider</param>
+        public BinanceBrokerage(string restUrl, IAlgorithm algorithm, IPriceProvider priceProvider)
+            : base(new RestClient(restUrl), null, null, Market.Binance, "Binance")
+        {
+            _algorithm = algorithm;
+            _securityProvider = algorithm?.Portfolio;
+        }
 
         /// <summary>
         /// Constructor for brokerage
@@ -355,7 +369,57 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(Data.HistoryRequest request)
         {
-            return base.GetHistory(request);
+            if (request.Resolution == Resolution.Tick || request.Resolution == Resolution.Second)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution",
+                    $"{request.Resolution} resolution is not supported, no history returned"));
+                yield break;
+            }
+
+            string resolution = ConvertResolution(request.Resolution);
+            long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
+            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+            long startMTS = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
+            long endMTS = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
+            string endpoint = $"/api/v1/klines?symbol={symbol}&interval={resolution}&limit=1000";
+
+            while ((endMTS - startMTS) > resolutionInMS)
+            {
+                var timeframe = $"&startTime={startMTS}&endTime={endMTS}";
+
+                var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
+                var response = ExecuteRestRequest(restRequest);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    throw new Exception($"BinanceBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                }
+
+                var klines = JsonConvert.DeserializeObject<object[][]>(response.Content)
+                    .Select(entries => new Messages.Kline(entries))
+                    .ToList();
+
+                startMTS = klines.Last().OpenTime + resolutionInMS;
+                var period = request.Resolution.ToTimeSpan();
+
+                foreach (var kline in klines)
+                {
+                    yield return new TradeBar()
+                    {
+                        Time = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime),
+                        Symbol = request.Symbol,
+                        Low = kline.Low,
+                        High = kline.High,
+                        Open = kline.Open,
+                        Close = kline.Close,
+                        Volume = kline.Volume,
+                        Value = kline.Close,
+                        DataType = MarketDataType.TradeBar,
+                        Period = period,
+                        EndTime = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime + (long)period.TotalMilliseconds)
+                    };
+                }
+            }
         }
 
         /// <summary>
