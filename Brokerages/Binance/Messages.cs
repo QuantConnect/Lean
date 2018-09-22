@@ -138,5 +138,35 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
         public OrderDirection Direction => Side.Equals("BUY", StringComparison.OrdinalIgnoreCase) ? OrderDirection.Buy : OrderDirection.Sell;
     }
+
+    public class Kline
+    {
+        public long OpenTime { get; }
+        public decimal Open { get; }
+        public decimal Close { get; }
+        public decimal High { get; }
+        public decimal Low { get; }
+        public decimal Volume { get; }
+
+        public Kline() { }
+
+        public Kline(long msts, decimal close)
+        {
+            OpenTime = msts;
+            Open = Close = High = Low = close;
+            Volume = 0;
+        }
+
+        public Kline(object[] entries)
+        {
+            OpenTime = Convert.ToInt64(entries[0]);
+            Open = ((string)entries[1]).ToDecimal();
+            Close = ((string)entries[4]).ToDecimal();
+            High = ((string)entries[2]).ToDecimal();
+            Low = ((string)entries[3]).ToDecimal();
+            Volume = ((string)entries[5]).ToDecimal();
+        }
+    }
+
 #pragma warning restore 1591
 }

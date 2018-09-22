@@ -87,7 +87,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public Messages.PriceTicker[] GetUsdConversionRates()
         {
-            
+
             string endpoint = $"/api/v3/ticker/price";
             var req = new RestRequest(endpoint, Method.GET);
             var response = ExecuteRestRequest(req);
@@ -144,6 +144,25 @@ namespace QuantConnect.Brokerages.Binance
                     return "MARKET";
                 default:
                     throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+            }
+        }
+
+        private readonly Dictionary<Resolution, string> _knownResolutions = new Dictionary<Resolution, string>()
+        {
+            { Resolution.Minute, "1m" },
+            { Resolution.Hour,   "1h" },
+            { Resolution.Daily,  "1d" }
+        };
+
+        private string ConvertResolution(Resolution resolution)
+        {
+            if (_knownResolutions.ContainsKey(resolution))
+            {
+                return _knownResolutions[resolution];
+            }
+            else
+            {
+                throw new ArgumentException($"BinanceBrokerage.ConvertResolution: Unsupported resolution type: {resolution}");
             }
         }
 
