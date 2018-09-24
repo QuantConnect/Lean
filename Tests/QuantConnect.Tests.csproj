@@ -155,6 +155,7 @@
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
+    <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
