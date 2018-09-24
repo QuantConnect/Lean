@@ -15,11 +15,13 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Logging")
 AddReference("QuantConnect.Indicators")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
+from QuantConnect.Logging import Log
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
@@ -187,6 +189,11 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
             if not history.empty:
                 ticker = SymbolCache.GetTicker(symbol)
+
+                if ticker not in history.index.levels[0]:
+                    Log.Trace(f'BlackLittermanOptimizationPortfolioConstructionModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
+                    continue
+
                 symbolData.WarmUpIndicators(history.loc[ticker])
 
             self.symbolDataBySymbol[symbol] = symbolData
