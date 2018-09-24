@@ -11,7 +11,7 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 # Option 1: Download from Master
 # RUN \
 #	wget https://github.com/QuantConnect/Lean/archive/master.zip && \
-#	unzip master.zip /root/Lean && \
+#	unzip master.zip -d /root/Lean && \
 #	cd /root/Lean
 # RUN \
 #	sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
