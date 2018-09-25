@@ -543,8 +543,16 @@ namespace QuantConnect.Securities
         /// Applies a dividend to the portfolio
         /// </summary>
         /// <param name="dividend">The dividend to be applied</param>
-        public void ApplyDividend(Dividend dividend)
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        public void ApplyDividend(Dividend dividend, bool liveMode)
         {
+            // we currently don't properly model dividend payable dates, so in
+            // live mode it's more accurate to rely on the brokerage cash sync
+            if (liveMode)
+            {
+                return;
+            }
+
             var security = Securities[dividend.Symbol];
 
             // only apply dividends when we're in raw mode or split adjusted mode

@@ -1512,6 +1512,31 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(initialCash, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
         }
 
+        [Test]
+        [TestCase(DataNormalizationMode.Adjusted)]
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.SplitAdjusted)]
+        [TestCase(DataNormalizationMode.TotalReturn)]
+        public void NeverAppliesDividendInLiveMode(DataNormalizationMode mode)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            var initialCash = algorithm.Portfolio.CashBook.TotalValueInAccountCurrency;
+
+            var spy = algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m));
+            spy.Holdings.SetHoldings(100m, 100);
+
+            var dividend = new Dividend(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m);
+            algorithm.Portfolio.ApplyDividend(dividend, algorithm.LiveMode);
+
+            // confirm no changes were made
+            Assert.AreEqual(100m, spy.Price);
+            Assert.AreEqual(100, spy.Holdings.Quantity);
+            Assert.AreEqual(initialCash, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)

@@ -477,7 +477,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     // apply the dividend event to the portfolio
-                    algorithm.Portfolio.ApplyDividend(dividend);
+                    algorithm.Portfolio.ApplyDividend(dividend, _liveMode);
 
                     if (_liveMode && security != null)
                     {
