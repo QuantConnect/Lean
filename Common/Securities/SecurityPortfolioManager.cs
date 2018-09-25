@@ -543,8 +543,16 @@ namespace QuantConnect.Securities
         /// Applies a dividend to the portfolio
         /// </summary>
         /// <param name="dividend">The dividend to be applied</param>
-        public void ApplyDividend(Dividend dividend)
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        public void ApplyDividend(Dividend dividend, bool liveMode)
         {
+            // we currently don't properly model dividend payable dates, so in
+            // live mode it's more accurate to rely on the brokerage cash sync
+            if (liveMode)
+            {
+                return;
+            }
+
             var security = Securities[dividend.Symbol];
 
             // only apply dividends when we're in raw mode or split adjusted mode
@@ -563,7 +571,8 @@ namespace QuantConnect.Securities
         /// Applies a split to the portfolio
         /// </summary>
         /// <param name="split">The split to be applied</param>
-        public void ApplySplit(Split split)
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        public void ApplySplit(Split split, bool liveMode)
         {
             var security = Securities[split.Symbol];
 
@@ -573,9 +582,9 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // only apply splits in raw data mode,
+            // only apply splits in live or raw data mode
             var mode = security.DataNormalizationMode;
-            if (mode != DataNormalizationMode.Raw)
+            if (!liveMode && mode != DataNormalizationMode.Raw)
             {
                 return;
             }
