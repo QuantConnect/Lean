@@ -14,11 +14,14 @@
  *
 */
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
         private readonly IDataFeed _dataFeed;
+        private readonly IAlgorithm _algorithm;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -41,6 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
+            _algorithm = algorithm;
         }
 
         #region IDataFeedSubscriptionManager
@@ -60,19 +65,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions => _subscriptionManagerSubscriptions.Select(x => x.Key);
 
         /// <summary>
-        /// Returns true if the given subscription data config is already present for the SubscriptionManager
+        /// Gets existing or adds new SubscriptionDataConfig
         /// </summary>
-        public bool SubscriptionManagerTryAdd(SubscriptionDataConfig config)
+        /// <returns>Returns the SubscriptionDataConfig used</returns>
+        public SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig newConfig)
         {
-            return _subscriptionManagerSubscriptions.TryAdd(config, 0);
-        }
+            if (!_subscriptionManagerSubscriptions.TryAdd(newConfig, 0))
+            {
+                Log.Trace("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + newConfig);
+                return SubscriptionManagerSubscriptions.FirstOrDefault(x => x == newConfig);
+            }
 
-        /// <summary>
-        /// Returns true if the given subscription data config is already present for the SubscriptionManager
-        /// </summary>
-        public bool SubscriptionManagerContainsKey(SubscriptionDataConfig config)
-        {
-            return _subscriptionManagerSubscriptions.ContainsKey(config);
+            // count data subscriptions by symbol, ignoring multiple data types
+            var uniqueCount = SubscriptionManagerSubscriptions
+                .Where(x => !x.Symbol.IsCanonical())
+                .DistinctBy(x => x.Symbol.Value)
+                .Count();
+
+            if (uniqueCount > _algorithm.Settings.DataSubscriptionLimit)
+            {
+                throw new Exception(
+                    $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithm.Settings.DataSubscriptionLimit})." +
+                    "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+            }
+
+            return newConfig;
         }
 
         /// <summary>

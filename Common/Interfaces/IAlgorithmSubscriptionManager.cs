@@ -30,15 +30,10 @@ namespace QuantConnect.Interfaces
         IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions { get; }
 
         /// <summary>
-        /// Adds a new subscription data config for the SubscriptionManager
+        /// Gets existing or adds new SubscriptionDataConfig
         /// </summary>
-        /// <returns>True, if the configuration was added successfully</returns>
-        bool SubscriptionManagerTryAdd(SubscriptionDataConfig config);
-
-        /// <summary>
-        /// Returns true if the given subscription data config is already present for the SubscriptionManager
-        /// </summary>
-        bool SubscriptionManagerContainsKey(SubscriptionDataConfig config);
+        /// <returns>Returns the SubscriptionDataConfig used</returns>
+        SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig config);
 
         /// <summary>
         /// Returns the amount of data config subscriptions processed for the SubscriptionManager
