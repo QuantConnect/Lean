@@ -563,7 +563,8 @@ namespace QuantConnect.Securities
         /// Applies a split to the portfolio
         /// </summary>
         /// <param name="split">The split to be applied</param>
-        public void ApplySplit(Split split)
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        public void ApplySplit(Split split, bool liveMode)
         {
             var security = Securities[split.Symbol];
 
@@ -573,9 +574,9 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // only apply splits in raw data mode,
+            // only apply splits in live or raw data mode
             var mode = security.DataNormalizationMode;
-            if (mode != DataNormalizationMode.Raw)
+            if (!liveMode && mode != DataNormalizationMode.Raw)
             {
                 return;
             }

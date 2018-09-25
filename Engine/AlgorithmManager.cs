@@ -505,7 +505,7 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         // apply the split event to the portfolio
-                        algorithm.Portfolio.ApplySplit(split);
+                        algorithm.Portfolio.ApplySplit(split, _liveMode);
 
                         if (_liveMode && security != null)
                         {

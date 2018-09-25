@@ -1487,6 +1487,31 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(-1, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
+        [Test]
+        [TestCase(DataNormalizationMode.Adjusted)]
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.SplitAdjusted)]
+        [TestCase(DataNormalizationMode.TotalReturn)]
+        public void AlwaysAppliesSplitInLiveMode(DataNormalizationMode mode)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            var initialCash = algorithm.Portfolio.CashBook.TotalValueInAccountCurrency;
+
+            var spy = algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m));
+            spy.Holdings.SetHoldings(100m, 100);
+
+            var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m, SplitType.SplitOccurred);
+            algorithm.Portfolio.ApplySplit(split, algorithm.LiveMode);
+
+            // confirm the split was properly applied to our holdings, no left over cash from split
+            Assert.AreEqual(50m, spy.Price);
+            Assert.AreEqual(200, spy.Holdings.Quantity);
+            Assert.AreEqual(initialCash, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
