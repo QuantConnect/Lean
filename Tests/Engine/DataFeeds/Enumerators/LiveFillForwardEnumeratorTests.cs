@@ -56,6 +56,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // first point is always emitted
             Assert.IsTrue(fillForward.MoveNext());
             Assert.AreEqual(underlying[0], fillForward.Current);
+            Assert.AreEqual(123456, ((TradeBar)fillForward.Current).Volume);
 
             // stepping again without advancing time does nothing, but we'll still
             // return true as per IEnumerator contract
@@ -69,10 +70,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(underlying[0].EndTime, fillForward.Current.Time);
             Assert.AreEqual(underlying[0].Value, fillForward.Current.Value);
             Assert.IsTrue(fillForward.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
 
             // even without stepping the time this will advance since non-null data is ready
             Assert.IsTrue(fillForward.MoveNext());
             Assert.AreEqual(underlying[2], fillForward.Current);
+            Assert.AreEqual(1234560, ((TradeBar)fillForward.Current).Volume);
 
             // step ahead into null data territory
             timeProvider.SetCurrentTime(reference.AddSeconds(4));
@@ -81,6 +84,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(underlying[2].Value, fillForward.Current.Value);
             Assert.AreEqual(timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork), fillForward.Current.EndTime);
             Assert.IsTrue(fillForward.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
 
             Assert.IsTrue(fillForward.MoveNext());
             Assert.IsNull(fillForward.Current);
@@ -91,6 +95,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(underlying[2].Value, fillForward.Current.Value);
             Assert.AreEqual(timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork), fillForward.Current.EndTime);
             Assert.IsTrue(fillForward.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
 
             timeProvider.SetCurrentTime(reference.AddSeconds(6));
 
@@ -98,6 +103,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(underlying[2].Value, fillForward.Current.Value);
             Assert.AreEqual(timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork), fillForward.Current.EndTime);
             Assert.IsTrue(fillForward.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
         }
     }
 }

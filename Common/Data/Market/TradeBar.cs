@@ -559,6 +559,24 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Return a new instance clone of this object, used in fill forward
+        /// </summary>
+        /// <param name="fillForward">True if this is a fill forward clone</param>
+        /// <returns>A clone of the current object</returns>
+        public override BaseData Clone(bool fillForward)
+        {
+            var clone = base.Clone(fillForward);
+
+            if (fillForward)
+            {
+                // zero volume out, since it would skew calculations in volume-based indicators
+                ((TradeBar) clone).Volume = 0;
+            }
+
+            return clone;
+        }
+
+        /// <summary>
         /// Return a new instance clone of this object
         /// </summary>
         public override BaseData Clone()
