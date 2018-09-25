@@ -51,9 +51,8 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
-        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper)
+        public SubscriptionManager(TimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
 
@@ -64,11 +63,10 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
         /// <param name="subscriptionManager">The subscription manager</param>
-        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
-            : this(algorithmSettings, timeKeeper)
+        public SubscriptionManager(TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
+            : this(timeKeeper)
         {
             _subscriptionManager = subscriptionManager;
         }
