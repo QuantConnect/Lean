@@ -48,16 +48,16 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
-        /// <param name="keyId">The Alpaca api key</param>
-        /// <param name="secretKey">The api secret</param>
+        /// <param name="tokenKey">The Alpaca token key</param>
+        /// <param name="tokenSecret">The token secret</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string tradingMode)
+        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string tokenKey, string tokenSecret, string tradingMode)
             : base("Alpaca Brokerage")
         {
             var baseUrl = "api.alpaca.markets";
             if (tradingMode.Equals("paper")) baseUrl = "paper-" + baseUrl;
             baseUrl = "https://" + baseUrl;
-            _api = new AlpacaApiBase(orderProvider, securityProvider, keyId, secretKey, baseUrl);
+            _api = new AlpacaApiBase(orderProvider, securityProvider, tokenKey, tokenSecret, baseUrl);
 
             //// forward events received from API
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);

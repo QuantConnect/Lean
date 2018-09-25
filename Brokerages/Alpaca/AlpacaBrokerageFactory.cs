@@ -55,9 +55,9 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 return new Dictionary<string, string>
                 {
-                    { "alpaca-key-id", Config.Get("alpaca-key-id") },
-                    { "alpaca-secret-key", Config.Get("alpaca-secret-key") },
-                    { "alpaca-base-url", Config.Get("alpaca-base-url") }
+                    { "alpaca-token-key", Config.Get("alpaca-token-key") },
+                    { "alpaca-token-secret", Config.Get("alpaca-token-secret") },
+                    { "alpaca-trading-mode", Config.Get("alpaca-trading-mode") }
                 };
             }
         }
@@ -81,8 +81,8 @@ namespace QuantConnect.Brokerages.Alpaca
             var errors = new List<string>();
 
             // read values from the brokerage data
-            var keyId = Read<string>(job.BrokerageData, "alpaca-key-id", errors);
-            var secretKey = Read<string>(job.BrokerageData, "alpaca-secret-key", errors);
+            var tokenKey = Read<string>(job.BrokerageData, "alpaca-token-key", errors);
+            var tokenSecret = Read<string>(job.BrokerageData, "alpaca-token-secret", errors);
             var tradingMode = Read<string>(job.BrokerageData, "alpaca-trading-mode", errors);
 
             if (errors.Count != 0)
@@ -98,7 +98,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception("Available trading mode: paper/live");
             }
 
-            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, keyId, secretKey, tradingMode);
+            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, tokenKey, tokenSecret, tradingMode);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
