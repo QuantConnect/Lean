@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -32,7 +33,11 @@ namespace QuantConnect.Data.UniverseSelection
     public class UserDefinedUniverse : Universe, INotifyCollectionChanged, ITimeTriggeredUniverse
     {
         private readonly TimeSpan _interval;
-        private readonly HashSet<Symbol> _symbols;
+        private readonly HashSet<SubscriptionDataConfig> _subscriptionDataConfigs = new HashSet<SubscriptionDataConfig>();
+        private readonly HashSet<Symbol> _symbols = new HashSet<Symbol>();
+        // `UniverseSelection.RemoveSecurityFromUniverse()` will query us at `GetSubscriptionRequests()` to get the `SubscriptionDataConfig` and remove it from the DF
+        // and we need to return the config even after the call to `Remove()`
+        private readonly HashSet<SubscriptionDataConfig> _pendingRemovedConfigs = new HashSet<SubscriptionDataConfig>();
         private readonly UniverseSettings _universeSettings;
         private readonly Func<DateTime, IEnumerable<Symbol>> _selector;
 
@@ -71,7 +76,7 @@ namespace QuantConnect.Data.UniverseSelection
             _interval = interval;
             _symbols = symbols.ToHashSet();
             _universeSettings = universeSettings;
-            _selector = time => _symbols;
+            _selector = time => _subscriptionDataConfigs.Select(x => x.Symbol).Union(_symbols);
         }
 
         /// <summary>
@@ -147,7 +152,7 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Adds the specified symbol to this universe
+        /// Adds the specified <see cref="Symbol"/> to this universe
         /// </summary>
         /// <param name="symbol">The symbol to be added to this universe</param>
         /// <returns>True if the symbol was added, false if it was already present</returns>
@@ -162,14 +167,34 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Removes the specified symbol from this universe
+        /// Adds the specified <see cref="SubscriptionDataConfig"/> to this universe
+        /// </summary>
+        /// <param name="subscriptionDataConfig">The subscription data configuration to be added to this universe</param>
+        /// <returns>True if the subscriptionDataConfig was added, false if it was already present</returns>
+        public bool Add(SubscriptionDataConfig subscriptionDataConfig)
+        {
+            if (_subscriptionDataConfigs.Add(subscriptionDataConfig))
+            {
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, subscriptionDataConfig.Symbol));
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the specified <see cref="Symbol"/> from this universe
         /// </summary>
         /// <param name="symbol">The symbol to be removed</param>
         /// <returns>True if the symbol was removed, false if the symbol was not present</returns>
         public bool Remove(Symbol symbol)
         {
-            if (_symbols.Remove(symbol))
+            var toBeRemoved = _subscriptionDataConfigs.Where(x => x.Symbol == symbol).ToList();
+            var removedSymbol = _symbols.Remove(symbol);
+
+            if (toBeRemoved.Any() || removedSymbol)
             {
+                _subscriptionDataConfigs.RemoveWhere(x => x.Symbol == symbol);
+                _pendingRemovedConfigs.UnionWith(toBeRemoved);
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, symbol));
                 return true;
             }
@@ -220,6 +245,42 @@ namespace QuantConnect.Data.UniverseSelection
         {
             var handler = CollectionChanged;
             if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// Gets the subscription requests to be added for the specified security
+        /// </summary>
+        /// <param name="security">The security to get subscriptions for</param>
+        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
+        /// <param name="maximumEndTimeUtc">The max end time</param>
+        /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
+        /// <returns>All subscriptions required by this security</returns>
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc,
+            ISubscriptionDataConfigService subscriptionService)
+        {
+            var result = _subscriptionDataConfigs.Where(x => x.Symbol == security.Symbol).ToList();
+            if (!result.Any())
+            {
+                result = _pendingRemovedConfigs.Where(x => x.Symbol == security.Symbol).ToList();
+                if (result.Any())
+                {
+                    _pendingRemovedConfigs.RemoveWhere(x => x.Symbol == security.Symbol);
+                }
+                else
+                {
+                    result = base.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService).Select(x => x.Configuration).ToList();
+                    // we create subscription data configs ourselves, add the configs
+                    _subscriptionDataConfigs.UnionWith(result);
+                }
+            }
+            return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
+                                                                   universe: this,
+                                                                   security: security,
+                                                                   configuration: config,
+                                                                   startTimeUtc: currentTimeUtc,
+                                                                   endTimeUtc: maximumEndTimeUtc));
         }
     }
 }

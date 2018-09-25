@@ -142,7 +142,12 @@ namespace QuantConnect.Algorithm
                 {
                     var security = kvp.Key;
                     var userDefinedUniverse = kvp.Value;
-                    userDefinedUniverse.Add(security.Symbol);
+                    foreach (var subscriptionDataConfig in security.Subscriptions)
+                    {
+                        // Depending on `security.Subscriptions` (that come from `CreateSecurity` => `SubscriptionManager.Add()`)
+                        // (which will eventually be removed) is an intermediate step.
+                        userDefinedUniverse.Add(subscriptionDataConfig);
+                    }
                 }
 
                 // finally add any pending universes, this will make them available to the data feed
@@ -479,8 +484,7 @@ namespace QuantConnect.Algorithm
                                 TimeSpan.Zero),
                             SecurityInitializer,
                             QuantConnect.Time.MaxTimeSpan,
-                            new List<Symbol> { security.Symbol }
-                        );
+                            new List<Symbol>());
                         _pendingUniverseAdditions.Add(universe);
                     }
                 }
