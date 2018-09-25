@@ -37,11 +37,11 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var accountKeyId = Config.Get("alpaca-key-id"); ;
-            var secretKey = Config.Get("alpaca-secret-key");
+            var tokenKey = Config.Get("alpaca-token-key"); ;
+            var tokenSecret = Config.Get("alpaca-token-secret");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, accountKeyId, secretKey, tradingMode);
+            var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, tokenKey, tokenSecret, tradingMode);
 
             return brokerage;
         }

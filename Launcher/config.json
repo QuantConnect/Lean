@@ -118,8 +118,8 @@
 
   // alpaca configuration
   // available trading mode: 'paper', 'live'
-  "alpaca-key-id": "",
-  "alpaca-secret-key": "",
+  "alpaca-token-key": "",
+  "alpaca-token-secret": "",
   "alpaca-trading-mode": "paper",
 
   // parameters to set in the algorithm (the below are just samples)

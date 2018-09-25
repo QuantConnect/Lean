@@ -63,10 +63,10 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         {
             TestDelegate test = () =>
             {
-                var accountKeyId = Config.Get("alpaca-access-token");
-                var secretKey = Config.Get("alpaca-account-id");
+                var tokenKey = Config.Get("alpaca-token-key");
+                var tokenSecret = Config.Get("alpaca-token-secret");
                 var tradingMode = Config.Get("alpaca-trading-mode");
-                var brokerage = new AlpacaBrokerage(null, null, accountKeyId, secretKey, tradingMode);
+                var brokerage = new AlpacaBrokerage(null, null, tokenKey, tokenSecret, tradingMode);
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);

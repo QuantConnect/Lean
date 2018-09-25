@@ -121,16 +121,16 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
-        /// <param name="keyId">The Alpaca api key</param>
-        /// <param name="secretKey">The api secret</param>
+        /// <param name="tokenKey">The Alpaca token key</param>
+        /// <param name="tokenSecret">The token secret</param>
         /// <param name="baseUrl">The Alpaca base url</param>
-        public AlpacaApiBase(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
+        public AlpacaApiBase(IOrderProvider orderProvider, ISecurityProvider securityProvider, string tokenKey, string tokenSecret, string baseUrl)
             : base("Alpaca Brokerage")
         {
             OrderProvider = orderProvider;
             SecurityProvider = securityProvider;
-            AccountKeyId = keyId;
-            SecretKey = secretKey;
+            AccountKeyId = tokenKey;
+            SecretKey = tokenSecret;
             BaseUrl = baseUrl;
 
             restClient = new Markets.RestClient(AccountKeyId, SecretKey, baseUrl);
