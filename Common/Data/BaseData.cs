@@ -247,7 +247,7 @@ namespace QuantConnect.Data
         /// </remarks>
         /// <param name="fillForward">True if this is a fill forward clone</param>
         /// <returns>A clone of the current object</returns>
-        public BaseData Clone(bool fillForward)
+        public virtual BaseData Clone(bool fillForward)
         {
             var clone = Clone();
             clone._isFillForward = fillForward;

@@ -41,7 +41,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 Time = reference.AddMinutes(x*2),
                 Value = x,
-                Period = dataResolution
+                Period = dataResolution,
+                Volume = (x + 1) * 100
             }).ToList();
             var enumerator = data.GetEnumerator();
 
@@ -55,6 +56,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(reference.AddMinutes(1), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:32 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -62,13 +64,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
-
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:33
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.AreEqual(reference.AddMinutes(3), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -84,13 +87,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Time = reference,
                     Value = 0,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 100
                 },
                 new TradeBar
                 {
                     Time = reference.AddMinutes(4),
                     Value = 1,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 200
                 }
             }.ToList();
             var enumerator = data.GetEnumerator();
@@ -105,6 +110,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:31 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -112,6 +118,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:32 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -119,6 +126,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:33
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -126,6 +134,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -141,13 +150,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Time = reference,
                     Value = 1,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 100
                 },
                 new TradeBar
                 {
                     Time = reference.Date.Add(new TimeSpan(9, 30, 0)),
                     Value = 2,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 200
                 }
             }.ToList();
             var enumerator = data.GetEnumerator();
@@ -162,6 +173,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:30:01 to 9:30:59 (ff)
             for (var i = 1; i < 60; i++)
@@ -171,6 +183,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
                 Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
                 Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+                Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
             }
 
             // 9:31:00
@@ -179,6 +192,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(2, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -192,7 +206,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 Time = reference.AddMinutes(x*2),
                 Value = x,
-                Period = dataResolution
+                Period = dataResolution,
+                Volume = 100
             }).ToList();
             var enumerator = data.GetEnumerator();
 
@@ -206,6 +221,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 3:59 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -213,6 +229,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -220,6 +237,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -235,7 +253,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Time = reference,
                     Value = 0,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 100
                 }
             }.ToList();
 
@@ -251,6 +270,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 3:59 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -258,6 +278,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -265,6 +286,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -280,7 +302,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Time = reference,
                     Value = 0,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 100
                 }
             }.ToList();
             var enumerator = data.GetEnumerator();
@@ -295,6 +318,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 3:39 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -302,6 +326,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -309,6 +334,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -325,13 +351,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Time = reference,
                     Value = 0,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 100
                 },
                 new TradeBar
                 {
                     Time = end - dataResolution,
                     Value = 1,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 200
                 }
             }.ToList();
             var enumerator = data.GetEnumerator();
@@ -346,6 +374,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -353,6 +382,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 10:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -360,6 +390,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -376,19 +407,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Time = reference,
                     Value = 0,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 100
                 },
                 new TradeBar
                 {
                     Time = reference.AddHours(3),
                     Value = 1,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 200
                 },
                 new TradeBar
                 {
                     Time = reference.Date.AddDays(1).AddHours(10) - dataResolution,
                     Value = 2,
-                    Period = dataResolution
+                    Period = dataResolution,
+                    Volume = 300
                 }
             }.ToList();
             var enumerator = data.GetEnumerator();
@@ -403,6 +437,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -410,6 +445,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 6:00 - this is raw data, the FF enumerator doesn't try to perform filtering per se, just filtering on when to FF
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -417,6 +453,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 10:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -424,6 +461,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(2, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(300, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -436,9 +474,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // thurs 6/25
-                new TradeBar{Value = 0, Time = reference, Period = Time.OneDay},
+                new TradeBar{Value = 0, Time = reference, Period = Time.OneDay, Volume = 100},
                 // fri 6/26
-                new TradeBar{Value = 1, Time = reference.AddDays(1), Period = Time.OneDay},
+                new TradeBar{Value = 1, Time = reference.AddDays(1), Period = Time.OneDay, Volume = 200},
             }.ToList();
             var enumerator = data.GetEnumerator();
 
@@ -452,6 +490,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 10:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -459,6 +498,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 11:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -466,6 +506,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 12:00pm (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -473,6 +514,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 1:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -480,6 +522,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 2:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -487,6 +530,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 3:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -494,6 +538,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -501,6 +546,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 12:00am
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -508,6 +554,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -520,9 +567,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // thurs 6/25
-                new TradeBar{Value = 0, Time = reference, Period = Time.OneDay},
+                new TradeBar{Value = 0, Time = reference, Period = Time.OneDay, Volume = 100},
                 // fri 6/26
-                new TradeBar{Value = 1, Time = reference.AddDays(5), Period = Time.OneDay},
+                new TradeBar{Value = 1, Time = reference.AddDays(5), Period = Time.OneDay, Volume = 200},
             }.ToList();
             var enumerator = data.GetEnumerator();
 
@@ -536,6 +583,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == dataResolution);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 6/26
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -543,6 +591,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == dataResolution);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 6/29
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -550,6 +599,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == dataResolution);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 6/30
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -557,6 +607,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == dataResolution);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 7/1
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -564,6 +615,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
             Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == dataResolution);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -576,9 +628,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // thurs 6/25
-                new TradeBar{Value = 0, Time = reference, Period = dataResolution},
+                new TradeBar{Value = 0, Time = reference, Period = dataResolution, Volume = 100},
                 // fri 6/26
-                new TradeBar{Value = 1, Time = reference.Date.AddDays(1), Period = dataResolution},
+                new TradeBar{Value = 1, Time = reference.Date.AddDays(1), Period = dataResolution, Volume = 200},
             }.ToList();
             var enumerator = data.GetEnumerator();
 
@@ -592,24 +644,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(reference.AddHours(1), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 3:30
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.AreEqual(reference.AddHours(1.5), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 4:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.AreEqual(reference.AddHours(2), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 12:00am
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.AreEqual(data.Last().EndTime, fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -622,9 +678,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // thurs 6/25
-                new TradeBar{Value = 0, Time = reference, Period = dataResolution},
+                new TradeBar{Value = 0, Time = reference, Period = dataResolution, Volume = 100},
                 // fri 6/26
-                new TradeBar{Value = 1, Time = reference.Date.AddHours(9), Period = dataResolution},
+                new TradeBar{Value = 1, Time = reference.Date.AddHours(9), Period = dataResolution, Volume = 200},
             }.ToList();
             var enumerator = data.GetEnumerator();
 
@@ -638,18 +694,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(reference.AddHours(1), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 9:45 (ff)
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.AreEqual(reference.AddHours(9.75), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
             Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             // 10:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.AreEqual(reference.AddHours(10), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
@@ -662,9 +721,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // tues 6/23
-                new TradeBar{Value = 0, Time = reference, Period = dataResolution},
+                new TradeBar{Value = 0, Time = reference, Period = dataResolution, Volume = 100},
                 // wed 7/1
-                new TradeBar{Value = 1, Time = reference.AddDays(8), Period = dataResolution},
+                new TradeBar{Value = 1, Time = reference.AddDays(8), Period = dataResolution, Volume = 200},
             }.ToList();
             var enumerator = data.GetEnumerator();
 
@@ -685,6 +744,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 else
                 {
                     hourlyBars++;
+                    Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
                 }
             }
 
