@@ -136,5 +136,14 @@ namespace QuantConnect.ToolBox
         {
             return _config.DataTimeZone.Id;
         }
+
+        /// <summary>
+        /// Returns the Exchange time zone
+        /// </summary>
+        /// <returns>String representing the exchange timezone</returns>
+        public string GetExchangeTimeZone()
+        {
+            return _config.ExchangeTimeZone.Id;
+        }
     }
 }
