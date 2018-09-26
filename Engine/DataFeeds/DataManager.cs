@@ -37,10 +37,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, IAlgorithm algorithm)
+        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection)
         {
             _dataFeed = dataFeed;
-            UniverseSelection = new UniverseSelection(dataFeed, algorithm);
+            UniverseSelection = universeSelection;
         }
 
         #region IDataFeedSubscriptionManager
