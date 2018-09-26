@@ -598,7 +598,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new BacktestingResultHandler();
 
             var feed = new TestableLiveTradingDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm));
+            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
@@ -671,7 +671,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, _manualTimeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, _algorithm));
+            var dataManager = new DataManager(feed, new UniverseSelection(feed, _algorithm), _algorithm.Settings);
             _algorithm.SubscriptionManager.SetDataManager(dataManager);
             _algorithm.AddSecurities(resolution, equities, forex);
 

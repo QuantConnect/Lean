@@ -163,7 +163,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Lean.Engine.DataFeeds import *
 
 algo = QCAlgorithm()
-algo.SubscriptionManager.SetDataManager(DataManager(None, None))
+algo.SubscriptionManager.SetDataManager(DataManager(None, UniverseSelection(None, algo), algo.Settings))
 forex = algo.AddForex('EURUSD', Resolution.Daily)
 indicator = IchimokuKinkoHyo('EURUSD', 9, 26, 26, 52, 26, 26)
 algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";

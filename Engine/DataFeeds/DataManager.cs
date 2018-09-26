@@ -31,21 +31,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
         private readonly IDataFeed _dataFeed;
-        private readonly IAlgorithm _algorithm;
+        private readonly IAlgorithmSettings _algorithmSettings;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
-        private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptionManagerSubscriptions
-            = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
+        private readonly ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig> _subscriptionManagerSubscriptions
+            = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
 
         /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection)
+        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
-            _algorithm = algorithm;
+            _algorithmSettings = algorithmSettings;
         }
 
         #region IDataFeedSubscriptionManager
@@ -65,31 +65,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions => _subscriptionManagerSubscriptions.Select(x => x.Key);
 
         /// <summary>
-        /// Gets existing or adds new SubscriptionDataConfig
+        /// Gets existing or adds new <see cref="SubscriptionDataConfig"/>
         /// </summary>
-        /// <returns>Returns the SubscriptionDataConfig used</returns>
+        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
         public SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig newConfig)
         {
-            if (!_subscriptionManagerSubscriptions.TryAdd(newConfig, 0))
+            var config = _subscriptionManagerSubscriptions.GetOrAdd(newConfig, newConfig);
+
+            // if the reference is not the same, means it was already there and we did not add anything new
+            if (!ReferenceEquals(config, newConfig))
             {
-                Log.Trace("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + newConfig);
-                return SubscriptionManagerSubscriptions.FirstOrDefault(x => x == newConfig);
+                Log.Trace("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
+            }
+            else
+            {
+                // count data subscriptions by symbol, ignoring multiple data types
+                var uniqueCount = SubscriptionManagerSubscriptions
+                    .Where(x => !x.Symbol.IsCanonical())
+                    // TODO should limit subscriptions or unique securities
+                    .DistinctBy(x => x.Symbol.Value)
+                    .Count();
+
+                if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
+                {
+                    throw new Exception(
+                        $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
+                        "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+                }
             }
 
-            // count data subscriptions by symbol, ignoring multiple data types
-            var uniqueCount = SubscriptionManagerSubscriptions
-                .Where(x => !x.Symbol.IsCanonical())
-                .DistinctBy(x => x.Symbol.Value)
-                .Count();
-
-            if (uniqueCount > _algorithm.Settings.DataSubscriptionLimit)
-            {
-                throw new Exception(
-                    $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithm.Settings.DataSubscriptionLimit})." +
-                    "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
-            }
-
-            return newConfig;
+            return config;
         }
 
         /// <summary>

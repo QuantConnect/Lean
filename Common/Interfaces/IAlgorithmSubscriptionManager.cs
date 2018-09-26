@@ -30,9 +30,9 @@ namespace QuantConnect.Interfaces
         IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions { get; }
 
         /// <summary>
-        /// Gets existing or adds new SubscriptionDataConfig
+        /// Gets existing or adds new <see cref="SubscriptionDataConfig"/>
         /// </summary>
-        /// <returns>Returns the SubscriptionDataConfig used</returns>
+        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
         SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig config);
 
         /// <summary>
