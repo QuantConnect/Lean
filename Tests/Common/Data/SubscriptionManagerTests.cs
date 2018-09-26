@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Common.Data
         public void SubscriptionsMemberIsThreadSafe()
         {
             var timeKeeper = new TimeKeeper(DateTime.UtcNow);
-            var subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
+            var subscriptionManager = new SubscriptionManager(timeKeeper);
             subscriptionManager.SetDataManager(new DataManagerStub());
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(5);
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Common.Data
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)
         {
             var timeKeeper = new TimeKeeper(DateTime.UtcNow);
-            var subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
+            var subscriptionManager = new SubscriptionManager(timeKeeper);
             return subscriptionManager.LookupSubscriptionConfigDataTypes(securityType, resolution, isCanonical);
         }
     }

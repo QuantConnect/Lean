@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
@@ -50,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
         {
             var feed = new AlgorithmManagerTests.MockDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm));
+            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             algorithm.Initialize();

@@ -21,7 +21,6 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -31,7 +30,6 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        private readonly IAlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
@@ -53,11 +51,9 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
-        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper)
+        public SubscriptionManager(TimeKeeper timeKeeper)
         {
-            _algorithmSettings = algorithmSettings;
             _timeKeeper = timeKeeper;
 
             // Initialize the default data feeds for each security type
@@ -67,11 +63,10 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
         /// <param name="subscriptionManager">The subscription manager</param>
-        public SubscriptionManager(IAlgorithmSettings algorithmSettings, TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
-            : this(algorithmSettings, timeKeeper)
+        public SubscriptionManager(TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
+            : this(timeKeeper)
         {
             _subscriptionManager = subscriptionManager;
         }
@@ -135,31 +130,22 @@ namespace QuantConnect.Data
             //Create:
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
 
-            //Add to subscription list: make sure we don't have this symbol:
-            if (_subscriptionManager.SubscriptionManagerContainsKey(newConfig))
-            {
-                Log.Trace("SubscriptionManager.Add(): subscription already added: " + newConfig);
-                return newConfig;
-            }
+            return GetOrAdd(newConfig);
+        }
 
-            _subscriptionManager.SubscriptionManagerTryAdd(newConfig);
-
-            // count data subscriptions by symbol, ignoring multiple data types
-            var uniqueCount = Subscriptions
-                .Where(x => !x.Symbol.IsCanonical())
-                .DistinctBy(x => x.Symbol.Value)
-                .Count();
-            if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
-            {
-                throw new Exception(
-                    $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit}). Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
-            }
+        /// <summary>
+        /// Gets existing or adds new <see cref="SubscriptionDataConfig"/>
+        /// </summary>
+        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
+        public SubscriptionDataConfig GetOrAdd(SubscriptionDataConfig newConfig)
+        {
+            newConfig = _subscriptionManager.SubscriptionManagerGetOrAdd(newConfig);
 
             // add the time zone to our time keeper
-            _timeKeeper.AddTimeZone(exchangeTimeZone);
+            _timeKeeper.AddTimeZone(newConfig.ExchangeTimeZone);
 
             // if is custom data, sets HasCustomData to true
-            HasCustomData = HasCustomData || isCustomData;
+            HasCustomData = HasCustomData || newConfig.IsCustomData;
 
             return newConfig;
         }

@@ -14,11 +14,14 @@
  *
 */
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,19 +31,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
         private readonly IDataFeed _dataFeed;
+        private readonly IAlgorithmSettings _algorithmSettings;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
-        private readonly ConcurrentDictionary<SubscriptionDataConfig, byte> _subscriptionManagerSubscriptions
-            = new ConcurrentDictionary<SubscriptionDataConfig, byte>();
+        private readonly ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig> _subscriptionManagerSubscriptions
+            = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
 
         /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection)
+        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
+            _algorithmSettings = algorithmSettings;
         }
 
         #region IDataFeedSubscriptionManager
@@ -60,19 +65,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions => _subscriptionManagerSubscriptions.Select(x => x.Key);
 
         /// <summary>
-        /// Returns true if the given subscription data config is already present for the SubscriptionManager
+        /// Gets existing or adds new <see cref="SubscriptionDataConfig"/>
         /// </summary>
-        public bool SubscriptionManagerTryAdd(SubscriptionDataConfig config)
+        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
+        public SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig newConfig)
         {
-            return _subscriptionManagerSubscriptions.TryAdd(config, 0);
-        }
+            var config = _subscriptionManagerSubscriptions.GetOrAdd(newConfig, newConfig);
 
-        /// <summary>
-        /// Returns true if the given subscription data config is already present for the SubscriptionManager
-        /// </summary>
-        public bool SubscriptionManagerContainsKey(SubscriptionDataConfig config)
-        {
-            return _subscriptionManagerSubscriptions.ContainsKey(config);
+            // if the reference is not the same, means it was already there and we did not add anything new
+            if (!ReferenceEquals(config, newConfig))
+            {
+                Log.Trace("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
+            }
+            else
+            {
+                // count data subscriptions by symbol, ignoring multiple data types
+                var uniqueCount = SubscriptionManagerSubscriptions
+                    .Where(x => !x.Symbol.IsCanonical())
+                    // TODO should limit subscriptions or unique securities
+                    .DistinctBy(x => x.Symbol.Value)
+                    .Count();
+
+                if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
+                {
+                    throw new Exception(
+                        $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
+                        "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+                }
+            }
+
+            return config;
         }
 
         /// <summary>

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Algorithm;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 
@@ -21,13 +22,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     internal class DataManagerStub : DataManager
     {
         public DataManagerStub()
-        : base(new NullDataFeed(), null)
+            : this(new QCAlgorithm())
         {
 
         }
 
         public DataManagerStub(IAlgorithm algorithm)
-            : base(new NullDataFeed(), new UniverseSelection(new NullDataFeed(), algorithm))
+            : this(new NullDataFeed(), algorithm)
+        {
+
+        }
+
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm)
+            : base(dataFeed, new UniverseSelection(dataFeed, algorithm), algorithm.Settings)
         {
 
         }

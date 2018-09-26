@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var feed = new FileSystemDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm));
+            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager);

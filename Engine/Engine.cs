@@ -125,7 +125,8 @@ namespace QuantConnect.Lean.Engine
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
                     dataManager = new DataManager(_algorithmHandlers.DataFeed,
-                                                  new UniverseSelection(_algorithmHandlers.DataFeed, algorithm));
+                                                  new UniverseSelection(_algorithmHandlers.DataFeed, algorithm),
+                                                  algorithm.Settings);
 
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 
