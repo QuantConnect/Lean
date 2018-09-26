@@ -69,7 +69,8 @@ namespace QuantConnect.Jupyter
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
-                SubscriptionManager.SetDataManager(new DataManager(new NullDataFeed(), this));
+                var nullDataFeed = new NullDataFeed();
+                SubscriptionManager.SetDataManager(new DataManager(nullDataFeed, new UniverseSelection(nullDataFeed, this)));
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));

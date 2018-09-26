@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         public DataManagerStub(IAlgorithm algorithm)
-            : base(new NullDataFeed(), algorithm)
+            : base(new NullDataFeed(), new UniverseSelection(new NullDataFeed(), algorithm))
         {
 
         }
