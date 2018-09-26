@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Ionic.Zip;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -131,19 +132,19 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Returns the data time zone
         /// </summary>
-        /// <returns>String representing the data timezone</returns>
-        public string GetDataTimeZone()
+        /// <returns><see cref="NodaTime.DateTimeZone"/> representing the data timezone</returns>
+        public DateTimeZone GetDataTimeZone()
         {
-            return _config.DataTimeZone.Id;
+            return _config.DataTimeZone;
         }
 
         /// <summary>
         /// Returns the Exchange time zone
         /// </summary>
-        /// <returns>String representing the exchange timezone</returns>
-        public string GetExchangeTimeZone()
+        /// <returns><see cref="NodaTime.DateTimeZone"/> representing the exchange timezone</returns>
+        public DateTimeZone GetExchangeTimeZone()
         {
-            return _config.ExchangeTimeZone.Id;
+            return _config.ExchangeTimeZone;
         }
     }
 }
