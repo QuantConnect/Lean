@@ -28,12 +28,12 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// DataManager will manage the subscriptions for both the DataFeeds and the SubscriptionManager
+    ///     DataManager will manage the subscriptions for both the DataFeeds and the SubscriptionManager
     /// </summary>
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
-        private readonly IDataFeed _dataFeed;
         private readonly IAlgorithmSettings _algorithmSettings;
+        private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
 
         /// <summary>
-        /// Creates a new instance of the DataManager
+        ///     Creates a new instance of the DataManager
         /// </summary>
         public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings)
         {
@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IDataFeedSubscriptionManager
 
         /// <summary>
-        /// Gets the data feed subscription collection
+        ///     Gets the data feed subscription collection
         /// </summary>
         public SubscriptionCollection DataFeedSubscriptions { get; } = new SubscriptionCollection();
 
@@ -63,17 +63,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IAlgorithmSubscriptionManager
 
         /// <summary>
-        /// The different <see cref="TickType"/> each <see cref="SecurityType"/> supports
+        ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
         private Dictionary<SecurityType, List<TickType>> _availableDataTypes;
 
         /// <summary>
-        /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
+        ///     Gets all the current data config subscriptions that are being processed for the SubscriptionManager
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions => _subscriptionManagerSubscriptions.Select(x => x.Key);
+        public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions =>
+            _subscriptionManagerSubscriptions.Select(x => x.Key);
 
         /// <summary>
-        /// Gets existing or adds new <see cref="SubscriptionDataConfig"/>
+        ///     Gets existing or adds new <see cref="SubscriptionDataConfig" />
         /// </summary>
         /// <returns>Returns the SubscriptionDataConfig instance used</returns>
         public SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig newConfig)
@@ -106,7 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Returns the amount of data config subscriptions processed for the SubscriptionManager
+        ///     Returns the amount of data config subscriptions processed for the SubscriptionManager
         /// </summary>
         public int SubscriptionManagerCount()
         {
@@ -114,23 +115,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Get the data feed types for a given <see cref="SecurityType"/> <see cref="Resolution"/>
+        ///     Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
         /// </summary>
-        /// <param name="symbolSecurityType">The <see cref="SecurityType"/> used to determine the types</param>
+        /// <param name="symbolSecurityType">The <see cref="SecurityType" /> used to determine the types</param>
         /// <param name="resolution">The resolution of the data requested</param>
         /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
-        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig"/></returns>
-        public List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType, Resolution resolution, bool isCanonical)
+        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig" /></returns>
+        public List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(
+            SecurityType symbolSecurityType,
+            Resolution resolution,
+            bool isCanonical
+            )
         {
             if (isCanonical)
             {
-                return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
+                return new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote)};
             }
-            return _availableDataTypes[symbolSecurityType].Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
+
+            return _availableDataTypes[symbolSecurityType]
+                .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
         /// <summary>
-        /// Sets up the available data types
+        ///     Sets up the available data types
         /// </summary>
         public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
         {
@@ -140,44 +147,54 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region ISubscriptionDataConfigBuilder
 
         /// <summary>
-        /// Creates a list of <see cref="SubscriptionDataConfig"/> for a given symbol and configuration.
-        /// Can optionally pass in desired subscription data types to use.
+        ///     Creates a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        ///     Can optionally pass in desired subscription data types to use.
         /// </summary>
-        public List<SubscriptionDataConfig> Create(Symbol symbol, Resolution resolution,
-                                                   bool fillForward, bool extendedMarketHours,
-                                                   bool isFilteredSubscription = true,
-                                                   bool isInternalFeed = false, bool isCustomData = false,
-                                                   List<Tuple<Type, TickType>> subscriptionDataTypes = null
+        public List<SubscriptionDataConfig> Create(
+            Symbol symbol,
+            Resolution resolution,
+            bool fillForward,
+            bool extendedMarketHours,
+            bool isFilteredSubscription = true,
+            bool isInternalFeed = false,
+            bool isCustomData = false,
+            List<Tuple<Type, TickType>> subscriptionDataTypes = null
             )
         {
-            var dataTypes = subscriptionDataTypes ?? LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
+            var dataTypes = subscriptionDataTypes ??
+                LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
 
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
             var dataNormalizationMode = symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future
-                                        ? DataNormalizationMode.Raw : DataNormalizationMode.Adjusted;
+                ? DataNormalizationMode.Raw
+                : DataNormalizationMode.Adjusted;
 
             if (marketHoursDbEntry.DataTimeZone == null)
             {
-                throw new ArgumentNullException(nameof(marketHoursDbEntry.DataTimeZone), "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
+                throw new ArgumentNullException(nameof(marketHoursDbEntry.DataTimeZone),
+                    "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
             }
+
             if (exchangeHours.TimeZone == null)
             {
-                throw new ArgumentNullException(nameof(exchangeHours.TimeZone), "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
+                throw new ArgumentNullException(nameof(exchangeHours.TimeZone),
+                    "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
             }
+
             if (!dataTypes.Any())
             {
                 throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create security");
             }
 
             var result = (from subscriptionDataType in dataTypes
-                          let dataType = subscriptionDataType.Item1
-                          let tickType = subscriptionDataType.Item2
-                          select new SubscriptionDataConfig(dataType, symbol, resolution, marketHoursDbEntry.DataTimeZone,
-                              exchangeHours.TimeZone, fillForward, extendedMarketHours,
-                              isInternalFeed: isInternalFeed, isCustom: isCustomData,
-                              isFilteredSubscription: isFilteredSubscription, tickType: tickType,
-                              dataNormalizationMode: dataNormalizationMode)).ToList();
+                let dataType = subscriptionDataType.Item1
+                let tickType = subscriptionDataType.Item2
+                select new SubscriptionDataConfig(dataType, symbol, resolution, marketHoursDbEntry.DataTimeZone,
+                    exchangeHours.TimeZone, fillForward, extendedMarketHours,
+                    isInternalFeed, isCustomData,
+                    isFilteredSubscription: isFilteredSubscription, tickType: tickType,
+                    dataNormalizationMode: dataNormalizationMode)).ToList();
             return result;
         }
 
@@ -188,12 +205,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IDataManager
 
         /// <summary>
-        /// Get the universe selection instance
+        ///     Get the universe selection instance
         /// </summary>
         public UniverseSelection UniverseSelection { get; }
 
         /// <summary>
-        /// Returns an enumerable which provides the data to stream to the algorithm
+        ///     Returns an enumerable which provides the data to stream to the algorithm
         /// </summary>
         public IEnumerable<TimeSlice> StreamData()
         {

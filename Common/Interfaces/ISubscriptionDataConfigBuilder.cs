@@ -17,21 +17,28 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// This interface exposes methods for creating a list of <see cref="SubscriptionDataConfig"/> for a given configuration
+    ///     This interface exposes methods for creating a list of <see cref="SubscriptionDataConfig" /> for a given
+    ///     configuration
     /// </summary>
     public interface ISubscriptionDataConfigBuilder
     {
         /// <summary>
-        /// Creates a list of <see cref="SubscriptionDataConfig"/> for a given symbol and configuration.
-        /// Can optionally pass in desired subscription data types to use.
+        ///     Creates a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        ///     Can optionally pass in desired subscription data types to use.
         /// </summary>
-        List<SubscriptionDataConfig> Create(Symbol symbol, Resolution resolution,
-                                            bool fillForward = true, bool extendedMarketHours = false,
-                                            bool isFilteredSubscription = true,
-                                            bool isInternalFeed = false, bool isCustomData = false,
-                                            List<Tuple<Type, TickType>> subscriptionDataTypes = null);
+        List<SubscriptionDataConfig> Create(
+            Symbol symbol,
+            Resolution resolution,
+            bool fillForward = true,
+            bool extendedMarketHours = false,
+            bool isFilteredSubscription = true,
+            bool isInternalFeed = false,
+            bool isCustomData = false,
+            List<Tuple<Type, TickType>> subscriptionDataTypes = null
+            );
     }
 }
