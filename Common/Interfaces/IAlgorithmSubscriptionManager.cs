@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 
@@ -22,7 +23,7 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// AlgorithmSubscriptionManager interface will manage the subscriptions for the SubscriptionManager
     /// </summary>
-    public interface IAlgorithmSubscriptionManager
+    public interface IAlgorithmSubscriptionManager : ISubscriptionDataConfigBuilder
     {
         /// <summary>
         /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
@@ -39,5 +40,19 @@ namespace QuantConnect.Interfaces
         /// Returns the amount of data config subscriptions processed for the SubscriptionManager
         /// </summary>
         int SubscriptionManagerCount();
+
+        /// <summary>
+        /// Get the data feed types for a given <see cref="SecurityType"/> <see cref="Resolution"/>
+        /// </summary>
+        /// <param name="symbolSecurityType">The <see cref="SecurityType"/> used to determine the types</param>
+        /// <param name="resolution">The resolution of the data requested</param>
+        /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
+        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig"/></returns>
+        List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType,
+                                                                      Resolution resolution, bool isCanonical);
+        /// <summary>
+        /// Sets up the available data types
+        /// </summary>
+        void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes);
     }
 }

@@ -47,7 +47,8 @@ namespace QuantConnect.Tests.Common.Securities
             _securityManager = new SecurityManager(timeKeeper);
             _securityTransactionManager = new SecurityTransactionManager(null, _securityManager);
             _securityPortfolioManager = new SecurityPortfolioManager(_securityManager, _securityTransactionManager);
-            _subscriptionManager = new SubscriptionManager(timeKeeper, new DataManagerStub());
+            _subscriptionManager = new SubscriptionManager(timeKeeper);
+            _subscriptionManager.SetDataManager(new DataManagerStub());
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _securityInitializer = SecurityInitializer.Null;
@@ -217,7 +218,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SecurityManagerCanCreate_Cfd_WithCorrectSubscriptions()
         {
             var symbol = Symbol.Create("abc", SecurityType.Cfd, Market.USA);
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, SecurityType.Equity);
+            var marketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "abc", SecurityType.Cfd, TimeZones.NewYork);
             var defaultQuoteCurrency = CashBook.AccountCurrency;
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
@@ -315,7 +316,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
-            var marketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
+            var marketHoursDbEntry = _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "ED", SecurityType.Future, TimeZones.NewYork);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>

@@ -85,8 +85,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager(TimeKeeper, new DataManagerStub());
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            subscriptions.SetDataManager(new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
+            MarketHoursDatabase.FromDataFolder().SetEntryAlwaysOpen(CASH.ID.Market, CASH.Value, CASH.SecurityType, TimeZones.NewYork);
             var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             security.SetLeverage(10m);
             securities.Add(CASH, security);
@@ -148,7 +150,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager(TimeKeeper, new DataManagerStub());
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            subscriptions.SetDataManager(new DataManagerStub());
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);

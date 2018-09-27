@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -34,6 +33,11 @@ namespace QuantConnect.Data
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
         /// <summary>
+        /// Instance that implements <see cref="ISubscriptionDataConfigBuilder"/>
+        /// </summary>
+        public ISubscriptionDataConfigBuilder SubscriptionDataConfigBuilder => _subscriptionManager;
+
+        /// <summary>
         /// Returns an IEnumerable of Subscriptions
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions;
@@ -44,7 +48,7 @@ namespace QuantConnect.Data
         public bool HasCustomData { get; set; }
 
         /// <summary>
-        ///
+        /// The different <see cref="TickType"/> each <see cref="SecurityType"/> supports
         /// </summary>
         public Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
 
@@ -58,17 +62,6 @@ namespace QuantConnect.Data
 
             // Initialize the default data feeds for each security type
             AvailableDataTypes = DefaultDataTypes();
-        }
-
-        /// <summary>
-        /// Initialise the Generic Data Manager Class
-        /// </summary>
-        /// <param name="timeKeeper">The algorithm's time keeper</param>
-        /// <param name="subscriptionManager">The subscription manager</param>
-        public SubscriptionManager(TimeKeeper timeKeeper, IAlgorithmSubscriptionManager subscriptionManager)
-            : this(timeKeeper)
-        {
-            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -87,7 +80,7 @@ namespace QuantConnect.Data
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
-        /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
+        /// <returns>The newly created <see cref="SubscriptionDataConfig"/> or existing instance if it already existed <see cref="GetOrAdd"/></returns>
         public SubscriptionDataConfig Add(Symbol symbol, Resolution resolution, DateTimeZone timeZone, DateTimeZone exchangeTimeZone, bool isCustomData = false, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
@@ -115,21 +108,12 @@ namespace QuantConnect.Data
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
-        /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
+        /// <returns>The newly created <see cref="SubscriptionDataConfig"/> or existing instance if it already existed <see cref="GetOrAdd"/></returns>
         public SubscriptionDataConfig Add(Type dataType, TickType tickType, Symbol symbol, Resolution resolution, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false, bool isFilteredSubscription = true)
         {
-            if (dataTimeZone == null)
-            {
-                throw new ArgumentNullException(nameof(dataTimeZone), "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
-            }
-            if (exchangeTimeZone == null)
-            {
-                throw new ArgumentNullException(nameof(exchangeTimeZone), "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
-            }
-
-            //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
-
+            var newConfig = SubscriptionDataConfigBuilder.Create(symbol, resolution, fillDataForward,
+                                                                 extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
+                                                                 new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)}).First();
             return GetOrAdd(newConfig);
         }
 
@@ -148,6 +132,19 @@ namespace QuantConnect.Data
             HasCustomData = HasCustomData || newConfig.IsCustomData;
 
             return newConfig;
+        }
+
+        /// <summary>
+        /// For each <see cref="SubscriptionDataConfig"/> in a provided list, gets existing or adds it
+        /// </summary>
+        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
+        public List<SubscriptionDataConfig> GetOrAdd(List<SubscriptionDataConfig> newConfigs)
+        {
+            for (var i = 0; i < newConfigs.Count; i++)
+            {
+                newConfigs[i] = GetOrAdd(newConfigs[i]);
+            }
+            return newConfigs;
         }
 
         /// <summary>
@@ -233,12 +230,7 @@ namespace QuantConnect.Data
         /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig"/></returns>
         public List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType, Resolution resolution, bool isCanonical)
         {
-            if (isCanonical)
-            {
-                return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
-            }
-
-            return AvailableDataTypes[symbolSecurityType].Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
+            return _subscriptionManager.LookupSubscriptionConfigDataTypes(symbolSecurityType, resolution, isCanonical);
         }
 
         /// <summary>
@@ -247,6 +239,7 @@ namespace QuantConnect.Data
         public void SetDataManager(IAlgorithmSubscriptionManager subscriptionManager)
         {
             _subscriptionManager = subscriptionManager;
+            _subscriptionManager.SetAvailableDataTypes(AvailableDataTypes);
         }
     }
 }

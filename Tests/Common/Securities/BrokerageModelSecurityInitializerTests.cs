@@ -25,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.Common.Securities
                                        null);
 
             _algo.HistoryProvider = historyProvider;
-
+            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
             _tradeBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                                         _tradeBarConfig,
                                         new Cash(CashBook.AccountCurrency, 0, 1m),
