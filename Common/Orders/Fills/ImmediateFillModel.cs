@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -95,6 +94,10 @@ namespace QuantConnect.Orders.Fills
 
             //Get the range of prices in the last bar:
             var prices = GetPrices(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
 
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -162,6 +165,10 @@ namespace QuantConnect.Orders.Fills
 
             //Get the range of prices in the last bar:
             var prices = GetPrices(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
 
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
@@ -231,6 +238,10 @@ namespace QuantConnect.Orders.Fills
 
             //Get the range of prices in the last bar:
             var prices = GetPrices(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
 
             //-> Valid Live/Model Order:
             switch (order.Direction)
@@ -391,10 +402,11 @@ namespace QuantConnect.Orders.Fills
             var open = asset.Open;
             var close = asset.Close;
             var current = asset.Price;
+            var endTime = asset.Cache.GetData()?.EndTime ?? DateTime.MinValue;
 
             if (direction == OrderDirection.Hold)
             {
-                return new Prices(current, open, high, low, close);
+                return new Prices(endTime, current, open, high, low, close);
             }
 
             // Only fill with data types we are subscribed to
@@ -407,14 +419,14 @@ namespace QuantConnect.Orders.Fills
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
                 {
-                    return new Prices(price, 0, 0, 0, 0);
+                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
                 }
 
                 // If the ask/bid spreads are not available for ticks, try the price
                 price = tick.Price;
                 if (price != 0m)
                 {
-                    return new Prices(price, 0, 0, 0, 0);
+                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
                 }
             }
 
@@ -425,7 +437,7 @@ namespace QuantConnect.Orders.Fills
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
                 {
-                    return new Prices(bar);
+                    return new Prices(quoteBar.EndTime, bar);
                 }
             }
 
@@ -436,7 +448,7 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(tradeBar);
             }
 
-            return new Prices(current, open, high, low, close);
+            return new Prices(endTime, current, open, high, low, close);
         }
 
         /// <summary>
@@ -459,19 +471,26 @@ namespace QuantConnect.Orders.Fills
 
         public class Prices
         {
+            public readonly DateTime EndTime;
             public readonly decimal Current;
             public readonly decimal Open;
             public readonly decimal High;
             public readonly decimal Low;
             public readonly decimal Close;
 
-            public Prices(IBar bar)
-                : this(bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
+            public Prices(IBaseDataBar bar)
+                : this(bar.EndTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
             {
             }
 
-            public Prices(decimal current, decimal open, decimal high, decimal low, decimal close)
+            public Prices(DateTime endTime, IBar bar)
+                : this(endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
             {
+            }
+
+            public Prices(DateTime endTime, decimal current, decimal open, decimal high, decimal low, decimal close)
+            {
+                EndTime = endTime;
                 Current = current;
                 Open = open == 0 ? current : open;
                 High = high == 0 ? current : high;

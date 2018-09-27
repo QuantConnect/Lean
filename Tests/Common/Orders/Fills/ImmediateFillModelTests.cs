@@ -110,5 +110,134 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             // The fill model should use the tick.Price
             Assert.AreEqual(fill.FillPrice, 1.0m);
         }
+
+        [TestCase(100, 290.50)]
+        [TestCase(-100, 291.50)]
+        public void LimitOrderDoesNotFillUsingDataBeforeSubmitTime(decimal orderQuantity, decimal limitPrice)
+        {
+            var time = new DateTime(2018, 9, 24, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            security.SetMarketPrice(tradeBar);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            var fillForwardBar = (TradeBar)tradeBar.Clone(true);
+            security.SetMarketPrice(fillForwardBar);
+
+            var fillModel = new ImmediateFillModel();
+            var order = new LimitOrder(symbol, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+
+            var fill = fillModel.LimitFill(security, order);
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            security.SetMarketPrice(tradeBar);
+
+            fill = fillModel.LimitFill(security, order);
+
+            Assert.AreEqual(orderQuantity, fill.FillQuantity);
+            Assert.AreEqual(limitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
+
+        [TestCase(100, 291.50)]
+        [TestCase(-100, 290.50)]
+        public void StopMarketOrderDoesNotFillUsingDataBeforeSubmitTime(decimal orderQuantity, decimal stopPrice)
+        {
+            var time = new DateTime(2018, 9, 24, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            security.SetMarketPrice(tradeBar);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            var fillForwardBar = (TradeBar)tradeBar.Clone(true);
+            security.SetMarketPrice(fillForwardBar);
+
+            var fillModel = new ImmediateFillModel();
+            var order = new StopMarketOrder(symbol, orderQuantity, stopPrice, time.ConvertToUtc(TimeZones.NewYork));
+
+            var fill = fillModel.StopMarketFill(security, order);
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            security.SetMarketPrice(tradeBar);
+
+            fill = fillModel.StopMarketFill(security, order);
+
+            Assert.AreEqual(orderQuantity, fill.FillQuantity);
+            Assert.AreEqual(stopPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
+
+        [TestCase(100, 291.50, 291.75)]
+        [TestCase(-100, 290.50, 290.25)]
+        public void StopLimitOrderDoesNotFillUsingDataBeforeSubmitTime(decimal orderQuantity, decimal stopPrice, decimal limitPrice)
+        {
+            var time = new DateTime(2018, 9, 24, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            security.SetMarketPrice(tradeBar);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            var fillForwardBar = (TradeBar)tradeBar.Clone(true);
+            security.SetMarketPrice(fillForwardBar);
+
+            var fillModel = new ImmediateFillModel();
+            var order = new StopLimitOrder(symbol, orderQuantity, stopPrice, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+
+            var fill = fillModel.StopLimitFill(security, order);
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            security.SetMarketPrice(tradeBar);
+
+            fill = fillModel.StopLimitFill(security, order);
+
+            Assert.AreEqual(orderQuantity, fill.FillQuantity);
+            Assert.AreEqual(limitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
     }
 }
