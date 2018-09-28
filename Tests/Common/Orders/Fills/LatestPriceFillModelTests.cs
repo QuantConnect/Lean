@@ -16,7 +16,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         private QuoteBar _quote;
         private TradeBar _trade;
         private TestableLatestFillModel _fillModel;
-        
+
         [TestFixtureSetUp]
         public void Setup()
         {
@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var cryptoSecurity = CreateCrypto();
             cryptoSecurity.Cache.AddData(_quote);
-            
+
             var price = _fillModel.GetPrices(cryptoSecurity, OrderDirection.Sell);
 
             // Bid prices are $1
