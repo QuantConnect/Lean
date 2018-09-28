@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // if the reference is not the same, means it was already there and we did not add anything new
             if (!ReferenceEquals(config, newConfig))
             {
-                Log.Trace("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
+                Log.Debug("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
             }
             else
             {
@@ -104,6 +104,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
                         "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
                 }
+
+                // add the time zone to our time keeper
+                _timeKeeper.AddTimeZone(newConfig.ExchangeTimeZone);
+
+                // if is custom data, sets HasCustomData to true
+                HasCustomData = HasCustomData || newConfig.IsCustomData;
             }
 
             return config;
@@ -125,8 +131,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
 
         /// <summary>
-        ///     Creates a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        ///     Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
         ///     Can optionally pass in desired subscription data types to use.
+        ///     If the config already existed will return existing instance instead
         /// </summary>
         public List<SubscriptionDataConfig> Add(
             Symbol symbol,
@@ -151,18 +158,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (marketHoursDbEntry.DataTimeZone == null)
             {
                 throw new ArgumentNullException(nameof(marketHoursDbEntry.DataTimeZone),
-                    "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
+                    "DataTimeZone is a required parameter for new subscriptions. Set to the time zone the raw data is time stamped in.");
             }
 
             if (exchangeHours.TimeZone == null)
             {
                 throw new ArgumentNullException(nameof(exchangeHours.TimeZone),
-                    "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
+                    "ExchangeTimeZone is a required parameter for new subscriptions. Set to the time zone the security exchange resides in.");
             }
 
             if (!dataTypes.Any())
             {
-                throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create security");
+                throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create new subscriptions");
             }
 
             var result = (from subscriptionDataType in dataTypes
@@ -177,12 +184,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             for (int i = 0; i < result.Count; i++)
             {
                 result[i] = SubscriptionManagerGetOrAdd(result[i]);
-
-                // add the time zone to our time keeper
-                _timeKeeper.AddTimeZone(result[i].ExchangeTimeZone);
-
-                // if is custom data, sets HasCustomData to true
-                HasCustomData = HasCustomData || result[i].IsCustomData;
             }
             return result;
         }
