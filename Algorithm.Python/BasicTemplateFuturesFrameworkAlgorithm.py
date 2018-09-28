@@ -28,8 +28,8 @@ from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.ConstantAlphaModel import ConstantAlphaModel
 from Selection.FutureUniverseSelectionModel import FutureUniverseSelectionModel
-from Execution.ImmediateExecutionModel import ImmediateExecutionModel
-from Risk.NullRiskManagementModel import NullRiskManagementModel
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Risk import *
 from datetime import date, timedelta
 
 ### <summary>

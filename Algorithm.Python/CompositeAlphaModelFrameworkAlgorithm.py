@@ -22,12 +22,12 @@ from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
 from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from Execution.ImmediateExecutionModel import ImmediateExecutionModel
-from Risk.NullRiskManagementModel import NullRiskManagementModel
 from datetime import timedelta
 import numpy as np
 
@@ -42,7 +42,7 @@ class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
-        
+
         # even though we're using a framework algorithm, we can still add our securities
         # using the AddEquity/Forex/Crypto/ect methods and then pass them into a manual
         # universe selection model using Securities.Keys

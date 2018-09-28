@@ -21,12 +21,14 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
-from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
-from Execution.ImmediateExecutionModel import ImmediateExecutionModel
-from Risk.NullRiskManagementModel import NullRiskManagementModel
 from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
+
 
 ### <summary>
 ### Mean Variance Optimization algorithm
