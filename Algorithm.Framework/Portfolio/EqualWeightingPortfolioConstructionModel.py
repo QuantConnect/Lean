@@ -14,9 +14,10 @@
 from clr import AddReference
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
+
 from QuantConnect import Resolution, Extensions
-from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
 from itertools import groupby
 from datetime import datetime, timedelta
 from pytz import utc

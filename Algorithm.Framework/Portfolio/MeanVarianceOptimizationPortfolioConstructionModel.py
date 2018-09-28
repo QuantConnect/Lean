@@ -14,6 +14,7 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
 
@@ -22,7 +23,7 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
+from QuantConnect.Algorithm.Framework.Portfolio import *
 from Portfolio.MinimumVariancePortfolioOptimizer import MinimumVariancePortfolioOptimizer
 from datetime import timedelta
 import numpy as np

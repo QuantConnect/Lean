@@ -24,8 +24,8 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
-from Execution.ImmediateExecutionModel import ImmediateExecutionModel
-from Risk.NullRiskManagementModel import NullRiskManagementModel
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Risk import *
 from Portfolio.BlackLittermanOptimizationPortfolioConstructionModel import *
 from Portfolio.UnconstrainedMeanVariancePortfolioOptimizer import UnconstrainedMeanVariancePortfolioOptimizer
 
