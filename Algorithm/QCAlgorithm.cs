@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm
             DefaultOrderProperties = new OrderProperties();
 
             //Initialise Data Manager
-            SubscriptionManager = new SubscriptionManager(_timeKeeper);
+            SubscriptionManager = new SubscriptionManager();
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
@@ -191,6 +191,11 @@ namespace QuantConnect.Algorithm
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets the time keeper instance
+        /// </summary>
+        public ITimeKeeper TimeKeeper => _timeKeeper;
 
         /// <summary>
         /// Generic Data Manager - Required for compiling all data feeds in order, and passing them into algorithm event methods.

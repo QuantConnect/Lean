@@ -29,13 +29,12 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        private readonly TimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
         /// <summary>
-        ///     Instance that implements <see cref="ISubscriptionDataConfigBuilder" />
+        ///     Instance that implements <see cref="ISubscriptionDataConfigService" />
         /// </summary>
-        public ISubscriptionDataConfigBuilder SubscriptionDataConfigBuilder => _subscriptionManager;
+        public ISubscriptionDataConfigService SubscriptionDataConfigService => _subscriptionManager;
 
         /// <summary>
         ///     Returns an IEnumerable of Subscriptions
@@ -45,24 +44,16 @@ namespace QuantConnect.Data
         /// <summary>
         ///     Flags the existence of custom data in the subscriptions
         /// </summary>
-        public bool HasCustomData { get; set; }
+        public bool HasCustomData
+        {
+            get { return _subscriptionManager.HasCustomData; }
+            set { _subscriptionManager.HasCustomData = value; }
+        }
 
         /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
-        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
-
-        /// <summary>
-        ///     Initialise the Generic Data Manager Class
-        /// </summary>
-        /// <param name="timeKeeper">The algorithm's time keeper</param>
-        public SubscriptionManager(TimeKeeper timeKeeper)
-        {
-            _timeKeeper = timeKeeper;
-
-            // Initialize the default data feeds for each security type
-            AvailableDataTypes = DefaultDataTypes();
-        }
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager.AvailableDataTypes;
 
         /// <summary>
         ///     Get the count of assets:
@@ -149,42 +140,11 @@ namespace QuantConnect.Data
             bool isFilteredSubscription = true
             )
         {
-            var newConfig = SubscriptionDataConfigBuilder.Create(symbol, resolution, fillDataForward,
+            return SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward,
                 extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
                 new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)}).First();
-            return GetOrAdd(newConfig);
         }
 
-        /// <summary>
-        ///     Gets existing or adds new <see cref="SubscriptionDataConfig" />
-        /// </summary>
-        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
-        public SubscriptionDataConfig GetOrAdd(SubscriptionDataConfig newConfig)
-        {
-            newConfig = _subscriptionManager.SubscriptionManagerGetOrAdd(newConfig);
-
-            // add the time zone to our time keeper
-            _timeKeeper.AddTimeZone(newConfig.ExchangeTimeZone);
-
-            // if is custom data, sets HasCustomData to true
-            HasCustomData = HasCustomData || newConfig.IsCustomData;
-
-            return newConfig;
-        }
-
-        /// <summary>
-        ///     For each <see cref="SubscriptionDataConfig" /> in a provided list, gets existing or adds it
-        /// </summary>
-        /// <returns>Returns the SubscriptionDataConfig instance used</returns>
-        public List<SubscriptionDataConfig> GetOrAdd(List<SubscriptionDataConfig> newConfigs)
-        {
-            for (var i = 0; i < newConfigs.Count; i++)
-            {
-                newConfigs[i] = GetOrAdd(newConfigs[i]);
-            }
-
-            return newConfigs;
-        }
 
         /// <summary>
         ///     Add a consolidator for the symbol
@@ -238,7 +198,7 @@ namespace QuantConnect.Data
         /// <summary>
         ///     Hard code the set of default available data feeds
         /// </summary>
-        public Dictionary<SecurityType, List<TickType>> DefaultDataTypes()
+        public static Dictionary<SecurityType, List<TickType>> DefaultDataTypes()
         {
             return new Dictionary<SecurityType, List<TickType>>
             {
@@ -283,7 +243,6 @@ namespace QuantConnect.Data
         public void SetDataManager(IAlgorithmSubscriptionManager subscriptionManager)
         {
             _subscriptionManager = subscriptionManager;
-            _subscriptionManager.SetAvailableDataTypes(AvailableDataTypes);
         }
     }
 }

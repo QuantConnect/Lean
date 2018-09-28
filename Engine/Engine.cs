@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine
 
                     dataManager = new DataManager(_algorithmHandlers.DataFeed,
                                                   new UniverseSelection(_algorithmHandlers.DataFeed, algorithm),
-                                                  algorithm.Settings);
+                                                  algorithm.Settings, algorithm.TimeKeeper);
 
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 

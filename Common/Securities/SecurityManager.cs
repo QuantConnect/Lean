@@ -319,10 +319,9 @@ namespace QuantConnect.Securities
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
             // Add the symbol to Data Manager -- generate unified data streams for algorithm events
-            var configs = subscriptionManager.SubscriptionDataConfigBuilder.Create(symbol, resolution, fillDataForward,
-                                                                                   extendedMarketHours, isFilteredSubscription, isInternalFeed,
-                                                                                   isCustomData, subscriptionDataTypes);
-            configs = subscriptionManager.GetOrAdd(configs);
+            var configs = subscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward,
+                                                                                extendedMarketHours, isFilteredSubscription, isInternalFeed,
+                                                                                isCustomData, subscriptionDataTypes);
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(configs);
 

@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private readonly ITimeKeeper _timeKeeper;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -44,11 +45,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         ///     Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings)
+        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings, ITimeKeeper timeKeeper)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
             _algorithmSettings = algorithmSettings;
+            AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
+            _timeKeeper = timeKeeper;
         }
 
         #region IDataFeedSubscriptionManager
@@ -63,9 +66,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IAlgorithmSubscriptionManager
 
         /// <summary>
-        ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
+        ///     Flags the existence of custom data in the subscriptions
         /// </summary>
-        private Dictionary<SecurityType, List<TickType>> _availableDataTypes;
+        public bool HasCustomData { get; set; }
 
         /// <summary>
         ///     Gets all the current data config subscriptions that are being processed for the SubscriptionManager
@@ -114,43 +117,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return _subscriptionManagerSubscriptions.Skip(0).Count();
         }
 
-        /// <summary>
-        ///     Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
-        /// </summary>
-        /// <param name="symbolSecurityType">The <see cref="SecurityType" /> used to determine the types</param>
-        /// <param name="resolution">The resolution of the data requested</param>
-        /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
-        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig" /></returns>
-        public List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(
-            SecurityType symbolSecurityType,
-            Resolution resolution,
-            bool isCanonical
-            )
-        {
-            if (isCanonical)
-            {
-                return new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote)};
-            }
-
-            return _availableDataTypes[symbolSecurityType]
-                .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
-        }
+        #region ISubscriptionDataConfigService
 
         /// <summary>
-        ///     Sets up the available data types
+        ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
-        public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
-        {
-            _availableDataTypes = availableDataTypes;
-        }
-
-        #region ISubscriptionDataConfigBuilder
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
 
         /// <summary>
         ///     Creates a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
         ///     Can optionally pass in desired subscription data types to use.
         /// </summary>
-        public List<SubscriptionDataConfig> Create(
+        public List<SubscriptionDataConfig> Add(
             Symbol symbol,
             Resolution resolution,
             bool fillForward,
@@ -195,7 +173,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     isInternalFeed, isCustomData,
                     isFilteredSubscription: isFilteredSubscription, tickType: tickType,
                     dataNormalizationMode: dataNormalizationMode)).ToList();
+
+            for (int i = 0; i < result.Count; i++)
+            {
+                result[i] = SubscriptionManagerGetOrAdd(result[i]);
+
+                // add the time zone to our time keeper
+                _timeKeeper.AddTimeZone(result[i].ExchangeTimeZone);
+
+                // if is custom data, sets HasCustomData to true
+                HasCustomData = HasCustomData || result[i].IsCustomData;
+            }
             return result;
+        }
+
+        /// <summary>
+        ///     Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
+        /// </summary>
+        /// <param name="symbolSecurityType">The <see cref="SecurityType" /> used to determine the types</param>
+        /// <param name="resolution">The resolution of the data requested</param>
+        /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
+        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig" /></returns>
+        public List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(
+            SecurityType symbolSecurityType,
+            Resolution resolution,
+            bool isCanonical
+            )
+        {
+            if (isCanonical)
+            {
+                return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
+            }
+
+            return AvailableDataTypes[symbolSecurityType]
+                .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
         #endregion

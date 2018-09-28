@@ -11,33 +11,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data;
+using NodaTime;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    ///     AlgorithmSubscriptionManager interface will manage the subscriptions for the SubscriptionManager
+    /// Interface implemented by <see cref="TimeKeeper"/>
     /// </summary>
-    public interface IAlgorithmSubscriptionManager : ISubscriptionDataConfigService
+    public interface ITimeKeeper
     {
         /// <summary>
-        ///     Gets all the current data config subscriptions that are being processed for the SubscriptionManager
+        /// Adds the specified time zone to this time keeper
         /// </summary>
-        IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions { get; }
-
-        /// <summary>
-        ///     Returns the amount of data config subscriptions processed for the SubscriptionManager
-        /// </summary>
-        int SubscriptionManagerCount();
-
-        /// <summary>
-        ///     Flags the existence of custom data in the subscriptions
-        /// </summary>
-        bool HasCustomData { get; set; }
+        /// <param name="timeZone"></param>
+        void AddTimeZone(DateTimeZone timeZone);
     }
 }

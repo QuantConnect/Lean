@@ -24,13 +24,14 @@ namespace QuantConnect.Interfaces
     ///     This interface exposes methods for creating a list of <see cref="SubscriptionDataConfig" /> for a given
     ///     configuration
     /// </summary>
-    public interface ISubscriptionDataConfigBuilder
+    public interface ISubscriptionDataConfigService
     {
         /// <summary>
-        ///     Creates a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        ///     Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
         ///     Can optionally pass in desired subscription data types to use.
+        ///     If the config already existed will return existing instance instead
         /// </summary>
-        List<SubscriptionDataConfig> Create(
+        List<SubscriptionDataConfig> Add(
             Symbol symbol,
             Resolution resolution,
             bool fillForward = true,
@@ -40,5 +41,23 @@ namespace QuantConnect.Interfaces
             bool isCustomData = false,
             List<Tuple<Type, TickType>> subscriptionDataTypes = null
             );
+
+        /// <summary>
+        ///     Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
+        /// </summary>
+        /// <param name="symbolSecurityType">The <see cref="SecurityType" /> used to determine the types</param>
+        /// <param name="resolution">The resolution of the data requested</param>
+        /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
+        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig" /></returns>
+        List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(
+            SecurityType symbolSecurityType,
+            Resolution resolution,
+            bool isCanonical
+            );
+
+        /// <summary>
+        ///     Gets the available data types
+        /// </summary>
+        Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
     }
 }
