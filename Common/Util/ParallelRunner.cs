@@ -152,18 +152,28 @@ namespace QuantConnect.Util
         {
             lock (_sync)
             {
-                if (_holdQueue != null) _holdQueue.Dispose();
-                if (_processQueue != null) _processQueue.Dispose();
-
-                // Wait for _holdQueue disposal be completed
-                Thread.Sleep(10000);
-
-                if (_processQueueThread != null && _processQueueThread.IsAlive) _processQueueThread.Abort();
+                if (_processQueueThread != null && _processQueueThread.IsAlive)
+                {
+                    try
+                    {
+                        if (!_processQueueThread.Join(TimeSpan.FromSeconds(1)))
+                        {
+                            _processQueueThread.Abort();
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                    }
+                }
 
                 foreach (var worker in _workers)
                 {
                     worker.DisposeSafely();
                 }
+
+                if (_holdQueue != null) _holdQueue.Dispose();
+                if (_processQueue != null) _processQueue.Dispose();
 
                 if (_waitHandle != null)
                 {
