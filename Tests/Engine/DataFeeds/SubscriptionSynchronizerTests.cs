@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
         {
             var feed = new AlgorithmManagerTests.MockDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings);
+            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings, algorithm.TimeKeeper);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             algorithm.Initialize();
