@@ -275,6 +275,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public IFutureChainProvider FutureChainProvider => _baseAlgorithm.FutureChainProvider;
 
         /// <summary>
+        /// Returns the current Slice object
+        /// </summary>
+        public Slice CurrentSlice => _baseAlgorithm.CurrentSlice;
+
+        /// <summary>
         /// Algorithm start date for backtesting, set by the SetStartDate methods.
         /// </summary>
         public DateTime StartDate => _baseAlgorithm.StartDate;
