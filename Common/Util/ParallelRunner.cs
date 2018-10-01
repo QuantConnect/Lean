@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -172,13 +171,14 @@ namespace QuantConnect.Util
                     worker.DisposeSafely();
                 }
 
-                if (_holdQueue != null) _holdQueue.Dispose();
-                if (_processQueue != null) _processQueue.Dispose();
+                _holdQueue?.DisposeSafely();
+                _processQueue?.DisposeSafely();
 
-                if (_waitHandle != null)
+                // if IsClosed means its already disposed
+                if (_waitHandle != null && !_waitHandle.SafeWaitHandle.IsClosed)
                 {
                     _waitHandle.Set();
-                    _waitHandle.Dispose();
+                    _waitHandle.DisposeSafely();
                 }
             }
         }
