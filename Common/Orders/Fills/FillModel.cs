@@ -63,11 +63,7 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled)
-            {
-                fill.FillQuantity = order.Quantity;
-                fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
-            }
+            fill.FillQuantity = order.Quantity;
 
             return fill;
         }
@@ -112,6 +108,8 @@ namespace QuantConnect.Orders.Fills
                         fill.Status = OrderStatus.Filled;
                         // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
                         fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
                     }
                     break;
 
@@ -122,15 +120,10 @@ namespace QuantConnect.Orders.Fills
                         fill.Status = OrderStatus.Filled;
                         // Assuming worse case scenario fill - fill at highest of the stop & asset price.
                         fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
                     }
                     break;
-            }
-
-            // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled)
-            {
-                fill.FillQuantity = order.Quantity;
-                fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
             return fill;
@@ -185,6 +178,8 @@ namespace QuantConnect.Orders.Fills
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = order.LimitPrice;
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
                         }
                     }
                     break;
@@ -201,16 +196,11 @@ namespace QuantConnect.Orders.Fills
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = order.LimitPrice; // Fill at limit price not asset price.
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
                         }
                     }
                     break;
-            }
-
-            // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled)
-            {
-                fill.FillQuantity = order.Quantity;
-                fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
             return fill;
@@ -255,6 +245,8 @@ namespace QuantConnect.Orders.Fills
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
                         fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
                     }
                     break;
                 case OrderDirection.Sell:
@@ -265,15 +257,10 @@ namespace QuantConnect.Orders.Fills
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
                         fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
                     }
                     break;
-            }
-
-            // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled)
-            {
-                fill.FillQuantity = order.Quantity;
-                fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
             return fill;
@@ -323,17 +310,14 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
+                    // assume the order completely filled
+                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
                     fill.FillPrice -= slip;
+                    // assume the order completely filled
+                    fill.FillQuantity = order.Quantity;
                     break;
-            }
-
-            // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled)
-            {
-                fill.FillQuantity = order.Quantity;
-                fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
             return fill;
@@ -374,17 +358,14 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
+                    // assume the order completely filled
+                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
                     fill.FillPrice -= slip;
+                    // assume the order completely filled
+                    fill.FillQuantity = order.Quantity;
                     break;
-            }
-
-            // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled)
-            {
-                fill.FillQuantity = order.Quantity;
-                fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
             return fill;

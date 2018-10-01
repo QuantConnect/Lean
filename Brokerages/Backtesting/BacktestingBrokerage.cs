@@ -353,6 +353,15 @@ namespace QuantConnect.Brokerages.Backtesting
                                     fills = option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder).ToArray();
                                     break;
                             }
+
+                            // invoke fee models for completely filled order events
+                            foreach (var fill in fills)
+                            {
+                                if (fill.Status == OrderStatus.Filled)
+                                {
+                                    fill.OrderFee = security.FeeModel.GetOrderFee(security, order);
+                                }
+                            }
                         }
                         catch (Exception err)
                         {
