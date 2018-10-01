@@ -11,32 +11,34 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System.Collections.Generic;
-using QuantConnect.Data;
+using System;
+using NodaTime;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    ///     AlgorithmSubscriptionManager interface will manage the subscriptions for the SubscriptionManager
+    /// Interface implemented by <see cref="TimeKeeper"/>
     /// </summary>
-    public interface IAlgorithmSubscriptionManager : ISubscriptionDataConfigService
+    public interface ITimeKeeper
     {
         /// <summary>
-        ///     Gets all the current data config subscriptions that are being processed for the SubscriptionManager
+        /// Gets the current time in UTC
         /// </summary>
-        IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions { get; }
+        DateTime UtcTime { get; }
 
         /// <summary>
-        ///     Returns the amount of data config subscriptions processed for the SubscriptionManager
+        /// Adds the specified time zone to this time keeper
         /// </summary>
-        int SubscriptionManagerCount();
+        /// <param name="timeZone"></param>
+        void AddTimeZone(DateTimeZone timeZone);
 
         /// <summary>
-        ///     Flags the existence of custom data in the subscriptions
+        /// Gets the <see cref="LocalTimeKeeper"/> instance for the specified time zone
         /// </summary>
-        bool HasCustomData { get; set; }
+        /// <param name="timeZone">The time zone whose <see cref="LocalTimeKeeper"/> we seek</param>
+        /// <returns>The <see cref="LocalTimeKeeper"/> instance for the specified time zone</returns>
+        LocalTimeKeeper GetLocalTimeKeeper(DateTimeZone timeZone);
     }
 }

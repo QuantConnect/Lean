@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -36,7 +37,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
-        private readonly TimeKeeper _timeKeeper;
+        private readonly ITimeKeeper _timeKeeper;
 
         //Internal dictionary implementation:
         private readonly ConcurrentDictionary<Symbol, Security> _securityManager;
@@ -53,7 +54,7 @@ namespace QuantConnect.Securities
         /// Initialise the algorithm security manager with two empty dictionaries
         /// </summary>
         /// <param name="timeKeeper"></param>
-        public SecurityManager(TimeKeeper timeKeeper)
+        public SecurityManager(ITimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
             _securityManager = new ConcurrentDictionary<Symbol, Security>();
@@ -315,25 +316,15 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
-            if (!subscriptionDataTypes.Any())
-            {
-                throw new ArgumentNullException(nameof(subscriptionDataTypes), "At least one type needed to create security");
-            }
-
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
             // Add the symbol to Data Manager -- generate unified data streams for algorithm events
+            var configs = subscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward,
+                                                                                extendedMarketHours, isFilteredSubscription, isInternalFeed,
+                                                                                isCustomData, subscriptionDataTypes);
             var configList = new SubscriptionDataConfigList(symbol);
-            configList.AddRange(from subscriptionDataType
-                                in subscriptionDataTypes
-                                let dataType = subscriptionDataType.Item1
-                                let tickType = subscriptionDataType.Item2
-                                select subscriptionManager.Add(dataType, tickType,
-                                                               symbol, resolution, dataTimeZone,
-                                                               exchangeHours.TimeZone, isCustomData,
-                                                               fillDataForward, extendedMarketHours,
-                                                               isInternalFeed, isFilteredSubscription));
+            configList.AddRange(configs);
 
             // verify the cash book is in a ready state
             var quoteCurrency = symbolProperties.QuoteCurrency;
@@ -363,7 +354,7 @@ namespace QuantConnect.Securities
             var quoteCash = securityPortfolioManager.CashBook[symbolProperties.QuoteCurrency];
 
             Security security;
-            switch (configList.Symbol.ID.SecurityType)
+            switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Equity:
                     security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties);
@@ -371,12 +362,10 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    configList.SetDataNormalizationMode(DataNormalizationMode.Raw);
                     security = new Option.Option(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
                     break;
 
                 case SecurityType.Future:
-                    configList.SetDataNormalizationMode(DataNormalizationMode.Raw);
                     security = new Future.Future(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 
@@ -400,7 +389,7 @@ namespace QuantConnect.Securities
 
             // if we're just creating this security and it only has an internal
             // feed, mark it as non-tradable since the user didn't request this data
-            if (!configList.IsInternalFeed)
+            if (!isInternalFeed)
             {
                 security.IsTradable = true;
             }

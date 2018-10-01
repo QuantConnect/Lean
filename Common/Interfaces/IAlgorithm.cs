@@ -51,6 +51,14 @@ namespace QuantConnect.Interfaces
         event AlgorithmEvent<GeneratedInsightsCollection> InsightsGenerated;
 
         /// <summary>
+        /// Gets the time keeper instance
+        /// </summary>
+        ITimeKeeper TimeKeeper
+        {
+            get;
+        }
+
+        /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.
         /// </summary>

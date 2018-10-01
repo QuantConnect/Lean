@@ -336,6 +336,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Gets the time keeper instance
+        /// </summary>
+        public ITimeKeeper TimeKeeper => _baseAlgorithm.TimeKeeper;
+
+        /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.
         /// </summary>

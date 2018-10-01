@@ -121,8 +121,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void SubscriptionsMemberIsThreadSafe()
         {
-            var timeKeeper = new TimeKeeper(DateTime.UtcNow);
-            var subscriptionManager = new SubscriptionManager(timeKeeper);
+            var subscriptionManager = new SubscriptionManager();
             subscriptionManager.SetDataManager(new DataManagerStub());
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(5);
@@ -155,10 +154,29 @@ namespace QuantConnect.Tests.Common.Data
             Task.WaitAll(addTask, readTask);
         }
 
+        [Test]
+        public void GetsCustomSubscriptionDataTypes()
+        {
+            var subscriptionManager = new SubscriptionManager();
+            subscriptionManager.SetDataManager(new DataManagerStub());
+            subscriptionManager.AvailableDataTypes[SecurityType.Commodity] = new List<TickType> { TickType.OpenInterest, TickType.Quote, TickType.Trade };
+            var types = subscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Commodity, Resolution.Daily, false);
+
+            Assert.AreEqual(3, types.Count);
+
+            Assert.AreEqual(typeof(OpenInterest), types[0].Item1);
+            Assert.AreEqual(typeof(QuoteBar), types[1].Item1);
+            Assert.AreEqual(typeof(TradeBar), types[2].Item1);
+
+            Assert.AreEqual(TickType.OpenInterest, types[0].Item2);
+            Assert.AreEqual(TickType.Quote, types[1].Item2);
+            Assert.AreEqual(TickType.Trade, types[2].Item2);
+        }
+
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)
         {
-            var timeKeeper = new TimeKeeper(DateTime.UtcNow);
-            var subscriptionManager = new SubscriptionManager(timeKeeper);
+            var subscriptionManager = new SubscriptionManager();
+            subscriptionManager.SetDataManager(new DataManagerStub());
             return subscriptionManager.LookupSubscriptionConfigDataTypes(securityType, resolution, isCanonical);
         }
     }
