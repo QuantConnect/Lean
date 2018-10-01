@@ -247,7 +247,9 @@ namespace QuantConnect.Data.Market
                         var csv = line.ToCsv(3);
                         Symbol = config.Symbol;
                         TickType = TickType.Quote;
-                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        var ticks = (long)(csv[0].ToDecimal() * TimeSpan.TicksPerMillisecond);
+                        Time = date.Date.AddTicks(ticks)
+                            .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
                         Value = (BidPrice + AskPrice) / 2;
@@ -287,7 +289,8 @@ namespace QuantConnect.Data.Market
                     {
                         var csv = line.ToCsv(7);
                         TickType = config.TickType;
-                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64())
+                            .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         Symbol = config.Symbol;
 
                         if (TickType == TickType.Trade)
