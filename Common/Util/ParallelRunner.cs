@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -152,23 +151,34 @@ namespace QuantConnect.Util
         {
             lock (_sync)
             {
-                if (_holdQueue != null) _holdQueue.Dispose();
-                if (_processQueue != null) _processQueue.Dispose();
-
-                // Wait for _holdQueue disposal be completed
-                Thread.Sleep(10000);
-
-                if (_processQueueThread != null && _processQueueThread.IsAlive) _processQueueThread.Abort();
+                if (_processQueueThread != null && _processQueueThread.IsAlive)
+                {
+                    try
+                    {
+                        if (!_processQueueThread.Join(TimeSpan.FromSeconds(1)))
+                        {
+                            _processQueueThread.Abort();
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                    }
+                }
 
                 foreach (var worker in _workers)
                 {
                     worker.DisposeSafely();
                 }
 
-                if (_waitHandle != null)
+                _holdQueue?.DisposeSafely();
+                _processQueue?.DisposeSafely();
+
+                // if IsClosed means its already disposed
+                if (_waitHandle != null && !_waitHandle.SafeWaitHandle.IsClosed)
                 {
                     _waitHandle.Set();
-                    _waitHandle.Dispose();
+                    _waitHandle.DisposeSafely();
                 }
             }
         }
