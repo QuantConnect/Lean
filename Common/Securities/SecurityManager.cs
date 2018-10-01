@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -36,7 +37,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
-        private readonly TimeKeeper _timeKeeper;
+        private readonly ITimeKeeper _timeKeeper;
 
         //Internal dictionary implementation:
         private readonly ConcurrentDictionary<Symbol, Security> _securityManager;
@@ -53,7 +54,7 @@ namespace QuantConnect.Securities
         /// Initialise the algorithm security manager with two empty dictionaries
         /// </summary>
         /// <param name="timeKeeper"></param>
-        public SecurityManager(TimeKeeper timeKeeper)
+        public SecurityManager(ITimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
             _securityManager = new ConcurrentDictionary<Symbol, Security>();
