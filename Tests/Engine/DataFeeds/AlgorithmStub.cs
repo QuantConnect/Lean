@@ -28,6 +28,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
 
+        public AlgorithmStub()
+        {
+            SubscriptionManager.SetDataManager(new DataManagerStub(this));
+        }
+
         public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
         {
             foreach (var ticker in equities ?? new List<string>())
