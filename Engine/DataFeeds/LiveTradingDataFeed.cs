@@ -61,7 +61,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private BusyBlockingCollection<TimeSlice> _bridge;
         private UniverseSelection _universeSelection;
         private DateTime _frontierUtc;
 
@@ -111,13 +110,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exchange.AddEnumerator(DataQueueHandlerSymbol, GetNextTicksEnumerator());
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
 
-            _bridge = new BusyBlockingCollection<TimeSlice>();
             _universeSelection = subscriptionManager.UniverseSelection;
 
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
             Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
 
+            IsActive = true;
             // wire ourselves up to receive notifications when universes are added/removed
             var start = _timeProvider.GetUtcNow();
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -249,107 +248,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Primary entry point.
-        /// </summary>
-        public void Run()
-        {
-            IsActive = true;
-
-            // we want to emit to the bridge minimally once a second since the data feed is
-            // the heartbeat of the application, so this value will contain a second after
-            // the last emit time, and if we pass this time, we'll emit even with no data
-            var nextEmit = DateTime.MinValue;
-
-            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, _frontierTimeProvider);
-            syncer.SubscriptionFinished += (sender, subscription) =>
-            {
-                RemoveSubscription(subscription.Configuration);
-                Log.Debug($"LiveTradingDataFeed.SubscriptionFinished(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
-            };
-
-            try
-            {
-                while (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    // perform sleeps to wake up on the second?
-                    _frontierUtc = _timeProvider.GetUtcNow();
-                    _frontierTimeProvider.SetCurrentTime(_frontierUtc);
-
-                    // always wait for other thread to sync up
-                    if (!_bridge.WaitHandle.WaitOne(Timeout.Infinite, _cancellationTokenSource.Token))
-                    {
-                        break;
-                    }
-
-                    var timeSlice = syncer.Sync(Subscriptions);
-
-                    // check for cancellation
-                    if (_cancellationTokenSource.IsCancellationRequested) return;
-
-                    // emit on data or if we've elapsed a full second since last emit or there are security changes
-                    if (timeSlice.SecurityChanges != SecurityChanges.None || timeSlice.Data.Count != 0 || _frontierUtc >= nextEmit)
-                    {
-                        _bridge.Add(timeSlice, _cancellationTokenSource.Token);
-
-                        // force emitting every second
-                        nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-                    }
-
-                    // take a short nap
-                    Thread.Sleep(1);
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                _algorithm.RunTimeError = err;
-                _algorithm.Status = AlgorithmStatus.RuntimeError;
-
-                // send last empty packet list before terminating,
-                // so the algorithm manager has a chance to detect the runtime error
-                // and exit showing the correct error instead of a timeout
-                nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _bridge.Add(
-                        TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>()),
-                        _cancellationTokenSource.Token);
-                }
-            }
-
-            Log.Trace("LiveTradingDataFeed.Run(): Exited thread.");
-            IsActive = false;
-        }
-
-        /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
         public void Exit()
         {
-            if (_subscriptions != null)
+            if (IsActive)
             {
-                // remove each subscription from our collection
-                foreach (var subscription in Subscriptions)
+                IsActive = false;
+                Log.Trace("LiveTradingDataFeed.Exit(): Start. Setting cancellation token...");
+                _cancellationTokenSource.Cancel();
+                _exchange?.Stop();
+                _customExchange?.Stop();
+
+                if (_subscriptions != null)
                 {
-                    try
+                    // remove each subscription from our collection
+                    foreach (var subscription in Subscriptions)
                     {
-                        RemoveSubscription(subscription.Configuration);
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err, "Error removing: " + subscription.Configuration);
+                        try
+                        {
+                            RemoveSubscription(subscription.Configuration);
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error(err, "Error removing: " + subscription.Configuration);
+                        }
                     }
                 }
+                Log.Trace("LiveTradingDataFeed.Exit(): Exit Finished.");
             }
-
-            if (_exchange != null) _exchange.Stop();
-            if (_customExchange != null) _customExchange.Stop();
-
-            Log.Trace("LiveTradingDataFeed.Exit(): Setting cancellation token...");
-            _cancellationTokenSource.Cancel();
-
-            if (_bridge != null) _bridge.Dispose();
         }
 
         /// <summary>
@@ -700,7 +627,61 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>1</filterpriority>
         public IEnumerator<TimeSlice> GetEnumerator()
         {
-            return _bridge.GetConsumingEnumerable(_cancellationTokenSource.Token).GetEnumerator();
+            var shouldSendExtraEmptyPacket = false;
+            // we want to emit to the bridge minimally once a second since the data feed is
+            // the heartbeat of the application, so this value will contain a second after
+            // the last emit time, and if we pass this time, we'll emit even with no data
+            var nextEmit = DateTime.MinValue;
+            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, _frontierTimeProvider);
+            syncer.SubscriptionFinished += (sender, subscription) =>
+            {
+                RemoveSubscription(subscription.Configuration);
+                Log.Debug($"LiveTradingDataFeed.SubscriptionFinished(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
+            };
+            while (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                // perform sleeps to wake up on the second?
+                _frontierUtc = _timeProvider.GetUtcNow();
+                _frontierTimeProvider.SetCurrentTime(_frontierUtc);
+                TimeSlice timeSlice;
+                try
+                {
+                    timeSlice = syncer.Sync(Subscriptions);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    // notify the algorithm about the error, so it can be reported to the user
+                    _algorithm.RunTimeError = err;
+                    _algorithm.Status = AlgorithmStatus.RuntimeError;
+                    shouldSendExtraEmptyPacket = true;
+                    break;
+                }
+                // check for cancellation
+                if (_cancellationTokenSource.IsCancellationRequested) break;
+                // emit on data or if we've elapsed a full second since last emit or there are security changes
+                if (timeSlice.SecurityChanges != SecurityChanges.None || timeSlice.Data.Count != 0 || _frontierUtc >= nextEmit)
+                {
+                    yield return timeSlice;
+                    // force emitting every second
+                    nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                }
+                // take a short nap
+                Thread.Sleep(1);
+            }
+            if (shouldSendExtraEmptyPacket)
+            {
+                // send last empty packet list before terminating,
+                // so the algorithm manager has a chance to detect the runtime error
+                // and exit showing the correct error instead of a timeout
+                nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    var timeSlice = TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
+                    yield return timeSlice;
+                }
+            }
+            Log.Trace("LiveTradingDataFeed.GetEnumerator(): Exited thread.");
         }
 
         /// <summary>

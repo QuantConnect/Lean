@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
@@ -49,15 +48,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            var feedThreadStarted = new ManualResetEvent(false);
-            var dataFeedThread = new Thread(() =>
-            {
-                feedThreadStarted.Set();
-                feed.Run();
-            }) {IsBackground = true};
-            dataFeedThread.Start();
-            feedThreadStarted.WaitOne();
-
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
             var lastMonth = algorithm.StartDate.Month;
@@ -73,8 +63,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 count++;
             }
             Console.WriteLine("Count: " + count);
-
             stopwatch.Stop();
+            feed.Exit();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count/1000d/stopwatch.Elapsed.TotalSeconds}");
         }
 

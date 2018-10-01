@@ -274,32 +274,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return true;
         }
 
-        /// <summary>
-        /// Main routine for datafeed analysis.
-        /// </summary>
-        /// <remarks>This is a hot-thread and should be kept extremely lean. Modify with caution.</remarks>
-        public void Run()
-        {
-            try
-            {
-                _controller.WaitHandle.WaitOne();
-            }
-            catch (Exception err)
-            {
-                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message);
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _cancellationTokenSource.Cancel();
-                }
-            }
-            finally
-            {
-                Log.Trace("FileSystemDataFeed.Run(): Ending Thread... ");
-                if (_controller != null) _controller.Dispose();
-                IsActive = false;
-            }
-        }
-
         private DateTime GetInitialFrontierTime()
         {
             var frontier = DateTime.MaxValue;
@@ -418,8 +392,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Exit()
         {
-            Log.Trace("FileSystemDataFeed.Exit(): Exit triggered.");
-            _cancellationTokenSource.Cancel();
+            if (IsActive)
+            {
+                IsActive = false;
+                Log.Trace("FileSystemDataFeed.Exit(): Start. Setting cancellation token...");
+                _cancellationTokenSource.Cancel();
+                Log.Trace("FileSystemDataFeed.Exit(): Ending Thread...");
+                _controller?.DisposeSafely();
+
+                if (_subscriptions != null)
+                {
+                    // remove each subscription from our collection
+                    foreach (var subscription in Subscriptions)
+                    {
+                        try
+                        {
+                            RemoveSubscription(subscription.Configuration);
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error(err, "Error removing: " + subscription.Configuration);
+                        }
+                    }
+                }
+
+                _subscriptionfactory?.DisposeSafely();
+                Log.Trace("FileSystemDataFeed.Exit(): Exit Finished.");
+            }
         }
 
         /// <summary>
@@ -475,17 +474,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
                 }
             }
-
-            //Close up all streams:
-            foreach (var subscription in Subscriptions)
-            {
-                subscription.Dispose();
-            }
-
-            if (_subscriptionfactory != null)
-                _subscriptionfactory.Dispose();
-
-            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _algorithm.UtcTime));
+            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Data Feed Completed at {0} UTC", _algorithm.UtcTime));
         }
 
         /// <summary>
