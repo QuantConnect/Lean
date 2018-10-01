@@ -228,7 +228,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
         /// </summary>
-        public void Scan()
+        public virtual void Scan()
         {
             lock (_needsScanLock)
             {
