@@ -434,7 +434,7 @@ namespace QuantConnect.Algorithm
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
-            AddUniverse(new UserDefinedUniverse(config, universeSettings, SecurityInitializer, resolution.ToTimeSpan(), selector));
+            AddUniverse(new UserDefinedUniverse(config, universeSettings, resolution.ToTimeSpan(), selector));
         }
 
         /// <summary>
@@ -488,7 +488,6 @@ namespace QuantConnect.Algorithm
 
                         universe = new UserDefinedUniverse(uconfig,
                             new UniverseSettings(resolution, leverage, isFillDataForward, isExtendedMarketHours, TimeSpan.Zero),
-                            SecurityInitializer,
                             QuantConnect.Time.MaxTimeSpan,
                             new List<Symbol>());
                         _pendingUniverseAdditions.Add(universe);

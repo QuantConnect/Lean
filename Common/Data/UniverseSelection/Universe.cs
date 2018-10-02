@@ -109,14 +109,25 @@ namespace QuantConnect.Data.UniverseSelection
         /// Initializes a new instance of the <see cref="Universe"/> class
         /// </summary>
         /// <param name="config">The configuration used to source data for this universe</param>
-        /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
-        protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer = null)
+        protected Universe(SubscriptionDataConfig config)
         {
             _previousSelections = new HashSet<Symbol>();
             Securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
-            SecurityInitializer = securityInitializer ?? QuantConnect.Securities.SecurityInitializer.Null;
+            SecurityInitializer = QuantConnect.Securities.SecurityInitializer.Null;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Universe"/> class
+        /// </summary>
+        /// <param name="config">The configuration used to source data for this universe</param>
+        /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
+        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
+        protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer)
+            : this(config)
+        {
+            SecurityInitializer = securityInitializer;
         }
 
         /// <summary>

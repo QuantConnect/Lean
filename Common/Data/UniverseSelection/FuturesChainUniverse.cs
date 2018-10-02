@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
@@ -34,8 +33,6 @@ namespace QuantConnect.Data.UniverseSelection
 
         private readonly UniverseSettings _universeSettings;
         private SubscriptionManager _subscriptionManager;
-
-        private HashSet<Symbol> _cachedSelection;
         private DateTime _cacheDate;
 
         /// <summary>
@@ -44,7 +41,24 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="future">The canonical future chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
         /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
+        public FuturesChainUniverse(Future future,
+            UniverseSettings universeSettings,
+            SubscriptionManager subscriptionManager)
+            : base(future.SubscriptionDataConfig)
+        {
+            Future = future;
+            _universeSettings = universeSettings;
+            _subscriptionManager = subscriptionManager;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuturesChainUniverse"/> class
+        /// </summary>
+        /// <param name="future">The canonical future chain security</param>
+        /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
+        /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
+        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
         public FuturesChainUniverse(Future future,
                                     UniverseSettings universeSettings,
                                     SubscriptionManager subscriptionManager,

@@ -630,11 +630,6 @@ namespace QuantConnect.Algorithm
             // this flag will prevent calls to SetBrokerageModel from overwriting this initializer
             _userSetSecurityInitializer = true;
             SecurityInitializer = securityInitializer;
-
-            foreach (var universe in UniverseManager.Select(x => x.Value))
-            {
-                universe.SetSecurityInitializer(securityInitializer);
-            }
         }
 
         /// <summary>
@@ -1499,7 +1494,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != canonicalSymbol))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer, LiveMode);
+                universe = new OptionChainUniverse(canonicalSecurity, settings, LiveMode);
                 _pendingUniverseAdditions.Add(universe);
             }
 
@@ -1545,7 +1540,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != canonicalSymbol))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager);
                 _pendingUniverseAdditions.Add(universe);
             }
 

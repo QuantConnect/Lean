@@ -243,36 +243,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager,
                                                               _marketHoursDatabase, _symbolPropertiesDatabase,
-                                                              universe.SecurityInitializer, symbol, universe.UniverseSettings.Resolution,
+                                                              _algorithm.SecurityInitializer, symbol, universe.UniverseSettings.Resolution,
                                                               universe.UniverseSettings.FillForward, universe.UniverseSettings.Leverage,
                                                               universe.UniverseSettings.ExtendedMarketHours, false, false,
                                                               _algorithm.LiveMode, symbol.ID.SecurityType == SecurityType.Option);
                     pendingAdditions.Add(symbol, security);
 
-                    var optionChainUniverse = universe as OptionChainUniverse;
-                    var futureChainUniverse = universe as FuturesChainUniverse;
-                    if (optionChainUniverse != null)
-                    {
-                        if (!symbol.HasUnderlying)
-                        {
-                            // create the underlying w/ raw mode
-                            security.SetDataNormalizationMode(DataNormalizationMode.Raw);
-                            optionChainUniverse.Option.Underlying = security;
-                        }
-                        else
-                        {
-                            // set the underlying security and pricing model from the canonical security
-                            var option = (Option) security;
-                            option.Underlying = optionChainUniverse.Option.Underlying;
-                            option.PriceModel = optionChainUniverse.Option.PriceModel;
-                        }
-                    }
-                    else if (futureChainUniverse != null)
-                    {
-                        // set the underlying security and pricing model from the canonical security
-                        var future = (Future) security;
-                        future.Underlying = futureChainUniverse.Future.Underlying;
-                    }
+                    SetUnderlyingSecurity(universe, security);
                 }
 
                 var addedSubscription = false;
@@ -370,6 +347,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// This method sets the underlying security for <see cref="OptionChainUniverse"/> and <see cref="FuturesChainUniverse"/>
+        /// </summary>
+        private void SetUnderlyingSecurity(Universe universe, Security security)
+        {
+            var optionChainUniverse = universe as OptionChainUniverse;
+            var futureChainUniverse = universe as FuturesChainUniverse;
+            if (optionChainUniverse != null)
+            {
+                if (!security.Symbol.HasUnderlying)
+                {
+                    // create the underlying w/ raw mode
+                    security.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                    optionChainUniverse.Option.Underlying = security;
+                }
+                else
+                {
+                    // set the underlying security and pricing model from the canonical security
+                    var option = (Option)security;
+                    option.Underlying = optionChainUniverse.Option.Underlying;
+                    option.PriceModel = optionChainUniverse.Option.PriceModel;
+                }
+            }
+            else if (futureChainUniverse != null)
+            {
+                // set the underlying security and pricing model from the canonical security
+                var future = (Future)security;
+                future.Underlying = futureChainUniverse.Future.Underlying;
+            }
         }
     }
 }

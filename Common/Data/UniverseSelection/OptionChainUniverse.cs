@@ -46,8 +46,26 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
+        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
+        public OptionChainUniverse(Option option,
+            UniverseSettings universeSettings,
+            bool liveMode)
+            : base(option.SubscriptionDataConfig)
+        {
+            Option = option;
+            _underlyingSymbol = new[] { Option.Symbol.Underlying };
+            _universeSettings = universeSettings;
+            _liveMode = liveMode;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
+        /// </summary>
+        /// <param name="option">The canonical option chain security</param>
+        /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
+        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
         public OptionChainUniverse(Option option,
                                    UniverseSettings universeSettings,
                                    ISecurityInitializer securityInitializer,
