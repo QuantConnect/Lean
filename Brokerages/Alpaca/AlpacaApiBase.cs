@@ -110,12 +110,21 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         protected string BaseUrl;
 
+        /// <summary>
+        /// The market hours database
+        /// </summary>
+        protected MarketHoursDatabase _marketHours;
+
 
         private TransactionStreamSession _eventsSession;
         private PricingStreamSession _ratesSession;
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
+        public AlpacaApiBase(string name):base(name)
+        {
 
+        }
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaApiBase"/> class.
         /// </summary>
@@ -124,14 +133,15 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="keyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="baseUrl">The Alpaca base url</param>
-        public AlpacaApiBase(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
-            : base("Alpaca Brokerage")
+        public void initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
         {
             OrderProvider = orderProvider;
             SecurityProvider = securityProvider;
             AccountKeyId = keyId;
             SecretKey = secretKey;
             BaseUrl = baseUrl;
+
+            _marketHours = MarketHoursDatabase.FromDataFolder();
 
             restClient = new Markets.RestClient(AccountKeyId, SecretKey, baseUrl);
         }
@@ -173,7 +183,7 @@ namespace QuantConnect.Brokerages.Alpaca
                         TimeSpan elapsed;
                         lock (LockerConnectionMonitor)
                         {
-                            elapsed = TimeSpan.FromSeconds(10); // DateTime.UtcNow - LastHeartbeatUtcTime;
+                            elapsed = DateTime.UtcNow - LastHeartbeatUtcTime;
                         }
 
                         if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
@@ -273,7 +283,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var response = restClient.ListAssetsAsync().Result;
+                var task = restClient.ListAssetsAsync();
+                var response = Extensions.SynchronouslyAwaitTaskResult(task);
 
                 return response.Select(x => x.Symbol).ToList();
             }
@@ -296,11 +307,12 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var response = restClient.ListQuotesAsync(instruments).Result;
+                var task = restClient.ListQuotesAsync(instruments);
+                var response = Extensions.SynchronouslyAwaitTaskResult(task);
                 return response
                     .ToDictionary(
                         x => x.Symbol,
-                        x => new Tick { BidPrice = x.BidPrice, AskPrice = x.AskPrice }
+                        x => new Tick { Symbol = Symbol.Create(x.Symbol, SecurityType.Equity, Market.USA), BidPrice = x.BidPrice, AskPrice = x.AskPrice, Time = x.LastTime, TickType = TickType.Trade }
                     );
             }
             catch (Exception e)
@@ -322,7 +334,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var orders = restClient.ListOrdersAsync().Result;
+                var task = restClient.ListOrdersAsync();
+                var orders = Extensions.SynchronouslyAwaitTaskResult(task);
 
                 var qcOrders = new List<Order>();
                 foreach (var order in orders)
@@ -349,7 +362,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var holdings = restClient.ListPositionsAsync().Result;
+                var task = restClient.ListPositionsAsync();
+                var holdings = Extensions.SynchronouslyAwaitTaskResult(task);
 
                 var qcHoldings = new List<Holding>();
                 foreach (var holds in holdings)
@@ -377,7 +391,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var balance = restClient.GetAccountAsync().Result;
+                var task = restClient.GetAccountAsync();
+                var balance = Extensions.SynchronouslyAwaitTaskResult(task);
 
                 return new List<Cash>
                     {
@@ -415,8 +430,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
-                    Log.Trace(e.Message);
-                    if (e.InnerException != null) Log.Trace(e.InnerException.Message);
+                    if (e.InnerException != null)
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     return false;
                 }
 
@@ -469,8 +484,10 @@ namespace QuantConnect.Brokerages.Alpaca
                     throw new NotSupportedException("The order type " + order.Type + " is not supported.");
             }
             CheckRateLimiting();
-            var apOrder = restClient.PostOrderAsync(order.Symbol.Value, quantity, side, type, timeInForce,
-                limitPrice, stopPrice).Result;
+            var task = restClient.PostOrderAsync(order.Symbol.Value, quantity, side, type, timeInForce,
+                limitPrice, stopPrice);
+
+            var apOrder = Extensions.SynchronouslyAwaitTaskResult(task); 
 
             return apOrder;
         }
@@ -503,7 +520,8 @@ namespace QuantConnect.Brokerages.Alpaca
             foreach (var orderId in order.BrokerId)
             {
                 CheckRateLimiting();
-                var res = restClient.DeleteOrderAsync(new Guid(orderId)).Result;
+                var task = restClient.DeleteOrderAsync(new Guid(orderId));
+                var res = Extensions.SynchronouslyAwaitTaskResult(task);
             }
 
             return true;
@@ -515,7 +533,7 @@ namespace QuantConnect.Brokerages.Alpaca
         public void StartTransactionStream()
         {
             _eventsSession = new TransactionStreamSession(this);
-            _eventsSession.TradeReceived += new Action<Markets.ITradeUpdate>(OnTransactionDataReceived);
+            _eventsSession.TradeReceived += OnTransactionDataReceived;
             _eventsSession.StartSession();
         }
 
@@ -526,6 +544,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             if (_eventsSession != null)
             {
+                _eventsSession.TradeReceived -= OnTransactionDataReceived;
                 _eventsSession.StopSession();
             }
         }
@@ -566,7 +585,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 else if (tradeEvent == "ORDER_CANCEL_REJECTED")
                 {
-
+                    Log.Trace($"AlpacaBrokerage.OnTransactionDataReceived(): Order cancel rejected.");
                 }
             }
             else
@@ -581,10 +600,9 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         public void StartPricingStream(List<string> instruments)
         {
-            Log.Trace("Start Pricing Stream");
             _ratesSession = new PricingStreamSession(this, instruments);
-            _ratesSession.QuoteReceived += new Action<Markets.IStreamQuote>(OnQuoteDataReceived);
-            _ratesSession.TradeReceived += new Action<Markets.IStreamTrade>(OnTradeDataReceived);
+            _ratesSession.QuoteReceived += OnQuoteDataReceived;
+            _ratesSession.TradeReceived += OnTradeDataReceived;
             _ratesSession.StartSession();
         }
 
@@ -595,7 +613,8 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             if (_ratesSession != null)
             {
-                Log.Trace("End Pricing Stream");
+                _ratesSession.QuoteReceived -= OnQuoteDataReceived;
+                _ratesSession.TradeReceived -= OnTradeDataReceived;
                 _ratesSession.StopSession();
             }
         }
@@ -614,7 +633,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(key: symbol, value: out exchangeTimeZone))
             {
-                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
+                exchangeTimeZone = _marketHours.GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
                 _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
             }
             time = time.ConvertFromUtc(exchangeTimeZone);
@@ -645,7 +664,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(key: symbol, value: out exchangeTimeZone))
             {
-                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
+                exchangeTimeZone = _marketHours.GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
                 _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
             }
             time = time.ConvertFromUtc(exchangeTimeZone);
@@ -699,7 +718,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     CheckRateLimiting();
-                    newBars = (period.Days < 1) ? restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI).Result.Items.ToList() : restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc).Result.Items.ToList();
+                    var task = (period.Days < 1) ? restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI) : restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc);
+                    newBars = Extensions.SynchronouslyAwaitTaskResult(task).Items.ToList();
                 }
                 catch (Exception e)
                 {
@@ -801,7 +821,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     CheckRateLimiting();
-                    var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
+                    var task = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
+                    var newBars = Extensions.SynchronouslyAwaitTaskResult(task);
                     asList = newBars.Items.ToList();
 
                     if (asList.Count == 0)
@@ -915,18 +936,10 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     CheckRateLimiting();
-                    var newBars = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets).Result;
+                    var task = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
+                    var newBars = Extensions.SynchronouslyAwaitTaskResult(task);
                     asList = newBars.Items.ToList();
-
-                    // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
-                    asList.RemoveAt(0);
-
-                    offsets = asList.Last().TimeOffset;
-                    if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
-                }
-                catch (Exception e)
-                {
-                    if (e.InnerException != null && e.InnerException.Message.Contains("ticks"))
+                    if (asList.Count == 0)
                     {
                         startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
                         startTime = startTime.AddDays(1);
@@ -934,7 +947,19 @@ namespace QuantConnect.Brokerages.Alpaca
                         offsets = 0;
                     }
                     else
-                        throw;
+                    {
+                        // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
+                        asList.RemoveAt(0);
+
+                        offsets = asList.Last().TimeOffset;
+                        if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (e.InnerException != null)
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
+                    throw e;
                 }
                 bool isEnd = false;
                 for (int i = 0; i < asList.Count; i++)
