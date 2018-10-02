@@ -30,9 +30,7 @@ namespace QuantConnect.Tests.Python
         [SetUp]
         public void Setup()
         {
-            var pythonPath = new DirectoryInfo("RegressionAlgorithms");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-            _baseCode = File.ReadAllText(Path.Combine(pythonPath.FullName, "Test_AlgorithmPythonWrapper.py"));
+            _baseCode = File.ReadAllText(Path.Combine("./RegressionAlgorithms", "Test_AlgorithmPythonWrapper.py"));
         }
 
         [Test]
@@ -90,7 +88,7 @@ namespace QuantConnect.Tests.Python
 
             using (Py.GIL())
             {
-                PythonEngine.ModuleFromString("Test_AlgorithmPythonWrapper", code);
+                 PythonEngine.ModuleFromString("Test_AlgorithmPythonWrapper", code);
                 return new AlgorithmPythonWrapper("Test_AlgorithmPythonWrapper");
             }
         }

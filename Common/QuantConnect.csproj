@@ -185,6 +185,7 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
+    <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Securities\ICurrencyConverter.cs" />
     <Compile Include="Python\BuyingPowerModelPythonWrapper.cs" />
     <Compile Include="Securities\CashAmount.cs" />

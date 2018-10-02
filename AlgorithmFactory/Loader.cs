@@ -22,8 +22,8 @@ using System.Runtime.InteropServices;
 using System.Security.Policy;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using Python.Runtime;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Python;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -41,9 +41,6 @@ namespace QuantConnect.AlgorithmFactory
 
         // Defines how we resolve a list of type names into a single type name to be instantiated
         private readonly Func<List<string>, string> _multipleTypeNameResolverFunction;
-
-        // Used to allow multiple Python regression tests
-        private static bool _isBeginAllowThreadsCalled;
 
         /// <summary>
         /// Memory space of the user algorithm
@@ -169,13 +166,9 @@ namespace QuantConnect.AlgorithmFactory
 
             try
             {
-                algorithmInstance = new AlgorithmPythonWrapper(moduleName);
+                PythonInitializer.Initialize();
 
-                if (!_isBeginAllowThreadsCalled)
-                {
-                    PythonEngine.BeginAllowThreads();
-                    _isBeginAllowThreadsCalled = true;
-                }
+                algorithmInstance = new AlgorithmPythonWrapper(moduleName);
             }
             catch (Exception e)
             {

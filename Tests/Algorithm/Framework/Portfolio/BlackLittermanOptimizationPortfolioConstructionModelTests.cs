@@ -24,8 +24,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -40,9 +38,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestFixtureSetUp]
         public void SetUp()
         {
-            var pythonPath = new DirectoryInfo("../../../Algorithm.Framework/Portfolio");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-
             _algorithm = new QCAlgorithmFramework();
             SetUtcTime(new DateTime(2018, 8, 7));
 
@@ -235,7 +230,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
             {
-                
+
             }
         }
 

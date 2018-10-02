@@ -11,36 +11,35 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-using System;
-using NUnit.Framework;
+using Python.Runtime;
 
-namespace QuantConnect.Tests
+namespace QuantConnect.Python
 {
-    [SetUpFixture]
-    public class PythonSetup
+    /// <summary>
+    /// Helper class for Python initialization
+    /// </summary>
+    public static class PythonInitializer
     {
-        [SetUp]
-        public void SetUp()
-        {
-            var pythonPath = string.Join(
-                OS.IsLinux ? ":" : ";",
-                "./Alphas",
-                "./Execution",
-                "./Portfolio",
-                "./Risk",
-                "./Selection",
-                "./RegressionAlgorithms",
-                "./Jupyter/RegressionScripts",
-                "../../../Algorithm.Python");
+        // Used to allow multiple Python unit and regression tests to be run in the same test run
+        private static bool _isBeginAllowThreadsCalled;
 
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath);
-        }
-
-        [TearDown]
-        public void TearDown()
+        /// <summary>
+        /// Initialize the Python.NET library
+        /// </summary>
+        public static void Initialize()
         {
+            if (!_isBeginAllowThreadsCalled)
+            {
+                PythonEngine.Initialize();
+
+                // required for multi-threading usage
+                PythonEngine.BeginAllowThreads();
+
+                _isBeginAllowThreadsCalled = true;
+            }
         }
     }
 }
