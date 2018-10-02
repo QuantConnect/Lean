@@ -13,11 +13,14 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
 
 from QuantConnect import *
 from QuantConnect.Indicators import *
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta
 from enum import Enum
@@ -59,7 +62,7 @@ class BasePairsTradingAlphaModel(AlphaModel):
 
         for key, pair in self.pairs.items():
             insights.extend(pair.GetInsightGroup())
- 
+
         return insights
 
     def OnSecuritiesChanged(self, algorithm, changes):
@@ -146,7 +149,7 @@ class BasePairsTradingAlphaModel(AlphaModel):
 
             lower = ConstantIndicator[IndicatorDataPoint]("ct", 1 - threshold / 100)
             self.lowerThreshold = IndicatorExtensions.Times(self.mean, lower)
-            
+
             self.predictionInterval = predictionInterval
 
         def GetInsightGroup(self):

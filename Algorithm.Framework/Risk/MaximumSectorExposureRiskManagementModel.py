@@ -14,8 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, PortfolioTargetCollection
 from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 from itertools import groupby

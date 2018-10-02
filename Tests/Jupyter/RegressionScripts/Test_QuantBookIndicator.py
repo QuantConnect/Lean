@@ -15,6 +15,9 @@ from clr import AddReference
 AddReference("QuantConnect.Jupyter")
 AddReference("QuantConnect.Indicators")
 
+from System import *
+from QuantConnect import *
+from QuantConnect.Data import *
 from QuantConnect.Jupyter import *
 from QuantConnect.Indicators import *
 

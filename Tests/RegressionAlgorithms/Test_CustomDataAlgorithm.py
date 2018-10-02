@@ -14,12 +14,19 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Data import SubscriptionDataSource
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Algorithm.Framework.Selection import *
+from QuantConnect.Data import *
 from QuantConnect.Python import PythonData, PythonQuandl
 from datetime import datetime
 import decimal

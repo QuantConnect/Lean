@@ -14,12 +14,19 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Algorithm.Framework.Selection import *
 
 class Test_MethodOverload(QCAlgorithm):
     def Initialize(self):

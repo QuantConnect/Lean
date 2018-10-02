@@ -19,6 +19,7 @@ AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Data import *
 from QuantConnect.Jupyter import *
 from datetime import datetime, timedelta
 from custom_data import QuandlFuture, Nifty

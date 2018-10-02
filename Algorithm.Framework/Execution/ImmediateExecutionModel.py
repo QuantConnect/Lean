@@ -14,13 +14,16 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm.Framework.Execution import ExecutionModel
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTargetCollection
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
 
 class ImmediateExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''

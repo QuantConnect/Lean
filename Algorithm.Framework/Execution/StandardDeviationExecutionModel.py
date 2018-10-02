@@ -15,15 +15,19 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
-from QuantConnect.Data.Market import TradeBar
+from QuantConnect.Data import *
+from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm.Framework.Execution import ExecutionModel
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTargetCollection
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
 import numpy as np
 
 
