@@ -366,6 +366,7 @@
     <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceFeeModelTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
