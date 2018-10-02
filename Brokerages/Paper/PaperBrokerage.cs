@@ -58,5 +58,28 @@ namespace QuantConnect.Brokerages.Paper
             // if we've already begun running, just return the current state
             return Algorithm.Portfolio.CashBook.Select(x => x.Value).ToList();
         }
+
+        /// <summary>
+        /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events.
+        /// This override adds dividend detection and applicatio
+        /// </summary>
+        public override void Scan()
+        {
+            if (Algorithm.CurrentSlice?.Dividends.Any() == true)
+            {
+                foreach (var dividend in Algorithm.CurrentSlice.Dividends.Values)
+                {
+                    Security security;
+                    if (Algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                    {
+                        // compute the total distribution and apply as security's quote currency
+                        var distribution = security.Holdings.Quantity * dividend.Distribution;
+                        security.QuoteCurrency.AddAmount(distribution);
+                    }
+                }
+            }
+
+            base.Scan();
+        }
     }
 }
