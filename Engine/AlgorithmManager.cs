@@ -81,7 +81,7 @@ namespace QuantConnect.Lean.Engine
         /// Gets a function used with the Isolator for verifying we're not spending too much time in each
         /// algo manager timer loop
         /// </summary>
-        public readonly Func<string> TimeLoopWithinLimits;
+        public readonly Func<IsolatorLimitResult> TimeLoopWithinLimits;
 
         private readonly bool _liveMode;
 
@@ -110,14 +110,13 @@ namespace QuantConnect.Lean.Engine
         {
             TimeLoopWithinLimits = () =>
             {
+                var message = string.Empty;
                 if (CurrentTimeStepElapsed > _timeLoopMaximum)
                 {
-                    return ("Algorithm took longer than " +
-                            _timeLoopMaximum.TotalMinutes.ToString() +
-                            " minutes on a single time loop.");
+                    message = $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
                 }
 
-                return null;
+                return new IsolatorLimitResult(CurrentTimeStepElapsed, message);
             };
             _liveMode = liveMode;
         }
