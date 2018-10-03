@@ -290,6 +290,7 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             catch (Exception e)
             {
+                Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 return new List<string>();
@@ -317,6 +318,7 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             catch (Exception e)
             {
+                Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw e;
@@ -346,6 +348,7 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             catch (Exception e)
             {
+                Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw e;
@@ -375,6 +378,7 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             catch (Exception e)
             {
+                Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw e;
@@ -403,9 +407,10 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             catch (Exception e)
             {
+                Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw;
+                throw e;
             }
             
         }
@@ -430,6 +435,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
+                    Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     return false;
@@ -723,9 +729,10 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
+                    Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw;
+                    throw e;
                 }
 
                 if (newBars.Count == 0)
@@ -843,6 +850,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
+                    Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     throw e;
@@ -957,6 +965,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
+                    Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     throw e;

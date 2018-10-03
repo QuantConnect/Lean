@@ -61,14 +61,6 @@ namespace QuantConnect.Brokerages.Alpaca
         #region IBrokerage implementation
 
         /// <summary>
-        /// Returns true if we're currently connected to the broker
-        /// </summary>
-        public override bool IsConnected
-        {
-            get { return IsConnected; }
-        }
-
-        /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         public override void Connect()
