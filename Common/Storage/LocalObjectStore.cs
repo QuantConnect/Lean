@@ -30,6 +30,8 @@ namespace QuantConnect.Storage
     {
         private static readonly string StorageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
+        protected Controls Controls { get; private set; }
+
         /// <summary>
         /// The root storage folder for the algorithm
         /// </summary>
@@ -50,6 +52,8 @@ namespace QuantConnect.Storage
 
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
+
+            Controls = controls;
         }
 
         /// <summary>
@@ -115,9 +119,28 @@ namespace QuantConnect.Storage
                 throw new ArgumentNullException(nameof(key));
             }
 
+
             try
             {
+
+                var files = Directory.EnumerateFiles(StorageRoot).Select(f => new FileInfo(f)).ToList();
+                var fileCount = files.Count;
+                if (fileCount > Controls.StorageFileCount)
+                {
+                    Log.Error($"LocaObjectStore at file capacity: {fileCount}. Unable to save: '{key}'");
+                    return false;
+                }
+
+
+
                 var fileName = GetFilePath(key);
+                var deltaKeyFileSizeMb = BytesToMb(contents.Length - new FileInfo(fileName).Length);
+                var expectedStorageSizeMb = files.Sum(f => BytesToMb(f.Length)) + deltaKeyFileSizeMb;
+                if (expectedStorageSizeMb > Controls.StorageLimitMB)
+                {
+                    Log.Error("LocalObjectStore");
+                }
+
 
                 File.WriteAllBytes(fileName, contents);
             }
@@ -189,6 +212,11 @@ namespace QuantConnect.Storage
             {
                 Log.Error(exception, "Error deleting storage directory.");
             }
+        }
+
+        private static double BytesToMb(long bytes)
+        {
+            return (double) bytes / 1024 / 1024;
         }
     }
 }
