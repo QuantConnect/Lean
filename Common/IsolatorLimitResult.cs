@@ -33,6 +33,11 @@ namespace QuantConnect
         public string ErrorMessage { get; }
 
         /// <summary>
+        /// Returns true if there are no errors in the current time step
+        /// </summary>
+        public bool IsWithinCustomLimits => string.IsNullOrEmpty(ErrorMessage);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="IsolatorLimitResult"/> class
         /// </summary>
         /// <param name="currentTimeStepElapsed">The amount of time spent on the current time step</param>

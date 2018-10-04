@@ -119,7 +119,7 @@ namespace QuantConnect
 
                 // check to see if we're within other custom limits defined by the caller
                 isolatorLimitResult = withinCustomLimits();
-                if (!string.IsNullOrEmpty(isolatorLimitResult.ErrorMessage))
+                if (!isolatorLimitResult.IsWithinCustomLimits)
                 {
                     message = isolatorLimitResult.ErrorMessage;
                     break;
