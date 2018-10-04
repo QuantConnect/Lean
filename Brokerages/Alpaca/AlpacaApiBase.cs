@@ -321,7 +321,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw e;
+                throw;
             }
             
         }
@@ -351,7 +351,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw e;
+                throw;
             }
 
         }
@@ -381,7 +381,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw e;
+                throw;
             }
             
         }
@@ -410,7 +410,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 Log.Error(e);
                 if (e.InnerException != null)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw e;
+                throw;
             }
             
         }
@@ -732,7 +732,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw e;
+                    throw;
                 }
 
                 if (newBars.Count == 0)
@@ -853,7 +853,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw e;
+                    throw;
                 }
                 var result = asList
                         .GroupBy(x => DateTimeHelper.FromUnixTimeMilliseconds(x.TimeOffset).RoundDown(period))
@@ -968,7 +968,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     Log.Error(e);
                     if (e.InnerException != null)
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw e;
+                    throw;
                 }
                 bool isEnd = false;
                 for (int i = 0; i < asList.Count; i++)
