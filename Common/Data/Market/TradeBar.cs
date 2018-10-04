@@ -270,7 +270,23 @@ namespace QuantConnect.Data.Market
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                string determinedDateFormat;
+                switch (csv[0].Length)
+                {
+                    case 12:
+                        determinedDateFormat = DateFormat.TwelveCharacter;
+                        break;
+                    case 8:
+                        determinedDateFormat = DateFormat.EightCharacter;
+                        break;
+                    default:
+                        determinedDateFormat = DateFormat.TwelveCharacter;
+                        break;
+                }
+
+                tradeBar.Time = DateTime
+                    .ParseExact(csv[0], determinedDateFormat, CultureInfo.InvariantCulture)
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
             else
             {
