@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework
 {
@@ -94,8 +95,16 @@ namespace QuantConnect.Algorithm.Framework
         {
             Update(changes,
                 added => dictionary.Add(keyFactory(added), valueFactory(added)),
-                removed => dictionary.Remove(keyFactory(removed))
-            );
+                removed =>
+                {
+                    var key = keyFactory(removed);
+                    var entry = dictionary[key];
+                    dictionary.Remove(key);
+
+                    // give the entry a chance to clean up after itself
+                    var disposable = entry as IDisposable;
+                    disposable.DisposeSafely();
+                });
         }
 
         public static void Update(SecurityChanges changes, Action<Security> add, Action<Security> remove)
