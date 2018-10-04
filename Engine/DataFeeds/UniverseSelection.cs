@@ -241,12 +241,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security security;
                 if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager,
-                                                              _marketHoursDatabase, _symbolPropertiesDatabase,
-                                                              _algorithm.SecurityInitializer, symbol, universe.UniverseSettings.Resolution,
-                                                              universe.UniverseSettings.FillForward, universe.UniverseSettings.Leverage,
-                                                              universe.UniverseSettings.ExtendedMarketHours, false, false,
-                                                              _algorithm.LiveMode, symbol.ID.SecurityType == SecurityType.Option);
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio,
+                        _algorithm.SubscriptionManager,
+                        _marketHoursDatabase,
+                        _symbolPropertiesDatabase,
+                        _algorithm.SecurityInitializer,
+                        symbol,
+                        universe.UniverseSettings.Resolution,
+                        universe.UniverseSettings.FillForward,
+                        universe.UniverseSettings.Leverage,
+                        universe.UniverseSettings.ExtendedMarketHours,
+                        false, // isInternalFeed
+                        false, // isCustomData
+                        _algorithm.LiveMode,
+                        symbol.ID.SecurityType == SecurityType.Option);
+
                     pendingAdditions.Add(symbol, security);
 
                     SetUnderlyingSecurity(universe, security);

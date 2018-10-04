@@ -259,15 +259,15 @@ namespace QuantConnect.Data.UniverseSelection
         {
 
             var result = subscriptionService.Add(security.Symbol,
-                                                 UniverseSettings.Resolution,
-                                                 UniverseSettings.FillForward,
-                                                 UniverseSettings.ExtendedMarketHours);
+                UniverseSettings.Resolution,
+                UniverseSettings.FillForward,
+                UniverseSettings.ExtendedMarketHours);
             return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
-                                                                   universe: this,
-                                                                   security: security,
-                                                                   configuration: config,
-                                                                   startTimeUtc: currentTimeUtc,
-                                                                   endTimeUtc: maximumEndTimeUtc));
+                universe: this,
+                security: security,
+                configuration: config,
+                startTimeUtc: currentTimeUtc,
+                endTimeUtc: maximumEndTimeUtc));
         }
 
         /// <summary>

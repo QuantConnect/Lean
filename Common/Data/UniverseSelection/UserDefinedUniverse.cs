@@ -116,6 +116,7 @@ namespace QuantConnect.Data.UniverseSelection
             _interval = interval;
             _symbols = symbols.ToHashSet();
             _universeSettings = universeSettings;
+            // the selector Func will be the union of the provided symbols and the added symbols or subscriptions data configurations
             _selector = time => _subscriptionDataConfigs.Select(x => x.Symbol).Union(_symbols);
         }
 

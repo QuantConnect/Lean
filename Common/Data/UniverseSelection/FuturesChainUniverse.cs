@@ -32,7 +32,6 @@ namespace QuantConnect.Data.UniverseSelection
         private static readonly IReadOnlyList<TickType> dataTypes = new[] { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
         private readonly UniverseSettings _universeSettings;
-        private SubscriptionManager _subscriptionManager;
         private DateTime _cacheDate;
 
         /// <summary>
@@ -40,15 +39,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="future">The canonical future chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         public FuturesChainUniverse(Future future,
-            UniverseSettings universeSettings,
-            SubscriptionManager subscriptionManager)
+            UniverseSettings universeSettings)
             : base(future.SubscriptionDataConfig)
         {
             Future = future;
             _universeSettings = universeSettings;
-            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -67,13 +63,12 @@ namespace QuantConnect.Data.UniverseSelection
         {
             Future = future;
             _universeSettings = universeSettings;
-            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
         /// The canonical future chain security
         /// </summary>
-        public readonly Future Future;
+        public Future Future { get; }
 
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe

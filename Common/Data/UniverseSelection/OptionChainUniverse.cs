@@ -81,7 +81,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// The canonical option chain security
         /// </summary>
-        public readonly Option Option;
+        public Option Option { get; }
 
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe

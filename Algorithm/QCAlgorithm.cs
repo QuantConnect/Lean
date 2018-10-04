@@ -1540,7 +1540,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != canonicalSymbol))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings);
                 _pendingUniverseAdditions.Add(universe);
             }
 
