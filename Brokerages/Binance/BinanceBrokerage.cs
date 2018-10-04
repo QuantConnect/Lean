@@ -174,6 +174,14 @@ namespace QuantConnect.Brokerages.Binance
                     case "LIMIT_MAKER":
                         order = new LimitOrder { LimitPrice = item.Price };
                         break;
+                    case "STOP_LOSS":
+                    case "TAKE_PROFIT":
+                        order = new StopMarketOrder { StopPrice = item.StopPrice, Price = item.Price };
+                        break;
+                    case "STOP_LOSS_LIMIT":
+                    case "TAKE_PROFIT_LIMIT":
+                        order = new StopLimitOrder { StopPrice = item.StopPrice, LimitPrice = item.Price };
+                        break;
                     default:
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
                             "BinanceBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
@@ -219,22 +227,50 @@ namespace QuantConnect.Brokerages.Binance
             {
                 { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
                 { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
-                { "side", ConvertOrderDirection(order.Direction) },
-                { "type", ConvertOrderType(order) },
-                { "timestamp", GetNonce() }
+                { "side", ConvertOrderDirection(order.Direction) }
             };
 
-            if (order.Type == OrderType.Limit)
+            decimal ticker = 0, stopPrice = 0m;
+            switch (order.Type)
             {
-                body["price"] = (order as LimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
-                // timeInForce is not required for LIMIT_MAKER
-                if (Equals(body["type"], "LIMIT"))
-                {
+                case OrderType.Limit:
+                    body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
+                        ? "LIMIT_MAKER"
+                        : "LIMIT";
+                    body["price"] = (order as LimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    // timeInForce is not required for LIMIT_MAKER
+                    if (Equals(body["type"], "LIMIT"))
+                        body["timeInForce"] = "GTC";
+                    break;
+                case OrderType.Market:
+                    body["type"] = "MARKET";
+                    break;
+                case OrderType.StopMarket:
+                    ticker = GetTickerPrice(order);
+                    stopPrice = (order as StopMarketOrder).StopPrice;
+                    if (order.Direction == OrderDirection.Sell)
+                        body["type"] = stopPrice <= ticker ? "STOP_LOSS" : "TAKE_PROFIT";
+                    else
+                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT" : "STOP_LOSS";
+                    body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
+                    break;
+                case OrderType.StopLimit:
+                    ticker = GetTickerPrice(order);
+                    stopPrice = (order as StopLimitOrder).StopPrice;
+                    if (order.Direction == OrderDirection.Sell)
+                        body["type"] = stopPrice <= ticker? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
+                    else
+                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
                     body["timeInForce"] = "GTC";
-                }
+                    body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
+                    body["price"] = (order as StopLimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    break;
+                default:
+                    throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
             }
 
             var endpoint = $"/api/v3/order";
+            body["timestamp"] = GetNonce();
             body["signature"] = AuthenticationToken(body.ToQueryString());
             var request = new RestRequest(endpoint, Method.POST);
             request.AddHeader(KeyHeader, ApiKey);

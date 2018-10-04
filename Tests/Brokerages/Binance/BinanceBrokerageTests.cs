@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var prices = ((BinanceBrokerage)this.Brokerage).GetUsdConversionRates();
+            var prices = ((BinanceBrokerage)this.Brokerage).GetTickers();
             return prices
                 .FirstOrDefault(t => t.Symbol == SymbolMapper.GetBrokerageSymbol(symbol))
                 .Price;

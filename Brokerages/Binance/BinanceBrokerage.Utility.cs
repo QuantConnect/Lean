@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages.Binance
         /// Provides the current tickers price
         /// </summary>
         /// <returns></returns>
-        public Messages.PriceTicker[] GetUsdConversionRates()
+        public Messages.PriceTicker[] GetTickers()
         {
 
             string endpoint = $"/api/v3/ticker/price";
@@ -97,6 +97,22 @@ namespace QuantConnect.Brokerages.Binance
             }
 
             return JsonConvert.DeserializeObject<Messages.PriceTicker[]>(response.Content);
+        }
+
+
+        private decimal GetTickerPrice(Order order)
+        {
+            var security = _securityProvider.GetSecurity(order.Symbol);
+            var tickerPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            if (tickerPrice == 0)
+            {
+                var tickers = GetTickers();
+                var ticker = tickers.FirstOrDefault(t => t.Symbol == _symbolMapper.GetBrokerageSymbol(order.Symbol));
+                if (ticker == null)
+                    throw new NotSupportedException($"BinanceBrokerage: Unable to resolve currency conversion pair: {order.Symbol}");
+                tickerPrice = ticker.Price;
+            }
+            return tickerPrice;
         }
 
         private static OrderStatus ConvertOrderStatus(string raw)
@@ -129,22 +145,6 @@ namespace QuantConnect.Brokerages.Binance
             }
 
             throw new NotSupportedException($"BinanceBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
-        }
-
-        private static string ConvertOrderType(Order order)
-        {
-            string outputOrderType = string.Empty;
-            switch (order.Type)
-            {
-                case OrderType.Limit:
-                    return (order.Properties as BinanceOrderProperties)?.PostOnly == true
-                        ? "LIMIT_MAKER"
-                        : "LIMIT";
-                case OrderType.Market:
-                    return "MARKET";
-                default:
-                    throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
-            }
         }
 
         private readonly Dictionary<Resolution, string> _knownResolutions = new Dictionary<Resolution, string>()

@@ -31,6 +31,7 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public string Id { get; set; }
         public string Symbol { get; set; }
         public decimal Price { get; set; }
+        public decimal StopPrice { get; set; }
         [JsonProperty("origQty")]
         public decimal OriginalAmount { get; set; }
         [JsonProperty("executedQty")]
