@@ -560,7 +560,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(10000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
-            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050 });
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
             Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);

@@ -998,12 +998,15 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     foreach (var subscription in _dataFeed.Subscriptions)
                     {
+                        var symbol = subscription.Configuration.Symbol;
+                        var tickType = subscription.Configuration.TickType;
+
                         // OI subscription doesn't contain asset market prices
-                        if (subscription.Configuration.TickType == TickType.OpenInterest)
+                        if (tickType == TickType.OpenInterest)
                             continue;
 
                         Security security;
-                        if (_algorithm.Securities.TryGetValue(subscription.Configuration.Symbol, out security))
+                        if (_algorithm.Securities.TryGetValue(symbol, out security))
                         {
                             //Sample Portfolio Value:
                             var price = subscription.RealtimePrice;
@@ -1029,12 +1032,12 @@ namespace QuantConnect.Lean.Engine.Results
                                 // we haven't gotten data yet so just spoof a tick to push through the system to start with
                                 if (price > 0)
                                 {
-                                    security.SetMarketPrice(new Tick(time, subscription.Configuration.Symbol, price, price));
+                                    security.SetMarketPrice(new Tick(time, symbol, price, price) { TickType = tickType });
                                 }
                             }
 
                             //Sample Asset Pricing:
-                            SampleAssetPrices(subscription.Configuration.Symbol, time, price);
+                            SampleAssetPrices(symbol, time, price);
                         }
                     }
                 }

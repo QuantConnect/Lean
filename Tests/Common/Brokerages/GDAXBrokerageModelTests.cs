@@ -140,7 +140,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             Assert.AreEqual(0, orderFee);
 
-            security.SetMarketPrice(new Tick { Symbol = security.Symbol, BidPrice = 5000m, AskPrice = 5000.01m });
+            security.SetMarketPrice(new Tick { Symbol = security.Symbol, BidPrice = 5000m, AskPrice = 5000.01m, TickType = TickType.Quote });
             orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5000m, DateTime.MinValue)
             {
                 OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
@@ -170,7 +170,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             // marketable buy limit fill at 5000
             Assert.AreEqual(15m, orderFee);
 
-            security.SetMarketPrice(new Tick { Symbol = security.Symbol, BidPrice = 5000m, AskPrice = 5000.01m });
+            security.SetMarketPrice(new Tick { Symbol = security.Symbol, BidPrice = 5000m, AskPrice = 5000.01m, TickType = TickType.Quote });
             orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
             {
                 OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)

@@ -195,6 +195,34 @@ namespace QuantConnect.Tests.Common.Securities
             }, map);
         }
 
+        [Test]
+        public void TickTypeDependencyTests()
+        {
+            // Arrange
+            var time = DateTime.Now;
+            var price = 100m;
+            var bidPrice = 99m;
+            var askPrice = 101m;
+            var volume = 1m;
+
+            var tick = new Tick(time, Symbols.AAPL, price, bidPrice, askPrice) { Quantity = volume }; ;
+
+            var securityCache = new SecurityCache();
+            securityCache.AddData(tick);
+            Assert.AreEqual(securityCache.Price, price);
+            Assert.AreEqual(securityCache.BidPrice, bidPrice);
+            Assert.AreEqual(securityCache.AskPrice, askPrice);
+            Assert.AreEqual(securityCache.Volume, 0m);
+
+            tick.TickType = TickType.Trade;
+            securityCache = new SecurityCache();
+            securityCache.AddData(tick);
+            Assert.AreEqual(securityCache.Price, price);
+            Assert.AreEqual(securityCache.BidPrice, 0m);
+            Assert.AreEqual(securityCache.AskPrice, 0m);
+            Assert.AreEqual(securityCache.Volume, volume);
+        }
+
         private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)
         {
             var before = JObject.FromObject(cache);
