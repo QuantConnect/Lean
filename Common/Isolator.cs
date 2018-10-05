@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
-    /// Isolator class - create a new instance of the algorithm and ensure it doesn't 
+    /// Isolator class - create a new instance of the algorithm and ensure it doesn't
     /// exceed memory or time execution limits.
     /// </summary>
     public class Isolator
@@ -67,16 +67,17 @@ namespace QuantConnect
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<string> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<IsolatorLimitResult> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
         {
             // default to always within custom limits
-            withinCustomLimits = withinCustomLimits ?? (() => null);
+            withinCustomLimits = withinCustomLimits ?? (() => new IsolatorLimitResult(TimeSpan.Zero, string.Empty));
 
             var message = "";
             var emaPeriod = 60d;
             var memoryUsed = 0L;
             var end = DateTime.Now + timeSpan;
             var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
+            var isolatorLimitResult = new IsolatorLimitResult(TimeSpan.Zero, string.Empty);
 
             //Convert to bytes
             memoryCap *= 1024 * 1024;
@@ -106,15 +107,21 @@ namespace QuantConnect
                     {
                         Log.Error("Execution Security Error: Memory usage over 80% capacity. Sampled at {0}", sample);
                     }
-                    Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2}", DateTime.Now.ToString("u"), PrettyFormatRam(memoryUsed), PrettyFormatRam((long)sample));
+
+                    Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2} CurrentTimeStepElapsed: {3}",
+                        DateTime.Now.ToString("u"),
+                        PrettyFormatRam(memoryUsed),
+                        PrettyFormatRam((long)sample),
+                        isolatorLimitResult.CurrentTimeStepElapsed.ToString("mm\\:ss\\.fff"));
+
                     memoryLogger = DateTime.Now.AddMinutes(1);
                 }
 
                 // check to see if we're within other custom limits defined by the caller
-                var possibleMessage = withinCustomLimits();
-                if (!string.IsNullOrEmpty(possibleMessage))
+                isolatorLimitResult = withinCustomLimits();
+                if (!isolatorLimitResult.IsWithinCustomLimits)
                 {
-                    message = possibleMessage;
+                    message = isolatorLimitResult.ErrorMessage;
                     break;
                 }
 
