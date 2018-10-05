@@ -53,6 +53,8 @@ namespace QuantConnect.Storage
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
 
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
+
             Controls = controls;
         }
 
@@ -97,6 +99,11 @@ namespace QuantConnect.Storage
             {
                 var fileName = GetFilePath(key);
 
+                if (!File.Exists(fileName))
+                {
+                    return new byte[0];
+                }
+
                 return File.ReadAllBytes(fileName);
             }
             catch (Exception exception)
@@ -119,10 +126,8 @@ namespace QuantConnect.Storage
                 throw new ArgumentNullException(nameof(key));
             }
 
-
             try
             {
-
                 var files = Directory.EnumerateFiles(StorageRoot).Select(f => new FileInfo(f)).ToList();
                 var fileCount = files.Count;
                 if (fileCount > Controls.StorageFileCount)
@@ -131,16 +136,15 @@ namespace QuantConnect.Storage
                     return false;
                 }
 
-
-
                 var fileName = GetFilePath(key);
-                var deltaKeyFileSizeMb = BytesToMb(contents.Length - new FileInfo(fileName).Length);
+                var fileInfo = new FileInfo(fileName);
+                var existingSizeBytes = fileInfo.Exists ? fileInfo.Length : 0;
+                var deltaKeyFileSizeMb = BytesToMb(contents.Length - existingSizeBytes);
                 var expectedStorageSizeMb = files.Sum(f => BytesToMb(f.Length)) + deltaKeyFileSizeMb;
                 if (expectedStorageSizeMb > Controls.StorageLimitMB)
                 {
-                    Log.Error("LocalObjectStore");
+                    Log.Error($"LocalObjectStore at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
                 }
-
 
                 File.WriteAllBytes(fileName, contents);
             }

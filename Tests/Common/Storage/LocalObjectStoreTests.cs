@@ -32,6 +32,14 @@ namespace QuantConnect.Tests.Common.Storage
             _store.Initialize("CSharp-TestAlgorithm", 0, 0, "", new Controls());
         }
 
+        [Test]
+        public void ReturnsEmptyByteArrayOnFileNotFound()
+        {
+            var result = _store.Read("missing.missing");
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.Length);
+        }
+
         [TestCase("my_key", "./storage/CSharp-TestAlgorithm/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
         [TestCase("test/123", "./storage/CSharp-TestAlgorithm/0a2557f6be73a1b8a6abe84104899591.dat")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
