@@ -132,14 +132,18 @@ namespace QuantConnect.Securities
             {
                 if (tick.Value != 0) Price = tick.Value;
 
-                if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
-                if (tick.BidSize != 0) BidSize = tick.BidSize;
+                if (tick.TickType == TickType.Trade && tick.Quantity != 0)
+                {
+                    Volume = tick.Quantity;
+                }
+                if (tick.TickType == TickType.Quote)
+                {
+                    if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
+                    if (tick.BidSize != 0) BidSize = tick.BidSize;
 
-                if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
-                if (tick.AskSize != 0) AskSize = tick.AskSize;
-
-                if (tick.Quantity != 0) Volume = tick.Quantity;
-
+                    if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
+                    if (tick.AskSize != 0) AskSize = tick.AskSize;
+                }
                 return;
             }
 
