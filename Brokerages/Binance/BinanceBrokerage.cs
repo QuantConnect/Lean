@@ -245,15 +245,6 @@ namespace QuantConnect.Brokerages.Binance
                 case OrderType.Market:
                     body["type"] = "MARKET";
                     break;
-                case OrderType.StopMarket:
-                    ticker = GetTickerPrice(order);
-                    stopPrice = (order as StopMarketOrder).StopPrice;
-                    if (order.Direction == OrderDirection.Sell)
-                        body["type"] = stopPrice <= ticker ? "STOP_LOSS" : "TAKE_PROFIT";
-                    else
-                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT" : "STOP_LOSS";
-                    body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
-                    break;
                 case OrderType.StopLimit:
                     ticker = GetTickerPrice(order);
                     stopPrice = (order as StopLimitOrder).StopPrice;
