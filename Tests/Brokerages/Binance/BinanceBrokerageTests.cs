@@ -70,7 +70,8 @@ namespace QuantConnect.Tests.Brokerages.Binance
         public override TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder")
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new StopLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopLimitOrder"),
         };
 
         /// <summary>
