@@ -22,7 +22,7 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 
-namespace QuantConnect.Algorithm.Framework.Risks
+namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that combines multiple risk
