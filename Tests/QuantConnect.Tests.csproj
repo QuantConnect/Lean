@@ -118,6 +118,7 @@
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmDownloadTests.cs" />
     <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
+    <Compile Include="Algorithm\AlgorithmHistoryTests.cs" />
     <Compile Include="Algorithm\AlgorithmInitializeTests.cs" />
     <Compile Include="Algorithm\AlgorithmLiveTradingTests.cs" />
     <Compile Include="Algorithm\AlgorithmPlottingTests.cs" />
