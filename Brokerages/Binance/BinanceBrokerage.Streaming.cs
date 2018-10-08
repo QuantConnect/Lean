@@ -18,6 +18,7 @@ namespace QuantConnect.Brokerages.Binance
         private Task _runningTask;
         private CancellationTokenSource _userDataCancellationTokenSource;
         private Thread _userDataMonitorThread;
+        private object _listenKeyLocker = new object();
         private DateTime UserDataLastHeartbeatUtcTime;
         private string userDataStreamEndpoint = "/api/v1/userDataStream";
 
@@ -31,30 +32,16 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public void StartSession()
         {
-            var request = new RestRequest(userDataStreamEndpoint, Method.POST);
-            request.AddHeader(KeyHeader, ApiKey);
-
-            var response = ExecuteRestRequest(request);
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception($"BinanceBrokerage.StartSession: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-            }
-
-            var content = JObject.Parse(response.Content);
-            SessionId = content.Value<string>("listenKey");
+            CreateListenKey();
 
             _userDataCancellationTokenSource = new CancellationTokenSource();
             _userDataMonitorThread = new Thread(() =>
             {
+                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
+                double nextReconnectionAttemptSeconds = 1;
                 UserDataLastHeartbeatUtcTime = DateTime.UtcNow;
-                double recommendedPingIntervalInMin = 30;
-                var ping = new RestRequest(userDataStreamEndpoint, Method.PUT);
-                ping.AddHeader(KeyHeader, ApiKey);
-                ping.AddParameter(
-                    "application/x-www-form-urlencoded",
-                    Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
-                    ParameterType.RequestBody
-                );
+                double recommendedPingIntervalInSec = 15;
+                bool authorized = true;
 
                 try
                 {
@@ -63,15 +50,42 @@ namespace QuantConnect.Brokerages.Binance
                         try
                         {
                             TimeSpan elapsed = DateTime.UtcNow - UserDataLastHeartbeatUtcTime;
-                            if (elapsed > TimeSpan.FromMinutes(recommendedPingIntervalInMin))
+                            if (authorized && elapsed > TimeSpan.FromSeconds(recommendedPingIntervalInSec))
                             {
-                                var pong = ExecuteRestRequest(ping);
-
-                                if (pong.StatusCode != HttpStatusCode.OK)
+                                if (!SessionKeepAlive())
                                 {
-                                    throw new Exception($"BinanceBrokerage.KeepAlive: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                                    authorized = false;
+                                    nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                                    OnMessage(BrokerageMessageEvent.Disconnected("UserData Stream listen key has been expired or deleted."));
                                 }
                                 UserDataLastHeartbeatUtcTime = DateTime.UtcNow;
+                            }
+                            else if (!authorized)
+                            {
+                                try
+                                {
+                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
+                                    {
+                                        try
+                                        {
+                                            CreateListenKey();
+                                            ConnectStream();
+                                            authorized = true;
+                                        }
+                                        catch (Exception err)
+                                        {
+                                            // double the interval between attempts (capped to 1 minute)
+                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
+                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                            Log.Error(err);
+                                        }
+                                    }
+                                }
+                                catch (Exception exception)
+                                {
+                                    Log.Error(exception);
+                                }
                             }
                         }
                         catch (Exception exception)
@@ -96,6 +110,29 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
+        /// Check User Data stream listen key is alive
+        /// </summary>
+        /// <returns></returns>
+        private bool SessionKeepAlive()
+        {
+            if (string.IsNullOrEmpty(SessionId))
+            {
+                throw new Exception("BinanceBrokerage:UserStream. listenKey wasn't allocated or has been refused.");
+            }
+
+            var ping = new RestRequest(userDataStreamEndpoint, Method.PUT);
+            ping.AddHeader(KeyHeader, ApiKey);
+            ping.AddParameter(
+                "application/x-www-form-urlencoded",
+                Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
+                ParameterType.RequestBody
+            );
+
+            var pong = ExecuteRestRequest(ping);
+            return pong.StatusCode == HttpStatusCode.OK;
+        }
+
+        /// <summary>
         /// Stops the session
         /// </summary>
         public void StopSession()
@@ -113,6 +150,25 @@ namespace QuantConnect.Brokerages.Binance
                     ParameterType.RequestBody
                 );
                 ExecuteRestRequest(request);
+            }
+        }
+
+
+        private void CreateListenKey()
+        {
+            var request = new RestRequest(userDataStreamEndpoint, Method.POST);
+            request.AddHeader(KeyHeader, ApiKey);
+
+            var response = ExecuteRestRequest(request);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"BinanceBrokerage.StartSession: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            var content = JObject.Parse(response.Content);
+            lock (_listenKeyLocker)
+            {
+                SessionId = content.Value<string>("listenKey");
             }
         }
     }
