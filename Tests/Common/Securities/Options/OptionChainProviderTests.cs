@@ -24,7 +24,8 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities.Options
 {
-    [TestFixture]
+    // For now these tests are excluded from the Travis build because of occasional web server errors.
+    [TestFixture, Category("TravisExclude")]
     public class OptionChainProviderTests
     {
         [Test]
