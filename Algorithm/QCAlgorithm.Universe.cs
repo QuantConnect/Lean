@@ -142,7 +142,12 @@ namespace QuantConnect.Algorithm
                 {
                     var security = kvp.Key;
                     var userDefinedUniverse = kvp.Value;
-                    userDefinedUniverse.Add(security.Symbol);
+                    foreach (var subscriptionDataConfig in security.Subscriptions)
+                    {
+                        // Depending on `security.Subscriptions` (that come from `CreateSecurity` => `SubscriptionManager.Add()`)
+                        // (which will eventually be removed) is an intermediate step.
+                        userDefinedUniverse.Add(subscriptionDataConfig);
+                    }
                 }
 
                 // finally add any pending universes, this will make them available to the data feed
@@ -429,19 +434,26 @@ namespace QuantConnect.Algorithm
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
-            AddUniverse(new UserDefinedUniverse(config, universeSettings, SecurityInitializer, resolution.ToTimeSpan(), selector));
+            AddUniverse(new UserDefinedUniverse(config, universeSettings, resolution.ToTimeSpan(), selector));
         }
 
         /// <summary>
-        /// Adds the security to the user defined universe for the specified
+        /// Adds the security to the user defined universe
         /// </summary>
-        private void AddToUserDefinedUniverse(Security security)
+        /// <param name="security">The security to add</param>
+        /// <param name="resolution">The <see cref="Resolution"/> requested, Tick, Second, Minute, Hour, or Daily</param>
+        /// <param name="leverage">The requested leverage for this security.</param>
+        /// <param name="market">The market of the security</param>
+        /// <param name="isFillDataForward">If true, returns the last available data even if none in that TimeSlice.</param>
+        /// <param name="isExtendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
+        /// <param name="isInternalFeed">Setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        private void AddToUserDefinedUniverse(Security security, Resolution resolution, decimal leverage, string market, bool isFillDataForward, bool isExtendedMarketHours, bool isInternalFeed)
         {
             // if we are adding a non-internal security which already has an internal feed, we remove it first
             Security existingSecurity;
             if (Securities.TryGetValue(security.Symbol, out existingSecurity))
             {
-                if (!security.IsInternalFeed() && existingSecurity.IsInternalFeed())
+                if (!isInternalFeed && existingSecurity.IsInternalFeed())
                 {
                     var securityUniverse = UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(security.Symbol));
                     securityUniverse?.Remove(security.Symbol);
@@ -455,7 +467,7 @@ namespace QuantConnect.Algorithm
             // add this security to the user defined universe
             Universe universe;
             var subscription = security.Subscriptions.First();
-            var universeSymbol = UserDefinedUniverse.CreateSymbol(subscription.SecurityType, subscription.Market);
+            var universeSymbol = UserDefinedUniverse.CreateSymbol(security.Type, market);
             lock (_pendingUniverseAdditionsLock)
             {
                 if (!UniverseManager.TryGetValue(universeSymbol, out universe))
@@ -475,12 +487,9 @@ namespace QuantConnect.Algorithm
                         }
 
                         universe = new UserDefinedUniverse(uconfig,
-                            new UniverseSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours,
-                                TimeSpan.Zero),
-                            SecurityInitializer,
+                            new UniverseSettings(resolution, leverage, isFillDataForward, isExtendedMarketHours, TimeSpan.Zero),
                             QuantConnect.Time.MaxTimeSpan,
-                            new List<Symbol> { security.Symbol }
-                        );
+                            new List<Symbol>());
                         _pendingUniverseAdditions.Add(universe);
                     }
                 }

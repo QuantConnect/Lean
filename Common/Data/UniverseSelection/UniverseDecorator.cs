@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ namespace QuantConnect.Data.UniverseSelection
         protected readonly Universe Universe;
 
         /// <summary>
-        /// Gets the settings used for subscriptons added for this universe
+        /// Gets the settings used for subscriptions added for this universe
         /// </summary>
         public override UniverseSettings UniverseSettings
         {
@@ -66,9 +66,26 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
         /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
+        [Obsolete("This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information")]
         public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
             return Universe.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc);
+        }
+
+        /// <summary>
+        /// Gets the subscription requests to be added for the specified security
+        /// </summary>
+        /// <param name="security">The security to get subscriptions for</param>
+        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
+        /// <param name="maximumEndTimeUtc">The max end time</param>
+        /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
+        /// <returns>All subscriptions required by this security</returns>
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security,
+            DateTime currentTimeUtc,
+            DateTime maximumEndTimeUtc,
+            ISubscriptionDataConfigService subscriptionService)
+        {
+            return Universe.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService);
         }
 
         /// <summary>
@@ -93,6 +110,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="marketHoursDatabase">The market hours database</param>
         /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
         /// <returns>The newly initialized security object</returns>
+        [Obsolete("CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols")]
         public override Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {
             return Universe.CreateSecurity(symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);

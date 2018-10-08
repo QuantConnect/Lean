@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
@@ -32,12 +31,21 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private static readonly IReadOnlyList<TickType> dataTypes = new[] { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
-        private readonly Future _future;
         private readonly UniverseSettings _universeSettings;
-        private SubscriptionManager _subscriptionManager;
-
-        private HashSet<Symbol> _cachedSelection;
         private DateTime _cacheDate;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuturesChainUniverse"/> class
+        /// </summary>
+        /// <param name="future">The canonical future chain security</param>
+        /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
+        public FuturesChainUniverse(Future future,
+            UniverseSettings universeSettings)
+            : base(future.SubscriptionDataConfig)
+        {
+            Future = future;
+            _universeSettings = universeSettings;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverse"/> class
@@ -46,16 +54,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
         /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
+        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
         public FuturesChainUniverse(Future future,
                                     UniverseSettings universeSettings,
                                     SubscriptionManager subscriptionManager,
                                     ISecurityInitializer securityInitializer = null)
             : base(future.SubscriptionDataConfig, securityInitializer)
         {
-            _future = future;
+            Future = future;
             _universeSettings = universeSettings;
-            _subscriptionManager = subscriptionManager;
         }
+
+        /// <summary>
+        /// The canonical future chain security
+        /// </summary>
+        public Future Future { get; }
 
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe
@@ -87,7 +100,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var availableContracts = futuresUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = _future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, underlying));
+            var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, underlying));
 
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)
@@ -100,22 +113,6 @@ namespace QuantConnect.Data.UniverseSelection
             futuresUniverseDataCollection.FilteredContracts = resultingSymbols;
 
             return resultingSymbols;
-        }
-
-        /// <summary>
-        /// Creates and configures a security for the specified symbol
-        /// </summary>
-        /// <param name="symbol">The symbol of the security to be created</param>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="marketHoursDatabase">The market hours database</param>
-        /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
-        /// <returns>The newly initialized security object</returns>
-        public override Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
-        {
-            // set the underlying security and pricing model from the canonical security
-            var future = (Future)base.CreateSecurity(symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
-            future.Underlying = _future.Underlying;
-            return future;
         }
 
         /// <summary>

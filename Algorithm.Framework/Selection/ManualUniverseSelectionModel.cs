@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 }
 
                 var config = new SubscriptionDataConfig(type, universeSymbol, resolution, entry.DataTimeZone, entry.ExchangeHours.TimeZone, false, false, true);
-                yield return new ManualUniverse(config, universeSettings, securityInitializer, grp);
+                yield return new ManualUniverse(config, universeSettings, grp);
             }
         }
     }

@@ -22,11 +22,12 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -240,15 +241,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security security;
                 if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio,
+                        _algorithm.SubscriptionManager,
+                        _marketHoursDatabase,
+                        _symbolPropertiesDatabase,
+                        _algorithm.SecurityInitializer,
+                        symbol,
+                        universe.UniverseSettings.Resolution,
+                        universe.UniverseSettings.FillForward,
+                        universe.UniverseSettings.Leverage,
+                        universe.UniverseSettings.ExtendedMarketHours,
+                        false, // isInternalFeed
+                        false, // isCustomData
+                        _algorithm.LiveMode,
+                        symbol.ID.SecurityType == SecurityType.Option);
+
                     pendingAdditions.Add(symbol, security);
+
+                    SetUnderlyingSecurity(universe, security);
                 }
 
                 var addedSubscription = false;
 
-                foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
+                foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
+                                                                         _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
-                    // add the new subscriptions to the data feed
+                    if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
+                        && !security.Subscriptions.Contains(request.Configuration))
+                    {
+                        // for now this is required for retro compatibility with usages of security.Subscriptions
+                        security.AddData(request.Configuration);
+                    }
                     _dataFeed.AddSubscription(request);
 
                     // only update our security changes if we actually added data
@@ -302,7 +325,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // it is expected that this function is called while in sync with the algo thread,
             // so we can make direct edits to the security here
             member.Cache.Reset();
-            foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc))
+            foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
+                                                                          _algorithm.SubscriptionManager.SubscriptionDataConfigService))
             {
                 if (subscription.IsUniverseSubscription)
                 {
@@ -332,6 +356,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// This method sets the underlying security for <see cref="OptionChainUniverse"/> and <see cref="FuturesChainUniverse"/>
+        /// </summary>
+        private void SetUnderlyingSecurity(Universe universe, Security security)
+        {
+            var optionChainUniverse = universe as OptionChainUniverse;
+            var futureChainUniverse = universe as FuturesChainUniverse;
+            if (optionChainUniverse != null)
+            {
+                if (!security.Symbol.HasUnderlying)
+                {
+                    // create the underlying w/ raw mode
+                    security.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                    optionChainUniverse.Option.Underlying = security;
+                }
+                else
+                {
+                    // set the underlying security and pricing model from the canonical security
+                    var option = (Option)security;
+                    option.Underlying = optionChainUniverse.Option.Underlying;
+                    option.PriceModel = optionChainUniverse.Option.PriceModel;
+                }
+            }
+            else if (futureChainUniverse != null)
+            {
+                // set the underlying security and pricing model from the canonical security
+                var future = (Future)security;
+                future.Underlying = futureChainUniverse.Future.Underlying;
+            }
         }
     }
 }

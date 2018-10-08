@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
@@ -28,16 +29,38 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class ManualUniverse : UserDefinedUniverse
     {
+        /// <summary>
+        /// Creates a new instance of the <see cref="ManualUniverse"/>
+        /// </summary>
+        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
         public ManualUniverse(SubscriptionDataConfig configuration,
             UniverseSettings universeSettings,
             ISecurityInitializer securityInitializer,
-            IEnumerable<Symbol> symbols
-            )
+            IEnumerable<Symbol> symbols)
             : base(configuration, universeSettings, securityInitializer, Time.MaxTimeSpan, symbols)
         {
         }
 
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
+        /// <summary>
+        /// Creates a new instance of the <see cref="ManualUniverse"/>
+        /// </summary>
+        public ManualUniverse(SubscriptionDataConfig configuration,
+            UniverseSettings universeSettings,
+            IEnumerable<Symbol> symbols)
+            : base(configuration, universeSettings, Time.MaxTimeSpan, symbols)
+        {
+        }
+
+        /// <summary>
+        /// Gets the subscription requests to be added for the specified security
+        /// </summary>
+        /// <param name="security">The security to get subscriptions for</param>
+        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
+        /// <param name="maximumEndTimeUtc">The max end time</param>
+        /// <param name="subscriptionService">Instance which implements <see cref="ISubscriptionDataConfigService"/> interface</param>
+        /// <returns>All subscriptions required by this security</returns>
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
+                                                                                ISubscriptionDataConfigService subscriptionService)
         {
             return security.Subscriptions.Select(config =>
                 new SubscriptionRequest(
