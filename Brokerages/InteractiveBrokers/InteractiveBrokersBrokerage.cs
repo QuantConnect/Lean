@@ -1081,7 +1081,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
             {
-                if (args.TickerId == marketDataTicker && args.Field == IBApi.TickType.ASK)
+                if (args.TickerId == marketDataTicker &&
+                    (args.Field == IBApi.TickType.ASK || args.Field == IBApi.TickType.DELAYED_ASK))
                 {
                     rate = Convert.ToDecimal(args.Price);
                     Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Market price rate is " + args.Price + " for currency " + currency);
@@ -2562,6 +2563,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (e.Field)
             {
                 case IBApi.TickType.BID:
+                case IBApi.TickType.DELAYED_BID:
 
                     tick.TickType = TickType.Quote;
                     tick.BidPrice = price;
@@ -2571,6 +2573,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
 
                 case IBApi.TickType.ASK:
+                case IBApi.TickType.DELAYED_ASK:
 
                     tick.TickType = TickType.Quote;
                     tick.AskPrice = price;
@@ -2580,6 +2583,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
 
                 case IBApi.TickType.LAST:
+                case IBApi.TickType.DELAYED_LAST:
 
                     tick.TickType = TickType.Trade;
                     tick.Value = price;
@@ -2627,6 +2631,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (e.Field)
             {
                 case IBApi.TickType.BID_SIZE:
+                case IBApi.TickType.DELAYED_BID_SIZE:
 
                     tick.TickType = TickType.Quote;
 
@@ -2638,6 +2643,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
 
                 case IBApi.TickType.ASK_SIZE:
+                case IBApi.TickType.DELAYED_ASK_SIZE:
 
                     tick.TickType = TickType.Quote;
 
@@ -2650,6 +2656,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
 
                 case IBApi.TickType.LAST_SIZE:
+                case IBApi.TickType.DELAYED_LAST_SIZE:
                     tick.TickType = TickType.Trade;
 
                     decimal lastPrice;
