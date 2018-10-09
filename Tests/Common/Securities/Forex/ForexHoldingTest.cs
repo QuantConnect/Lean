@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             var pair = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                                                                cash, subscription,
                                                                new SymbolProperties("", pairQuoteCurrency, 1,
-                                                                                    minimumPriceVariation, lotSize));
+                                                                                    minimumPriceVariation, lotSize), ErrorCurrencyConverter.Instance);
             pair.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             pair.SetFeeModel(new ConstantFeeModel(decimal.Zero));
             var forexHolding = new ForexHolding(pair);

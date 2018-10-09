@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
@@ -99,7 +100,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-            security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             model = new PartialMarketFillModel(algorithm.Transactions, 2);
 

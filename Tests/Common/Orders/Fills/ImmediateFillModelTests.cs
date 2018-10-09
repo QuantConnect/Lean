@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var quoteCash = new Cash("USD", 1000, 1);
             var symbolProperties = SymbolProperties.GetDefault("USD");
             var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var security = new Forex(exchangeHours, quoteCash, config, symbolProperties);
+            var security = new Forex(exchangeHours, quoteCash, config, symbolProperties, ErrorCurrencyConverter.Instance);
 
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
@@ -70,7 +70,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var config = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
@@ -96,7 +102,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             // Minute subscription
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
@@ -123,7 +135,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
@@ -167,7 +185,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
@@ -211,7 +235,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);

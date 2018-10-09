@@ -18,6 +18,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -29,9 +30,22 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             get
             {
-                return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new SubscriptionDataConfig(typeof(TradeBar), Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                    new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                return new Security(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new SubscriptionDataConfig(
+                        typeof(TradeBar),
+                        Symbol,
+                        Resolution.Minute,
+                        TimeZones.NewYork,
+                        TimeZones.NewYork,
+                        false,
+                        false,
+                        false
+                    ),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    ErrorCurrencyConverter.Instance
+                );
             }
         }
 

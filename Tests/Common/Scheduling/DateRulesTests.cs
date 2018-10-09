@@ -22,6 +22,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
@@ -255,7 +256,16 @@ namespace QuantConnect.Tests.Common.Scheduling
             var manager = new SecurityManager(timeKeeper);
             var securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            manager.Add(
+                Symbols.SPY,
+                new Security(
+                    securityExchangeHours,
+                    config,
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
             var rules = new DateRules(manager);
             return rules;
         }

@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -330,7 +331,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private Security GetSecurity(Symbol symbol)
         {
             var config = SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc);
-            return new Equity(symbol, config, new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
+            return new Equity(
+                symbol,
+                config,
+                new Cash("USD", 0, 1),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance
+            );
         }
 
         private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null)

@@ -24,21 +24,66 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
-            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            securities.Add(
+                Symbols.SPY,
+                new Security(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
 
             var option1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2016, 02, 16));
-            securities.Add(option1, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Option, option1), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(
+                option1,
+                new Option(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Option, option1),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
 
             var option2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 193m, new DateTime(2016, 03, 19));
-            securities.Add(option2, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Option, option2), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(
+                option2,
+                new Option(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Option, option2),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
 
             var future1= Symbol.CreateFuture("ES", Market.USA, new DateTime(2016, 02, 16));
-            securities.Add(future1, new Future(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Future, future1), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(
+                future1,
+                new Future(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Future, future1),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
 
             var future2 = Symbol.CreateFuture("ES", Market.USA, new DateTime(2016, 02, 19));
-            securities.Add(future2, new Future(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Future, future2), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            
+            securities.Add(
+                future2,
+                new Future(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Future, future2),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
+
             var cal = new TradingCalendar(securities, marketHoursDatabase);
 
             var optionDays = cal.GetDaysByType(TradingDayType.OptionExpiration, new DateTime(2016, 02, 16), new DateTime(2016, 03, 19)).Count();

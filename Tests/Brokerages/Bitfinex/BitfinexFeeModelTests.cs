@@ -11,6 +11,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -22,9 +23,22 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             get
             {
-                var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new SubscriptionDataConfig(typeof(TradeBar), Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                    new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                var security = new Security(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new SubscriptionDataConfig(
+                        typeof(TradeBar),
+                        Symbol,
+                        Resolution.Minute,
+                        TimeZones.NewYork,
+                        TimeZones.NewYork,
+                        false,
+                        false,
+                        false
+                    ),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    ErrorCurrencyConverter.Instance
+                );
                 security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbol, LowPrice, HighPrice));
 
                 return security;

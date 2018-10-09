@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, CashBook.AccountCurrency);
                         var quoteCash = _algorithm.Portfolio.CashBook[symbolProperties.QuoteCurrency];
 
-                        var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
+                        var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties, _algorithm.Portfolio.CashBook);
 
                         var localStartTime = dateTimeUtc.ConvertFromUtc(exchangeHours.TimeZone).AddDays(-1);
                         var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { localStartTime });

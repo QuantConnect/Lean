@@ -41,6 +41,8 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security
     {
+        private readonly ICurrencyConverter _currencyConverter;
+
         private LocalTimeKeeper _localTimeKeeper;
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
@@ -300,7 +302,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
             : this(config,
                 quoteCurrency,
                 symbolProperties,
@@ -314,14 +316,16 @@ namespace QuantConnect.Securities
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
-                new SecurityPriceVariationModel())
+                new SecurityPriceVariationModel(),
+                currencyConverter
+                )
         {
         }
 
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties)
+        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
             : this(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -335,7 +339,8 @@ namespace QuantConnect.Securities
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
-                new SecurityPriceVariationModel()
+                new SecurityPriceVariationModel(),
+                currencyConverter
                 )
         {
         }
@@ -356,7 +361,8 @@ namespace QuantConnect.Securities
             IVolatilityModel volatilityModel,
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
-            IPriceVariationModel priceVariationModel
+            IPriceVariationModel priceVariationModel,
+            ICurrencyConverter currencyConverter
             )
         {
             if (symbolProperties == null)
@@ -368,6 +374,8 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
             }
+
+            this._currencyConverter = currencyConverter;
 
             Symbol = symbol;
             SubscriptionsBag = new ConcurrentBag<SubscriptionDataConfig>();
@@ -407,7 +415,8 @@ namespace QuantConnect.Securities
             IVolatilityModel volatilityModel,
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
-            IPriceVariationModel priceVariationModel
+            IPriceVariationModel priceVariationModel,
+            ICurrencyConverter currencyConverter
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -422,7 +431,8 @@ namespace QuantConnect.Securities
                 volatilityModel,
                 buyingPowerModel,
                 dataFilter,
-                priceVariationModel
+                priceVariationModel,
+                currencyConverter
                 )
         {
             SubscriptionsBag.Add(config);

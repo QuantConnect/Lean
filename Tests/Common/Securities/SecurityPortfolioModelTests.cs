@@ -191,7 +191,13 @@ namespace QuantConnect.Tests.Common.Securities
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
         {
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                CreateTradeBarConfig(),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             security.SetMarketPrice(new Tick { Value = 100 });
             var timeKeeper = new TimeKeeper(reference);
             var securityManager = new SecurityManager(timeKeeper);
