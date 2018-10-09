@@ -26,15 +26,14 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.Server;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -85,7 +84,17 @@ namespace QuantConnect.Tests.Brokerages.Paper
             algorithm.SetLiveMode(true);
             var dividend = new Dividend(Symbols.SPY, DateTime.UtcNow, 10m, 100m);
             var feed = new TestDividendDataFeed(algorithm, dividend);
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings, algorithm.TimeKeeper);
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed,
+                    algorithm,
+                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
+                algorithm.Settings,
+                algorithm.TimeKeeper,
+                marketHoursDatabase);
+
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.AddSecurities(equities: new List<string> {"SPY"});
             algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(100m, 1);

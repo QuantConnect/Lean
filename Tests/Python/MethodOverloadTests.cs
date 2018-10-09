@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Python;
@@ -38,7 +39,9 @@ namespace QuantConnect.Tests.Python
             {
                 var module = Py.Import("Test_MethodOverload");
                 _algorithm = module.GetAttr("Test_MethodOverload").Invoke();
-                _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub());
+                // this is required else will get a 'RuntimeBinderException' because fails to match constructor method
+                dynamic algo = _algorithm.AsManagedObject((Type)_algorithm.GetPythonType().AsManagedObject(typeof(Type)));
+                _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
                 _algorithm.Initialize();
             }
         }

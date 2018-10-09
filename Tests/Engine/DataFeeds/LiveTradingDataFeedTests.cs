@@ -591,8 +591,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new BacktestingResultHandler();
 
             var feed = new TestableLiveTradingDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm),
-                algorithm.Settings, algorithm.TimeKeeper);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(
+                algorithm.Portfolio.CashBook,
+                marketHoursDatabase,
+                symbolPropertiesDataBase,
+                algorithm);
+            algorithm.Securities.SetSecurityService(securityService);
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed, algorithm, securityService),
+                algorithm.Settings,
+                algorithm.TimeKeeper,
+                marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
@@ -655,8 +666,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, _manualTimeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, _algorithm),
-                _algorithm.Settings, _algorithm.TimeKeeper);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm);
+            _algorithm.Securities.SetSecurityService(securityService);
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed, _algorithm, securityService),
+                _algorithm.Settings,
+                _algorithm.TimeKeeper,
+                marketHoursDatabase);
             _algorithm.SubscriptionManager.SetDataManager(dataManager);
             _algorithm.AddSecurities(resolution, equities, forex);
 

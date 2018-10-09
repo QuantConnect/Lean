@@ -68,8 +68,16 @@ namespace QuantConnect.Jupyter
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
+                var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var nullDataFeed = new NullDataFeed();
-                SubscriptionManager.SetDataManager(new DataManager(nullDataFeed, new UniverseSelection(nullDataFeed, this), Settings, TimeKeeper));
+                var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this);
+                Securities.SetSecurityService(securityService);
+                SubscriptionManager.SetDataManager(
+                    new DataManager(nullDataFeed,
+                        new UniverseSelection(nullDataFeed, this, securityService),
+                        Settings,
+                        TimeKeeper,
+                        MarketHoursDatabase));
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));

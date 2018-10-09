@@ -124,9 +124,24 @@ namespace QuantConnect.Lean.Engine
                     IBrokerageFactory factory;
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
+                    var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                    var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+                    var securityService = new SecurityService(algorithm.Portfolio.CashBook,
+                        marketHoursDatabase,
+                        symbolPropertiesDatabase,
+                        (ISecurityInitializerProvider)algorithm);
+
+                    algorithm.Securities.SetSecurityService(securityService);
+
                     dataManager = new DataManager(_algorithmHandlers.DataFeed,
-                                                  new UniverseSelection(_algorithmHandlers.DataFeed, algorithm),
-                                                  algorithm.Settings, algorithm.TimeKeeper);
+                        new UniverseSelection(
+                            _algorithmHandlers.DataFeed,
+                            algorithm,
+                            securityService),
+                        algorithm.Settings,
+                        algorithm.TimeKeeper,
+                        marketHoursDatabase);
 
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 

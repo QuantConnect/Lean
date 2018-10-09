@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly IDataFeed _dataFeed;
-        private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -45,13 +45,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings, ITimeKeeper timeKeeper)
+        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
             _algorithmSettings = algorithmSettings;
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
+            _marketHoursDatabase = marketHoursDatabase;
         }
 
         #region IDataFeedSubscriptionManager
@@ -75,14 +76,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions =>
             _subscriptionManagerSubscriptions.Select(x => x.Key);
-
-        /// <summary>
-        /// Gets a list of all registered <see cref="SubscriptionDataConfig"/> for a given <see cref="Symbol"/>
-        /// </summary>
-        public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol)
-        {
-            return SubscriptionManagerSubscriptions.Where(x => x.Symbol == symbol).ToList();
-        }
 
         /// <summary>
         /// Gets existing or adds new <see cref="SubscriptionDataConfig" />
@@ -140,8 +133,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
-        /// Can optionally pass in desired subscription data types to use.
+        /// Can optionally pass in desired subscription data type to use.
         /// If the config already existed will return existing instance instead
+        /// </summary>
+        public SubscriptionDataConfig Add(
+            Type dataType,
+            Symbol symbol,
+            Resolution resolution,
+            bool fillForward = true,
+            bool extendedMarketHours = false,
+            bool isFilteredSubscription = true,
+            bool isInternalFeed = false,
+            bool isCustomData = false
+            )
+        {
+            return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
+                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))})
+                .First();
+        }
+
+        /// <summary>
+        /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        /// Can optionally pass in desired subscription data types to use.
+        ///  If the config already existed will return existing instance instead
         /// </summary>
         public List<SubscriptionDataConfig> Add(
             Symbol symbol,
@@ -224,6 +238,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return AvailableDataTypes[symbolSecurityType]
                 .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
+        }
+
+        /// <summary>
+        /// Gets a list of all registered <see cref="SubscriptionDataConfig"/> for a given <see cref="Symbol"/>
+        /// </summary>
+        public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol)
+        {
+            return SubscriptionManagerSubscriptions.Where(x => x.Symbol == symbol).ToList();
         }
 
         #endregion
