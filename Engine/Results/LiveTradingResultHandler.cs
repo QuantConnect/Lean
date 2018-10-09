@@ -56,6 +56,7 @@ namespace QuantConnect.Lean.Engine.Results
         //Update loop:
         private DateTime _nextUpdate;
         private DateTime _nextChartsUpdate;
+        private DateTime _nextChartTrimming;
         private DateTime _nextRunningStatus;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
@@ -97,7 +98,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Equity resampling period for the charting.
         /// </summary>
         /// <remarks>Live trading can resample at much higher frequencies (every 1-2 seconds)</remarks>
-        public TimeSpan ResamplePeriod { get; } = TimeSpan.FromSeconds(1);
+        public TimeSpan ResamplePeriod { get; } = TimeSpan.FromSeconds(2);
 
         /// <summary>
         /// Notification periods set how frequently we push updates to the browser.
@@ -150,7 +151,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (Messages.Count == 0)
                     {
                         // prevent thread lock/tight loop when there's no work to be done
-                        Thread.Sleep(10);
+                        Thread.Sleep(100);
                     }
                 }
                 catch (Exception err)
@@ -176,9 +177,10 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            try
+            var utcNow = DateTime.UtcNow;
+            if (utcNow > _nextUpdate)
             {
-                if (DateTime.UtcNow > _nextUpdate || _exitTriggered)
+                try
                 {
                     //Extract the orders created since last update
                     OrderEvent orderEvent;
@@ -224,7 +226,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = OS.GetServerStatistics();
-                    var upTime = DateTime.UtcNow - _launchTimeUtc;
+                    var upTime = utcNow - _launchTimeUtc;
                     serverStatistics["Up Time"] = $"{upTime.Days}d {upTime:hh\\:mm\\:ss}";
                     serverStatistics["Total RAM (MB)"] = _job.Controls.RamAllocation.ToString();
 
@@ -274,7 +276,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Send full packet to storage.
-                    if (DateTime.UtcNow > _nextChartsUpdate || _exitTriggered)
+                    if (utcNow > _nextChartsUpdate)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
                         _nextChartsUpdate = DateTime.UtcNow.AddMinutes(1);
@@ -295,15 +297,15 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     // Upload the logs every 1-2 minutes; this can be a heavy operation depending on amount of live logging and should probably be done asynchronously.
-                    if (DateTime.UtcNow > _nextLogStoreUpdate || _exitTriggered)
+                    if (utcNow > _nextLogStoreUpdate)
                     {
                         List<LogEntry> logs;
                         Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
                         lock (_logStoreLock)
                         {
-                            var utc = DateTime.UtcNow;
+                            var timeLimitUtc = utcNow.RoundDown(TimeSpan.FromHours(1));
                             logs = (from log in _logStore
-                                    where log.Time >= utc.RoundDown(TimeSpan.FromHours(1))
+                                    where log.Time >= timeLimitUtc
                                     select log).ToList();
                             //Override the log master to delete the old entries and prevent memory creep.
                             _logStore = logs;
@@ -314,7 +316,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     // Every minute send usage statistics:
-                    if (DateTime.UtcNow > _nextStatisticsUpdate || _exitTriggered)
+                    if (utcNow > _nextStatisticsUpdate)
                     {
                         try
                         {
@@ -333,38 +335,40 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             Log.Error(err, "Error sending statistics:");
                         }
-                        _nextStatisticsUpdate = DateTime.UtcNow.AddMinutes(1);
+                        _nextStatisticsUpdate = utcNow.AddMinutes(1);
                     }
 
-
-                    Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
-                    lock (_chartLock)
+                    if (utcNow > _nextChartTrimming)
                     {
-                        foreach (var chart in Charts)
+                        Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
+                        var timeLimitUtc = Time.DateTimeToUnixTimeStamp(utcNow.AddDays(-2));
+                        lock (_chartLock)
                         {
-                            foreach (var series in chart.Value.Series)
+                            foreach (var chart in Charts)
                             {
-                                // trim data that's older than 2 days
-                                series.Value.Values =
-                                    (from v in series.Value.Values
-                                     where v.x > Time.DateTimeToUnixTimeStamp(DateTime.UtcNow.AddDays(-2))
-                                     select v).ToList();
+                                foreach (var series in chart.Value.Series)
+                                {
+                                    // trim data that's older than 2 days
+                                    series.Value.Values =
+                                        (from v in series.Value.Values
+                                         where v.x > timeLimitUtc
+                                         select v).ToList();
+                                }
                             }
                         }
+                        _nextChartTrimming = DateTime.UtcNow.AddMinutes(10);
+                        Log.Debug("LiveTradingResultHandler.Update(): Finished trimming charts");
                     }
-                    Log.Debug("LiveTradingResultHandler.Update(): Finished trimming charts");
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "LiveTradingResultHandler().Update(): ", true);
+                }
 
-
-                    //Set the new update time after we've finished processing.
-                    // The processing can takes time depending on how large the packets are.
-                    _nextUpdate = DateTime.UtcNow.AddSeconds(2);
-
-                } // End Update Charts:
-            }
-            catch (Exception err)
-            {
-                Log.Error(err, "LiveTradingResultHandler().Update(): ", true);
-            }
+                //Set the new update time after we've finished processing.
+                // The processing can takes time depending on how large the packets are.
+                _nextUpdate = DateTime.UtcNow.AddSeconds(3);
+            } // End Update Charts:
         }
 
 
@@ -739,6 +743,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="runtime">Runtime statistics banner information</param>
         public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> runtime)
         {
+            Log.Trace("LiveTradingResultHandler.SendFinalResult(): Starting...");
             try
             {
                 //Convert local dictionary:
@@ -762,7 +767,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Store to S3:
                 StoreResult(result, false);
-
+                Log.Trace("LiveTradingResultHandler.SendFinalResult(): Finished storing results. Start sending...");
                 //Truncate packet to fit within 32kb:
                 result.Results = new LiveResult{IsFrameworkAlgorithm = _algorithm.IsFrameworkAlgorithm};
 
@@ -773,6 +778,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Error(err);
             }
+            Log.Trace("LiveTradingResultHandler.SendFinalResult(): Ended");
         }
 
 
@@ -826,11 +832,11 @@ namespace QuantConnect.Lean.Engine.Results
 
                     var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
 
-                    // minute resoluton data, save today
+                    // minute resolution data, save today
                     var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
                     var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
-                    // swap out our charts with the sampeld data
+                    // swap out our charts with the sampled data
                     live.Results.Charts = minuteCharts;
                     SaveResults(CreateKey("minute"), live.Results);
 
@@ -896,17 +902,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Exit()
         {
-            // If the algorithm was not successfully initialized, be sure to store the logs
-            // Update() will be unable to store the logs if the algorithm never full initialized
-            if (!_exitTriggered && _algorithm != null && !_algorithm.GetLocked())
+            if (!_exitTriggered)
             {
+                _exitTriggered = true;
                 ProcessSynchronousEvents(true);
-                StoreLog(_logStore);
+                lock (_logStoreLock)
+                {
+                    StoreLog(_logStore);
+                }
             }
-
-            _exitTriggered = true;
-
-            Update();
         }
 
         /// <summary>
