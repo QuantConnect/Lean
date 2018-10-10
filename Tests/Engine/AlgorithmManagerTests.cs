@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        class NullAlphaHandler : IAlphaHandler
+        public class NullAlphaHandler : IAlphaHandler
         {
             public bool IsActive { get; }
             public AlphaRuntimeStatistics RuntimeStatistics { get; }
@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        class NullLeanManager : ILeanManager
+        public class NullLeanManager : ILeanManager
         {
             public void Dispose()
             {
