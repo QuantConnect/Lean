@@ -28,7 +28,6 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -228,8 +227,7 @@ namespace QuantConnect.Tests.Algorithm
             public string underlyingSymbol2 = "AAPL";
             public int DataPointCount { get; }
             public Resolution LastResolutionRequest;
-            public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider,
-                IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+            public void Initialize(HistoryProviderInitializeParameters parameters)
             {
                 throw new NotImplementedException();
             }

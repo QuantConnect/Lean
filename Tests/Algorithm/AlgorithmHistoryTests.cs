@@ -21,7 +21,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
 using QuantConnect.Tests.Engine.DataFeeds;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -111,14 +110,7 @@ namespace QuantConnect.Tests.Algorithm
             public int DataPointCount { get; }
             public List<HistoryRequest> HistryRequests { get; } = new List<HistoryRequest>();
 
-            public void Initialize(
-                AlgorithmNodePacket job,
-                IDataProvider dataProvider,
-                IDataCacheProvider dataCacheProvider,
-                IMapFileProvider mapFileProvider,
-                IFactorFileProvider factorFileProvider,
-                Action<int> statusUpdate
-                )
+            public void Initialize(HistoryProviderInitializeParameters parameters)
             {
                 throw new NotImplementedException();
             }

@@ -312,7 +312,7 @@ namespace QuantConnect.ToolBox.IEX
             get { return _dataPointCount; }
         }
 
-        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        public void Initialize(HistoryProviderInitializeParameters parameters)
         {
         }
 
@@ -338,7 +338,7 @@ namespace QuantConnect.ToolBox.IEX
 
             if (request.Resolution == Resolution.Minute && start <= DateTime.Today.AddDays(-30))
             {
-                Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available only for trailing 30 calendar days."); 
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available only for trailing 30 calendar days.");
                 yield break;
             } else if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
             {
@@ -359,7 +359,7 @@ namespace QuantConnect.ToolBox.IEX
             {
                 var begin = start;
                 while (begin < end)
-                { 
+                {
                     suffixes.Add("date/" + begin.ToString("yyyyMMdd"));
                     begin = begin.AddDays(1);
                 }
@@ -384,7 +384,7 @@ namespace QuantConnect.ToolBox.IEX
             {
                 suffixes.Add("2y");
             }
-            else 
+            else
             {
                 suffixes.Add("5y");
             }
@@ -420,7 +420,7 @@ namespace QuantConnect.ToolBox.IEX
                     if (item["open"] == null)
                     {
                         continue;
-                    }                    
+                    }
                     var open = item["open"].Value<decimal>();
                     var high = item["high"].Value<decimal>();
                     var low = item["low"].Value<decimal>();

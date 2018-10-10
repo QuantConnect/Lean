@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -144,15 +145,24 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     var historyDataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
-                    historyProvider.Initialize(job, _algorithmHandlers.DataProvider, historyDataCacheProvider, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, progress =>
-                    {
-                        // send progress updates to the result handler only during initialization
-                        if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
-                        {
-                            _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
-                                string.Format("Processing history {0}%...", progress));
-                        }
-                    });
+                    historyProvider.Initialize(
+                        new HistoryProviderInitializeParameters(
+                            job,
+                            _algorithmHandlers.DataProvider,
+                            historyDataCacheProvider,
+                            _algorithmHandlers.MapFileProvider,
+                            _algorithmHandlers.FactorFileProvider,
+                            progress =>
+                            {
+                                // send progress updates to the result handler only during initialization
+                                if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
+                                {
+                                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
+                                        string.Format("Processing history {0}%...", progress));
+                                }
+                            }
+                        )
+                    );
 
                     algorithm.HistoryProvider = historyProvider;
 
@@ -506,7 +516,5 @@ namespace QuantConnect.Lean.Engine
                 }
             }
         }
-
-
     } // End Algorithm Node Core Thread
 } // End Namespace

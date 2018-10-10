@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
@@ -21,7 +20,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -48,14 +46,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        public override void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider,
-            IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
             _brokerage.Connect();
         }

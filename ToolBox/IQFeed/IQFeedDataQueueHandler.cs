@@ -25,12 +25,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
-using System.Linq;
-using System.Threading;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 
 namespace QuantConnect.ToolBox.IQFeed
@@ -192,15 +188,9 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        /// <param name="parameters">The initialization parameters</param>
+        public void Initialize(HistoryProviderInitializeParameters parameters)
         {
-            return;
         }
 
         /// <summary>

@@ -51,18 +51,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        public override void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
-            _mapFileProvider = mapFileProvider;
-            _factorFileProvider = factorFileProvider;
-            _dataProvider = dataProvider;
-            _dataCacheProvider = dataCacheProvider;
+            _mapFileProvider = parameters.MapFileProvider;
+            _factorFileProvider = parameters.FactorFileProvider;
+            _dataProvider = parameters.DataProvider;
+            _dataCacheProvider = parameters.DataCacheProvider;
         }
 
         /// <summary>
