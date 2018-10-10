@@ -106,7 +106,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (!_algorithm.Securities.TryGetValue(config.Symbol, out security))
                             {
                                 // create a canonical security object if it doesn't exist
-                                security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                                security = new Security(
+                                    exchangeHours,
+                                    config,
+                                    _algorithm.Portfolio.CashBook[CashBook.AccountCurrency],
+                                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                                    _algorithm.Portfolio.CashBook
+                                );
                             }
 
                             var end = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders
 {
@@ -49,21 +50,54 @@ namespace QuantConnect.Tests.Common.Orders
 
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(tz);
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var equity = new Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             equity.SetMarketPrice(new Tick {Value = price});
 
             var gbpCash = new Cash("GBP", 0, 1.46m);
             var properties = SymbolProperties.GetDefault(gbpCash.Symbol);
-            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false), properties);
+            var forex = new Forex(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                gbpCash,
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
+                properties,
+                ErrorCurrencyConverter.Instance
+            );
             forex.SetMarketPrice(new Tick {Value= price});
 
             var eurCash = new Cash("EUR", 0, 1.12m);
             properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m, 1);
-            var cfd = new Cfd(SecurityExchangeHours.AlwaysOpen(tz), eurCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.DE10YBEUR, Resolution.Minute, tz, tz, true, false, false), properties);
+            var cfd = new Cfd(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                eurCash,
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.DE10YBEUR, Resolution.Minute, tz, tz, true, false, false),
+                properties,
+                ErrorCurrencyConverter.Instance
+            );
             cfd.SetMarketPrice(new Tick { Value = price });
             var multiplierTimesConversionRate = properties.ContractMultiplier*eurCash.ConversionRate;
 
-            var option = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            var option = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY_P_192_Feb19_2016,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                ErrorCurrencyConverter.Instance
+            );
             option.SetMarketPrice(new Tick { Value = price });
 
             return new List<ValueTestParameters>
@@ -91,7 +125,7 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("ForexLongStopMarketOrder", forex, new StopMarketOrder(Symbols.EURGBP, quantity, pricePlusDelta, time), quantity*price*forex.QuoteCurrency.ConversionRate),
                 new ValueTestParameters("ForexShortStopMarketOrder", forex, new StopMarketOrder(Symbols.EURGBP, -quantity, pricePlusDelta, time), -quantity*pricePlusDelta*forex.QuoteCurrency.ConversionRate),
                 new ValueTestParameters("ForexShortStopMarketOrder", forex, new StopMarketOrder(Symbols.EURGBP, -quantity, priceMinusDelta, time), -quantity*price*forex.QuoteCurrency.ConversionRate),
-                
+
                 // cfd orders
                 new ValueTestParameters("CfdLongMarketOrder", cfd, new MarketOrder(Symbols.DE10YBEUR, quantity, time), quantity*price*multiplierTimesConversionRate),
                 new ValueTestParameters("CfdShortMarketOrder", cfd, new MarketOrder(Symbols.DE10YBEUR, -quantity, time), -quantity*price*multiplierTimesConversionRate),

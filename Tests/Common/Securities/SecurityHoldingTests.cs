@@ -62,11 +62,13 @@ namespace QuantConnect.Tests.Common.Securities
                 true,
                 false);
 
-            var security =new Security(
+            var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(subscriptionDataConfig.DataTimeZone);

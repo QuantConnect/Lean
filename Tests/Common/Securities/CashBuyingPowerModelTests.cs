@@ -68,25 +68,33 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook[CashBook.AccountCurrency],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m));
+                new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m),
+                ErrorCurrencyConverter.Instance
+            );
 
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook[CashBook.AccountCurrency],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m));
+                new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m),
+                ErrorCurrencyConverter.Instance
+            );
 
             _btceur = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook["EUR"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m));
+                new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m),
+                ErrorCurrencyConverter.Instance
+            );
 
             _ethbtc = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook["BTC"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHBTC, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETHBTC", "BTC", 1, 0.00001m, 0.00000001m));
+                new SymbolProperties("ETHBTC", "BTC", 1, 0.00001m, 0.00000001m),
+                ErrorCurrencyConverter.Instance
+            );
 
             _buyingPowerModel = new CashBuyingPowerModel();
         }

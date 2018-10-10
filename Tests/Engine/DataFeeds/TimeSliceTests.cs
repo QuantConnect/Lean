@@ -28,6 +28,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
+using QuantConnect.Tests.Common.Securities;
 using QuandlFuture = QuantConnect.Algorithm.CSharp.QCUQuandlFutures.QuandlFuture;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -52,7 +53,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             DateTime refTime = DateTime.UtcNow;
 
@@ -101,13 +104,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig1,
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             var security2 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig1,
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             var timeSlice = TimeSlice.Create(DateTime.UtcNow, TimeZones.Utc, new CashBook(),
                 new List<DataFeedPacket>
@@ -143,7 +150,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             var refTime = DateTime.UtcNow;
 
@@ -206,14 +215,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void TimeSliceCreateDoesNotThrowNullReferanceWhenUnderlyingIsNull()
         {
             var optionSymbol = Symbol.Create("SVXY", SecurityType.Option, Market.USA);
-            var underlyingSecurity = new Equity(optionSymbol.Underlying, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
+            var underlyingSecurity = new Equity(
+                optionSymbol.Underlying,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                new Cash("USD", 0, 1),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance
+            );
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(DailyFx), optionSymbol, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
 
-            var optionSecurity = new Option(optionSymbol,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new OptionSymbolProperties(SymbolProperties.GetDefault("USD")));
+            var optionSecurity = new Option(
+                optionSymbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                ErrorCurrencyConverter.Instance
+            );
 
             var refTime = DateTime.UtcNow;
             var timeSlice = TimeSlice.Create(refTime, TimeZones.Utc, new CashBook(),
@@ -233,15 +251,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void TimeSliceCreateDoesNotThrowNullReferanceWhenUnderlyingSecurityLastDataIsNull()
         {
             var optionSymbol = Symbol.Create("SVXY", SecurityType.Option, Market.USA);
-            var underlyingSecurity = new Equity(optionSymbol.Underlying, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("USD", 0, 1), SymbolProperties.GetDefault("USD"));
+            var underlyingSecurity = new Equity(
+                optionSymbol.Underlying,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                new Cash("USD", 0, 1),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance
+            );
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(DailyFx), optionSymbol, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
 
-            var optionSecurity = new Option(optionSymbol,
-                                            SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                                            new Cash(CashBook.AccountCurrency, 0, 1m),
-                                            new OptionSymbolProperties(SymbolProperties.GetDefault("USD")))
-            { Underlying = underlyingSecurity };
+            var optionSecurity = new Option(
+                    optionSymbol,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                    ErrorCurrencyConverter.Instance
+                )
+                {Underlying = underlyingSecurity};
 
             var refTime = DateTime.UtcNow;
             var timeSlice = TimeSlice.Create(refTime, TimeZones.Utc, new CashBook(),
@@ -260,7 +287,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(typeof(ZipEntryName), symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), subscriptionDataConfig, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                subscriptionDataConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
             var refTime = DateTime.UtcNow;
 
             return Enumerable

@@ -74,15 +74,21 @@ namespace QuantConnect.Tests.Common.Securities
 
             _algo.HistoryProvider = historyProvider;
             _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
-            _tradeBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                                        _tradeBarConfig,
-                                        new Cash(CashBook.AccountCurrency, 0, 1m),
-                                        SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            _tradeBarSecurity = new Security(
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                _tradeBarConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
-            _quoteBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                                    _quoteBarConfig,
-                                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                                    SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            _quoteBarSecurity = new Security(
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                _quoteBarConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
                                                                           new FuncSecuritySeeder(_algo.GetLastKnownPrice));

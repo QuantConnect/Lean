@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using System;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Slippage
 {
@@ -39,7 +40,9 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1));
 
@@ -50,7 +53,9 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 Symbols.EURUSD,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                ErrorCurrencyConverter.Instance
+            );
 
             _forex.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.EURUSD, 100m, 100m, 100m, 100m, 0));
 
@@ -63,7 +68,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var slippagePercent = 1m;
             var model = new ConstantSlippageModel(slippagePercent);
 
-            var expected = _equity.Price * slippagePercent; 
+            var expected = _equity.Price * slippagePercent;
             var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);
             Assert.AreEqual(expected, actual);
         }
@@ -114,7 +119,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var volumeShare = _equityBuyOrder.Quantity / (decimal)volume;
             Assert.Greater(volume, volumeLimit * _equityBuyOrder.Quantity);
             _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, volume));
-            
+
             var expected = _equity.Price * priceImpact * volumeShare * volumeShare;
             var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);
             Assert.AreEqual(expected, actual);

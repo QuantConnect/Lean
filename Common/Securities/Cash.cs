@@ -235,15 +235,15 @@ namespace QuantConnect.Securities
                     Security security;
                     if (securityType == SecurityType.Cfd)
                     {
-                        security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
+                        security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties, cashBook);
                     }
                     else if (securityType == SecurityType.Crypto)
                     {
-                        security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+                        security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties, cashBook);
                     }
                     else
                     {
-                        security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);
+                        security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties, cashBook);
                     }
 
                     ConversionRateSecurity = security;

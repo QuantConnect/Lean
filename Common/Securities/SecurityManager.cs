@@ -357,33 +357,33 @@ namespace QuantConnect.Securities
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties);
+                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties, securityPortfolioManager.CashBook);
                     break;
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new Option.Option(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
+                    security = new Option.Option(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties), securityPortfolioManager.CashBook);
                     break;
 
                 case SecurityType.Future:
-                    security = new Future.Future(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    security = new Future.Future(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties, securityPortfolioManager.CashBook);
                     break;
 
                 case SecurityType.Forex:
-                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties);
+                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties, securityPortfolioManager.CashBook);
                     break;
 
                 case SecurityType.Cfd:
-                    security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties);
+                    security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties, securityPortfolioManager.CashBook);
                     break;
 
                 case SecurityType.Crypto:
-                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties);
+                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties, securityPortfolioManager.CashBook);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(symbol, exchangeHours, quoteCash, symbolProperties);
+                    security = new Security(symbol, exchangeHours, quoteCash, symbolProperties, securityPortfolioManager.CashBook);
                     break;
             }
 
