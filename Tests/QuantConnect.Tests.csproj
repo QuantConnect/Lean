@@ -148,6 +148,7 @@
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
+    <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />
