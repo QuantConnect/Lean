@@ -35,6 +35,21 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private int _dataPointCount;
 
         /// <summary>
+        /// Event fired when an error message should be sent to the algorithm
+        /// </summary>
+        public abstract event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+
+        /// <summary>
+        /// Event fired when a debug message should be sent to the algorithm
+        /// </summary>
+        public abstract event EventHandler<DebugMessageEventArgs> DebugMessage;
+
+        /// <summary>
+        /// Event fired when a runtime error should be sent to the algorithm
+        /// </summary>
+        public abstract event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+
+        /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
         public int DataPointCount

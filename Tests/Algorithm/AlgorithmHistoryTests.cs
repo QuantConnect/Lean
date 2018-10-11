@@ -107,6 +107,12 @@ namespace QuantConnect.Tests.Algorithm
 
         private class TestHistoryProvider : IHistoryProvider
         {
+#pragma warning disable CS0067 // The event is never used
+            public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+            public event EventHandler<DebugMessageEventArgs> DebugMessage;
+            public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+#pragma warning restore CS0067
+
             public int DataPointCount { get; }
             public List<HistoryRequest> HistryRequests { get; } = new List<HistoryRequest>();
 

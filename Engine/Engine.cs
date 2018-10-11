@@ -164,6 +164,10 @@ namespace QuantConnect.Lean.Engine
                         )
                     );
 
+                    historyProvider.DebugMessage += (sender, args) => { _algorithmHandlers.Results.DebugMessage(args.Message); };
+                    historyProvider.ErrorMessage += (sender, args) => { _algorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
+                    historyProvider.RuntimeError += (sender, args) => { _algorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
+
                     algorithm.HistoryProvider = historyProvider;
 
                     // initialize the default brokerage message handler

@@ -227,6 +227,13 @@ namespace QuantConnect.Tests.Algorithm
             public string underlyingSymbol2 = "AAPL";
             public int DataPointCount { get; }
             public Resolution LastResolutionRequest;
+
+#pragma warning disable CS0067 // The event is never used
+            public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+            public event EventHandler<DebugMessageEventArgs> DebugMessage;
+            public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+#pragma warning restore CS0067
+
             public void Initialize(HistoryProviderInitializeParameters parameters)
             {
                 throw new NotImplementedException();

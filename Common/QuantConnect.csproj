@@ -182,6 +182,7 @@
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
+    <Compile Include="HistoryProviderEvents.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using NodaTime;
@@ -27,6 +28,21 @@ namespace QuantConnect.Interfaces
     [InheritedExport(typeof(IHistoryProvider))]
     public interface IHistoryProvider
     {
+        /// <summary>
+        /// Event fired when an error message should be sent to the algorithm
+        /// </summary>
+        event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+
+        /// <summary>
+        /// Event fired when a debug message should be sent to the algorithm
+        /// </summary>
+        event EventHandler<DebugMessageEventArgs> DebugMessage;
+
+        /// <summary>
+        /// Event fired when a runtime error should be sent to the algorithm
+        /// </summary>
+        event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>

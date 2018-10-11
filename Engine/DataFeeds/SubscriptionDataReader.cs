@@ -25,9 +25,7 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 
@@ -50,19 +48,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly SubscriptionDataConfig _config;
 
         /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\market\factor_files\{SYMBOL}.csv
-        private readonly bool _hasScaleFactors;
+        private bool _hasScaleFactors;
 
         // Location of the datafeed - the type of this data.
 
         // Create a single instance to invoke all Type Methods:
-        private readonly BaseData _dataFactory;
+        private BaseData _dataFactory;
 
         //Start finish times of the backtest:
-        private readonly DateTime _periodStart;
+        private DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        private readonly FactorFile _factorFile;
-        private readonly MapFile _mapFile;
+        private readonly MapFileResolver _mapFileResolver;
+        private readonly IFactorFileProvider _factorFileProvider;
+        private FactorFile _factorFile;
+        private MapFile _mapFile;
 
         // we set the price factor ratio when we encounter a dividend in the factor file
         // and on the next trading day we use this data to produce the dividend instance
@@ -84,15 +84,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private BaseData _previous;
         private readonly Queue<BaseData> _auxiliaryData;
-        private readonly IResultHandler _resultHandler;
         private readonly IEnumerator<DateTime> _tradeableDates;
 
         // used when emitting aux data from within while loop
         private bool _emittedAuxilliaryData;
         private BaseData _lastInstanceBeforeAuxilliaryData;
-        private readonly IDataProvider _dataProvider;
         private readonly IDataCacheProvider _dataCacheProvider;
         private DateTime _delistingDate;
+
+        /// <summary>
+        /// Event fired when an error message should be sent to the algorithm
+        /// </summary>
+        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+
+        /// <summary>
+        /// Event fired when a debug message should be sent to the algorithm
+        /// </summary>
+        public event EventHandler<DebugMessageEventArgs> DebugMessage;
+
+        /// <summary>
+        /// Event fired when a runtime error should be sent to the algorithm
+        /// </summary>
+        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -117,10 +130,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">Subscription configuration object</param>
         /// <param name="periodStart">Start date for the data request/backtest</param>
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
-        /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
-        /// <param name="dataProvider">Used for getting files not present on disk</param>
         /// <param name="dataCacheProvider">Used for caching files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
@@ -128,10 +139,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public SubscriptionDataReader(SubscriptionDataConfig config,
             DateTime periodStart,
             DateTime periodFinish,
-            IResultHandler resultHandler,
             MapFileResolver mapFileResolver,
             IFactorFileProvider factorFileProvider,
-            IDataProvider dataProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
             IDataCacheProvider dataCacheProvider,
@@ -145,29 +154,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save Start and End Dates:
             _periodStart = periodStart;
             _periodFinish = periodFinish;
-            _dataProvider = dataProvider;
+            _mapFileResolver = mapFileResolver;
+            _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
             _isLiveMode = isLiveMode;
             _includeAuxilliaryData = includeAuxilliaryData;
 
+            _tradeableDates = tradeableDates.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="SubscriptionDataReader"/> instance
+        /// </summary>
+        public void Initialize()
+        {
             //Save the type of data we'll be getting from the source.
 
             //Create the dynamic type-activators:
-            var objectActivator = ObjectActivator.GetActivator(config.Type);
+            var objectActivator = ObjectActivator.GetActivator(_config.Type);
 
-            _resultHandler = resultHandler;
-            _tradeableDates = tradeableDates.GetEnumerator();
             if (objectActivator == null)
             {
-                _resultHandler.ErrorMessage("Custom data type '" + config.Type.Name + "' missing parameterless constructor E.g. public " + config.Type.Name + "() { }");
+                ErrorMessage?.Invoke(this, new ErrorMessageEventArgs(
+                    $"Custom data type \'{_config.Type.Name}\' missing parameterless constructor E.g. public {_config.Type.Name}() {{ }}"));
+
                 _endOfStream = true;
                 return;
             }
 
             //Create an instance of the "Type":
-            var userObj = objectActivator.Invoke(new object[] { config.Type });
+            var userObj = objectActivator.Invoke(new object[] { _config.Type });
 
             _dataFactory = userObj as BaseData;
 
@@ -191,20 +209,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            _factorFile = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
-            _mapFile = new MapFile(config.Symbol.Value, new List<MapFileRow>());
+            _factorFile = new FactorFile(_config.Symbol.Value, new List<FactorFileRow>());
+            _mapFile = new MapFile(_config.Symbol.Value, new List<MapFileRow>());
 
             // load up the map and factor files for equities
-            if (!config.IsCustomData && config.SecurityType == SecurityType.Equity)
+            if (!_config.IsCustomData && _config.SecurityType == SecurityType.Equity)
             {
                 try
                 {
-                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
+                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol.ID.Symbol, _config.Symbol.ID.Date);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    var factorFile = factorFileProvider.Get(_config.Symbol);
+                    var factorFile = _factorFileProvider.Get(_config.Symbol);
                     _hasScaleFactors = factorFile != null;
                     if (_hasScaleFactors)
                     {
@@ -217,33 +235,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 _periodStart = _factorFile.FactorFileMinimumDate.Value;
 
-                                _resultHandler.DebugMessage(
-                                    string.Format("Data for symbol {0} has been limited due to numerical precision issues in the factor file. The starting date has been set to {1}.",
-                                    config.Symbol.Value,
-                                    _factorFile.FactorFileMinimumDate.Value.ToShortDateString()));
+                                DebugMessage?.Invoke(this, new DebugMessageEventArgs(
+                                    $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
+                                    $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
                             }
                         }
                     }
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, "Fetching Price/Map Factors: " + config.Symbol.ID + ": ");
+                    Log.Error(err, "Fetching Price/Map Factors: " + _config.Symbol.ID + ": ");
                 }
             }
 
             // load up the map and factor files for underlying of equity option
-            if (!config.IsCustomData && config.SecurityType == SecurityType.Option)
+            if (!_config.IsCustomData && _config.SecurityType == SecurityType.Option)
             {
                 try
                 {
-                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date);
+                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol.Underlying.ID.Symbol, _config.Symbol.Underlying.ID.Date);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, "Map Factors: " + config.Symbol.ID + ": ");
+                    Log.Error(err, "Map Factors: " + _config.Symbol.ID + ": ");
                 }
             }
 
@@ -260,6 +277,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _delistingDate = _mapFile.DelistingDate;
                     break;
             }
+
             _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
         }
 
@@ -504,7 +522,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
 
                     case SubscriptionTransportMedium.RemoteFile:
-                        _resultHandler.ErrorMessage(string.Format("Error downloading custom data source file, skipped: {0} Error: {1}", source, args.Exception.Message), args.Exception.StackTrace);
+                        ErrorMessage?.Invoke(this, new ErrorMessageEventArgs(
+                            $"Error downloading custom data source file, skipped: {source} Error: {args.Exception.Message}", args.Exception.StackTrace));
                         break;
 
                     case SubscriptionTransportMedium.Rest:
@@ -524,14 +543,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     //Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
                     if (_config.IsCustomData)
                     {
-                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                        ErrorMessage?.Invoke(this, new ErrorMessageEventArgs(
+                            $"We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({args.Source.Source})."));
                     }
                 };
 
                 // handle parser errors
                 textSubscriptionFactory.ReaderError += (sender, args) =>
                 {
-                    _resultHandler.RuntimeError(string.Format("Error invoking {0} data reader. Line: {1} Error: {2}", _config.Symbol, args.Line, args.Exception.Message), args.Exception.StackTrace);
+                    RuntimeError?.Invoke(this, new RuntimeErrorEventArgs(
+                        $"Error invoking {_config.Symbol} data reader. Line: {args.Line} Error: {args.Exception.Message}", args.Exception.StackTrace));
                 };
             }
         }
@@ -686,8 +707,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CheckForDelisting(DateTime date)
         {
-
-
             if (!_delistedWarning && date >= _delistingDate)
             {
                 _delistedWarning = true;

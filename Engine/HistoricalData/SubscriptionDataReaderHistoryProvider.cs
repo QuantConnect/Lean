@@ -45,8 +45,22 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     {
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
-        private IDataProvider _dataProvider;
         private IDataCacheProvider _dataCacheProvider;
+
+        /// <summary>
+        /// Event fired when an error message should be sent to the algorithm
+        /// </summary>
+        public override event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+
+        /// <summary>
+        /// Event fired when a debug message should be sent to the algorithm
+        /// </summary>
+        public override event EventHandler<DebugMessageEventArgs> DebugMessage;
+
+        /// <summary>
+        /// Event fired when a runtime error should be sent to the algorithm
+        /// </summary>
+        public override event EventHandler<RuntimeErrorEventArgs> RuntimeError;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -56,7 +70,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         {
             _mapFileProvider = parameters.MapFileProvider;
             _factorFileProvider = parameters.FactorFileProvider;
-            _dataProvider = parameters.DataProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
         }
 
@@ -111,18 +124,24 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 ErrorCurrencyConverter.Instance
             );
 
-            IEnumerator<BaseData> reader = new SubscriptionDataReader(config,
+            var dataReader = new SubscriptionDataReader(config,
                 start,
                 end,
-                ResultHandlerStub.Instance,
                 config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty,
                 _factorFileProvider,
-                _dataProvider,
                 Time.EachTradeableDay(request.ExchangeHours, start, end),
                 false,
                 _dataCacheProvider,
                 false
                 );
+
+            dataReader.DebugMessage += (sender, args) => { DebugMessage?.Invoke(this, args); };
+            dataReader.ErrorMessage += (sender, args) => { ErrorMessage?.Invoke(this, args); };
+            dataReader.RuntimeError += (sender, args) => { RuntimeError?.Invoke(this, args); };
+
+            dataReader.Initialize();
+
+            IEnumerator<BaseData> reader = dataReader;
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
@@ -156,55 +175,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
             var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, reader);
             return new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
-        }
-
-        // this implementation is provided solely for the data reader's dependency,
-        // in the future we can refactor the data reader to not use the result handler
-        private class ResultHandlerStub : BaseResultsHandler, IResultHandler
-        {
-            public static readonly IResultHandler Instance = new ResultHandlerStub();
-
-            private ResultHandlerStub() { }
-
-            #region Implementation of IResultHandler
-
-            public ConcurrentQueue<Packet> Messages { get; set; }
-            public ConcurrentDictionary<string, Chart> Charts { get; set; }
-            public TimeSpan ResamplePeriod { get; private set; }
-            public TimeSpan NotificationPeriod { get; private set; }
-            public bool IsActive { get; private set; }
-
-            public void Initialize(AlgorithmNodePacket job,
-                IMessagingHandler messagingHandler,
-                IApi api,
-                IDataFeed dataFeed,
-                ISetupHandler setupHandler,
-                ITransactionHandler transactionHandler) { }
-            public void Run() { }
-            public void DebugMessage(string message) { }
-            public void SystemDebugMessage(string message) { }
-            public void SecurityType(List<SecurityType> types) { }
-            public void LogMessage(string message) { }
-            public void ErrorMessage(string error, string stacktrace = "") { }
-            public void RuntimeError(string message, string stacktrace = "") { }
-            public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$") { }
-            public void SampleEquity(DateTime time, decimal value) { }
-            public void SamplePerformance(DateTime time, decimal value) { }
-            public void SampleBenchmark(DateTime time, decimal value) { }
-            public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value) { }
-            public void SampleRange(List<Chart> samples) { }
-            public void SetAlgorithm(IAlgorithm algorithm) { }
-            public void StoreResult(Packet packet, bool async = false) { }
-            public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> banner) { }
-            public void SendStatusUpdate(AlgorithmStatus status, string message = "") { }
-            public void SetChartSubscription(string symbol) { }
-            public void RuntimeStatistic(string key, string value) { }
-            public void OrderEvent(OrderEvent newEvent) { }
-            public void Exit() { }
-            public void PurgeQueue() { }
-            public void ProcessSynchronousEvents(bool forceProcess = false) { }
-
-            #endregion
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>

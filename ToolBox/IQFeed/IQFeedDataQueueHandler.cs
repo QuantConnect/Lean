@@ -185,6 +185,23 @@ namespace QuantConnect.ToolBox.IQFeed
             }
         }
 
+#pragma warning disable CS0067 // The event is never used
+        /// <summary>
+        /// Event fired when an error message should be sent to the algorithm
+        /// </summary>
+        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+
+        /// <summary>
+        /// Event fired when a debug message should be sent to the algorithm
+        /// </summary>
+        public event EventHandler<DebugMessageEventArgs> DebugMessage;
+
+        /// <summary>
+        /// Event fired when a runtime error should be sent to the algorithm
+        /// </summary>
+        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+#pragma warning restore CS0067
+
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>

@@ -844,6 +844,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
         internal class EmptyHistoryProvider : IHistoryProvider
         {
+#pragma warning disable CS0067 // The event is never used
+            public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+            public event EventHandler<DebugMessageEventArgs> DebugMessage;
+            public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+#pragma warning restore CS0067
+
             public int DataPointCount
             {
                 get { return 0; }

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
@@ -33,6 +34,23 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     public class BrokerageHistoryProvider : SynchronizingHistoryProvider
     {
         private IBrokerage _brokerage;
+
+#pragma warning disable CS0067 // The event is never used
+        /// <summary>
+        /// Event fired when an error message should be sent to the algorithm
+        /// </summary>
+        public override event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+
+        /// <summary>
+        /// Event fired when a debug message should be sent to the algorithm
+        /// </summary>
+        public override event EventHandler<DebugMessageEventArgs> DebugMessage;
+
+        /// <summary>
+        /// Event fired when a runtime error should be sent to the algorithm
+        /// </summary>
+        public override event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+#pragma warning restore CS0067
 
         /// <summary>
         /// Sets the brokerage to be used for historical requests
