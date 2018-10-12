@@ -52,13 +52,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm = new AlgorithmStub();
         }
 
-        [TearDown]
-        public void TearDown()
-        {
-            // Allow the threads that are looping, time to process the cancellation and end
-            Thread.Sleep(400);
-        }
-
         [Test]
         public void EmitsData()
         {
@@ -608,28 +601,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var fileProvider = new DefaultDataProvider();
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
 
-            var feedThreadStarted = new ManualResetEvent(false);
-
             var unhandledExceptionWasThrown = false;
-            Task.Run(() =>
+            try
             {
-                try
-                {
-                    feedThreadStarted.Set();
-                    feed.Run();
-                }
-                catch (Exception ex)
-                {
-                    QuantConnect.Logging.Log.Error(ex.ToString());
-                    unhandledExceptionWasThrown = true;
-                }
-            });
+                feed.Exit();
+            }
+            catch (Exception ex)
+            {
+                QuantConnect.Logging.Log.Error(ex.ToString());
+                unhandledExceptionWasThrown = true;
+            }
 
-            feedThreadStarted.WaitOne();
-            feed.Exit();
-
-            Thread.Sleep(1000);
-
+            Thread.Sleep(500);
             Assert.IsFalse(unhandledExceptionWasThrown);
         }
 
@@ -681,16 +664,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
-
-            var feedThreadStarted = new ManualResetEvent(false);
-            Task.Factory.StartNew(() =>
-            {
-                feedThreadStarted.Set();
-                feed.Run();
-            });
-
-            // wait for feed.Run to actually begin
-            feedThreadStarted.WaitOne();
 
             return feed;
         }

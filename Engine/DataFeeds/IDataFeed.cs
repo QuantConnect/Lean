@@ -68,11 +68,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         bool RemoveSubscription(SubscriptionDataConfig configuration);
 
         /// <summary>
-        /// Primary entry point.
-        /// </summary>
-        void Run();
-
-        /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
         void Exit();

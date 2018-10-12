@@ -92,7 +92,6 @@ namespace QuantConnect.Lean.Engine
             {
                 //Reset thread holders.
                 var initializeComplete = false;
-                Thread threadFeed = null;
                 Thread threadTransactions = null;
                 Thread threadResults = null;
                 Thread threadRealTime = null;
@@ -251,13 +250,11 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     //Launch the data, transaction and realtime handlers into dedicated threads
-                    threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) { IsBackground = true, Name = "DataFeed Thread" };
                     threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) { IsBackground = true, Name = "Transaction Thread" };
                     threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) { IsBackground = true, Name = "RealTime Thread" };
                     threadAlphas = new Thread(() => _algorithmHandlers.Alphas.Run()) {IsBackground = true, Name = "Alpha Thread" };
 
                     //Launch the data feed, result sending, and transaction models/handlers in separate threads.
-                    threadFeed.Start(); // Data feed pushing data packets into thread bridge;
                     threadTransactions.Start(); // Transaction modeller scanning new order requests
                     threadRealTime.Start(); // RealTime scan time for time based events:
                     threadAlphas.Start(); // Alpha thread for processing algorithm alpha insights
@@ -414,7 +411,6 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Terminate threads still in active state.
-                if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                 if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                 if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
                 if (threadAlphas != null && threadAlphas.IsAlive) threadAlphas.Abort();

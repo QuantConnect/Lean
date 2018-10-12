@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
@@ -277,16 +276,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var request = new SubscriptionRequest(false, null, algorithm.Securities[symbol], config, startDate, Time.EndOfTime);
                 feed.AddSubscription(request);
             }
-
-            var feedThreadStarted = new ManualResetEvent(false);
-            Task.Factory.StartNew(() =>
-            {
-                feedThreadStarted.Set();
-                feed.Run();
-            });
-
-            feedThreadStarted.WaitOne();
-
             return feed;
         }
 
