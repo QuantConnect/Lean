@@ -25,7 +25,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -70,9 +69,10 @@ namespace QuantConnect.Tests.Engine
                 algo.TimeKeeper,
                 marketHoursDatabase);
             algo.SubscriptionManager.SetDataManager(dataManager);
-
+            var synchronizer = new Synchronizer();
+            synchronizer.Initialize(algo, dataManager, _liveTradingDataFeed, true, algo.Portfolio.CashBook);
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(),
-                                            null, new DefaultDataProvider(), dataManager);
+                                            null, new DefaultDataProvider(), dataManager, synchronizer);
 
             algo.Initialize();
         }

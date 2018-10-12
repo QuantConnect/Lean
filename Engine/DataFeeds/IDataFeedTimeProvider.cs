@@ -17,13 +17,18 @@
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// IDataManager is the engines view of the Data Manager.
+    /// Reduced interface which exposes required <see cref="ITimeProvider"/> for <see cref="IDataFeed"/> implementations
     /// </summary>
-    public interface IDataManager
+    public interface IDataFeedTimeProvider
     {
         /// <summary>
-        /// Get the universe selection instance
+        /// Continuous UTC time provider
         /// </summary>
-        UniverseSelection UniverseSelection { get; }
+        ITimeProvider TimeProvider { get; }
+
+        /// <summary>
+        /// Time provider which returns current UTC frontier time
+        /// </summary>
+        ITimeProvider FrontierTimeProvider { get; }
     }
 }

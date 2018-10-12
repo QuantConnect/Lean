@@ -77,10 +77,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endTimeUtc = algorithm.EndDate.ConvertToUtc(TimeZones.NewYork);
             var startTimeUtc = algorithm.StartDate.ConvertToUtc(TimeZones.NewYork);
             var subscriptionBasedTimeProvider = new SubscriptionFrontierTimeProvider(startTimeUtc, dataManager);
-            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection, algorithm.TimeZone,
-                                                            algorithm.Portfolio.CashBook,
-                                                            subscriptionBasedTimeProvider);
-
+            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection, algorithm.Portfolio.CashBook);
+            synchronizer.SetTimeProvider(subscriptionBasedTimeProvider);
+            synchronizer.SetSliceTimeZone(algorithm.TimeZone);
             var totalDataPoints = 0;
             var subscriptions = dataManager.DataFeedSubscriptions;
             foreach (var kvp in algorithm.Securities)

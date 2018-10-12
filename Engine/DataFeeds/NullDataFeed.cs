@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -49,22 +48,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <inheritdoc />
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
-            IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider,
-            IDataFeedSubscriptionManager subscriptionManager)
+        public void Initialize(
+            IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider,
+            IDataProvider dataProvider,
+            IDataFeedSubscriptionManager subscriptionManager,
+            IDataFeedTimeProvider dataFeedTimeProvider
+            )
         {
             throw new NotImplementedException("Unexpected usage of null data feed implementation.");
-        }
-
-        /// <inheritdoc />
-        public IEnumerator<TimeSlice> GetEnumerator()
-        {
-            throw new NotImplementedException("Unexpected usage of null data feed implementation.");
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         /// <inheritdoc />

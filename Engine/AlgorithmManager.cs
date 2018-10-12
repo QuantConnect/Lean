@@ -127,6 +127,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="job">Algorithm job</param>
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="dataManager">DataManager object</param>
+        /// <param name="synchronizer">Instance which implements <see cref="ISynchronizer"/>. Used to stream the data</param>
         /// <param name="transactions">Transaction manager object</param>
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
@@ -134,7 +135,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="alphas">Alpha handler used to process algorithm generated insights</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataManager dataManager, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataManager dataManager, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
             //Initialize:
             _dataPointCount = 0;
@@ -202,7 +203,7 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            foreach (var timeSlice in Stream(algorithm, dataManager, results, token))
+            foreach (var timeSlice in Stream(algorithm, dataManager, synchronizer, results, token))
             {
                 // reset our timer on each loop
                 _currentTimeStepTime = DateTime.UtcNow;
@@ -768,7 +769,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, IDataManager dataManager, IResultHandler results, CancellationToken cancellationToken)
+        private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, IDataManager dataManager, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
         {
             bool setStartTime = false;
             var timeZone = algorithm.TimeZone;
@@ -929,7 +930,7 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
-            foreach (var timeSlice in dataManager.StreamData())
+            foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
                 if (!setStartTime)
                 {

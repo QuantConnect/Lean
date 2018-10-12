@@ -42,6 +42,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class CustomLiveDataFeedTests
     {
+        private Synchronizer _synchronizer;
+        private IDataFeed _feed;
+
         [Test]
         public void EmitsDailyQuandlFutureDataOverWeekends()
         {
@@ -68,8 +71,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timeProvider.SetCurrentTime(startDate);
 
             var dataPointsEmitted = 0;
-            var feed = RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager);
+            RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager);
 
+            var cancellationTokenSource = new CancellationTokenSource();
             var lastFileWriteDate = DateTime.MinValue;
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
@@ -86,7 +90,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Log.Trace($"Total data points emitted: {dataPointsEmitted}");
 
-                    feed.Exit();
+                    _feed.Exit();
+                    cancellationTokenSource.Cancel();
                     return;
                 }
 
@@ -147,7 +152,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             try
             {
-                foreach (var timeSlice in feed)
+                foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
                 {
                     foreach (var dataPoint in timeSlice.Slice.Values)
                     {
@@ -187,6 +192,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
             timeProvider.SetCurrentTime(startDate);
+            var cancellationTokenSource = new CancellationTokenSource();
 
             var dataPointsEmitted = 0;
             var slicesEmitted = 0;
@@ -204,7 +210,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return new[] { tick, tick2 };
             });
 
-            var feed = RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager, dataQueueHandler);
+            RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager, dataQueueHandler);
             Thread.Sleep(5000); // Give remote sources a handicap, so the data is available in time
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
@@ -219,7 +225,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 if (currentTime.Date > endDate.Date)
                 {
-                    feed.Exit();
+                    _feed.Exit();
+                    cancellationTokenSource.Cancel();
                     return;
                 }
 
@@ -232,7 +239,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             try
             {
-                foreach (var timeSlice in feed)
+                foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
                 {
                     if (timeSlice.Slice.HasData)
                     {
@@ -255,7 +262,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }
 
-        private static IDataFeed RunLiveDataFeed(
+        private IDataFeed RunLiveDataFeed(
             IAlgorithm algorithm,
             DateTime startDate,
             IEnumerable<Symbol> symbols,
@@ -263,20 +270,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataManager dataManager,
             FuncDataQueueHandler funcDataQueueHandler  = null)
         {
-            var feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>()),
-                                                       timeProvider);
+            _feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>()));
+            _synchronizer = new TestableSynchronizer(algorithm, dataManager, _feed, true, timeProvider);
 
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), dataManager);
+            _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), dataManager, _synchronizer);
 
             foreach (var symbol in symbols)
             {
                 var config = algorithm.Securities[symbol].SubscriptionDataConfig;
                 var request = new SubscriptionRequest(false, null, algorithm.Securities[symbol], config, startDate, Time.EndOfTime);
-                feed.AddSubscription(request);
+                _feed.AddSubscription(request);
             }
-            return feed;
+            return _feed;
         }
 
         private static int _countFilesWritten;

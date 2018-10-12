@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
     [InheritedExport(typeof(IDataFeed))]
-    public interface IDataFeed : IEnumerable<TimeSlice>
+    public interface IDataFeed
     {
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -49,9 +49,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
-                        IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider,
-                        IDataProvider dataProvider, IDataFeedSubscriptionManager subscriptionManager);
+        void Initialize(IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider,
+            IDataProvider dataProvider,
+            IDataFeedSubscriptionManager subscriptionManager,
+            IDataFeedTimeProvider dataFeedTimeProvider);
 
         /// <summary>
         /// Adds a new subscription to provide data for the specified security.
