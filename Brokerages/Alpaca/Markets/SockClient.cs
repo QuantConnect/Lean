@@ -1,6 +1,8 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Changes from the above source:
+ *     The websocket connection now depends on WebSocketSharp, not on WebSocket4Net as in the original source
 */
 
 using System;
@@ -10,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using WebSocket4Net;
+using WebSocketSharp;
 using System.Security.Authentication;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
@@ -67,14 +69,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             };
             uriBuilder.Path += "/stream";
 
-            _webSocket = new WebSocket(uriBuilder.Uri.ToString(),
-                sslProtocols: SslProtocols.Tls11 | SslProtocols.Tls12);
+            _webSocket = new WebSocket(uriBuilder.Uri.ToString());
 
-            _webSocket.Opened += handleOpened;
-            _webSocket.Closed += handleClosed;
+            _webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12;
 
-            _webSocket.DataReceived += handleDataReceived;
-            _webSocket.Error += (sender, args) =>
+            _webSocket.OnOpen += handleOpened;
+            _webSocket.OnClose += handleClosed;
+
+            _webSocket.OnMessage += handleDataReceived;
+            _webSocket.OnError += (sender, args) =>
             {
                 Console.WriteLine(args.Exception);
                 OnError?.Invoke(args.Exception);
@@ -107,7 +110,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <returns>Waitable task object for handling action completion in asyncronious mode.</returns>
         public Task ConnectAsync()
         {
-            return Task.Run(() => _webSocket.Open());
+            return Task.Run(() => _webSocket.Connect());
         }
 
         /// <summary>
@@ -122,7 +125,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <inheritdoc />
         public void Dispose()
         {
-            _webSocket?.Dispose();
+            _webSocket?.Close();
         }
 
         private void handleOpened(
@@ -150,9 +153,9 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
         private void handleDataReceived(
             Object sender,
-            DataReceivedEventArgs e)
+            MessageEventArgs e)
         {
-            var message = Encoding.UTF8.GetString(e.Data);
+            var message = Encoding.UTF8.GetString(e.RawData);
             var root = JObject.Parse(message);
 
             var data = root["data"];
