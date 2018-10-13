@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // define risk management model as a composite of several risk management models
             SetRiskManagement(new CompositeRiskManagementModel(
-                new NullRiskManagementModel(),
+                new MaximumUnrealizedProfitPerSecurity(0.01m),
                 new MaximumDrawdownPercentPerSecurity(0.01m)
             ));
         }
@@ -66,27 +66,27 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
-            {"Average Win", "0%"},
+            {"Total Trades", "7"},
+            {"Average Win", "1.15%"},
             {"Average Loss", "-1.03%"},
-            {"Compounding Annual Return", "245.167%"},
-            {"Drawdown", "2.300%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "1.597%"},
-            {"Sharpe Ratio", "4.169"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
+            {"Compounding Annual Return", "280.389%"},
+            {"Drawdown", "2.200%"},
+            {"Expectancy", "0.414"},
+            {"Net Profit", "1.723%"},
+            {"Sharpe Ratio", "4.394"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
+            {"Profit-Loss Ratio", "1.12"},
             {"Alpha", "0.007"},
-            {"Beta", "73.191"},
-            {"Annual Standard Deviation", "0.195"},
-            {"Annual Variance", "0.038"},
-            {"Information Ratio", "4.113"},
-            {"Tracking Error", "0.195"},
+            {"Beta", "78.944"},
+            {"Annual Standard Deviation", "0.2"},
+            {"Annual Variance", "0.04"},
+            {"Information Ratio", "4.34"},
+            {"Tracking Error", "0.2"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$9.77"},
+            {"Total Fees", "$22.80"},
             {"Total Insights Generated", "100"},
-            {"Total Insights Closed", "9"},
+            {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "99"},
             {"Long Insight Count", "100"},
             {"Short Insight Count", "0"},

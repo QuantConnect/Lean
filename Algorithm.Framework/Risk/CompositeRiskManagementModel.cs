@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 
@@ -50,6 +49,20 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// Initializes a new instance of the <see cref="CompositeRiskManagementModel"/> class
         /// </summary>
         /// <param name="riskManagementModels">The individual risk management models defining this composite model</param>
+        public CompositeRiskManagementModel(IEnumerable<IRiskManagementModel>riskManagementModels)
+        {
+            _riskManagementModels = riskManagementModels?.ToArray();
+
+            if (_riskManagementModels.IsNullOrEmpty())
+            {
+                throw new ArgumentException("Must specify at least 1 risk management model for the CompositeRiskManagementModel");
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositeRiskManagementModel"/> class
+        /// </summary>
+        /// <param name="riskManagementModels">The individual risk management models defining this composite model</param>
         public CompositeRiskManagementModel(params PyObject[] riskManagementModels)
         {
             if (riskManagementModels.IsNullOrEmpty())
@@ -61,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
             for (var i = 0; i < riskManagementModels.Length; i++)
             {
-                if (!riskManagementModels[i].TryConvert(out _riskManagementModels[i]))
+                if (riskManagementModels[i].TryConvert(out _riskManagementModels[i]))
                 {
                     _riskManagementModels[i] = new RiskManagementModelPythonWrapper(riskManagementModels[i]);
                 }
@@ -79,7 +92,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         }
 
         /// <summary>
-        /// Manages the algorithm's risk at each time step. 
+        /// Manages the algorithm's risk at each time step.
         /// This method patches this call through the each of the wrapped models.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
@@ -87,10 +100,18 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <returns>The new portfolio targets</returns>
         public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
-            foreach (var model in _riskManagementModels)
+            if (targets.Length > 0)
             {
-                targets = model.ManageRisk(algorithm, targets).ToArray();
+                foreach (var model in _riskManagementModels)
+                {
+                    // take into account the possibility of ManageRisk returning nothing
+                    var riskAdjusted = model.ManageRisk(algorithm, targets);
+
+                    // produce a distinct set of new targets giving preference to newer targets
+                    targets = riskAdjusted.Concat(targets).DistinctBy(t => t.Symbol).ToArray();
+                }
             }
+
             return targets;
         }
 

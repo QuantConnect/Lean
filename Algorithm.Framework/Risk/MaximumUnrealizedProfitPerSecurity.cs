@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
             decimal maximumUnrealizedProfitPercent = 0.05m
             )
         {
-            _maximumUnrealizedProfitPercent = -Math.Abs(maximumUnrealizedProfitPercent);
+            _maximumUnrealizedProfitPercent = Math.Abs(maximumUnrealizedProfitPercent);
         }
 
         /// <summary>
