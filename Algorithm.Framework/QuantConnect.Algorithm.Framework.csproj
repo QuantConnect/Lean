@@ -110,6 +110,7 @@
     <Compile Include="Risk\IRiskManagementModel.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\MaximumSectorExposureRiskManagementModel.cs" />
+    <Compile Include="Risk\MaximumUnrealizedProfitPerSecurity.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />
