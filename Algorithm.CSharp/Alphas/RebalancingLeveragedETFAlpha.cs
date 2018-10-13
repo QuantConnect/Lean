@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 			}
 
 			// Manually curated universe
-			SetUniverseSelection(new ManualUniverseSelectionModel(Securities.Keys));
+			SetUniverseSelection(new ManualUniverseSelectionModel());
 
 			// Select the demonstration alpha model
 			SetAlpha(new RebalancingLeveragedETFAlphaModel(Groups));

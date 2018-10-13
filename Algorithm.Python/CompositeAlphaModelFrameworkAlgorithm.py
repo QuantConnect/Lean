@@ -52,7 +52,7 @@ class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.AddEquity("AIG")
 
         # define a manual universe of all the securities we manually registered
-        self.SetUniverseSelection(ManualUniverseSelectionModel(self.Securities.Keys))
+        self.SetUniverseSelection(ManualUniverseSelectionModel())
 
         # define alpha model as a composite of the rsi and ema cross models
         self.SetAlpha(CompositeAlphaModel(RsiAlphaModel(), EmaCrossAlphaModel()))

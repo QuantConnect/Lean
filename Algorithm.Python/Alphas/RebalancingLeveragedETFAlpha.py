@@ -52,7 +52,7 @@ class RebalancingLeveragedETFAlpha(QCAlgorithmFramework):
             groups.append(group)
 
         # Manually curated universe
-        self.SetUniverseSelection(ManualUniverseSelectionModel(self.Securities.Keys))
+        self.SetUniverseSelection(ManualUniverseSelectionModel())
         # Select the demonstration alpha model
         self.SetAlpha(RebalancingLeveragedETFAlphaModel(groups))
         # Select our default model types

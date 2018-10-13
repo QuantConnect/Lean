@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 Assert.IsTrue(insights.All(insight => insight.CloseTimeUtc != default(DateTime)));
             };
             var security = algo.AddEquity("SPY");
-            algo.SetUniverseSelection(new ManualUniverseSelectionModel(algo.Securities.Keys));
+            algo.SetUniverseSelection(new ManualUniverseSelectionModel());
 
             var alpha = new FakeAlpha();
             algo.SetAlpha(alpha);

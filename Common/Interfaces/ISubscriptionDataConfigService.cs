@@ -21,15 +21,15 @@ using QuantConnect.Data;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    ///     This interface exposes methods for creating a list of <see cref="SubscriptionDataConfig" /> for a given
-    ///     configuration
+    /// This interface exposes methods for creating a list of <see cref="SubscriptionDataConfig" /> for a given
+    /// configuration
     /// </summary>
     public interface ISubscriptionDataConfigService
     {
         /// <summary>
-        ///     Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
-        ///     Can optionally pass in desired subscription data types to use.
-        ///     If the config already existed will return existing instance instead
+        /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        /// Can optionally pass in desired subscription data types to use.
+        /// If the config already existed will return existing instance instead
         /// </summary>
         List<SubscriptionDataConfig> Add(
             Symbol symbol,
@@ -43,7 +43,7 @@ namespace QuantConnect.Interfaces
             );
 
         /// <summary>
-        ///     Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
+        /// Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
         /// </summary>
         /// <param name="symbolSecurityType">The <see cref="SecurityType" /> used to determine the types</param>
         /// <param name="resolution">The resolution of the data requested</param>
@@ -56,8 +56,13 @@ namespace QuantConnect.Interfaces
             );
 
         /// <summary>
-        ///     Gets the available data types
+        /// Gets the available data types
         /// </summary>
         Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
+
+        /// <summary>
+        /// Gets a list of all registered <see cref="SubscriptionDataConfig"/> for a given <see cref="Symbol"/>
+        /// </summary>
+        List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol);
     }
 }
