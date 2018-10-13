@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // define risk management model as a composite of several risk management models
             SetRiskManagement(new CompositeRiskManagementModel(
-                new MaximumUnrealizedProfitPerSecurity(0.01m),
+                new MaximumUnrealizedProfitPercentPerSecurity(0.01m),
                 new MaximumDrawdownPercentPerSecurity(0.01m)
             ));
         }
@@ -67,24 +67,24 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "7"},
-            {"Average Win", "1.15%"},
+            {"Average Win", "1.00%"},
             {"Average Loss", "-1.03%"},
-            {"Compounding Annual Return", "280.389%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0.414"},
-            {"Net Profit", "1.723%"},
-            {"Sharpe Ratio", "4.394"},
+            {"Compounding Annual Return", "190.425%"},
+            {"Drawdown", "2.300%"},
+            {"Expectancy", "0.314"},
+            {"Net Profit", "1.372%"},
+            {"Sharpe Ratio", "3.771"},
             {"Loss Rate", "33%"},
             {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "1.12"},
+            {"Profit-Loss Ratio", "0.97"},
             {"Alpha", "0.007"},
-            {"Beta", "78.944"},
-            {"Annual Standard Deviation", "0.2"},
-            {"Annual Variance", "0.04"},
-            {"Information Ratio", "4.34"},
-            {"Tracking Error", "0.2"},
+            {"Beta", "62.953"},
+            {"Annual Standard Deviation", "0.186"},
+            {"Annual Variance", "0.035"},
+            {"Information Ratio", "3.713"},
+            {"Tracking Error", "0.186"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$22.80"},
+            {"Total Fees", "$22.77"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "99"},

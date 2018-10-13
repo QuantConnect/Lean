@@ -24,16 +24,16 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the unrealized profit
     /// per holding to the specified percentage
     /// </summary>
-    public class MaximumUnrealizedProfitPerSecurity : RiskManagementModel
+    public class MaximumUnrealizedProfitPercentPerSecurity : RiskManagementModel
     {
         private readonly decimal _maximumUnrealizedProfitPercent;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MaximumUnrealizedProfitPerSecurity"/> class
+        /// Initializes a new instance of the <see cref="MaximumUnrealizedProfitPercentPerSecurity"/> class
         /// </summary>
         /// <param name="maximumUnrealizedProfitPercent">The maximum percentage unrealized profit allowed for any single security holding,
         /// defaults to 5% drawdown per security</param>
-        public MaximumUnrealizedProfitPerSecurity(
+        public MaximumUnrealizedProfitPercentPerSecurity(
             decimal maximumUnrealizedProfitPercent = 0.05m
             )
         {

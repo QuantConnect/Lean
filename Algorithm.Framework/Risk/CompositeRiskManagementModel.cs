@@ -100,16 +100,13 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <returns>The new portfolio targets</returns>
         public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
-            if (targets.Length > 0)
+            foreach (var model in _riskManagementModels)
             {
-                foreach (var model in _riskManagementModels)
-                {
-                    // take into account the possibility of ManageRisk returning nothing
-                    var riskAdjusted = model.ManageRisk(algorithm, targets);
+                // take into account the possibility of ManageRisk returning nothing
+                var riskAdjusted = model.ManageRisk(algorithm, targets);
 
-                    // produce a distinct set of new targets giving preference to newer targets
-                    targets = riskAdjusted.Concat(targets).DistinctBy(t => t.Symbol).ToArray();
-                }
+                // produce a distinct set of new targets giving preference to newer targets
+                targets = riskAdjusted.Concat(targets).DistinctBy(t => t.Symbol).ToArray();
             }
 
             return targets;
