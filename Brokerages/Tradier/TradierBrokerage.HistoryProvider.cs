@@ -31,22 +31,25 @@ namespace QuantConnect.Brokerages.Tradier
     {
         #region IHistoryProvider implementation
 
-#pragma warning disable CS0067 // The event is never used
         /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
+        /// Event fired when an invalid configuration has been detected
         /// </summary>
-        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+        public event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected;
 
         /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
+        /// Event fired when the numerical precision in the factor file has been limited
         /// </summary>
-        public event EventHandler<DebugMessageEventArgs> DebugMessage;
+        public event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
 
         /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
+        /// Event fired when there was an error downloading a remote file
         /// </summary>
-        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
-#pragma warning restore CS0067
+        public event EventHandler<DownloadFailedEventArgs> DownloadFailed;
+
+        /// <summary>
+        /// Event fired when there was an error reading the data
+        /// </summary>
+        public event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -114,6 +117,42 @@ namespace QuantConnect.Brokerages.Tradier
                     yield return slice;
                 }
             }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="InvalidConfigurationDetected"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="InvalidConfigurationDetected"/> event</param>
+        protected virtual void OnInvalidConfigurationDetected(InvalidConfigurationDetectedEventArgs e)
+        {
+            InvalidConfigurationDetected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NumericalPrecisionLimited"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="NumericalPrecisionLimited"/> event</param>
+        protected virtual void OnNumericalPrecisionLimited(NumericalPrecisionLimitedEventArgs e)
+        {
+            NumericalPrecisionLimited?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="DownloadFailed"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="DownloadFailed"/> event</param>
+        protected virtual void OnDownloadFailed(DownloadFailedEventArgs e)
+        {
+            DownloadFailed?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="ReaderErrorDetected"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="ReaderErrorDetected"/> event</param>
+        protected virtual void OnReaderErrorDetected(ReaderErrorDetectedEventArgs e)
+        {
+            ReaderErrorDetected?.Invoke(this, e);
         }
 
         private IEnumerable<Slice> GetHistoryTick(Symbol symbol, DateTime start, DateTime end)

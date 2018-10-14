@@ -29,19 +29,24 @@ namespace QuantConnect.Interfaces
     public interface IHistoryProvider
     {
         /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
+        /// Event fired when an invalid configuration has been detected
         /// </summary>
-        event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+        event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected;
 
         /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
+        /// Event fired when the numerical precision in the factor file has been limited
         /// </summary>
-        event EventHandler<DebugMessageEventArgs> DebugMessage;
+        event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
 
         /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
+        /// Event fired when there was an error downloading a remote file
         /// </summary>
-        event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+        event EventHandler<DownloadFailedEventArgs> DownloadFailed;
+
+        /// <summary>
+        /// Event fired when there was an error reading the data
+        /// </summary>
+        event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider

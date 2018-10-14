@@ -14,12 +14,11 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
 
-namespace QuantConnect
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Event arguments for the <see cref="IHistoryProvider.InvalidConfigurationDetected"/> event
+    /// Event arguments for the <see cref="SubscriptionDataReader.InvalidConfigurationDetected"/> event
     /// </summary>
     public sealed class InvalidConfigurationDetectedEventArgs : EventArgs
     {
@@ -39,7 +38,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Event arguments for the <see cref="IHistoryProvider.NumericalPrecisionLimited"/> event
+    /// Event arguments for the <see cref="SubscriptionDataReader.NumericalPrecisionLimited"/> event
     /// </summary>
     public sealed class NumericalPrecisionLimitedEventArgs : EventArgs
     {
@@ -59,7 +58,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Event arguments for the <see cref="IHistoryProvider.DownloadFailed"/> event
+    /// Event arguments for the <see cref="SubscriptionDataReader.DownloadFailed"/> event
     /// </summary>
     public sealed class DownloadFailedEventArgs : EventArgs
     {
@@ -86,7 +85,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Event arguments for the <see cref="IHistoryProvider.ReaderErrorDetected"/> event
+    /// Event arguments for the <see cref="SubscriptionDataReader.ReaderErrorDetected"/> event
     /// </summary>
     public sealed class ReaderErrorDetectedEventArgs : EventArgs
     {

@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Lean.Engine.DataFeeds.Queues;
 using QuantConnect.Packets;
 using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
@@ -31,6 +30,7 @@ using System.Text;
 using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -38,7 +38,7 @@ namespace QuantConnect.ToolBox.IEX
     /// IEX live data handler.
     /// Data provided for free by IEX. See more at https://iextrading.com/api-exhibit-a
     /// </summary>
-    public class IEXDataQueueHandler : LiveDataQueue, IHistoryProvider, IDisposable
+    public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler, IDisposable
     {
         // using SocketIoClientDotNet is a temp solution until IEX implements standard WebSockets protocol
         private Socket _socket;
@@ -157,7 +157,7 @@ namespace QuantConnect.ToolBox.IEX
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
         /// <returns>Tick</returns>
-        public sealed override IEnumerable<BaseData> GetNextTicks()
+        public IEnumerable<BaseData> GetNextTicks()
         {
             return _outputCollection.GetConsumingEnumerable();
         }
@@ -165,7 +165,7 @@ namespace QuantConnect.ToolBox.IEX
         /// <summary>
         /// Subscribe to symbols
         /// </summary>
-        public sealed override void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -201,7 +201,7 @@ namespace QuantConnect.ToolBox.IEX
         /// <summary>
         /// Unsubscribe from symbols
         /// </summary>
-        public sealed override void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -304,36 +304,26 @@ namespace QuantConnect.ToolBox.IEX
 
         #region IHistoryProvider implementation
 
-#pragma warning disable CS0067 // The event is never used
-        /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
-
-        /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<DebugMessageEventArgs> DebugMessage;
-
-        /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
-#pragma warning restore CS0067
-
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public int DataPointCount
+        public override int DataPointCount => _dataPointCount;
+
+        /// <summary>
+        /// Initializes this history provider to work for the specified job
+        /// </summary>
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
-            get { return _dataPointCount; }
         }
 
-        public void Initialize(HistoryProviderInitializeParameters parameters)
-        {
-        }
-
-        public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        /// <summary>
+        /// Gets the history for the requested securities
+        /// </summary>
+        /// <param name="requests">The historical data requests</param>
+        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        public override IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             foreach (var request in requests)
             {

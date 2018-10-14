@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
@@ -25,13 +24,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Orders;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -46,21 +39,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
-
-        /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
-        /// </summary>
-        public override event EventHandler<ErrorMessageEventArgs> ErrorMessage;
-
-        /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
-        /// </summary>
-        public override event EventHandler<DebugMessageEventArgs> DebugMessage;
-
-        /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
-        /// </summary>
-        public override event EventHandler<RuntimeErrorEventArgs> RuntimeError;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -135,9 +113,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 false
                 );
 
-            dataReader.DebugMessage += (sender, args) => { DebugMessage?.Invoke(this, args); };
-            dataReader.ErrorMessage += (sender, args) => { ErrorMessage?.Invoke(this, args); };
-            dataReader.RuntimeError += (sender, args) => { RuntimeError?.Invoke(this, args); };
+            dataReader.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(new InvalidConfigurationDetectedEventArgs(args.Message)); };
+            dataReader.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(new NumericalPrecisionLimitedEventArgs(args.Message)); };
+            dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(new DownloadFailedEventArgs(args.Message, args.StackTrace)); };
+            dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(args.Message, args.StackTrace)); };
 
             dataReader.Initialize();
 

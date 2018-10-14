@@ -17,7 +17,6 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using System;
@@ -30,33 +29,16 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// <summary>
     /// Implements a History provider that always return a IEnumerable of Slice with prices following a sine function
     /// </summary>
-    public class SineHistoryProvider : IHistoryProvider
+    public class SineHistoryProvider : HistoryProviderBase
     {
         private readonly CashBook _cashBook = new CashBook();
         private readonly SecurityChanges _securityChanges = SecurityChanges.None;
         private readonly SecurityManager _securities;
 
-#pragma warning disable CS0067 // The event is never used
-        /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
-
-        /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<DebugMessageEventArgs> DebugMessage;
-
-        /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
-#pragma warning restore CS0067
-
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public int DataPointCount => 0;
+        public override int DataPointCount => 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SineHistoryProvider"/> class
@@ -71,7 +53,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="parameters">The initialization parameters</param>
-        public void Initialize(HistoryProviderInitializeParameters parameters)
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
         }
 
@@ -81,7 +63,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             var configsByDateTime = GetSubscriptionDataConfigByDateTime(requests);
             var count = configsByDateTime.Count;

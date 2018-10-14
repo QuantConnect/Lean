@@ -20,7 +20,7 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -105,23 +105,17 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(TickType.Trade, _testHistoryProvider.HistryRequests.First().TickType);
         }
 
-        private class TestHistoryProvider : IHistoryProvider
+        private class TestHistoryProvider : HistoryProviderBase
         {
-#pragma warning disable CS0067 // The event is never used
-            public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
-            public event EventHandler<DebugMessageEventArgs> DebugMessage;
-            public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
-#pragma warning restore CS0067
-
-            public int DataPointCount { get; }
+            public override int DataPointCount { get; }
             public List<HistoryRequest> HistryRequests { get; } = new List<HistoryRequest>();
 
-            public void Initialize(HistoryProviderInitializeParameters parameters)
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 foreach (var request in requests)
                 {

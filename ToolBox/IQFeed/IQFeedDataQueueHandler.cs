@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
 
@@ -34,7 +35,7 @@ namespace QuantConnect.ToolBox.IQFeed
     /// <summary>
     /// IQFeedDataQueueHandler is an implementation of IDataQueueHandler and IHistoryProvider
     /// </summary>
-    public class IQFeedDataQueueHandler : IDataQueueHandler, IHistoryProvider, IDataQueueUniverseProvider
+    public class IQFeedDataQueueHandler : HistoryProviderBase, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private bool _isConnected;
         private int _dataPointCount;
@@ -52,10 +53,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public int DataPointCount
-        {
-            get { return _dataPointCount; }
-        }
+        public override int DataPointCount => _dataPointCount;
 
         /// <summary>
         /// IQFeedDataQueueHandler is an implementation of IDataQueueHandler:
@@ -87,8 +85,6 @@ namespace QuantConnect.ToolBox.IQFeed
                 }
             }
         }
-
-
 
         /// <summary>
         /// Adds the specified symbols to the subscription: new IQLevel1WatchItem("IBM", true)
@@ -185,28 +181,11 @@ namespace QuantConnect.ToolBox.IQFeed
             }
         }
 
-#pragma warning disable CS0067 // The event is never used
-        /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
-
-        /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<DebugMessageEventArgs> DebugMessage;
-
-        /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
-        /// </summary>
-        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
-#pragma warning restore CS0067
-
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="parameters">The initialization parameters</param>
-        public void Initialize(HistoryProviderInitializeParameters parameters)
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
         }
 
@@ -216,7 +195,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             foreach (var request in requests)
             {

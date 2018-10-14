@@ -93,19 +93,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime _delistingDate;
 
         /// <summary>
-        /// Event fired when an error message should be sent to the algorithm
+        /// Event fired when an invalid configuration has been detected
         /// </summary>
-        public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
+        public event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected;
 
         /// <summary>
-        /// Event fired when a debug message should be sent to the algorithm
+        /// Event fired when the numerical precision in the factor file has been limited
         /// </summary>
-        public event EventHandler<DebugMessageEventArgs> DebugMessage;
+        public event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
 
         /// <summary>
-        /// Event fired when a runtime error should be sent to the algorithm
+        /// Event fired when there was an error downloading a remote file
         /// </summary>
-        public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
+        public event EventHandler<DownloadFailedEventArgs> DownloadFailed;
+
+        /// <summary>
+        /// Event fired when there was an error reading the data
+        /// </summary>
+        public event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -177,8 +182,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (objectActivator == null)
             {
-                ErrorMessage?.Invoke(this, new ErrorMessageEventArgs(
-                    $"Custom data type \'{_config.Type.Name}\' missing parameterless constructor E.g. public {_config.Type.Name}() {{ }}"));
+                OnInvalidConfigurationDetected(
+                    new InvalidConfigurationDetectedEventArgs(
+                        $"Custom data type \'{_config.Type.Name}\' missing parameterless constructor " +
+                        $"E.g. public {_config.Type.Name}() {{ }}"));
 
                 _endOfStream = true;
                 return;
@@ -235,9 +242,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 _periodStart = _factorFile.FactorFileMinimumDate.Value;
 
-                                DebugMessage?.Invoke(this, new DebugMessageEventArgs(
-                                    $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
-                                    $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
+                                OnNumericalPrecisionLimited(
+                                    new NumericalPrecisionLimitedEventArgs(
+                                        $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
+                                        $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
                             }
                         }
                     }
@@ -522,8 +530,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
 
                     case SubscriptionTransportMedium.RemoteFile:
-                        ErrorMessage?.Invoke(this, new ErrorMessageEventArgs(
-                            $"Error downloading custom data source file, skipped: {source} Error: {args.Exception.Message}", args.Exception.StackTrace));
+                        OnDownloadFailed(
+                            new DownloadFailedEventArgs(
+                                $"Error downloading custom data source file, skipped: {source} " +
+                                $"Error: {args.Exception.Message}", args.Exception.StackTrace));
                         break;
 
                     case SubscriptionTransportMedium.Rest:
@@ -543,16 +553,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     //Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
                     if (_config.IsCustomData)
                     {
-                        ErrorMessage?.Invoke(this, new ErrorMessageEventArgs(
-                            $"We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({args.Source.Source})."));
+                        OnDownloadFailed(
+                            new DownloadFailedEventArgs(
+                                "We could not fetch the requested data. " +
+                                "This may not be valid data, or a failed download of custom data. " +
+                                $"Skipping source ({args.Source.Source})."));
                     }
                 };
 
                 // handle parser errors
                 textSubscriptionFactory.ReaderError += (sender, args) =>
                 {
-                    RuntimeError?.Invoke(this, new RuntimeErrorEventArgs(
-                        $"Error invoking {_config.Symbol} data reader. Line: {args.Line} Error: {args.Exception.Message}", args.Exception.StackTrace));
+                    OnReaderErrorDetected(
+                        new ReaderErrorDetectedEventArgs(
+                            $"Error invoking {_config.Symbol} data reader. " +
+                            $"Line: {args.Line} Error: {args.Exception.Message}",
+                            args.Exception.StackTrace));
                 };
             }
         }
@@ -766,6 +782,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _subscriptionFactoryEnumerator.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="InvalidConfigurationDetected"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="InvalidConfigurationDetected"/> event</param>
+        protected virtual void OnInvalidConfigurationDetected(InvalidConfigurationDetectedEventArgs e)
+        {
+            InvalidConfigurationDetected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NumericalPrecisionLimited"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="NumericalPrecisionLimited"/> event</param>
+        protected virtual void OnNumericalPrecisionLimited(NumericalPrecisionLimitedEventArgs e)
+        {
+            NumericalPrecisionLimited?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="DownloadFailed"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="DownloadFailed"/> event</param>
+        protected virtual void OnDownloadFailed(DownloadFailedEventArgs e)
+        {
+            DownloadFailed?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="ReaderErrorDetected"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="ReaderErrorDetected"/> event</param>
+        protected virtual void OnReaderErrorDetected(ReaderErrorDetectedEventArgs e)
+        {
+            ReaderErrorDetected?.Invoke(this, e);
         }
     }
 }

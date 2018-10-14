@@ -93,9 +93,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _includeAuxiliaryData
                 );
 
-            dataReader.DebugMessage += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
-            dataReader.ErrorMessage += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
-            dataReader.RuntimeError += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
+            dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
+            dataReader.NumericalPrecisionLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
+            dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
+            dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
 
             dataReader.Initialize();
 

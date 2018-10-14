@@ -30,6 +30,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -842,24 +843,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             broker.Verify(m => m.GetCashBalance(), Times.Exactly(0));
         }
 
-        internal class EmptyHistoryProvider : IHistoryProvider
+        internal class EmptyHistoryProvider : HistoryProviderBase
         {
-#pragma warning disable CS0067 // The event is never used
-            public event EventHandler<ErrorMessageEventArgs> ErrorMessage;
-            public event EventHandler<DebugMessageEventArgs> DebugMessage;
-            public event EventHandler<RuntimeErrorEventArgs> RuntimeError;
-#pragma warning restore CS0067
+            public override int DataPointCount => 0;
 
-            public int DataPointCount
-            {
-                get { return 0; }
-            }
-
-            public void Initialize(HistoryProviderInitializeParameters parameters)
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
             {
             }
 
-            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 return Enumerable.Empty<Slice>();
             }
