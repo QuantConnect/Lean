@@ -27,7 +27,6 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;

@@ -30,7 +30,6 @@ using System.Text;
 using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
-using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.ToolBox.IEX
 {

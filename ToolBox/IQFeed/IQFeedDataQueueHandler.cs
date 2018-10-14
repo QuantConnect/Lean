@@ -25,7 +25,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
 

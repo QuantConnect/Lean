@@ -16,10 +16,9 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Lean.Engine.HistoricalData
+namespace QuantConnect.Data
 {
     /// <summary>
     /// Provides a base type for all history providers

@@ -30,7 +30,6 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;

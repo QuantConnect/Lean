@@ -20,7 +20,6 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
