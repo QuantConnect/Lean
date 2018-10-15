@@ -37,6 +37,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <remarks>The class accepts any subscription configuration and automatically makes it availble to enumerate</remarks>
     public class SubscriptionDataReader : IEnumerator<BaseData>
     {
+        private bool _initialized;
+
         // Source string to create memory stream:
         private SubscriptionDataSource _source;
 
@@ -175,6 +177,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize()
         {
+            if (_initialized)
+            {
+                return;
+            }
+
             //Save the type of data we'll be getting from the source.
 
             //Create the dynamic type-activators:
@@ -287,6 +294,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
+
+            _initialized = true;
         }
 
         /// <summary>
@@ -298,6 +307,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
+            if (!_initialized)
+            {
+                Initialize();
+            }
+
             if (_endOfStream)
             {
                 return false;
@@ -778,10 +792,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            if (_subscriptionFactoryEnumerator != null)
-            {
-                _subscriptionFactoryEnumerator.Dispose();
-            }
+            _subscriptionFactoryEnumerator?.Dispose();
         }
 
         /// <summary>
