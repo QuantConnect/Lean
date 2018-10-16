@@ -22,14 +22,14 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents a buying power model for cash accounts
     /// </summary>
-    public class CashBuyingPowerModel : IBuyingPowerModel
+    public class CashBuyingPowerModel : BuyingPowerModel
     {
         /// <summary>
         /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
         /// <returns>The current leverage in the security</returns>
-        public decimal GetLeverage(Security security)
+        public override decimal GetLeverage(Security security)
         {
             // Always returns 1. Cash accounts have no leverage.
             return 1m;
@@ -43,7 +43,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="security">The security to set leverage for</param>
         /// <param name="leverage">The new leverage</param>
-        public void SetLeverage(Security security, decimal leverage)
+        public override void SetLeverage(Security security, decimal leverage)
         {
             // No action performed. This model always uses a leverage = 1
         }
@@ -55,7 +55,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="order">The order to be checked</param>
         /// <returns>Returns buying power information for an order</returns>
-        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             var baseCurrency = security as IBaseCurrencySymbol;
             if (baseCurrency == null)
@@ -147,7 +147,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="target">Target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal target)
+        public override GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal target)
         {
             var targetPortfolioValue = target * portfolio.TotalPortfolioValue;
             // no shorting allowed
@@ -274,7 +274,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="context">A context object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context)
+        public override ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context)
         {
             // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
             return context.ResultInAccountCurrency(0m);
@@ -285,7 +285,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="context">A context object containing the algorithm's potrfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        public BuyingPower GetBuyingPower(BuyingPowerContext context)
+        public override BuyingPower GetBuyingPower(BuyingPowerContext context)
         {
             var security = context.Security;
             var portfolio = context.Portfolio;

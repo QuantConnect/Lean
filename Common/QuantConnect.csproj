@@ -189,6 +189,7 @@
     <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Securities\BuyingPower.cs" />
     <Compile Include="Securities\BuyingPowerContext.cs" />
+    <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
     <Compile Include="Securities\ICurrencyConverter.cs" />
