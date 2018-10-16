@@ -405,6 +405,7 @@
     <Compile Include="Python\MethodOverloadTests.cs" />
     <Compile Include="Python\PortfolioCustomModelTests.cs" />
     <Compile Include="Python\PythonThreadingTests.cs" />
+    <Compile Include="Python\PythonWrapperTests.cs" />
     <Compile Include="Python\SecurityCustomModelTests.cs" />
     <Compile Include="Python\PandasConverterTests.cs" />
     <Compile Include="RegressionTests.cs" />
