@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -71,6 +72,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private IMessagingHandler _messagingHandler;
         private IApi _api;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private IDataFeed _dataFeed;
         private ISetupHandler _setupHandler;
         private ITransactionHandler _transactionHandler;
@@ -695,6 +697,8 @@ namespace QuantConnect.Lean.Engine.Results
             var error = new FuncTextWriter(algorithm.Error);
             Console.SetOut(debug);
             Console.SetError(error);
+
+            UpdateAlgorithmStatus();
         }
 
 
@@ -905,6 +909,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (!_exitTriggered)
             {
                 _exitTriggered = true;
+                _cancellationTokenSource.Cancel();
                 ProcessSynchronousEvents(true);
                 lock (_logStoreLock)
                 {
@@ -1053,13 +1058,6 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleRange(_algorithm.GetChartUpdates(true));
             }
 
-            // wait until after we're warmed up to start sending running status each minute
-            if (!_algorithm.IsWarmingUp && time > _nextRunningStatus)
-            {
-                _nextRunningStatus = time.Add(TimeSpan.FromMinutes(1));
-                _api.SetAlgorithmStatus(_job.AlgorithmId, AlgorithmStatus.Running);
-            }
-
             //Send out the debug messages:
             var debugStopWatch = Stopwatch.StartNew();
             while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
@@ -1131,6 +1129,23 @@ namespace QuantConnect.Lean.Engine.Results
             else
             {
                 dictionary.Add(key, value);
+            }
+        }
+
+        /// <summary>
+        /// Will launch a task which will call the API and update the algorithm status every minute
+        /// </summary>
+        private void UpdateAlgorithmStatus()
+        {
+            if (!_exitTriggered
+                && !_cancellationTokenSource.IsCancellationRequested) // just in case
+            {
+                // wait until after we're warmed up to start sending running status each minute
+                if (!_algorithm.IsWarmingUp)
+                {
+                    _api.SetAlgorithmStatus(_job.AlgorithmId, AlgorithmStatus.Running);
+                }
+                Task.Delay(TimeSpan.FromMinutes(1), _cancellationTokenSource.Token).ContinueWith(_ => UpdateAlgorithmStatus());
             }
         }
     }
