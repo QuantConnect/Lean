@@ -175,6 +175,7 @@
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
+    <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\BitfinexBrokerageModel.cs" />
     <Compile Include="Brokerages\BitfinexTransactionModel.cs" />
