@@ -396,11 +396,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
         /// </summary>
-        /// <param name="security">The security for the position</param>
+        /// <param name="context">A context object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public decimal GetReservedBuyingPowerForPosition(Security security)
+        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context)
         {
-            return GetMaintenanceMargin(security);
+            var maintenanceMargin = GetMaintenanceMargin(context.Security);
+            return context.ResultInAccountCurrency(maintenanceMargin);
         }
 
         /// <summary>
