@@ -60,17 +60,15 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
         /// </summary>
-        /// <param name="security">The security for the position</param>
+        /// <param name="context">A context object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        decimal GetReservedBuyingPowerForPosition(Security security);
+        ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context);
 
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="direction">The direction of the trade</param>
+        /// <param name="context">A context object containing the algorithm's potrfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        decimal GetBuyingPower(SecurityPortfolioManager portfolio, Security security, OrderDirection direction);
+        BuyingPower GetBuyingPower(BuyingPowerContext context);
     }
 }

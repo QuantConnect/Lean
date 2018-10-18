@@ -190,11 +190,17 @@
     <Compile Include="IsolatorLimitResult.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
+    <Compile Include="Securities\BuyingPower.cs" />
+    <Compile Include="Securities\BuyingPowerContext.cs" />
+    <Compile Include="Securities\BuyingPowerModel.cs" />
+    <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
     <Compile Include="Securities\ICurrencyConverter.cs" />
     <Compile Include="Python\BuyingPowerModelPythonWrapper.cs" />
     <Compile Include="Securities\CashAmount.cs" />
     <Compile Include="Securities\IdentityCurrencyConverter.cs" />
+    <Compile Include="Securities\ReservedBuyingPowerForPosition.cs" />
+    <Compile Include="Securities\ReservedBuyingPowerForPositionContext.cs" />
     <Compile Include="Series.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
