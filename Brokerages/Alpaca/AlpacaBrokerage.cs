@@ -17,15 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
-using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Alpaca
 {
@@ -54,7 +49,7 @@ namespace QuantConnect.Brokerages.Alpaca
             var baseUrl = "api.alpaca.markets";
             if (tradingMode.Equals("paper")) baseUrl = "paper-" + baseUrl;
             baseUrl = "https://" + baseUrl;
-            base.initialize(orderProvider, securityProvider, keyId, secretKey, baseUrl);
+            base.Initialize(orderProvider, securityProvider, keyId, secretKey, baseUrl);
 
         }
 
@@ -70,7 +65,7 @@ namespace QuantConnect.Brokerages.Alpaca
             base.Connect();
         }
 
-        
+
         /// <summary>
         /// Gets all holdings for the account
         /// </summary>
@@ -108,17 +103,14 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-
-            var exchangeTimeZone = _marketHours.GetExchangeHours(Market.USA, request.Symbol, request.Symbol.SecurityType).TimeZone;
-
-            var period = request.Resolution.ToTimeSpan();
+            var exchangeTimeZone = MarketHours.GetExchangeHours(Market.USA, request.Symbol, request.Symbol.SecurityType).TimeZone;
 
             // set the starting date/time
             var startDateTime = request.StartTimeUtc;
 
             if (request.Resolution == Resolution.Tick)
             {
-                var ticks = base.DownloadTicks(request.Symbol, startDateTime, request.EndTimeUtc, exchangeTimeZone).ToList();
+                var ticks = DownloadTicks(request.Symbol, startDateTime, request.EndTimeUtc, exchangeTimeZone).ToList();
                 if (ticks.Count != 0)
                 {
                     foreach (var tick in ticks)
@@ -129,7 +121,7 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             else if (request.Resolution == Resolution.Second)
             {
-                var quoteBars = base.DownloadQuoteBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
+                var quoteBars = DownloadQuoteBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
                 if (quoteBars.Count != 0)
                 {
                     foreach (var quoteBar in quoteBars)
@@ -141,7 +133,7 @@ namespace QuantConnect.Brokerages.Alpaca
             // Due to the slow processing time for QuoteBars in larger resolution, we change into TradeBar in these cases
             else
             {
-                var tradeBars = base.DownloadTradeBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
+                var tradeBars = DownloadTradeBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
                 if (tradeBars.Count != 0)
                 {
                     tradeBars.RemoveAt(0);
@@ -171,8 +163,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
         public Tick GetRates(string instrument)
         {
-            return base.GetRates(new List<string> { instrument }).Values.First();
+            return GetRates(new List<string> { instrument }).Values.First();
         }
-        
     }
 }

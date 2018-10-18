@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using NodaTime;
 using QuantConnect.Brokerages.Alpaca.Markets;
 using QuantConnect.Data;
@@ -37,11 +36,6 @@ namespace QuantConnect.Brokerages.Alpaca
     /// </summary>
     public class AlpacaApiBase : Brokerage, IDataQueueHandler
     {
-        private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
-        private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
-
-        private bool _subscriptionsPending;
-
         private bool _isConnected;
         private Thread _connectionMonitorThread;
         private volatile bool _connectionLost;
@@ -50,11 +44,15 @@ namespace QuantConnect.Brokerages.Alpaca
         // Rest API requests must be limited to a maximum of 200 messages/minute
         private readonly RateGate _messagingRateLimiter = new RateGate(200, TimeSpan.FromMinutes(1));
 
-        private Markets.RestClient restClient;
+        private RestClient _restClient;
+        private SockClient _sockClient;
+        private NatsClient _natsClient;
+
         /// <summary>
         /// This lock is used to sync 'PlaceOrder' and callback 'OnTransactionDataReceived'
         /// </summary>
-        protected readonly object Locker = new object();
+        private readonly object _locker = new object();
+
         /// <summary>
         /// This container is used to keep pending to be filled market orders, so when the callback comes in we send the filled event
         /// </summary>
@@ -74,16 +72,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// The list of ticks received
         /// </summary>
         protected readonly List<Tick> Ticks = new List<Tick>();
-
-        /// <summary>
-        /// The list of currently subscribed symbols
-        /// </summary>
-        protected HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
-
-        /// <summary>
-        /// A lock object used to synchronize access to subscribed symbols
-        /// </summary>
-        protected readonly object LockerSubscriptions = new object();
 
         /// <summary>
         /// The order provider
@@ -113,18 +101,15 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// The market hours database
         /// </summary>
-        protected MarketHoursDatabase _marketHours;
+        protected MarketHoursDatabase MarketHours;
 
-
-        private TransactionStreamSession _eventsSession;
-        private PricingStreamSession _ratesSession;
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
         public AlpacaApiBase(string name):base(name)
         {
 
         }
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaApiBase"/> class.
         /// </summary>
@@ -133,7 +118,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="keyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="baseUrl">The Alpaca base url</param>
-        public void initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
+        public void Initialize(IOrderProvider orderProvider, ISecurityProvider securityProvider, string keyId, string secretKey, string baseUrl)
         {
             OrderProvider = orderProvider;
             SecurityProvider = securityProvider;
@@ -141,27 +126,35 @@ namespace QuantConnect.Brokerages.Alpaca
             SecretKey = secretKey;
             BaseUrl = baseUrl;
 
-            _marketHours = MarketHoursDatabase.FromDataFolder();
+            MarketHours = MarketHoursDatabase.FromDataFolder();
 
-            restClient = new Markets.RestClient(AccountKeyId, SecretKey, baseUrl);
+            // api client for alpaca
+            _restClient = new RestClient(AccountKeyId, SecretKey, baseUrl);
+
+            // websocket client for alpaca
+            _sockClient = new SockClient(AccountKeyId, SecretKey, BaseUrl);
+            _sockClient.OnTradeUpdate += OnTradeUpdate;
+            _sockClient.OnError += OnSockClientError;
+            _sockClient.ConnectAsync().SynchronouslyAwaitTask();
+
+            // polygon client for alpaca
+            _natsClient = new NatsClient(AccountKeyId, BaseUrl.Contains("staging"));
+            _natsClient.QuoteReceived += OnQuoteReceived;
+            _natsClient.TradeReceived += OnTradeReceived;
+            _natsClient.OnError += OnNatsClientError;
+            _natsClient.Open();
         }
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected
-        {
-            get { return _isConnected && !_connectionLost; }
-        }
+        public override bool IsConnected => _isConnected && !_connectionLost;
 
         /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         public override void Connect()
         {
-            // Register to the event session to receive events.
-            StartTransactionStream();
-
             _isConnected = true;
 
             // create new thread to manage disconnections and reconnections
@@ -213,18 +206,6 @@ namespace QuantConnect.Brokerages.Alpaca
                                         {
                                             // check if we have a connection
                                             GetInstrumentList();
-
-                                            // restore events session
-                                            StopTransactionStream();
-                                            StartTransactionStream();
-
-                                            // restore rates session
-                                            List<Symbol> symbolsToSubscribe;
-                                            lock (LockerSubscriptions)
-                                            {
-                                                symbolsToSubscribe = SubscribedSymbols.ToList();
-                                            }
-                                            SubscribeSymbols(symbolsToSubscribe);
                                         }
                                         catch (Exception)
                                         {
@@ -262,15 +243,12 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         public override void Disconnect()
         {
-            StopTransactionStream();
-            StopPricingStream();
-
             // request and wait for thread to stop
             _cancellationTokenSource.Cancel();
-            if (_connectionMonitorThread != null)
-            {
-                _connectionMonitorThread.Join();
-            }
+            _connectionMonitorThread?.Join();
+
+            _sockClient.DisconnectAsync().SynchronouslyAwaitTask();
+            _natsClient.Close();
 
             _isConnected = false;
         }
@@ -283,8 +261,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var task = restClient.ListAssetsAsync();
-                var response = Extensions.SynchronouslyAwaitTaskResult(task);
+                var task = _restClient.ListAssetsAsync();
+                var response = task.SynchronouslyAwaitTaskResult();
 
                 return response.Select(x => x.Symbol).ToList();
             }
@@ -295,7 +273,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 return new List<string>();
             }
-            
+
         }
 
         /// <summary>
@@ -308,8 +286,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var task = restClient.ListQuotesAsync(instruments);
-                var response = Extensions.SynchronouslyAwaitTaskResult(task);
+                var task = _restClient.ListQuotesAsync(instruments);
+                var response = task.SynchronouslyAwaitTaskResult();
                 return response
                     .ToDictionary(
                         x => x.Symbol,
@@ -323,7 +301,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw;
             }
-            
+
         }
 
         /// <summary>
@@ -336,8 +314,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var task = restClient.ListOrdersAsync();
-                var orders = Extensions.SynchronouslyAwaitTaskResult(task);
+                var task = _restClient.ListOrdersAsync();
+                var orders = task.SynchronouslyAwaitTaskResult();
 
                 var qcOrders = new List<Order>();
                 foreach (var order in orders)
@@ -365,8 +343,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var task = restClient.ListPositionsAsync();
-                var holdings = Extensions.SynchronouslyAwaitTaskResult(task);
+                var task = _restClient.ListPositionsAsync();
+                var holdings = task.SynchronouslyAwaitTaskResult();
 
                 var qcHoldings = new List<Holding>();
                 foreach (var holds in holdings)
@@ -383,7 +361,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw;
             }
-            
+
         }
 
         /// <summary>
@@ -395,8 +373,8 @@ namespace QuantConnect.Brokerages.Alpaca
             try
             {
                 CheckRateLimiting();
-                var task = restClient.GetAccountAsync();
-                var balance = Extensions.SynchronouslyAwaitTaskResult(task);
+                var task = _restClient.GetAccountAsync();
+                var balance = task.SynchronouslyAwaitTaskResult();
 
                 return new List<Cash>
                     {
@@ -412,7 +390,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw;
             }
-            
+
         }
 
         /// <summary>
@@ -425,12 +403,11 @@ namespace QuantConnect.Brokerages.Alpaca
             const int orderFee = 0;
             order.PriceCurrency = "USD";
 
-            lock (Locker)
+            lock (_locker)
             {
-                IOrder apOrder = null;
                 try
                 {
-                    apOrder = GenerateAndPlaceOrder(order);
+                    var apOrder = GenerateAndPlaceOrder(order);
                     order.BrokerId.Add(apOrder.OrderId.ToString());
                 }
                 catch (Exception e)
@@ -447,10 +424,8 @@ namespace QuantConnect.Brokerages.Alpaca
             return true;
         }
 
-        private Markets.IOrder GenerateAndPlaceOrder(Order order)
+        private IOrder GenerateAndPlaceOrder(Order order)
         {
-            var instrument = order.Symbol;
-
             var quantity = (long)order.Quantity;
             var side = order.Quantity > 0 ? OrderSide.Buy : OrderSide.Sell;
             if (order.Quantity < 0) quantity = -quantity;
@@ -490,10 +465,10 @@ namespace QuantConnect.Brokerages.Alpaca
                     throw new NotSupportedException("The order type " + order.Type + " is not supported.");
             }
             CheckRateLimiting();
-            var task = restClient.PostOrderAsync(order.Symbol.Value, quantity, side, type, timeInForce,
+            var task = _restClient.PostOrderAsync(order.Symbol.Value, quantity, side, type, timeInForce,
                 limitPrice, stopPrice);
 
-            var apOrder = Extensions.SynchronouslyAwaitTaskResult(task); 
+            var apOrder = task.SynchronouslyAwaitTaskResult();
 
             return apOrder;
         }
@@ -526,57 +501,33 @@ namespace QuantConnect.Brokerages.Alpaca
             foreach (var orderId in order.BrokerId)
             {
                 CheckRateLimiting();
-                var task = restClient.DeleteOrderAsync(new Guid(orderId));
-                var res = Extensions.SynchronouslyAwaitTaskResult(task);
+                var task = _restClient.DeleteOrderAsync(new Guid(orderId));
+                task.SynchronouslyAwaitTaskResult();
             }
 
             return true;
         }
 
         /// <summary>
-        /// Starts streaming transactions for the active account
-        /// </summary>
-        public void StartTransactionStream()
-        {
-            _eventsSession = new TransactionStreamSession(this);
-            _eventsSession.TradeReceived += OnTransactionDataReceived;
-            _eventsSession.StartSession();
-        }
-
-        /// <summary>
-        /// Stops streaming transactions for the active account
-        /// </summary>
-        public void StopTransactionStream()
-        {
-            if (_eventsSession != null)
-            {
-                _eventsSession.TradeReceived -= OnTransactionDataReceived;
-                _eventsSession.StopSession();
-            }
-        }
-
-        /// <summary>
         /// Event handler for streaming events
         /// </summary>
         /// <param name="trade">The event object</param>
-        private void OnTransactionDataReceived(Markets.ITradeUpdate trade)
+        private void OnTradeUpdate(ITradeUpdate trade)
         {
             Log.Trace("OnTransactionData: {0} {1} {2}", trade.Event, trade.Order.OrderId, trade.Order.OrderStatus);
             Order order;
             string tradeEvent = trade.Event.ToUpper();
-            lock (Locker)
+            lock (_locker)
             {
                 order = OrderProvider.GetOrderByBrokerageId(trade.Order.OrderId.ToString());
             }
             if (order != null)
             {
-                Orders.OrderStatus status;
-
                 if (tradeEvent == "FILL" || tradeEvent == "PARTIAL_FILL")
                 {
                     order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                    status = Orders.OrderStatus.Filled;
+                    var status = Orders.OrderStatus.Filled;
                     if (trade.Order.FilledQuantity < trade.Order.Quantity) status = Orders.OrderStatus.PartiallyFilled;
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Fill Event")
                     {
@@ -591,45 +542,20 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 else if (tradeEvent == "ORDER_CANCEL_REJECTED")
                 {
-                    Log.Trace($"AlpacaBrokerage.OnTransactionDataReceived(): Order cancel rejected.");
+                    Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Order cancel rejected.");
                 }
             }
             else
             {
-                Log.Error($"AlpacaBrokerage.OnTransactionDataReceived(): order id not found: {trade.Order.OrderId.ToString()}");
-            }
-        }
-
-
-        /// <summary>
-        /// Starts streaming prices for a list of instruments
-        /// </summary>
-        public void StartPricingStream(List<string> instruments)
-        {
-            _ratesSession = new PricingStreamSession(this, instruments);
-            _ratesSession.QuoteReceived += OnQuoteDataReceived;
-            _ratesSession.TradeReceived += OnTradeDataReceived;
-            _ratesSession.StartSession();
-        }
-
-        /// <summary>
-        /// Stops streaming prices for all instruments
-        /// </summary>
-        public void StopPricingStream()
-        {
-            if (_ratesSession != null)
-            {
-                _ratesSession.QuoteReceived -= OnQuoteDataReceived;
-                _ratesSession.TradeReceived -= OnTradeDataReceived;
-                _ratesSession.StopSession();
+                Log.Error($"AlpacaBrokerage.OnTradeUpdate(): order id not found: {trade.Order.OrderId}");
             }
         }
 
         /// <summary>
-        /// Event handler for streaming ticks
+        /// Event handler for streaming quote ticks
         /// </summary>
         /// <param name="quote">The data object containing the received tick</param>
-        private void OnQuoteDataReceived(Markets.IStreamQuote quote)
+        private void OnQuoteReceived(IStreamQuote quote)
         {
             LastHeartbeatUtcTime = DateTime.UtcNow;
             var symbol = Symbol.Create(quote.Symbol, SecurityType.Equity, Market.USA);
@@ -639,7 +565,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(key: symbol, value: out exchangeTimeZone))
             {
-                exchangeTimeZone = _marketHours.GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
+                exchangeTimeZone = MarketHours.GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
                 _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
             }
             time = time.ConvertFromUtc(exchangeTimeZone);
@@ -657,10 +583,10 @@ namespace QuantConnect.Brokerages.Alpaca
         }
 
         /// <summary>
-        /// Event handler for streaming ticks
+        /// Event handler for streaming trade ticks
         /// </summary>
         /// <param name="trade">The data object containing the received tick</param>
-        private void OnTradeDataReceived(Markets.IStreamTrade trade)
+        private void OnTradeReceived(IStreamTrade trade)
         {
             LastHeartbeatUtcTime = DateTime.UtcNow;
             var symbol = Symbol.Create(trade.Symbol, SecurityType.Equity, Market.USA);
@@ -670,7 +596,7 @@ namespace QuantConnect.Brokerages.Alpaca
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(key: symbol, value: out exchangeTimeZone))
             {
-                exchangeTimeZone = _marketHours.GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
+                exchangeTimeZone = MarketHours.GetExchangeHours(Market.USA, symbol, SecurityType.Equity).TimeZone;
                 _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
             }
             time = time.ConvertFromUtc(exchangeTimeZone);
@@ -684,6 +610,15 @@ namespace QuantConnect.Brokerages.Alpaca
             }
         }
 
+        private void OnNatsClientError(string error)
+        {
+            Log.Error($"NatsClient error: {error}");
+        }
+
+        private void OnSockClientError(Exception exception)
+        {
+            Log.Error(exception, "SockClient error");
+        }
 
         /// <summary>
         /// Downloads a list of TradeBars at the requested resolution
@@ -696,9 +631,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of bars</returns>
         public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
-            var startUtc = startTimeUtc.ToString("yyyy-MM-dd");
-            var endUtc = endTimeUtc.ToString("yyyy-MM-dd");
-
             // This is due to the polygon API logic.
             // If start and end date is equal, then the result is null
             var endTimeUtcForAPI = endTimeUtc.Add(TimeSpan.FromDays(1));
@@ -711,8 +643,6 @@ namespace QuantConnect.Brokerages.Alpaca
                 yield return null;
             }
 
-            List<Markets.IBar> bars = new List<Markets.IBar>();
-
             DateTime startTime = startTimeUtc;
             DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
             DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
@@ -724,8 +654,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     CheckRateLimiting();
-                    var task = (period.Days < 1) ? restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI) : restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc);
-                    newBars = Extensions.SynchronouslyAwaitTaskResult(task).Items.ToList();
+                    var task = (period.Days < 1) ? _restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI) : _restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc);
+                    newBars = task.SynchronouslyAwaitTaskResult().Items.ToList();
                 }
                 catch (Exception e)
                 {
@@ -810,9 +740,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of bars</returns>
         public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
-            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
-
             var period = resolution.ToTimeSpan();
 
             DateTime startTime = startTimeUtc;
@@ -828,8 +755,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     CheckRateLimiting();
-                    var task = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
-                    var newBars = Extensions.SynchronouslyAwaitTaskResult(task);
+                    var task = _restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
+                    var newBars = task.SynchronouslyAwaitTaskResult();
                     asList = newBars.Items.ToList();
 
                     if (asList.Count == 0)
@@ -920,18 +847,15 @@ namespace QuantConnect.Brokerages.Alpaca
         }
 
         /// <summary>
-		/// Downloads a list of Ticks for the requested period
-		/// </summary>
-		/// <param name="symbol">The symbol</param>
-		/// <param name="startTimeUtc">The starting time (UTC)</param>
-		/// <param name="endTimeUtc">The ending time (UTC)</param>
-		/// <param name="requestedTimeZone">The requested timezone for the data</param>
-		/// <returns>The list of ticks</returns>
-		public IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
+        /// Downloads a list of Ticks for the requested period
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="startTimeUtc">The starting time (UTC)</param>
+        /// <param name="endTimeUtc">The ending time (UTC)</param>
+        /// <param name="requestedTimeZone">The requested timezone for the data</param>
+        /// <returns>The list of ticks</returns>
+        public IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
         {
-            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
-
             DateTime startTime = startTimeUtc;
             DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone);
             DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone);
@@ -944,8 +868,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 try
                 {
                     CheckRateLimiting();
-                    var task = restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
-                    var newBars = Extensions.SynchronouslyAwaitTaskResult(task);
+                    var task = _restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
+                    var newBars = task.SynchronouslyAwaitTaskResult();
                     asList = newBars.Items.ToList();
                     if (asList.Count == 0)
                     {
@@ -1013,23 +937,15 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            lock (LockerSubscriptions)
+            foreach (var symbol in symbols.Where(CanSubscribe))
             {
-                var symbolsToSubscribe = (from symbol in symbols
-                                          where !SubscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
-                                          select symbol).ToList();
-                if (symbolsToSubscribe.Count == 0)
-                    return;
+                Log.Trace($"AlpacaBrokerage.Subscribe(): {symbol}");
 
-                Log.Trace("AlpacaBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
+                //CheckRateLimiting();
+                _natsClient.SubscribeQuote(symbol.Value);
 
-                // Alpaca does not allow more than a few rate streaming sessions,
-                // so we only use a single session for all currently subscribed symbols
-                symbolsToSubscribe = symbolsToSubscribe.Union(SubscribedSymbols.ToList()).ToList();
-
-                SubscribedSymbols = symbolsToSubscribe.ToHashSet();
-
-                ProcessSubscriptionRequest();
+                //CheckRateLimiting();
+                _natsClient.SubscribeTrade(symbol.Value);
             }
         }
 
@@ -1040,68 +956,16 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            lock (LockerSubscriptions)
+            foreach (var symbol in symbols.Where(CanSubscribe))
             {
-                var symbolsToUnsubscribe = (from symbol in symbols
-                                            where SubscribedSymbols.Contains(symbol)
-                                            select symbol).ToList();
-                if (symbolsToUnsubscribe.Count == 0)
-                    return;
+                Log.Trace($"AlpacaBrokerage.Unsubscribe(): {symbol}");
 
-                Log.Trace("AlpacaBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
+                //CheckRateLimiting();
+                _natsClient.UnsubscribeQuote(symbol.Value);
 
-                // Alpaca does not allow more than a few rate streaming sessions,
-                // so we only use a single session for all currently subscribed symbols
-                var symbolsToSubscribe = SubscribedSymbols.ToList().Where(x => !symbolsToUnsubscribe.Contains(x)).ToList();
-
-                SubscribedSymbols = symbolsToSubscribe.ToHashSet();
-
-                ProcessSubscriptionRequest();
+                //CheckRateLimiting();
+                _natsClient.UnsubscribeTrade(symbol.Value);
             }
-        }
-
-        /// <summary>
-        /// Groups multiple subscribe/unsubscribe calls to avoid closing and reopening the streaming session on each call
-        /// </summary>
-        private void ProcessSubscriptionRequest()
-        {
-            if (_subscriptionsPending) return;
-
-            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-            _subscriptionsPending = true;
-
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    DateTime requestTime;
-                    List<Symbol> symbolsToSubscribe;
-                    lock (LockerSubscriptions)
-                    {
-                        requestTime = _lastSubscribeRequestUtcTime.Add(SubscribeDelay);
-                        symbolsToSubscribe = SubscribedSymbols.ToList();
-                    }
-
-                    if (DateTime.UtcNow > requestTime)
-                    {
-                        // restart streaming session
-                        SubscribeSymbols(symbolsToSubscribe);
-
-                        lock (LockerSubscriptions)
-                        {
-                            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-                            if (SubscribedSymbols.Count == symbolsToSubscribe.Count)
-                            {
-                                // no more subscriptions pending, task finished
-                                _subscriptionsPending = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    Thread.Sleep(200);
-                }
-            });
         }
 
         /// <summary>
@@ -1112,8 +976,10 @@ namespace QuantConnect.Brokerages.Alpaca
             // ignore unsupported security types
             if (symbol.ID.SecurityType != SecurityType.Equity)
                 return false;
+
             if (symbol.Value.ToLower().IndexOf("universe") != -1)
                 return false;
+
             return true;
         }
 
@@ -1127,12 +993,18 @@ namespace QuantConnect.Brokerages.Alpaca
                 .Select(symbol => symbol.Value)
                 .ToList();
 
-            StopPricingStream();
-
-            if (instruments.Count > 0)
+            foreach (var instrument in instruments)
             {
-                StartPricingStream(instruments);
+                _natsClient.SubscribeQuote(instrument);
+                _natsClient.SubscribeTrade(instrument);
             }
+
+            //StopPricingStream();
+
+            //if (instruments.Count > 0)
+            //{
+            //    StartPricingStream(instruments);
+            //}
         }
 
 
@@ -1222,22 +1094,18 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Returns the websocket client for alpaca
         /// </summary>
-        internal SockClient GetSockClient()
-        {
-            var sockClient = new SockClient(AccountKeyId, SecretKey, BaseUrl);
-            return sockClient;
-        }
+        //private SockClient GetSockClient()
+        //{
+        //    return new SockClient(AccountKeyId, SecretKey, BaseUrl);
+        //}
 
         /// <summary>
         /// Returns the polygon client for alpaca
         /// </summary>
-        internal NatsClient GetNatsClient()
-        {
-            var isStaging = BaseUrl.Contains("staging") ? true : false;
-
-            var natsClient = new NatsClient(AccountKeyId, isStaging);
-            return natsClient;
-        }
+        //private NatsClient GetNatsClient()
+        //{
+        //    return new NatsClient(AccountKeyId, BaseUrl.Contains("staging"));
+        //}
 
         private void CheckRateLimiting()
         {

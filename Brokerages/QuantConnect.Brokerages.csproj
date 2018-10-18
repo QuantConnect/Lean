@@ -265,8 +265,6 @@
     <Compile Include="Alpaca\Markets\RestClient.Polygon.cs" />
     <Compile Include="Alpaca\Markets\RestClientErrorException.cs" />
     <Compile Include="Alpaca\Markets\SockClient.cs" />
-    <Compile Include="Alpaca\PricingStreamSession.cs" />
-    <Compile Include="Alpaca\TransactionStreamSession.cs" />
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
