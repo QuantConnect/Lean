@@ -66,8 +66,9 @@ namespace QuantConnect
         /// timing individual time loops, return a non-null and non-empty string with a message indicating the error/reason for stoppage</param>
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
+        /// <param name="sleepIntervalMillis">Sleep interval between each check in ms</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<IsolatorLimitResult> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<IsolatorLimitResult> withinCustomLimits, Action codeBlock, long memoryCap = 1024, int sleepIntervalMillis = 1000)
         {
             // default to always within custom limits
             withinCustomLimits = withinCustomLimits ?? (() => new IsolatorLimitResult(TimeSpan.Zero, string.Empty));
@@ -125,7 +126,7 @@ namespace QuantConnect
                     break;
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(sleepIntervalMillis);
             }
 
             if (task.IsCompleted == false && message == "")
@@ -149,10 +150,11 @@ namespace QuantConnect
         /// <param name="timeSpan">Timeout in timespan</param>
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
+        /// <param name="sleepIntervalMillis">Sleep interval between each check in ms</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap, int sleepIntervalMillis = 1000)
         {
-            return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap);
+            return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap, sleepIntervalMillis);
         }
 
         /// <summary>
