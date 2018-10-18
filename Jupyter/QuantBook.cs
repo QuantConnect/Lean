@@ -23,7 +23,6 @@ using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -74,7 +73,16 @@ namespace QuantConnect.Jupyter
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
-                HistoryProvider.Initialize(null, algorithmHandlers.DataProvider, _dataCacheProvider, mapFileProvider, algorithmHandlers.FactorFileProvider, null);
+                HistoryProvider.Initialize(
+                    new HistoryProviderInitializeParameters(
+                        null,
+                        algorithmHandlers.DataProvider,
+                        _dataCacheProvider,
+                        mapFileProvider,
+                        algorithmHandlers.FactorFileProvider,
+                        null
+                    )
+                );
 
                 SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
                 SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));

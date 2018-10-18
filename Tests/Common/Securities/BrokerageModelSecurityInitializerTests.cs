@@ -65,12 +65,16 @@ namespace QuantConnect.Tests.Common.Securities
         {
             _algo =  new QCAlgorithm();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            historyProvider.Initialize(null,
-                                       new DefaultDataProvider(),
-                                       new SingleEntryDataCacheProvider(new DefaultDataProvider()),
-                                       new LocalDiskMapFileProvider(),
-                                       new LocalDiskFactorFileProvider(),
-                                       null);
+            historyProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    new DefaultDataProvider(),
+                    new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                    new LocalDiskMapFileProvider(),
+                    new LocalDiskFactorFileProvider(),
+                    null
+                )
+            );
 
             _algo.HistoryProvider = historyProvider;
             _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));

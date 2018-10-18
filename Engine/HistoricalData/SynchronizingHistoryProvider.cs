@@ -21,9 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {
@@ -31,37 +29,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// Provides an abstract implementation of <see cref="IHistoryProvider"/>
     /// which provides synchronization of multiple history results
     /// </summary>
-    public abstract class SynchronizingHistoryProvider : IHistoryProvider
+    public abstract class SynchronizingHistoryProvider : HistoryProviderBase
     {
         private int _dataPointCount;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public int DataPointCount
-        {
-            get { return _dataPointCount; }
-        }
-
-        /// <summary>
-        /// Initializes this history provider to work for the specified job
-        /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        public abstract void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider,
-            IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate);
-
-        /// <summary>
-        /// Gets the history for the requested securities
-        /// </summary>
-        /// <param name="requests">The historical data requests</param>
-        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
-        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public abstract IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone);
+        public override int DataPointCount => _dataPointCount;
 
         /// <summary>
         /// Enumerates the subscriptions into slices

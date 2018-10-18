@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Packets;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Interfaces
@@ -30,6 +29,26 @@ namespace QuantConnect.Interfaces
     public interface IHistoryProvider
     {
         /// <summary>
+        /// Event fired when an invalid configuration has been detected
+        /// </summary>
+        event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected;
+
+        /// <summary>
+        /// Event fired when the numerical precision in the factor file has been limited
+        /// </summary>
+        event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
+
+        /// <summary>
+        /// Event fired when there was an error downloading a remote file
+        /// </summary>
+        event EventHandler<DownloadFailedEventArgs> DownloadFailed;
+
+        /// <summary>
+        /// Event fired when there was an error reading the data
+        /// </summary>
+        event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
+
+        /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
         int DataPointCount { get; }
@@ -37,13 +56,8 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate);
+        /// <param name="parameters">The initialization parameters</param>
+        void Initialize(HistoryProviderInitializeParameters parameters);
 
         /// <summary>
         /// Gets the history for the requested securities
