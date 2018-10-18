@@ -272,6 +272,20 @@ namespace QuantConnect.Data.Market
         {
             get { return _data.Values; }
         }
+
+        /// <summary>
+        /// Gets the value associated with the specified key.
+        /// </summary>
+        /// <param name="key">The key whose value to get.</param>
+        /// <returns>
+        /// The value associated with the specified key, if the key is found; otherwise, the default value for the type of the <see cref ="T"/> parameter.
+        /// </returns>
+        public virtual T GetValue(Symbol key)
+        {
+            T value;
+            TryGetValue(key, out value);
+            return value;
+        }
     }
 
     /// <summary>
