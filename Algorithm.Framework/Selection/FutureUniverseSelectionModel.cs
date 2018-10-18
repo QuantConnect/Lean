@@ -137,13 +137,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="subscriptionDataConfigService">The service used to create new <see cref="SubscriptionDataConfig"/></param>
         /// <param name="symbol">Symbol of the future</param>
         /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityService">The service used to create new <see cref="Security"/></param>
+        /// <param name="securityManager">Used to create new <see cref="Security"/></param>
         /// <returns><see cref="Future"/> for the given symbol</returns>
         protected virtual Future CreateFutureChainSecurity(
             ISubscriptionDataConfigService subscriptionDataConfigService,
             Symbol symbol,
             UniverseSettings settings,
-            ISecurityService securityService)
+            SecurityManager securityManager)
         {
             var config = subscriptionDataConfigService.Add(
                 typeof(ZipEntryName),
@@ -151,8 +151,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 settings.Resolution,
                 settings.FillForward,
                 settings.ExtendedMarketHours,
-                false);
-            return (Future)securityService.CreateSecurity(symbol, config, settings.Leverage, false);
+                isFilteredSubscription: false);
+            return (Future)securityManager.CreateSecurity(symbol, config, settings.Leverage, false);
         }
 
         /// <summary>

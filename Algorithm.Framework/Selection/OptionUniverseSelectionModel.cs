@@ -136,21 +136,22 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="subscriptionDataConfigService">The service used to create new <see cref="SubscriptionDataConfig"/></param>
         /// <param name="symbol">Symbol of the option</param>
         /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityService">The service used to create new <see cref="Security"/></param>
+        /// <param name="securityManager">Used to create new <see cref="Security"/></param>
         /// <returns><see cref="Option"/> for the given symbol</returns>
         protected virtual Option CreateOptionChainSecurity(
             ISubscriptionDataConfigService subscriptionDataConfigService,
             Symbol symbol,
             UniverseSettings settings,
-            ISecurityService securityService)
+            SecurityManager securityManager)
         {
-            var config = subscriptionDataConfigService.Add(typeof(ZipEntryName),
+            var config = subscriptionDataConfigService.Add(
+                typeof(ZipEntryName),
                 symbol,
                 settings.Resolution,
                 settings.FillForward,
                 settings.ExtendedMarketHours,
                 false);
-            return (Option)securityService.CreateSecurity(symbol, config, settings.Leverage, false);
+            return (Option)securityManager.CreateSecurity(symbol, config, settings.Leverage, false);
         }
 
         /// <summary>
