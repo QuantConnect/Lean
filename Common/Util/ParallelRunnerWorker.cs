@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ namespace QuantConnect.Util
         private Thread _thread;
         private readonly object _sync = new object();
         private readonly ManualResetEvent _waitHandle;
-        private readonly ParallelRunnerController _controller;
+        private readonly CancellationToken _token;
         private readonly BlockingCollection<IParallelRunnerWorkItem> _queue;
 
         /// <summary>
@@ -42,28 +42,27 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Initialzies a new instance of the <see cref="ParallelRunnerWorker"/> class
+        /// Initializes a new instance of the <see cref="ParallelRunnerWorker"/> class
         /// </summary>
-        /// <param name="controller">The controller instance used to reschedule work items</param>
+        /// <param name="token">The cancellation token</param>
         /// <param name="queue">The work queue where this worker will source the work items</param>
-        public ParallelRunnerWorker(ParallelRunnerController controller, BlockingCollection<IParallelRunnerWorkItem> queue)
+        public ParallelRunnerWorker(CancellationToken token, BlockingCollection<IParallelRunnerWorkItem> queue)
         {
             _queue = queue;
-            _controller = controller;
             _waitHandle = new ManualResetEvent(false);
+            _token = token;
         }
 
         /// <summary>
         /// Starts a new thread to process the work queue.
         /// This method is indempotent.
         /// </summary>
-        /// <param name="token">The cancellation token</param>
-        public void Start(CancellationToken token)
+        public void Start()
         {
             lock (_sync)
             {
                 if (_thread != null) return;
-                _thread = new Thread(() => ThreadEntry(token)) { IsBackground = true };
+                _thread = new Thread(() => ThreadEntry(_token)) { IsBackground = true };
                 _thread.Start();
             }
         }
@@ -112,8 +111,18 @@ namespace QuantConnect.Util
         {
             lock (_sync)
             {
+                if (_thread != null && _thread.IsAlive)
+                {
+                    // if cancellation was not request, thread will not stop, so abort
+                    // else give the thread a 500ms join timeout
+                    if (!_token.IsCancellationRequested
+                        || !_thread.Join(TimeSpan.FromMilliseconds(500)))
+                    {
+                        _thread.Abort();
+                    }
+                }
+                // dispose of the handle after stopping the thread, since the thread sets it
                 if (_waitHandle != null) _waitHandle.Dispose();
-                if (_thread != null && _thread.IsAlive) _thread.Abort();
             }
         }
     }
