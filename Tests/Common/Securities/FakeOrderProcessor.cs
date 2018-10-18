@@ -90,5 +90,12 @@ namespace QuantConnect.Tests.Common.Securities
                     throw new NotImplementedException();
             }
         }
+
+        public void Clear()
+        {
+            _orders.Clear();
+            _tickets.Clear();
+            ProcessedOrdersRequests.Clear();
+        }
     }
 }

@@ -38,8 +38,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Removes the <see cref="Subscription"/>, if it exists
         /// </summary>
         /// <param name="configuration">The <see cref="SubscriptionDataConfig"/> of the subscription to remove</param>
+        /// <param name="universe">Universe requesting to remove <see cref="Subscription"/>.
+        /// Default value, null, will remove all universes</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        bool RemoveSubscription(SubscriptionDataConfig configuration);
+        bool RemoveSubscription(SubscriptionDataConfig configuration, Universe universe = null);
 
         /// <summary>
         /// Adds a new <see cref="Subscription"/> to provide data for the specified security.

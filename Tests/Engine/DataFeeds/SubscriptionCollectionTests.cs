@@ -22,6 +22,7 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Securities;
@@ -54,7 +55,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
             var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);
-            var subscription = new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
+            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
+            var subscription = new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
             var addTask = new TaskFactory().StartNew(() =>
             {
@@ -363,7 +365,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
             var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);
-            return new Subscription(null, security, config, subscriptionDataEnumerator, timeZoneOffsetProvider, start, end, false);
+            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
+            return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }
     }
 }

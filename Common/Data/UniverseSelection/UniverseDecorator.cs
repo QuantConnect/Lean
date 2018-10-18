@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -26,6 +27,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// wrapped (or decorated) universe. This provides scaffolding for other decorators who
     /// only need to override one or two methods.
     /// </summary>
+    /// <remarks> Requires special handling due to `this != this.Universe` <see cref="GetSubscriptionRequests"/></remarks>
     public abstract class UniverseDecorator : Universe
     {
         /// <summary>
@@ -54,7 +56,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="universe">The decorated universe. All overridable methods delegate to this instance.</param>
         protected UniverseDecorator(Universe universe)
-            : base(universe.Configuration, universe.SecurityInitializer)
+            : base(universe.Configuration)
         {
             Universe = universe;
         }
@@ -85,7 +87,23 @@ namespace QuantConnect.Data.UniverseSelection
             DateTime maximumEndTimeUtc,
             ISubscriptionDataConfigService subscriptionService)
         {
-            return Universe.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService);
+            var result = Universe.GetSubscriptionRequests(
+                security,
+                currentTimeUtc,
+                maximumEndTimeUtc,
+                subscriptionService).ToList();
+
+            for (var i = 0; i < result.Count; i++)
+            {
+                // This is required because the system tracks which universe
+                // is requesting to add or remove each SubscriptionRequest.
+                // UniverseDecorator is a special case because
+                // `this != UniverseDecorator.Universe`
+                result[i] =
+                    new SubscriptionRequest(result[i], universe: this);
+            }
+
+            return result;
         }
 
         /// <summary>

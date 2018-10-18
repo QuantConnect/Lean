@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -32,11 +33,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private bool _removedFromUniverse;
         private readonly IEnumerator<SubscriptionData> _enumerator;
+        private List<SubscriptionRequest> _subscriptionRequests;
 
         /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
-        public Universe Universe { get; }
+        public IEnumerable<Universe> Universe => _subscriptionRequests
+            .Where(x => x.Universe != null)
+            .Select(x => x.Universe);
+
+        /// <summary>
+        /// Gets true if there is at least one subscription requests in this subscription
+        /// </summary>
+        public bool HasSubscriptionRequests => _subscriptionRequests.Any();
 
         /// <summary>
         /// Gets the security this subscription points to
@@ -91,35 +100,74 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="Subscription"/> class with a universe
         /// </summary>
-        /// <param name="universe">Specified for universe subscriptions</param>
-        /// <param name="security">The security this subscription is for</param>
-        /// <param name="configuration">The subscription configuration that was used to generate the enumerator</param>
+        /// <param name="subscriptionRequest">Specified for universe subscriptions</param>
         /// <param name="enumerator">The subscription's data source</param>
         /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
-        /// <param name="utcStartTime">The start time of the subscription</param>
-        /// <param name="utcEndTime">The end time of the subscription</param>
-        /// <param name="isUniverseSelectionSubscription">True if this is a subscription for universe selection,
-        /// that is, the configuration is used to produce the used to perform universe selection, false for a
-        /// normal data subscription, i.e, SPY</param>
-        public Subscription(Universe universe,
-            Security security,
-            SubscriptionDataConfig configuration,
+        public Subscription(
+            SubscriptionRequest subscriptionRequest,
             IEnumerator<SubscriptionData> enumerator,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            DateTime utcStartTime,
-            DateTime utcEndTime,
-            bool isUniverseSelectionSubscription)
+            TimeZoneOffsetProvider timeZoneOffsetProvider)
         {
-            Universe = universe;
-            Security = security;
+            _subscriptionRequests = new List<SubscriptionRequest> { subscriptionRequest };
+            Security = subscriptionRequest.Security;
             _enumerator = enumerator;
-            IsUniverseSelectionSubscription = isUniverseSelectionSubscription;
-            Configuration = configuration;
+            IsUniverseSelectionSubscription = subscriptionRequest.IsUniverseSubscription;
+            Configuration = subscriptionRequest.Configuration;
             OffsetProvider = timeZoneOffsetProvider;
 
-            UtcStartTime = utcStartTime;
-            UtcEndTime = utcEndTime;
+            UtcStartTime = subscriptionRequest.StartTimeUtc;
+            UtcEndTime = subscriptionRequest.EndTimeUtc;
             RemovedFromUniverse = Ref.CreateReadOnly(() => _removedFromUniverse);
+        }
+
+        /// <summary>
+        /// Adds a <see cref="SubscriptionRequest"/> for this subscription
+        /// </summary>
+        /// <param name="subscriptionRequest">The <see cref="SubscriptionRequest"/> to add</param>
+        public bool AddSubscriptionRequest(SubscriptionRequest subscriptionRequest)
+        {
+            if (IsUniverseSelectionSubscription
+                || subscriptionRequest.IsUniverseSubscription)
+            {
+                throw new Exception("Subscription.AddSubscriptionRequest(): Universe selection" +
+                    " subscriptions should not have more than 1 SubscriptionRequest");
+            }
+
+            // this shouldn't happen but just in case..
+            if (subscriptionRequest.Configuration != Configuration)
+            {
+                throw new Exception("Subscription.AddSubscriptionRequest(): Requesting to add" +
+                    "a different SubscriptionDataConfig");
+            }
+
+            // Only allow one subscription request per universe
+            if (!Universe.Contains(subscriptionRequest.Universe))
+            {
+                _subscriptionRequests.Add(subscriptionRequest);
+                // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes one or all <see cref="SubscriptionRequest"/> from this subscription
+        /// </summary>
+        /// <param name="universe">Universe requesting to remove <see cref="SubscriptionRequest"/>.
+        /// Default value, null, will remove all universes</param>
+        public IEnumerable<Universe> RemoveSubscriptionRequest(Universe universe = null)
+        {
+            if (universe == null)
+            {
+                var result = _subscriptionRequests;
+                _subscriptionRequests = new List<SubscriptionRequest>();
+                return result.Where(x => x.Universe != null)
+                    .Select(x => x.Universe);
+            }
+
+            _subscriptionRequests.RemoveAll(x => x.Universe == universe);
+            // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
+            return new List<Universe> { universe };
         }
 
         /// <summary>

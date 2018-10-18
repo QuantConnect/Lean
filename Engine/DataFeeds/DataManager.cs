@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Remove:
                         foreach (var universe in args.OldItems.OfType<Universe>())
                         {
-                            RemoveSubscription(universe.Configuration);
+                            RemoveSubscription(universe.Configuration, universe);
                         }
                         break;
 
@@ -146,13 +146,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
         public bool AddSubscription(SubscriptionRequest request)
         {
-            if (DataFeedSubscriptions.Contains(request.Configuration))
+            Subscription subscription;
+            if (DataFeedSubscriptions.TryGetValue(request.Configuration, out subscription))
             {
                 // duplicate subscription request
-                return false;
+                return subscription.AddSubscriptionRequest(request);
             }
 
-            var subscription = _dataFeed.CreateSubscription(request);
+            subscription = _dataFeed.CreateSubscription(request);
 
             if (subscription == null)
             {
@@ -171,8 +172,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Removes the <see cref="Subscription"/>, if it exists
         /// </summary>
         /// <param name="configuration">The <see cref="SubscriptionDataConfig"/> of the subscription to remove</param>
+        /// <param name="universe">Universe requesting to remove <see cref="Subscription"/>.
+        /// Default value, null, will remove all universes</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        public bool RemoveSubscription(SubscriptionDataConfig configuration)
+        public bool RemoveSubscription(SubscriptionDataConfig configuration, Universe universe = null)
         {
             // remove the subscription from our collection, if it exists
             Subscription subscription;
@@ -181,33 +184,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // don't remove universe subscriptions immediately, instead mark them as disposed
                 // so we can turn the crank one more time to ensure we emit security changes properly
-                if (subscription.IsUniverseSelectionSubscription && subscription.Universe.DisposeRequested)
+                if (subscription.IsUniverseSelectionSubscription && subscription.Universe.First().DisposeRequested)
                 {
                     // subscription syncer will dispose the universe AFTER we've run selection a final time
                     // and then will invoke SubscriptionFinished which will remove the universe subscription
                     return false;
                 }
 
-                if (!DataFeedSubscriptions.TryRemove(configuration, out subscription))
-                {
-                    Log.Error($"DataManager.RemoveSubscription(): Unable to remove {configuration}");
-                    return false;
-                }
+                var removedUniverses = subscription.RemoveSubscriptionRequest(universe);
 
-                _dataFeed.RemoveSubscription(subscription);
-
-                // if the security is no longer a member of the universe, then mark the subscription properly
-                // universe may be null for internal currency conversion feeds
-                // TODO : Put currency feeds in their own internal universe
-                if (subscription.Universe != null && !subscription.Universe.Members.ContainsKey(configuration.Symbol))
+                // we remove the subscription when there are no other requests left
+                if (!subscription.HasSubscriptionRequests)
                 {
-                    subscription.MarkAsRemovedFromUniverse();
+                    if (!DataFeedSubscriptions.TryRemove(configuration, out subscription))
+                    {
+                        Log.Error($"DataManager.RemoveSubscription(): Unable to remove {configuration}");
+                        return false;
+                    }
+
+                    _dataFeed.RemoveSubscription(subscription);
+
+                    // if the security is no longer a member of the universe, then mark the subscription properly
+                    // universe may be null for internal currency conversion feeds
+                    // TODO : Put currency feeds in their own internal universe
+                    if (!removedUniverses.Any(x => x.Members.ContainsKey(configuration.Symbol)))
+                    {
+                        subscription.MarkAsRemovedFromUniverse();
+                    }
+                    subscription.Dispose();
+                    Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
+                    return true;
                 }
-                subscription.Dispose();
-                Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
-                return true;
             }
-
             return false;
         }
 
