@@ -21,23 +21,23 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the drawdown
+    /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the unrealized profit
     /// per holding to the specified percentage
     /// </summary>
-    public class MaximumDrawdownPercentPerSecurity : RiskManagementModel
+    public class MaximumUnrealizedProfitPercentPerSecurity : RiskManagementModel
     {
-        private readonly decimal _maximumDrawdownPercent;
+        private readonly decimal _maximumUnrealizedProfitPercent;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MaximumDrawdownPercentPerSecurity"/> class
+        /// Initializes a new instance of the <see cref="MaximumUnrealizedProfitPercentPerSecurity"/> class
         /// </summary>
-        /// <param name="maximumDrawdownPercent">The maximum percentage drawdown allowed for any single security holding,
+        /// <param name="maximumUnrealizedProfitPercent">The maximum percentage unrealized profit allowed for any single security holding,
         /// defaults to 5% drawdown per security</param>
-        public MaximumDrawdownPercentPerSecurity(
-            decimal maximumDrawdownPercent = 0.05m
+        public MaximumUnrealizedProfitPercentPerSecurity(
+            decimal maximumUnrealizedProfitPercent = 0.05m
             )
         {
-            _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);
+            _maximumUnrealizedProfitPercent = Math.Abs(maximumUnrealizedProfitPercent);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 }
 
                 var pnl = security.Holdings.UnrealizedProfitPercent;
-                if (pnl < _maximumDrawdownPercent)
+                if (pnl > _maximumUnrealizedProfitPercent)
                 {
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
