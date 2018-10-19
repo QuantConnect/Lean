@@ -28,6 +28,22 @@ namespace QuantConnect.Interfaces
     {
         /// <summary>
         /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        /// Can optionally pass in desired subscription data type to use.
+        /// If the config already existed will return existing instance instead
+        /// </summary>
+        SubscriptionDataConfig Add(
+            Type dataType,
+            Symbol symbol,
+            Resolution resolution,
+            bool fillForward = true,
+            bool extendedMarketHours = false,
+            bool isFilteredSubscription = true,
+            bool isInternalFeed = false,
+            bool isCustomData = false
+            );
+
+        /// <summary>
+        /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
         /// Can optionally pass in desired subscription data types to use.
         /// If the config already existed will return existing instance instead
         /// </summary>

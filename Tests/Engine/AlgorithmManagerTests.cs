@@ -54,7 +54,15 @@ namespace QuantConnect.Tests.Engine
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(AlgorithmManagerTests)}.{nameof(TestAlgorithmManagerSpeed)}");
             var feed = new MockDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings, algorithm.TimeKeeper);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed,
+                    algorithm,
+                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
+                algorithm.Settings,
+                algorithm.TimeKeeper,
+                marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var transactions = new BacktestingTransactionHandler();
             var results = new BacktestingResultHandler();

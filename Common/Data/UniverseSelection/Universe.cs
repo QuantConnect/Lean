@@ -215,10 +215,8 @@ namespace QuantConnect.Data.UniverseSelection
         [Obsolete("CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols")]
         public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {
-            // by default invoke the create security method to handle security initialization
-            return SecurityManager.CreateSecurity(algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
-                SecurityInitializer, symbol, UniverseSettings.Resolution, UniverseSettings.FillForward, UniverseSettings.Leverage,
-                UniverseSettings.ExtendedMarketHours, false, false, algorithm.LiveMode, symbol.ID.SecurityType == SecurityType.Option);
+            throw new Exception("CreateSecurity is obsolete and should not be called." +
+                "The system will create the required Securities based on selected symbols");
         }
 
         /// <summary>
@@ -231,16 +229,8 @@ namespace QuantConnect.Data.UniverseSelection
         [Obsolete("This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information")]
         public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
-            return security.Subscriptions.Select(config =>
-                new SubscriptionRequest(
-                    isUniverseSubscription: false,
-                    universe: this,
-                    security: security,
-                    configuration: new SubscriptionDataConfig(config),
-                    startTimeUtc: currentTimeUtc,
-                    endTimeUtc: maximumEndTimeUtc
-                    )
-                );
+            throw new Exception("This overload is obsolete and should not be called." +
+                "It was not capable of creating new SubscriptionDataConfig due to lack of information");
         }
 
 

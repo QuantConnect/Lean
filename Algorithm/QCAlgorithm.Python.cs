@@ -86,17 +86,21 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            var marketHoursDbEntry = MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
+            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security:
-            var security = SecurityManager.CreateSecurity(dataType, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
-                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
+            var config = SubscriptionManager.SubscriptionDataConfigService.Add(dataType,
+                symbolObject,
+                resolution,
+                fillDataForward,
+                isCustomData: true,
+                extendedMarketHours: true);
+            var security = Securities.CreateSecurity(symbolObject, config, leverage);
 
-            AddToUserDefinedUniverse(security, resolution, leverage, symbolObject.ID.Market, fillDataForward, isExtendedMarketHours:true, isInternalFeed:false);
+            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
             return security;
         }
 

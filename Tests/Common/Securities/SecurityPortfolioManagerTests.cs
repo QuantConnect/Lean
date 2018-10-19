@@ -33,6 +33,7 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -157,7 +158,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we're going to process fills and very our equity after each fill
             var subscriptions = new SubscriptionManager();
-            subscriptions.SetDataManager(new DataManagerStub(TimeKeeper));
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
@@ -203,7 +205,9 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None);
+            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm);
+
+            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None, securityService);
 
             for (int i = 0; i < fills.Count; i++)
             {

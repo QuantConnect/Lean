@@ -23,7 +23,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Securities.Future;
@@ -38,8 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
-        private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+        private readonly ISecurityService _securityService;
         private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
 
@@ -48,10 +46,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
+        /// <param name="securityService"></param>
+        public UniverseSelection(IDataFeed dataFeed,
+            IAlgorithm algorithm,
+            ISecurityService securityService)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
+            _securityService = securityService;
         }
 
         /// <summary>
@@ -88,14 +90,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Parallel.ForEach(selectSymbolsResult, options, symbol =>
                     {
                         var config = FineFundamentalUniverse.CreateConfiguration(symbol);
+                        var security = _securityService.CreateSecurity(symbol, config);
 
-                        var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
-                        var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, CashBook.AccountCurrency);
-                        var quoteCash = _algorithm.Portfolio.CashBook[symbolProperties.QuoteCurrency];
-
-                        var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties, _algorithm.Portfolio.CashBook);
-
-                        var localStartTime = dateTimeUtc.ConvertFromUtc(exchangeHours.TimeZone).AddDays(-1);
+                        var localStartTime = dateTimeUtc.ConvertFromUtc(config.ExchangeTimeZone).AddDays(-1);
                         var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { localStartTime });
                         var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), localStartTime, localStartTime);
                         using (var enumerator = factory.CreateEnumerator(request, dataProvider))
@@ -241,20 +238,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security security;
                 if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio,
-                        _algorithm.SubscriptionManager,
-                        _marketHoursDatabase,
-                        _symbolPropertiesDatabase,
-                        _algorithm.SecurityInitializer,
-                        symbol,
+                    // For now this is required for retro compatibility with usages of security.Subscriptions
+                    var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                         universe.UniverseSettings.Resolution,
                         universe.UniverseSettings.FillForward,
-                        universe.UniverseSettings.Leverage,
-                        universe.UniverseSettings.ExtendedMarketHours,
-                        false, // isInternalFeed
-                        false, // isCustomData
-                        _algorithm.LiveMode,
-                        symbol.ID.SecurityType == SecurityType.Option);
+                        universe.UniverseSettings.ExtendedMarketHours);
+
+                    security =_securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, symbol.ID.SecurityType == SecurityType.Option);
 
                     pendingAdditions.Add(symbol, security);
 
@@ -269,7 +259,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
                         && !security.Subscriptions.Contains(request.Configuration))
                     {
-                        // for now this is required for retro compatibility with usages of security.Subscriptions
+                        // For now this is required for retro compatibility with usages of security.Subscriptions
                         security.AddData(request.Configuration);
                     }
                     _dataFeed.AddSubscription(request);
@@ -300,11 +290,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Add currency data feeds that weren't explicitly added in Initialize
             if (additions.Count > 0)
             {
-                var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.BrokerageModel.DefaultMarkets, securityChanges);
-                foreach (var security in addedSecurities)
+                var addedSubscriptionDataConfigs = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(
+                    _algorithm.Securities,
+                    _algorithm.SubscriptionManager,
+                    _algorithm.BrokerageModel.DefaultMarkets,
+                    securityChanges,
+                    _securityService);
+
+                foreach (var subscriptionDataConfig in addedSubscriptionDataConfigs)
                 {
-                    // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, new SubscriptionDataConfig(security.Subscriptions.First()), dateTimeUtc, algorithmEndDateUtc));
+                    var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
+                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, subscriptionDataConfig, dateTimeUtc, algorithmEndDateUtc));
                 }
             }
 

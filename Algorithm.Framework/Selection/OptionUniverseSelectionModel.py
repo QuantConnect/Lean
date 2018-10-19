@@ -29,14 +29,14 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
     def __init__(self,
                  refreshInterval,
                  optionChainSymbolSelector,
-                 universeSettings = None, 
+                 universeSettings = None,
                  securityInitializer = None):
         '''Creates a new instance of OptionUniverseSelectionModel
         Args:
             refreshInterval: Time interval between universe refreshes</param>
             optionChainSymbolSelector: Selects symbols from the provided option chain
             universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-            securityInitializer: Performs extra initialization (such as setting models) after we create a new security object'''
+            securityInitializer: [Obsolete, will not be used] Performs extra initialization (such as setting models) after we create a new security object'''
         self.nextRefreshTimeUtc = datetime.min
 
         self.refreshInterval = refreshInterval
@@ -107,19 +107,17 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
             algorithm: The algorithm instance to create universes for
             symbol: Symbol of the option
             settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-            initializer: Performs extra initialization (such as setting models) after we create a new security object
+            initializer: [Obsolete, will not be used] Performs extra initialization (such as setting models) after we create a new security object
         Returns
             Option for the given symbol'''
-        market = symbol.ID.Market
-        underlying = symbol.Underlying
+        config = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(ZipEntryName),
+                                                                                 symbol,
+                                                                                 settings.Resolution,
+                                                                                 settings.FillForward,
+                                                                                 settings.ExtendedMarketHours,
+                                                                                 False)
 
-        marketHoursEntry = MarketHoursDatabase.FromDataFolder().GetEntry(market, underlying, SecurityType.Option)
-        symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency)
-
-        return SecurityManager.CreateSecurity(typeof(ZipEntryName), algorithm.Portfolio,
-                algorithm.SubscriptionManager, marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties,
-                initializer, symbol, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours,
-                False, False, algorithm.LiveMode, False, False)
+        return algorithm.Securities.CreateSecurity(symbol, config, settings.Leverage, False)
 
     def Filter(self, filter):
         '''Defines the option chain universe filter'''
