@@ -165,6 +165,7 @@
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
+    <Compile Include="Engine\DataFeeds\MockDataFeed.cs" />
     <Compile Include="Engine\DataFeeds\UniverseSelectionTests.cs" />
     <Compile Include="PythonSetup.cs" />
     <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />

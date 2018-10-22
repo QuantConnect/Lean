@@ -69,13 +69,12 @@ namespace QuantConnect.Jupyter
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
-                var nullDataFeed = new NullDataFeed();
                 var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this);
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
-                    new DataManager(nullDataFeed,
-                        new UniverseSelection(nullDataFeed, this, securityService),
-                        Settings,
+                    new DataManager(new NullDataFeed(),
+                        new UniverseSelection(this, securityService),
+                        this,
                         TimeKeeper,
                         MarketHoursDatabase));
 

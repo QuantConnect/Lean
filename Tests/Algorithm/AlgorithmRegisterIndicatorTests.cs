@@ -169,7 +169,7 @@ marketHoursDatabase = MarketHoursDatabase.FromDataFolder()
 symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder()
 securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo)
 algo.Securities.SetSecurityService(securityService)
-dataManager = DataManager(None, UniverseSelection(None, algo, securityService), algo.Settings, algo.TimeKeeper, marketHoursDatabase)
+dataManager = DataManager(None, UniverseSelection(algo, securityService), algo, algo.TimeKeeper, marketHoursDatabase)
 algo.SubscriptionManager.SetDataManager(dataManager)
 
 

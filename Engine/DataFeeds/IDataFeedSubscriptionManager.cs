@@ -14,6 +14,9 @@
  *
 */
 
+using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
+
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
@@ -30,5 +33,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Get the universe selection instance
         /// </summary>
         UniverseSelection UniverseSelection { get; }
+
+        /// <summary>
+        /// Removes the <see cref="Subscription"/>, if it exists
+        /// </summary>
+        /// <param name="configuration">The <see cref="SubscriptionDataConfig"/> of the subscription to remove</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        bool RemoveSubscription(SubscriptionDataConfig configuration);
+
+        /// <summary>
+        /// Adds a new <see cref="Subscription"/> to provide data for the specified security.
+        /// </summary>
+        /// <param name="request">Defines the <see cref="SubscriptionRequest"/> to be added</param>
+        /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
+        bool AddSubscription(SubscriptionRequest request);
     }
 }

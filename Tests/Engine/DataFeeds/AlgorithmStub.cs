@@ -30,10 +30,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
         public DataManager DataManager;
 
-        public AlgorithmStub()
+        public AlgorithmStub(bool createDataManager = true)
         {
-            DataManager = new DataManagerStub(this);
-            SubscriptionManager.SetDataManager(DataManager);
+            if (createDataManager)
+            {
+                DataManager = new DataManagerStub(this);
+                SubscriptionManager.SetDataManager(DataManager);
+            }
         }
 
         public AlgorithmStub(IDataFeed dataFeed)

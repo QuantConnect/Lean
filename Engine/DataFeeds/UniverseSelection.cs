@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class UniverseSelection
     {
-        private readonly IDataFeed _dataFeed;
+        private IDataFeedSubscriptionManager _dataManager;
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
         private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
@@ -44,16 +44,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
         /// </summary>
-        /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
         /// <param name="securityService"></param>
-        public UniverseSelection(IDataFeed dataFeed,
+        public UniverseSelection(
             IAlgorithm algorithm,
             ISecurityService securityService)
         {
-            _dataFeed = dataFeed;
             _algorithm = algorithm;
             _securityService = securityService;
+        }
+
+        /// <summary>
+        /// Sets the data manager
+        /// </summary>
+        public void SetDataManager(IDataFeedSubscriptionManager dataManager)
+        {
+            if (_dataManager != null)
+            {
+                throw new Exception("UniverseSelection.SetDataManager(): can only be set once");
+            }
+            _dataManager = dataManager;
         }
 
         /// <summary>
@@ -264,7 +274,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // For now this is required for retro compatibility with usages of security.Subscriptions
                         security.AddData(request.Configuration);
                     }
-                    _dataFeed.AddSubscription(request);
+                    _dataManager.AddSubscription(request);
 
                     // only update our security changes if we actually added data
                     if (!request.IsUniverseSubscription)
@@ -302,7 +312,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var subscriptionDataConfig in addedSubscriptionDataConfigs)
                 {
                     var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
-                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, subscriptionDataConfig, dateTimeUtc, algorithmEndDateUtc));
+                    _dataManager.AddSubscription(new SubscriptionRequest(false, universe, security, subscriptionDataConfig, dateTimeUtc, algorithmEndDateUtc));
                 }
             }
 
@@ -332,7 +342,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    _dataFeed.RemoveSubscription(subscription.Configuration);
+                    _dataManager.RemoveSubscription(subscription.Configuration);
                 }
             }
 

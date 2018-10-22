@@ -79,7 +79,6 @@ namespace QuantConnect.Tests.Engine
         public void Initialize(AlgorithmNodePacket job,
             IMessagingHandler messagingHandler,
             IApi api,
-            IDataFeed dataFeed,
             ISetupHandler setupHandler,
             ITransactionHandler transactionHandler)
         {

@@ -27,6 +27,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -127,7 +128,7 @@ namespace QuantConnect.Tests.Algorithm
         public void OnEndOfTimeStepSeedsUnderlyingSecuritiesThatHaveNoData()
         {
             var qcAlgorithm = new QCAlgorithm();
-            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
+            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm, new MockDataFeed()));
             qcAlgorithm.SetLiveMode(true);
             var testHistoryProvider = new TestHistoryProvider();
             qcAlgorithm.HistoryProvider = testHistoryProvider;
@@ -149,7 +150,7 @@ namespace QuantConnect.Tests.Algorithm
         public void OnEndOfTimeStepDoesNotThrowWhenSeedsSameUnderlyingForTwoSecurities()
         {
             var qcAlgorithm = new QCAlgorithm();
-            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
+            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm, new MockDataFeed()));
             qcAlgorithm.SetLiveMode(true);
             var testHistoryProvider = new TestHistoryProvider();
             qcAlgorithm.HistoryProvider = testHistoryProvider;

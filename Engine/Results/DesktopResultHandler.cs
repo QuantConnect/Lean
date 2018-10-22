@@ -87,10 +87,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="job">Algorithm job packet for this result handler</param>
         /// <param name="messagingHandler"></param>
         /// <param name="api"></param>
-        /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
         /// <param name="transactionHandler"></param>
-        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
+        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             //Redirect the log messages here:
             _job = job;

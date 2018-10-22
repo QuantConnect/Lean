@@ -59,14 +59,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private UniverseSelection _universeSelection;
 
         /// <summary>
-        /// Gets all of the current subscriptions this data feed is processing
-        /// </summary>
-        public IEnumerable<Subscription> Subscriptions
-        {
-            get { return _subscriptions; }
-        }
-
-        /// <summary>
         /// Public flag indicator that the thread is still busy.
         /// </summary>
         public bool IsActive
@@ -114,116 +106,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
 
             IsActive = true;
-            // wire ourselves up to receive notifications when universes are added/removed
-            var start = _timeProvider.GetUtcNow();
-            algorithm.UniverseManager.CollectionChanged += (sender, args) =>
-            {
-                switch (args.Action)
-                {
-                    case NotifyCollectionChangedAction.Add:
-                        foreach (var universe in args.NewItems.OfType<Universe>())
-                        {
-                            var config = universe.Configuration;
-                            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-                            var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
-
-                            Security security;
-                            if (!_algorithm.Securities.TryGetValue(config.Symbol, out security))
-                            {
-                                // create a canonical security object
-                                security = new Security(
-                                    exchangeHours,
-                                    config,
-                                    _algorithm.Portfolio.CashBook[CashBook.AccountCurrency],
-                                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
-                                    _algorithm.Portfolio.CashBook
-                                );
-                            }
-
-                            AddSubscription(new SubscriptionRequest(true, universe, security, config, start, Time.EndOfTime));
-                        }
-                        break;
-
-                    case NotifyCollectionChangedAction.Remove:
-                        foreach (var universe in args.OldItems.OfType<Universe>())
-                        {
-                            RemoveSubscription(universe.Configuration);
-                        }
-                        break;
-
-                    default:
-                        throw new NotImplementedException("The specified action is not implemented: " + args.Action);
-                }
-            };
         }
 
         /// <summary>
-        /// Adds a new subscription to provide data for the specified security.
+        /// Creates a new subscription to provide data for the specified security.
         /// </summary>
         /// <param name="request">Defines the subscription to be added, including start/end times the universe and security</param>
-        /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
-        public bool AddSubscription(SubscriptionRequest request)
+        /// <returns>The created <see cref="Subscription"/> if successful, null otherwise</returns>
+        public Subscription CreateSubscription(SubscriptionRequest request)
         {
-            if (_subscriptions.Contains(request.Configuration))
-            {
-                // duplicate subscription request
-                return false;
-            }
-
             // create and add the subscription to our collection
             var subscription = request.IsUniverseSubscription
                 ? CreateUniverseSubscription(request)
-                : CreateSubscription(request);
+                : InternalCreateSubscription(request);
 
-            // for some reason we couldn't create the subscription
-            if (subscription == null)
+            // check if we could create the subscription
+            if (subscription != null)
             {
-                Log.Trace("Unable to add subscription for: " + request.Configuration);
-                return false;
+                // send the subscription for the new symbol through to the data queuehandler
+                // unless it is custom data, custom data is retrieved using the same as backtest
+                if (!subscription.Configuration.IsCustomData)
+                {
+                    _dataQueueHandler.Subscribe(_job, new[] { request.Security.Symbol });
+                }
             }
 
-            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + request.Configuration);
-
-            _subscriptions.TryAdd(subscription);
-            // send the subscription for the new symbol through to the data queuehandler
-            // unless it is custom data, custom data is retrieved using the same as backtest
-            if (!subscription.Configuration.IsCustomData)
-            {
-                _dataQueueHandler.Subscribe(_job, new[] {request.Security.Symbol});
-            }
-
-            return true;
+            return subscription;
         }
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="configuration">The configuration of the subscription to remove</param>
-        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        public bool RemoveSubscription(SubscriptionDataConfig configuration)
+        /// <param name="subscription">The subscription to remove</param>
+        public void RemoveSubscription(Subscription subscription)
         {
-            // remove the subscription from our collection
-            Subscription subscription;
-            if (!_subscriptions.TryGetValue(configuration, out subscription))
-            {
-                Log.Error($"LiveTradingDataFeed.RemoveSubscription(): Unable to locate: {configuration}");
-            }
-
-            // don't remove universe subscriptions immediately, instead mark them as disposed
-            // so we can turn the crank one more time to ensure we emit security changes properly
-            if (subscription.IsUniverseSelectionSubscription && subscription.Universe.DisposeRequested)
-            {
-                // subscription syncer will dispose the universe AFTER we've run selection a final time
-                // and then will invoke SubscriptionFinished which will remove the universe subscription
-                return false;
-            }
-
-            if (!_subscriptions.TryRemove(configuration, out subscription))
-            {
-                Log.Error($"LiveTradingDataFeed.RemoveSubscription(): Unable to remove: {configuration}");
-                return false;
-            }
-
             var security = subscription.Security;
 
             // remove the subscriptions
@@ -237,17 +153,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _dataQueueHandler.Unsubscribe(_job, new[] { security.Symbol });
                 _exchange.RemoveDataHandler(security.Symbol);
             }
-
-            // if the security is no longer a member of the universe, then mark the subscription properly
-            if (subscription.Universe != null && !subscription.Universe.Members.ContainsKey(configuration.Symbol))
-            {
-                subscription.MarkAsRemovedFromUniverse();
-            }
-            subscription.Dispose();
-
-            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration);
-
-            return true;
         }
 
         /// <summary>
@@ -262,22 +167,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _cancellationTokenSource.Cancel();
                 _exchange?.Stop();
                 _customExchange?.Stop();
-
-                if (_subscriptions != null)
-                {
-                    // remove each subscription from our collection
-                    foreach (var subscription in Subscriptions)
-                    {
-                        try
-                        {
-                            RemoveSubscription(subscription.Configuration);
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error(err, "Error removing: " + subscription.Configuration);
-                        }
-                    }
-                }
                 Log.Trace("LiveTradingDataFeed.Exit(): Exit Finished.");
             }
         }
@@ -298,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription request</param>
         /// <returns>A new subscription instance of the specified security</returns>
-        protected Subscription CreateSubscription(SubscriptionRequest request)
+        protected Subscription InternalCreateSubscription(SubscriptionRequest request)
         {
             Subscription subscription = null;
             try

@@ -73,7 +73,6 @@ namespace QuantConnect.Lean.Engine.Results
         private IMessagingHandler _messagingHandler;
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private IDataFeed _dataFeed;
         private ISetupHandler _setupHandler;
         private ITransactionHandler _transactionHandler;
 
@@ -114,13 +113,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="job">Algorithm job packet for this result handler</param>
         /// <param name="messagingHandler"></param>
         /// <param name="api"></param>
-        /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
         /// <param name="transactionHandler"></param>
-        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
+        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             _api = api;
-            _dataFeed = dataFeed;
             _messagingHandler = messagingHandler;
             _setupHandler = setupHandler;
             _transactionHandler = transactionHandler;
@@ -1003,9 +1000,9 @@ namespace QuantConnect.Lean.Engine.Results
                 _nextSample = time.Add(ResamplePeriod);
 
                 //Update the asset prices to take a real time sample of the market price even though we're using minute bars
-                if (_dataFeed != null)
+                if (DataManager != null)
                 {
-                    foreach (var subscription in _dataFeed.Subscriptions)
+                    foreach (var subscription in DataManager.DataFeedSubscriptions)
                     {
                         var symbol = subscription.Configuration.Symbol;
                         var tickType = subscription.Configuration.TickType;
