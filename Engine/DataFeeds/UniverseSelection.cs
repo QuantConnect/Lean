@@ -90,7 +90,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Parallel.ForEach(selectSymbolsResult, options, symbol =>
                     {
                         var config = FineFundamentalUniverse.CreateConfiguration(symbol);
-                        var security = _securityService.CreateSecurity(symbol, config);
+                        var security = _securityService.CreateSecurity(symbol,
+                            config,
+                            addToSymbolCache: false);
 
                         var localStartTime = dateTimeUtc.ConvertFromUtc(config.ExchangeTimeZone).AddDays(-1);
                         var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { localStartTime });

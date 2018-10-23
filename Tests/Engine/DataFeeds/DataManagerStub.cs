@@ -44,6 +44,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         }
 
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm)
+            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+        {
+
+        }
+
         public DataManagerStub(IAlgorithm algorithm, ITimeKeeper timeKeeper)
             : this(new NullDataFeed(), algorithm, timeKeeper)
         {
