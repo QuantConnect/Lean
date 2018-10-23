@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -27,10 +28,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class AlgorithmStub : QCAlgorithm
     {
         public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
+        public DataManager DataManager;
 
         public AlgorithmStub()
         {
-            SubscriptionManager.SetDataManager(new DataManagerStub(this));
+            DataManager = new DataManagerStub(this);
+            SubscriptionManager.SetDataManager(DataManager);
+        }
+
+        public AlgorithmStub(IDataFeed dataFeed)
+        {
+            DataManager = new DataManagerStub(dataFeed, this);
+            SubscriptionManager.SetDataManager(DataManager);
         }
 
         public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)

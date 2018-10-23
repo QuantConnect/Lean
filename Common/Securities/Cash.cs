@@ -226,7 +226,9 @@ namespace QuantConnect.Securities
                         isInternalFeed: true,
                         subscriptionDataTypes: new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(objectType, tickType) }).First();
 
-                    var security = securityService.CreateSecurity(symbol, config);
+                    var security = securityService.CreateSecurity(symbol,
+                        config,
+                        addToSymbolCache: false);
 
                     ConversionRateSecurity = security;
                     securities.Add(config.Symbol, security);

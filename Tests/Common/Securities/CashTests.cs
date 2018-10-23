@@ -273,6 +273,53 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void EnsureCurrencyDataFeedsForNonUsdQuoteCurrencyDoNotGetAddedToSymbolCache()
+        {
+            SymbolCache.Clear();
+            const int quantity = 100;
+            const decimal conversionRate = 1 / 100m;
+            var cashJPY = new Cash("JPY", quantity, conversionRate);
+            var cashGBP = new Cash("GBP", quantity, conversionRate);
+            var cashBook = new CashBook();
+            cashBook.Add("JPY", cashJPY);
+            cashBook.Add("GBP", cashGBP);
+
+            var symbol = Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM);
+
+            var subscriptions = new SubscriptionManager();
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add(
+                symbol,
+                new Security(
+                    SecurityExchangeHours,
+                    subscriptions.Add(symbol, Resolution.Minute, TimeZone, TimeZone),
+                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
+
+
+            Assert.IsNotNull(
+                cashGBP.EnsureCurrencyDataFeed(
+                    securities,
+                    subscriptions,
+                    MarketMap,
+                    SecurityChanges.None,
+                    dataManager.SecurityService));
+            Assert.IsNotNull(
+                cashJPY.EnsureCurrencyDataFeed(securities,
+                    subscriptions,
+                    MarketMap,
+                    SecurityChanges.None,
+                    dataManager.SecurityService));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("USDJPY", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("GBPUSD", out symbol));
+        }
+
+        [Test]
         public void EnsureCurrencyDataFeedForCryptoCurrency()
         {
             var book = new CashBook
