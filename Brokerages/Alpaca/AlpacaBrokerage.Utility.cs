@@ -30,29 +30,6 @@ namespace QuantConnect.Brokerages.Alpaca
     public partial class AlpacaBrokerage
     {
         /// <summary>
-        /// Gets the list of available tradable instruments/products from Alpaca
-        /// </summary>
-        private List<string> GetInstrumentList()
-        {
-            try
-            {
-                CheckRateLimiting();
-                var task = _restClient.ListAssetsAsync();
-                var response = task.SynchronouslyAwaitTaskResult();
-
-                return response.Select(x => x.Symbol).ToList();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                if (e.InnerException != null)
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                return new List<string>();
-            }
-
-        }
-
-        /// <summary>
         /// Retrieves the current rate for each of a list of instruments
         /// </summary>
         /// <param name="instruments">the list of instruments to check</param>
@@ -77,7 +54,6 @@ namespace QuantConnect.Brokerages.Alpaca
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                 throw;
             }
-
         }
 
         private IOrder GenerateAndPlaceOrder(Order order)
@@ -290,7 +266,6 @@ namespace QuantConnect.Brokerages.Alpaca
                     break;
                 }
             }
-
         }
 
         /// <summary>
@@ -407,7 +382,6 @@ namespace QuantConnect.Brokerages.Alpaca
                     break;
                 }
             }
-
         }
 
         /// <summary>
@@ -477,7 +451,6 @@ namespace QuantConnect.Brokerages.Alpaca
                 asList.Clear();
                 if (isEnd) break;
             }
-
         }
 
         /// <summary>

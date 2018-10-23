@@ -33,7 +33,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// The list of ticks received
         /// </summary>
-        protected readonly List<Tick> Ticks = new List<Tick>();
+        private readonly List<Tick> _ticks = new List<Tick>();
 
         #region IDataQueueHandler implementation
 
@@ -43,10 +43,10 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>IEnumerable list of ticks since the last update.</returns>
         public IEnumerable<BaseData> GetNextTicks()
         {
-            lock (Ticks)
+            lock (_ticks)
             {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
+                var copy = _ticks.ToArray();
+                _ticks.Clear();
                 return copy;
             }
         }
@@ -104,7 +104,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="quote">The data object containing the received tick</param>
         private void OnQuoteReceived(IStreamQuote quote)
         {
-            _lastHeartbeatUtcTime = DateTime.UtcNow;
             var symbol = Symbol.Create(quote.Symbol, SecurityType.Equity, Market.USA);
             var time = quote.Time;
 
@@ -126,9 +125,9 @@ namespace QuantConnect.Brokerages.Alpaca
                 AskSize = quote.AskSize
             };
 
-            lock (Ticks)
+            lock (_ticks)
             {
-                Ticks.Add(tick);
+                _ticks.Add(tick);
             }
         }
 
@@ -138,7 +137,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="trade">The data object containing the received tick</param>
         private void OnTradeReceived(IStreamTrade trade)
         {
-            _lastHeartbeatUtcTime = DateTime.UtcNow;
             var symbol = Symbol.Create(trade.Symbol, SecurityType.Equity, Market.USA);
             var time = trade.Time;
 
@@ -157,9 +155,9 @@ namespace QuantConnect.Brokerages.Alpaca
                 Quantity = trade.Size
             };
 
-            lock (Ticks)
+            lock (_ticks)
             {
-                Ticks.Add(tick);
+                _ticks.Add(tick);
             }
         }
 

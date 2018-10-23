@@ -50,19 +50,9 @@ namespace QuantConnect.Brokerages.Alpaca
         private readonly NatsClient _natsClient;
 
         /// <summary>
-        /// This lock is used to sync 'PlaceOrder' and callback 'OnTransactionDataReceived'
+        /// This lock is used to sync 'PlaceOrder' and callback 'OnTradeUpdate'
         /// </summary>
         private readonly object _locker = new object();
-
-        /// <summary>
-        /// The UTC time of the last received heartbeat message
-        /// </summary>
-        private DateTime _lastHeartbeatUtcTime;
-
-        /// <summary>
-        /// A lock object used to synchronize access to LastHeartbeatUtcTime
-        /// </summary>
-        private readonly object _lockerConnectionMonitor = new object();
 
         /// <summary>
         /// The order provider
@@ -108,14 +98,12 @@ namespace QuantConnect.Brokerages.Alpaca
             _sockClient = new SockClient(accountKeyId, secretKey, baseUrl);
             _sockClient.OnTradeUpdate += OnTradeUpdate;
             _sockClient.OnError += OnSockClientError;
-            _sockClient.ConnectAsync().SynchronouslyAwaitTask();
 
             // polygon client for alpaca
             _natsClient = new NatsClient(accountKeyId, baseUrl.Contains("staging"));
             _natsClient.QuoteReceived += OnQuoteReceived;
             _natsClient.TradeReceived += OnTradeReceived;
             _natsClient.OnError += OnNatsClientError;
-            _natsClient.Open();
         }
 
         #region IBrokerage implementation
@@ -132,82 +120,70 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             if (IsConnected) return;
 
+            _sockClient.ConnectAsync().SynchronouslyAwaitTask();
+            _natsClient.Open();
+
             _isConnected = true;
 
             // create new thread to manage disconnections and reconnections
             _cancellationTokenSource = new CancellationTokenSource();
             _connectionMonitorThread = new Thread(() =>
+            {
+                try
                 {
-                    var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
-                    double nextReconnectionAttemptSeconds = 1;
-
-                    lock (_lockerConnectionMonitor)
+                    while (!_cancellationTokenSource.IsCancellationRequested)
                     {
-                        _lastHeartbeatUtcTime = DateTime.UtcNow;
-                    }
+                        Thread.Sleep(10000);
 
-                    try
-                    {
-                        while (!_cancellationTokenSource.IsCancellationRequested)
+                        var isAlive = true;
+                        try
                         {
-                            TimeSpan elapsed;
-                            lock (_lockerConnectionMonitor)
-                            {
-                                elapsed = DateTime.UtcNow - _lastHeartbeatUtcTime;
-                            }
+                            isAlive = _sockClient.IsAlive;
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
 
-                            if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
-                            {
-                                _connectionLost = true;
-                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                        Log.Trace("IsAlive: " + isAlive);
 
-                                OnMessage(BrokerageMessageEvent.Disconnected("Connection with Alpaca server lost. " +
-                                                                             "This could be because of internet connectivity issues. "));
-                            }
-                            else if (_connectionLost)
+                        if (isAlive && _connectionLost)
+                        {
+                            _connectionLost = false;
+
+                            OnMessage(BrokerageMessageEvent.Reconnected("Connection with Alpaca server restored."));
+                        }
+                        else if (!isAlive)
+                        {
+                            if (_connectionLost)
                             {
                                 try
                                 {
-                                    if (elapsed <= TimeSpan.FromSeconds(20))
-                                    {
-                                        _connectionLost = false;
-                                        nextReconnectionAttemptSeconds = 1;
-
-                                        OnMessage(BrokerageMessageEvent.Reconnected("Connection with Alpaca server restored."));
-                                    }
-                                    else
-                                    {
-                                        if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
-                                        {
-                                            try
-                                            {
-                                                // check if we have a connection
-                                                GetInstrumentList();
-                                            }
-                                            catch (Exception)
-                                            {
-                                                // double the interval between attempts (capped to 1 minute)
-                                                nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
-                                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-                                            }
-                                        }
-                                    }
+                                    _sockClient.ConnectAsync().SynchronouslyAwaitTask();
                                 }
                                 catch (Exception exception)
                                 {
-                                    Log.Error(exception);
+                                    Log.Trace(exception.ToString());
                                 }
                             }
+                            else
+                            {
+                                _connectionLost = true;
 
-                            Thread.Sleep(1000);
+                                OnMessage(
+                                    BrokerageMessageEvent.Disconnected(
+                                        "Connection with Alpaca server lost. " +
+                                        "This could be because of internet connectivity issues. "));
+                            }
                         }
                     }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                    }
-                })
-                { IsBackground = true };
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+            })
+            { IsBackground = true };
             _connectionMonitorThread.Start();
             while (!_connectionMonitorThread.IsAlive)
             {

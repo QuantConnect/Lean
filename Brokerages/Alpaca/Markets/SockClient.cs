@@ -105,6 +105,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public event Action<Exception> OnError;
 
         /// <summary>
+        /// Returns true if the websocket ping-pong handshake was successful
+        /// </summary>
+        public bool IsAlive => _webSocket.IsAlive;
+
+        /// <summary>
         /// Opens connection to Alpaca streaming API.
         /// </summary>
         /// <returns>Waitable task object for handling action completion in asyncronious mode.</returns>
