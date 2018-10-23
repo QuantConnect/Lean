@@ -170,7 +170,8 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Alpaca\AlpacaApiBase.cs" />
+    <Compile Include="Alpaca\AlpacaBrokerage.Utility.cs" />
+    <Compile Include="Alpaca\AlpacaBrokerage.DataQueueHandler.cs" />
     <Compile Include="Alpaca\AlpacaBrokerage.cs" />
     <Compile Include="Alpaca\AlpacaBrokerageFactory.cs" />
     <Compile Include="Alpaca\Markets\Enums\AccountStatus.cs" />
