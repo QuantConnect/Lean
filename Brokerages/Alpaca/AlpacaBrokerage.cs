@@ -145,8 +145,6 @@ namespace QuantConnect.Brokerages.Alpaca
                             // ignored
                         }
 
-                        Log.Trace("IsAlive: " + isAlive);
-
                         if (isAlive && _connectionLost)
                         {
                             _connectionLost = false;
