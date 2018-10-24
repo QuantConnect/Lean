@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the drawdown
-    /// per holding to the specified percentage
+    /// of the portfolio to the specified percentage - it terminates the algorithm if this limt is reached
     /// </summary>
     public class MaximumDrawdownPercentPortfolio : RiskManagementModel
     {
