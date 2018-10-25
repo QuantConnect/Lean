@@ -273,13 +273,20 @@ namespace QuantConnect.Lean.Engine.Results
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
-                var completeResult = new BacktestResult(Algorithm.IsFrameworkAlgorithm, Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), runtimeStatistics, new Dictionary<string, AlgorithmPerformance>());
-                var complete = new BacktestResultPacket(_job, completeResult, progress);
-
                 if (DateTime.UtcNow > _nextS3Update)
                 {
+                    var completeResult = new BacktestResult(
+                        Algorithm.IsFrameworkAlgorithm,
+                        Charts,
+                        _transactionHandler.Orders,
+                        Algorithm.Transactions.TransactionRecord,
+                        new Dictionary<string, string>(),
+                        runtimeStatistics,
+                        new Dictionary<string, AlgorithmPerformance>());
+
+                    StoreResult(new BacktestResultPacket(_job, completeResult, progress));
+
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
-                    StoreResult(complete);
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
