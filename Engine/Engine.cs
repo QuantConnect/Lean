@@ -109,6 +109,7 @@ namespace QuantConnect.Lean.Engine
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
+                var synchronizer = new Synchronizer();
                 try
                 {
                     // Save algorithm to cache, load algorithm instance:
@@ -145,9 +146,23 @@ namespace QuantConnect.Lean.Engine
 
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 
+                    synchronizer.Initialize(
+                        algorithm,
+                        dataManager,
+                        _algorithmHandlers.DataFeed,
+                        _liveMode,
+                        algorithm.Portfolio.CashBook);
+
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
-                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider,
-                                                            _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider, dataManager);
+                    _algorithmHandlers.DataFeed.Initialize(
+                        algorithm,
+                        job,
+                        _algorithmHandlers.Results,
+                        _algorithmHandlers.MapFileProvider,
+                        _algorithmHandlers.FactorFileProvider,
+                        _algorithmHandlers.DataProvider,
+                        dataManager,
+                        (IDataFeedTimeProvider) synchronizer);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
                     algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
@@ -306,7 +321,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, dataManager, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Alphas, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, dataManager, synchronizer, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Alphas, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {

@@ -14,16 +14,19 @@
  *
 */
 
+using System.Collections.Generic;
+using System.Threading;
+
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// IDataManager is the engines view of the Data Manager.
+    /// Interface which provides the data to stream to the algorithm
     /// </summary>
-    public interface IDataManager
+    public interface ISynchronizer
     {
         /// <summary>
-        /// Get the universe selection instance
+        /// Returns an enumerable which provides the data to stream to the algorithm
         /// </summary>
-        UniverseSelection UniverseSelection { get; }
+        IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken);
     }
 }

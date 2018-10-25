@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// <summary>
     /// This type allows tests to easily create an algorith that is mostly initialized in one line
     /// </summary>
-    public class AlgorithmStub : QCAlgorithm
+    internal class AlgorithmStub : QCAlgorithm
     {
         public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
         public DataManager DataManager;

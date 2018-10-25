@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -50,20 +49,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         // used to get current time
         private ITimeProvider _timeProvider;
-        // used to keep time constant during a time sync iteration
-        private ManualTimeProvider _frontierTimeProvider;
+        private ITimeProvider _frontierTimeProvider;
         private IDataProvider _dataProvider;
-        private SingleEntryDataCacheProvider _dataCacheProvider;
-
-        private IResultHandler _resultHandler;
         private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _exchange;
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
-        private DateTime _frontierUtc;
-
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -84,9 +77,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
-                               IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider,
-                               IDataProvider dataProvider, IDataFeedSubscriptionManager subscriptionManager)
+        public void Initialize(IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider,
+            IDataProvider dataProvider,
+            IDataFeedSubscriptionManager subscriptionManager,
+            IDataFeedTimeProvider dataFeedTimeProvider)
         {
             if (!(job is LiveNodePacket))
             {
@@ -97,13 +95,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _algorithm = algorithm;
             _job = (LiveNodePacket) job;
-            _resultHandler = resultHandler;
-            _timeProvider = GetTimeProvider();
+
+            _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataQueueHandler = GetDataQueueHandler();
             _dataProvider = dataProvider;
-            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
 
-            _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
+            _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
             _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
@@ -297,17 +294,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Gets the <see cref="ITimeProvider"/> to use. By default this will load the
-        /// <see cref="RealTimeProvider"/> which use's the system's <see cref="DateTime.UtcNow"/>
-        /// for the current time
-        /// </summary>
-        /// <returns>he loaded <see cref="ITimeProvider"/></returns>
-        protected virtual ITimeProvider GetTimeProvider()
-        {
-            return new RealTimeProvider();
-        }
-
-        /// <summary>
         /// Creates a new subscription for the specified security
         /// </summary>
         /// <param name="request">The subscription request</param>
@@ -495,13 +481,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
                             args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
-                        if (items == null || _frontierUtc == DateTime.MinValue) return;
+                        var currentFrontierUtcTime = _frontierTimeProvider.GetUtcNow();
+                        if (items == null || currentFrontierUtcTime == DateTime.MinValue) return;
 
                         var symbol = items.OfType<Symbol>().FirstOrDefault();
                         if (symbol == null) return;
 
-                        var collection = new BaseDataCollection(_frontierUtc, symbol);
-                        var changes = _universeSelection.ApplyUniverseSelection(userDefined, _frontierUtc, collection);
+                        var collection = new BaseDataCollection(currentFrontierUtcTime, symbol);
+                        var changes = _universeSelection.ApplyUniverseSelection(userDefined, currentFrontierUtcTime, collection);
                         _algorithm.OnSecuritiesChanged(changes);
                     };
                 }
@@ -623,85 +610,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
         }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        public IEnumerator<TimeSlice> GetEnumerator()
-        {
-            var shouldSendExtraEmptyPacket = false;
-            // we want to emit to the bridge minimally once a second since the data feed is
-            // the heartbeat of the application, so this value will contain a second after
-            // the last emit time, and if we pass this time, we'll emit even with no data
-            var nextEmit = DateTime.MinValue;
-            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, _frontierTimeProvider);
-            syncer.SubscriptionFinished += (sender, subscription) =>
-            {
-                RemoveSubscription(subscription.Configuration);
-                Log.Debug($"LiveTradingDataFeed.SubscriptionFinished(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
-            };
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                // perform sleeps to wake up on the second?
-                _frontierUtc = _timeProvider.GetUtcNow();
-                _frontierTimeProvider.SetCurrentTime(_frontierUtc);
-                TimeSlice timeSlice;
-                try
-                {
-                    timeSlice = syncer.Sync(Subscriptions);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                    // notify the algorithm about the error, so it can be reported to the user
-                    _algorithm.RunTimeError = err;
-                    _algorithm.Status = AlgorithmStatus.RuntimeError;
-                    shouldSendExtraEmptyPacket = true;
-                    break;
-                }
-                // check for cancellation
-                if (_cancellationTokenSource.IsCancellationRequested) break;
-                // emit on data or if we've elapsed a full second since last emit or there are security changes
-                if (timeSlice.SecurityChanges != SecurityChanges.None || timeSlice.Data.Count != 0 || _frontierUtc >= nextEmit)
-                {
-                    yield return timeSlice;
-                    // force emitting every second
-                    nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-                }
-                // take a short nap
-                Thread.Sleep(1);
-            }
-            if (shouldSendExtraEmptyPacket)
-            {
-                // send last empty packet list before terminating,
-                // so the algorithm manager has a chance to detect the runtime error
-                // and exit showing the correct error instead of a timeout
-                nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    var timeSlice = TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
-                    yield return timeSlice;
-                }
-            }
-            Log.Trace("LiveTradingDataFeed.GetEnumerator(): Exited thread.");
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through a collection.
-        /// </summary>
-        /// <returns>
-        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
 
         /// <summary>
         /// Overrides methods of the base data exchange implementation

@@ -45,7 +45,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase)
+        public DataManager(
+            IDataFeed dataFeed,
+            UniverseSelection universeSelection,
+            IAlgorithmSettings algorithmSettings,
+            ITimeKeeper timeKeeper,
+            MarketHoursDatabase marketHoursDatabase)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
@@ -258,14 +263,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Get the universe selection instance
         /// </summary>
         public UniverseSelection UniverseSelection { get; }
-
-        /// <summary>
-        /// Returns an enumerable which provides the data to stream to the algorithm
-        /// </summary>
-        public IEnumerable<TimeSlice> StreamData()
-        {
-            return _dataFeed;
-        }
 
         #endregion
     }

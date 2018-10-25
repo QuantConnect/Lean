@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,6 +39,7 @@ using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Tests.Engine.DataFeeds;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
@@ -70,6 +70,7 @@ namespace QuantConnect.Tests.Engine
             var leanManager = new NullLeanManager();
             var alphas = new NullAlphaHandler();
             var token = new CancellationToken();
+            var nullSynchronizer = new NullSynchronizer(algorithm);
 
             algorithm.Initialize();
             algorithm.PostInitialize();
@@ -77,106 +78,43 @@ namespace QuantConnect.Tests.Engine
             results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), feed, new BacktestingSetupHandler(), transactions);
             results.SetAlgorithm(algorithm);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
-            feed.Initialize(algorithm, job, results, null, null, null, dataManager);
+            feed.Initialize(algorithm, job, results, null, null, null, dataManager, null);
 
-            Log.Trace("Starting algorithm manager loop to process " + feed.Count + " time slices");
+            Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");
             var sw = Stopwatch.StartNew();
-            algorithmManager.Run(job, algorithm, dataManager, transactions, results, realtime, leanManager, alphas, token);
+            algorithmManager.Run(job, algorithm, dataManager, nullSynchronizer, transactions, results, realtime, leanManager, alphas, token);
             sw.Stop();
 
-            var thousands = feed.Count / 1000d;
+            var thousands = nullSynchronizer.Count / 1000d;
             var seconds = sw.Elapsed.TotalSeconds;
-            Log.Trace("COUNT: " + feed.Count + "  KPS: " + thousands/seconds);
+            Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);
         }
 
         public class MockDataFeed : IDataFeed
         {
-            private DateTime _frontierUtc;
-            private DateTime _endTimeUtc;
-            private readonly List<BaseData> _data = new List<BaseData>();
-            public readonly List<UpdateData<Security>> securitiesUpdateData = new List<UpdateData<Security>>();
-            private readonly List<UpdateData<SubscriptionDataConfig>> _consolidatorUpdateData = new List<UpdateData<SubscriptionDataConfig>>();
-            private readonly List<TimeSlice> _timeSlices = new List<TimeSlice>();
-
-            public int Count => _timeSlices.Count;
-            public TimeSpan FrontierStepSize = TimeSpan.FromSeconds(1);
-
-            public IEnumerator<TimeSlice> GetEnumerator()
-            {
-                return _timeSlices.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
-            public IEnumerable<TimeSlice> GetTimeSlices()
-            {
-                var bars = new TradeBars();
-                var quotes = new QuoteBars();
-                var ticks = new Ticks();
-                var options = new OptionChains();
-                var futures = new FuturesChains();
-                var splits = new Splits();
-                var dividends = new Dividends();
-                var delistings = new Delistings();
-                var symbolChanges = new SymbolChangedEvents();
-                var dataFeedPackets = new List<DataFeedPacket>();
-                var customData = new List<UpdateData<Security>>();
-                var changes = SecurityChanges.None;
-                do
-                {
-                    var slice = new Slice(default(DateTime), _data, bars, quotes, ticks, options, futures, splits, dividends, delistings, symbolChanges);
-                    var timeSlice = new TimeSlice(_frontierUtc, _data.Count, slice, dataFeedPackets, securitiesUpdateData, _consolidatorUpdateData, customData, changes, new Dictionary<Universe, BaseDataCollection>());
-                    yield return timeSlice;
-                    _frontierUtc += FrontierStepSize;
-                }
-                while (_frontierUtc <= _endTimeUtc);
-            }
-
             public bool IsActive { get; }
             public IEnumerable<Subscription> Subscriptions { get; }
 
-            public void Initialize(IAlgorithm algorithm,
+            public void Initialize(
+                IAlgorithm algorithm,
                 AlgorithmNodePacket job,
                 IResultHandler resultHandler,
                 IMapFileProvider mapFileProvider,
                 IFactorFileProvider factorFileProvider,
                 IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager)
+                IDataFeedSubscriptionManager subscriptionManager,
+                IDataFeedTimeProvider dataFeedTimeProvider
+                )
             {
-                _frontierUtc = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone);
-                _endTimeUtc = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone);
-                foreach (var kvp in algorithm.Securities)
-                {
-                    var security = kvp.Value;
-                    var tick = new Tick
-                    {
-                        Symbol = security.Symbol,
-                        EndTime = _frontierUtc.ConvertFromUtc(security.Exchange.TimeZone)
-                    };
-                    _data.Add(tick);
-                    securitiesUpdateData.Add(new UpdateData<Security>(security, typeof(Tick), new BaseData[]{tick}));
-                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[]{tick}));
-                }
-
-                _timeSlices.AddRange(GetTimeSlices().Take(int.MaxValue/1000));
             }
 
             public bool AddSubscription(SubscriptionRequest request)
             {
-                _data.Add(new Tick
-                {
-                    Symbol = request.Security.Symbol,
-                    EndTime = _frontierUtc.ConvertFromUtc(request.Configuration.ExchangeTimeZone)
-                });
                 return true;
             }
 
             public bool RemoveSubscription(SubscriptionDataConfig configuration)
             {
-                _data.RemoveAll(d => d.Symbol == configuration.Symbol);
                 return true;
             }
 
@@ -470,6 +408,67 @@ namespace QuantConnect.Tests.Engine
             public void AddOpenOrder(Order order, OrderTicket orderTicket)
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        class NullSynchronizer : ISynchronizer
+        {
+            private DateTime _frontierUtc;
+            private readonly DateTime _endTimeUtc;
+            private readonly List<BaseData> _data = new List<BaseData>();
+            private readonly List<UpdateData<SubscriptionDataConfig>> _consolidatorUpdateData = new List<UpdateData<SubscriptionDataConfig>>();
+            private readonly List<TimeSlice> _timeSlices = new List<TimeSlice>();
+            private readonly TimeSpan _frontierStepSize = TimeSpan.FromSeconds(1);
+            private readonly List<UpdateData<Security>> _securitiesUpdateData = new List<UpdateData<Security>>();
+            public int Count => _timeSlices.Count;
+
+            public NullSynchronizer(IAlgorithm algorithm)
+            {
+                _frontierUtc = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone);
+                _endTimeUtc = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone);
+                foreach (var kvp in algorithm.Securities)
+                {
+                    var security = kvp.Value;
+                    var tick = new Tick
+                    {
+                        Symbol = security.Symbol,
+                        EndTime = _frontierUtc.ConvertFromUtc(security.Exchange.TimeZone)
+                    };
+                    _data.Add(tick);
+                    _securitiesUpdateData.Add(new UpdateData<Security>(security, typeof(Tick), new BaseData[] { tick }));
+                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }));
+                }
+
+                _timeSlices.AddRange(GenerateTimeSlices().Take(int.MaxValue / 1000));
+            }
+
+            public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
+            {
+                return _timeSlices;
+            }
+
+            private IEnumerable<TimeSlice> GenerateTimeSlices()
+            {
+                var bars = new TradeBars();
+                var quotes = new QuoteBars();
+                var ticks = new Ticks();
+                var options = new OptionChains();
+                var futures = new FuturesChains();
+                var splits = new Splits();
+                var dividends = new Dividends();
+                var delistings = new Delistings();
+                var symbolChanges = new SymbolChangedEvents();
+                var dataFeedPackets = new List<DataFeedPacket>();
+                var customData = new List<UpdateData<Security>>();
+                var changes = SecurityChanges.None;
+                do
+                {
+                    var slice = new Slice(default(DateTime), _data, bars, quotes, ticks, options, futures, splits, dividends, delistings, symbolChanges);
+                    var timeSlice = new TimeSlice(_frontierUtc, _data.Count, slice, dataFeedPackets, _securitiesUpdateData, _consolidatorUpdateData, customData, changes, new Dictionary<Universe, BaseDataCollection>());
+                    yield return timeSlice;
+                    _frontierUtc += _frontierStepSize;
+                }
+                while (_frontierUtc <= _endTimeUtc);
             }
         }
     }

@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
@@ -52,15 +53,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.TimeKeeper,
                 marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
+            var synchronizer = new Synchronizer();
+            synchronizer.Initialize(algorithm, dataManager, feed, false, algorithm.Portfolio.CashBook);
 
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer);
             algorithm.Initialize();
             algorithm.PostInitialize();
 
+            var cancellationTokenSource = new CancellationTokenSource();
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
             var lastMonth = algorithm.StartDate.Month;
-            foreach (var timeSlice in feed)
+            foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (timeSlice.Time.Month != lastMonth)
                 {
