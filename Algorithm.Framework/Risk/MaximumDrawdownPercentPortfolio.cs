@@ -30,8 +30,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
         private readonly decimal _maximumDrawdownPercent;
         private decimal _startingValue;
         private bool _initialised = false;
-        private string _email;
-        private string _phoneNumber;
 
 
         /// <summary>
@@ -39,15 +37,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="maximumDrawdownPercent">The maximum percentage drawdown allowed for algorithm portfolio
         /// compared with starting value, defaults to 5% drawdown</param>
-        /// <param name="email">Optional - Email address for Algorithm Termination Notifications</param>
-        /// <param name="phoneNumber">Optional - Phone Number for Algorithm Termination SMS Notifications</param>
-        public MaximumDrawdownPercentPortfolio(
-            decimal maximumDrawdownPercent = 0.05m, string email = "", string phoneNumber = ""
-            )
+        public MaximumDrawdownPercentPortfolio(decimal maximumDrawdownPercent = 0.05m)
         {
             _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);
-            _email = email;
-            _phoneNumber = phoneNumber;
         }
 
         /// <summary>
@@ -66,20 +58,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
             var pnl = TotalDrawdownPercent(algorithm.Portfolio);
             if (pnl < _maximumDrawdownPercent)
             {
-                var message = $"Maximum Portfolio Drawdown Reached - Drawdown: {pnl.SmartRounding()}%, Drawdown Limit: {_maximumDrawdownPercent.SmartRounding()}%";
-                algorithm.Log(message);
-
-                var subject = "Terminating Algorithm";
-                algorithm.Error(subject);
-
-                // Inform user
-                if (_email != "") algorithm.Notify.Email(_email, subject, message);
-                if (_phoneNumber != "") algorithm.Notify.Sms(_phoneNumber, subject + ", " + message);
-
-                KillAlgorithm(algorithm);
+                foreach(var target in targets)
+                    yield return new PortfolioTarget(target.Symbol, 0);
             }
-
-            return targets;
         }
 
         private decimal TotalDrawdownPercent(SecurityPortfolioManager portfolio)
@@ -91,18 +72,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
         private decimal TotalDrawdownValue(SecurityPortfolioManager portfolio)
         {
             return portfolio.TotalProfit + portfolio.TotalUnrealisedProfit;
-        }
-
-        private void KillAlgorithm(QCAlgorithmFramework algorithm)
-        {
-            // Liqudate
-            algorithm.Log($"Liquidating All Holdings");
-            algorithm.Liquidate();
-
-            // Stop algorithm
-            algorithm.Quit("Terminated Algorithm due to Drawdown");
-        }
-
-        
+        }      
     }
 }
