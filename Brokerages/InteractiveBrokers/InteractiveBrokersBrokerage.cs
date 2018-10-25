@@ -2749,7 +2749,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // Try to remove options or futures contracts that have expired
             if (securityType == SecurityType.Option || securityType == SecurityType.Future)
             {
-                var removedSymbols = symbols.Where(x => x.ID.Date < DateTime.UtcNow.Date);
+                var removedSymbols = symbols.Where(x => x.ID.Date < GetRealTimeTickTime(x).Date).ToHashSet();
 
                 if (symbols.RemoveAll(x => removedSymbols.Contains(x)) > 0)
                 {
