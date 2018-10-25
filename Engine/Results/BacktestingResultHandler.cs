@@ -347,29 +347,40 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                lock (_chartLock)
+                //1. Make sure this is the right type of packet:
+                if (packet.Type != PacketType.BacktestResult) return;
+
+                //2. Port to packet format:
+                var result = packet as BacktestResultPacket;
+
+                if (result != null)
                 {
-                    //1. Make sure this is the right type of packet:
-                    if (packet.Type != PacketType.BacktestResult) return;
+                    //3. Set Alpha Runtime Statistics
+                    result.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
 
-                    //2. Port to packet format:
-                    var result = packet as BacktestResultPacket;
+                    //4. Get Storage Location:
+                    var key = _job.BacktestId + ".json";
 
-                    if (result != null)
+                    BacktestResult results;
+                    lock (_chartLock)
                     {
-                        //3. Set Alpha Runtime Statistics
-                        result.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
-
-                        //4. Get Storage Location:
-                        var key = _job.BacktestId + ".json";
-
-                        //5. Save results
-                        SaveResults(key, result.Results);
+                        results = new BacktestResult(
+                            result.Results.IsFrameworkAlgorithm,
+                            result.Results.Charts.ToDictionary(x => x.Key, x => x.Value.Clone()),
+                            result.Results.Orders,
+                            result.Results.ProfitLoss,
+                            result.Results.Statistics,
+                            result.Results.RuntimeStatistics,
+                            result.Results.RollingWindow,
+                            result.Results.TotalPerformance);
                     }
-                    else
-                    {
-                        Log.Error("BacktestingResultHandler.StoreResult(): Result Null.");
-                    }
+
+                    //5. Save results
+                    SaveResults(key, results);
+                }
+                else
+                {
+                    Log.Error("BacktestingResultHandler.StoreResult(): Result Null.");
                 }
             }
             catch (Exception err)
