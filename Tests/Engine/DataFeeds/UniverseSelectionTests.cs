@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -73,16 +72,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class TestDataFeed : IDataFeed
         {
-            public IEnumerator<TimeSlice> GetEnumerator()
-            {
-                return null;
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
             public IEnumerable<Subscription> Subscriptions { get; }
             public bool IsActive { get; }
 
@@ -93,7 +82,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 IMapFileProvider mapFileProvider,
                 IFactorFileProvider factorFileProvider,
                 IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager
+                IDataFeedSubscriptionManager subscriptionManager,
+                IDataFeedTimeProvider dataFeedTimeProvider
                 )
             {
             }
