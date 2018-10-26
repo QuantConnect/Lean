@@ -39,7 +39,6 @@ using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
-using QuantConnect.Tests.Engine.DataFeeds;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine

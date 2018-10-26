@@ -24,7 +24,7 @@ namespace QuantConnect.Interfaces
     /// This interface exposes methods for creating a list of <see cref="SubscriptionDataConfig" /> for a given
     /// configuration
     /// </summary>
-    public interface ISubscriptionDataConfigService
+    public interface ISubscriptionDataConfigService : ISubscriptionDataConfigProvider
     {
         /// <summary>
         /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
@@ -75,10 +75,5 @@ namespace QuantConnect.Interfaces
         /// Gets the available data types
         /// </summary>
         Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
-
-        /// <summary>
-        /// Gets a list of all registered <see cref="SubscriptionDataConfig"/> for a given <see cref="Symbol"/>
-        /// </summary>
-        List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol);
     }
 }

@@ -37,6 +37,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -984,9 +985,14 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm)
+        /// <summary>
+        /// Helper method used to process securities volatility history requirements
+        /// </summary>
+        /// <remarks>Implemented as static to facilitate testing</remarks>
+        /// <param name="algorithm">The algorithm instance</param>
+        public static void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm)
         {
-            Log.Trace("AlgorithmManager.ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
+            Log.Trace("ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
             foreach (var kvp in algorithm.Securities)
             {
@@ -994,6 +1000,12 @@ namespace QuantConnect.Lean.Engine
 
                 if (security.VolatilityModel != VolatilityModel.Null)
                 {
+                    // start: this is a work around to maintain retro compatibility
+                    var baseType = security.VolatilityModel as BaseVolatilityModel;
+                    baseType?.SetSubscriptionDataConfigProvider(
+                        algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                    // end
+
                     var historyReq = security.VolatilityModel.GetHistoryRequirements(security, algorithm.UtcTime);
 
                     if (historyReq != null && algorithm.HistoryProvider != null)
