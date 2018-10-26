@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     _lastUpdate = Algorithm.UtcTime.Date;
                     _lastDaysProcessed = _daysProcessed;
-                    _nextUpdate = DateTime.UtcNow.AddSeconds(0.5);
+                    _nextUpdate = DateTime.UtcNow.AddSeconds(2);
                 }
                 catch (Exception err)
                 {
