@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     _lastUpdate = Algorithm.UtcTime.Date;
                     _lastDaysProcessed = _daysProcessed;
-                    _nextUpdate = DateTime.UtcNow.AddSeconds(0.5);
+                    _nextUpdate = DateTime.UtcNow.AddSeconds(2);
                 }
                 catch (Exception err)
                 {
@@ -273,13 +273,20 @@ namespace QuantConnect.Lean.Engine.Results
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
-                var completeResult = new BacktestResult(Algorithm.IsFrameworkAlgorithm, Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), runtimeStatistics, new Dictionary<string, AlgorithmPerformance>());
-                var complete = new BacktestResultPacket(_job, completeResult, progress);
-
                 if (DateTime.UtcNow > _nextS3Update)
                 {
+                    var completeResult = new BacktestResult(
+                        Algorithm.IsFrameworkAlgorithm,
+                        Charts,
+                        _transactionHandler.Orders,
+                        Algorithm.Transactions.TransactionRecord,
+                        new Dictionary<string, string>(),
+                        runtimeStatistics,
+                        new Dictionary<string, AlgorithmPerformance>());
+
+                    StoreResult(new BacktestResultPacket(_job, completeResult, progress));
+
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
-                    StoreResult(complete);
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
@@ -340,29 +347,40 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                lock (_chartLock)
+                //1. Make sure this is the right type of packet:
+                if (packet.Type != PacketType.BacktestResult) return;
+
+                //2. Port to packet format:
+                var result = packet as BacktestResultPacket;
+
+                if (result != null)
                 {
-                    //1. Make sure this is the right type of packet:
-                    if (packet.Type != PacketType.BacktestResult) return;
+                    //3. Set Alpha Runtime Statistics
+                    result.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
 
-                    //2. Port to packet format:
-                    var result = packet as BacktestResultPacket;
+                    //4. Get Storage Location:
+                    var key = _job.BacktestId + ".json";
 
-                    if (result != null)
+                    BacktestResult results;
+                    lock (_chartLock)
                     {
-                        //3. Set Alpha Runtime Statistics
-                        result.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
-
-                        //4. Get Storage Location:
-                        var key = _job.BacktestId + ".json";
-
-                        //5. Save results
-                        SaveResults(key, result.Results);
+                        results = new BacktestResult(
+                            result.Results.IsFrameworkAlgorithm,
+                            result.Results.Charts.ToDictionary(x => x.Key, x => x.Value.Clone()),
+                            result.Results.Orders,
+                            result.Results.ProfitLoss,
+                            result.Results.Statistics,
+                            result.Results.RuntimeStatistics,
+                            result.Results.RollingWindow,
+                            result.Results.TotalPerformance);
                     }
-                    else
-                    {
-                        Log.Error("BacktestingResultHandler.StoreResult(): Result Null.");
-                    }
+
+                    //5. Save results
+                    SaveResults(key, results);
+                }
+                else
+                {
+                    Log.Error("BacktestingResultHandler.StoreResult(): Result Null.");
                 }
             }
             catch (Exception err)
