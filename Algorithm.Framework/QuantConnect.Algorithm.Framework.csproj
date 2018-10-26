@@ -106,9 +106,11 @@
     <Compile Include="QCAlgorithmFramework.Python.cs" />
     <Compile Include="QCAlgorithmFramework.cs" />
     <Compile Include="QCAlgorithmFrameworkBridge.cs" />
+    <Compile Include="Risk\CompositeRiskManagementModel.cs" />
     <Compile Include="Risk\IRiskManagementModel.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\MaximumSectorExposureRiskManagementModel.cs" />
+    <Compile Include="Risk\MaximumUnrealizedProfitPercentPerSecurity.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />

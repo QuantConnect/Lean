@@ -29,14 +29,14 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
     def __init__(self,
                  refreshInterval,
                  futureChainSymbolSelector,
-                 universeSettings = None, 
+                 universeSettings = None,
                  securityInitializer = None):
         '''Creates a new instance of FutureUniverseSelectionModel
         Args:
             refreshInterval: Time interval between universe refreshes</param>
             futureChainSymbolSelector: Selects symbols from the provided future chain
             universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-            securityInitializer: Performs extra initialization (such as setting models) after we create a new security object'''
+            securityInitializer: [Obsolete, will not be used] Performs extra initialization (such as setting models) after we create a new security object'''
         self.nextRefreshTimeUtc = datetime.min
 
         self.refreshInterval = refreshInterval
@@ -105,18 +105,17 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
             algorithm: The algorithm instance to create universes for
             symbol: Symbol of the future
             settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-            initializer: Performs extra initialization (such as setting models) after we create a new security object
+            initializer: [Obsolete, will not be used] Performs extra initialization (such as setting models) after we create a new security object
         Returns
             Future for the given symbol'''
-        market = symbol.ID.Market
+        config = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(ZipEntryName),
+                                                                                 symbol,
+                                                                                 settings.Resolution,
+                                                                                 settings.FillForward,
+                                                                                 settings.ExtendedMarketHours,
+                                                                                 False)
 
-        marketHoursEntry = MarketHoursDatabase.FromDataFolder().GetEntry(market, symbol, SecurityType.Future)
-        symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency)
-
-        return SecurityManager.CreateSecurity(typeof(ZipEntryName), algorithm.Portfolio,
-                algorithm.SubscriptionManager, marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties,
-                initializer, symbol, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours,
-                False, False, algorithm.LiveMode, False, False)
+        return algorithm.Securities.CreateSecurity(symbol, config, settings.Leverage, False)
 
     def Filter(self, filter):
         '''Defines the future chain universe filter'''

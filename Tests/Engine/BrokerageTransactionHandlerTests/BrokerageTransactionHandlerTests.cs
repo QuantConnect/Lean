@@ -30,7 +30,6 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -843,18 +842,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             broker.Verify(m => m.GetCashBalance(), Times.Exactly(0));
         }
 
-        internal class EmptyHistoryProvider : IHistoryProvider
+        internal class EmptyHistoryProvider : HistoryProviderBase
         {
-            public int DataPointCount
-            {
-                get { return 0; }
-            }
+            public override int DataPointCount => 0;
 
-            public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
             {
             }
 
-            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 return Enumerable.Empty<Slice>();
             }

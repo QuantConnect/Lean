@@ -28,13 +28,13 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    ///     DataManager will manage the subscriptions for both the DataFeeds and the SubscriptionManager
+    /// DataManager will manage the subscriptions for both the DataFeeds and the SubscriptionManager
     /// </summary>
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly IDataFeed _dataFeed;
-        private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -43,21 +43,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
 
         /// <summary>
-        ///     Creates a new instance of the DataManager
+        /// Creates a new instance of the DataManager
         /// </summary>
-        public DataManager(IDataFeed dataFeed, UniverseSelection universeSelection, IAlgorithmSettings algorithmSettings, ITimeKeeper timeKeeper)
+        public DataManager(
+            IDataFeed dataFeed,
+            UniverseSelection universeSelection,
+            IAlgorithmSettings algorithmSettings,
+            ITimeKeeper timeKeeper,
+            MarketHoursDatabase marketHoursDatabase)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
             _algorithmSettings = algorithmSettings;
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
+            _marketHoursDatabase = marketHoursDatabase;
         }
 
         #region IDataFeedSubscriptionManager
 
         /// <summary>
-        ///     Gets the data feed subscription collection
+        /// Gets the data feed subscription collection
         /// </summary>
         public SubscriptionCollection DataFeedSubscriptions { get; } = new SubscriptionCollection();
 
@@ -66,18 +72,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IAlgorithmSubscriptionManager
 
         /// <summary>
-        ///     Flags the existence of custom data in the subscriptions
+        /// Flags the existence of custom data in the subscriptions
         /// </summary>
         public bool HasCustomData { get; set; }
 
         /// <summary>
-        ///     Gets all the current data config subscriptions that are being processed for the SubscriptionManager
+        /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions =>
             _subscriptionManagerSubscriptions.Select(x => x.Key);
 
         /// <summary>
-        ///     Gets existing or adds new <see cref="SubscriptionDataConfig" />
+        /// Gets existing or adds new <see cref="SubscriptionDataConfig" />
         /// </summary>
         /// <returns>Returns the SubscriptionDataConfig instance used</returns>
         public SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig newConfig)
@@ -116,7 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        ///     Returns the amount of data config subscriptions processed for the SubscriptionManager
+        /// Returns the amount of data config subscriptions processed for the SubscriptionManager
         /// </summary>
         public int SubscriptionManagerCount()
         {
@@ -126,14 +132,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region ISubscriptionDataConfigService
 
         /// <summary>
-        ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
+        /// The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
         public Dictionary<SecurityType, List<TickType>> AvailableDataTypes { get; }
 
         /// <summary>
-        ///     Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
-        ///     Can optionally pass in desired subscription data types to use.
-        ///     If the config already existed will return existing instance instead
+        /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        /// Can optionally pass in desired subscription data type to use.
+        /// If the config already existed will return existing instance instead
+        /// </summary>
+        public SubscriptionDataConfig Add(
+            Type dataType,
+            Symbol symbol,
+            Resolution resolution,
+            bool fillForward = true,
+            bool extendedMarketHours = false,
+            bool isFilteredSubscription = true,
+            bool isInternalFeed = false,
+            bool isCustomData = false
+            )
+        {
+            return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
+                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))})
+                .First();
+        }
+
+        /// <summary>
+        /// Creates and adds a list of <see cref="SubscriptionDataConfig" /> for a given symbol and configuration.
+        /// Can optionally pass in desired subscription data types to use.
+        ///  If the config already existed will return existing instance instead
         /// </summary>
         public List<SubscriptionDataConfig> Add(
             Symbol symbol,
@@ -175,10 +202,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var result = (from subscriptionDataType in dataTypes
                 let dataType = subscriptionDataType.Item1
                 let tickType = subscriptionDataType.Item2
-                select new SubscriptionDataConfig(dataType, symbol, resolution, marketHoursDbEntry.DataTimeZone,
-                    exchangeHours.TimeZone, fillForward, extendedMarketHours,
-                    isInternalFeed, isCustomData,
-                    isFilteredSubscription: isFilteredSubscription, tickType: tickType,
+                select new SubscriptionDataConfig(
+                    dataType,
+                    symbol,
+                    resolution,
+                    marketHoursDbEntry.DataTimeZone,
+                    exchangeHours.TimeZone,
+                    fillForward,
+                    extendedMarketHours,
+                    isInternalFeed,
+                    isCustomData,
+                    isFilteredSubscription: isFilteredSubscription,
+                    tickType: tickType,
                     dataNormalizationMode: dataNormalizationMode)).ToList();
 
             for (int i = 0; i < result.Count; i++)
@@ -189,7 +224,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        ///     Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
+        /// Get the data feed types for a given <see cref="SecurityType" /> <see cref="Resolution" />
         /// </summary>
         /// <param name="symbolSecurityType">The <see cref="SecurityType" /> used to determine the types</param>
         /// <param name="resolution">The resolution of the data requested</param>
@@ -210,6 +245,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
+        /// <summary>
+        /// Gets a list of all registered <see cref="SubscriptionDataConfig"/> for a given <see cref="Symbol"/>
+        /// </summary>
+        public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol)
+        {
+            return SubscriptionManagerSubscriptions.Where(x => x.Symbol == symbol).ToList();
+        }
+
         #endregion
 
         #endregion
@@ -217,17 +260,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IDataManager
 
         /// <summary>
-        ///     Get the universe selection instance
+        /// Get the universe selection instance
         /// </summary>
         public UniverseSelection UniverseSelection { get; }
-
-        /// <summary>
-        ///     Returns an enumerable which provides the data to stream to the algorithm
-        /// </summary>
-        public IEnumerable<TimeSlice> StreamData()
-        {
-            return _dataFeed;
-        }
 
         #endregion
     }

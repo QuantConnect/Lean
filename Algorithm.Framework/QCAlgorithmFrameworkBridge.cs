@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.Framework
             // set universe model if still null, needed to wait for AddSecurity calls
             if (UniverseSelection == null)
             {
-                SetUniverseSelection(new ManualUniverseSelectionModel(Securities.Keys));
+                SetUniverseSelection(new ManualUniverseSelectionModel());
             }
 
             base.PostInitialize();

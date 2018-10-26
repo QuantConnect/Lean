@@ -2718,34 +2718,47 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for " + contract.Symbol + " ...");
 
+            var symbols = new List<Symbol>();
+
             if (securityType == SecurityType.Option)
             {
                 // IB requests for full option chains are rate limited and responses can be delayed up to a minute for each underlying,
                 // so we fetch them from the OCC website instead of using the IB API.
-
                 var underlyingSymbol = Symbol.Create(contract.Symbol, SecurityType.Equity, Market.USA);
-                var symbols = _algorithm.OptionChainProvider.GetOptionContractList(underlyingSymbol, DateTime.Today).ToList();
+                symbols.AddRange(_algorithm.OptionChainProvider.GetOptionContractList(underlyingSymbol, DateTime.Today));
+            }
+            else
+            {
+                // processing request
+                var results = FindContracts(contract);
 
-                Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} contracts for {1}", symbols.Count, contract.Symbol);
+                // filtering results
+                var filteredResults =
+                    results
+                        .Select(x => x.Summary)
+                        .GroupBy(x => x.Exchange)
+                        .OrderByDescending(g => exchangeFilter(g.Key))
+                        .FirstOrDefault();
 
-                return symbols;
+                if (filteredResults != null)
+                {
+                    symbols.AddRange(filteredResults.Select(MapSymbol));
+                }
             }
 
-            // processing request
-            var results = FindContracts(contract);
+            // Try to remove options or futures contracts that have expired
+            if (securityType == SecurityType.Option || securityType == SecurityType.Future)
+            {
+                var removedSymbols = symbols.Where(x => x.ID.Date < GetRealTimeTickTime(x).Date).ToHashSet();
 
-            // filtering results
-            var filteredResults =
-                    results
-                    .Select(x => x.Summary)
-                    .GroupBy(x => x.Exchange)
-                    .OrderByDescending(g => exchangeFilter(g.Key))
-                    .FirstOrDefault();
+                if (symbols.RemoveAll(x => removedSymbols.Contains(x)) > 0)
+                {
+                    Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Removed contract(s) for having expiry in the past: {0}", string.Join(",", removedSymbols.Select(x => x.Value)));
+                }
+            }
+            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} contract(s) for {1}", symbols.Count, contract.Symbol);
 
-            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} symbol(s)", filteredResults != null ? filteredResults.Count() : 0);
-
-            // returning results
-            return filteredResults != null ? filteredResults.Select(MapSymbol) : Enumerable.Empty<Symbol>();
+            return symbols;
         }
 
         /// <summary>

@@ -27,8 +27,6 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -222,19 +220,19 @@ namespace QuantConnect.Tests.Algorithm
                     select sub).FirstOrDefault();
         }
 
-        private class TestHistoryProvider : IHistoryProvider
+        private class TestHistoryProvider : HistoryProviderBase
         {
             public string underlyingSymbol = "GOOG";
             public string underlyingSymbol2 = "AAPL";
-            public int DataPointCount { get; }
+            public override int DataPointCount { get; }
             public Resolution LastResolutionRequest;
-            public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider,
-                IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 var now = DateTime.UtcNow;
                 LastResolutionRequest = requests.First().Resolution;

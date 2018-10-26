@@ -39,7 +39,17 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class using the algorithm's
         /// security initializer and universe settings
         /// </summary>
-        /// <param name="symbols">The symbols to subscribe to</param>
+        public ManualUniverseSelectionModel()
+            : this(Enumerable.Empty<Symbol>())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class using the algorithm's
+        /// security initializer and universe settings
+        /// </summary>
+        /// <param name="symbols">The symbols to subscribe to.
+        /// Should not send in symbols at <see cref="QCAlgorithm.Securities"/> since those will be managed by the <see cref="UserDefinedUniverse"/></param>
         public ManualUniverseSelectionModel(IEnumerable<Symbol> symbols)
             : this(symbols.ToArray())
         {
@@ -49,7 +59,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class using the algorithm's
         /// security initializer and universe settings
         /// </summary>
-        /// <param name="symbols">The symbols to subscribe to</param>
+        /// <param name="symbols">The symbols to subscribe to
+        /// Should not send in symbols at <see cref="QCAlgorithm.Securities"/> since those will be managed by the <see cref="UserDefinedUniverse"/></param>
         public ManualUniverseSelectionModel(params Symbol[] symbols)
             : this (symbols?.AsEnumerable(), null, null)
         {
@@ -58,7 +69,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Initializes a new instance of the <see cref="ManualUniverseSelectionModel"/> class
         /// </summary>
-        /// <param name="symbols">The symbols to subscribe to</param>
+        /// <param name="symbols">The symbols to subscribe to
+        /// Should not send in symbols at <see cref="QCAlgorithm.Securities"/> since those will be managed by the <see cref="UserDefinedUniverse"/></param>
         /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings</param>
         /// <param name="securityInitializer">Optional security initializer invoked when creating new securities, specify null to use algorithm.SecurityInitializer</param>
         public ManualUniverseSelectionModel(IEnumerable<Symbol> symbols, UniverseSettings universeSettings, ISecurityInitializer securityInitializer)

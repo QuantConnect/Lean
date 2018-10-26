@@ -161,9 +161,11 @@
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\IdentityCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
+    <Compile Include="Common\Securities\SecurityServiceTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
+    <Compile Include="Engine\DataFeeds\UniverseSelectionTests.cs" />
     <Compile Include="PythonSetup.cs" />
     <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />
     <Compile Include="Algorithm\Framework\Risk\MaximumDrawdownPercentPerSecurityTests.cs" />

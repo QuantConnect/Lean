@@ -17,9 +17,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
@@ -31,7 +29,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// <summary>
     /// Implements a History provider that always return a IEnumerable of Slice with prices following a sine function
     /// </summary>
-    public class SineHistoryProvider : IHistoryProvider
+    public class SineHistoryProvider : HistoryProviderBase
     {
         private readonly CashBook _cashBook = new CashBook();
         private readonly SecurityChanges _securityChanges = SecurityChanges.None;
@@ -40,7 +38,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public int DataPointCount => 0;
+        public override int DataPointCount => 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SineHistoryProvider"/> class
@@ -54,13 +52,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
         }
 
@@ -70,7 +63,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             var configsByDateTime = GetSubscriptionDataConfigByDateTime(requests);
             var count = configsByDateTime.Count;

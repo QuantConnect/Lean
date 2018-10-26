@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -32,7 +33,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
         private readonly TimeSpan _refreshInterval;
         private readonly UniverseSettings _universeSettings;
-        private readonly ISecurityInitializer _securityInitializer;
         private readonly Func<DateTime, IEnumerable<Symbol>> _futureChainSymbolSelector;
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         public FutureUniverseSelectionModel(TimeSpan refreshInterval, Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector)
-            : this(refreshInterval, futureChainSymbolSelector, null, null)
+            : this(refreshInterval, futureChainSymbolSelector, null)
         {
         }
 
@@ -57,17 +57,34 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         /// <param name="securityInitializer">Performs extra initialization (such as setting models) after we create a new security object</param>
-        public FutureUniverseSelectionModel(TimeSpan refreshInterval,
+        [Obsolete("This constructor is obsolete because SecurityInitializer is obsolete and will not be used.")]
+        public FutureUniverseSelectionModel(
+            TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
             UniverseSettings universeSettings,
             ISecurityInitializer securityInitializer
-        )
+            )
+            : this(refreshInterval, futureChainSymbolSelector, universeSettings)
+        {
+
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
+        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        public FutureUniverseSelectionModel(
+            TimeSpan refreshInterval,
+            Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
+            UniverseSettings universeSettings
+            )
         {
             _nextRefreshTimeUtc = DateTime.MinValue;
 
             _refreshInterval = refreshInterval;
             _universeSettings = universeSettings;
-            _securityInitializer = securityInitializer;
             _futureChainSymbolSelector = futureChainSymbolSelector;
         }
 
@@ -104,20 +121,38 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         /// <param name="initializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         /// <returns><see cref="Future"/> for the given symbol</returns>
+        [Obsolete("This method is obsolete because SecurityInitializer is obsolete and will not be used.")]
         protected virtual Future CreateFutureChainSecurity(QCAlgorithmFramework algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
         {
-            var market = symbol.ID.Market;
+            return CreateFutureChainSecurity(
+                algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                symbol,
+                settings,
+                algorithm.Securities);
+        }
 
-            var marketHoursEntry = MarketHoursDatabase.FromDataFolder()
-                .GetEntry(market, symbol, SecurityType.Future);
-
-            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
-
-            return (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), algorithm.Portfolio,
-                algorithm.SubscriptionManager, marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties,
-                initializer, symbol, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours,
-                false, false, algorithm.LiveMode, false, false);
+        /// <summary>
+        /// Creates the canonical <see cref="Future"/> chain security for a given symbol
+        /// </summary>
+        /// <param name="subscriptionDataConfigService">The service used to create new <see cref="SubscriptionDataConfig"/></param>
+        /// <param name="symbol">Symbol of the future</param>
+        /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        /// <param name="securityManager">Used to create new <see cref="Security"/></param>
+        /// <returns><see cref="Future"/> for the given symbol</returns>
+        protected virtual Future CreateFutureChainSecurity(
+            ISubscriptionDataConfigService subscriptionDataConfigService,
+            Symbol symbol,
+            UniverseSettings settings,
+            SecurityManager securityManager)
+        {
+            var config = subscriptionDataConfigService.Add(
+                typeof(ZipEntryName),
+                symbol,
+                settings.Resolution,
+                settings.FillForward,
+                settings.ExtendedMarketHours,
+                isFilteredSubscription: false);
+            return (Future)securityManager.CreateSecurity(symbol, config, settings.Leverage, false);
         }
 
         /// <summary>
@@ -151,14 +186,17 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
             // resolve defaults if not specified
             var settings = _universeSettings ?? algorithm.UniverseSettings;
-            var initializer = _securityInitializer ?? algorithm.SecurityInitializer;
 
             // create canonical security object, but don't duplicate if it already exists
             Security security;
             Future futureChain;
             if (!algorithm.Securities.TryGetValue(symbol, out security))
             {
-                futureChain = CreateFutureChainSecurity(algorithm, symbol, settings, initializer);
+                futureChain = CreateFutureChainSecurity(
+                    algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                    symbol,
+                    settings,
+                    algorithm.Securities);
             }
             else
             {
@@ -171,7 +209,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             // force future chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
             futureChain.IsTradable = false;
 
-            return new FuturesChainUniverse(futureChain, settings, algorithm.SubscriptionManager, initializer);
+            return new FuturesChainUniverse(futureChain, settings);
         }
     }
 }

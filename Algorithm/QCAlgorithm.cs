@@ -67,7 +67,6 @@ namespace QuantConnect.Algorithm
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
         private string _previousErrorMessage = "";
-        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         /// <summary>
         /// Gets the market hours database in use by this algorithm
@@ -135,9 +134,6 @@ namespace QuantConnect.Algorithm
 
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-
-            // get symbol properties loaded from the symbol-properties-database.csv in /Data/symbol-properties
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
             // universe selection
             UniverseManager = new UniverseManager();
@@ -1342,7 +1338,7 @@ namespace QuantConnect.Algorithm
                 _liveMode = live;
                 Notify = new NotificationManager(live);
                 TradeBuilder.SetLiveMode(live);
-
+                Securities.SetLiveMode(live);
                 if (live)
                 {
                     _startDate = DateTime.Today;
@@ -1427,10 +1423,10 @@ namespace QuantConnect.Algorithm
                     symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
 
-                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                    symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
+                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbolObject, resolution, fillDataForward, extendedMarketHours);
+                var security = Securities.CreateSecurity(symbolObject, configs, leverage);
 
-                AddToUserDefinedUniverse(security, resolution, leverage, market, fillDataForward, extendedMarketHours, isInternalFeed: false);
+                AddToUserDefinedUniverse(security, configs);
                 return security;
             }
             catch (Exception err)
@@ -1481,11 +1477,13 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Option, market, alias);
             }
 
-            var marketHoursEntry = MarketHoursDatabase.GetEntry(market, underlying, SecurityType.Option);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency);
-            var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
-                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
-                fillDataForward, leverage, false, false, false, LiveMode, true, false);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(typeof(ZipEntryName),
+                canonicalSymbol,
+                resolution,
+                fillDataForward,
+                isFilteredSubscription: false);
+            var canonicalSecurity = (Option)Securities.CreateSecurity(canonicalSymbol, configs, leverage);
+
             canonicalSecurity.IsTradable = false;
             Securities.Add(canonicalSecurity);
 
@@ -1527,11 +1525,11 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
             }
 
-            var marketHoursEntry = MarketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
-            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
-                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
-                fillDataForward, leverage, false, false, false, LiveMode, true, false);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(canonicalSymbol,
+                resolution,
+                fillDataForward,
+                isFilteredSubscription: false);
+            var canonicalSecurity = (Future)Securities.CreateSecurity(canonicalSymbol, configs, leverage);
             canonicalSecurity.IsTradable = false;
             Securities.Add(canonicalSecurity);
 
@@ -1557,10 +1555,10 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Future"/> security</returns>
         public Future AddFutureContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
         {
-            var future = (Future)SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                symbol, resolution, fillDataForward, leverage, false, false, false, LiveMode);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward);
+            var future = (Future)Securities.CreateSecurity(symbol, configs, leverage);
 
-            AddToUserDefinedUniverse(future, resolution, leverage, symbol.ID.Market, fillDataForward, isExtendedMarketHours: false, isInternalFeed: false);
+            AddToUserDefinedUniverse(future, configs);
             return future;
         }
 
@@ -1574,8 +1572,8 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Option"/> security</returns>
         public Option AddOptionContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
         {
-            var option = (Option)SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                symbol, resolution, fillDataForward, leverage, false, false, false, LiveMode);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward);
+            var option = (Option)Securities.CreateSecurity(symbol, configs, leverage);
 
             // add underlying if not present
             var underlying = option.Symbol.Underlying;
@@ -1595,7 +1593,7 @@ namespace QuantConnect.Algorithm
 
             option.Underlying = equity;
 
-            AddToUserDefinedUniverse(option, resolution, leverage, symbol.ID.Market, fillDataForward, isExtendedMarketHours: false, isInternalFeed: false);
+            AddToUserDefinedUniverse(option, configs);
 
             return option;
         }
@@ -1769,17 +1767,21 @@ namespace QuantConnect.Algorithm
             where T : IBaseData, new()
         {
             //Add this custom symbol to our market hours database
-            var marketHoursDbEntry = MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
+            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security:
-            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
-                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
+            var config = SubscriptionManager.SubscriptionDataConfigService.Add(typeof(T),
+                symbolObject,
+                resolution,
+                fillDataForward,
+                extendedMarketHours: true,
+                isCustomData: true);
+            var security = Securities.CreateSecurity(symbolObject, config, leverage);
 
-            AddToUserDefinedUniverse(security, resolution, leverage, symbolObject.ID.Market, fillDataForward, isExtendedMarketHours: true, isInternalFeed: false);
+            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
             return security;
         }
 
@@ -1990,10 +1992,10 @@ namespace QuantConnect.Algorithm
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
 
-            var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours);
+            var security = Securities.CreateSecurity(symbol, configs, leverage);
 
-            AddToUserDefinedUniverse(security, resolution, leverage, market, fillDataForward, extendedMarketHours, isInternalFeed: false);
+            AddToUserDefinedUniverse(security, configs);
             return (T)security;
         }
 
@@ -2021,12 +2023,10 @@ namespace QuantConnect.Algorithm
                 resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
             }
 
-            var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, MarketHoursDatabase, _symbolPropertiesDatabase,
-                                                          SecurityInitializer, _benchmarkSymbol, resolution, fillDataForward: true,
-                                                          leverage: 1m, extendedMarketHours: false, isInternalFeed: true,
-                                                          isCustomData: false, isLiveMode: LiveMode);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(_benchmarkSymbol, resolution, isInternalFeed:true);
+            var security = Securities.CreateSecurity(_benchmarkSymbol, configs, 1m);
 
-            AddToUserDefinedUniverse(security, resolution, 1m, security.Symbol.ID.Market, isFillDataForward: true, isExtendedMarketHours: false, isInternalFeed: true);
+            AddToUserDefinedUniverse(security, configs);
 
             return security;
         }

@@ -154,11 +154,14 @@
     <Compile Include="DataFeeds\Enumerators\LiveBaseDataSynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
+    <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
     <Compile Include="DataFeeds\IDataManager.cs" />
     <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
+    <Compile Include="DataFeeds\ISynchronizer.cs" />
     <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
     <Compile Include="DataFeeds\NullDataFeed.cs" />
+    <Compile Include="DataFeeds\SubscriptionDataReaderEvents.cs" />
     <Compile Include="DataFeeds\SubscriptionFrontierTimeProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
@@ -195,6 +198,7 @@
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
     <Compile Include="DataFeeds\SubscriptionData.cs" />
+    <Compile Include="DataFeeds\Synchronizer.cs" />
     <Compile Include="DataFeeds\TextSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />

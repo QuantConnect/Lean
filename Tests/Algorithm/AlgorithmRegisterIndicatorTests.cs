@@ -158,12 +158,21 @@ AddReference('QuantConnect.Lean.Engine')
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Securities import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Lean.Engine.DataFeeds import *
 
 algo = QCAlgorithm()
-algo.SubscriptionManager.SetDataManager(DataManager(None, UniverseSelection(None, algo), algo.Settings, algo.TimeKeeper))
+
+marketHoursDatabase = MarketHoursDatabase.FromDataFolder()
+symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder()
+securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo)
+algo.Securities.SetSecurityService(securityService)
+dataManager = DataManager(None, UniverseSelection(None, algo, securityService), algo.Settings, algo.TimeKeeper, marketHoursDatabase)
+algo.SubscriptionManager.SetDataManager(dataManager)
+
+
 forex = algo.AddForex('EURUSD', Resolution.Daily)
 indicator = IchimokuKinkoHyo('EURUSD', 9, 26, 26, 52, 26, 26)
 algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";

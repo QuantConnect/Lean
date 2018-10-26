@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("AIG");
 
             // define a manual universe of all the securities we manually registered
-            SetUniverseSelection(new ManualUniverseSelectionModel(Securities.Keys));
+            SetUniverseSelection(new ManualUniverseSelectionModel());
 
             // define alpha model as a composite of the rsi and ema cross models
             SetAlpha(new CompositeAlphaModel(

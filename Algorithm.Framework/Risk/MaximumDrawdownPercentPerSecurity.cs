@@ -31,7 +31,8 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <summary>
         /// Initializes a new instance of the <see cref="MaximumDrawdownPercentPerSecurity"/> class
         /// </summary>
-        /// <param name="maximumDrawdownPercent">The maximum percentage drawdown allowed for any single security holding, defaults to 5% drawdown per security</param>
+        /// <param name="maximumDrawdownPercent">The maximum percentage drawdown allowed for any single security holding,
+        /// defaults to 5% drawdown per security</param>
         public MaximumDrawdownPercentPerSecurity(
             decimal maximumDrawdownPercent = 0.05m
             )

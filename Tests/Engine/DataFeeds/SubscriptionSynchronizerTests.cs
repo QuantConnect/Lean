@@ -49,7 +49,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
         {
             var feed = new AlgorithmManagerTests.MockDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm), algorithm.Settings, algorithm.TimeKeeper);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(
+                algorithm.Portfolio.CashBook,
+                marketHoursDatabase,
+                symbolPropertiesDataBase,
+                algorithm);
+            algorithm.Securities.SetSecurityService(securityService);
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed, algorithm, securityService),
+                algorithm.Settings,
+                algorithm.TimeKeeper,
+                marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             algorithm.Initialize();
@@ -65,10 +77,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endTimeUtc = algorithm.EndDate.ConvertToUtc(TimeZones.NewYork);
             var startTimeUtc = algorithm.StartDate.ConvertToUtc(TimeZones.NewYork);
             var subscriptionBasedTimeProvider = new SubscriptionFrontierTimeProvider(startTimeUtc, dataManager);
-            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection, algorithm.TimeZone,
-                                                            algorithm.Portfolio.CashBook,
-                                                            subscriptionBasedTimeProvider);
-
+            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection, algorithm.Portfolio.CashBook);
+            synchronizer.SetTimeProvider(subscriptionBasedTimeProvider);
+            synchronizer.SetSliceTimeZone(algorithm.TimeZone);
             var totalDataPoints = 0;
             var subscriptions = dataManager.DataFeedSubscriptions;
             foreach (var kvp in algorithm.Securities)

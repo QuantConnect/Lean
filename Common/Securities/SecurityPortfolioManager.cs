@@ -429,8 +429,9 @@ namespace QuantConnect.Securities
                 foreach (var kvp in Securities)
                 {
                     var security = kvp.Value;
-
-                    sum += security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
+                    var context = new ReservedBuyingPowerForPositionContext(security);
+                    var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
+                    sum += reservedBuyingPower.Value;
                 }
                 return sum;
             }
@@ -510,7 +511,8 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            return security.BuyingPowerModel.GetBuyingPower(this, security, direction);
+            var context = new BuyingPowerContext(this, security, direction);
+            return security.BuyingPowerModel.GetBuyingPower(context).Value;
         }
 
         /// <summary>
@@ -720,12 +722,17 @@ namespace QuantConnect.Securities
                 var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
                 var security = Securities[orderSubmitRequest.Symbol];
 
-                var marginUsed = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(security);
-                var marginRemaining = security.BuyingPowerModel.GetBuyingPower(this, security, direction);
+                var marginUsed = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                    new ReservedBuyingPowerForPositionContext(security)
+                );
+
+                var marginRemaining = security.BuyingPowerModel.GetBuyingPower(
+                    new BuyingPowerContext(this, security, direction)
+                );
 
                 Log.Trace("Order request margin information: " +
-                          $"MarginUsed: {marginUsed.ToString("F2", CultureInfo.InvariantCulture)}, " +
-                          $"MarginRemaining: {marginRemaining.ToString("F2", CultureInfo.InvariantCulture)}");
+                          $"MarginUsed: {marginUsed.Value.ToString("F2", CultureInfo.InvariantCulture)}, " +
+                          $"MarginRemaining: {marginRemaining.Value.ToString("F2", CultureInfo.InvariantCulture)}");
             }
         }
 

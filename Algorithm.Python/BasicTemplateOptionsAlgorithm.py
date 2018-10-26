@@ -48,21 +48,21 @@ class BasicTemplateOptionsAlgorithm(QCAlgorithm):
     def OnData(self,slice):
         if self.Portfolio.Invested: return
 
-        for kvp in slice.OptionChains:
-            if kvp.Key != self.option_symbol: continue
-            chain = kvp.Value
+        chain = slice.OptionChains.GetValue(self.option_symbol)
+        if chain is None:
+            return
 
-            # we sort the contracts to find at the money (ATM) contract with farthest expiration
-            contracts = sorted(sorted(sorted(chain, \
-                key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
-                key = lambda x: x.Expiry, reverse=True), \
-                key = lambda x: x.Right, reverse=True)
+        # we sort the contracts to find at the money (ATM) contract with farthest expiration
+        contracts = sorted(sorted(sorted(chain, \
+            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
+            key = lambda x: x.Expiry, reverse=True), \
+            key = lambda x: x.Right, reverse=True)
 
-            # if found, trade it
-            if len(contracts) == 0: continue
-            symbol = contracts[0].Symbol
-            self.MarketOrder(symbol, 1)
-            self.MarketOnCloseOrder(symbol, -1)
+        # if found, trade it
+        if len(contracts) == 0: return
+        symbol = contracts[0].Symbol
+        self.MarketOrder(symbol, 1)
+        self.MarketOnCloseOrder(symbol, -1)
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

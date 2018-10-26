@@ -17,18 +17,22 @@ using System;
 using QuantConnect.Algorithm;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
     internal class DataManagerStub : DataManager
     {
+        public ISecurityService SecurityService { get; }
+        public IAlgorithm Algorithm { get; }
+
         public DataManagerStub()
             : this(new QCAlgorithm())
         {
 
         }
 
-        public DataManagerStub(TimeKeeper timeKeeper)
+        public DataManagerStub(ITimeKeeper timeKeeper)
             : this(new QCAlgorithm(), timeKeeper)
         {
 
@@ -40,16 +44,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         }
 
-        public DataManagerStub(IAlgorithm algorithm, TimeKeeper timeKeeper)
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm)
+            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+        {
+
+        }
+
+        public DataManagerStub(IAlgorithm algorithm, ITimeKeeper timeKeeper)
             : this(new NullDataFeed(), algorithm, timeKeeper)
         {
 
         }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, TimeKeeper timeKeeper)
-            : base(dataFeed, new UniverseSelection(dataFeed, algorithm), algorithm.Settings, timeKeeper)
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper)
+            : this(dataFeed, algorithm, timeKeeper, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder())
         {
 
+        }
+
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+            : this(dataFeed, algorithm, timeKeeper, marketHoursDatabase, symbolPropertiesDatabase,
+                new SecurityService(algorithm.Portfolio.CashBook,
+                    marketHoursDatabase,
+                    symbolPropertiesDatabase,
+                    algorithm))
+        {
+        }
+
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, SecurityService securityService)
+            : base(dataFeed,
+                new UniverseSelection(dataFeed, algorithm, securityService),
+                algorithm.Settings,
+                timeKeeper,
+                marketHoursDatabase)
+        {
+            SecurityService = securityService;
+            algorithm.Securities.SetSecurityService(securityService);
+            Algorithm = algorithm;
         }
     }
 }

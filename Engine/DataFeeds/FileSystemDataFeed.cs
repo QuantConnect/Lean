@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -49,8 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
-        private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionfactory;
-        private IDataFeedSubscriptionManager _subscriptionManager;
+        private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionFactory;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -68,20 +66,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
-                               IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider,
-                               IDataProvider dataProvider, IDataFeedSubscriptionManager subscriptionManager)
+        public void Initialize(IAlgorithm algorithm,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider,
+            IDataProvider dataProvider,
+            IDataFeedSubscriptionManager subscriptionManager,
+            IDataFeedTimeProvider dataFeedTimeProvider)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataProvider = dataProvider;
-            _subscriptionManager = subscriptionManager;
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
             _universeSelection = subscriptionManager.UniverseSelection;
             _cancellationTokenSource = new CancellationTokenSource();
-            _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
+            _subscriptionFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
@@ -390,7 +392,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            return _subscriptionfactory;
+            return _subscriptionFactory;
         }
 
         /// <summary>
@@ -422,77 +424,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
-                _subscriptionfactory?.DisposeSafely();
+                _subscriptionFactory?.DisposeSafely();
                 Log.Trace("FileSystemDataFeed.Exit(): Exit Finished.");
             }
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        public IEnumerator<TimeSlice> GetEnumerator()
-        {
-            // compute initial frontier time
-            var frontierUtc = GetInitialFrontierTime();
-            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontierUtc));
-
-            var subscriptionFrontierTimeProvider = new SubscriptionFrontierTimeProvider(frontierUtc, _subscriptionManager);
-            var syncer = new SubscriptionSynchronizer(_universeSelection, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, subscriptionFrontierTimeProvider);
-            syncer.SubscriptionFinished += (sender, subscription) =>
-            {
-                RemoveSubscription(subscription.Configuration);
-                Log.Debug($"FileSystemDataFeed.SubscriptionFinished(): Finished subscription: {subscription.Configuration} at {_algorithm.UtcTime} UTC");
-            };
-
-            var previousDateTime = DateTime.MaxValue;
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                TimeSlice timeSlice;
-
-                try
-                {
-                    timeSlice = syncer.Sync(Subscriptions);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-
-                    // notify the algorithm about the error, so it can be reported to the user
-                    _algorithm.RunTimeError = err;
-                    _algorithm.Status = AlgorithmStatus.RuntimeError;
-
-                    break;
-                }
-
-                // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
-                if (timeSlice.Time != previousDateTime)
-                {
-                    previousDateTime = timeSlice.Time;
-                    yield return timeSlice;
-                }
-                else if (timeSlice.SecurityChanges == SecurityChanges.None)
-                {
-                    // there's no more data to pull off, we're done (frontier is max value and no security changes)
-                    break;
-                }
-            }
-            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Data Feed Completed at {0} UTC", _algorithm.UtcTime));
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through a collection.
-        /// </summary>
-        /// <returns>
-        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         /// <summary>

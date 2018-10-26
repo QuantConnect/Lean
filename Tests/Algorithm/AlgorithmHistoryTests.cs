@@ -20,8 +20,6 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
 using QuantConnect.Tests.Engine.DataFeeds;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -106,24 +104,17 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(TickType.Trade, _testHistoryProvider.HistryRequests.First().TickType);
         }
 
-        private class TestHistoryProvider : IHistoryProvider
+        private class TestHistoryProvider : HistoryProviderBase
         {
-            public int DataPointCount { get; }
+            public override int DataPointCount { get; }
             public List<HistoryRequest> HistryRequests { get; } = new List<HistoryRequest>();
 
-            public void Initialize(
-                AlgorithmNodePacket job,
-                IDataProvider dataProvider,
-                IDataCacheProvider dataCacheProvider,
-                IMapFileProvider mapFileProvider,
-                IFactorFileProvider factorFileProvider,
-                Action<int> statusUpdate
-                )
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 foreach (var request in requests)
                 {

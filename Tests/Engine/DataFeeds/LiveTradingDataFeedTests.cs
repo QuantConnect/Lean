@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -41,6 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static bool LogsEnabled = false; // this is for travis log no to fill up and reach the max size.
         private ManualTimeProvider _manualTimeProvider;
         private AlgorithmStub _algorithm;
+        private Synchronizer _synchronizer;
         private readonly DateTime _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
 
         [SetUp]
@@ -495,7 +495,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeZone = _algorithm.Securities[symbol].Exchange.TimeZone;
             RestApiBaseData last = null;
 
-            foreach (var ts in feed)
+            var cancellationTokenSource = new CancellationTokenSource();
+            foreach (var ts in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (!ts.Slice.ContainsKey(symbol)) return;
 
@@ -591,15 +592,35 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new BacktestingResultHandler();
 
             var feed = new TestableLiveTradingDataFeed();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, algorithm),
-                algorithm.Settings, algorithm.TimeKeeper);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(
+                algorithm.Portfolio.CashBook,
+                marketHoursDatabase,
+                symbolPropertiesDataBase,
+                algorithm);
+            algorithm.Securities.SetSecurityService(securityService);
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed, algorithm, securityService),
+                algorithm.Settings,
+                algorithm.TimeKeeper,
+                marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
+            var synchronizer = new TestableSynchronizer(_algorithm, dataManager, feed, true);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
             feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
+            feed.Initialize(
+                algorithm,
+                job,
+                resultHandler,
+                mapFileProvider,
+                new LocalDiskFactorFileProvider(mapFileProvider),
+                fileProvider,
+                dataManager,
+                synchronizer);
 
             var unhandledExceptionWasThrown = false;
             try
@@ -652,15 +673,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction);
 
-            var feed = new TestableLiveTradingDataFeed(dataQueueHandler, _manualTimeProvider);
+            var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
-            var dataManager = new DataManager(feed, new UniverseSelection(feed, _algorithm),
-                _algorithm.Settings, _algorithm.TimeKeeper);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm);
+            _algorithm.Securities.SetSecurityService(securityService);
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(feed, _algorithm, securityService),
+                _algorithm.Settings,
+                _algorithm.TimeKeeper,
+                marketHoursDatabase);
             _algorithm.SubscriptionManager.SetDataManager(dataManager);
             _algorithm.AddSecurities(resolution, equities, forex);
+            _synchronizer = new TestableSynchronizer(_algorithm, dataManager, feed, true, _manualTimeProvider);
 
-            feed.Initialize(_algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager);
+            feed.Initialize(_algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager, _synchronizer);
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
@@ -673,11 +702,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             ConsumeBridge(feed, timeout, false, handler);
         }
 
-        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, bool alwaysInvoke, Action<TimeSlice> handler, bool noOutput = true)
+        private void ConsumeBridge(IDataFeed feed,
+            TimeSpan timeout,
+            bool alwaysInvoke,
+            Action<TimeSlice> handler,
+            bool noOutput = true)
         {
             var endTime = DateTime.UtcNow.Add(timeout);
             bool startedReceivingata = false;
-            foreach (var timeSlice in feed)
+            var cancellationTokenSource = new CancellationTokenSource();
+            foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (!noOutput)
                 {
@@ -698,6 +732,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (endTime <= DateTime.UtcNow)
                 {
                     feed.Exit();
+                    cancellationTokenSource.Cancel();
                     return;
                 }
             }
@@ -729,20 +764,37 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
     }
 
-    public class TestableLiveTradingDataFeed : LiveTradingDataFeed
+    internal class TestableLiveTradingDataFeed : LiveTradingDataFeed
     {
-        private readonly ITimeProvider _timeProvider;
         public IDataQueueHandler DataQueueHandler;
 
-        public TestableLiveTradingDataFeed(IDataQueueHandler dataQueueHandler = null, ITimeProvider timeProvider = null)
+        public TestableLiveTradingDataFeed(IDataQueueHandler dataQueueHandler = null)
         {
             DataQueueHandler = dataQueueHandler;
-            _timeProvider = timeProvider ?? new RealTimeProvider();
         }
 
         protected override IDataQueueHandler GetDataQueueHandler()
         {
             return DataQueueHandler;
+        }
+    }
+
+    internal class TestableSynchronizer : Synchronizer
+    {
+        private readonly ITimeProvider _timeProvider;
+        public TestableSynchronizer(
+            IAlgorithm algorithm,
+            IDataFeedSubscriptionManager subscriptionManager,
+            IDataFeed dataFeed,
+            bool liveMode,
+            ITimeProvider timeProvider = null)
+        {
+            _timeProvider = timeProvider ?? new RealTimeProvider();
+            Initialize(algorithm,
+                subscriptionManager,
+                dataFeed,
+                liveMode,
+                algorithm.Portfolio.CashBook);
         }
 
         protected override ITimeProvider GetTimeProvider()

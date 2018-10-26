@@ -14,8 +14,6 @@
  *
 */
 
-using System.Collections.Generic;
-
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
@@ -27,10 +25,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Get the universe selection instance
         /// </summary>
         UniverseSelection UniverseSelection { get; }
-
-        /// <summary>
-        /// Returns an enumerable which provides the data to stream to the algorithm
-        /// </summary>
-        IEnumerable<TimeSlice> StreamData();
     }
 }
