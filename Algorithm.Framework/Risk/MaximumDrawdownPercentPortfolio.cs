@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
     /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the drawdown
-    /// of the portfolio to the specified percentage - it terminates the algorithm if this limt is reached
+    /// of the portfolio to the specified percentage
     /// </summary>
     public class MaximumDrawdownPercentPortfolio : RiskManagementModel
     {
@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 _initialised = true;
             }
 
-            var pnl = TotalDrawdownPercent(algorithm.Portfolio);
+            var pnl = GetTotalDrawdownPercent(algorithm.Portfolio.TotalPortfolioValue);
             if (pnl < _maximumDrawdownPercent)
             {
                 foreach(var target in targets)
@@ -63,15 +63,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
             }
         }
 
-        private decimal TotalDrawdownPercent(SecurityPortfolioManager portfolio)
+        private decimal GetTotalDrawdownPercent(decimal currentValue)
         {
-            var currentValue = portfolio.TotalPortfolioValue;
-            return (currentValue / _startingValue) - 1.0m;            
+            return (currentValue / _startingValue) - 1.0m;
         }
-
-        private decimal TotalDrawdownValue(SecurityPortfolioManager portfolio)
-        {
-            return portfolio.TotalProfit + portfolio.TotalUnrealisedProfit;
-        }      
     }
 }
