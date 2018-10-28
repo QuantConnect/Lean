@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -80,10 +79,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 var drawdown = (security.Low / securityHigh) - 1m;
 
                 if (drawdown < _maximumDrawdownPercent)
-                {
-                    algorithm.Debug($"Trailing Stop Triggered - {security}, Current Price:{ security.Price.SmartRounding()}"
-                        +$", High Price:{securityHigh.SmartRounding()}, Drawdown:{drawdown.SmartRounding()}, Drawdown Limit:{_maximumDrawdownPercent}");
-                    
+                {                    
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
                 }
