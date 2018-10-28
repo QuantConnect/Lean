@@ -27,10 +27,10 @@ from QuantConnect.Algorithm.Framework.Selection import *
 from datetime import datetime, timedelta
 
 ### <summary>
-### Regression algortihm for testing ScheduledUniverseSelectionModel scheduling functions.
+### Regression algorithm for testing ScheduledUniverseSelectionModel scheduling functions.
 ### </summary>
 class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
-    '''Regression algortihm for testing ScheduledUniverseSelectionModel scheduling functions.'''
+    '''Regression algorithm for testing ScheduledUniverseSelectionModel scheduling functions.'''
 
     def Initialize(self):
 
