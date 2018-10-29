@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _controller.Start(_cancellationTokenSource.Token);
         }
 
-        private Subscription InternalCreateSubscription(SubscriptionRequest request)
+        private Subscription CreateDataSubscription(SubscriptionRequest request)
         {
             // ReSharper disable once PossibleMultipleEnumeration
             if (!request.TradableDays.Any())
@@ -169,7 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             return request.IsUniverseSubscription
                 ? CreateUniverseSubscription(request)
-                : InternalCreateSubscription(request);
+                : CreateDataSubscription(request);
         }
 
         /// <summary>

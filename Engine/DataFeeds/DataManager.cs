@@ -164,8 +164,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Debug($"DataManager.AddSubscription(): Added {request.Configuration}." +
                 $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
-            DataFeedSubscriptions.TryAdd(subscription);
-            return true;
+            return DataFeedSubscriptions.TryAdd(subscription);
         }
 
         /// <summary>
@@ -206,9 +205,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 subscription.Dispose();
                 Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         #endregion

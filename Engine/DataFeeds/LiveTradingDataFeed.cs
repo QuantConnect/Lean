@@ -118,7 +118,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // create and add the subscription to our collection
             var subscription = request.IsUniverseSubscription
                 ? CreateUniverseSubscription(request)
-                : InternalCreateSubscription(request);
+                : CreateDataSubscription(request);
 
             // check if we could create the subscription
             if (subscription != null)
@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription request</param>
         /// <returns>A new subscription instance of the specified security</returns>
-        protected Subscription InternalCreateSubscription(SubscriptionRequest request)
+        protected Subscription CreateDataSubscription(SubscriptionRequest request)
         {
             Subscription subscription = null;
             try
