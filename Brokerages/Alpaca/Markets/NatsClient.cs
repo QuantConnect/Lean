@@ -50,7 +50,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 };
             }
 
-            if (isStagingEnvironment && 
+            if (isStagingEnvironment &&
                 !keyId.EndsWith("-staging"))
             {
                 keyId += "-staging";
@@ -225,6 +225,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             {
                 subscription?.Unsubscribe();
                 subscription?.Dispose();
+                _subscriptions.Remove(topic);
             }
         }
 
