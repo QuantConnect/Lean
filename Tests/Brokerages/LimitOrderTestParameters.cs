@@ -65,12 +65,20 @@ namespace QuantConnect.Tests.Brokerages
             return true;
         }
 
-        public override OrderStatus ExpectedStatus
-        {
-            // default limit orders will only be submitted, not filled
-            get { return OrderStatus.Submitted; }
-        }
+        // default limit orders will only be submitted, not filled
+        public override OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         public override bool ExpectedCancellationResult => true;
+    }
+
+    // to be used with brokerages which do not support UpdateOrder
+    public class NonUpdateableLimitOrderTestParameters : LimitOrderTestParameters
+    {
+        public NonUpdateableLimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
+            : base(symbol, highLimit, lowLimit, properties)
+        {
+        }
+
+        public override bool ModifyUntilFilled => false;
     }
 }

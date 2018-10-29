@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
@@ -32,18 +31,26 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
     public partial class AlpacaBrokerageTests : BrokerageTests
     {
         /// <summary>
-        ///     Creates the brokerage under test and connects it
+        /// Creates the brokerage under test and connects it
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var keyId = Config.Get("alpaca-key-id"); ;
+            var keyId = Config.Get("alpaca-key-id");
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            var brokerage = new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode);
+            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode);
+        }
 
-            return brokerage;
+        /// <summary>
+        /// Disposes of the brokerage and any external resources started in order to create it
+        /// </summary>
+        /// <param name="brokerage">The brokerage instance to be disposed of</param>
+        protected override void DisposeBrokerage(IBrokerage brokerage)
+        {
+            brokerage.Disconnect();
+            brokerage.Dispose();
         }
 
         /// <summary>
@@ -52,41 +59,29 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         public override TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder")
+            new TestCaseData(new NonUpdateableLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new NonUpdateableStopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder")
         };
 
         /// <summary>
-        ///     Gets the symbol to be traded, must be shortable
+        /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol
-        {
-            get { return Symbol.Create("AAPL", SecurityType.Equity, Market.USA); }
-        }
+        protected override Symbol Symbol { get; } = Symbol.Create("F", SecurityType.Equity, Market.USA);
 
         /// <summary>
-        ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
+        /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Equity; }
-        }
+        protected override SecurityType SecurityType => Symbol.SecurityType;
 
         /// <summary>
-        ///     Gets a high price for the specified symbol so a limit sell won't fill
+        /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice
-        {
-            get { return 10000m; }
-        }
+        protected override decimal HighPrice => 1000m;
 
         /// <summary>
-        ///     Gets a low price for the specified symbol so a limit buy won't fill
+        /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice
-        {
-            get { return 0.32m; }
-        }
+        protected override decimal LowPrice => 0.1m;
 
         /// <summary>
         /// Returns wether or not the brokers order methods implementation are async
@@ -97,7 +92,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         }
 
         /// <summary>
-        ///     Gets the current market price of the specified security
+        /// Gets the current market price of the specified security
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
         {
@@ -105,6 +100,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var quote = alpaca.GetRates(symbol.Value);
             return quote.AskPrice;
         }
+
         [Test]
         public void ValidateMarketOrders()
         {
@@ -119,17 +115,17 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             const int numberOfOrders = 2;
             for (var i = 0; i < numberOfOrders; i++)
             {
-                var order = new MarketOrder(symbol, 10, DateTime.Now);
+                var order = new MarketOrder(symbol, 10, DateTime.UtcNow);
                 OrderProvider.Add(order);
                 Console.WriteLine("Buy Order");
                 alpaca.PlaceOrder(order);
-                //Assert.IsTrue(order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled);
+
                 var orderr = new MarketOrder(symbol, -10, DateTime.UtcNow);
                 OrderProvider.Add(orderr);
                 Console.WriteLine("Sell Order");
                 alpaca.PlaceOrder(orderr);
-                //Assert.IsTrue(orderr.Status == OrderStatus.Filled || orderr.Status == OrderStatus.PartiallyFilled);
             }
+
             // We want to verify the number of order events with OrderStatus.Filled sent
             Thread.Sleep(14000);
             alpaca.OrderStatusChanged -= orderStatusChangedCallback;
@@ -152,7 +148,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
 
             // Buy Limit order above market - should be filled immediately
             var limitPrice = quote.BidPrice + 0.5m;
-            var order = new LimitOrder(symbol, 1, limitPrice, DateTime.Now);
+            var order = new LimitOrder(symbol, 1, limitPrice, DateTime.UtcNow);
             OrderProvider.Add(order);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
@@ -172,22 +168,22 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
 
             // Buy StopMarket order below market
             var price = quote.BidPrice - 0.5m;
-            var order = new StopMarketOrder(symbol, 1, price, DateTime.Now);
+            var order = new StopMarketOrder(symbol, 1, price, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
             // Buy StopMarket order above market
             price = quote.AskPrice + 0.5m;
-            order = new StopMarketOrder(symbol, 1, price, DateTime.Now);
+            order = new StopMarketOrder(symbol, 1, price, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
             // Sell StopMarket order below market
             price = quote.BidPrice - 0.5m;
-            order = new StopMarketOrder(symbol, -1, price, DateTime.Now);
+            order = new StopMarketOrder(symbol, -1, price, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
             // Sell StopMarket order above market
             price = quote.AskPrice + 0.5m;
-            order = new StopMarketOrder(symbol, -1, price, DateTime.Now);
+            order = new StopMarketOrder(symbol, -1, price, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
         }
 
@@ -201,31 +197,31 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             // Buy StopLimit order below market
             var stopPrice = quote.BidPrice - 0.5m;
             var limitPrice = stopPrice + 0.05m;
-            var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.Now);
+            var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
             // Buy StopLimit order above market
             stopPrice = quote.AskPrice + 0.5m;
             limitPrice = stopPrice + 0.05m;
-            order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.Now);
+            order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
             // In case there is no position, the following sell orders would not be placed
             // So build a position for them.
-            var marketOrder = new MarketOrder(symbol, 2, DateTime.Now);
+            var marketOrder = new MarketOrder(symbol, 2, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(marketOrder));
 
             Thread.Sleep(20000);
             // Sell StopLimit order below market
             stopPrice = quote.BidPrice - 0.5m;
             limitPrice = stopPrice - 0.05m;
-            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.Now);
+            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
 
             // Sell StopLimit order above market
             stopPrice = quote.AskPrice + 0.5m;
             limitPrice = stopPrice - 0.05m;
-            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.Now);
+            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow);
             Assert.IsTrue(alpaca.PlaceOrder(order));
         }
 

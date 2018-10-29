@@ -49,11 +49,8 @@ namespace QuantConnect.Tests.Brokerages
             return false;
         }
 
-        public override OrderStatus ExpectedStatus
-        {
-            // all market orders should fill
-            get { return OrderStatus.Filled; }
-        }
+        // all market orders should fill
+        public override OrderStatus ExpectedStatus => OrderStatus.Filled;
 
         public override bool ExpectedCancellationResult => false;
     }
