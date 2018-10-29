@@ -191,6 +191,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
 
+                case BrokerageName.Alpaca:
+                    return new AlpacaBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
