@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
@@ -34,6 +35,8 @@ namespace QuantConnect.Brokerages.Alpaca
         /// The list of ticks received
         /// </summary>
         private readonly List<Tick> _ticks = new List<Tick>();
+
+        private readonly ConcurrentDictionary<string, Symbol> _subscribedSymbols = new ConcurrentDictionary<string, Symbol>();
 
         #region IDataQueueHandler implementation
 
@@ -58,12 +61,16 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var symbol in symbols.Where(CanSubscribe))
+            var symbolsToSubscribe = symbols.Where(x => !_subscribedSymbols.ContainsKey(x.Value));
+
+            foreach (var symbol in symbolsToSubscribe.Where(CanSubscribe))
             {
                 Log.Trace($"AlpacaBrokerage.Subscribe(): {symbol}");
 
                 _natsClient.SubscribeQuote(symbol.Value);
                 _natsClient.SubscribeTrade(symbol.Value);
+
+                _subscribedSymbols.TryAdd(symbol.Value, symbol);
             }
         }
 
@@ -74,12 +81,17 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var symbol in symbols.Where(CanSubscribe))
+            var symbolsToUnsubscribe = symbols.Where(x => _subscribedSymbols.ContainsKey(x.Value));
+
+            foreach (var symbol in symbolsToUnsubscribe.Where(CanSubscribe))
             {
                 Log.Trace($"AlpacaBrokerage.Unsubscribe(): {symbol}");
 
                 _natsClient.UnsubscribeQuote(symbol.Value);
                 _natsClient.UnsubscribeTrade(symbol.Value);
+
+                Symbol removed;
+                _subscribedSymbols.TryRemove(symbol.Value, out removed);
             }
         }
 
@@ -92,10 +104,7 @@ namespace QuantConnect.Brokerages.Alpaca
             if (symbol.ID.SecurityType != SecurityType.Equity)
                 return false;
 
-            if (symbol.Value.ToLower().IndexOf("universe", StringComparison.Ordinal) != -1)
-                return false;
-
-            return true;
+            return symbol.Value.ToLower().IndexOf("universe", StringComparison.Ordinal) == -1;
         }
 
         /// <summary>
@@ -104,7 +113,9 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="quote">The data object containing the received tick</param>
         private void OnQuoteReceived(IStreamQuote quote)
         {
-            var symbol = Symbol.Create(quote.Symbol, SecurityType.Equity, Market.USA);
+            Symbol symbol;
+            if (!_subscribedSymbols.TryGetValue(quote.Symbol, out symbol)) return;
+
             var time = quote.Time;
 
             // live ticks timestamps must be in exchange time zone
@@ -137,7 +148,9 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="trade">The data object containing the received tick</param>
         private void OnTradeReceived(IStreamTrade trade)
         {
-            var symbol = Symbol.Create(trade.Symbol, SecurityType.Equity, Market.USA);
+            Symbol symbol;
+            if (!_subscribedSymbols.TryGetValue(trade.Symbol, out symbol)) return;
+
             var time = trade.Time;
 
             // live ticks timestamps must be in exchange time zone
