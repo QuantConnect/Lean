@@ -130,7 +130,10 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <inheritdoc />
         public void Dispose()
         {
-            _webSocket?.Close();
+            if (_webSocket != null && _webSocket.ReadyState != WebSocketState.Closing && _webSocket.ReadyState != WebSocketState.Closed)
+            {
+                _webSocket.Close();
+            }
         }
 
         private void handleOpened(
