@@ -132,8 +132,8 @@ namespace QuantConnect.Securities
                                    security.Exchange.Hours,
                                    configuration.DataTimeZone,
                                    Resolution.Daily,
-                                   configurations.ExtendedMarketHours(),
-                                   configurations.CustomData(),
+                                   configurations.IsExtendedMarketHours(),
+                                   configurations.IsCustomData(),
                                    configurations.DataNormalizationMode(),
                                    LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))
             };

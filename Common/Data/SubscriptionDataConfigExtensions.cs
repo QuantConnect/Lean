@@ -46,7 +46,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="subscriptionDataConfigs"></param>
         /// <returns>True, at least one subscription has it enabled</returns>
-        public static bool FillForward(
+        public static bool IsFillForward(
             this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
         {
             return subscriptionDataConfigs.Any(x => x.FillDataForward);
@@ -58,7 +58,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="subscriptionDataConfigs"></param>
         /// <returns>True, at least one subscription has it enabled</returns>
-        public static bool ExtendedMarketHours(
+        public static bool IsExtendedMarketHours(
             this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
         {
             return subscriptionDataConfigs.Any(x => x.ExtendedMarketHours);
@@ -70,7 +70,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="subscriptionDataConfigs"></param>
         /// <returns>True, at least one subscription is custom data</returns>
-        public static bool CustomData(
+        public static bool IsCustomData(
             this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
         {
             return subscriptionDataConfigs.Any(x => x.IsCustomData);
@@ -89,7 +89,7 @@ namespace QuantConnect.Data
             return subscriptionDataConfigs.
                 Select(x => x.DataNormalizationMode)
                 .DefaultIfEmpty(QuantConnect.DataNormalizationMode.Adjusted)
-                .First(); ;
+                .First();
         }
     }
 }

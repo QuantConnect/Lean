@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -23,7 +24,7 @@ namespace QuantConnect.Securities.Volatility
     /// <summary>
     /// Represents a base model that computes the volatility of a security
     /// </summary>
-    public abstract class BaseVolatilityModel : IVolatilityModel
+    public class BaseVolatilityModel : IVolatilityModel
     {
         /// <summary>
         /// Provides access to registered <see cref="SubscriptionDataConfig"/>
@@ -33,7 +34,7 @@ namespace QuantConnect.Securities.Volatility
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public abstract decimal Volatility { get; }
+        public virtual decimal Volatility { get; }
 
         /// <summary>
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
@@ -51,7 +52,9 @@ namespace QuantConnect.Securities.Volatility
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new data used to update the model</param>
-        public abstract void Update(Security security, BaseData data);
+        public virtual void Update(Security security, BaseData data)
+        {
+        }
 
         /// <summary>
         /// Returns history requirements for the volatility model expressed in the form of history request
@@ -59,8 +62,12 @@ namespace QuantConnect.Securities.Volatility
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public abstract IEnumerable<HistoryRequest> GetHistoryRequirements(
+        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(
             Security security,
-            DateTime utcTime);
+            DateTime utcTime
+            )
+        {
+            return Enumerable.Empty<HistoryRequest>();
+        }
     }
 }

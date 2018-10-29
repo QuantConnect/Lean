@@ -1001,6 +1001,8 @@ namespace QuantConnect.Lean.Engine
                 if (security.VolatilityModel != VolatilityModel.Null)
                 {
                     // start: this is a work around to maintain retro compatibility
+                    // did not want to add IVolatilityModel.SetSubscriptionDataConfigProvider
+                    // to prevent breaking existing user models.
                     var baseType = security.VolatilityModel as BaseVolatilityModel;
                     baseType?.SetSubscriptionDataConfigProvider(
                         algorithm.SubscriptionManager.SubscriptionDataConfigService);

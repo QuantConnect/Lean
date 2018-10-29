@@ -24,7 +24,8 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents a model that computes the volatility of a security
     /// </summary>
-    /// <remarks><see cref="BaseVolatilityModel"/></remarks>
+    /// <remarks>Please use<see cref="BaseVolatilityModel"/> as the base class for
+    /// any implementations of<see cref="IVolatilityModel"/></remarks>
     public interface IVolatilityModel
     {
         /// <summary>
