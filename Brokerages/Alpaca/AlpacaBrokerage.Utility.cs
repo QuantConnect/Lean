@@ -34,26 +34,25 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         /// <param name="instruments">the list of instruments to check</param>
         /// <returns>Dictionary containing the current quotes for each instrument</returns>
-        private Dictionary<string, Tick> GetRates(List<string> instruments)
+        private Dictionary<string, Tick> GetRates(IEnumerable<string> instruments)
         {
-            try
-            {
-                CheckRateLimiting();
-                var task = _restClient.ListQuotesAsync(instruments);
-                var response = task.SynchronouslyAwaitTaskResult();
-                return response
-                    .ToDictionary(
-                        x => x.Symbol,
-                        x => new Tick { Symbol = Symbol.Create(x.Symbol, SecurityType.Equity, Market.USA), BidPrice = x.BidPrice, AskPrice = x.AskPrice, Time = x.LastTime, TickType = TickType.Trade }
-                    );
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                if (e.InnerException != null)
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw;
-            }
+            CheckRateLimiting();
+
+            var task = _restClient.ListQuotesAsync(instruments);
+            var response = task.SynchronouslyAwaitTaskResult();
+
+            return response
+                .ToDictionary(
+                    x => x.Symbol,
+                    x => new Tick
+                    {
+                        Symbol = Symbol.Create(x.Symbol, SecurityType.Equity, Market.USA),
+                        BidPrice = x.BidPrice,
+                        AskPrice = x.AskPrice,
+                        Time = x.LastTime,
+                        TickType = TickType.Quote
+                    }
+                );
         }
 
         private IOrder GenerateAndPlaceOrder(Order order)
@@ -112,10 +111,10 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="trade">The event object</param>
         private void OnTradeUpdate(ITradeUpdate trade)
         {
-            Log.Trace("OnTransactionData: {0} {1} {2}", trade.Event, trade.Order.OrderId, trade.Order.OrderStatus);
+            Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} OrderStatus:{trade.Order.OrderStatus}");
 
             Order order;
-            string tradeEvent = trade.Event.ToUpper();
+            var tradeEvent = trade.Event.ToUpper();
             lock (_locker)
             {
                 order = _orderProvider.GetOrderByBrokerageId(trade.Order.OrderId.ToString());
@@ -139,10 +138,6 @@ namespace QuantConnect.Brokerages.Alpaca
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.Canceled });
                 }
-                else if (tradeEvent == "ORDER_CANCEL_REJECTED")
-                {
-                    Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Order cancel rejected.");
-                }
             }
             else
             {
@@ -150,12 +145,12 @@ namespace QuantConnect.Brokerages.Alpaca
             }
         }
 
-        private void OnNatsClientError(string error)
+        private static void OnNatsClientError(string error)
         {
             Log.Error($"NatsClient error: {error}");
         }
 
-        private void OnSockClientError(Exception exception)
+        private static void OnSockClientError(Exception exception)
         {
             Log.Error(exception, "SockClient error");
         }
@@ -173,28 +168,28 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             // This is due to the polygon API logic.
             // If start and end date is equal, then the result is null
-            var endTimeUtcForAPI = endTimeUtc.Add(TimeSpan.FromDays(1));
+            var endTimeUtcForApi = endTimeUtc.Add(TimeSpan.FromDays(1));
 
             var period = resolution.ToTimeSpan();
 
-            // No seconds resolution
-            if (period.Seconds < 60)
+            // Only minute/hour/daily resolutions supported
+            if (resolution < Resolution.Minute)
             {
-                yield return null;
+                yield break;
             }
 
-            DateTime startTime = startTimeUtc;
-            DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-            DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            var startTime = startTimeUtc;
+            var startTimeWithTimeZone = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            var endTimeWithTimeZone = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
 
-            TradeBar currentBar = new TradeBar();
+            var currentBar = new TradeBar();
             while (true)
             {
-                List<Markets.IBar> newBars = new List<Markets.IBar>();
+                List<Markets.IBar> newBars;
                 try
                 {
                     CheckRateLimiting();
-                    var task = (period.Days < 1) ? _restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForAPI) : _restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc);
+                    var task = period.Days < 1 ? _restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForApi) : _restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc);
                     newBars = task.SynchronouslyAwaitTaskResult().Items.ToList();
                 }
                 catch (Exception e)
@@ -246,11 +241,11 @@ namespace QuantConnect.Brokerages.Alpaca
                     result.Insert(0, currentBar);
                 }
                 if (result.Count == 1 && result[0].Time == currentBar.Time) continue;
-                bool isEnd = false;
-                for (int i = 0; i < result.Count - 1; i++)
+                var isEnd = false;
+                for (var i = 0; i < result.Count - 1; i++)
                 {
-                    if (result[i].Time < startTimeWithTZ) continue;
-                    if (result[i].Time > endTimeWithTZ)
+                    if (result[i].Time < startTimeWithTimeZone) continue;
+                    if (result[i].Time > endTimeWithTimeZone)
                     {
                         isEnd = true;
                         break;
@@ -260,7 +255,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 currentBar = result[result.Count - 1];
 
                 if (isEnd) break;
-                if (currentBar.Time == endTimeWithTZ)
+                if (currentBar.Time == endTimeWithTimeZone)
                 {
                     yield return currentBar;
                     break;
@@ -281,16 +276,16 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             var period = resolution.ToTimeSpan();
 
-            DateTime startTime = startTimeUtc;
-            DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-            DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            var startTime = startTimeUtc;
+            var startTimeWithTimeZone = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
+            var endTimeWithTimeZone = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
             long offsets = 0;
 
             QuoteBar currentBar = new QuoteBar();
             while (true)
             {
 
-                List<IHistoricalQuote> asList = new List<IHistoricalQuote>();
+                List<IHistoricalQuote> asList;
                 try
                 {
                     CheckRateLimiting();
@@ -365,8 +360,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 bool isEnd = false;
                 for (int i = 0; i < result.Count - 1; i++)
                 {
-                    if (startTimeWithTZ > result[i].Time) continue;
-                    if (endTimeWithTZ < result[i].Time)
+                    if (startTimeWithTimeZone > result[i].Time) continue;
+                    if (endTimeWithTimeZone < result[i].Time)
                     {
                         isEnd = true;
                         break;
@@ -376,7 +371,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 currentBar = result[result.Count - 1];
 
                 if (isEnd) break;
-                if (currentBar.Time == endTimeWithTZ)
+                if (currentBar.Time == endTimeWithTimeZone)
                 {
                     yield return currentBar;
                     break;
@@ -394,15 +389,15 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of ticks</returns>
         private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
         {
-            DateTime startTime = startTimeUtc;
-            DateTime startTimeWithTZ = startTimeUtc.ConvertFromUtc(requestedTimeZone);
-            DateTime endTimeWithTZ = endTimeUtc.ConvertFromUtc(requestedTimeZone);
+            var startTime = startTimeUtc;
+            var startTimeWithTimeZone = startTimeUtc.ConvertFromUtc(requestedTimeZone);
+            var endTimeWithTimeZone = endTimeUtc.ConvertFromUtc(requestedTimeZone);
             long offsets = 0;
 
-            Tick currentTick = new Tick();
+            var currentTick = new Tick();
             while (true)
             {
-                List<IHistoricalQuote> asList = new List<IHistoricalQuote>();
+                List<IHistoricalQuote> asList;
                 try
                 {
                     CheckRateLimiting();
@@ -432,12 +427,12 @@ namespace QuantConnect.Brokerages.Alpaca
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
                     throw;
                 }
-                bool isEnd = false;
-                for (int i = 0; i < asList.Count; i++)
+                var isEnd = false;
+                for (var i = 0; i < asList.Count; i++)
                 {
                     var currentTime = DateTimeHelper.FromUnixTimeMilliseconds(asList[i].TimeOffset).ConvertFromUtc(requestedTimeZone);
-                    if (startTimeWithTZ > currentTime) continue;
-                    if (endTimeWithTZ < currentTime)
+                    if (startTimeWithTimeZone > currentTime) continue;
+                    if (endTimeWithTimeZone < currentTime)
                     {
                         isEnd = true;
                         break;
@@ -498,12 +493,22 @@ namespace QuantConnect.Brokerages.Alpaca
             var id = order.OrderId.ToString();
 
             qcOrder.Symbol = Symbol.Create(instrument, SecurityType.Equity, Market.USA);
-            qcOrder.Time = order.SubmittedAt.Value;
+
+            if (order.SubmittedAt != null)
+            {
+                qcOrder.Time = order.SubmittedAt.Value;
+            }
+
             qcOrder.Quantity = order.Quantity;
             qcOrder.Status = Orders.OrderStatus.None;
             qcOrder.BrokerId.Add(id);
 
-            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(id);
+            Order orderByBrokerageId;
+            lock (_locker)
+            {
+                orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(id);
+            }
+
             if (orderByBrokerageId != null)
             {
                 qcOrder.Id = orderByBrokerageId.Id;
@@ -520,9 +525,9 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Converts an Alpaca position into a LEAN holding.
         /// </summary>
-        private Holding ConvertHolding(IPosition position)
+        private static Holding ConvertHolding(IPosition position)
         {
-            var securityType = SecurityType.Equity;
+            const SecurityType securityType = SecurityType.Equity;
             var symbol = Symbol.Create(position.Symbol, securityType, Market.USA);
 
             return new Holding

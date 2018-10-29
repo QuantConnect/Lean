@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using NodaTime;
@@ -129,12 +128,12 @@ namespace QuantConnect.Brokerages.Alpaca
             _cancellationTokenSource = new CancellationTokenSource();
             _connectionMonitorThread = new Thread(() =>
             {
+                var nextReconnectionAttemptSeconds = 1;
+
                 try
                 {
                     while (!_cancellationTokenSource.IsCancellationRequested)
                     {
-                        Thread.Sleep(10000);
-
                         var isAlive = true;
                         try
                         {
@@ -148,6 +147,7 @@ namespace QuantConnect.Brokerages.Alpaca
                         if (isAlive && _connectionLost)
                         {
                             _connectionLost = false;
+                            nextReconnectionAttemptSeconds = 1;
 
                             OnMessage(BrokerageMessageEvent.Reconnected("Connection with Alpaca server restored."));
                         }
@@ -157,11 +157,16 @@ namespace QuantConnect.Brokerages.Alpaca
                             {
                                 try
                                 {
+                                    Thread.Sleep(TimeSpan.FromSeconds(nextReconnectionAttemptSeconds));
+
                                     _sockClient.ConnectAsync().SynchronouslyAwaitTask();
                                 }
                                 catch (Exception exception)
                                 {
-                                    Log.Trace(exception.ToString());
+                                    // double the interval between attempts (capped to 1 minute)
+                                    nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
+
+                                    Log.Error(exception);
                                 }
                             }
                             else
@@ -174,6 +179,8 @@ namespace QuantConnect.Brokerages.Alpaca
                                         "This could be because of internet connectivity issues. "));
                             }
                         }
+
+                        Thread.Sleep(1000);
                     }
                 }
                 catch (Exception exception)
@@ -204,32 +211,38 @@ namespace QuantConnect.Brokerages.Alpaca
             _isConnected = false;
         }
 
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public override void Dispose()
+        {
+            Log.Trace("AlpacaBrokerage.Dispose(): Disposing of Alpaca brokerage resources.");
+
+            _cancellationTokenSource.Dispose();
+            _sockClient?.Dispose();
+            _natsClient?.Dispose();
+
+            _messagingRateLimiter.Dispose();
+        }
+
         /// <summary>
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            try
-            {
-                CheckRateLimiting();
-                var task = _restClient.GetAccountAsync();
-                var balance = task.SynchronouslyAwaitTaskResult();
+            CheckRateLimiting();
 
-                return new List<Cash>
-                {
-                    new Cash("USD",
-                        balance.TradableCash,
-                        1m)
-                };
-            }
-            catch (Exception e)
+            var task = _restClient.GetAccountAsync();
+            var balance = task.SynchronouslyAwaitTaskResult();
+
+            return new List<Cash>
             {
-                Log.Error(e);
-                if (e.InnerException != null)
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw;
-            }
+                new Cash("USD",
+                    balance.TradableCash,
+                    1m)
+            };
         }
 
         /// <summary>
@@ -238,46 +251,33 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            try
+            CheckRateLimiting();
+
+            var task = _restClient.ListPositionsAsync();
+            var holdings = task.SynchronouslyAwaitTaskResult();
+
+            var qcHoldings = holdings.Select(ConvertHolding).ToList();
+
+            // Set MarketPrice in each Holding
+            var alpacaSymbols = qcHoldings
+                .Select(x => x.Symbol.Value)
+                .ToList();
+
+            if (alpacaSymbols.Count > 0)
             {
-                CheckRateLimiting();
-                var task = _restClient.ListPositionsAsync();
-                var holdings = task.SynchronouslyAwaitTaskResult();
-
-                var qcHoldings = new List<Holding>();
-                foreach (var holds in holdings)
+                var quotes = GetRates(alpacaSymbols);
+                foreach (var holding in qcHoldings)
                 {
-                    qcHoldings.Add(ConvertHolding(holds));
-                }
-
-                // Set MarketPrice in each Holding
-                var alpacaSymbols = qcHoldings
-                    .Select(x => x.Symbol.Value)
-                    .ToList();
-
-                if (alpacaSymbols.Count > 0)
-                {
-                    var quotes = GetRates(alpacaSymbols);
-                    foreach (var holding in qcHoldings)
+                    var alpacaSymbol = holding.Symbol;
+                    Tick tick;
+                    if (quotes.TryGetValue(alpacaSymbol.Value, out tick))
                     {
-                        var alpacaSymbol = holding.Symbol;
-                        Tick tick;
-                        if (quotes.TryGetValue(alpacaSymbol.Value, out tick))
-                        {
-                            holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
-                        }
+                        holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
                     }
                 }
+            }
 
-                return qcHoldings;
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                if (e.InnerException != null)
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw;
-            }
+            return qcHoldings;
         }
 
         /// <summary>
@@ -287,27 +287,12 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The open orders returned from Alpaca</returns>
         public override List<Order> GetOpenOrders()
         {
-            try
-            {
-                CheckRateLimiting();
-                var task = _restClient.ListOrdersAsync();
-                var orders = task.SynchronouslyAwaitTaskResult();
+            CheckRateLimiting();
 
-                var qcOrders = new List<Order>();
-                foreach (var order in orders)
-                {
-                    qcOrders.Add(ConvertOrder(order));
-                }
-                return qcOrders;
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                if (e.InnerException != null)
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                throw;
-            }
+            var task = _restClient.ListOrdersAsync();
+            var orders = task.SynchronouslyAwaitTaskResult();
 
+            return orders.Select(ConvertOrder).ToList();
         }
 
         /// <summary>
@@ -329,13 +314,20 @@ namespace QuantConnect.Brokerages.Alpaca
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e);
-                    if (e.InnerException != null)
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    return false;
-                }
+                    var errorMessage = $"Error placing order: {e.Message}";
 
+                    OnOrderEvent(
+                        new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Order Event")
+                        {
+                            Status = Orders.OrderStatus.Invalid,
+                            Message = errorMessage
+                        });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                    return true;
+                }
             }
+
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = Orders.OrderStatus.Submitted });
 
             return true;
@@ -348,7 +340,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            return false;
+            throw new NotSupportedException("AlpacaBrokerage.UpdateOrder(): Order update not supported. Please cancel and re-create.");
         }
 
         /// <summary>
@@ -416,7 +408,6 @@ namespace QuantConnect.Brokerages.Alpaca
                 var tradeBars = DownloadTradeBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
                 if (tradeBars.Count != 0)
                 {
-                    tradeBars.RemoveAt(0);
                     foreach (var tradeBar in tradeBars)
                     {
                         yield return tradeBar;
@@ -426,15 +417,6 @@ namespace QuantConnect.Brokerages.Alpaca
         }
 
         #endregion
-
-        /// <summary>
-        /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
-        /// </summary>
-        /// <param name="time">The time string</param>
-        public static DateTime GetDateTimeFromString(string time)
-        {
-            return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture);
-        }
 
         /// <summary>
         /// Retrieves the current quotes for an instrument
