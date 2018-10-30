@@ -138,6 +138,11 @@ namespace QuantConnect.Brokerages.Alpaca
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.Canceled });
                 }
+                else if (tradeEvent == "ORDER_CANCEL_REJECTED")
+                {
+                    var message = $"Order cancellation rejected: OrderId: {order.Id}";
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
+                }
             }
             else
             {
