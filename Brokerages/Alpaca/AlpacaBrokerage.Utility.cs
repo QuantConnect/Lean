@@ -21,6 +21,7 @@ using QuantConnect.Brokerages.Alpaca.Markets;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using OrderStatus = QuantConnect.Orders.OrderStatus;
 
 namespace QuantConnect.Brokerages.Alpaca
 {
@@ -111,7 +112,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="trade">The event object</param>
         private void OnTradeUpdate(ITradeUpdate trade)
         {
-            Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} OrderStatus:{trade.Order.OrderStatus}");
+            Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} OrderStatus:{trade.Order.OrderStatus} FillQuantity: {trade.Order.FilledQuantity} Price: {trade.Price}");
 
             Order order;
             var tradeEvent = trade.Event.ToUpper();
@@ -121,22 +122,22 @@ namespace QuantConnect.Brokerages.Alpaca
             }
             if (order != null)
             {
-                if (tradeEvent == "FILL" || tradeEvent == "PARTIAL_FILL")
+                if (tradeEvent == "FILL" || tradeEvent == "ORDER_PARTIALLY_FILLED")
                 {
                     order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                    var status = Orders.OrderStatus.Filled;
-                    if (trade.Order.FilledQuantity < trade.Order.Quantity) status = Orders.OrderStatus.PartiallyFilled;
+                    var status = tradeEvent == "FILL" ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Fill Event")
                     {
                         Status = status,
                         FillPrice = trade.Price.Value,
-                        FillQuantity = Convert.ToInt32(trade.Order.Quantity)
+                        FillQuantity = Convert.ToInt32(trade.Order.FilledQuantity) * (order.Direction == OrderDirection.Buy ? +1 : -1)
                     });
                 }
                 else if (tradeEvent == "CANCELED")
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = Orders.OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = OrderStatus.Canceled });
                 }
                 else if (tradeEvent == "ORDER_CANCEL_REJECTED")
                 {
