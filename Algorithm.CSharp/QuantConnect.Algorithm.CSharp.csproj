@@ -94,6 +94,7 @@
     <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.cs" />
     <Compile Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.cs" />
+    <Compile Include="DailyResolutionSplitRegressionAlgorithm.cs" />
     <Compile Include="MeanVarianceOptimizationFrameworkAlgorithm.cs" />
     <Compile Include="TiingoDailyDataAlgorithm.cs" />
     <Compile Include="OptionExpiryDateOnHolidayCase.cs" />
