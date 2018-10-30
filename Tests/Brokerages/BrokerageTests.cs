@@ -280,9 +280,17 @@ namespace QuantConnect.Tests.Brokerages
         protected abstract decimal LowPrice { get; }
 
         /// <summary>
-        /// Returns wether or not the brokers order methods implementation are async
+        /// Returns whether or not the brokers order methods implementation are async
         /// </summary>
         protected abstract bool IsAsync();
+
+        /// <summary>
+        /// Returns whether or not the brokers order cancel method implementation is async
+        /// </summary>
+        protected virtual bool IsCancelAsync()
+        {
+            return IsAsync();
+        }
 
         /// <summary>
         /// Gets the current market price of the specified security
@@ -332,7 +340,7 @@ namespace QuantConnect.Tests.Brokerages
                 Log.Error(exception);
             }
 
-            Assert.AreEqual(IsAsync() || parameters.ExpectedCancellationResult, cancelResult);
+            Assert.AreEqual(IsCancelAsync() || parameters.ExpectedCancellationResult, cancelResult);
 
             if (parameters.ExpectedCancellationResult)
             {
@@ -355,7 +363,7 @@ namespace QuantConnect.Tests.Brokerages
             {
                 Log.Error(exception);
             }
-            Assert.AreEqual(IsAsync(), cancelResultSecondTime);
+            Assert.AreEqual(IsCancelAsync(), cancelResultSecondTime);
             // We do NOT expect the OrderStatus.Canceled event
             Assert.IsFalse(canceledOrderStatusEvent.WaitOne(new TimeSpan(0, 0, 10)));
 

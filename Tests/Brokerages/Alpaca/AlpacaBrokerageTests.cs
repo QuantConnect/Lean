@@ -84,11 +84,19 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         protected override decimal LowPrice => 0.1m;
 
         /// <summary>
-        /// Returns wether or not the brokers order methods implementation are async
+        /// Returns whether or not the brokers order methods implementation are async
         /// </summary>
         protected override bool IsAsync()
         {
             return false;
+        }
+
+        /// <summary>
+        /// Returns whether or not the brokers order cancel method implementation is async
+        /// </summary>
+        protected override bool IsCancelAsync()
+        {
+            return true;
         }
 
         /// <summary>
