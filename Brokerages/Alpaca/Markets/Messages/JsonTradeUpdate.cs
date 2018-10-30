@@ -28,4 +28,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
         public IOrder Order => JsonOrder;
     }
+
+    internal static class TradeUpdateEvent
+    {
+        public const string OrderFilled = "fill";
+        public const string OrderPartiallyFilled = "order_partially_filled";
+        public const string OrderCanceled = "canceled";
+        public const string OrderCancelRejected = "order_cancel_rejected";
+    }
 }

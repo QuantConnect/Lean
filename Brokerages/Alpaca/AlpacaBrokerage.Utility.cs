@@ -115,18 +115,18 @@ namespace QuantConnect.Brokerages.Alpaca
             Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} OrderStatus:{trade.Order.OrderStatus} FillQuantity: {trade.Order.FilledQuantity} Price: {trade.Price}");
 
             Order order;
-            var tradeEvent = trade.Event.ToUpper();
             lock (_locker)
             {
                 order = _orderProvider.GetOrderByBrokerageId(trade.Order.OrderId.ToString());
             }
+
             if (order != null)
             {
-                if (tradeEvent == "FILL" || tradeEvent == "ORDER_PARTIALLY_FILLED")
+                if (trade.Event == TradeUpdateEvent.OrderFilled || trade.Event == TradeUpdateEvent.OrderPartiallyFilled)
                 {
                     order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                    var status = tradeEvent == "FILL" ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+                    var status = trade.Event == TradeUpdateEvent.OrderFilled ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Fill Event")
                     {
@@ -135,11 +135,11 @@ namespace QuantConnect.Brokerages.Alpaca
                         FillQuantity = Convert.ToInt32(trade.Order.FilledQuantity) * (order.Direction == OrderDirection.Buy ? +1 : -1)
                     });
                 }
-                else if (tradeEvent == "CANCELED")
+                else if (trade.Event == TradeUpdateEvent.OrderCanceled)
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Cancel Order Event") { Status = OrderStatus.Canceled });
                 }
-                else if (tradeEvent == "ORDER_CANCEL_REJECTED")
+                else if (trade.Event == TradeUpdateEvent.OrderCancelRejected)
                 {
                     var message = $"Order cancellation rejected: OrderId: {order.Id}";
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
