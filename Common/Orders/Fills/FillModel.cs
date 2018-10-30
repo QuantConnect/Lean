@@ -15,7 +15,9 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -26,13 +28,80 @@ namespace QuantConnect.Orders.Fills
     public class FillModel : IFillModel
     {
         /// <summary>
+        /// The parameters instance to be used by the different XxxxFill() implementations
+        /// </summary>
+        protected FillModelParameters Parameters { get; set; }
+
+        /// <summary>
+        /// This is required due to a limitation in PythonNet to resolved overriden methods
+        /// </summary>
+        protected FillModelPythonWrapper PythonWrapper;
+
+        /// <summary>
+        /// Used to set the <see cref="FillModelPythonWrapper"/> instance if any
+        /// </summary>
+        public void SetPythonWrapper(FillModelPythonWrapper pythonWrapper)
+        {
+            PythonWrapper = pythonWrapper;
+        }
+
+        /// <summary>
+        /// Return an order event with the fill details
+        /// </summary>
+        /// <param name="parameters">A <see cref="FillModelParameters"/> object containing the security and order</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public virtual Fill Fill(FillModelParameters parameters)
+        {
+            // Important: setting the parameters is required because it is
+            // consumed by the different XxxxFill() implementations
+            Parameters = parameters;
+
+            var order = parameters.Order;
+            OrderEvent orderEvent;
+            switch (order.Type)
+            {
+                case OrderType.Market:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.MarketFill(parameters.Security, parameters.Order as MarketOrder)
+                        : MarketFill(parameters.Security, parameters.Order as MarketOrder);
+                    break;
+                case OrderType.Limit:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.LimitFill(parameters.Security, parameters.Order as LimitOrder)
+                        : LimitFill(parameters.Security, parameters.Order as LimitOrder);
+                    break;
+                case OrderType.StopMarket:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder)
+                        : StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder);
+                    break;
+                case OrderType.StopLimit:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.StopLimitFill(parameters.Security, parameters.Order as StopLimitOrder)
+                        : StopLimitFill(parameters.Security, parameters.Order as StopLimitOrder);
+                    break;
+                case OrderType.MarketOnOpen:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.MarketOnOpenFill(parameters.Security, parameters.Order as MarketOnOpenOrder)
+                        : MarketOnOpenFill(parameters.Security, parameters.Order as MarketOnOpenOrder);
+                    break;
+                case OrderType.MarketOnClose:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.MarketOnCloseFill(parameters.Security, parameters.Order as MarketOnCloseOrder)
+                        : MarketOnCloseFill(parameters.Security, parameters.Order as MarketOnCloseOrder);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return new Fill(orderEvent);
+        }
+
+        /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        /// <seealso cref="SecurityTransactionModel.StopMarketFill"/>
-        /// <seealso cref="SecurityTransactionModel.LimitFill"/>
         public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             //Default order event to return.
@@ -45,7 +114,7 @@ namespace QuantConnect.Orders.Fills
             if (!IsExchangeOpen(asset, false)) return fill;
 
             //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = GetPrices(asset, order.Direction).Current;
+            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Current;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -75,7 +144,6 @@ namespace QuantConnect.Orders.Fills
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        /// <seealso cref="SecurityTransactionModel.LimitFill"/>
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             //Default order event to return.
@@ -89,7 +157,7 @@ namespace QuantConnect.Orders.Fills
             if (!IsExchangeOpen(asset, false)) return fill;
 
             //Get the range of prices in the last bar:
-            var prices = GetPrices(asset, order.Direction);
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
@@ -136,7 +204,6 @@ namespace QuantConnect.Orders.Fills
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="SecurityTransactionModel.LimitFill"/>
         /// <remarks>
         ///     There is no good way to model limit orders with OHLC because we never know whether the market has
         ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
@@ -154,10 +221,17 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset, true)) return fill;
+            if (!IsExchangeOpen(
+                asset,
+                Parameters.ConfigProvider
+                    .GetSubscriptionDataConfigs(asset.Symbol)
+                    .IsExtendedMarketHours()))
+            {
+                return fill;
+            }
 
             //Get the range of prices in the last bar:
-            var prices = GetPrices(asset, order.Direction);
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
@@ -224,10 +298,15 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset, true)) return fill;
-
+            if (!IsExchangeOpen(asset,
+                Parameters.ConfigProvider
+                    .GetSubscriptionDataConfigs(asset.Symbol)
+                    .IsExtendedMarketHours()))
+            {
+                return fill;
+            }
             //Get the range of prices in the last bar:
-            var prices = GetPrices(asset, order.Direction);
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
@@ -272,7 +351,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
+        public virtual OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, 0);
@@ -299,9 +378,8 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPrices(asset, order.Direction).Open;
+            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Open;
             fill.Status = OrderStatus.Filled;
-
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
@@ -329,7 +407,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
+        public virtual OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, 0);
@@ -347,9 +425,8 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPrices(asset, order.Direction).Close;
+            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Close;
             fill.Status = OrderStatus.Filled;
-
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
@@ -372,6 +449,19 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// This is required due to a limitation in PythonNet to resolved
+        /// overriden methods. <see cref="GetPrices"/>
+        /// </summary>
+        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        {
+            if (PythonWrapper != null)
+            {
+                return PythonWrapper.GetPrices(asset, direction);
+            }
+            return GetPrices(asset, direction);
+        }
+
+        /// <summary>
         /// Get the minimum and maximum price for this security in the last bar:
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
@@ -391,8 +481,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
-
+            var subscriptionTypes = Parameters.ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol)
+                .Select(x => x.Type).ToList();
             // Tick
             var tick = asset.Cache.GetData<Tick>();
             if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
@@ -435,14 +526,14 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        private static bool IsExchangeOpen(Security asset, bool allowExtendedMarketHoursFills)
+        private static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();
-                var isExtendedMarketHours = allowExtendedMarketHoursFills && asset.IsExtendedMarketHours;
-                if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
+                if (asset.LocalTime.Date != currentBar.EndTime.Date
+                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
                 {
                     return false;
                 }
