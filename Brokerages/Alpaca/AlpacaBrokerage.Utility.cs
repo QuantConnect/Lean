@@ -166,286 +166,153 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of bars</returns>
         private IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
-            // This is due to the polygon API logic.
-            // If start and end date is equal, then the result is null
-            var endTimeUtcForApi = endTimeUtc.Add(TimeSpan.FromDays(1));
-
-            var period = resolution.ToTimeSpan();
-
             // Only minute/hour/daily resolutions supported
             if (resolution < Resolution.Minute)
             {
                 yield break;
             }
 
-            var startTime = startTimeUtc;
-            var startTimeWithTimeZone = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-            var endTimeWithTimeZone = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-
-            var currentBar = new TradeBar();
-            while (true)
-            {
-                List<Markets.IBar> newBars;
-                try
-                {
-                    CheckRateLimiting();
-                    var task = period.Days < 1 ? _restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTimeUtcForApi) : _restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTimeUtc);
-                    newBars = task.SynchronouslyAwaitTaskResult().Items.ToList();
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e);
-                    if (e.InnerException != null)
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw;
-                }
-
-                if (newBars.Count == 0)
-                {
-                    if (currentBar.Symbol != Symbol.Empty) yield return currentBar;
-                    break;
-                }
-                if (startTime == newBars.Last().Time)
-                {
-                    yield return currentBar;
-                    break;
-                }
-
-                startTime = newBars.Last().Time;
-
-                var result = newBars
-                        .GroupBy(x => x.Time.RoundDown(period))
-                        .Select(x => new TradeBar(
-                            x.Key.ConvertFromUtc(requestedTimeZone),
-                            symbol,
-                            x.First().Open,
-                            x.Max(t => t.High),
-                            x.Min(t => t.Low),
-                            x.Last().Close,
-                            0,
-                            period
-                            ))
-                         .ToList();
-                if (currentBar.Symbol == Symbol.Empty) currentBar = result[0];
-                if (currentBar.Time == result[0].Time)
-                {
-                    // Update the last QuoteBar
-                    var newBar = result[0];
-                    currentBar.High = currentBar.High > newBar.High ? currentBar.High : newBar.High;
-                    currentBar.Low = currentBar.Low < newBar.Low ? currentBar.Low : newBar.Low;
-                    currentBar.Close = newBar.Close;
-                    result[0] = currentBar;
-                }
-                else
-                {
-                    result.Insert(0, currentBar);
-                }
-                if (result.Count == 1 && result[0].Time == currentBar.Time) continue;
-                var isEnd = false;
-                for (var i = 0; i < result.Count - 1; i++)
-                {
-                    if (result[i].Time < startTimeWithTimeZone) continue;
-                    if (result[i].Time > endTimeWithTimeZone)
-                    {
-                        isEnd = true;
-                        break;
-                    }
-                    yield return result[i];
-                }
-                currentBar = result[result.Count - 1];
-
-                if (isEnd) break;
-                if (currentBar.Time == endTimeWithTimeZone)
-                {
-                    yield return currentBar;
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Downloads a list of QuoteBars at the requested resolution
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <param name="startTimeUtc">The starting time (UTC)</param>
-        /// <param name="endTimeUtc">The ending time (UTC)</param>
-        /// <param name="resolution">The requested resolution</param>
-        /// <param name="requestedTimeZone">The requested timezone for the data</param>
-        /// <returns>The list of bars</returns>
-        private IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
-        {
             var period = resolution.ToTimeSpan();
 
-            var startTime = startTimeUtc;
-            var startTimeWithTimeZone = startTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-            var endTimeWithTimeZone = endTimeUtc.ConvertFromUtc(requestedTimeZone).RoundDown(period);
-            long offsets = 0;
+            var startTime = startTimeUtc.RoundDown(period);
+            var endTime = endTimeUtc.RoundDown(period).Add(period);
 
-            QuoteBar currentBar = new QuoteBar();
-            while (true)
+            while (startTime < endTime)
             {
+                CheckRateLimiting();
 
-                List<IHistoricalQuote> asList;
-                try
+                var task = resolution == Resolution.Daily
+                    ? _restClient.ListDayAggregatesAsync(symbol.Value, startTime, endTime)
+                    : _restClient.ListMinuteAggregatesAsync(symbol.Value, startTime, endTime);
+
+                var time = startTime;
+                var items = task.SynchronouslyAwaitTaskResult()
+                    .Items
+                    .Where(x => x.Time >= time)
+                    .ToList();
+
+                if (!items.Any())
                 {
-                    CheckRateLimiting();
-                    var task = _restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
-                    var newBars = task.SynchronouslyAwaitTaskResult();
-                    asList = newBars.Items.ToList();
+                    break;
+                }
 
-                    if (asList.Count == 0)
+                if (resolution == Resolution.Hour)
+                {
+                    // aggregate minute tradebars into hourly tradebars
+                    var bars = items
+                        .GroupBy(x => x.Time.RoundDown(period))
+                        .Select(
+                            x => new TradeBar(
+                                x.Key.ConvertFromUtc(requestedTimeZone),
+                                symbol,
+                                x.First().Open,
+                                x.Max(t => t.High),
+                                x.Min(t => t.Low),
+                                x.Last().Close,
+                                x.Sum(t => t.Volume),
+                                period
+                            ));
+
+                    foreach (var bar in bars)
                     {
-                        startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
-                        startTime = startTime.AddDays(1);
-                        if (startTime > endTimeUtc) break;
-                        offsets = 0;
-                        continue;
+                        yield return bar;
                     }
-
-                    // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
-                    asList.RemoveAt(0);
-                    if (asList.Count == 0) break;
-
-                    offsets = asList.Last().TimeOffset;
-                    if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e);
-                    if (e.InnerException != null)
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw;
-                }
-                var result = asList
-                        .GroupBy(x => DateTimeHelper.FromUnixTimeMilliseconds(x.TimeOffset).RoundDown(period))
-                        .Select(x => new QuoteBar(
-                            x.Key.ConvertFromUtc(requestedTimeZone),
-                            symbol,
-                            new Bar(
-                                x.First().BidPrice,
-                                x.Max(t => t.BidPrice),
-                                x.Min(t => t.BidPrice),
-                                x.Last().BidPrice
-                            ),
-                            x.Last().BidSize,
-                            new Bar(
-                                x.First().AskPrice,
-                                x.Max(t => t.AskPrice),
-                                x.Min(t => t.AskPrice),
-                                x.Last().AskPrice
-                            ),
-                            x.Last().AskPrice,
-                            period
-                            ))
-                         .ToList();
-                if (currentBar.Symbol == Symbol.Empty) currentBar = result[0];
-                if (currentBar.Time == result[0].Time)
-                {
-                    // Update the last QuoteBar
-                    var newBar = result[0];
-                    currentBar.Bid.High = currentBar.Bid.High > newBar.Bid.High ? currentBar.Bid.High : newBar.Bid.High;
-                    currentBar.Bid.Low = currentBar.Bid.Low < newBar.Bid.Low ? currentBar.Bid.Low : newBar.Bid.Low;
-                    currentBar.Bid.Close = newBar.Bid.Close;
-
-                    currentBar.Ask.High = currentBar.Ask.High > newBar.Ask.High ? currentBar.Ask.High : newBar.Ask.High;
-                    currentBar.Ask.Low = currentBar.Ask.Low < newBar.Ask.Low ? currentBar.Ask.Low : newBar.Ask.Low;
-                    currentBar.Ask.Close = newBar.Ask.Close;
-                    result[0] = currentBar;
                 }
                 else
                 {
-                    result.Insert(0, currentBar);
-                }
-                if (result.Count == 1 && result[0].Time == currentBar.Time) continue;
-                bool isEnd = false;
-                for (int i = 0; i < result.Count - 1; i++)
-                {
-                    if (startTimeWithTimeZone > result[i].Time) continue;
-                    if (endTimeWithTimeZone < result[i].Time)
+                    foreach (var item in items)
                     {
-                        isEnd = true;
-                        break;
+                        yield return new TradeBar(
+                            resolution == Resolution.Daily
+                                ? item.Time
+                                : item.Time.ConvertFromUtc(requestedTimeZone),
+                            symbol,
+                            item.Open,
+                            item.High,
+                            item.Low,
+                            item.Close,
+                            item.Volume,
+                            period);
                     }
-                    yield return result[i];
                 }
-                currentBar = result[result.Count - 1];
 
-                if (isEnd) break;
-                if (currentBar.Time == endTimeWithTimeZone)
-                {
-                    yield return currentBar;
-                    break;
-                }
+                startTime = items.Last().Time.Add(period);
             }
         }
 
         /// <summary>
-        /// Downloads a list of Ticks for the requested period
+        /// Downloads a list of Trade ticks
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="startTimeUtc">The starting time (UTC)</param>
         /// <param name="endTimeUtc">The ending time (UTC)</param>
         /// <param name="requestedTimeZone">The requested timezone for the data</param>
         /// <returns>The list of ticks</returns>
-        private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
+        private IEnumerable<Tick> DownloadTradeTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
         {
             var startTime = startTimeUtc;
-            var startTimeWithTimeZone = startTimeUtc.ConvertFromUtc(requestedTimeZone);
-            var endTimeWithTimeZone = endTimeUtc.ConvertFromUtc(requestedTimeZone);
-            long offsets = 0;
 
-            var currentTick = new Tick();
-            while (true)
+            var offset = 0L;
+            while (startTime < endTimeUtc)
             {
-                List<IHistoricalQuote> asList;
-                try
-                {
-                    CheckRateLimiting();
-                    var task = _restClient.ListHistoricalQuotesAsync(symbol.Value, startTime, offsets);
-                    var newBars = task.SynchronouslyAwaitTaskResult();
-                    asList = newBars.Items.ToList();
-                    if (asList.Count == 0)
-                    {
-                        startTime = new DateTime(startTime.Year, startTime.Month, startTime.Day);
-                        startTime = startTime.AddDays(1);
-                        if (startTime > endTimeUtc) break;
-                        offsets = 0;
-                    }
-                    else
-                    {
-                        // The first item in the HistoricalQuote is always 0 on BidPrice, so ignore it.
-                        asList.RemoveAt(0);
+                CheckRateLimiting();
 
-                        offsets = asList.Last().TimeOffset;
-                        if (DateTimeHelper.FromUnixTimeMilliseconds(offsets) < startTimeUtc) continue;
-                    }
-                }
-                catch (Exception e)
+                var date = startTime.ConvertFromUtc(requestedTimeZone).Date;
+
+                var task = _restClient.ListHistoricalTradesAsync(symbol.Value, date, offset);
+
+                var time = startTime;
+                var items = task.SynchronouslyAwaitTaskResult()
+                    .Items
+                    .Where(x => DateTimeHelper.FromUnixTimeMilliseconds(x.TimeOffset) >= time)
+                    .ToList();
+
+                if (!items.Any())
                 {
-                    Log.Error(e);
-                    if (e.InnerException != null)
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, 100, e.InnerException.Message));
-                    throw;
+                    break;
                 }
-                var isEnd = false;
-                for (var i = 0; i < asList.Count; i++)
+
+                foreach (var item in items)
                 {
-                    var currentTime = DateTimeHelper.FromUnixTimeMilliseconds(asList[i].TimeOffset).ConvertFromUtc(requestedTimeZone);
-                    if (startTimeWithTimeZone > currentTime) continue;
-                    if (endTimeWithTimeZone < currentTime)
+                    yield return new Tick
                     {
-                        isEnd = true;
-                        break;
-                    }
-                    currentTick.Time = currentTime;
-                    currentTick.Symbol = symbol;
-                    currentTick.BidPrice = asList[i].BidPrice;
-                    currentTick.AskPrice = asList[i].AskPrice;
-                    yield return currentTick;
+                        TickType = TickType.Trade,
+                        Time = DateTimeHelper.FromUnixTimeMilliseconds(item.TimeOffset).ConvertFromUtc(requestedTimeZone),
+                        Symbol = symbol,
+                        Value = item.Price,
+                        Quantity = item.Size
+                    };
                 }
-                asList.Clear();
-                if (isEnd) break;
+
+                offset = items.Last().TimeOffset;
+                startTime = DateTimeHelper.FromUnixTimeMilliseconds(offset);
             }
+        }
+
+        /// <summary>
+        /// Aggregates a list of trade ticks into tradebars
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="ticks">The IEnumerable of ticks</param>
+        /// <param name="period">The time span for the resolution</param>
+        /// <returns></returns>
+        internal static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan period)
+        {
+            return
+                from t in ticks
+                group t by t.Time.RoundDown(period)
+                into g
+                select new TradeBar
+                {
+                    Symbol = symbol,
+                    Time = g.Key,
+                    Open = g.First().LastPrice,
+                    High = g.Max(t => t.LastPrice),
+                    Low = g.Min(t => t.LastPrice),
+                    Close = g.Last().LastPrice,
+                    Volume = g.Sum(t => t.Quantity),
+                    Period = period
+                };
         }
 
         /// <summary>

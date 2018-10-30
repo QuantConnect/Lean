@@ -24,7 +24,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -386,7 +385,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test, TestCaseSource("OrderParameters")]
-        public void ShortFromZero(OrderTestParameters parameters)
+        public virtual void ShortFromZero(OrderTestParameters parameters)
         {
             Log.Trace("");
             Log.Trace("SHORT FROM ZERO");
@@ -395,7 +394,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test, TestCaseSource("OrderParameters")]
-        public void CloseFromShort(OrderTestParameters parameters)
+        public virtual void CloseFromShort(OrderTestParameters parameters)
         {
             Log.Trace("");
             Log.Trace("CLOSE FROM SHORT");
@@ -408,7 +407,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test, TestCaseSource("OrderParameters")]
-        public void ShortFromLong(OrderTestParameters parameters)
+        public virtual void ShortFromLong(OrderTestParameters parameters)
         {
             Log.Trace("");
             Log.Trace("SHORT FROM LONG");
@@ -426,7 +425,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test, TestCaseSource("OrderParameters")]
-        public void LongFromShort(OrderTestParameters parameters)
+        public virtual void LongFromShort(OrderTestParameters parameters)
         {
             Log.Trace("");
             Log.Trace("LONG FROM SHORT");

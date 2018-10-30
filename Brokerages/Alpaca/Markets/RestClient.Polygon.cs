@@ -125,8 +125,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             {
                 Path = $"v1/historic/agg/day/{symbol}",
                 Query = getDefaultPolygonApiQueryBuilder()
-                    .AddParameter("from", dateFromInclusive, "yyyy-MM-dd")
-                    .AddParameter("to", dateIntoInclusive, "yyyy-MM-dd")
+                    .AddParameter("from", dateFromInclusive)
+                    .AddParameter("to", dateIntoInclusive)
                     .AddParameter("limit", limit)
             };
 
@@ -154,8 +154,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             {
                 Path = $"v1/historic/agg/minute/{symbol}",
                 Query = getDefaultPolygonApiQueryBuilder()
-                    .AddParameter("from", dateFromInclusive, "yyyy-MM-dd")
-                    .AddParameter("to", dateIntoInclusive, "yyyy-MM-dd")
+                    .AddParameter("from", dateFromInclusive)
+                    .AddParameter("to", dateIntoInclusive)
                     .AddParameter("limit", limit)
             };
 

@@ -375,44 +375,28 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            var exchangeTimeZone = _marketHours.GetExchangeHours(Market.USA, request.Symbol, request.Symbol.SecurityType).TimeZone;
+            var exchangeTimeZone = _marketHours.GetExchangeHours(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType).TimeZone;
 
-            // set the starting date/time
-            var startDateTime = request.StartTimeUtc;
+            IEnumerable<BaseData> items;
+            switch (request.Resolution)
+            {
+                case Resolution.Tick:
+                    items = DownloadTradeTicks(request.Symbol, request.StartTimeUtc, request.EndTimeUtc, exchangeTimeZone);
+                    break;
 
-            if (request.Resolution == Resolution.Tick)
-            {
-                var ticks = DownloadTicks(request.Symbol, startDateTime, request.EndTimeUtc, exchangeTimeZone).ToList();
-                if (ticks.Count != 0)
-                {
-                    foreach (var tick in ticks)
-                    {
-                        yield return tick;
-                    }
-                }
+                case Resolution.Second:
+                    var ticks = DownloadTradeTicks(request.Symbol, request.StartTimeUtc, request.EndTimeUtc, exchangeTimeZone);
+                    items = AggregateTicks(request.Symbol, ticks, request.Resolution.ToTimeSpan());
+                    break;
+
+                default:
+                    items = DownloadTradeBars(request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution, exchangeTimeZone);
+                    break;
             }
-            else if (request.Resolution == Resolution.Second)
+
+            foreach (var item in items)
             {
-                var quoteBars = DownloadQuoteBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
-                if (quoteBars.Count != 0)
-                {
-                    foreach (var quoteBar in quoteBars)
-                    {
-                        yield return quoteBar;
-                    }
-                }
-            }
-            // Due to the slow processing time for QuoteBars in larger resolution, we change into TradeBar in these cases
-            else
-            {
-                var tradeBars = DownloadTradeBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
-                if (tradeBars.Count != 0)
-                {
-                    foreach (var tradeBar in tradeBars)
-                    {
-                        yield return tradeBar;
-                    }
-                }
+                yield return item;
             }
         }
 

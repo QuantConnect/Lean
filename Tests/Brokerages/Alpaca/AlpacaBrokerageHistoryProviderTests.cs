@@ -14,7 +14,7 @@
 */
 
 using System;
-using NodaTime;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
@@ -38,36 +38,33 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                 return new[]
                 {
                     // valid parameters
-                    new TestCaseData(aapl, Resolution.Second, Time.OneMinute, false),
-                    new TestCaseData(aapl, Resolution.Minute, Time.OneHour, false),
+                    new TestCaseData(aapl, Resolution.Tick, TimeSpan.FromMinutes(15), false),
+                    new TestCaseData(aapl, Resolution.Second, TimeSpan.FromMinutes(15), false),
+                    new TestCaseData(aapl, Resolution.Minute, Time.OneDay, false),
                     new TestCaseData(aapl, Resolution.Hour, Time.OneDay, false),
-                    new TestCaseData(aapl, Resolution.Daily, TimeSpan.FromDays(5), false),
-
-                    // invalid resolution, no error, empty result
-                    new TestCaseData(aapl, Resolution.Tick, TimeSpan.FromSeconds(15), false),
+                    new TestCaseData(aapl, Resolution.Daily, TimeSpan.FromDays(30), false),
 
                     // invalid period, no error, empty result
-                    new TestCaseData(aapl, Resolution.Daily, TimeSpan.FromDays(-15), false),
+                    new TestCaseData(aapl, Resolution.Daily, TimeSpan.FromDays(-15), true),
 
                     // invalid symbol, no error, empty result
                     new TestCaseData(Symbol.Create("XYZ", SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), true),
 
                     // invalid security type, no error, empty result
-                    new TestCaseData(Symbols.ETHBTC, Resolution.Daily, TimeSpan.FromDays(15), true),
+                    new TestCaseData(Symbols.ETHBTC, Resolution.Daily, TimeSpan.FromDays(15), true)
                 };
             }
         }
 
-        [Test, TestCaseSource("TestParameters")]
-        public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool throwsException)
+        [Test, TestCaseSource(nameof(TestParameters))]
+        public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool shouldBeEmpty)
         {
-            TestDelegate test = () =>
-            {
-                var keyId = Config.Get("alpaca-key-id");
-                var secretKey = Config.Get("alpaca-secret-key");
-                var tradingMode = Config.Get("alpaca-trading-mode");
-                var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode);
+            var keyId = Config.Get("alpaca-key-id");
+            var secretKey = Config.Get("alpaca-secret-key");
+            var tradingMode = Config.Get("alpaca-trading-mode");
 
+            using (var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode))
+            {
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
                 historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null));
@@ -76,21 +73,22 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
 
                 var requests = new[]
                 {
-                    new HistoryRequest(now.Add(-period),
+                    new HistoryRequest(
+                        now.Add(-period),
                         now,
                         typeof(TradeBar),
                         symbol,
                         resolution,
                         SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        DateTimeZone.Utc,
-                        Resolution.Daily,
+                        TimeZones.NewYork,
+                        null,
                         false,
                         false,
                         DataNormalizationMode.Adjusted,
                         TickType.Trade)
                 };
 
-                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
+                var history = historyProvider.GetHistory(requests, TimeZones.NewYork).ToList();
 
                 foreach (var slice in history)
                 {
@@ -98,33 +96,29 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                     {
                         foreach (var tick in slice.Ticks[symbol])
                         {
-                            Console.WriteLine("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol, tick.BidPrice, tick.AskPrice);
+                            Console.WriteLine($"{tick.Time}: {tick.Symbol} - P={tick.Price}, Q={tick.Quantity}");
                         }
-                    }
-                    else if (resolution == Resolution.Second)
-                    {
-                        var bar = slice.QuoteBars[symbol];
-
-                        Console.WriteLine("{0}: {1} - O={2}, H={3}, L={4}, C={5}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close);
                     }
                     else
                     {
                         var bar = slice.Bars[symbol];
 
-                        Console.WriteLine("{0}: {1} - O={2}, H={3}, L={4}, C={5}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close);
+                        Console.WriteLine($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}, V={bar.Volume}");
                     }
                 }
 
-                Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
-            };
+                if (shouldBeEmpty)
+                {
+                    Assert.IsTrue(history.Count == 0);
+                }
+                else
+                {
+                    Assert.IsTrue(history.Count > 0);
+                }
 
-            if (throwsException)
-            {
-                Assert.Throws<ArgumentException>(test);
-            }
-            else
-            {
-                Assert.DoesNotThrow(test);
+                brokerage.Disconnect();
+
+                Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
             }
         }
     }

@@ -101,6 +101,30 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             return quote.AskPrice;
         }
 
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
+        }
+
         [Test]
         public void ValidateMarketOrders()
         {
