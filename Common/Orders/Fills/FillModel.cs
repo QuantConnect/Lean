@@ -14,8 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -25,6 +28,22 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class FillModel : IFillModel
     {
+        /// <summary>
+        /// Provides access to registered <see cref="SubscriptionDataConfig"/>
+        /// </summary>
+        protected ISubscriptionDataConfigProvider SubscriptionDataConfigProvider;
+
+        /// <summary>
+        /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
+        /// </summary>
+        /// <param name="subscriptionDataConfigProvider">Provides access to registered <see cref="SubscriptionDataConfig"/></param>
+        /// <remarks>This will be set by the Lean system. Work around to maintain retro compatibility</remarks>
+        public virtual void SetSubscriptionDataConfigProvider(
+            ISubscriptionDataConfigProvider subscriptionDataConfigProvider)
+        {
+            SubscriptionDataConfigProvider = subscriptionDataConfigProvider;
+        }
+
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
@@ -44,8 +63,11 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
+            var subscriptionDataConfigs =
+                SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
             //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = GetPrices(asset, order.Direction).Current;
+            fill.FillPrice = GetPrices(asset, order.Direction, subscriptionDataConfigs).Current;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -88,8 +110,11 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
+            var subscriptionDataConfigs =
+                SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
             //Get the range of prices in the last bar:
-            var prices = GetPrices(asset, order.Direction);
+            var prices = GetPrices(asset, order.Direction, subscriptionDataConfigs);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
@@ -153,11 +178,14 @@ namespace QuantConnect.Orders.Fills
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
+            var subscriptionDataConfigs =
+                SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset, true)) return fill;
+            if (!IsExchangeOpen(asset, subscriptionDataConfigs.IsExtendedMarketHours())) return fill;
 
             //Get the range of prices in the last bar:
-            var prices = GetPrices(asset, order.Direction);
+            var prices = GetPrices(asset, order.Direction, subscriptionDataConfigs);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
@@ -223,11 +251,14 @@ namespace QuantConnect.Orders.Fills
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
+            var subscriptionDataConfigs =
+                SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset, true)) return fill;
+            if (!IsExchangeOpen(asset, subscriptionDataConfigs.IsExtendedMarketHours())) return fill;
 
             //Get the range of prices in the last bar:
-            var prices = GetPrices(asset, order.Direction);
+            var prices = GetPrices(asset, order.Direction, subscriptionDataConfigs);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
@@ -299,7 +330,10 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPrices(asset, order.Direction).Open;
+            var subscriptionDataConfigs =
+                SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
+            fill.FillPrice = GetPrices(asset, order.Direction, subscriptionDataConfigs).Open;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -344,10 +378,14 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
+
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPrices(asset, order.Direction).Close;
+            var subscriptionDataConfigs =
+                SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
+            fill.FillPrice = GetPrices(asset, order.Direction, subscriptionDataConfigs).Close;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -376,7 +414,11 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
-        protected virtual Prices GetPrices(Security asset, OrderDirection direction)
+        /// <param name="subscriptionDataConfigs">The <see cref="SubscriptionDataConfig"/>
+        /// registered for this security</param>
+        protected virtual Prices GetPrices(Security asset,
+            OrderDirection direction,
+            List<SubscriptionDataConfig> subscriptionDataConfigs)
         {
             var low = asset.Low;
             var high = asset.High;
@@ -391,7 +433,7 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
+            var subscriptionTypes = subscriptionDataConfigs.Select(x => x.Type).ToList();
 
             // Tick
             var tick = asset.Cache.GetData<Tick>();
@@ -435,13 +477,12 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        private static bool IsExchangeOpen(Security asset, bool allowExtendedMarketHoursFills)
+        private static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();
-                var isExtendedMarketHours = allowExtendedMarketHoursFills && asset.IsExtendedMarketHours;
                 if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
                 {
                     return false;

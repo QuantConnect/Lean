@@ -40,6 +40,7 @@ namespace QuantConnect.Securities.Volatility
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
         /// </summary>
         /// <param name="subscriptionDataConfigProvider">Provides access to registered <see cref="SubscriptionDataConfig"/></param>
+        /// <remarks>This will be set by the Lean system. Work around to maintain retro compatibility</remarks>
         public virtual void SetSubscriptionDataConfigProvider(
             ISubscriptionDataConfigProvider subscriptionDataConfigProvider)
         {

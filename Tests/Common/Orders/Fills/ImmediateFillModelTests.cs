@@ -23,6 +23,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Tests.Common.Data;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
@@ -48,6 +49,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var brokerageModel = new FxcmBrokerageModel();
             var fillModel = brokerageModel.GetFillModel(security);
+
+            MockSubscriptionDataConfigProvider.SetSubscriptionDataConfigProvider(fillModel, config);
 
             const decimal bidPrice = 1.13739m;
             const decimal askPrice = 1.13746m;
@@ -86,6 +89,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
 
             var fillModel = new ImmediateFillModel();
+            MockSubscriptionDataConfigProvider.SetSubscriptionDataConfigProvider(fillModel, config);
             var order = new MarketOrder(symbol, 1000, DateTime.Now);
             var fill = fillModel.MarketFill(security, order);
 
@@ -118,6 +122,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
 
             var fillModel = new ImmediateFillModel();
+            MockSubscriptionDataConfigProvider.SetSubscriptionDataConfigProvider(fillModel, config);
             var order = new MarketOrder(symbol, 1000, DateTime.Now);
             var fill = fillModel.MarketFill(security, order);
 
@@ -154,6 +159,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(fillForwardBar);
 
             var fillModel = new ImmediateFillModel();
+            MockSubscriptionDataConfigProvider.SetSubscriptionDataConfigProvider(fillModel, config);
             var order = new LimitOrder(symbol, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
 
             var fill = fillModel.LimitFill(security, order);
@@ -204,6 +210,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(fillForwardBar);
 
             var fillModel = new ImmediateFillModel();
+            MockSubscriptionDataConfigProvider.SetSubscriptionDataConfigProvider(fillModel, config);
             var order = new StopMarketOrder(symbol, orderQuantity, stopPrice, time.ConvertToUtc(TimeZones.NewYork));
 
             var fill = fillModel.StopMarketFill(security, order);
@@ -254,6 +261,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(fillForwardBar);
 
             var fillModel = new ImmediateFillModel();
+            MockSubscriptionDataConfigProvider.SetSubscriptionDataConfigProvider(fillModel, config);
             var order = new StopLimitOrder(symbol, orderQuantity, stopPrice, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
 
             var fill = fillModel.StopLimitFill(security, order);

@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -318,6 +319,26 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         //Model:
                         var model = security.FillModel;
+
+                        // start: this is a work around to maintain retro compatibility
+                        // did not want to add IFillModel.SetSubscriptionDataConfigProvider
+                        // to prevent breaking existing user models.
+                        // This is set here with the objective of centralization and robustness,
+                        // since the FillModel could be set at any time.
+                        var baseType = security.FillModel as FillModel;
+                        if (baseType != null)
+                        {
+                            baseType.SetSubscriptionDataConfigProvider(
+                                Algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                        }
+                        else
+                        {
+                            // the FillModel could be wrapped by the TransactionModel
+                            var transactionModel = security.TransactionModel as SecurityTransactionModel;
+                            transactionModel?.SetSubscriptionDataConfigProvider(
+                                Algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                        }
+                        // end
 
                         //Based on the order type: refresh its model to get fill price and quantity
                         try

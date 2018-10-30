@@ -20,6 +20,8 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Represents a model that simulates order fill events
     /// </summary>
+    /// <remarks>Please use<see cref="FillModel"/> as the base class for
+    /// any implementations of<see cref="IFillModel"/></remarks>
     public interface IFillModel
     {
         /// <summary>

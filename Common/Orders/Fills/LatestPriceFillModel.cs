@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -34,7 +36,11 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
-        protected override Prices GetPrices(Security asset, OrderDirection direction)
+        /// <param name="subscriptionDataConfigs">The <see cref="SubscriptionDataConfig"/>
+        /// registered for this security</param>
+        protected override Prices GetPrices(Security asset,
+            OrderDirection direction,
+            List<SubscriptionDataConfig> subscriptionDataConfigs)
         {
             var low = asset.Low;
             var high = asset.High;
@@ -49,7 +55,7 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
+            var subscriptionTypes = subscriptionDataConfigs.Select(x => x.Type).ToList();
 
             // Tick
             var tick = asset.Cache.GetData<Tick>();
