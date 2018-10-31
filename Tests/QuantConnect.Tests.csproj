@@ -156,6 +156,7 @@
     <Compile Include="Brokerages\GDAX\GDAXBrokerageHistoryProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
+    <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />
