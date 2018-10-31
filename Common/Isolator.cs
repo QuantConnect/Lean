@@ -87,6 +87,10 @@ namespace QuantConnect
             //Launch task
             var task = Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token);
 
+            // give some granularity to the sleep interval if >= 1000ms
+            var sleepGranularity = sleepIntervalMillis >= 1000 ? 5 : 1;
+            var granularSleepIntervalMillis = sleepIntervalMillis / sleepGranularity;
+
             while (!task.IsCompleted && DateTime.Now < end)
             {
                 // if over 80% allocation force GC then sample
@@ -126,7 +130,15 @@ namespace QuantConnect
                     break;
                 }
 
-                Thread.Sleep(sleepIntervalMillis);
+                // for loop to give the sleep intervals some granularity
+                for (int i = 0; i < sleepGranularity; i++)
+                {
+                    Thread.Sleep(granularSleepIntervalMillis);
+                    if (task.IsCompleted)
+                    {
+                        break;
+                    }
+                }
             }
 
             if (task.IsCompleted == false && message == "")
