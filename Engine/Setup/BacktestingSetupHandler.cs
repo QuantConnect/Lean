@@ -211,7 +211,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Error(err);
                     Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
                 }
-            }, controls.RamAllocation);
+            }, controls.RamAllocation,
+                sleepIntervalMillis:50); // entire system is waiting on this, so be as fast as possible
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
