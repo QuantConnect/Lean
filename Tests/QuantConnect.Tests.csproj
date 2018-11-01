@@ -164,6 +164,7 @@
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\IdentityCurrencyConverterTests.cs" />
+    <Compile Include="Common\Securities\ProcessVolatilityHistoryRequirementsTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
     <Compile Include="Common\Securities\SecurityServiceTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />

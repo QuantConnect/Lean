@@ -185,10 +185,12 @@
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\HistoryProviderBase.cs" />
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
+    <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="HistoryProviderEvents.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
     <Compile Include="Interfaces\ISecurityInitializerProvider.cs" />
     <Compile Include="Interfaces\ISecurityService.cs" />
+    <Compile Include="Interfaces\ISubscriptionDataConfigProvider.cs" />
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
@@ -208,6 +210,7 @@
     <Compile Include="Securities\ReservedBuyingPowerForPosition.cs" />
     <Compile Include="Securities\ReservedBuyingPowerForPositionContext.cs" />
     <Compile Include="Securities\SecurityService.cs" />
+    <Compile Include="Securities\Volatility\BaseVolatilityModel.cs" />
     <Compile Include="Series.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioConfig.cs" />
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />

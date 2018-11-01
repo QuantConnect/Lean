@@ -13,25 +13,38 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Securities.Volatility;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Securities.Volatility
 {
     /// <summary>
-    /// Represents a model that computes the volatility of a security
+    /// Represents a base model that computes the volatility of a security
     /// </summary>
-    /// <remarks>Please use<see cref="BaseVolatilityModel"/> as the base class for
-    /// any implementations of<see cref="IVolatilityModel"/></remarks>
-    public interface IVolatilityModel
+    public class BaseVolatilityModel : IVolatilityModel
     {
+        /// <summary>
+        /// Provides access to registered <see cref="SubscriptionDataConfig"/>
+        /// </summary>
+        protected ISubscriptionDataConfigProvider SubscriptionDataConfigProvider;
+
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        decimal Volatility { get; }
+        public virtual decimal Volatility { get; }
+
+        /// <summary>
+        /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
+        /// </summary>
+        /// <param name="subscriptionDataConfigProvider">Provides access to registered <see cref="SubscriptionDataConfig"/></param>
+        public virtual void SetSubscriptionDataConfigProvider(
+            ISubscriptionDataConfigProvider subscriptionDataConfigProvider)
+        {
+            SubscriptionDataConfigProvider = subscriptionDataConfigProvider;
+        }
 
         /// <summary>
         /// Updates this model using the new price information in
@@ -39,7 +52,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new data used to update the model</param>
-        void Update(Security security, BaseData data);
+        public virtual void Update(Security security, BaseData data)
+        {
+        }
 
         /// <summary>
         /// Returns history requirements for the volatility model expressed in the form of history request
@@ -47,27 +62,12 @@ namespace QuantConnect.Securities
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime);
-    }
-
-    /// <summary>
-    /// Provides access to a null implementation for <see cref="IVolatilityModel"/>
-    /// </summary>
-    public static class VolatilityModel
-    {
-        /// <summary>
-        /// Gets an instance of <see cref="IVolatilityModel"/> that will always
-        /// return 0 for its volatility and does nothing during Update.
-        /// </summary>
-        public static readonly IVolatilityModel Null = new NullVolatilityModel();
-
-        private sealed class NullVolatilityModel : IVolatilityModel
+        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(
+            Security security,
+            DateTime utcTime
+            )
         {
-            public decimal Volatility { get; private set; }
-
-            public void Update(Security security, BaseData data) { }
-
-            public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime) { return Enumerable.Empty<HistoryRequest>(); }
+            return Enumerable.Empty<HistoryRequest>();
         }
     }
 }

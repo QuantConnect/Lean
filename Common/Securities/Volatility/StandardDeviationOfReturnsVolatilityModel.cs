@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,8 @@ using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Securities.Volatility;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -27,7 +29,7 @@ namespace QuantConnect.Securities
     /// Provides an implementation of <see cref="IVolatilityModel"/> that computes the
     /// annualized sample standard deviation of daily returns as the volatility of the security
     /// </summary>
-    public class StandardDeviationOfReturnsVolatilityModel : IVolatilityModel
+    public class StandardDeviationOfReturnsVolatilityModel : BaseVolatilityModel
     {
         private bool _needsUpdate;
         private decimal _volatility;
@@ -40,7 +42,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public decimal Volatility
+        public override decimal Volatility
         {
             get
             {
@@ -78,7 +80,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data"></param>
-        public void Update(Security security, BaseData data)
+        public override void Update(Security security, BaseData data)
         {
             var timeSinceLastUpdate = data.EndTime - _lastUpdate;
             if (timeSinceLastUpdate >= _periodSpan && data.Price > 0)
@@ -102,25 +104,37 @@ namespace QuantConnect.Securities
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
             var barCount = _window.Size + 1;
             var localStartTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours, utcTime.ConvertFromUtc(security.Exchange.TimeZone), _periodSpan, barCount, security.IsExtendedMarketHours);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
 
+            if (SubscriptionDataConfigProvider == null)
+            {
+                throw new Exception(
+                    "RelativeStandardDeviationVolatilityModel.GetHistoryRequirements(): " +
+                    "SubscriptionDataConfigProvider was not set."
+                );
+            }
+            var configurations = SubscriptionDataConfigProvider
+                .GetSubscriptionDataConfigs(security.Symbol)
+                .ToList();
+            var configuration = configurations.First();
+
             return new[]
             {
-                new HistoryRequest(utcStartTime, 
-                                   utcTime, 
-                                   typeof(TradeBar), 
-                                   security.Symbol, 
-                                   Resolution.Daily, 
-                                   security.Exchange.Hours, 
-                                   MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Type), 
-                                   Resolution.Daily, 
-                                   security.IsExtendedMarketHours, 
-                                   security.IsCustomData(), 
-                                   security.DataNormalizationMode,
+                new HistoryRequest(utcStartTime,
+                                   utcTime,
+                                   typeof(TradeBar),
+                                   configuration.Symbol,
+                                   Resolution.Daily,
+                                   security.Exchange.Hours,
+                                   configuration.DataTimeZone,
+                                   Resolution.Daily,
+                                   configurations.IsExtendedMarketHours(),
+                                   configurations.IsCustomData(),
+                                   configurations.DataNormalizationMode(),
                                    LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))
             };
         }
