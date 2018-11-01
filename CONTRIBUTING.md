@@ -20,6 +20,14 @@ As a point of consistency, we use soft tabs of four spaces to ensure files rende
 
 All pull requests must be accompanied by units tests. If it is a new feature, the tests should highlight expected use cases as well as edge cases, if applicable. If it is a bugfix, there should be tests that expose the bug in question.
 
+## Guidelines for Framework Modules Contributions
+
+Contributions of [Algorithm Framework](https://www.quantconnect.com/docs/algorithm-framework/overview) Modules needs to follow certain extra patterns, since QuantConnect users can use them in their algorithms.
+
+Generally modules should do one focused, specific role well. For example, combining risk control logic with [notifications](https://www.quantconnect.com/docs/live-trading/notifications) or placing orders outside execution models violates the general programming rule 'separation of concerns'. Keep each module doing one specific task and if you want to consider additional functionality add event handlers that users can bind to from their Algorithm instance.
+
+By default production code should be silent unless there is a fatal exception. Because of this, [logging or debugging](https://www.quantconnect.com/docs/algorithm-reference/logging-and-debug) is not allowed inside LEAN framework modules. Additional [charting](https://www.quantconnect.com/docs/algorithm-reference/charting) inside the module consumes the resources and should not be included in a module as well.
+
 ## Initial Setup
 
 * Setup a [GitHub](https://github.com/) account
