@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -32,20 +33,46 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Gets the default period for the field
         /// </summary>
-        protected virtual string DefaultPeriod
-        {
-            get { return Store.Keys.FirstOrDefault() ?? string.Empty; }
-        }
+        protected virtual string DefaultPeriod => Store.Keys.FirstOrDefault() ?? string.Empty;
 
         /// <summary>
         /// Gets the value of the field for the requested period
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        protected decimal GetPeriodValue(string period)
+        public decimal GetPeriodValue(string period)
         {
             decimal value;
             return Store.TryGetValue(period, out value) ? value : 0m;
+        }
+
+        /// <summary>
+        /// Returns true if the field contains a value for the requested period
+        /// </summary>
+        /// <param name="period">The requested period</param>
+        public bool HasPeriodValue(string period) => Store.ContainsKey(period);
+
+        /// <summary>
+        /// Returns true if the field contains a value for the default period
+        /// </summary>
+        public bool HasValue => DefaultPeriod.Length > 0 && Store.ContainsKey(DefaultPeriod);
+
+        /// <summary>
+        /// Gets the list of available period names for the field
+        /// </summary>
+        /// <returns>The list of periods</returns>
+        public IEnumerable<string> GetPeriodNames()
+        {
+            return Store.Keys;
+        }
+
+        /// <summary>
+        /// Gets a dictionary of period names and values for the field
+        /// </summary>
+        /// <returns>The dictionary of period names and values</returns>
+        public IReadOnlyDictionary<string, decimal> GetPeriodValues()
+        {
+            return Store.ToReadOnlyDictionary();
         }
 
         /// <summary>
