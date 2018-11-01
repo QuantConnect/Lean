@@ -25,9 +25,10 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -35,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// Subscription data reader is a wrapper on the stream reader class to download, unpack and iterate over a data file.
     /// </summary>
     /// <remarks>The class accepts any subscription configuration and automatically makes it availble to enumerate</remarks>
-    public class SubscriptionDataReader : IEnumerator<BaseData>
+    public class SubscriptionDataReader : IEnumerator<BaseData>, ITradableDatesNotifier
     {
         private bool _initialized;
 
@@ -66,31 +67,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private FactorFile _factorFile;
         private MapFile _mapFile;
 
-        // we set the price factor ratio when we encounter a dividend in the factor file
-        // and on the next trading day we use this data to produce the dividend instance
-        private decimal? _priceFactorRatio;
-
-        // we set the split factor when we encounter a split in the factor file
-        // and on the next trading day we use this data to produce the split instance
-        private decimal? _splitFactor;
-
-        // we'll use these flags to denote we've already fired off the DelistingType.Warning
-        // and a DelistedType.Delisted Delisting object, the _delistingType object is save here
-        // since we need to wait for the next trading day before emitting
-        private bool _delisted;
-        private bool _delistedWarning;
+        private bool _pastDelistedDate;
 
         // true if we're in live mode, false otherwise
         private readonly bool _isLiveMode;
-        private readonly bool _includeAuxilliaryData;
 
         private BaseData _previous;
-        private readonly Queue<BaseData> _auxiliaryData;
         private readonly IEnumerator<DateTime> _tradeableDates;
 
         // used when emitting aux data from within while loop
-        private bool _emittedAuxilliaryData;
-        private BaseData _lastInstanceBeforeAuxilliaryData;
         private readonly IDataCacheProvider _dataCacheProvider;
         private DateTime _delistingDate;
 
@@ -113,6 +98,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event fired when there was an error reading the data
         /// </summary>
         public event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
+
+        /// <summary>
+        /// Event fired when there is a new tradable date
+        /// </summary>
+        public event EventHandler<DateTime> NewTradableDate;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -142,7 +132,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataCacheProvider">Used for caching files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
-        /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
             DateTime periodStart,
             DateTime periodFinish,
@@ -150,13 +139,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
-            IDataCacheProvider dataCacheProvider,
-            bool includeAuxilliaryData = true)
+            IDataCacheProvider dataCacheProvider)
         {
             //Save configuration of data-subscription:
             _config = config;
-
-            _auxiliaryData = new Queue<BaseData>();
 
             //Save Start and End Dates:
             _periodStart = periodStart;
@@ -167,8 +153,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             //Save access to securities
             _isLiveMode = isLiveMode;
-            _includeAuxilliaryData = includeAuxilliaryData;
-
             _tradeableDates = tradeableDates.GetEnumerator();
         }
 
@@ -292,6 +276,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _delistingDate = _mapFile.DelistingDate;
                     break;
             }
+            // adding a day so we stop at EOD
+            _delistingDate = _delistingDate.AddDays(1);
 
             _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
 
@@ -317,7 +303,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            if (Current != null && Current.DataType != MarketDataType.Auxiliary)
+            if (Current != null)
             {
                 // only save previous price data
                 _previous = Current;
@@ -339,28 +325,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             do
             {
-                // check for aux data first
-                if (HasAuxDataBefore(_lastInstanceBeforeAuxilliaryData))
-                {
-                    // check for any auxilliary data before reading a line, but make sure
-                    // it should be going ahead of '_lastInstanceBeforeAuxilliaryData'
-                    Current = _auxiliaryData.Dequeue();
-                    return true;
-                }
-
-                if (_emittedAuxilliaryData)
-                {
-                    _emittedAuxilliaryData = false;
-                    Current = _lastInstanceBeforeAuxilliaryData;
-                    _lastInstanceBeforeAuxilliaryData = null;
-                    return true;
-                }
-
-                if (_delisted)
+                if (_pastDelistedDate)
                 {
                     break;
                 }
-
                 // keep enumerating until we find something that is within our time frame
                 while (_subscriptionFactoryEnumerator.MoveNext())
                 {
@@ -402,11 +370,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // if we move past our current 'date' then we need to do daily things, such
-                    // as updating factors and symbol mapping as well as detecting aux data
+                    // as updating factors and symbol mapping
                     if (instance.EndTime.Date > _tradeableDates.Current)
                     {
                         var currentPriceScaleFactor = _config.PriceScaleFactor;
-
                         // this is fairly hacky and could be solved by removing the aux data from this class
                         // the case is with coarse data files which have many daily sized data points for the
                         // same date,
@@ -417,21 +384,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
                         }
 
-                        // we produce auxiliary data on date changes, but make sure our current instance
-                        // isn't before it in time
-                        if (HasAuxDataBefore(instance))
+                        // TODO: we should be able to remove this `if` once the underlying data
+                        // scale process is performed later in the enumerator stack and in its own
+                        // enumerator.
+                        // with hourly resolution the first bar for the new date is received
+                        // before the price scale factor is updated by ResolveDataEnumerator,
+                        // so we have to 'rescale' prices before emitting the bar
+                        if (currentPriceScaleFactor != _config.PriceScaleFactor)
                         {
-                            // since we're emitting this here we need to save off the instance for next time
-                            Current = _auxiliaryData.Dequeue();
-                            _emittedAuxilliaryData = true;
-
-                            // With hourly resolution the first bar for the new date is received
-                            // before the price scale factor is updated by ResolveDataEnumerator.
-                            // For daily resolution this means 'instance' is already in the next day.
-                            // So we have to 'rescale' prices before emitting the bar
-                            if (_config.Resolution == Resolution.Hour &&
-                               (_config.SecurityType == SecurityType.Equity || _config.SecurityType == SecurityType.Option)
-                                || _config.Resolution == Resolution.Daily)
+                            if ((_config.Resolution == Resolution.Hour
+                                || (_config.Resolution == Resolution.Daily
+                                    && instance.EndTime.Date > _tradeableDates.Current))
+                                && (_config.SecurityType == SecurityType.Equity
+                                || _config.SecurityType == SecurityType.Option))
                             {
                                 var tradeBar = instance as TradeBar;
                                 if (tradeBar != null)
@@ -443,9 +408,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     bar.Close = _config.GetNormalizedPrice(GetRawValue(bar.Close, _config.SumOfDividends, currentPriceScaleFactor));
                                 }
                             }
-
-                            _lastInstanceBeforeAuxilliaryData = instance;
-                            return true;
                         }
                     }
 
@@ -463,18 +425,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _endOfStream = true;
             return false;
-        }
-
-        private bool HasAuxDataBefore(BaseData instance)
-        {
-            // this function is always used to check for aux data, as such, we'll implement the
-            // feature of whether to include or not here so if other aux data is added we won't
-            // need to remember this feature. this is mostly here until aux data gets moved into
-            // its own subscription class
-            if (!_includeAuxilliaryData) _auxiliaryData.Clear();
-            if (_auxiliaryData.Count == 0) return false;
-            if (instance == null) return true;
-            return _auxiliaryData.Peek().EndTime < instance.EndTime;
         }
 
         /// <summary>
@@ -607,10 +557,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _tradeableDates.Current;
 
-                CheckForDelisting(date);
-                if (_delisted)
+                OnNewTradableDate(date);
+
+                if (_pastDelistedDate || date > _delistingDate)
                 {
-                    return true;
+                    // if we already passed our delisting date we stop
+                    _pastDelistedDate = true;
+                    break;
                 }
 
                 if (!_mapFile.HasData(date))
@@ -618,31 +571,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                // don't do other checks if we haven't goten data for this date yet
+                // don't do other checks if we haven't gotten data for this date yet
                 if (_previous != null && _previous.EndTime > _tradeableDates.Current)
                 {
                     continue;
                 }
 
-                // check for dividends and split for this security
-                CheckForDividend(date);
-                CheckForSplit(date);
-
-                // if we have factor files check to see if we need to update the scale factors
-                if (_hasScaleFactors)
-                {
-                    // update our price scaling factors in light of the normalization mode
-                    UpdateScaleFactors(date);
-                }
-
-                // check to see if the symbol was remapped
-                var newSymbol = _mapFile.GetMappedSymbol(date, _config.MappedSymbol);
-                if (newSymbol != _config.MappedSymbol)
-                {
-                    var changed = new SymbolChangedEvent(_config.Symbol, date, _config.MappedSymbol, newSymbol);
-                    _auxiliaryData.Enqueue(changed);
-                    _config.MappedSymbol = newSymbol;
-                }
+                UpdateScaleFactors(date);
 
                 // we've passed initial checks,now go get data for this date!
                 return true;
@@ -660,22 +595,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">Current date of the backtest.</param>
         private void UpdateScaleFactors(DateTime date)
         {
-            switch (_config.DataNormalizationMode)
+            if (_hasScaleFactors)
             {
-                case DataNormalizationMode.Raw:
-                    return;
+                switch (_config.DataNormalizationMode)
+                {
+                    case DataNormalizationMode.Raw:
+                        return;
 
-                case DataNormalizationMode.TotalReturn:
-                case DataNormalizationMode.SplitAdjusted:
-                    _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
-                    break;
+                    case DataNormalizationMode.TotalReturn:
+                    case DataNormalizationMode.SplitAdjusted:
+                        _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
+                        break;
 
-                case DataNormalizationMode.Adjusted:
-                    _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
-                    break;
+                    case DataNormalizationMode.Adjusted:
+                        _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
+                        break;
 
-                default:
-                    throw new ArgumentOutOfRangeException();
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
@@ -686,80 +624,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Reset()
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
-        }
-
-        /// <summary>
-        /// Check for dividends and emit them into the aux data queue
-        /// </summary>
-        private void CheckForSplit(DateTime date)
-        {
-            var factor = _splitFactor;
-            if (factor != null)
-            {
-                var close = GetRawClose();
-                var split = new Split(_config.Symbol, date, close, factor.Value, SplitType.SplitOccurred);
-                _auxiliaryData.Enqueue(split);
-                _splitFactor = null;
-            }
-
-            decimal splitFactor;
-            if (_factorFile.HasSplitEventOnNextTradingDay(date, out splitFactor))
-            {
-                _splitFactor = splitFactor;
-                var split = new Split(_config.Symbol, date, GetRawClose(), splitFactor, SplitType.Warning);
-                _auxiliaryData.Enqueue(split);
-            }
-        }
-
-        /// <summary>
-        /// Check for dividends and emit them into the aux data queue
-        /// </summary>
-        private void CheckForDividend(DateTime date)
-        {
-            if (_priceFactorRatio != null)
-            {
-                var close = GetRawClose();
-                var dividend = Dividend.Create(_config.Symbol, date, close, _priceFactorRatio.Value);
-                // let the config know about it for normalization
-                _config.SumOfDividends += dividend.Distribution;
-                _auxiliaryData.Enqueue(dividend);
-                _priceFactorRatio = null;
-            }
-
-            // check the factor file to see if we have a dividend event tomorrow
-            decimal priceFactorRatio;
-            if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
-            {
-                _priceFactorRatio = priceFactorRatio;
-            }
-        }
-
-        /// <summary>
-        /// Check for delistings and emit them into the aux data queue
-        /// </summary>
-        private void CheckForDelisting(DateTime date)
-        {
-            if (!_delistedWarning && date >= _delistingDate)
-            {
-                _delistedWarning = true;
-                var price = _previous != null ? _previous.Price : 0;
-                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
-            }
-            else if (!_delisted && date > _delistingDate)
-            {
-                _delisted = true;
-                var price = _previous != null ? _previous.Price : 0;
-                // delisted at EOD
-                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, _delistingDate.AddDays(1), price, DelistingType.Delisted));
-            }
-        }
-
-        /// <summary>
-        /// Un-normalizes the Previous.Value
-        /// </summary>
-        private decimal GetRawClose()
-        {
-            return _previous == null ? 0m : GetRawValue(_previous.Value, _config.SumOfDividends, _config.PriceScaleFactor);
         }
 
         /// <summary>
@@ -831,6 +695,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual void OnReaderErrorDetected(ReaderErrorDetectedEventArgs e)
         {
             ReaderErrorDetected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NewTradableDate"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="NewTradableDate"/> event</param>
+        protected virtual void OnNewTradableDate(DateTime e)
+        {
+            NewTradableDate?.Invoke(this, e);
         }
     }
 }

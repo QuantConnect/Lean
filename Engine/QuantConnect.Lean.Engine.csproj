@@ -150,9 +150,16 @@
     <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\DataManager.cs" />
+    <Compile Include="DataFeeds\Enumerators\DelistingEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\DividendEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\CorporateEventEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\ITradableDatesNotifier.cs" />
+    <Compile Include="DataFeeds\Enumerators\MappingEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\SplitEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\LiveBaseDataSynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\CorporateEventBaseEnumerator.cs" />
     <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
     <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
     <Compile Include="DataFeeds\IDataManager.cs" />

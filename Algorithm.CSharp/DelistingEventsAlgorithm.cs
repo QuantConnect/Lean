@@ -32,6 +32,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="delisting event" />
     public class DelistingEventsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _receivedDelistedWarningEvent;
+        private bool _receivedDelistedEvent;
+        private int _dataCount;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -51,6 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            _dataCount += data.Bars.Count;
             if (Transactions.OrdersCount == 0)
             {
                 SetHoldings("AAA", 1);
@@ -85,6 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var delisting = kvp.Value;
                 if (delisting.Type == DelistingType.Warning)
                 {
+                    _receivedDelistedWarningEvent = true;
                     Debug($"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today.");
 
                     // liquidate on delisting warning
@@ -92,6 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
+                    _receivedDelistedEvent = true;
                     Debug($"OnData(Delistings): {Time}: {symbol} has been delisted.");
 
                     // fails because the security has already been delisted and is no longer tradable
@@ -103,6 +110,22 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Debug($"OnOrderEvent(OrderEvent): {Time}: {orderEvent}");
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_receivedDelistedEvent)
+            {
+                throw new Exception("Did not receive expected delisted event");
+            }
+            if (!_receivedDelistedWarningEvent)
+            {
+                throw new Exception("Did not receive expected delisted warning event");
+            }
+            if (_dataCount != 13)
+            {
+                throw new Exception($"Unexpected data count {_dataCount}. Expected 13");
+            }
         }
 
         /// <summary>
