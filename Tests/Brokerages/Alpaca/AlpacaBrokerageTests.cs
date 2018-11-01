@@ -257,6 +257,19 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             Assert.IsTrue(alpaca.PlaceOrder(order));
         }
 
+        [Test]
+        public void IsConnectedUpdatesCorrectly()
+        {
+            var brokerage = Brokerage;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            brokerage.Disconnect();
+            Assert.IsFalse(brokerage.IsConnected);
+
+            brokerage.Connect();
+            Assert.IsTrue(brokerage.IsConnected);
+        }
+
         [Test, Ignore("This test requires disconnecting the internet to test for connection resiliency")]
         public void ClientReconnectsAfterInternetDisconnect()
         {

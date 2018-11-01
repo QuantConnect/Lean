@@ -228,6 +228,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 {
                     foreach (var item in items)
                     {
+                        // we do not convert time zones for daily bars here because the API endpoint
+                        // for historical daily bars returns only dates instead of timestamps
                         yield return new TradeBar(
                             resolution == Resolution.Daily
                                 ? item.Time
@@ -372,8 +374,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 qcOrder.Time = order.SubmittedAt.Value;
             }
 
-            qcOrder.Quantity = order.Quantity;
-            qcOrder.Status = Orders.OrderStatus.None;
+            qcOrder.Quantity = order.OrderSide == OrderSide.Buy ? order.Quantity : -order.Quantity;
+            qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(id);
 
             Order orderByBrokerageId;
@@ -410,7 +412,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 AveragePrice = position.AverageEntryPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
-                Quantity = position.Quantity
+                Quantity = position.Side == PositionSide.Long ? position.Quantity : -position.Quantity
             };
         }
 

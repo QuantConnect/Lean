@@ -125,9 +125,12 @@ namespace QuantConnect.Brokerages.Alpaca
             _isConnected = true;
 
             // create new thread to manage disconnections and reconnections
+            var connectionMonitorStartedEvent = new AutoResetEvent(false);
             _cancellationTokenSource = new CancellationTokenSource();
             _connectionMonitorThread = new Thread(() =>
             {
+                connectionMonitorStartedEvent.Set();
+
                 var nextReconnectionAttemptSeconds = 1;
 
                 try
@@ -190,10 +193,8 @@ namespace QuantConnect.Brokerages.Alpaca
             })
             { IsBackground = true };
             _connectionMonitorThread.Start();
-            while (!_connectionMonitorThread.IsAlive)
-            {
-                Thread.Sleep(1);
-            }
+
+            connectionMonitorStartedEvent.WaitOne();
         }
 
         /// <summary>
@@ -305,27 +306,27 @@ namespace QuantConnect.Brokerages.Alpaca
             const int orderFee = 0;
             order.PriceCurrency = "USD";
 
-            lock (_locker)
+            try
             {
-                try
+                lock (_locker)
                 {
                     var apOrder = GenerateAndPlaceOrder(order);
                     order.BrokerId.Add(apOrder.OrderId.ToString());
                 }
-                catch (Exception e)
-                {
-                    var errorMessage = $"Error placing order: {e.Message}";
+            }
+            catch (Exception e)
+            {
+                var errorMessage = $"Error placing order: {e.Message}";
 
-                    OnOrderEvent(
-                        new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Order Event")
-                        {
-                            Status = Orders.OrderStatus.Invalid,
-                            Message = errorMessage
-                        });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+                OnOrderEvent(
+                    new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Order Event")
+                    {
+                        Status = Orders.OrderStatus.Invalid,
+                        Message = errorMessage
+                    });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
-                    return true;
-                }
+                return true;
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = Orders.OrderStatus.Submitted });
