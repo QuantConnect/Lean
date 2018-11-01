@@ -39,7 +39,6 @@ using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
-using QuantConnect.Tests.Engine.DataFeeds;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
@@ -57,10 +56,10 @@ namespace QuantConnect.Tests.Engine
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(feed,
+                new UniverseSelection(
                     algorithm,
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
-                algorithm.Settings,
+                algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
@@ -75,7 +74,7 @@ namespace QuantConnect.Tests.Engine
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), feed, new BacktestingSetupHandler(), transactions);
+            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), new BacktestingSetupHandler(), transactions);
             results.SetAlgorithm(algorithm);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null);
@@ -88,43 +87,6 @@ namespace QuantConnect.Tests.Engine
             var thousands = nullSynchronizer.Count / 1000d;
             var seconds = sw.Elapsed.TotalSeconds;
             Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);
-        }
-
-        public class MockDataFeed : IDataFeed
-        {
-            public bool IsActive { get; }
-            public IEnumerable<Subscription> Subscriptions { get; }
-
-            public void Initialize(
-                IAlgorithm algorithm,
-                AlgorithmNodePacket job,
-                IResultHandler resultHandler,
-                IMapFileProvider mapFileProvider,
-                IFactorFileProvider factorFileProvider,
-                IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager,
-                IDataFeedTimeProvider dataFeedTimeProvider
-                )
-            {
-            }
-
-            public bool AddSubscription(SubscriptionRequest request)
-            {
-                return true;
-            }
-
-            public bool RemoveSubscription(SubscriptionDataConfig configuration)
-            {
-                return true;
-            }
-
-            public void Run()
-            {
-            }
-
-            public void Exit()
-            {
-            }
         }
 
         public class NullAlphaHandler : IAlphaHandler
@@ -193,7 +155,6 @@ namespace QuantConnect.Tests.Engine
             public void Initialize(AlgorithmNodePacket job,
                 IMessagingHandler messagingHandler,
                 IApi api,
-                IDataFeed dataFeed,
                 ISetupHandler setupHandler,
                 ITransactionHandler transactionHandler)
             {
@@ -307,6 +268,10 @@ namespace QuantConnect.Tests.Engine
             }
 
             public void SaveResults(string name, Result result)
+            {
+            }
+
+            public void SetDataManager(IDataFeedSubscriptionManager dataManager)
             {
             }
         }

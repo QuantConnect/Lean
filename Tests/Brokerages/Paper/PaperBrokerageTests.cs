@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
         public void AppliesDividendDistributionDirectlyToPortfolioCashBook()
         {
             // init algorithm
-            var algorithm = new AlgorithmStub();
+            var algorithm = new AlgorithmStub(new MockDataFeed());
             algorithm.AddSecurities(equities: new List<string> {"SPY"});
             algorithm.PostInitialize();
 
@@ -79,19 +79,19 @@ namespace QuantConnect.Tests.Brokerages.Paper
         public void AppliesDividendsOnce()
         {
             // init algorithm
-            var algorithm = new AlgorithmStub();
+            var algorithm = new AlgorithmStub(new MockDataFeed());
             algorithm.SetLiveMode(true);
             var dividend = new Dividend(Symbols.SPY, DateTime.UtcNow, 10m, 100m);
 
-            var feed = new TestDividendDataFeed();
+            var feed = new MockDataFeed();
 
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(feed,
+                new UniverseSelection(
                     algorithm,
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
-                algorithm.Settings,
+                algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase);
             var synchronizer = new NullSynchronizer(algorithm, dividend);
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var brokerage = new PaperBrokerage(algorithm, job);
 
             // initialize results and transactions
-            results.Initialize(job, new EventMessagingHandler(), new Api.Api(), feed, new BrokerageSetupHandler(), transactions);
+            results.Initialize(job, new EventMessagingHandler(), new Api.Api(), new BrokerageSetupHandler(), transactions);
             results.SetAlgorithm(algorithm);
             transactions.Initialize(algorithm, brokerage, results);
 
@@ -136,46 +136,6 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var postDividendCash = algorithm.Portfolio.CashBook["USD"].Amount;
 
             Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
-        }
-
-        class TestDividendDataFeed : IDataFeed
-        {
-            public IEnumerable<Subscription> Subscriptions => new List<Subscription>();
-            public bool IsActive => true;
-
-            public void Initialize(
-                IAlgorithm algorithm,
-                AlgorithmNodePacket job,
-                IResultHandler resultHandler,
-                IMapFileProvider mapFileProvider,
-                IFactorFileProvider factorFileProvider,
-                IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager,
-                IDataFeedTimeProvider dataFeedTimeProvider
-                )
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool AddSubscription(SubscriptionRequest request)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public bool RemoveSubscription(SubscriptionDataConfig configuration)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public void Run()
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public void Exit()
-            {
-                throw new System.NotImplementedException();
-            }
         }
 
         class NullSynchronizer : ISynchronizer

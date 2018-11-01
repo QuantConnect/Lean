@@ -17,9 +17,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -48,16 +50,66 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public DataManager(
             IDataFeed dataFeed,
             UniverseSelection universeSelection,
-            IAlgorithmSettings algorithmSettings,
+            IAlgorithm algorithm,
             ITimeKeeper timeKeeper,
             MarketHoursDatabase marketHoursDatabase)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
-            _algorithmSettings = algorithmSettings;
+            UniverseSelection.SetDataManager(this);
+            _algorithmSettings = algorithm.Settings;
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
+
+            var liveStart = DateTime.UtcNow;
+            // wire ourselves up to receive notifications when universes are added/removed
+            algorithm.UniverseManager.CollectionChanged += (sender, args) =>
+            {
+                switch (args.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        foreach (var universe in args.NewItems.OfType<Universe>())
+                        {
+                            var config = universe.Configuration;
+                            var start = algorithm.LiveMode ? liveStart : algorithm.UtcTime;
+
+                            var end = algorithm.LiveMode ? Time.EndOfTime
+                                : algorithm.EndDate.ConvertToUtc(algorithm.TimeZone);
+
+                            Security security;
+                            if (!algorithm.Securities.TryGetValue(config.Symbol, out security))
+                            {
+                                // create a canonical security object if it doesn't exist
+                                security = new Security(
+                                    _marketHoursDatabase.GetExchangeHours(config),
+                                    config,
+                                    algorithm.Portfolio.CashBook[CashBook.AccountCurrency],
+                                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                                    algorithm.Portfolio.CashBook
+                                 );
+                            }
+                            AddSubscription(
+                                new SubscriptionRequest(true,
+                                    universe,
+                                    security,
+                                    config,
+                                    start,
+                                    end));
+                        }
+                        break;
+
+                    case NotifyCollectionChangedAction.Remove:
+                        foreach (var universe in args.OldItems.OfType<Universe>())
+                        {
+                            RemoveSubscription(universe.Configuration);
+                        }
+                        break;
+
+                    default:
+                        throw new NotImplementedException("The specified action is not implemented: " + args.Action);
+                }
+            };
         }
 
         #region IDataFeedSubscriptionManager
@@ -66,6 +118,98 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Gets the data feed subscription collection
         /// </summary>
         public SubscriptionCollection DataFeedSubscriptions { get; } = new SubscriptionCollection();
+
+        /// <summary>
+        /// Will remove all current <see cref="Subscription"/>
+        /// </summary>
+        public void RemoveAllSubscriptions()
+        {
+            // remove each subscription from our collection
+            foreach (var subscription in DataFeedSubscriptions)
+            {
+                try
+                {
+                    RemoveSubscription(subscription.Configuration);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "DataManager.RemoveAllSubscriptions():" +
+                        $"Error removing: {subscription.Configuration}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="Subscription"/> to provide data for the specified security.
+        /// </summary>
+        /// <param name="request">Defines the <see cref="SubscriptionRequest"/> to be added</param>
+        /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
+        public bool AddSubscription(SubscriptionRequest request)
+        {
+            if (DataFeedSubscriptions.Contains(request.Configuration))
+            {
+                // duplicate subscription request
+                return false;
+            }
+
+            var subscription = _dataFeed.CreateSubscription(request);
+
+            if (subscription == null)
+            {
+                Log.Trace($"DataManager.AddSubscription(): Unable to add subscription for: {request.Configuration}");
+                // subscription will be null when there's no tradeable dates for the security between the requested times, so
+                // don't even try to load the data
+                return false;
+            }
+
+            Log.Debug($"DataManager.AddSubscription(): Added {request.Configuration}." +
+                $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
+            return DataFeedSubscriptions.TryAdd(subscription);
+        }
+
+        /// <summary>
+        /// Removes the <see cref="Subscription"/>, if it exists
+        /// </summary>
+        /// <param name="configuration">The <see cref="SubscriptionDataConfig"/> of the subscription to remove</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        public bool RemoveSubscription(SubscriptionDataConfig configuration)
+        {
+            // remove the subscription from our collection, if it exists
+            Subscription subscription;
+
+            if (DataFeedSubscriptions.TryGetValue(configuration, out subscription))
+            {
+                // don't remove universe subscriptions immediately, instead mark them as disposed
+                // so we can turn the crank one more time to ensure we emit security changes properly
+                if (subscription.IsUniverseSelectionSubscription && subscription.Universe.DisposeRequested)
+                {
+                    // subscription syncer will dispose the universe AFTER we've run selection a final time
+                    // and then will invoke SubscriptionFinished which will remove the universe subscription
+                    return false;
+                }
+
+                if (!DataFeedSubscriptions.TryRemove(configuration, out subscription))
+                {
+                    Log.Error($"DataManager.RemoveSubscription(): Unable to remove {configuration}");
+                    return false;
+                }
+
+                _dataFeed.RemoveSubscription(subscription);
+
+                // if the security is no longer a member of the universe, then mark the subscription properly
+                // universe may be null for internal currency conversion feeds
+                // TODO : Put currency feeds in their own internal universe
+                if (subscription.Universe != null && !subscription.Universe.Members.ContainsKey(configuration.Symbol))
+                {
+                    subscription.MarkAsRemovedFromUniverse();
+                }
+                subscription.Dispose();
+                Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
+                return true;
+            }
+
+            return false;
+        }
 
         #endregion
 

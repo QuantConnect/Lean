@@ -38,6 +38,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         }
 
+        public DataManagerStub(IAlgorithm algorithm, IDataFeed dataFeed)
+            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+        {
+
+        }
+
         public DataManagerStub(IAlgorithm algorithm)
             : this(new NullDataFeed(), algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
         {
@@ -73,8 +79,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, SecurityService securityService)
             : base(dataFeed,
-                new UniverseSelection(dataFeed, algorithm, securityService),
-                algorithm.Settings,
+                new UniverseSelection(algorithm, securityService),
+                algorithm,
                 timeKeeper,
                 marketHoursDatabase)
         {

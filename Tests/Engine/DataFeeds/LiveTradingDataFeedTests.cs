@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private AlgorithmStub _algorithm;
         private Synchronizer _synchronizer;
         private readonly DateTime _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
+        private DataManager _dataManager;
 
         [SetUp]
         public void SetUp()
@@ -49,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider = new ManualTimeProvider();
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            _algorithm = new AlgorithmStub();
+            _algorithm = new AlgorithmStub(false);
         }
 
         [Test]
@@ -337,7 +338,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     currentSubscriptionCount = dataQueueHandler.Subscriptions.Count;
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
-                    feed.RemoveSubscription(feed.Subscriptions.Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
+                    _dataManager.RemoveSubscription(_dataManager.DataFeedSubscriptions
+                        .Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
                     emittedData = true;
                 }
                 else
@@ -572,7 +574,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
-                Assert.IsTrue(feed.Subscriptions.Any(x => x.IsUniverseSelectionSubscription));
+                Assert.IsTrue(_dataManager.DataFeedSubscriptions
+                    .Any(x => x.IsUniverseSelectionSubscription));
             });
 
             timer.Dispose();
@@ -601,12 +604,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm);
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
-                new UniverseSelection(feed, algorithm, securityService),
-                algorithm.Settings,
+                new UniverseSelection(algorithm, securityService),
+                algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
-            var synchronizer = new TestableSynchronizer(_algorithm, dataManager, feed, true);
+            var synchronizer = new TestableSynchronizer(_algorithm, dataManager, true);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
             feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction);
@@ -680,16 +683,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm);
             _algorithm.Securities.SetSecurityService(securityService);
-            var dataManager = new DataManager(feed,
-                new UniverseSelection(feed, _algorithm, securityService),
-                _algorithm.Settings,
+            _dataManager = new DataManager(feed,
+                new UniverseSelection(_algorithm, securityService),
+                _algorithm,
                 _algorithm.TimeKeeper,
                 marketHoursDatabase);
-            _algorithm.SubscriptionManager.SetDataManager(dataManager);
+            _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex);
-            _synchronizer = new TestableSynchronizer(_algorithm, dataManager, feed, true, _manualTimeProvider);
+            _synchronizer = new TestableSynchronizer(_algorithm, _dataManager, true, _manualTimeProvider);
 
-            feed.Initialize(_algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, dataManager, _synchronizer);
+            feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
+                new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer);
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
@@ -785,14 +789,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public TestableSynchronizer(
             IAlgorithm algorithm,
             IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeed dataFeed,
             bool liveMode,
             ITimeProvider timeProvider = null)
         {
             _timeProvider = timeProvider ?? new RealTimeProvider();
             Initialize(algorithm,
                 subscriptionManager,
-                dataFeed,
                 liveMode,
                 algorithm.Portfolio.CashBook);
         }

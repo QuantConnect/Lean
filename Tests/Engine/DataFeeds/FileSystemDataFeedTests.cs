@@ -46,15 +46,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(feed,
+                new UniverseSelection(
                     algorithm,
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
-                algorithm.Settings,
+                algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, dataManager, feed, false, algorithm.Portfolio.CashBook);
+            synchronizer.Initialize(algorithm, dataManager, false, algorithm.Portfolio.CashBook);
 
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer);
             algorithm.Initialize();
@@ -85,7 +85,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void TestDataFeedEnumeratorStackSpeed()
         {
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.Initialize();
             algorithm.PostInitialize();
 

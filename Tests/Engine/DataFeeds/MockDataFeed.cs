@@ -14,7 +14,7 @@
  *
 */
 
-using System;
+using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -22,21 +22,10 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /// <summary>
-    /// Null data feed implementation. <seealso cref="DataManager"/>
-    /// </summary>
-    public class NullDataFeed : IDataFeed
+    public class MockDataFeed : IDataFeed
     {
-        /// <inheritdoc />
-        public bool IsActive
-        {
-            get
-            {
-                throw new NotImplementedException("Unexpected usage of null data feed implementation.");
-            }
-        }
+        public bool IsActive { get; }
 
-        /// <inheritdoc />
         public void Initialize(
             IAlgorithm algorithm,
             AlgorithmNodePacket job,
@@ -48,25 +37,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataFeedTimeProvider dataFeedTimeProvider
             )
         {
-            throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
 
-        /// <inheritdoc />
         public Subscription CreateSubscription(SubscriptionRequest request)
         {
-            throw new NotImplementedException("Unexpected usage of null data feed implementation.");
+            return null;
         }
 
-        /// <inheritdoc />
         public void RemoveSubscription(Subscription subscription)
         {
-            throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
 
-        /// <inheritdoc />
         public void Exit()
         {
-            throw new NotImplementedException("Unexpected usage of null data feed implementation.");
         }
     }
 }

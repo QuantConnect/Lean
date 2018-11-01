@@ -87,10 +87,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="job">Algorithm job packet for this result handler</param>
         /// <param name="messagingHandler"></param>
         /// <param name="api"></param>
-        /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
         /// <param name="transactionHandler"></param>
-        void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler);
+        void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ISetupHandler setupHandler, ITransactionHandler transactionHandler);
 
         /// <summary>
         /// Primary result thread entry point to process the result message queue and send it to whatever endpoint is set.
@@ -273,5 +272,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="name">The name of the results</param>
         /// <param name="result">The results to save</param>
         void SaveResults(string name, Result result);
+
+        /// <summary>
+        /// Sets the current Data Manager instance
+        /// </summary>
+        void SetDataManager(IDataFeedSubscriptionManager dataManager);
     }
 }

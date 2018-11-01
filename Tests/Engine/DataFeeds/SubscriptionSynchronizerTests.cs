@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private void TestSubscriptionSynchronizerSpeed(QCAlgorithm algorithm)
         {
-            var feed = new AlgorithmManagerTests.MockDataFeed();
+            var feed = new MockDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(
@@ -58,8 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm);
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
-                new UniverseSelection(feed, algorithm, securityService),
-                algorithm.Settings,
+                new UniverseSelection(algorithm, securityService),
+                algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);

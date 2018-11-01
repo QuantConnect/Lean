@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine
                 _systemHandlers.Notify.SetAuthentication(job);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
+                _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
 
                 threadResults = new Thread(_algorithmHandlers.Results.Run, 0) { IsBackground = true, Name = "Result Thread" };
                 threadResults.Start();
@@ -137,19 +137,18 @@ namespace QuantConnect.Lean.Engine
 
                     dataManager = new DataManager(_algorithmHandlers.DataFeed,
                         new UniverseSelection(
-                            _algorithmHandlers.DataFeed,
                             algorithm,
                             securityService),
-                        algorithm.Settings,
+                        algorithm,
                         algorithm.TimeKeeper,
                         marketHoursDatabase);
 
+                    _algorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 
                     synchronizer.Initialize(
                         algorithm,
                         dataManager,
-                        _algorithmHandlers.DataFeed,
                         _liveMode,
                         algorithm.Portfolio.CashBook);
 
@@ -437,6 +436,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.DataFeed.Exit();
                     _algorithmHandlers.RealTime.Exit();
                     _algorithmHandlers.Alphas.Exit();
+                    dataManager?.RemoveAllSubscriptions();
                 }
 
                 //Close result handler:

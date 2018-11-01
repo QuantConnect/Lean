@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CreatedEquityIsNotAddedToSymbolCache()
         {
             SymbolCache.Clear();
-            var algorithm = new AlgorithmStub(new TestDataFeed());
+            var algorithm = new AlgorithmStub(new MockDataFeed());
             algorithm.SetEndDate(Time.EndOfTime);
             algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
             algorithm.AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
@@ -68,39 +68,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
             return new[] { fine.First().Symbol };
-        }
-
-        private class TestDataFeed : IDataFeed
-        {
-            public IEnumerable<Subscription> Subscriptions { get; }
-            public bool IsActive { get; }
-
-            public void Initialize(
-                IAlgorithm algorithm,
-                AlgorithmNodePacket job,
-                IResultHandler resultHandler,
-                IMapFileProvider mapFileProvider,
-                IFactorFileProvider factorFileProvider,
-                IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager,
-                IDataFeedTimeProvider dataFeedTimeProvider
-                )
-            {
-            }
-
-            public bool AddSubscription(SubscriptionRequest request)
-            {
-                return true;
-            }
-
-            public bool RemoveSubscription(SubscriptionDataConfig configuration)
-            {
-                return true;
-            }
-
-            public void Exit()
-            {
-            }
         }
     }
 }

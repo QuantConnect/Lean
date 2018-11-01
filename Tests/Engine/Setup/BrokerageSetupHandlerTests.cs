@@ -24,6 +24,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
@@ -281,7 +282,7 @@ namespace QuantConnect.Tests.Engine.Setup
         {
             public TestAlgorithm()
             {
-                SubscriptionManager.SetDataManager(new DataManagerStub(this));
+                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed()));
             }
 
             public override void Initialize() { }

@@ -35,7 +35,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private DateTimeZone _dateTimeZone;
         private CashBook _cashBook;
-        private IDataFeed _dataFeed;
         private bool _liveMode;
 
         /// <summary>
@@ -53,16 +52,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize(
             IAlgorithm algorithm,
-            IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeed dataFeed, // To be removed, when subscriptionManager is completely in front of the DF
+            IDataFeedSubscriptionManager dataFeedSubscriptionManager,
             bool liveMode,
             CashBook cashBook)
         {
-            _subscriptionManager = subscriptionManager;
+            _subscriptionManager = dataFeedSubscriptionManager;
             _algorithm = algorithm;
             _cashBook = cashBook;
             _liveMode = liveMode;
-            _dataFeed = dataFeed;
 
             _subscriptionSynchronizer = new SubscriptionSynchronizer(_subscriptionManager.UniverseSelection, _cashBook);
 
@@ -159,7 +156,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _subscriptionSynchronizer.SubscriptionFinished += (sender, subscription) =>
             {
-                _dataFeed.RemoveSubscription(subscription.Configuration);
+                _subscriptionManager.RemoveSubscription(subscription.Configuration);
                 Log.Debug("Synchronizer.SubscriptionFinished(): Finished subscription:" +
                     $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC");
             };
