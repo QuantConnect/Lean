@@ -462,7 +462,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            var balances = _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+
+            if (balances.Count == 0)
+            {
+                Log.Trace($"InteractiveBrokersBrokerage.GetCashBalance(): no balances found, IsConnected: {IsConnected}");
+            }
+
+            return balances;
         }
 
         /// <summary>

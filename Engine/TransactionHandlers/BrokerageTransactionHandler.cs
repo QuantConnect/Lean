@@ -52,6 +52,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // 7:45 AM (New York time zone)
         private static readonly TimeSpan LiveBrokerageCashSyncTime = new TimeSpan(7, 45, 0);
 
+        private const int MaxCashSyncAttempts = 5;
+        private int _failedCashSyncAttempts;
+
         /// <summary>
         /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
         /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
@@ -516,22 +519,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
             {
                 _syncedLiveBrokerageCashToday = false;
+                _failedCashSyncAttempts = 0;
             }
 
             // we want to sync up our cash balance before market open
             if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime)
             {
-                try
+                // only perform cash syncs if we haven't had a fill for at least 10 seconds
+                if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
-                    // only perform cash syncs if we haven't had a fill for at least 10 seconds
-                    if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
+                    if (!PerformCashSync())
                     {
-                        PerformCashSync();
+                        if (++_failedCashSyncAttempts >= MaxCashSyncAttempts)
+                        {
+                            throw new Exception("The maximum number of attempts for brokerage cash sync has been reached.");
+                        }
                     }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Updating cash balances");
                 }
             }
 
@@ -570,14 +573,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Syncs cash from brokerage with portfolio object
         /// </summary>
-        private void PerformCashSync()
+        private bool PerformCashSync()
         {
             try
             {
                 // prevent reentrance in this method
                 if (!Monitor.TryEnter(_performCashSyncReentranceGuard))
                 {
-                    return;
+                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Reentrant call, cash sync not performed");
+                    return false;
                 }
 
                 Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
@@ -589,12 +593,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err);
+                    Log.Error(err, "Error in GetCashBalance:");
                 }
 
                 if (balances.Count == 0)
                 {
-                    return;
+                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): No cash balances available, cash sync not performed");
+                    return false;
                 }
 
                 //Adds currency to the cashbook that the user might have deposited
@@ -651,6 +656,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // this will cause us to come back in and reset cash again until we
                     // haven't processed a fill for +- 10 seconds of the set cash time
                     _syncedLiveBrokerageCashToday = false;
+                    _failedCashSyncAttempts = 0;
                     Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Unverified cash sync - resync required.");
                 }
                 else
@@ -660,6 +666,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Portfolio.LogMarginInformation();
                 }
             });
+
+            return true;
         }
 
         /// <summary>
