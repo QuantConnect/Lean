@@ -54,10 +54,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= _period; }
-        }
+        public override bool IsReady => _adxHistory.IsReady;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -67,9 +64,13 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _adx.Update(input);
-            _adxHistory.Add(_adx);
 
-            return (_adx + _adxHistory[Math.Min(_adxHistory.Count - 1, _period - 1)]) / 2;
+            if (_adx.IsReady)
+            {
+                _adxHistory.Add(_adx);
+            }
+
+            return IsReady ? (_adx + _adxHistory[_period - 1]) / 2 : 50m;
         }
 
         /// <summary>
