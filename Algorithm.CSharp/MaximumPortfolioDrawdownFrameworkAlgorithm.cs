@@ -46,7 +46,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // define risk management model as a composite of several risk management models
             SetRiskManagement(new CompositeRiskManagementModel(
-                new MaximumDrawdownPercentPortfolio(0.01m)
+                new MaximumDrawdownPercentPortfolio(0.01m), // Avoid loss of initial capital
+                new MaximumDrawdownPercentPortfolio(0.015m, true) // Avoid profit losses
             ));
         }
 
@@ -66,13 +67,23 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Compounding Annual Return", "-55.497%"},
-            {"Drawdown", "1.600%"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.97%"},
+            {"Compounding Annual Return", "-53.355%"},
+            {"Drawdown", "1.500%"}, // Should be less than or equal to max trailing drawdown
             {"Expectancy", "-1"},
-            {"Net Profit", "-1.030%"},
+            {"Net Profit", "-0.970%"}, // Should be less than or equal to max absolute drawdown
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.007"},
+            {"Beta", "-44.915"},
+            {"Annual Standard Deviation", "0.069"},
+            {"Annual Variance", "0.005"},
+            {"Information Ratio", "-7.224"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$6.51"}
         };
     }
 }

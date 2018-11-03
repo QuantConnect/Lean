@@ -22,24 +22,27 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the drawdown
-    /// of the portfolio to the specified percentage
+    /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the drawdown of the portfolio
+    /// to the specified percentage. Once this is triggered the algorithm will need to be manually restarted.
     /// </summary>
     public class MaximumDrawdownPercentPortfolio : RiskManagementModel
     {
         private readonly decimal _maximumDrawdownPercent;
-        private decimal _startingValue;
+        private decimal _portfolioHigh;
         private bool _initialised = false;
-
+        private bool _isTrailing;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MaximumDrawdownPercentPortfolio"/> class
         /// </summary>
         /// <param name="maximumDrawdownPercent">The maximum percentage drawdown allowed for algorithm portfolio
         /// compared with starting value, defaults to 5% drawdown</param>
-        public MaximumDrawdownPercentPortfolio(decimal maximumDrawdownPercent = 0.05m)
+        /// <param name="isTrailing">If "false", the drawdown will be relative to the starting value of the portfolio.
+        /// If "true", the drawdown will be relative the last maximum portfolio value</param>
+        public MaximumDrawdownPercentPortfolio(decimal maximumDrawdownPercent = 0.05m, bool isTrailing = false)
         {
             _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);
+            _isTrailing = isTrailing;
         }
 
         /// <summary>
@@ -49,13 +52,22 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
         public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
         {
-            if(!_initialised)
+            var currentValue = algorithm.Portfolio.TotalPortfolioValue;
+
+            if (!_initialised)
             {
-                _startingValue = algorithm.Portfolio.TotalPortfolioValue; // Set inital portfolio value
+                _portfolioHigh = currentValue; // Set initial portfolio value
                 _initialised = true;
             }
 
-            var pnl = GetTotalDrawdownPercent(algorithm.Portfolio.TotalPortfolioValue);
+            // Update trailing high value if in trailing mode
+            if (_isTrailing && (_portfolioHigh < currentValue))
+            {
+                _portfolioHigh = currentValue;
+                yield break; // return if new high reached
+            }
+
+            var pnl = GetTotalDrawdownPercent(currentValue);
             if (pnl < _maximumDrawdownPercent)
             {
                 foreach(var target in targets)
@@ -65,7 +77,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
         private decimal GetTotalDrawdownPercent(decimal currentValue)
         {
-            return (currentValue / _startingValue) - 1.0m;
+            return (currentValue / _portfolioHigh) - 1.0m;
         }
     }
 }
