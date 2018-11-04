@@ -25,7 +25,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Show cases how to use the <see cref="CompositeRiskManagementModel"/> to define
+    /// Show example of how to use the <see cref="MaximumDrawdownPercentPortfolio"/> Risk Management Model
     /// </summary>
     public class MaximumPortfolioDrawdownFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
