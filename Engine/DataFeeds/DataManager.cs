@@ -184,17 +184,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // don't remove universe subscriptions immediately, instead mark them as disposed
                 // so we can turn the crank one more time to ensure we emit security changes properly
-                if (subscription.IsUniverseSelectionSubscription && subscription.Universe.First().DisposeRequested)
+                if (subscription.IsUniverseSelectionSubscription
+                    && subscription.Universes.Single().DisposeRequested)
                 {
                     // subscription syncer will dispose the universe AFTER we've run selection a final time
                     // and then will invoke SubscriptionFinished which will remove the universe subscription
                     return false;
                 }
 
-                var removedUniverses = subscription.RemoveSubscriptionRequest(universe);
-
                 // we remove the subscription when there are no other requests left
-                if (!subscription.HasSubscriptionRequests)
+                if (subscription.RemoveSubscriptionRequest(universe))
                 {
                     if (!DataFeedSubscriptions.TryRemove(configuration, out subscription))
                     {
@@ -204,13 +203,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     _dataFeed.RemoveSubscription(subscription);
 
-                    // if the security is no longer a member of the universe, then mark the subscription properly
-                    // universe may be null for internal currency conversion feeds
-                    // TODO : Put currency feeds in their own internal universe
-                    if (!removedUniverses.Any(x => x.Members.ContainsKey(configuration.Symbol)))
-                    {
-                        subscription.MarkAsRemovedFromUniverse();
-                    }
                     subscription.Dispose();
                     Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
                     return true;

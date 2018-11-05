@@ -149,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 : packetBaseDataCollection.Data;
 
                             BaseDataCollection collection;
-                            if (universeData.TryGetValue(subscription.Universe.First(), out collection))
+                            if (universeData.TryGetValue(subscription.Universes.Single(), out collection))
                             {
                                 collection.Data.AddRange(packetData);
                             }
@@ -169,17 +169,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     collection = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol, packetData);
                                 }
 
-                                universeData[subscription.Universe.First()] = collection;
+                                universeData[subscription.Universes.Single()] = collection;
                             }
                         }
                     }
 
                     if (subscription.IsUniverseSelectionSubscription
-                        && subscription.Universe.First().DisposeRequested
+                        && subscription.Universes.Single().DisposeRequested
                         || delayedSubscriptionFinished)
                     {
                         delayedSubscriptionFinished = false;
-                        // we need to do this after all usages of subscription.Universe
+                        // we need to do this after all usages of subscription.Universes
                         OnSubscriptionFinished(subscription);
                     }
                 }

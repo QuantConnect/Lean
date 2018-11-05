@@ -38,14 +38,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
-        public IEnumerable<Universe> Universe => _subscriptionRequests
+        public IEnumerable<Universe> Universes => _subscriptionRequests
             .Where(x => x.Universe != null)
             .Select(x => x.Universe);
-
-        /// <summary>
-        /// Gets true if there is at least one subscription requests in this subscription
-        /// </summary>
-        public bool HasSubscriptionRequests => _subscriptionRequests.Any();
 
         /// <summary>
         /// Gets the security this subscription points to
@@ -95,7 +90,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets whether or not this subscription has been removed from its parent universe
         /// </summary>
-        public IReadOnlyRef<bool> RemovedFromUniverse { get; private set; }
+        public IReadOnlyRef<bool> RemovedFromUniverse { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Subscription"/> class with a universe
@@ -141,7 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Only allow one subscription request per universe
-            if (!Universe.Contains(subscriptionRequest.Universe))
+            if (!Universes.Contains(subscriptionRequest.Universe))
             {
                 _subscriptionRequests.Add(subscriptionRequest);
                 // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
@@ -155,19 +150,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universe">Universe requesting to remove <see cref="SubscriptionRequest"/>.
         /// Default value, null, will remove all universes</param>
-        public IEnumerable<Universe> RemoveSubscriptionRequest(Universe universe = null)
+        /// <returns>True, if the subscription is empty and ready to be removed</returns>
+        public bool RemoveSubscriptionRequest(Universe universe = null)
         {
+            // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
+            IEnumerable<Universe> removedUniverses;
             if (universe == null)
             {
-                var result = _subscriptionRequests;
+                var subscriptionRequests = _subscriptionRequests;
                 _subscriptionRequests = new List<SubscriptionRequest>();
-                return result.Where(x => x.Universe != null)
+                removedUniverses = subscriptionRequests.Where(x => x.Universe != null)
                     .Select(x => x.Universe);
             }
+            else
+            {
+                _subscriptionRequests.RemoveAll(x => x.Universe == universe);
+                removedUniverses = new[] {universe};
+            }
 
-            _subscriptionRequests.RemoveAll(x => x.Universe == universe);
-            // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
-            return new List<Universe> { universe };
+            var emptySubscription = !_subscriptionRequests.Any();
+            if (emptySubscription)
+            {
+                // if the security is no longer a member of the universe, then mark the subscription properly
+                // universe may be null for internal currency conversion feeds
+                // TODO : Put currency feeds in their own internal universe
+                if (!removedUniverses.Any(x => x.Members.ContainsKey(Configuration.Symbol)))
+                {
+                    MarkAsRemovedFromUniverse();
+                }
+            }
+
+            return emptySubscription;
         }
 
         /// <summary>

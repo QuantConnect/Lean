@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class PendingRemovalsManager
     {
-        private readonly Dictionary<Universe, List<Security>> _pendingRemovals = new Dictionary<Universe, List<Security>>();
+        private readonly Dictionary<Universe, List<Security>> _pendingRemovals;
         private readonly IOrderProvider _orderProvider;
 
         /// <summary>
@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public PendingRemovalsManager(IOrderProvider orderProvider)
         {
             _orderProvider = orderProvider;
+            _pendingRemovals = new Dictionary<Universe, List<Security>>();
         }
 
         /// <summary>

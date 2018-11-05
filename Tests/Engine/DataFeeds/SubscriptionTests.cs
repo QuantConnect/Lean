@@ -40,8 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
 
-            Assert.IsTrue(subscription.HasSubscriptionRequests);
-            Assert.IsFalse(subscription.Universe.Any());
+            Assert.IsFalse(subscription.Universes.Any());
             Assert.IsFalse(subscription.EndOfStream);
             Assert.AreEqual(_start, subscription.UtcStartTime);
             Assert.AreEqual(_end, subscription.UtcEndTime);
@@ -58,11 +57,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
 
-            Assert.IsTrue(subscription.HasSubscriptionRequests);
-            Assert.AreEqual(1, subscription.Universe.Count());
+            Assert.AreEqual(1, subscription.Universes.Count());
             Assert.AreEqual(_start, subscription.UtcStartTime);
             Assert.AreEqual(_end, subscription.UtcEndTime);
-            Assert.AreEqual(subscriptionRequest.Universe, subscription.Universe.First());
+            Assert.AreEqual(subscriptionRequest.Universe, subscription.Universes.First());
             Assert.IsFalse(subscription.EndOfStream);
             Assert.AreEqual(subscription.Configuration, subscriptionRequest.Configuration);
             Assert.IsFalse(subscription.IsUniverseSelectionSubscription);
@@ -77,13 +75,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
 
-            Assert.AreEqual(1, subscription.Universe.Count());
-            Assert.AreEqual(subscriptionRequest.Universe, subscription.Universe.First());
+            Assert.AreEqual(1, subscription.Universes.Count());
+            Assert.AreEqual(subscriptionRequest.Universe, subscription.Universes.First());
 
             subscription.AddSubscriptionRequest(subscriptionRequest);
 
-            Assert.AreEqual(1, subscription.Universe.Count());
-            Assert.AreEqual(subscriptionRequest.Universe, subscription.Universe.First());
+            Assert.AreEqual(1, subscription.Universes.Count());
+            Assert.AreEqual(subscriptionRequest.Universe, subscription.Universes.First());
         }
 
         [Test]
@@ -138,11 +136,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
 
-            var removedUniverse = subscription.RemoveSubscriptionRequest(subscriptionRequest.Universe);
-            Assert.IsTrue(removedUniverse.Contains(subscriptionRequest.Universe));
+            var emptySubscription = subscription.RemoveSubscriptionRequest(subscriptionRequest.Universe);
 
-            Assert.IsFalse(subscription.Universe.Any());
-            Assert.IsFalse(subscription.HasSubscriptionRequests);
+            Assert.IsTrue(emptySubscription);
+            Assert.IsFalse(subscription.Universes.Any());
         }
 
         [Test]
@@ -156,14 +153,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
 
             subscription.AddSubscriptionRequest(subscriptionRequest2);
-            Assert.AreEqual(2, subscription.Universe.Count());
-            var removedUniverses = subscription.RemoveSubscriptionRequest().ToList();
+            Assert.AreEqual(2, subscription.Universes.Count());
+            var emptySubscription = subscription.RemoveSubscriptionRequest();
 
-            Assert.IsTrue(removedUniverses.Contains(subscriptionRequest.Universe));
-            Assert.IsTrue(removedUniverses.Contains(subscriptionRequest2.Universe));
-
-            Assert.IsFalse(subscription.Universe.Any());
-            Assert.IsFalse(subscription.HasSubscriptionRequests);
+            Assert.IsTrue(emptySubscription);
+            Assert.IsFalse(subscription.Universes.Any());
         }
 
         [Test]
@@ -175,11 +169,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
 
-            var removedUniverses = subscription.RemoveSubscriptionRequest().ToList();
+            var emptySubscription = subscription.RemoveSubscriptionRequest();
 
-            Assert.IsFalse(removedUniverses.Any());
-            Assert.IsFalse(subscription.Universe.Any());
-            Assert.IsFalse(subscription.HasSubscriptionRequests);
+            Assert.IsTrue(emptySubscription);
+            Assert.IsFalse(subscription.Universes.Any());
         }
 
         private SubscriptionRequest GetSubscriptionRequest(
