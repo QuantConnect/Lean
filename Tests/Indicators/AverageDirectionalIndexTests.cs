@@ -26,10 +26,20 @@ namespace QuantConnect.Tests.Indicators
         {
             var adx = new AverageDirectionalIndex("adx", 14);
 
-            const double epsilon = 1;
+            const double epsilon = .0001;
 
             TestHelper.TestIndicator(adx, "spy_with_adx.txt", "ADX 14",
                 (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).Current.Value, epsilon)
+            );
+            adx.Reset();
+
+            TestHelper.TestIndicator(adx, "spy_with_adx.txt", "+DI14",
+                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).PositiveDirectionalIndex.Current.Value, epsilon)
+            );
+            adx.Reset();
+
+            TestHelper.TestIndicator(adx, "spy_with_adx.txt", "-DI14",
+                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).NegativeDirectionalIndex.Current.Value, epsilon)
             );
         }
 
