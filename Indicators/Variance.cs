@@ -78,7 +78,8 @@ namespace QuantConnect.Indicators
                 _rollingSumOfSquares -= removedValue * removedValue;
             }
 
-            return meanValue2 - meanValue1 * meanValue1;
+            // Ensure non-negative variance
+            return System.Math.Max(0m, meanValue2 - meanValue1 * meanValue1);
         }
 
         /// <summary>
