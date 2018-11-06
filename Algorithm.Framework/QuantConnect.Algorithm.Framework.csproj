@@ -200,6 +200,9 @@
     <Content Include="Risk\CompositeRiskManagementModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Risk\MaximumDrawdownPercentPortfolio.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Risk\MaximumUnrealizedProfitPercentPerSecurity.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

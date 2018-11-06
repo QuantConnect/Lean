@@ -113,6 +113,7 @@
     <None Include="main.py" />
     <None Include="MarginCallEventsAlgorithm.py" />
     <None Include="MarketOnOpenOnCloseAlgorithm.py" />
+    <None Include="MaximumPortfolioDrawdownFrameworkAlgorithm.py" />
     <None Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <None Include="MovingAverageCrossAlgorithm.py" />
     <None Include="MultipleSymbolConsolidationAlgorithm.py" />
