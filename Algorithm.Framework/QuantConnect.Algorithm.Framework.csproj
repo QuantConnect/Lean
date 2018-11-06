@@ -197,6 +197,12 @@
     <Content Include="Portfolio\EqualWeightingPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Risk\CompositeRiskManagementModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Risk\MaximumUnrealizedProfitPercentPerSecurity.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Risk\MaximumDrawdownPercentPerSecurity.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -23,9 +23,11 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
-from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from Risk.CompositeRiskManagementModel import CompositeRiskManagementModel
+from Risk.MaximumUnrealizedProfitPercentPerSecurity import MaximumUnrealizedProfitPercentPerSecurity
+from Risk.MaximumDrawdownPercentPerSecurity import MaximumDrawdownPercentPerSecurity
 from datetime import timedelta
 
 ### <summary>
