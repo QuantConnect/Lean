@@ -6,7 +6,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Common.Data;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
@@ -117,6 +117,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         internal class TestableLatestFillModel : LatestPriceFillModel
         {
+            public TestableLatestFillModel()
+            {
+                // NOTE. GetPrices will no be called before SubscriptionDataConfigProvider is set by the system
+                SubscriptionDataConfigProvider = new MockSubscriptionDataConfigProvider();
+            }
             public new Prices GetPrices(Security asset, OrderDirection direction)
             {
                 return base.GetPrices(asset, direction);

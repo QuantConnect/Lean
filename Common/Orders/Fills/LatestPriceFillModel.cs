@@ -48,8 +48,10 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(endTime, current, open, high, low, close);
             }
 
+            var subscriptions = SubscriptionDataConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
+            var subscriptionTypes = subscriptions.Select(x => x.Type).ToList();
 
             // Tick
             var tick = asset.Cache.GetData<Tick>();

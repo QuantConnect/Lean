@@ -13,21 +13,20 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities.Future
+
+namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Future holdings implementation of the base securities class
+    /// Represents an interface that simulates order fill events
     /// </summary>
-    /// <seealso cref="SecurityHolding"/>
-    public class FutureHolding : SecurityHolding
+    /// <remarks>Users should override base class <see cref="IFillModel"/></remarks>
+    public interface InterfaceFillModel
     {
         /// <summary>
-        /// Future Holding Class constructor
+        /// Return an order event with the fill details
         /// </summary>
-        /// <param name="security">The future security being held</param>
-        public FutureHolding(Security security)
-            : base(security)
-        {
-        }
+        /// <param name="context">A context object containing the security and order</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        OrderEvent Fill(FillModelContext context);
     }
 }

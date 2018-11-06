@@ -11,23 +11,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
-
-namespace QuantConnect.Securities.Future
+using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+namespace QuantConnect.Tests.Common.Data
 {
-    /// <summary>
-    /// Future holdings implementation of the base securities class
-    /// </summary>
-    /// <seealso cref="SecurityHolding"/>
-    public class FutureHolding : SecurityHolding
+    internal class MockSubscriptionDataConfigProvider : ISubscriptionDataConfigProvider
     {
-        /// <summary>
-        /// Future Holding Class constructor
-        /// </summary>
-        /// <param name="security">The future security being held</param>
-        public FutureHolding(Security security)
-            : base(security)
+        public List<SubscriptionDataConfig> SubscriptionDataConfigs
+            = new List<SubscriptionDataConfig>();
+        public MockSubscriptionDataConfigProvider(SubscriptionDataConfig config = null)
         {
+            if (config != null)
+            {
+                SubscriptionDataConfigs.Add(config);
+            }
+        }
+        public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol)
+        {
+            return SubscriptionDataConfigs;
         }
     }
 }

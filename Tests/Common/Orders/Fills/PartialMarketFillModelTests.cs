@@ -25,7 +25,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Common.Data;
 using QuantConnect.Tests.Engine;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
@@ -33,6 +33,22 @@ namespace QuantConnect.Tests.Common.Orders.Fills
     [TestFixture, Ignore]
     public class PartialMarketFillModelTests
     {
+        private SubscriptionDataConfig _config;
+
+        [SetUp]
+        public void Setup()
+        {
+            _config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Second,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false);
+        }
+
         [Test]
         public void CreatesSpecificNumberOfFills()
         {
@@ -45,14 +61,20 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             algorithm.SetDateTime(referenceTimeUtc.AddSeconds(1));
 
-            var fill1 = model.MarketFill(security, order);
+            var fill1 = model.Fill(new FillModelContext(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(_config)));
             ticket.AddOrderEvent(fill1);
             Assert.AreEqual(order.Quantity / 2, fill1.FillQuantity);
             Assert.AreEqual(OrderStatus.PartiallyFilled, fill1.Status);
 
             algorithm.SetDateTime(referenceTimeUtc.AddSeconds(2));
 
-            var fill2 = model.MarketFill(security, order);
+            var fill2 = model.Fill(new FillModelContext(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(_config)));
             ticket.AddOrderEvent(fill2);
             Assert.AreEqual(order.Quantity / 2, fill2.FillQuantity);
             Assert.AreEqual(OrderStatus.Filled, fill2.Status);
@@ -68,25 +90,34 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             BasicTemplateAlgorithm algorithm;
             var referenceTimeUtc = InitializeTest(out algorithm, out security, out model, out order, out ticket);
 
-            var fill1 = model.MarketFill(security, order);
+            var fill1 = model.Fill(new FillModelContext(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(_config)));
             ticket.AddOrderEvent(fill1);
             Assert.AreEqual(order.Quantity / 2, fill1.FillQuantity);
             Assert.AreEqual(OrderStatus.PartiallyFilled, fill1.Status);
 
-            var fill2 = model.MarketFill(security, order);
+            var fill2 = model.Fill(new FillModelContext(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(_config)));
             ticket.AddOrderEvent(fill2);
             Assert.AreEqual(0, fill2.FillQuantity);
             Assert.AreEqual(OrderStatus.None, fill2.Status);
 
             algorithm.SetDateTime(referenceTimeUtc.AddSeconds(1));
 
-            var fill3 = model.MarketFill(security, order);
+            var fill3 = model.Fill(new FillModelContext(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(_config)));
             ticket.AddOrderEvent(fill3);
             Assert.AreEqual(order.Quantity / 2, fill3.FillQuantity);
             Assert.AreEqual(OrderStatus.Filled, fill3.Status);
         }
 
-        private static DateTime InitializeTest(out BasicTemplateAlgorithm algorithm, out Security security, out PartialMarketFillModel model, out MarketOrder order, out OrderTicket ticket)
+        private DateTime InitializeTest(out BasicTemplateAlgorithm algorithm, out Security security, out PartialMarketFillModel model, out MarketOrder order, out OrderTicket ticket)
         {
             var referenceTimeNY = new DateTime(2015, 12, 21, 13, 0, 0);
             var referenceTimeUtc = referenceTimeNY.ConvertToUtc(TimeZones.NewYork);
@@ -99,10 +130,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
             security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                config,
+                _config,
                 new Cash(CashBook.AccountCurrency, 0, 1m),
                 SymbolProperties.GetDefault(CashBook.AccountCurrency),
                 ErrorCurrencyConverter.Instance

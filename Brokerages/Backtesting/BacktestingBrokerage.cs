@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -318,34 +319,22 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         //Model:
                         var model = security.FillModel;
-
                         //Based on the order type: refresh its model to get fill price and quantity
                         try
                         {
                             switch (order.Type)
                             {
                                 case OrderType.Limit:
-                                    fills = new[] { model.LimitFill(security, order as LimitOrder) };
-                                    break;
-
                                 case OrderType.StopMarket:
-                                    fills = new[] { model.StopMarketFill(security, order as StopMarketOrder) };
-                                    break;
-
                                 case OrderType.Market:
-                                    fills = new[] { model.MarketFill(security, order as MarketOrder) };
-                                    break;
-
                                 case OrderType.StopLimit:
-                                    fills = new[] { model.StopLimitFill(security, order as StopLimitOrder) };
-                                    break;
-
                                 case OrderType.MarketOnOpen:
-                                    fills = new[] { model.MarketOnOpenFill(security, order as MarketOnOpenOrder) };
-                                    break;
-
                                 case OrderType.MarketOnClose:
-                                    fills = new[] { model.MarketOnCloseFill(security, order as MarketOnCloseOrder) };
+                                    var context = new FillModelContext(
+                                        security,
+                                        order,
+                                        Algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                                    fills = new[] { model.Fill(context) };
                                     break;
 
                                 case OrderType.OptionExercise:
