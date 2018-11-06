@@ -425,11 +425,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             Current = _auxiliaryData.Dequeue();
                             _emittedAuxilliaryData = true;
 
-                            // with hourly resolution the first bar for the new date is received
-                            // before the price scale factor is updated by ResolveDataEnumerator,
-                            // so we have to 'rescale' prices before emitting the bar
+                            // With hourly resolution the first bar for the new date is received
+                            // before the price scale factor is updated by ResolveDataEnumerator.
+                            // For daily resolution this means 'instance' is already in the next day.
+                            // So we have to 'rescale' prices before emitting the bar
                             if (_config.Resolution == Resolution.Hour &&
-                               (_config.SecurityType == SecurityType.Equity || _config.SecurityType == SecurityType.Option))
+                               (_config.SecurityType == SecurityType.Equity || _config.SecurityType == SecurityType.Option)
+                                || _config.Resolution == Resolution.Daily)
                             {
                                 var tradeBar = instance as TradeBar;
                                 if (tradeBar != null)
