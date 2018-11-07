@@ -140,6 +140,7 @@
     <None Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <None Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
     <None Include="TimeInForceAlgorithm.py" />
+    <None Include="TrailingStopRiskFrameworkAlgorithm.py" />
     <None Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <None Include="UniverseSelectionRegressionAlgorithm.py" />
     <None Include="UpdateOrderRegressionAlgorithm.py" />
