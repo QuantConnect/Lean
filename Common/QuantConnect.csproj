@@ -179,7 +179,6 @@
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\BitfinexBrokerageModel.cs" />
-    <Compile Include="Brokerages\BitfinexTransactionModel.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
@@ -271,8 +270,6 @@
     <Compile Include="Securities\IDerivativeSecurity.cs" />
     <Compile Include="Securities\Option\EmptyOptionChainProvider.cs" />
     <Compile Include="Interfaces\IOptionChainProvider.cs" />
-    <Compile Include="Brokerages\OandaTransactionModel.cs" />
-    <Compile Include="Brokerages\FxcmTransactionModel.cs" />
     <Compile Include="Brokerages\IBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\IBrokerageModel.cs" />
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
@@ -456,7 +453,6 @@
     <Compile Include="Securities\Cfd\CfdExchange.cs" />
     <Compile Include="Securities\Cfd\CfdHolding.cs" />
     <Compile Include="Securities\CompositeSecurityInitializer.cs" />
-    <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Crypto\Crypto.cs" />
     <Compile Include="Securities\Crypto\CryptoExchange.cs" />
     <Compile Include="Securities\Crypto\CryptoHolding.cs" />
@@ -574,16 +570,12 @@
     <Compile Include="Securities\Forex\ForexDataFilter.cs" />
     <Compile Include="Securities\Interfaces\ISecurityDataFilter.cs" />
     <Compile Include="Securities\SecurityDataFilter.cs" />
-    <Compile Include="Securities\SecurityTransactionModel.cs" />
     <Compile Include="Securities\Equity\Equity.cs" />
     <Compile Include="Securities\Equity\EquityExchange.cs" />
     <Compile Include="Securities\Equity\EquityHolding.cs" />
-    <Compile Include="Securities\Equity\EquityTransactionModel.cs" />
     <Compile Include="Securities\Forex\Forex.cs" />
     <Compile Include="Securities\Forex\ForexExchange.cs" />
     <Compile Include="Securities\Forex\ForexHolding.cs" />
-    <Compile Include="Securities\Forex\ForexTransactionModel.cs" />
-    <Compile Include="Securities\Interfaces\ISecurityTransactionModel.cs" />
     <Compile Include="Securities\Security.cs" />
     <Compile Include="Securities\SecurityCache.cs" />
     <Compile Include="Securities\SecurityExchange.cs" />

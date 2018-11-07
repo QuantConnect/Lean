@@ -23,6 +23,7 @@ using Moq;
 using QuantConnect.Brokerages;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -676,7 +677,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algo.SetFinishedWarmingUp();
             security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD");
-            security.TransactionModel = new ConstantFeeTransactionModel(fee);
+            security.FeeModel = new ConstantFeeModel(fee);
             //Set price to $25
             Update(algo.Portfolio.CashBook, security, 25);
             return algo;

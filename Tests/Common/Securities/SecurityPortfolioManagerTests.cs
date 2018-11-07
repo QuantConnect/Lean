@@ -34,6 +34,7 @@ using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -197,9 +198,9 @@ namespace QuantConnect.Tests.Common.Securities
             usdJwbSecurity.SetLeverage(10m);
 
             // no fee model
-            mchJwbSecurity.TransactionModel = new SecurityTransactionModel();
-            mchUsdSecurity.TransactionModel = new SecurityTransactionModel();
-            usdJwbSecurity.TransactionModel = new SecurityTransactionModel();
+            mchJwbSecurity.FeeModel = new ConstantFeeModel(0);
+            mchUsdSecurity.FeeModel = new ConstantFeeModel(0);
+            usdJwbSecurity.FeeModel = new ConstantFeeModel(0);
 
             securities.Add(mchJwbSecurity);
             securities.Add(usdJwbSecurity);
