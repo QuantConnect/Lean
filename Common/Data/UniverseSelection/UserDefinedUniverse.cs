@@ -228,13 +228,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if the symbol was removed, false if the symbol was not present</returns>
         public bool Remove(Symbol symbol)
         {
-            var toBeRemoved = _subscriptionDataConfigs.Where(x => x.Symbol == symbol).ToList();
-            var removedSymbol = _symbols.Remove(symbol);
-
-            if (toBeRemoved.Any() || removedSymbol)
+            if (RemoveAndKeepTrack(symbol))
             {
-                _subscriptionDataConfigs.RemoveWhere(x => x.Symbol == symbol);
-                _pendingRemovedConfigs.UnionWith(toBeRemoved);
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, symbol));
                 return true;
             }
@@ -321,6 +316,38 @@ namespace QuantConnect.Data.UniverseSelection
                                                                    configuration: config,
                                                                    startTimeUtc: currentTimeUtc,
                                                                    endTimeUtc: maximumEndTimeUtc));
+        }
+
+        /// <summary>
+        /// Tries to remove the specified security from the universe.
+        /// </summary>
+        /// <param name="utcTime">The current utc time</param>
+        /// <param name="security">The security to be removed</param>
+        /// <returns>True if the security was successfully removed, false if
+        /// we're not allowed to remove or if the security didn't exist</returns>
+        internal override bool RemoveMember(DateTime utcTime, Security security)
+        {
+            if (base.RemoveMember(utcTime, security))
+            {
+                RemoveAndKeepTrack(security.Symbol);
+                return true;
+            }
+            return false;
+        }
+
+        private bool RemoveAndKeepTrack(Symbol symbol)
+        {
+            var toBeRemoved = _subscriptionDataConfigs.Where(x => x.Symbol == symbol).ToList();
+            var removedSymbol = _symbols.Remove(symbol);
+
+            if (removedSymbol || toBeRemoved.Any())
+            {
+                _subscriptionDataConfigs.RemoveWhere(x => x.Symbol == symbol);
+                _pendingRemovedConfigs.UnionWith(toBeRemoved);
+                return true;
+            }
+
+            return false;
         }
     }
 }
