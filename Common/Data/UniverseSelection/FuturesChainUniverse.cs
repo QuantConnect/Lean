@@ -94,7 +94,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             var underlying = new Tick { Time = utcTime };
 
-            if (_cacheDate != null && _cacheDate == data.Time.Date)
+            if (_cacheDate == data.Time.Date)
             {
                 return Unchanged;
             }
