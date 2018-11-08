@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </returns>
         public bool MoveNext()
         {
-            if (Current == null && !_needNewCurrent)
+            if (!_needNewCurrent)
             {
                 // refresh on date change (in exchange time zone)
                 _needNewCurrent = _timeProvider.GetUtcNow().ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone).Date != _lastEmitTime.Date;
