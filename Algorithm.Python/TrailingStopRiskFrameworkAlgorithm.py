@@ -14,6 +14,7 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -23,18 +24,14 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
-from Risk.CompositeRiskManagementModel import CompositeRiskManagementModel
-from Risk.MaximumUnrealizedProfitPercentPerSecurity import MaximumUnrealizedProfitPercentPerSecurity
-from Risk.MaximumDrawdownPercentPerSecurity import MaximumDrawdownPercentPerSecurity
+from QuantConnect.Algorithm.Framework.Selection import *
+from Risk.TrailingStopRiskManagementModel import TrailingStopRiskManagementModel
 from datetime import timedelta
 
-### <summary>
-### Show cases how to use the CompositeRiskManagementModel.
-### </summary>
-class CompositeRiskManagementModelFrameworkAlgorithm(QCAlgorithmFramework):
-    '''Show cases how to use the CompositeRiskManagementModel.'''
+
+class TrailingStopRiskFrameworkAlgorithm(QCAlgorithmFramework):
+    '''Show example of how to use the TrailingStopRiskManagementModel'''
 
     def Initialize(self):
 
@@ -46,13 +43,12 @@ class CompositeRiskManagementModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetCash(100000)           #Set Strategy Cash
 
         # set algorithm framework models
-        self.SetUniverseSelection(ManualUniverseSelectionModel([Symbol.Create("SPY", SecurityType.Equity, Market.USA)]))
+        self.SetUniverseSelection(ManualUniverseSelectionModel([ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]))
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
+        self.SetRiskManagement(TrailingStopRiskManagementModel(0.01))
 
-        # define risk management model as a composite of several risk management models
-        self.SetRiskManagement(CompositeRiskManagementModel(
-            MaximumUnrealizedProfitPercentPerSecurity(0.01),
-            MaximumDrawdownPercentPerSecurity(0.01)
-        ))
+    def OnOrderEvent(self, orderEvent):
+        if orderEvent.Status == OrderStatus.Filled:
+            self.Debug(f'Processed Order: {orderEvent.Symbol}, Quantity: {orderEvent.FillQuantity}')

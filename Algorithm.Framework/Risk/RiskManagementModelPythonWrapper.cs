@@ -15,7 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
-using System;
+using QuantConnect.Python;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
@@ -34,16 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="model">Model defining how risk is managed</param>
         public RiskManagementModelPythonWrapper(PyObject model)
         {
-            using (Py.GIL())
-            {
-                foreach (var attributeName in new[] { "ManageRisk", "OnSecuritiesChanged" })
-                {
-                    if (!model.HasAttr(attributeName))
-                    {
-                        throw new NotImplementedException($"IRiskManagementModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
-                    }
-                }
-            }
+            model.ValidateImplementationOf<IRiskManagementModel>();
             _model = model;
         }
 

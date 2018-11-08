@@ -21,8 +21,8 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the relative drawdown
-    /// per holding to the specified percentage
+    /// Provides an implementation of <see cref="IRiskManagementModel"/> that limits the maximum possible loss
+    /// measured from the highest unrealized profit
     /// </summary>
     public class TrailingStopRiskManagementModel : RiskManagementModel
     {
@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <summary>
         /// Initializes a new instance of the <see cref="TrailingStopRiskManagementModel"/> class
         /// </summary>
-        /// <param name="maximumDrawdownPercent">The maximum percentage relative drawdown allowed for any single security holding, defaults to 5% drawdown per security</param>
+        /// <param name="maximumDrawdownPercent">The maximum percentage relative drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown per security</param>
         public TrailingStopRiskManagementModel(decimal maximumDrawdownPercent = 0.05m)
         {
             _maximumDrawdownPercent = -Math.Abs(maximumDrawdownPercent);

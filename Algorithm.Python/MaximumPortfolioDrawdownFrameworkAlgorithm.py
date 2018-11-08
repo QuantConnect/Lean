@@ -14,6 +14,7 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -23,18 +24,16 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Selection import *
 from Risk.CompositeRiskManagementModel import CompositeRiskManagementModel
-from Risk.MaximumUnrealizedProfitPercentPerSecurity import MaximumUnrealizedProfitPercentPerSecurity
-from Risk.MaximumDrawdownPercentPerSecurity import MaximumDrawdownPercentPerSecurity
+from Risk.MaximumDrawdownPercentPortfolio import MaximumDrawdownPercentPortfolio
 from datetime import timedelta
+import numpy as np
 
-### <summary>
-### Show cases how to use the CompositeRiskManagementModel.
-### </summary>
-class CompositeRiskManagementModelFrameworkAlgorithm(QCAlgorithmFramework):
-    '''Show cases how to use the CompositeRiskManagementModel.'''
+
+class MaximumPortfolioDrawdownFrameworkAlgorithm(QCAlgorithmFramework):
+    '''Show example of how to use the MaximumDrawdownPercentPortfolio Risk Management Model'''
 
     def Initialize(self):
 
@@ -46,13 +45,13 @@ class CompositeRiskManagementModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetCash(100000)           #Set Strategy Cash
 
         # set algorithm framework models
-        self.SetUniverseSelection(ManualUniverseSelectionModel([Symbol.Create("SPY", SecurityType.Equity, Market.USA)]))
+        self.SetUniverseSelection(ManualUniverseSelectionModel([ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]))
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
 
         # define risk management model as a composite of several risk management models
         self.SetRiskManagement(CompositeRiskManagementModel(
-            MaximumUnrealizedProfitPercentPerSecurity(0.01),
-            MaximumDrawdownPercentPerSecurity(0.01)
-        ))
+            MaximumDrawdownPercentPortfolio(0.01),         # Avoid loss of initial capital
+            MaximumDrawdownPercentPortfolio(0.015, True)   # Avoid profit losses
+            ))

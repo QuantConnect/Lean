@@ -87,6 +87,7 @@
     <Compile Include="main.py" />
     <Compile Include="MarginCallEventsAlgorithm.py" />
     <Compile Include="MarketOnOpenOnCloseAlgorithm.py" />
+    <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.py" />
     <Compile Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <Compile Include="MovingAverageCrossAlgorithm.py" />
     <Compile Include="MultipleSymbolConsolidationAlgorithm.py" />
@@ -114,6 +115,7 @@
     <Compile Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
     <Compile Include="TimeInForceAlgorithm.py" />
+    <Compile Include="TrailingStopRiskFrameworkAlgorithm.py" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Compile Include="UniverseSelectionRegressionAlgorithm.py" />
     <Compile Include="UpdateOrderRegressionAlgorithm.py" />

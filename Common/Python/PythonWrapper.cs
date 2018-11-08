@@ -41,14 +41,16 @@ namespace QuantConnect.Python
 
             var missingMembers = new List<string>();
             var members = typeof(TInterface).GetMembers(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var member in members)
+            using (Py.GIL())
             {
-                if (!model.HasAttr(member.Name))
+                foreach (var member in members)
                 {
-                    missingMembers.Add(member.Name);
+                    if (!model.HasAttr(member.Name))
+                    {
+                        missingMembers.Add(member.Name);
+                    }
                 }
             }
-
             if (missingMembers.Any())
             {
                 throw new NotImplementedException($"{nameof(TInterface)} must be fully implemented. Missing implementations: {string.Join(", ", missingMembers)}");

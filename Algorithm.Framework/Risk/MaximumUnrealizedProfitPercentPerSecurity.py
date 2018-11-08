@@ -23,14 +23,14 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
 from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 
-class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
-    '''Provides an implementation of IRiskManagementModel that limits the drawdown per holding to the specified percentage'''
+class MaximumUnrealizedProfitPercentPerSecurity(RiskManagementModel):
+    '''Provides an implementation of IRiskManagementModel that limits the unrealized profit per holding to the specified percentage'''
 
-    def __init__(self, maximumDrawdownPercent = 0.05):
-        '''Initializes a new instance of the MaximumDrawdownPercentPerSecurity class
+    def __init__(self, maximumUnrealizedProfitPercent = 0.05):
+        '''Initializes a new instance of the MaximumUnrealizedProfitPercentPerSecurity class
         Args:
-            maximumDrawdownPercent: The maximum percentage drawdown allowed for any single security holding'''
-        self.maximumDrawdownPercent = -abs(maximumDrawdownPercent)
+            maximumUnrealizedProfitPercent: The maximum percentage unrealized profit allowed for any single security holding, defaults to 5% drawdown per security'''
+        self.maximumUnrealizedProfitPercent = abs(maximumUnrealizedProfitPercent)
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -45,7 +45,7 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
                 continue
 
             pnl = security.Holdings.UnrealizedProfitPercent
-            if pnl < self.maximumDrawdownPercent:
+            if pnl > self.maximumUnrealizedProfitPercent:
                 # liquidate
                 targets.append(PortfolioTarget(security.Symbol, 0))
 
