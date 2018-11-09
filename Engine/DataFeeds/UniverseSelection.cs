@@ -38,8 +38,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataFeedSubscriptionManager _dataManager;
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
-        private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
+        private readonly PendingRemovalsManager _pendingRemovalsManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -52,6 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _algorithm = algorithm;
             _securityService = securityService;
+            _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
         }
 
         /// <summary>
@@ -193,16 +194,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var additions = new List<Security>();
             var removals = new List<Security>();
 
-            // remove previously deselected members which were kept in the universe because of holdings or open orders
-            foreach (var member in _pendingRemovals.ToList())
-            {
-                if (IsSafeToRemove(member))
-                {
-                    RemoveSecurityFromUniverse(universe, member, removals, dateTimeUtc, algorithmEndDateUtc);
-
-                    _pendingRemovals.Remove(member);
-                }
-            }
+            RemoveSecurityFromUniverse(
+                _pendingRemovalsManager.CheckPendingRemovals(selections, universe),
+                removals,
+                dateTimeUtc,
+                algorithmEndDateUtc);
 
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Members.Values)
@@ -218,14 +214,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // until open orders are closed and the security is liquidated
                 removals.Add(member);
 
-                if (IsSafeToRemove(member))
-                {
-                    RemoveSecurityFromUniverse(universe, member, removals, dateTimeUtc, algorithmEndDateUtc);
-                }
-                else
-                {
-                    _pendingRemovals.Add(member);
-                }
+                RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(member, universe),
+                    removals,
+                    dateTimeUtc,
+                    algorithmEndDateUtc);
             }
 
             var keys = _pendingSecurityAdditions.Keys;
@@ -324,46 +316,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return securityChanges;
         }
 
-        private void RemoveSecurityFromUniverse(Universe universe, Security member, List<Security> removals, DateTime dateTimeUtc, DateTime algorithmEndDateUtc)
+        private void RemoveSecurityFromUniverse(
+            List<PendingRemovalsManager.RemovedMember> removedMembers,
+            List<Security> removals,
+            DateTime dateTimeUtc,
+            DateTime algorithmEndDateUtc)
         {
-            // safe to remove the member from the universe
-            universe.RemoveMember(dateTimeUtc, member);
-
-            // we need to mark this security as untradeable while it has no data subscription
-            // it is expected that this function is called while in sync with the algo thread,
-            // so we can make direct edits to the security here
-            member.Cache.Reset();
-            foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
-                                                                          _algorithm.SubscriptionManager.SubscriptionDataConfigService))
+            foreach (var removedMember in removedMembers)
             {
-                if (subscription.IsUniverseSubscription)
+                var universe = removedMember.Universe;
+                var member = removedMember.Security;
+
+                // safe to remove the member from the universe
+                universe.RemoveMember(dateTimeUtc, member);
+
+                // we need to mark this security as untradeable while it has no data subscription
+                // it is expected that this function is called while in sync with the algo thread,
+                // so we can make direct edits to the security here
+                member.Cache.Reset();
+                foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
+                                                                              _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
-                    removals.Remove(member);
+                    if (subscription.IsUniverseSubscription)
+                    {
+                        removals.Remove(member);
+                    }
+                    else
+                    {
+                        _dataManager.RemoveSubscription(subscription.Configuration, universe);
+                    }
                 }
-                else
-                {
-                    _dataManager.RemoveSubscription(subscription.Configuration);
-                }
+
+                // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
+                SymbolCache.TryRemove(member.Symbol);
             }
-
-            // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
-            SymbolCache.TryRemove(member.Symbol);
-        }
-
-        /// <summary>
-        /// Determines if we can safely remove the security member from a universe.
-        /// We must ensure that we have zero holdings, no open orders, and no existing portfolio targets
-        /// </summary>
-        private bool IsSafeToRemove(Security member)
-        {
-            // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
-            var openOrders = _algorithm.Transactions.GetOpenOrders(x => x.Symbol == member.Symbol);
-            if (!member.HoldStock && !openOrders.Any() && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0))
-            {
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>

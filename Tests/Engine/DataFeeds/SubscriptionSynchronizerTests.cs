@@ -131,7 +131,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             .ToList();
 
             dataPointCount = data.Count;
-            return new Subscription(universe, security, config, data.GetEnumerator(), offsetProvider, endTimeUtc, endTimeUtc, false);
+            var subscriptionRequest = new SubscriptionRequest(false, universe, security, config, startTimeUtc, endTimeUtc);
+            return new Subscription(subscriptionRequest, data.GetEnumerator(), offsetProvider);
         }
 
         private class DataPoint : BaseData

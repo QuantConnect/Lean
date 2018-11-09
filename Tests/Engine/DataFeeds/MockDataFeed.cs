@@ -14,7 +14,6 @@
  *
 */
 
-using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;

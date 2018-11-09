@@ -186,6 +186,7 @@
     <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.cs" />
     <Compile Include="TimeInForceAlgorithm.cs" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
+    <Compile Include="UniverseSharingSubscriptionRequestRegressionAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />

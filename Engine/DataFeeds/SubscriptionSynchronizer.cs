@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -34,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ManualTimeProvider _frontierTimeProvider;
 
         /// <summary>
-        /// Event fired when a subscription is finished
+        /// Event fired when a <see cref="Subscription"/> is finished
         /// </summary>
         public event EventHandler<Subscription> SubscriptionFinished;
 
@@ -86,6 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscriptions">The subscriptions to sync</param>
         public TimeSlice Sync(IEnumerable<Subscription> subscriptions)
         {
+            var delayedSubscriptionFinished = false;
             var changes = SecurityChanges.None;
             var data = new List<DataFeedPacket>();
             // NOTE: Tight coupling in UniverseSelection.ApplyUniverseSelection
@@ -125,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         if (!subscription.MoveNext())
                         {
-                            OnSubscriptionFinished(subscription);
+                            delayedSubscriptionFinished = true;
                             break;
                         }
                     }
@@ -147,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 : packetBaseDataCollection.Data;
 
                             BaseDataCollection collection;
-                            if (universeData.TryGetValue(subscription.Universe, out collection))
+                            if (universeData.TryGetValue(subscription.Universes.Single(), out collection))
                             {
                                 collection.Data.AddRange(packetData);
                             }
@@ -167,15 +169,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     collection = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol, packetData);
                                 }
 
-                                universeData[subscription.Universe] = collection;
+                                universeData[subscription.Universes.Single()] = collection;
                             }
                         }
                     }
 
-                    // remove subscription for universe data if disposal requested AFTER time sync
-                    // this ensures we get any security changes from removing the universe and its children
-                    if (subscription.IsUniverseSelectionSubscription && subscription.Universe.DisposeRequested)
+                    if (subscription.IsUniverseSelectionSubscription
+                        && subscription.Universes.Single().DisposeRequested
+                        || delayedSubscriptionFinished)
                     {
+                        delayedSubscriptionFinished = false;
+                        // we need to do this after all usages of subscription.Universes
                         OnSubscriptionFinished(subscription);
                     }
                 }

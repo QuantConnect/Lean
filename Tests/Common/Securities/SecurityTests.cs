@@ -255,7 +255,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(20, securityCache.Volume);
         }
 
-        private Security GetSecurity()
+        internal static Security GetSecurity()
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -266,9 +266,9 @@ namespace QuantConnect.Tests.Common.Securities
             );
         }
 
-        private static SubscriptionDataConfig CreateTradeBarConfig()
+        internal static SubscriptionDataConfig CreateTradeBarConfig(Resolution resolution = Resolution.Minute)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, resolution, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
         }
     }
 }

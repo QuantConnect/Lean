@@ -17,10 +17,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -73,7 +76,6 @@ namespace QuantConnect.Tests.Engine
             synchronizer.Initialize(algo, dataManager, true, algo.Portfolio.CashBook);
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(),
                                             null, new DefaultDataProvider(), dataManager, synchronizer);
-
             algo.Initialize();
         }
 
@@ -103,13 +105,24 @@ namespace QuantConnect.Tests.Engine
         public void ClosedExchanges_DoNotIndicateRealTimePriceUpdates()
         {
             var security = new Security(
-                Symbol.Empty,
+                Symbols.AAPL,
                 _exchangeHours,
                 new Cash("USA", 100m, 1m),
                 SymbolProperties.GetDefault("USA"),
                 ErrorCurrencyConverter.Instance
             );
-            var subscription = new Subscription(null, security, null, null, new TimeZoneOffsetProviderNeverOpen(), DateTime.MinValue, DateTime.MaxValue, false);
+            var config = new SubscriptionDataConfig(
+                security.GetType(),
+                security.Symbol,
+                Resolution.Daily,
+                DateTimeZone.Utc,
+                _exchangeHours.TimeZone,
+                false,
+                false,
+                false
+            );
+            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, DateTime.MinValue, DateTime.MaxValue);
+            var subscription = new Subscription(subscriptionRequest, null, new TimeZoneOffsetProviderNeverOpen());
             Assert.IsFalse(_liveTradingDataFeed.UpdateRealTimePrice(subscription, new TimeZoneOffsetProviderNeverOpen()));
         }
 
@@ -117,13 +130,24 @@ namespace QuantConnect.Tests.Engine
         public void OpenExchanges_DoIndicateRealTimePriceUpdates()
         {
             var security = new Security(
-                Symbol.Empty,
+                Symbols.AAPL,
                 _exchangeHours,
                 new Cash("USA", 100m, 1m),
                 SymbolProperties.GetDefault("USA"),
                 ErrorCurrencyConverter.Instance
             );
-            var subscription = new Subscription(null, security, null, null, new TimeZoneOffsetProviderAlwaysOpen(), DateTime.MinValue, DateTime.MaxValue, false);
+            var config = new SubscriptionDataConfig(
+                security.GetType(),
+                security.Symbol,
+                Resolution.Daily,
+                DateTimeZone.Utc,
+                _exchangeHours.TimeZone,
+                false,
+                false,
+                false
+            );
+            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, DateTime.MinValue, DateTime.MaxValue);
+            var subscription = new Subscription(subscriptionRequest, null, new TimeZoneOffsetProviderNeverOpen());
             Assert.IsTrue(_liveTradingDataFeed.UpdateRealTimePrice(subscription, new TimeZoneOffsetProviderAlwaysOpen()));
         }
 
