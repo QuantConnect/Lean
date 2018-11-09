@@ -386,7 +386,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 else
                 {
                     // for items not directly requested set leverage to 1 and at the min resolution
-                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, minResolution, null, true, 1.0m, false);
+                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, minResolution, symbol.ID.Market, true, 1.0m, false);
                 }
             }
         }
