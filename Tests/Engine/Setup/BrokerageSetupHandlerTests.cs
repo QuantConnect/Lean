@@ -142,6 +142,51 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
+        [Test]
+        public void LoadsHoldingsForExpectedMarket()
+        {
+            var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "PaperBrokerage",
+                DataQueueHandler = "none"
+            };
+            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
+            job.Controls.RamAllocation = 1024 * 1024 * 1024;
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<Cash>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
+            {
+                new Holding { Symbol = symbol, Type = symbol.SecurityType, Quantity = 100 }
+            });
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(algorithm, brokerage.Object, job, resultHandler.Object, transactionHandler.Object, realTimeHandler.Object));
+
+            Security security;
+            Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
+            Assert.AreEqual(symbol, security.Symbol);
+        }
+
         public TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
         {
             return new[]
