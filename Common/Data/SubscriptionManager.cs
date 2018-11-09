@@ -75,7 +75,6 @@ namespace QuantConnect.Data
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <returns>
         ///     The newly created <see cref="SubscriptionDataConfig" /> or existing instance if it already existed
-        ///     <see cref="GetOrAdd" />
         /// </returns>
         public SubscriptionDataConfig Add(
             Symbol symbol,
@@ -124,7 +123,6 @@ namespace QuantConnect.Data
         /// </param>
         /// <returns>
         ///     The newly created <see cref="SubscriptionDataConfig" /> or existing instance if it already existed
-        ///     <see cref="GetOrAdd" />
         /// </returns>
         public SubscriptionDataConfig Add(
             Type dataType,
