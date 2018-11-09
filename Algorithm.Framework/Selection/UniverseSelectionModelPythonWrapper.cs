@@ -17,6 +17,7 @@ using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {

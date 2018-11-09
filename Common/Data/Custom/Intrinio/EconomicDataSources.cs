@@ -157,7 +157,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string VIX = "$VIXCLS";
 
             /// <summary>
-            ///     CBOE S&P 100 Volatility Index: VXO
+            ///     CBOE S&amp;P 100 Volatility Index: VXO
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/VXOCLS
@@ -165,7 +165,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             public const string VXO = "$VXOCLS";
 
             /// <summary>
-            ///     CBOE S&P 500 3-Month Volatility Index
+            ///     CBOE S&amp;P 500 3-Month Volatility Index
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/VXVCLS
@@ -424,7 +424,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// </remarks>
             public const string SeasonedBaaCorporateBondYield = "$DBAA";
 
-            // <summary>
+            /// <summary>
             /// Series is calculated as the spread between Moody's Seasoned Baa Corporate Bond© and 10-Year Treasury Constant Maturity
             /// </summary>
             /// <remarks>

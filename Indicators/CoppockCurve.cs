@@ -17,7 +17,7 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     ///     A momentum indicator developed by Edwin “Sedge” Coppock in October 1965.
-    ///     The goal of this indicator is to identify long-term buying opportunities in the S&P500 and Dow Industrials.
+    ///     The goal of this indicator is to identify long-term buying opportunities in the S&amp;P500 and Dow Industrials.
     ///     Source: http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:coppock_curve
     /// </summary>
     public class CoppockCurve : IndicatorBase<IndicatorDataPoint>

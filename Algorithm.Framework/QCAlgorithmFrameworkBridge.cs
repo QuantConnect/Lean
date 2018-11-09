@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.Framework
         /// This is typically invoked before calls to submit orders in algorithms written against
         /// QCAlgorithm that have been ported into the algorithm framework.
         /// </summary>
-        /// <param name="insights"></param>
+        /// <param name="insights">The array of insights to be emitted</param>
         public void EmitInsights(params Insight[] insights)
         {
             OnInsightsGenerated(insights);
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.Framework
         /// This is typically invoked before calls to submit orders in algorithms written against
         /// QCAlgorithm that have been ported into the algorithm framework.
         /// </summary>
-        /// <param name="insights"></param>
+        /// <param name="insight">The insight to be emitted</param>
         public void EmitInsights(Insight insight)
         {
             OnInsightsGenerated(new[] { insight });

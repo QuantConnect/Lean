@@ -89,7 +89,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
         /// </summary>
-        /// <seealso cref="QCAlgorithm.Quit"/>
+        /// <seealso cref="QCAlgorithm.Quit(String)"/>
         public bool QuitState
         {
             get { return State == AlgorithmStatus.Deleted; }

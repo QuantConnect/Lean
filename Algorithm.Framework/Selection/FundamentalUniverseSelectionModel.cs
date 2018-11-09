@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         ///
         /// </summary>
         /// <param name="coarseSelector">Selects symbols from the provided coarse data set</param>
-        /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param
+        /// <param name="fineSelector">Selects symbols from the provided fine data set (this set has already been filtered according to the coarse selection)</param>
         /// <returns>A new universe selection model that will select US equities according to the selection functions specified</returns>
         public static IUniverseSelectionModel Fine(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {

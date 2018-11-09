@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Represents an entire chain of futures contracts for a single underlying 
+    /// Represents an entire chain of futures contracts for a single underlying
     /// This type is <see cref="IEnumerable{FuturesContract}"/>
     /// </summary>
     public class FuturesChain : BaseData, IEnumerable<FuturesContract>
@@ -111,7 +111,8 @@ namespace QuantConnect.Data.Market
         /// <param name="time">The time of this chain</param>
         /// <param name="trades">All trade data for the entire futures chain</param>
         /// <param name="quotes">All quote data for the entire futures chain</param>
-        /// <param name="contracts">All contrains for this futures chain</param>
+        /// <param name="contracts">All contracts for this futures chain</param>
+        /// <param name="filteredContracts">The filtered list of contracts for this futures chain</param>
         public FuturesChain(Symbol canonicalFutureSymbol, DateTime time, IEnumerable<BaseData> trades, IEnumerable<BaseData> quotes, IEnumerable<FuturesContract> contracts, IEnumerable<Symbol> filteredContracts)
         {
             Time = time;

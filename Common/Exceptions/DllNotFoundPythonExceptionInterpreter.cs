@@ -35,7 +35,7 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public bool CanInterpret(Exception exception)
         {
-            return 
+            return
                 exception?.GetType() == typeof(DllNotFoundException) &&
                 exception.Message.Contains("python");
         }
@@ -43,12 +43,12 @@ namespace QuantConnect.Exceptions
         /// Interprets the specified exception into a new exception
         /// </summary>
         /// <param name="exception">The exception to be interpreted</param>
-        /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.
+        /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
         public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var dnfe = (DllNotFoundException)exception;
-            
+
             var startIndex = dnfe.Message.IndexOf("python");
             var length = Math.Min(dnfe.Message.Length - startIndex, 10);
             var dllName = dnfe.Message.Substring(startIndex, length);

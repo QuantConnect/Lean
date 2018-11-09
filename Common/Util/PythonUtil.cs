@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -94,7 +94,7 @@ namespace QuantConnect.Util
         /// Encapsulates a python method in coarse fundamental universe selector.
         /// </summary>
         /// <param name="pyObject">The python method</param>
-        /// <returns>A <see cref="System.Func{IEnumerable{CoarseFundamental}, IEnumerable{Symbol}}"/> that encapsulates the python method</returns>
+        /// <returns>A <see cref="Func{T, TResult}"/> (parameter is <see cref="IEnumerable{CoarseFundamental}"/>, return value is <see cref="IEnumerable{Symbol}"/>) that encapsulates the python method</returns>
         public static Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> ToCoarseFundamentalSelector(PyObject pyObject)
         {
             var selector = ToFunc<IEnumerable<CoarseFundamental>, Symbol[]>(pyObject);
@@ -112,7 +112,7 @@ namespace QuantConnect.Util
         /// Encapsulates a python method in fine fundamental universe selector.
         /// </summary>
         /// <param name="pyObject">The python method</param>
-        /// <returns>A <see cref="System.Func{IEnumerable{FineFundamental}, IEnumerable{Symbol}}"/> that encapsulates the python method</returns>
+        /// <returns>A <see cref="Func{T, TResult}"/> (parameter is <see cref="IEnumerable{FineFundamental}"/>, return value is <see cref="IEnumerable{Symbol}"/>) that encapsulates the python method</returns>
         public static Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> ToFineFundamentalSelector(PyObject pyObject)
         {
             var selector = ToFunc<IEnumerable<FineFundamental>, Symbol[]>(pyObject);
@@ -127,7 +127,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Parsers <see cref="PythonException.StackTrace"/> into a readable message 
+        /// Parsers <see cref="PythonException.StackTrace"/> into a readable message
         /// </summary>
         /// <param name="value">String with the stacktrace information</param>
         /// <returns>String with relevant part of the stacktrace</returns>
@@ -205,7 +205,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates a python module with utils methods 
+        /// Creates a python module with utils methods
         /// </summary>
         /// <returns>PyObject with a python module</returns>
         private static PyObject GetModule()

@@ -1951,7 +1951,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>Intended for internal use by the QuantConnect Lean Engine only.</remarks>
         /// <param name="quit">Boolean quit state</param>
-        /// <seealso cref="Quit"/>
+        /// <seealso cref="Quit(String)"/>
         public void SetQuit(bool quit)
         {
             if (quit)
