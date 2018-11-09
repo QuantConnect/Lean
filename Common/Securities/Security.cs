@@ -29,6 +29,7 @@ using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities
 {
@@ -39,7 +40,7 @@ namespace QuantConnect.Securities
     /// Security object is intended to hold properties of the specific security asset. These properties can include trade start-stop dates,
     /// price, market hours, resolution of the security, the holdings information for this security and the specific fill model.
     /// </remarks>
-    public class Security
+    public class Security : ISecurityPrice
     {
         private readonly ICurrencyConverter _currencyConverter;
 
@@ -542,7 +543,6 @@ namespace QuantConnect.Securities
         /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
-        ///
         public void SetMarketPrice(BaseData data)
         {
             //Add new point to cache:

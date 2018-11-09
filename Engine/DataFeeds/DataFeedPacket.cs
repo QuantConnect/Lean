@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// The security
         /// </summary>
-        public Security Security
+        public ISecurityPrice Security
         {
             get; private set;
         }
@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security whose data is held in this packet</param>
         /// <param name="configuration">The subscription configuration that produced this data</param>
         /// <param name="isSubscriptionRemoved">Reference to whether or not the subscription has since been removed, defaults to false</param>
-        public DataFeedPacket(Security security, SubscriptionDataConfig configuration, IReadOnlyRef<bool> isSubscriptionRemoved = null)
+        public DataFeedPacket(ISecurityPrice security, SubscriptionDataConfig configuration, IReadOnlyRef<bool> isSubscriptionRemoved = null)
             : this(security, configuration, new List<BaseData>(), isSubscriptionRemoved)
         {
         }
@@ -78,7 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="data">The data to add to this packet. The list reference is reused
         /// internally and NOT copied.</param>
         /// <param name="isSubscriptionRemoved">Reference to whether or not the subscription has since been removed, defaults to false</param>
-        public DataFeedPacket(Security security, SubscriptionDataConfig configuration, List<BaseData> data, IReadOnlyRef<bool> isSubscriptionRemoved = null)
+        public DataFeedPacket(ISecurityPrice security, SubscriptionDataConfig configuration, List<BaseData> data, IReadOnlyRef<bool> isSubscriptionRemoved = null)
         {
             Security = security;
             Configuration = configuration;

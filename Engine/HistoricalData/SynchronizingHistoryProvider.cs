@@ -21,7 +21,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {
@@ -44,9 +43,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         protected IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(List<Subscription> subscriptions, DateTimeZone sliceTimeZone)
         {
             // required by TimeSlice.Create, but we don't need it's behavior
-            var cashBook = new CashBook();
-            cashBook.Clear();
             var frontier = DateTime.MinValue;
+            var timeSliceFactory = new TimeSliceFactory {TimeZone = sliceTimeZone};
             while (true)
             {
                 var earlyBirdTicks = long.MaxValue;
@@ -82,7 +80,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 if (data.Count != 0)
                 {
                     // reuse the slice construction code from TimeSlice.Create
-                    yield return TimeSlice.Create(frontier, sliceTimeZone, cashBook, data, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>()).Slice;
+                    yield return timeSliceFactory.Create(frontier, data, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>()).Slice;
                 }
 
                 frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);

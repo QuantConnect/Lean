@@ -143,12 +143,14 @@ namespace QuantConnect.Tests.Brokerages.Paper
             private readonly IAlgorithm _algorithm;
             private readonly Dividend _dividend;
             private readonly Symbol _symbol;
+            private readonly TimeSliceFactory _timeSliceFactory;
 
             public NullSynchronizer(IAlgorithm algorithm, Dividend dividend)
             {
                 _algorithm = algorithm;
                 _dividend = dividend;
                 _symbol = dividend.Symbol;
+                _timeSliceFactory = new TimeSliceFactory { TimeZone = TimeZones.NewYork};
             }
 
             public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
@@ -157,9 +159,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
                     _algorithm.SubscriptionManager.Subscriptions.First(s => s.Symbol == _symbol),
                     new List<BaseData> { _dividend }, Ref.CreateReadOnly(() => false));
 
-                yield return TimeSlice.Create(DateTime.UtcNow,
-                    TimeZones.NewYork,
-                    _algorithm.Portfolio.CashBook,
+                yield return _timeSliceFactory.Create(DateTime.UtcNow,
                     new List<DataFeedPacket> { dataFeedPacket },
                     SecurityChanges.None,
                     new Dictionary<Universe, BaseDataCollection>()

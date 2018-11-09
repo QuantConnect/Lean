@@ -31,9 +31,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// </summary>
     public class SineHistoryProvider : HistoryProviderBase
     {
-        private readonly CashBook _cashBook = new CashBook();
         private readonly SecurityChanges _securityChanges = SecurityChanges.None;
         private readonly SecurityManager _securities;
+        private readonly TimeSliceFactory _timeSliceFactory;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -47,6 +47,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         public SineHistoryProvider(SecurityManager securities)
         {
             _securities = securities;
+            _timeSliceFactory = new TimeSliceFactory();
         }
 
         /// <summary>
@@ -68,7 +69,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var configsByDateTime = GetSubscriptionDataConfigByDateTime(requests);
             var count = configsByDateTime.Count;
             var i = 0;
-
+            _timeSliceFactory.TimeZone = sliceTimeZone;
             foreach (var kvp in configsByDateTime)
             {
                 var utcDateTime = kvp.Key;
@@ -95,7 +96,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 i++;
-                yield return TimeSlice.Create(utcDateTime, sliceTimeZone, _cashBook, packets, _securityChanges, new Dictionary<Universe, BaseDataCollection>()).Slice;
+                yield return _timeSliceFactory.Create(utcDateTime, packets, _securityChanges, new Dictionary<Universe, BaseDataCollection>()).Slice;
             }
         }
 

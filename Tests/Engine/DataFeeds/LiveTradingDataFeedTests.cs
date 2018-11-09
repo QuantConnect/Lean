@@ -795,8 +795,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _timeProvider = timeProvider ?? new RealTimeProvider();
             Initialize(algorithm,
                 subscriptionManager,
-                liveMode,
-                algorithm.Portfolio.CashBook);
+                liveMode);
         }
 
         protected override ITimeProvider GetTimeProvider()

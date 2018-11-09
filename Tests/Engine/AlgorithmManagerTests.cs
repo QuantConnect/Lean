@@ -384,7 +384,7 @@ namespace QuantConnect.Tests.Engine
             private readonly List<UpdateData<SubscriptionDataConfig>> _consolidatorUpdateData = new List<UpdateData<SubscriptionDataConfig>>();
             private readonly List<TimeSlice> _timeSlices = new List<TimeSlice>();
             private readonly TimeSpan _frontierStepSize = TimeSpan.FromSeconds(1);
-            private readonly List<UpdateData<Security>> _securitiesUpdateData = new List<UpdateData<Security>>();
+            private readonly List<UpdateData<ISecurityPrice>> _securitiesUpdateData = new List<UpdateData<ISecurityPrice>>();
             public int Count => _timeSlices.Count;
 
             public NullSynchronizer(IAlgorithm algorithm)
@@ -400,7 +400,7 @@ namespace QuantConnect.Tests.Engine
                         EndTime = _frontierUtc.ConvertFromUtc(security.Exchange.TimeZone)
                     };
                     _data.Add(tick);
-                    _securitiesUpdateData.Add(new UpdateData<Security>(security, typeof(Tick), new BaseData[] { tick }));
+                    _securitiesUpdateData.Add(new UpdateData<ISecurityPrice>(security, typeof(Tick), new BaseData[] { tick }));
                     _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }));
                 }
 
@@ -424,7 +424,7 @@ namespace QuantConnect.Tests.Engine
                 var delistings = new Delistings();
                 var symbolChanges = new SymbolChangedEvents();
                 var dataFeedPackets = new List<DataFeedPacket>();
-                var customData = new List<UpdateData<Security>>();
+                var customData = new List<UpdateData<ISecurityPrice>>();
                 var changes = SecurityChanges.None;
                 do
                 {

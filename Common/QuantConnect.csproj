@@ -187,8 +187,11 @@
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="HistoryProviderEvents.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
+    <Compile Include="Interfaces\IHistoryProvider.cs" />
+    <Compile Include="Interfaces\IOptionPrice.cs" />
     <Compile Include="Interfaces\ISecurityInitializerProvider.cs" />
     <Compile Include="Interfaces\ISecurityService.cs" />
+    <Compile Include="Interfaces\ISecurityPrice.cs" />
     <Compile Include="Interfaces\ISubscriptionDataConfigProvider.cs" />
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
@@ -381,7 +384,6 @@
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
     <Compile Include="Interfaces\IFactorFileProvider.cs" />
     <Compile Include="Interfaces\IDataProvider.cs" />
-    <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />
     <Compile Include="Interfaces\IMessagingHandler.cs" />

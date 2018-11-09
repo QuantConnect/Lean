@@ -149,8 +149,7 @@ namespace QuantConnect.Lean.Engine
                     synchronizer.Initialize(
                         algorithm,
                         dataManager,
-                        _liveMode,
-                        algorithm.Portfolio.CashBook);
+                        _liveMode);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(
