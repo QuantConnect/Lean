@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="brokerageMessageHandler">The brokerage message handler to be wrapped</param>
         /// <param name="errorCodesToIgnore">The error codes to convert to warning messages</param>
-        public DowngradeErrorCodeToWarningBrokerageMessageHandler(IBrokerageMessageHandler brokerageMessageHandler, List<string> errorCodesToIgnore)
+        public DowngradeErrorCodeToWarningBrokerageMessageHandler(IBrokerageMessageHandler brokerageMessageHandler, string[] errorCodesToIgnore)
         {
             _brokerageMessageHandler = brokerageMessageHandler;
             _errorCodesToIgnore = errorCodesToIgnore.ToHashSet();
