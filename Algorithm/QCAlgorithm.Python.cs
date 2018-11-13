@@ -1002,7 +1002,7 @@ namespace QuantConnect.Algorithm
                 var typeBuilder = AppDomain.CurrentDomain
                     .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
                     .DefineDynamicModule("MainModule")
-                    .DefineType(an.Name, TypeAttributes.Class, typeof(DynamicData));
+                    .DefineType(an.Name, TypeAttributes.Class, type);
 
                 pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
 
