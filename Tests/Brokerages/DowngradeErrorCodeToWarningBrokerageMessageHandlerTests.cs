@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
@@ -33,7 +32,7 @@ namespace QuantConnect.Tests.Brokerages
             var wrapped = new Mock<IBrokerageMessageHandler>();
             wrapped.Setup(bmh => bmh.Handle(It.IsAny<BrokerageMessageEvent>())).Verifiable();
 
-            var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new List<string>{"code"});
+            var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new[] { "code" });
             var message = new BrokerageMessageEvent(type, "code", "message");
             downgrader.Handle(message);
 
@@ -46,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages
             var wrapped = new Mock<IBrokerageMessageHandler>();
             wrapped.Setup(bmh => bmh.Handle(It.IsAny<BrokerageMessageEvent>())).Verifiable();
 
-            var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new List<string> { "code" });
+            var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new[] { "code" });
             var message = new BrokerageMessageEvent(BrokerageMessageType.Error, "not-code", "message");
             downgrader.Handle(message);
 
@@ -59,7 +58,7 @@ namespace QuantConnect.Tests.Brokerages
             var wrapped = new Mock<IBrokerageMessageHandler>();
             wrapped.Setup(bmh => bmh.Handle(It.IsAny<BrokerageMessageEvent>())).Verifiable();
 
-            var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new List<string> { "code" });
+            var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new[] { "code" });
             var message = new BrokerageMessageEvent(BrokerageMessageType.Error, "code", "message");
             downgrader.Handle(message);
 
