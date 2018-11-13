@@ -115,10 +115,6 @@ namespace QuantConnect.Securities
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            var barCount = _window.Size + 1;
-            var localStartTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours, utcTime.ConvertFromUtc(security.Exchange.TimeZone), _periodSpan, barCount, security.IsExtendedMarketHours);
-            var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
-
             if (SubscriptionDataConfigProvider == null)
             {
                 throw new Exception(
@@ -126,9 +122,21 @@ namespace QuantConnect.Securities
                     "SubscriptionDataConfigProvider was not set."
                 );
             }
+
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
                 .ToList();
+
+            var barCount = _window.Size + 1;
+            var extendedMarketHours = configurations.IsExtendedMarketHours();
+            var localStartTime = Time.GetStartTimeForTradeBars(
+                security.Exchange.Hours,
+                utcTime.ConvertFromUtc(security.Exchange.TimeZone),
+                _periodSpan,
+                barCount,
+                extendedMarketHours);
+
+            var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
             var configuration = configurations.First();
 
             return new[]
@@ -141,7 +149,7 @@ namespace QuantConnect.Securities
                                    security.Exchange.Hours,
                                    configuration.DataTimeZone,
                                    configurations.GetHighestResolution(),
-                                   configurations.IsExtendedMarketHours(),
+                                   extendedMarketHours,
                                    configurations.IsCustomData(),
                                    configurations.DataNormalizationMode(),
                                    LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))

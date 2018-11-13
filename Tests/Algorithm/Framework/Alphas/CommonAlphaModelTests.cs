@@ -225,14 +225,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 {
                     var security = kvp.Value;
                     var exchange = security.Exchange.Hours;
-                    var extendedMarket = security.IsExtendedMarketHours;
+                    var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(security.Symbol);
+                    var extendedMarket = configs.IsExtendedMarketHours();
                     var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
                     if (!exchange.IsOpen(localDateTime, extendedMarket))
                     {
                         continue;
                     }
                     var configuration = security.Subscriptions.FirstOrDefault();
-                    var period = security.Resolution.ToTimeSpan();
+                    var period = configs.GetHighestResolution().ToTimeSpan();
                     var time = (utcDateTime - period).ConvertFromUtc(configuration.DataTimeZone);
                     var tradeBar = new TradeBar(time, security.Symbol, last, high, low, last, 1000, period);
                     packets.Add(new DataFeedPacket(security, configuration, new List<BaseData> { tradeBar }));
@@ -260,16 +262,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             {
                 foreach (var kvp in _algorithm.Securities)
                 {
-                    var resolution = kvp.Value.Resolution.ToTimeSpan();
+                    var security = kvp.Value;
+                    var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(security.Symbol);
+                    var resolution = configs.GetHighestResolution().ToTimeSpan();
                     utcDateTime = utcDateTime.Add(resolution);
                     if (resolution == Time.OneDay && utcDateTime.TimeOfDay == TimeSpan.Zero)
                     {
                         utcDateTime = utcDateTime.AddHours(17);
                     }
-
-                    var security = kvp.Value;
                     var exchange = security.Exchange.Hours;
-                    var extendedMarket = security.IsExtendedMarketHours;
+                    var extendedMarket = configs.IsExtendedMarketHours();
                     var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
                     if (exchange.IsOpen(localDateTime, extendedMarket))
                     {

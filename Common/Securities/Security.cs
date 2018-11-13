@@ -86,16 +86,19 @@ namespace QuantConnect.Securities
         /// Resolution of data requested for this security.
         /// </summary>
         /// <remarks>Tick, second or minute resolution for QuantConnect assets.</remarks>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public Resolution Resolution { get; private set; }
 
         /// <summary>
         /// Indicates the data will use previous bars when there was no trading in this time period. This was a configurable datastream setting set in initialization.
         /// </summary>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public bool IsFillDataForward { get; private set; }
 
         /// <summary>
         /// Indicates the security will continue feeding data after the primary market hours have closed. This was a configurable setting set in initialization.
         /// </summary>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public bool IsExtendedMarketHours { get; private set; }
 
         /// <summary>

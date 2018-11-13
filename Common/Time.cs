@@ -389,7 +389,7 @@ namespace QuantConnect
             {
                 foreach (var security in securities)
                 {
-                    if (security.Exchange.IsOpenDuringBar(day.Date, day.Date.AddDays(1), security.IsExtendedMarketHours)) return true;
+                    if (security.Exchange.DateIsOpen(day.Date)) return true;
                 }
             }
             catch (Exception err)

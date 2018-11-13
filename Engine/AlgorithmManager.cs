@@ -1181,9 +1181,11 @@ namespace QuantConnect.Lean.Engine
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // determine the latest possible time we can submit a MOC order
-                var highestResolutionSubscription = security.Subscriptions.OrderBy(sub => sub.Resolution).First();
+                var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(security.Symbol);
+
                 var latestMarketOnCloseTimeRoundedDownByResolution = nextMarketClose.Subtract(MarketOnCloseOrder.DefaultSubmissionTimeBuffer)
-                    .RoundDownInTimeZone(security.Resolution.ToTimeSpan(), security.Exchange.TimeZone, highestResolutionSubscription.DataTimeZone);
+                    .RoundDownInTimeZone(configs.GetHighestResolution().ToTimeSpan(), security.Exchange.TimeZone, configs.First().DataTimeZone);
 
                 // we don't need to do anyhing until the market closes
                 if (security.LocalTime < latestMarketOnCloseTimeRoundedDownByResolution) continue;

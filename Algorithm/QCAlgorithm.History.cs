@@ -461,7 +461,10 @@ namespace QuantConnect.Algorithm
 
             resolution = GetResolution(symbol, resolution);
             var exchange = GetExchangeHours(symbol);
-            var isExtendedMarketHours = Securities.TryGetValue(symbol, out security) ? security.IsExtendedMarketHours : false;
+            var isExtendedMarketHours = Securities.TryGetValue(symbol, out security)
+                && SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol)
+                    .IsExtendedMarketHours();
 
             var timeSpan = resolution.Value.ToTimeSpan();
             // make this a minimum of one second
@@ -503,10 +506,14 @@ namespace QuantConnect.Algorithm
                 return null;
             }
 
-            // For speed and memory usage, use Resolution.Minute as the minimum resolution
-            var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)security.Resolution);
+            var configs = SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol);
 
-            var startTime = GetStartTimeAlgoTzForSecurity(security, 1, resolution);
+            // For speed and memory usage, use Resolution.Minute as the minimum resolution
+            var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)configs.GetHighestResolution());
+            var isExtendedMarketHours = configs.IsExtendedMarketHours();
+
+            var startTime = GetStartTimeAlgoTzForSecurity(security.Exchange, 1, resolution, isExtendedMarketHours);
             var endTime   = Time.RoundDown(resolution.ToTimeSpan());
 
             // request QuoteBar for Options and Futures
@@ -535,9 +542,9 @@ namespace QuantConnect.Algorithm
                 security.Exchange.Hours,
                 MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType),
                 resolution,
-                security.IsExtendedMarketHours,
-                security.IsCustomData(),
-                security.DataNormalizationMode,
+                isExtendedMarketHours,
+                configs.IsCustomData(),
+                configs.DataNormalizationMode(),
                 subscriptionDataConfig == null ? LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type) : subscriptionDataConfig.TickType
             );
 
@@ -555,15 +562,23 @@ namespace QuantConnect.Algorithm
         /// Gets the start time required for the specified bar count for a security in terms of the algorithm's time zone
         /// Used when the security has not yet been subscribed to
         /// </summary>
-        private DateTime GetStartTimeAlgoTzForSecurity(Security security, int periods, Resolution? resolution = null)
+        private DateTime GetStartTimeAlgoTzForSecurity(SecurityExchange securityExchange,
+            int periods,
+            Resolution resolution,
+            bool isExtendedMarketHours)
         {
-            var timeSpan = (resolution ?? security.Resolution).ToTimeSpan();
+            var timeSpan = resolution.ToTimeSpan();
 
             // make this a minimum of one second
             timeSpan = timeSpan < QuantConnect.Time.OneSecond ? QuantConnect.Time.OneSecond : timeSpan;
 
-            var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, UtcTime.ConvertFromUtc(security.Exchange.TimeZone), timeSpan, periods, security.IsExtendedMarketHours);
-            return localStartTime.ConvertTo(security.Exchange.TimeZone, TimeZone);
+            var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(
+                securityExchange.Hours,
+                UtcTime.ConvertFromUtc(securityExchange.TimeZone),
+                timeSpan,
+                periods,
+                isExtendedMarketHours);
+            return localStartTime.ConvertTo(securityExchange.TimeZone, TimeZone);
         }
 
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
@@ -693,7 +708,9 @@ namespace QuantConnect.Algorithm
             Security security;
             if (Securities.TryGetValue(symbol, out security))
             {
-                return resolution ?? security.Resolution;
+                return resolution ?? SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol)
+                    .GetHighestResolution();
             }
             else
             {
