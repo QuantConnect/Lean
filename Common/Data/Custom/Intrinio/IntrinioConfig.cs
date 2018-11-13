@@ -12,7 +12,7 @@ namespace QuantConnect.Data.Custom.Intrinio
         /// <summary>
         /// </summary>
         public static RateGate RateGate =
-            new RateGate(1, TimeSpan.FromMilliseconds(5000));
+            new RateGate(1, TimeSpan.FromMinutes(1));
 
         /// <summary>
         ///     Check if Intrinio API user and password are not empty or null.
