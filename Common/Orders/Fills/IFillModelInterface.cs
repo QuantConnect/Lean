@@ -19,8 +19,8 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Represents an interface that simulates order fill events
     /// </summary>
-    /// <remarks>Users should override base class <see cref="IFillModel"/></remarks>
-    public interface InterfaceFillModel
+    /// <remarks>Users should override base class <see cref="FillModel"/></remarks>
+    public interface IFillModelInterface
     {
         /// <summary>
         /// Return an order event with the fill details

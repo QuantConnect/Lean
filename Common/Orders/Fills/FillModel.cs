@@ -21,7 +21,6 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Provides a base class for all fill models
     /// </summary>
-    /// <remarks>Users FillModels should inherit IFillModel</remarks>
     public class FillModel : IFillModel
     {
         /// <summary>

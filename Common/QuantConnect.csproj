@@ -194,7 +194,7 @@
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
     <Compile Include="Orders\Fills\FillModelContext.cs" />
-    <Compile Include="Orders\Fills\InterfaceFillModel.cs" />
+    <Compile Include="Orders\Fills\IFillModelInterface.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />

@@ -20,7 +20,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Defines the parameters for the <see cref="InterfaceFillModel"/> methods
+    /// Defines the parameters for the <see cref="IFillModelInterface"/> methods
     /// </summary>
     public class FillModelContext
     {

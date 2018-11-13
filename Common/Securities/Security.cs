@@ -170,7 +170,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Fill model used to produce fill events for this security
         /// </summary>
-        public InterfaceFillModel FillModel
+        public IFillModelInterface FillModel
         {
             get;
             set;

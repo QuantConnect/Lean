@@ -25,9 +25,13 @@ using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Represents a base model that simulates order fill events
+    /// Represents a base model that simulates order fill events.
     /// </summary>
-    public abstract class IFillModel : InterfaceFillModel
+    /// <remarks>Originally <see cref="IFillModel"/> was an interface but due to
+    /// maintain compatibility is was change to be an abstract class and
+    /// <see cref="IFillModelInterface"/> was added. See GH issue 2634.
+    /// Users FillModels should inherit <see cref="FillModel"/></remarks>
+    public abstract class IFillModel : IFillModelInterface
     {
         private readonly ConstantExpression _self;
         private readonly ParameterExpression _securityParameter;
@@ -97,7 +101,7 @@ namespace QuantConnect.Orders.Fills
             if (!_checkedMarketFill)
             {
                 _checkedMarketFill = true;
-                SetFunctionCall(context.Order.Type);
+                _marketFill = GetFunctionCall<MarketOrder>(context.Order.Type);
             }
 
             if (_marketFill != null)
@@ -161,7 +165,7 @@ namespace QuantConnect.Orders.Fills
             if (!_checkedStopMarketFill)
             {
                 _checkedStopMarketFill = true;
-                SetFunctionCall(context.Order.Type);
+                _stopMarketFill = GetFunctionCall<StopMarketOrder>(context.Order.Type);
             }
 
             if (_stopMarketFill != null)
@@ -250,7 +254,7 @@ namespace QuantConnect.Orders.Fills
             if (!_checkedStopLimitFill)
             {
                 _checkedStopLimitFill = true;
-                SetFunctionCall(context.Order.Type);
+                _stopLimitFill = GetFunctionCall<StopLimitOrder>(context.Order.Type);
             }
 
             if (_stopLimitFill != null)
@@ -348,7 +352,7 @@ namespace QuantConnect.Orders.Fills
             if (!_checkedLimitFill)
             {
                 _checkedLimitFill = true;
-                SetFunctionCall(context.Order.Type);
+                _limitFill = GetFunctionCall<LimitOrder>(context.Order.Type);
             }
 
             if (_limitFill != null)
@@ -434,7 +438,7 @@ namespace QuantConnect.Orders.Fills
             if (!_checkedMarketOnOpenFill)
             {
                 _checkedMarketOnOpenFill = true;
-                SetFunctionCall(context.Order.Type);
+                _marketOnOpenFill = GetFunctionCall<MarketOnOpenOrder>(context.Order.Type);
             }
 
             if (_marketOnOpenFill != null)
@@ -514,7 +518,7 @@ namespace QuantConnect.Orders.Fills
             if (!_checkedMarketOnCloseFill)
             {
                 _checkedMarketOnCloseFill = true;
-                SetFunctionCall(context.Order.Type);
+                _marketOnCloseFill = GetFunctionCall<MarketOnCloseOrder>(context.Order.Type);
             }
 
             if (_marketOnCloseFill != null)
@@ -690,92 +694,30 @@ namespace QuantConnect.Orders.Fills
         /// Helper method that will set the retro compatible fill functions
         /// </summary>
         /// <param name="orderType">Used to determine the type of fill</param>
-        private void SetFunctionCall(OrderType orderType)
+        private Func<Security, T, OrderEvent> GetFunctionCall<T>(OrderType orderType)
+            where T : Order
         {
-            string methodName;
-            Type inputType;
-            switch (orderType)
-            {
-                case OrderType.Market:
-                    methodName = "MarketFill";
-                    inputType = typeof(MarketOrder);
-                    break;
-                case OrderType.Limit:
-                    methodName = "LimitFill";
-                    inputType = typeof(LimitOrder);
-                    break;
-                case OrderType.StopMarket:
-                    methodName = "StopMarketFill";
-                    inputType = typeof(StopMarketOrder);
-                    break;
-                case OrderType.StopLimit:
-                    methodName = "StopLimitFill";
-                    inputType = typeof(StopLimitOrder);
-                    break;
-                case OrderType.MarketOnOpen:
-                    methodName = "MarketOnOpenFill";
-                    inputType = typeof(MarketOnOpenOrder);
-                    break;
-                case OrderType.MarketOnClose:
-                    methodName = "MarketOnCloseFill";
-                    inputType = typeof(MarketOnCloseOrder);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            var methodName = $"{orderType}Fill";
+            var inputType = typeof(T);
             var method = GetMethod(GetType(),
                 methodName,
                 typeof(OrderEvent),
                 typeof(FillModel),
                 new[] { typeof(Security), inputType });
 
-            if (method != null)
+            if (method == null)
             {
-                // we've found the old method, now create a delegate so we can invoke it
-                var orderParameter = Expression.Parameter(inputType, "order");
-                var call = Expression.Call(_self, method, _securityParameter, orderParameter);
-                switch (orderType)
-                {
-                    case OrderType.Market:
-                        _marketFill = Expression.Lambda<Func<Security, MarketOrder, OrderEvent>>(
-                            call,
-                            _securityParameter,
-                            orderParameter).Compile();
-                        break;
-                    case OrderType.Limit:
-                        _limitFill = Expression.Lambda<Func<Security, LimitOrder, OrderEvent>>(
-                            call,
-                            _securityParameter,
-                            orderParameter).Compile();
-                        break;
-                    case OrderType.StopMarket:
-                        _stopMarketFill = Expression.Lambda<Func<Security, StopMarketOrder, OrderEvent>>(
-                            call,
-                            _securityParameter,
-                            orderParameter).Compile();
-                        break;
-                    case OrderType.StopLimit:
-                        _stopLimitFill = Expression.Lambda<Func<Security, StopLimitOrder, OrderEvent>>(
-                            call,
-                            _securityParameter,
-                            orderParameter).Compile();
-                        break;
-                    case OrderType.MarketOnOpen:
-                        _marketOnOpenFill = Expression.Lambda<Func<Security, MarketOnOpenOrder, OrderEvent>>(
-                            call,
-                            _securityParameter,
-                            orderParameter).Compile();
-                        break;
-                    case OrderType.MarketOnClose:
-                        _marketOnCloseFill = Expression.Lambda<Func<Security, MarketOnCloseOrder, OrderEvent>>(
-                            call,
-                            _securityParameter,
-                            orderParameter).Compile();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                return null;
             }
+
+            // we've found the old method, now create a delegate so we can invoke it
+            var orderParameter = Expression.Parameter(inputType, "order");
+            var call = Expression.Call(_self, method, _securityParameter, orderParameter);
+
+            return Expression.Lambda<Func<Security, T, OrderEvent>>(
+                call,
+                _securityParameter,
+                orderParameter).Compile();
         }
 
         /// <summary>

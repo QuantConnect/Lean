@@ -322,25 +322,18 @@ namespace QuantConnect.Brokerages.Backtesting
                         //Based on the order type: refresh its model to get fill price and quantity
                         try
                         {
-                            switch (order.Type)
+                            if (order.Type == OrderType.OptionExercise)
                             {
-                                case OrderType.Limit:
-                                case OrderType.StopMarket:
-                                case OrderType.Market:
-                                case OrderType.StopLimit:
-                                case OrderType.MarketOnOpen:
-                                case OrderType.MarketOnClose:
-                                    var context = new FillModelContext(
-                                        security,
-                                        order,
-                                        Algorithm.SubscriptionManager.SubscriptionDataConfigService);
-                                    fills = new[] { model.Fill(context) };
-                                    break;
-
-                                case OrderType.OptionExercise:
-                                    var option = (Option)security;
-                                    fills = option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder).ToArray();
-                                    break;
+                                var option = (Option)security;
+                                fills = option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder).ToArray();
+                            }
+                            else
+                            {
+                                var context = new FillModelContext(
+                                    security,
+                                    order,
+                                    Algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                                fills = new[] { model.Fill(context) };
                             }
 
                             // invoke fee models for completely filled order events
