@@ -81,12 +81,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             if (_isLiveMode)
             {
-                var localTime = request.StartTimeUtc.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
-
-                // loading the list of option contract and converting them into zip entries
-                var symbols = _symbolUniverse.LookupSymbols(request.Security.Symbol.Underlying.ToString(), request.Security.Type);
-                var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
-
                 // creating trade bar builder enumerator to model underlying price change
                 var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
 
@@ -95,7 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 var subscriptionRequest = new SubscriptionRequest(request, configuration: subscriptionConfiguration);
                 var configuredEnumerator = _enumeratorConfigurator(subscriptionRequest, underlyingEnumerator);
 
-                return new DataQueueOptionChainUniverseDataCollectionEnumerator(request.Security.Symbol, configuredEnumerator, zipEntries);
+                return new DataQueueOptionChainUniverseDataCollectionEnumerator(subscriptionRequest, configuredEnumerator, _symbolUniverse, _timeProvider);
             }
             else
             {
