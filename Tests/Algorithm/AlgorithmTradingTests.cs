@@ -24,6 +24,7 @@ using Moq;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -1074,7 +1075,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetCash(100000);
             algo.SetCash("BTC", 0, 8000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
-            algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
+            algo.Securities[Symbols.EURUSD].FeeModel = new ConstantFeeModel(0);
             Security eurusd = algo.Securities[Symbols.EURUSD];
             // Set Price to $26
             Update(eurusd, 26);
@@ -1083,7 +1084,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(3000m, actual);
 
             var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
-            btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
+            btcusd.FeeModel = new ConstantFeeModel(0);
             // Set Price to $26
             Update(btcusd, 26);
             // (100000 * 0.9975) / 26 = 3836.53846153m
@@ -1099,7 +1100,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.AddSecurity(SecurityType.Forex, "EURUSD");
             algo.SetCash(100000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
-            algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
+            algo.Securities[Symbols.EURUSD].FeeModel = new ConstantFeeModel(0);
             Security eurusd = algo.Securities[Symbols.EURUSD];
             // Set Price to $26
             Update(eurusd, 26);
@@ -1108,7 +1109,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-3000m, actual);
 
             var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
-            btcusd.TransactionModel = new ConstantFeeTransactionModel(0);
+            btcusd.FeeModel = new ConstantFeeModel(0);
             // Set Price to $26
             Update(btcusd, 26);
             // Cash model does not allow shorts
@@ -1124,7 +1125,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.AddSecurity(SecurityType.Forex, "EURUSD");
             algo.SetCash(10000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
-            algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
+            algo.Securities[Symbols.EURUSD].FeeModel = new ConstantFeeModel(0);
             Security eurusd = algo.Securities[Symbols.EURUSD];
             // Set Price to $25
             Update(eurusd, 25);
@@ -1313,7 +1314,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
             algo.SetFinishedWarmingUp();
-            algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
+            algo.Securities[Symbols.MSFT].FeeModel = new ConstantFeeModel(fee);
             _fakeOrderProcessor = new FakeOrderProcessor();
             algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];
@@ -1329,7 +1330,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
             algo.SetFinishedWarmingUp();
-            algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
+            algo.Securities[Symbols.MSFT].FeeModel = new ConstantFeeModel(fee);
             _fakeOrderProcessor = new FakeOrderProcessor();
             algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];

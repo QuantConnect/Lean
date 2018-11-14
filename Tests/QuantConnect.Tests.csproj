@@ -264,10 +264,8 @@
     <Compile Include="Common\Securities\CashBookTests.cs" />
     <Compile Include="Common\Securities\CashTests.cs" />
     <Compile Include="Common\Securities\Cfd\CfdTests.cs" />
-    <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\PriceVariationModelsTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
-    <Compile Include="Common\Securities\Forex\ForexTransactionModelTests.cs" />
     <Compile Include="Common\Securities\DelayedSettlementModelTests.cs" />
     <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
@@ -284,7 +282,6 @@
     <Compile Include="Common\Securities\MarginCallModelTests.cs" />
     <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
-    <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\SubscriptionDataConfigTests.cs" />
     <Compile Include="Common\Securities\OptionFilterTests.cs" />
     <Compile Include="Common\Securities\SymbolPropertiesDatabaseTests.cs" />

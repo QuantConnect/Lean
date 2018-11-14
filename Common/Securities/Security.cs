@@ -159,49 +159,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Transaction model class implements the fill models for the security. If the user does not define a model the default
-        /// model is used for this asset class.
-        /// </summary>
-        /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
-        /// <seealso cref="EquityTransactionModel"/>
-        /// <seealso cref="ForexTransactionModel"/>
-        [Obsolete("Security.Model has been made obsolete, use Security.TransactionModel instead.")]
-        public virtual ISecurityTransactionModel Model
-        {
-            get { return TransactionModel; }
-            set { TransactionModel = value; }
-        }
-
-        /// <summary>
-        /// Transaction model class implements the fill models for the security. If the user does not define a model the default
-        /// model is used for this asset class.
-        /// </summary>
-        /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
-        /// <seealso cref="EquityTransactionModel"/>
-        /// <seealso cref="ForexTransactionModel"/>
-        public ISecurityTransactionModel TransactionModel
-        {
-            // these methods provided for backwards compatibility
-            get
-            {
-                // check if the FillModel/FeeModel/Slippage models are all the same reference
-                if (FillModel is ISecurityTransactionModel
-                 && ReferenceEquals(FillModel, FeeModel)
-                 && ReferenceEquals(FeeModel, SlippageModel))
-                {
-                    return (ISecurityTransactionModel) FillModel;
-                }
-                return new SecurityTransactionModel(FillModel, FeeModel, SlippageModel);
-            }
-            set
-            {
-                FeeModel = value;
-                FillModel = value;
-                SlippageModel = value;
-            }
-        }
-
-        /// <summary>
         /// Fee model used to compute order fees for this security
         /// </summary>
         public IFeeModel FeeModel

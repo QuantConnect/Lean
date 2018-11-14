@@ -20,6 +20,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -405,7 +406,7 @@ namespace QuantConnect.Tests.Common.Securities
                 throw new Exception("SecurityType not implemented");
             }
 
-            security.TransactionModel = new ConstantFeeTransactionModel(fee);
+            security.FeeModel = new ConstantFeeModel(fee);
             Update(algo.Portfolio.CashBook, security, 25);
             return security;
         }
