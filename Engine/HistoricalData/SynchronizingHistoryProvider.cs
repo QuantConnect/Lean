@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         {
             // required by TimeSlice.Create, but we don't need it's behavior
             var frontier = DateTime.MinValue;
-            var timeSliceFactory = new TimeSliceFactory {TimeZone = sliceTimeZone};
+            var timeSliceFactory = new TimeSliceFactory(sliceTimeZone);
             while (true)
             {
                 var earlyBirdTicks = long.MaxValue;

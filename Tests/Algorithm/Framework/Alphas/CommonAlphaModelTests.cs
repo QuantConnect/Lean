@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// </summary>
         protected virtual IEnumerable<Slice> CreateSlices()
         {
-            var timeSliceFactory = new TimeSliceFactory {TimeZone = TimeZones.NewYork};
+            var timeSliceFactory = new TimeSliceFactory(TimeZones.NewYork);
             var changes = SecurityChanges.None;
             var sliceDateTimes = GetSliceDateTimes(MaxSliceCount);
 

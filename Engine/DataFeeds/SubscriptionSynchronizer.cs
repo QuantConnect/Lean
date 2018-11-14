@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class SubscriptionSynchronizer : ISubscriptionSynchronizer, ITimeProvider
     {
         private readonly UniverseSelection _universeSelection;
-        private readonly TimeSliceFactory _timeSliceFactory;
+        private TimeSliceFactory _timeSliceFactory;
         private ITimeProvider _timeProvider;
         private ManualTimeProvider _frontierTimeProvider;
 
@@ -41,13 +41,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
-        /// <param name="timeSliceFactory">Used to create the new <see cref="TimeSlice"/></param>
         /// <returns>A time slice for the specified frontier time</returns>
-        public SubscriptionSynchronizer(UniverseSelection universeSelection,
-                                        TimeSliceFactory timeSliceFactory)
+        public SubscriptionSynchronizer(UniverseSelection universeSelection)
         {
             _universeSelection = universeSelection;
-            _timeSliceFactory = timeSliceFactory;
         }
 
         /// <summary>
@@ -62,6 +59,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             _timeProvider = timeProvider;
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
+        }
+
+        /// <summary>
+        /// Sets the <see cref="TimeSliceFactory"/> instance to use
+        /// </summary>
+        /// <param name="timeSliceFactory">Used to create the new <see cref="TimeSlice"/></param>
+        public void SetTimeSliceFactory(TimeSliceFactory timeSliceFactory)
+        {
+            if (_timeSliceFactory != null)
+            {
+                throw new Exception("SubscriptionSynchronizer.SetTimeSliceFactory(): can only be called once");
+            }
+            _timeSliceFactory = timeSliceFactory;
         }
 
         /// <summary>

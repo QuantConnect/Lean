@@ -480,7 +480,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var subscriptionDataConfig = GetSubscriptionDataConfig<T>(symbol, resolution);
             var security = GetSecurity(subscriptionDataConfig);
-            var timeSliceFactory = new TimeSliceFactory{ TimeZone = TimeZones.Utc };
+            var timeSliceFactory = new TimeSliceFactory(TimeZones.Utc);
             return data.Select(t => timeSliceFactory.Create(
                t.Time,
                new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t as BaseData }) },

@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
                 _algorithm = algorithm;
                 _dividend = dividend;
                 _symbol = dividend.Symbol;
-                _timeSliceFactory = new TimeSliceFactory { TimeZone = TimeZones.NewYork};
+                _timeSliceFactory = new TimeSliceFactory(TimeZones.NewYork);
             }
 
             public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)

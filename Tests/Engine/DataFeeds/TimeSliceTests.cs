@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [SetUp]
         public void SetUp()
         {
-            _timeSliceFactory = new TimeSliceFactory {TimeZone = TimeZones.Utc};
+            _timeSliceFactory = new TimeSliceFactory(TimeZones.Utc);
         }
 
         [Test]

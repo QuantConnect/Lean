@@ -30,10 +30,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class TimeSliceFactory
     {
+        private readonly DateTimeZone _timeZone;
+
         /// <summary>
-        /// The time zone required for computing algorithm and slice time
+        /// Creates a new instance
         /// </summary>
-        public DateTimeZone TimeZone { get; set; }
+        /// <param name="timeZone">The time zone required for computing algorithm and slice time</param>
+        public TimeSliceFactory(DateTimeZone timeZone)
+        {
+            _timeZone = timeZone;
+        }
 
         /// <summary>
         /// Creates a new <see cref="TimeSlice"/> for the specified time using the specified data
@@ -66,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Slice slice = null;
             var sliceFuture = new Lazy<Slice>(() => slice);
 
-            var algorithmTime = utcDateTime.ConvertFromUtc(TimeZone);
+            var algorithmTime = utcDateTime.ConvertFromUtc(_timeZone);
             var tradeBars = new TradeBars(algorithmTime);
             var quoteBars = new QuoteBars(algorithmTime);
             var ticks = new Ticks(algorithmTime);

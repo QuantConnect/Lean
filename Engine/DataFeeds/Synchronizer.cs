@@ -57,10 +57,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptionManager = dataFeedSubscriptionManager;
             _algorithm = algorithm;
             _liveMode = liveMode;
-            _timeSliceFactory = new TimeSliceFactory();
             _subscriptionSynchronizer = new SubscriptionSynchronizer(
-                _subscriptionManager.UniverseSelection,
-                _timeSliceFactory);
+                _subscriptionManager.UniverseSelection);
 
             if (_liveMode)
             {
@@ -160,7 +158,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // this is set after the algorithm initializes
             _dateTimeZone = _algorithm.TimeZone;
-            _timeSliceFactory.TimeZone = _dateTimeZone;
+            _timeSliceFactory = new TimeSliceFactory(_dateTimeZone);
+            _subscriptionSynchronizer.SetTimeSliceFactory(_timeSliceFactory);
 
             if (!_liveMode)
             {

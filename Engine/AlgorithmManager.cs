@@ -850,7 +850,7 @@ namespace QuantConnect.Lean.Engine
                     dataManager.UniverseSelection.ApplyUniverseSelection(universe, new DateTime(start), dataCollection);
                 }
 
-                var timeSliceFactory = new TimeSliceFactory{ TimeZone = timeZone };
+                var timeSliceFactory = new TimeSliceFactory(timeZone);
                 // make the history request and build time slices
                 foreach (var slice in history.GetHistory(historyRequests, timeZone))
                 {
