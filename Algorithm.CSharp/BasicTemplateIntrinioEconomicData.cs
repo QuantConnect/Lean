@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
             // (1 call each minute is the free account limit for historical_data endpoint)
-            IntrinioConfig.RateGate = new RateGate(1, TimeSpan.FromMinutes(1));
+            IntrinioConfig.SetTimeIntervalBetweenCalls(TimeSpan.FromMinutes(1));
 
 
             // Find more symbols here: http://quantconnect.com/data

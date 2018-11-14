@@ -44,6 +44,20 @@ namespace QuantConnect.Data.Custom.Intrinio
         public static string User = string.Empty;
 
         /// <summary>
+        /// Sets the time interval between calls.
+        /// For more information, please refer to: https://intrinio.com/documentation/api#limits
+        /// </summary>
+        /// <param name="timeSpan">Time interval between to consecutive calls.</param>
+        /// <remarks>
+        /// Paid subscription has limits of 1 call per second.
+        /// Free subscription has limits of 1 call per minute.
+        /// </remarks>
+        public static void SetTimeIntervalBetweenCalls(TimeSpan timeSpan)
+        {
+            RateGate = new RateGate(1, timeSpan);
+        }
+
+        /// <summary>
         ///     Set the Intrinio API user and password.
         /// </summary>
         public static void SetUserAndPassword(string user, string password)
