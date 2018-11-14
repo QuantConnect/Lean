@@ -25,6 +25,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Data.Custom.Intrinio import *
 from numpy import sign
+from datetime import timedelta
 
 class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
@@ -39,9 +40,9 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
         IntrinioConfig.SetUserAndPassword(self.GetParameter("intrinio-username"), self.GetParameter("intrinio-password"))
         # The Intrinio user and password can be also defined in the config.json file for local backtest.
 
-		# Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
-		#(1 call each minute is the free account limit for historical_data endpoint)
-		IntrinioConfig.SetTimeIntervalBetweenCalls(timedelta(minutes = 1))
+        # Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
+        #(1 call each minute is the free account limit for historical_data endpoint)
+        IntrinioConfig.SetTimeIntervalBetweenCalls(timedelta(minutes = 1))
 
         # United States Oil Fund LP
         self.uso = self.AddEquity("USO", Resolution.Daily).Symbol
@@ -52,7 +53,7 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
         self.AddData(IntrinioEconomicData, "$DCOILWTICO", Resolution.Daily)
         self.AddData(IntrinioEconomicData, "$DCOILBRENTEU", Resolution.Daily)
-        
+
         self.emaWti = self.EMA("$DCOILWTICO", 10)
 
 
