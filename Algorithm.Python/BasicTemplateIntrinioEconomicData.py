@@ -39,6 +39,10 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
         IntrinioConfig.SetUserAndPassword(self.GetParameter("intrinio-username"), self.GetParameter("intrinio-password"))
         # The Intrinio user and password can be also defined in the config.json file for local backtest.
 
+		# Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
+		#(1 call each minute is the free account limit for historical_data endpoint)
+		IntrinioConfig.SetTimeIntervalBetweenCalls(timedelta(minutes = 1))
+
         # United States Oil Fund LP
         self.uso = self.AddEquity("USO", Resolution.Daily).Symbol
         self.Securities[self.uso].SetLeverage(2)

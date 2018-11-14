@@ -20,6 +20,7 @@ using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Indicators;
 using QuantConnect.Parameters;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -60,6 +61,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Set your Intrinino user and password.
             IntrinioConfig.SetUserAndPassword(_user, _password);
+
+            // Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
+            // (1 call each minute is the free account limit for historical_data endpoint)
+            IntrinioConfig.SetTimeIntervalBetweenCalls(TimeSpan.FromMinutes(1));
+
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
