@@ -23,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
@@ -308,6 +307,8 @@ namespace QuantConnect.Lean.Engine.Results
                                     select log).ToList();
                             //Override the log master to delete the old entries and prevent memory creep.
                             _logStore = logs;
+                            // we need a new container instance so we can store the logs outside the lock
+                            logs = new List<LogEntry>(logs);
                         }
                         StoreLog(logs);
                         _nextLogStoreUpdate = DateTime.UtcNow.AddMinutes(2);
