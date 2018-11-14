@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -23,8 +22,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator who will emit <see cref="Dividend"/> events, merged with the
-    /// underlying enumerator output
+    /// Enumerator who will emit <see cref="Dividend"/> events
     /// </summary>
     public class DividendEnumerator : CorporateEventBaseEnumerator
     {
@@ -37,20 +35,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="enumerator">Underlying enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFile">The factor file to use</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         public DividendEnumerator(
-            IEnumerator<BaseData> enumerator,
             SubscriptionDataConfig config,
             FactorFile factorFile,
             MapFile mapFile,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
-            : base(enumerator, config, tradableDayNotifier, includeAuxiliaryData)
+            : base(config, tradableDayNotifier, includeAuxiliaryData)
         {
             _mapFile = mapFile;
             _factorFile = factorFile;
@@ -59,34 +55,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Check for dividends and emit them into the aux data queue
         /// </summary>
-        protected override BaseData CheckNewEvent(DateTime date)
+        /// <param name="eventArgs">The new tradable day event arguments</param>
+        /// <returns>New Dividend event, else Null</returns>
+        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
         {
-            BaseData baseData = null;
-            if (_mapFile.HasData(date))
+            if (_mapFile.HasData(eventArgs.Date))
             {
                 if (_priceFactorRatio != null)
                 {
-                    var close = GetRawClose();
-                    baseData = Dividend.Create(
+                    var close = GetRawClose(eventArgs.LastBaseData?.Price ?? 0);
+                    var baseData = Dividend.Create(
                         SubscriptionDataConfig.Symbol,
-                        date,
+                        eventArgs.Date,
                         close,
                         _priceFactorRatio.Value
                     );
                     // let the config know about it for normalization
-                    SubscriptionDataConfig.SumOfDividends += ((Dividend) baseData).Distribution;
+                    SubscriptionDataConfig.SumOfDividends += baseData.Distribution;
                     _priceFactorRatio = null;
+
+                    yield return baseData;
                 }
 
                 // check the factor file to see if we have a dividend event tomorrow
                 decimal priceFactorRatio;
-                if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
+                if (_factorFile.HasDividendEventOnNextTradingDay(eventArgs.Date, out priceFactorRatio))
                 {
                     _priceFactorRatio = priceFactorRatio;
                 }
             }
-
-            return baseData;
         }
     }
 }

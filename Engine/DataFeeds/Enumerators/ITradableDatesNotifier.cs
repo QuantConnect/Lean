@@ -27,6 +27,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Event fired when there is a new tradable date
         /// </summary>
-        event EventHandler<DateTime> NewTradableDate;
+        event EventHandler<NewTradableDateEventArgs> NewTradableDate;
     }
 }

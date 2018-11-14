@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -23,8 +22,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator who will emit <see cref="SymbolChangedEvent"/> events, merged with the
-    /// underlying enumerator output
+    /// Enumerator who will emit <see cref="SymbolChangedEvent"/> events
     /// </summary>
     public class MappingEnumerator : CorporateEventBaseEnumerator
     {
@@ -34,18 +32,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="enumerator">Underlying enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         public MappingEnumerator(
-            IEnumerator<BaseData> enumerator,
             SubscriptionDataConfig config,
             MapFile mapFile,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
-            : base(enumerator, config, tradableDayNotifier, includeAuxiliaryData)
+            : base(config, tradableDayNotifier, includeAuxiliaryData)
         {
             _config = config;
             _mapFile = mapFile;
@@ -54,22 +50,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Check for new mappings
         /// </summary>
-        /// <param name="date">The new tradable day value</param>
+        /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New mapping event, else Null</returns>
-        protected override BaseData CheckNewEvent(DateTime date)
+        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (_mapFile.HasData(date))
+            if (_mapFile.HasData(eventArgs.Date))
             {
                 // check to see if the symbol was remapped
-                var newSymbol = _mapFile.GetMappedSymbol(date, _config.MappedSymbol);
+                var newSymbol = _mapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
                 if (newSymbol != _config.MappedSymbol)
                 {
-                    var changed = new SymbolChangedEvent(_config.Symbol, date, _config.MappedSymbol, newSymbol);
+                    var changed = new SymbolChangedEvent(_config.Symbol, eventArgs.Date, _config.MappedSymbol, newSymbol);
                     _config.MappedSymbol = newSymbol;
-                    return changed;
+                    yield return changed;
                 }
             }
-            return null;
         }
     }
 }

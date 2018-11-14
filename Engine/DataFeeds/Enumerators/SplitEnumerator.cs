@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -23,8 +22,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator who will emit <see cref="Split"/> events, merged with the
-    /// underlying enumerator output
+    /// Enumerator who will emit <see cref="Split"/> events
     /// </summary>
     public class SplitEnumerator : CorporateEventBaseEnumerator
     {
@@ -37,20 +35,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="enumerator">Underlying enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFile">The factor file to use</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         public SplitEnumerator(
-            IEnumerator<BaseData> enumerator,
             SubscriptionDataConfig config,
             FactorFile factorFile,
             MapFile mapFile,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
-            : base(enumerator, config, tradableDayNotifier, includeAuxiliaryData)
+            : base(config, tradableDayNotifier, includeAuxiliaryData)
         {
             _mapFile = mapFile;
             _factorFile = factorFile;
@@ -59,40 +55,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Check for new splits
         /// </summary>
-        /// <param name="date">The new tradable day value</param>
+        /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New split event, else Null</returns>
-        protected override BaseData CheckNewEvent(DateTime date)
+        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
         {
-            BaseData baseData = null;
-            if (_mapFile.HasData(date))
+            if (_mapFile.HasData(eventArgs.Date))
             {
                 var factor = _splitFactor;
                 if (factor != null)
                 {
-                    var close = GetRawClose();
-                    baseData = new Split(
+                    var close = GetRawClose(eventArgs.LastBaseData?.Price ?? 0);
+                    _splitFactor = null;
+                    yield return new Split(
                         SubscriptionDataConfig.Symbol,
-                        date,
+                        eventArgs.Date,
                         close,
                         factor.Value,
                         SplitType.SplitOccurred);
-                    _splitFactor = null;
                 }
 
                 decimal splitFactor;
-                if (_factorFile.HasSplitEventOnNextTradingDay(date, out splitFactor))
+                if (_factorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor))
                 {
                     _splitFactor = splitFactor;
-                    baseData = new Split(
+                    yield return new Split(
                         SubscriptionDataConfig.Symbol,
-                        date,
-                        GetRawClose(),
+                        eventArgs.Date,
+                        GetRawClose(eventArgs.LastBaseData?.Price ?? 0),
                         splitFactor,
                         SplitType.Warning);
                 }
             }
-
-            return baseData;
         }
     }
 }

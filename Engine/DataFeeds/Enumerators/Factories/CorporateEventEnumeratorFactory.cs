@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -34,15 +35,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <summary>
         /// Creates a new corporate event enumerator stack
         /// </summary>
-        /// <param name="underlyingEnumerator">Underlying enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <returns>The new corporate event enumerator stack</returns>
-        public static IEnumerator<BaseData> CreateEnumerators(
-            IEnumerator<BaseData> underlyingEnumerator,
+        public static List<IEnumerator<BaseData>> CreateEnumerators(
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             ITradableDatesNotifier tradableDayNotifier,
@@ -53,39 +52,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var factorFile = GetFactorFileToUse(config, factorFileProvider);
 
             // note: enumerator order does not matter
+            var enumerators = new List<IEnumerator<BaseData>>
+            {
+                new MappingEnumerator(
+                    config,
+                    mapFileToUse,
+                    tradableDayNotifier,
+                    includeAuxiliaryData
+                ),
+                new SplitEnumerator(
+                    config,
+                    factorFile,
+                    mapFileToUse,
+                    tradableDayNotifier,
+                    includeAuxiliaryData
+                ),
+                new DividendEnumerator(
+                    config,
+                    factorFile,
+                    mapFileToUse,
+                    tradableDayNotifier,
+                    includeAuxiliaryData
+                ),
+                new DelistingEnumerator(
+                    config,
+                    mapFileToUse,
+                    tradableDayNotifier,
+                    includeAuxiliaryData
+                )
+            };
 
-            IEnumerator<BaseData> enumerator = new MappingEnumerator(
-                underlyingEnumerator,
-                config,
-                mapFileToUse,
-                tradableDayNotifier,
-                includeAuxiliaryData
-            );
-            enumerator = new SplitEnumerator(
-                enumerator,
-                config,
-                factorFile,
-                mapFileToUse,
-                tradableDayNotifier,
-                includeAuxiliaryData
-            );
-            enumerator = new DividendEnumerator(
-                enumerator,
-                config,
-                factorFile,
-                mapFileToUse,
-                tradableDayNotifier,
-                includeAuxiliaryData
-            );
-            enumerator = new DelistingEnumerator(
-                enumerator,
-                config,
-                mapFileToUse,
-                tradableDayNotifier,
-                includeAuxiliaryData
-            );
-
-            return enumerator;
+            return enumerators;
         }
 
         private static MapFile GetMapFileToUse(

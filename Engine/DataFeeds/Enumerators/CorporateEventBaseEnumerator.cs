@@ -23,21 +23,12 @@ using QuantConnect.Data;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Base class for corporate event enumerators. Will call the <see cref="CheckNewEvent"/>
-    /// implementation each time there is a new tradable day. Will merge new events produced with
-    /// underlying enumerator data.
+    /// Base class for corporate event enumerators. Will call the <see cref="GetCorporateEvents"/>
+    /// implementation each time there is a new tradable day.
     /// </summary>
     public abstract class CorporateEventBaseEnumerator : IEnumerator<BaseData>
     {
-        private readonly IEnumerator<BaseData> _enumerator;
         private readonly Queue<BaseData> _auxiliaryData;
-        private bool _underlyingExhausted;
-        private bool _weEmittedData;
-
-        /// <summary>
-        /// The previous data provided by the underlying enumerator
-        /// </summary>
-        protected BaseData PreviousUnderlyingData;
 
         /// <summary>
         ///The Subscription data config used by this enumerator
@@ -47,26 +38,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="enumerator">Underlying enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
-        public CorporateEventBaseEnumerator(
-            IEnumerator<BaseData> enumerator,
+        protected CorporateEventBaseEnumerator(
             SubscriptionDataConfig config,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
         {
             SubscriptionDataConfig = config;
             _auxiliaryData = new Queue<BaseData>();
-            _enumerator = enumerator;
-            tradableDayNotifier.NewTradableDate += (sender, dateTime) =>
+            tradableDayNotifier.NewTradableDate += (sender, eventArgs) =>
             {
                 // Call implementation
-                var newEvent = CheckNewEvent(dateTime);
-                if (newEvent != null && includeAuxiliaryData)
+                var newEvents = GetCorporateEvents(eventArgs);
+                if (includeAuxiliaryData)
                 {
-                    _auxiliaryData.Enqueue(newEvent);
+                    foreach (var newEvent in newEvents)
+                    {
+                        _auxiliaryData.Enqueue(newEvent);
+                    }
                 }
             };
         }
@@ -74,47 +65,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Called each time there is a new tradable day
         /// </summary>
-        /// <param name="date">The new tradable day value</param>
+        /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New corporate event, else Null</returns>
-        protected abstract BaseData CheckNewEvent(DateTime date);
+        protected abstract IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs);
 
         /// <summary>
         /// Advances the enumerator to the next element.
-        /// Will merge chronologically new data produced by this enumerator
-        /// with underlying enumerator.
         /// </summary>
-        /// <returns>
-        /// True if the enumerator was successfully advanced to the next element;
-        /// </returns>
+        /// <returns>Always true</returns>
         public virtual bool MoveNext()
         {
-            // save previous value
-            PreviousUnderlyingData = _enumerator.Current;
-
-            // if we emitted data we don't have to turn underlying enumerator
-            // because we already did in previous step
-            if (!_weEmittedData
-                && !_underlyingExhausted
-                && !_enumerator.MoveNext())
-            {
-                _underlyingExhausted = true;
-            }
-
-            _weEmittedData = false;
-            if (_auxiliaryData.Any()
-                && (_enumerator.Current == null // if underlying is null but we have data, emit
-                    || _auxiliaryData.Peek().EndTime < _enumerator.Current.EndTime
-                    || _underlyingExhausted))
-            {
-                _weEmittedData = true;
-                Current = _auxiliaryData.Dequeue();
-            }
-            else
-            {
-                Current = _enumerator.Current;
-            }
-
-            return _weEmittedData || (!_underlyingExhausted && _enumerator.Current != null);
+            Current = _auxiliaryData.Any() ? _auxiliaryData.Dequeue() : null;
+            return true;
         }
 
         /// <summary>
@@ -122,7 +84,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Dispose()
         {
-            _enumerator.Dispose();
         }
 
         /// <summary>
@@ -148,12 +109,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Un-normalizes the PreviousUnderlyingData.Value
         /// </summary>
-        protected decimal GetRawClose()
+        protected decimal GetRawClose(decimal price)
         {
-            return PreviousUnderlyingData == null
-                ? 0m
-                : GetRawValue(
-                    PreviousUnderlyingData.Value,
+            return GetRawValue(price,
                     SubscriptionDataConfig.SumOfDividends,
                     SubscriptionDataConfig.PriceScaleFactor);
         }

@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event fired when there is a new tradable date
         /// </summary>
-        public event EventHandler<DateTime> NewTradableDate;
+        public event EventHandler<NewTradableDateEventArgs> NewTradableDate;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -557,7 +557,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _tradeableDates.Current;
 
-                OnNewTradableDate(date);
+                OnNewTradableDate(new NewTradableDateEventArgs(date, _previous));
 
                 if (_pastDelistedDate || date > _delistingDate)
                 {
@@ -701,7 +701,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event invocator for the <see cref="NewTradableDate"/> event
         /// </summary>
         /// <param name="e">Event arguments for the <see cref="NewTradableDate"/> event</param>
-        protected virtual void OnNewTradableDate(DateTime e)
+        protected virtual void OnNewTradableDate(NewTradableDateEventArgs e)
         {
             NewTradableDate?.Invoke(this, e);
         }

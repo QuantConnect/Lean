@@ -68,6 +68,10 @@ namespace QuantConnect.Algorithm.CSharp
                 else if (slice.Splits.Single().Value.Type == SplitType.SplitOccurred)
                 {
                     _receivedOccurredEvent = true;
+                    if (slice.Splits.Single().Value.Price != 88.9700m || slice.Splits.Single().Value.ReferencePrice != 88.9700m)
+                    {
+                        throw new Exception("Did not receive expected price values");
+                    }
                     Debug($"{slice.Splits.Single().Value}");
                 }
             }

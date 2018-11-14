@@ -24,8 +24,7 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator who will emit <see cref="Delisting"/> events, merged with the
-    /// underlying enumerator output.
+    /// Enumerator who will emit <see cref="Delisting"/> events
     /// </summary>
     public class DelistingEnumerator : CorporateEventBaseEnumerator
     {
@@ -39,18 +38,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="enumerator">Underlying enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         public DelistingEnumerator(
-            IEnumerator<BaseData> enumerator,
             SubscriptionDataConfig config,
             MapFile mapFile,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
-            : base(enumerator, config, tradableDayNotifier, includeAuxiliaryData)
+            : base(config, tradableDayNotifier, includeAuxiliaryData)
         {
             // Estimate delisting date.
             switch (SubscriptionDataConfig.Symbol.ID.SecurityType)
@@ -71,32 +68,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Check for delistings
         /// </summary>
-        /// <param name="date">The new tradable day value</param>
+        /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New delisting event, else Null</returns>
-        protected override BaseData CheckNewEvent(DateTime date)
+        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (!_delistedWarning && date >= _delistingDate)
+            if (!_delistedWarning && eventArgs.Date >= _delistingDate)
             {
                 _delistedWarning = true;
-                var price = PreviousUnderlyingData != null ? PreviousUnderlyingData.Price : 0;
-                return new Delisting(
+                var price = eventArgs.LastBaseData?.Price ?? 0;
+                yield return new Delisting(
                     SubscriptionDataConfig.Symbol,
-                    date,
+                    eventArgs.Date,
                     price,
                     DelistingType.Warning);
             }
-            if (!_delisted && date > _delistingDate)
+            if (!_delisted && eventArgs.Date > _delistingDate)
             {
                 _delisted = true;
-                var price = PreviousUnderlyingData != null ? PreviousUnderlyingData.Price : 0;
+                var price = eventArgs.LastBaseData?.Price ?? 0;
                 // delisted at EOD
-                return new Delisting(
+                yield return new Delisting(
                     SubscriptionDataConfig.Symbol,
                     _delistingDate.AddDays(1),
                     price,
                     DelistingType.Delisted);
             }
-            return null;
         }
     }
 }
