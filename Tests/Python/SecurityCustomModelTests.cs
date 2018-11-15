@@ -95,19 +95,19 @@ class CustomBuyingPowerModel:
     def __init__(self):
         self.margin = 1.0
 
-    def GetBuyingPower(self, portfolio, security, direction):
-        return portfolio.MarginRemaining
-    
+    def GetBuyingPower(self, context):
+        return BuyingPower(context.Portfolio.MarginRemaining)
+
     def GetLeverage(self, security):
         return 1.0 / self.margin
 
-    def GetMaximumOrderQuantityForTargetValue(self, portfolio, security, order):
+    def GetMaximumOrderQuantityForTargetValue(self, context):
         return GetMaximumOrderQuantityForTargetValueResult(200)
 
-    def GetReservedBuyingPowerForPosition(self, security):
-        return security.Holdings.AbsoluteHoldingsCost * self.margin
+    def GetReservedBuyingPowerForPosition(self, context):
+        return ReservedBuyingPowerForPosition(context.Security.Holdings.AbsoluteHoldingsCost * self.margin)
 
-    def HasSufficientBuyingPowerForOrder(self, portfolio, security, order):
+    def HasSufficientBuyingPowerForOrder(self, context):
         return HasSufficientBuyingPowerForOrderResult(True)
 
     def SetLeverage(self, security, leverage):
@@ -123,7 +123,7 @@ from QuantConnect import *
 from QuantConnect.Securities import *
 
 class CustomBuyingPowerModel(SecurityMarginModel):
-    def GetMaximumOrderQuantityForTargetValue(self, portfolio, security, order):
+    def GetMaximumOrderQuantityForTargetValue(self, context):
         return GetMaximumOrderQuantityForTargetValueResult(100)";
 
         private Security GetSecurity<T>(Symbol symbol, Resolution resolution)

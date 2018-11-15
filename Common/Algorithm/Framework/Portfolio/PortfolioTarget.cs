@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -77,7 +78,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Factoring in FreePortfolioValuePercentage.
             var adjustedPercent = percent * (1 - algorithm.Settings.FreePortfolioValuePercentage);
 
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, adjustedPercent);
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
+                new GetMaximumOrderQuantityForTargetValueContext(algorithm.Portfolio, security, adjustedPercent)
+            );
+
             if (result.IsError)
             {
                 algorithm.Error($"Unable to compute order quantity of {symbol}. Reason: {result.Reason}. Returning null.");

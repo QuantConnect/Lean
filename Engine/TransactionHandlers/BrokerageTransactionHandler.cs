@@ -758,7 +758,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
             try
             {
-                hasSufficientBuyingPowerResult = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(_algorithm.Portfolio, security, order);
+                hasSufficientBuyingPowerResult = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    new HasSufficientBuyingPowerForOrderContext(_algorithm.Portfolio, security, order));
             }
             catch (Exception err)
             {
