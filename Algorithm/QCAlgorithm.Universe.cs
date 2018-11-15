@@ -525,10 +525,14 @@ namespace QuantConnect.Algorithm
         private void ConfigureUnderlyingSecurity(Security security)
         {
             // force underlying securities to be raw data mode
-            if (security.DataNormalizationMode != DataNormalizationMode.Raw)
+            var configs = SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol);
+            if (configs.DataNormalizationMode() != DataNormalizationMode.Raw)
             {
                 Debug($"Warning: The {security.Symbol.Value} equity security was set the raw price normalization mode to work with options.");
-                security.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                configs.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                // For backward compatibility we need to refresh the security DataNormalizationMode Property
+                security.RefreshDataNormalizationModeProperty();
             }
 
             // ensure a volatility model has been set on the underlying

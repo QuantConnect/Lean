@@ -477,8 +477,12 @@ namespace QuantConnect.Lean.Engine
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: {algorithm.Portfolio.CashBook[CashBook.AccountCurrency].Amount}");
                     }
 
+                    var mode = algorithm.SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(dividend.Symbol)
+                        .DataNormalizationMode();
+
                     // apply the dividend event to the portfolio
-                    algorithm.Portfolio.ApplyDividend(dividend, _liveMode);
+                    algorithm.Portfolio.ApplyDividend(dividend, _liveMode, mode);
 
                     if (_liveMode && security != null)
                     {
@@ -505,8 +509,12 @@ namespace QuantConnect.Lean.Engine
                             Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
                         }
 
+                        var mode = algorithm.SubscriptionManager.SubscriptionDataConfigService
+                            .GetSubscriptionDataConfigs(split.Symbol)
+                            .DataNormalizationMode();
+
                         // apply the split event to the portfolio
-                        algorithm.Portfolio.ApplySplit(split, _liveMode);
+                        algorithm.Portfolio.ApplySplit(split, _liveMode, mode);
 
                         if (_liveMode && security != null)
                         {
@@ -514,7 +522,7 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
-                        if (_liveMode || algorithm.Securities[split.Symbol].DataNormalizationMode == DataNormalizationMode.Raw)
+                        if (_liveMode || mode == DataNormalizationMode.Raw)
                         {
                             // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
                             var openOrders = transactions.GetOpenOrderTickets(ticket => ticket.Symbol == split.Symbol);

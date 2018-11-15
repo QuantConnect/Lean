@@ -1599,10 +1599,9 @@ namespace QuantConnect.Algorithm
                                                 "please change this to DataNormalizationMode.Raw with the SetDataNormalization() method");
                 }
             }
-            foreach (var config in underlyingConfigs)
-            {
-                config.DataNormalizationMode = DataNormalizationMode.Raw;
-            }
+            underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            // For backward compatibility we need to refresh the security DataNormalizationMode Property
+            equity.RefreshDataNormalizationModeProperty();
 
             option.Underlying = equity;
 
