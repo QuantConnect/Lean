@@ -119,6 +119,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public sealed class NewTradableDateEventArgs : EventArgs
     {
         /// <summary>
+        /// The <see cref="Symbol"/> of the new tradable date
+        /// </summary>
+        public Symbol Symbol { get; }
+
+        /// <summary>
         /// The new tradable date
         /// </summary>
         public DateTime Date { get; }
@@ -135,10 +140,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The new tradable date</param>
         /// <param name="lastBaseData">The last <see cref="BaseData"/> of the
         /// <see cref="Security"/> for which we are enumerating</param>
-        public NewTradableDateEventArgs(DateTime date, BaseData lastBaseData)
+        /// <param name="symbol">The <see cref="Symbol"/> of the new tradable date</param>
+        public NewTradableDateEventArgs(DateTime date, BaseData lastBaseData, Symbol symbol)
         {
             Date = date;
             LastBaseData = lastBaseData;
+            Symbol = symbol;
         }
     }
 }

@@ -159,6 +159,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the <see cref="SubscriptionDataReader"/> instance
         /// </summary>
+        /// <remarks>Should be called after all consumers of <see cref="NewTradableDate"/> event are set,
+        /// since it will produce events.</remarks>
         public void Initialize()
         {
             if (_initialized)
@@ -557,7 +559,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _tradeableDates.Current;
 
-                OnNewTradableDate(new NewTradableDateEventArgs(date, _previous));
+                OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol));
 
                 if (_pastDelistedDate || date > _delistingDate)
                 {

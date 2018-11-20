@@ -27,7 +27,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     public class DelistingEnumeratorTests
     {
         private SubscriptionDataConfig _config;
-        private TestTradableDayNotifier _tradableDayNotifier;
 
         [SetUp]
         public void SetUp()
@@ -42,40 +41,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 true,
                 true,
                 false);
-
-            _tradableDayNotifier = new TestTradableDayNotifier
-            {
-                TradableDate = DateTime.UtcNow,
-                LastBaseData = new Tick(DateTime.UtcNow, symbol, 10, 5)
-            };
-        }
-
-        [Test]
-        public void MoveNextIsTrueCurrentNull()
-        {
-            var enumerator = new DelistingEnumerator(_config,
-                null,
-                _tradableDayNotifier,
-                true);
-
-            Assert.IsNull(enumerator.Current);
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
         }
 
         [Test]
         public void EmitsBothEventsIfDateIsPastDelisted()
         {
-            var enumerator = new DelistingEnumerator(_config,
+            var eventProvider = new DelistingEventProvider();
+            eventProvider.Initialize(_config,
                 null,
-                _tradableDayNotifier,
-                true);
-            Assert.IsNull(enumerator.Current);
-            Assert.IsTrue(enumerator.MoveNext());
+                null);
 
-            _tradableDayNotifier.TriggerEvent();
+            var enumerator = eventProvider.GetEvents(
+                new NewTradableDateEventArgs(
+                    DateTime.UtcNow,
+                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                    _config.Symbol
+                )
+            ).GetEnumerator();
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
@@ -91,30 +73,37 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(_config.Symbol.ID.Date.AddDays(1), (enumerator.Current as Delisting).Time.Date);
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
+            Assert.IsFalse(enumerator.MoveNext());
         }
 
         [Test]
         public void EmitsWarningAsOffDelistingDate()
         {
-            var enumerator = new DelistingEnumerator(_config,
+            var eventProvider = new DelistingEventProvider();
+            eventProvider.Initialize(_config,
                 null,
-                _tradableDayNotifier,
-                true);
-            Assert.IsNull(enumerator.Current);
-            Assert.IsTrue(enumerator.MoveNext());
+                null);
+
 
             // should NOT emit
-            _tradableDayNotifier.TradableDate = _config.Symbol.ID.Date.Subtract(TimeSpan.FromMinutes(1));
-            _tradableDayNotifier.TriggerEvent();
+            var enumerator = eventProvider.GetEvents(
+                new NewTradableDateEventArgs(
+                    _config.Symbol.ID.Date.Subtract(TimeSpan.FromMinutes(1)),
+                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                    _config.Symbol
+                )
+            ).GetEnumerator();
 
-            Assert.IsNull(enumerator.Current);
-            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsFalse(enumerator.MoveNext());
 
             // should emit
-            _tradableDayNotifier.TradableDate = _config.Symbol.ID.Date;
-            _tradableDayNotifier.TriggerEvent();
+            enumerator = eventProvider.GetEvents(
+                new NewTradableDateEventArgs(
+                    _config.Symbol.ID.Date,
+                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                    _config.Symbol
+                )
+            ).GetEnumerator();
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
@@ -123,35 +112,49 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(_config.Symbol.ID.Date, (enumerator.Current as Delisting).Time.Date);
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
+            Assert.IsFalse(enumerator.MoveNext());
         }
 
         [Test]
         public void EmitsDelistedAfterDelistingDate()
         {
-            var enumerator = new DelistingEnumerator(_config,
+            var eventProvider = new DelistingEventProvider();
+            eventProvider.Initialize(_config,
                 null,
-                _tradableDayNotifier,
-                true);
-            Assert.IsNull(enumerator.Current);
-            Assert.IsTrue(enumerator.MoveNext());
+                null);
 
             // should emit warning
-            _tradableDayNotifier.TradableDate = _config.Symbol.ID.Date;
-            _tradableDayNotifier.TriggerEvent();
+            var enumerator = eventProvider.GetEvents(
+                new NewTradableDateEventArgs(
+                    _config.Symbol.ID.Date,
+                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                    _config.Symbol
+                )
+            ).GetEnumerator();
+
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(DelistingType.Warning, (enumerator.Current as Delisting).Type);
 
             // should NOT emit if not AFTER delisting date
-            _tradableDayNotifier.TriggerEvent();
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
+            enumerator = eventProvider.GetEvents(
+                new NewTradableDateEventArgs(
+                    _config.Symbol.ID.Date,
+                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                    _config.Symbol
+                )
+            ).GetEnumerator();
+            Assert.IsFalse(enumerator.MoveNext());
 
             // should emit AFTER delisting date
-            _tradableDayNotifier.TradableDate = _config.Symbol.ID.Date.AddMinutes(1);
-            _tradableDayNotifier.TriggerEvent();
+            enumerator = eventProvider.GetEvents(
+                new NewTradableDateEventArgs(
+                    _config.Symbol.ID.Date.AddMinutes(1),
+                    new Tick(DateTime.UtcNow, _config.Symbol, 10, 5),
+                    _config.Symbol
+                )
+            ).GetEnumerator();
+
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current as Delisting);
             Assert.AreEqual(MarketDataType.Auxiliary, enumerator.Current.DataType);
@@ -159,20 +162,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(_config.Symbol.ID.Date.AddDays(1), (enumerator.Current as Delisting).Time.Date);
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-        }
-
-        class TestTradableDayNotifier : ITradableDatesNotifier
-        {
-            public event EventHandler<NewTradableDateEventArgs> NewTradableDate;
-            public DateTime TradableDate { get; set; }
-            public BaseData LastBaseData { get; set; }
-
-            public void TriggerEvent()
-            {
-                NewTradableDate?.Invoke(this, new NewTradableDateEventArgs(TradableDate, LastBaseData));
-            }
+            Assert.IsFalse(enumerator.MoveNext());
         }
     }
 }

@@ -21,27 +21,27 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
     /// <summary>
-    /// Helper class used to create all the corporate event enumerators
-    /// <see cref="MappingEnumerator"/>, <see cref="SplitEnumerator"/>,
-    /// <see cref="DividendEnumerator"/>, <see cref="DelistingEnumerator"/>
+    /// Helper class used to create the corporate event providers
+    /// <see cref="MappingEventProvider"/>, <see cref="SplitEventProvider"/>,
+    /// <see cref="DividendEventProvider"/>, <see cref="DelistingEventProvider"/>
     /// </summary>
     public static class CorporateEventEnumeratorFactory
     {
         /// <summary>
-        /// Creates a new corporate event enumerator stack
+        /// Creates a new <see cref="AuxiliaryDataEnumerator"/> that will hold the
+        /// corporate event providers
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
-        /// <returns>The new corporate event enumerator stack</returns>
-        public static List<IEnumerator<BaseData>> CreateEnumerators(
+        /// <returns>The new auxiliary data enumerator</returns>
+        public static IEnumerator<BaseData> CreateEnumerators(
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             ITradableDatesNotifier tradableDayNotifier,
@@ -51,38 +51,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var mapFileToUse = GetMapFileToUse(config, mapFileResolver);
             var factorFile = GetFactorFileToUse(config, factorFileProvider);
 
-            // note: enumerator order does not matter
-            var enumerators = new List<IEnumerator<BaseData>>
-            {
-                new MappingEnumerator(
-                    config,
-                    mapFileToUse,
-                    tradableDayNotifier,
-                    includeAuxiliaryData
-                ),
-                new SplitEnumerator(
-                    config,
-                    factorFile,
-                    mapFileToUse,
-                    tradableDayNotifier,
-                    includeAuxiliaryData
-                ),
-                new DividendEnumerator(
-                    config,
-                    factorFile,
-                    mapFileToUse,
-                    tradableDayNotifier,
-                    includeAuxiliaryData
-                ),
-                new DelistingEnumerator(
-                    config,
-                    mapFileToUse,
-                    tradableDayNotifier,
-                    includeAuxiliaryData
-                )
-            };
+            var enumerator = new AuxiliaryDataEnumerator(
+                config,
+                factorFile,
+                mapFileToUse,
+                new ITradableDateEventProvider[]
+                {
+                    new MappingEventProvider(),
+                    new SplitEventProvider(),
+                    new DividendEventProvider(),
+                    new DelistingEventProvider()
+                },
+                tradableDayNotifier,
+                includeAuxiliaryData);
 
-            return enumerators;
+            return enumerator;
         }
 
         private static MapFile GetMapFileToUse(

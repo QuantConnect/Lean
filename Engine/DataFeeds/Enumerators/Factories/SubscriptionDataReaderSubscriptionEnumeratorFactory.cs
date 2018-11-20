@@ -96,7 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
             dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
 
-            var enumerators = CorporateEventEnumeratorFactory.CreateEnumerators(
+            var enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(
                 request.Configuration,
                 _factorFileProvider,
                 dataReader,
@@ -106,8 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // has to be initialized after adding all the enumerators since it will execute a MoveNext
             dataReader.Initialize();
 
-            enumerators.Add(dataReader);
-            return new SynchronizingEnumerator(enumerators);
+            return new SynchronizingEnumerator(dataReader, enumerator);
         }
 
         /// <summary>

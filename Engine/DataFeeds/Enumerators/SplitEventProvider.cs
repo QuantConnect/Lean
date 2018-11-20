@@ -22,52 +22,52 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator who will emit <see cref="Split"/> events
+    /// Event provider who will emit <see cref="Split"/> events
     /// </summary>
-    public class SplitEnumerator : CorporateEventBaseEnumerator
+    public class SplitEventProvider : ITradableDateEventProvider
     {
-        private readonly FactorFile _factorFile;
-        private readonly MapFile _mapFile;
         // we set the split factor when we encounter a split in the factor file
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
+        private FactorFile _factorFile;
+        private MapFile _mapFile;
+        private SubscriptionDataConfig _config;
 
         /// <summary>
-        /// Creates a new instance
+        /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFile">The factor file to use</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
-        /// <param name="tradableDayNotifier">Tradable dates provider</param>
-        /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
-        public SplitEnumerator(
+        public void Initialize(
             SubscriptionDataConfig config,
             FactorFile factorFile,
-            MapFile mapFile,
-            ITradableDatesNotifier tradableDayNotifier,
-            bool includeAuxiliaryData)
-            : base(config, tradableDayNotifier, includeAuxiliaryData)
+            MapFile mapFile)
         {
             _mapFile = mapFile;
             _factorFile = factorFile;
+            _config = config;
         }
 
         /// <summary>
         /// Check for new splits
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
-        /// <returns>New split event, else Null</returns>
-        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
+        /// <returns>New split event if any</returns>
+        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (_mapFile.HasData(eventArgs.Date))
+            if (_config.Symbol == eventArgs.Symbol
+                && _mapFile.HasData(eventArgs.Date))
             {
                 var factor = _splitFactor;
                 if (factor != null)
                 {
-                    var close = GetRawClose(eventArgs.LastBaseData?.Price ?? 0);
+                    var close = AuxiliaryDataEnumerator.GetRawClose(
+                        eventArgs.LastBaseData?.Price ?? 0,
+                        _config);
                     _splitFactor = null;
                     yield return new Split(
-                        SubscriptionDataConfig.Symbol,
+                        eventArgs.Symbol,
                         eventArgs.Date,
                         close,
                         factor.Value,
@@ -79,9 +79,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     _splitFactor = splitFactor;
                     yield return new Split(
-                        SubscriptionDataConfig.Symbol,
+                        eventArgs.Symbol,
                         eventArgs.Date,
-                        GetRawClose(eventArgs.LastBaseData?.Price ?? 0),
+                        AuxiliaryDataEnumerator.GetRawClose(
+                            eventArgs.LastBaseData?.Price ?? 0,
+                            _config),
                         splitFactor,
                         SplitType.Warning);
                 }

@@ -19,55 +19,63 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Base class for corporate event enumerators. Will call the <see cref="GetCorporateEvents"/>
-    /// implementation each time there is a new tradable day.
+    /// Auxiliary data enumerator that will, initialize and call the <see cref="ITradableDateEventProvider.GetEvents"/>
+    /// implementation each time there is a new tradable day for every <see cref="ITradableDateEventProvider"/>
+    /// provided.
     /// </summary>
-    public abstract class CorporateEventBaseEnumerator : IEnumerator<BaseData>
+    public class AuxiliaryDataEnumerator : IEnumerator<BaseData>
     {
         private readonly Queue<BaseData> _auxiliaryData;
-
-        /// <summary>
-        ///The Subscription data config used by this enumerator
-        /// </summary>
-        protected readonly SubscriptionDataConfig SubscriptionDataConfig;
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
+        /// <param name="factorFile">The factor file to use</param>
+        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="tradableDateEventProviders">The tradable dates event providers</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
-        protected CorporateEventBaseEnumerator(
+        public AuxiliaryDataEnumerator(
             SubscriptionDataConfig config,
+            FactorFile factorFile,
+            MapFile mapFile,
+            ITradableDateEventProvider []tradableDateEventProviders,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
         {
-            SubscriptionDataConfig = config;
             _auxiliaryData = new Queue<BaseData>();
+
+            foreach (var tradableDateEventProvider in tradableDateEventProviders)
+            {
+                tradableDateEventProvider.Initialize(
+                    config,
+                    factorFile,
+                    mapFile);
+            }
+
             tradableDayNotifier.NewTradableDate += (sender, eventArgs) =>
             {
-                // Call implementation
-                var newEvents = GetCorporateEvents(eventArgs);
-                if (includeAuxiliaryData)
+                foreach (var tradableDateEventProvider in tradableDateEventProviders)
                 {
-                    foreach (var newEvent in newEvents)
+                    // Call implementation
+                    var newEvents = tradableDateEventProvider.GetEvents(eventArgs);
+                    if (includeAuxiliaryData)
                     {
-                        _auxiliaryData.Enqueue(newEvent);
+                        foreach (var newEvent in newEvents)
+                        {
+                            _auxiliaryData.Enqueue(newEvent);
+                        }
                     }
                 }
             };
         }
 
-        /// <summary>
-        /// Called each time there is a new tradable day
-        /// </summary>
-        /// <param name="eventArgs">The new tradable day event arguments</param>
-        /// <returns>New corporate event, else Null</returns>
-        protected abstract IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs);
 
         /// <summary>
         /// Advances the enumerator to the next element.
@@ -109,19 +117,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Un-normalizes the PreviousUnderlyingData.Value
         /// </summary>
-        protected decimal GetRawClose(decimal price)
+        public static decimal GetRawClose(decimal price, SubscriptionDataConfig config)
         {
-            return GetRawValue(price,
-                    SubscriptionDataConfig.SumOfDividends,
-                    SubscriptionDataConfig.PriceScaleFactor);
+            return GetRawValue(price, config.SumOfDividends, config.PriceScaleFactor, config.DataNormalizationMode);
         }
 
         /// <summary>
         /// Un-normalizes a price
         /// </summary>
-        private decimal GetRawValue(decimal price, decimal sumOfDividends, decimal priceScaleFactor)
+        private static decimal GetRawValue(decimal price,
+            decimal sumOfDividends,
+            decimal priceScaleFactor,
+            DataNormalizationMode dataNormalizationMode)
         {
-            switch (SubscriptionDataConfig.DataNormalizationMode)
+            switch (dataNormalizationMode)
             {
                 case DataNormalizationMode.Raw:
                     break;

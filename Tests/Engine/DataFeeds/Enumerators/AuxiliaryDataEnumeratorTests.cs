@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -26,7 +27,7 @@ using QuantConnect.Tests.Common.Securities;
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
-    public class CorporateEventBaseEnumeratorTests
+    public class AuxiliaryDataEnumeratorTests
     {
         private SubscriptionDataConfig _config;
         private TestTradableDayNotifier _tradableDayNotifier;
@@ -37,19 +38,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             _config = SecurityTests.CreateTradeBarConfig();
             _tradableDayNotifier = new TestTradableDayNotifier();
+            _tradableDayNotifier.Symbol = _config.Symbol;
             _delistingEvent = new Delisting(_config.Symbol, new DateTime(2009, 1, 1), 1, DelistingType.Delisted);
         }
 
         [Test]
         public void IsSetToNullIfNoDataAlwaysReturnsTrue()
         {
-            var enumerator = new TestableCorporateEventBaseEnumerator(
+            var eventProvider = new TestableEventProvider();
+            var enumerator = new AuxiliaryDataEnumerator(
                 _config,
+                null,
+                null,
+                new ITradableDateEventProvider[] { eventProvider },
                 _tradableDayNotifier,
                 true
             );
 
-            enumerator.Data.Enqueue(_delistingEvent);
+            eventProvider.Data.Enqueue(_delistingEvent);
             _tradableDayNotifier.TriggerEvent();
 
             Assert.Null(enumerator.Current);
@@ -66,22 +72,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
     }
 
-    class TestableCorporateEventBaseEnumerator : CorporateEventBaseEnumerator
+    class TestableEventProvider : ITradableDateEventProvider
     {
-        public Queue<BaseData> Data { get; }
+        public readonly Queue<BaseData> Data = new Queue<BaseData>();
 
-        public TestableCorporateEventBaseEnumerator(
-            SubscriptionDataConfig config,
-            ITradableDatesNotifier tradableDayNotifier,
-            bool includeAuxiliaryData)
-            : base(config, tradableDayNotifier, includeAuxiliaryData)
-        {
-            Data = new Queue<BaseData>();
-        }
-
-        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
+        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
             yield return Data.Dequeue();
+        }
+
+        public void Initialize(SubscriptionDataConfig config, FactorFile factorFile, MapFile mapFile)
+        {
         }
     }
 
@@ -90,10 +91,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public event EventHandler<NewTradableDateEventArgs> NewTradableDate;
         public DateTime TradableDate { get; set; }
         public BaseData LastBaseData { get; set; }
+        public Symbol Symbol { get; set; }
 
         public void TriggerEvent()
         {
-            NewTradableDate?.Invoke(this, new NewTradableDateEventArgs(TradableDate, LastBaseData));
+            NewTradableDate?.Invoke(this, new NewTradableDateEventArgs(TradableDate, LastBaseData, Symbol));
         }
     }
 }

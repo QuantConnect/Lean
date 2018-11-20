@@ -122,14 +122,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(new DownloadFailedEventArgs(args.Message, args.StackTrace)); };
             dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(args.Message, args.StackTrace)); };
 
-            var enumerators = CorporateEventEnumeratorFactory.CreateEnumerators(
+            var enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(
                 config,
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
                 false);
-            enumerators.Add(dataReader);
-            IEnumerator<BaseData> reader = new SynchronizingEnumerator(enumerators);
+            IEnumerator<BaseData> reader = new SynchronizingEnumerator(dataReader, enumerator);
 
             // has to be initialized after adding all the enumerators since it will execute a MoveNext
             dataReader.Initialize();

@@ -22,45 +22,47 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerator who will emit <see cref="SymbolChangedEvent"/> events
+    /// Event provider who will emit <see cref="SymbolChangedEvent"/> events
     /// </summary>
-    public class MappingEnumerator : CorporateEventBaseEnumerator
+    public class MappingEventProvider : ITradableDateEventProvider
     {
-        private readonly SubscriptionDataConfig _config;
-        private readonly MapFile _mapFile;
+        private MapFile _mapFile;
+        private SubscriptionDataConfig _config;
 
         /// <summary>
-        /// Creates a new instance
+        /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="tradableDayNotifier">Tradable dates provider</param>
+        /// <param name="factorFile">The factor file to use</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
-        /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
-        public MappingEnumerator(
+        public void Initialize(
             SubscriptionDataConfig config,
-            MapFile mapFile,
-            ITradableDatesNotifier tradableDayNotifier,
-            bool includeAuxiliaryData)
-            : base(config, tradableDayNotifier, includeAuxiliaryData)
+            FactorFile factorFile,
+            MapFile mapFile)
         {
-            _config = config;
             _mapFile = mapFile;
+            _config = config;
         }
 
         /// <summary>
         /// Check for new mappings
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
-        /// <returns>New mapping event, else Null</returns>
-        protected override IEnumerable<BaseData> GetCorporateEvents(NewTradableDateEventArgs eventArgs)
+        /// <returns>New mapping event if any</returns>
+        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (_mapFile.HasData(eventArgs.Date))
+            if (_config.Symbol == eventArgs.Symbol
+                && _mapFile.HasData(eventArgs.Date))
             {
                 // check to see if the symbol was remapped
                 var newSymbol = _mapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
                 if (newSymbol != _config.MappedSymbol)
                 {
-                    var changed = new SymbolChangedEvent(_config.Symbol, eventArgs.Date, _config.MappedSymbol, newSymbol);
+                    var changed = new SymbolChangedEvent(
+                        _config.Symbol,
+                        eventArgs.Date,
+                        _config.MappedSymbol,
+                        newSymbol);
                     _config.MappedSymbol = newSymbol;
                     yield return changed;
                 }
