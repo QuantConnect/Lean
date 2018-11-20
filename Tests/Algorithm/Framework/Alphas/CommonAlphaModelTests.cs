@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// </summary>
         protected virtual IEnumerable<Slice> CreateSlices()
         {
-            var cashBook = new CashBook();
+            var timeSliceFactory = new TimeSliceFactory(TimeZones.NewYork);
             var changes = SecurityChanges.None;
             var sliceDateTimes = GetSliceDateTimes(MaxSliceCount);
 
@@ -240,7 +240,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
                 if (packets.Count > 0)
                 {
-                    yield return TimeSlice.Create(utcDateTime, TimeZones.NewYork, cashBook, packets, changes, new Dictionary<Universe, BaseDataCollection>()).Slice;
+                    yield return timeSliceFactory.Create(utcDateTime, packets, changes, new Dictionary<Universe, BaseDataCollection>()).Slice;
                 }
             }
         }

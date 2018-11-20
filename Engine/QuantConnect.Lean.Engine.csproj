@@ -213,6 +213,7 @@
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
+    <Compile Include="DataFeeds\TimeSliceFactory.cs" />
     <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />

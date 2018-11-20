@@ -102,16 +102,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
 
             // add this enumerator to our exchange
-            ScheduleEnumerator(subscription, enumerator, enqueueable, GetLowerThreshold(request.Configuration.Resolution), GetUpperThreshold(request.Configuration.Resolution));
+            ScheduleEnumerator(subscription,
+                enumerator,
+                enqueueable,
+                GetLowerThreshold(request.Configuration.Resolution),
+                GetUpperThreshold(request.Configuration.Resolution),
+                request.Security.Exchange.Hours);
 
             return subscription;
         }
 
         private void ScheduleEnumerator(Subscription subscription, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<SubscriptionData> enqueueable,
-            int lowerThreshold, int upperThreshold, int firstLoopCount = 5)
+            int lowerThreshold, int upperThreshold, SecurityExchangeHours exchangeHours, int firstLoopCount = 5)
         {
             // schedule the work on the controller
-            var security = subscription.Security;
             var configuration = subscription.Configuration;
 
             var firstLoop = true;
@@ -128,7 +132,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return;
                     }
 
-                    var subscriptionData = SubscriptionData.Create(configuration, security.Exchange.Hours, subscription.OffsetProvider, enumerator.Current);
+                    var subscriptionData = SubscriptionData.Create(configuration, exchangeHours, subscription.OffsetProvider, enumerator.Current);
 
                     // drop the data into the back of the enqueueable
                     enqueueable.Enqueue(subscriptionData);
@@ -207,7 +211,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
 
             // add this enumerator to our exchange
-            ScheduleEnumerator(subscription, enumerator, enqueueable, lowerThreshold, upperThreshold, firstLoopCount);
+            ScheduleEnumerator(subscription, enumerator, enqueueable, lowerThreshold, upperThreshold, request.Security.Exchange.Hours, firstLoopCount);
 
             return subscription;
         }

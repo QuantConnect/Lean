@@ -29,7 +29,6 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
-using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -249,7 +248,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
 
 
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
                 SecurityType.Option, SecurityType.Option, SecurityType.Future });
         }
 
@@ -271,7 +270,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             subscriptionColletion.TryAdd(subscription4);
 
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
         }
 
         [Test]
@@ -294,25 +293,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
 
             subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option,
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option,
                             SecurityType.Option, SecurityType.Option, SecurityType.Future });
 
             subscriptionColletion.TryRemove(subscription3.Configuration, out subscription3);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option, SecurityType.Future });
 
             subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option });
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option });
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription6, subscription5 });
 
             subscriptionColletion.TryRemove(subscription6.Configuration, out subscription6);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] { SecurityType.Equity, SecurityType.Option });
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option });
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription5 });
 
             subscriptionColletion.TryRemove(subscription5.Configuration, out subscription5);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Security.Type).ToList(), new[] {SecurityType.Equity});
+            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] {SecurityType.Equity});
 
             subscriptionColletion.TryRemove(subscription4.Configuration, out subscription4);
-            Assert.IsTrue(subscriptionColletion.Select(x => x.Security.Type).ToList().IsNullOrEmpty());
+            Assert.IsTrue(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList().IsNullOrEmpty());
         }
 
         private Subscription CreateSubscription(Resolution resolution, string symbol = "AAPL", bool isInternalFeed = false,

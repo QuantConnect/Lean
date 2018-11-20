@@ -21,7 +21,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -45,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the security this subscription points to
         /// </summary>
-        public readonly Security Security;
+        public readonly ISecurityPrice Security;
 
         /// <summary>
         /// Gets the configuration for this subscritions
@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the exchange time zone associated with this subscription
         /// </summary>
-        public DateTimeZone TimeZone => Security.Exchange.TimeZone;
+        public DateTimeZone TimeZone { get; }
 
         /// <summary>
         /// Gets the offset provider for time zone conversions to and from the data's local time
@@ -104,14 +104,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             TimeZoneOffsetProvider timeZoneOffsetProvider)
         {
             _subscriptionRequests = new List<SubscriptionRequest> { subscriptionRequest };
-            Security = subscriptionRequest.Security;
             _enumerator = enumerator;
+            Security = subscriptionRequest.Security;
             IsUniverseSelectionSubscription = subscriptionRequest.IsUniverseSubscription;
             Configuration = subscriptionRequest.Configuration;
             OffsetProvider = timeZoneOffsetProvider;
-
+            TimeZone = subscriptionRequest.Security.Exchange.TimeZone;
             UtcStartTime = subscriptionRequest.StartTimeUtc;
             UtcEndTime = subscriptionRequest.EndTimeUtc;
+
             RemovedFromUniverse = Ref.CreateReadOnly(() => _removedFromUniverse);
         }
 

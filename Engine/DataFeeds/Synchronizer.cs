@@ -21,7 +21,6 @@ using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,9 +31,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private SubscriptionSynchronizer _subscriptionSynchronizer;
         private IDataFeedSubscriptionManager _subscriptionManager;
+        private TimeSliceFactory _timeSliceFactory;
         private IAlgorithm _algorithm;
         private DateTimeZone _dateTimeZone;
-        private CashBook _cashBook;
         private bool _liveMode;
 
         /// <summary>
@@ -53,15 +52,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Initialize(
             IAlgorithm algorithm,
             IDataFeedSubscriptionManager dataFeedSubscriptionManager,
-            bool liveMode,
-            CashBook cashBook)
+            bool liveMode)
         {
             _subscriptionManager = dataFeedSubscriptionManager;
             _algorithm = algorithm;
-            _cashBook = cashBook;
             _liveMode = liveMode;
-
-            _subscriptionSynchronizer = new SubscriptionSynchronizer(_subscriptionManager.UniverseSelection, _cashBook);
+            _subscriptionSynchronizer = new SubscriptionSynchronizer(
+                _subscriptionManager.UniverseSelection);
 
             if (_liveMode)
             {
@@ -139,10 +136,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 nextEmit = previousEmitTime.RoundDown(Time.OneSecond).Add(Time.OneSecond);
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    var timeSlice = TimeSlice.Create(
+                    var timeSlice = _timeSliceFactory.Create(
                         nextEmit,
-                        _dateTimeZone,
-                        _cashBook,
                         new List<DataFeedPacket>(),
                         SecurityChanges.None,
                         new Dictionary<Universe, BaseDataCollection>());
@@ -163,7 +158,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // this is set after the algorithm initializes
             _dateTimeZone = _algorithm.TimeZone;
-            _subscriptionSynchronizer.SetSliceTimeZone(_dateTimeZone);
+            _timeSliceFactory = new TimeSliceFactory(_dateTimeZone);
+            _subscriptionSynchronizer.SetTimeSliceFactory(_timeSliceFactory);
 
             if (!_liveMode)
             {

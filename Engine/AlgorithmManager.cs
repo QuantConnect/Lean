@@ -850,6 +850,7 @@ namespace QuantConnect.Lean.Engine
                     dataManager.UniverseSelection.ApplyUniverseSelection(universe, new DateTime(start), dataCollection);
                 }
 
+                var timeSliceFactory = new TimeSliceFactory(timeZone);
                 // make the history request and build time slices
                 foreach (var slice in history.GetHistory(historyRequests, timeZone))
                 {
@@ -889,7 +890,7 @@ namespace QuantConnect.Lean.Engine
                             paired.Add(new DataFeedPacket(security, config, list));
                         }
 
-                        timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
+                        timeSlice = timeSliceFactory.Create(slice.Time.ConvertToUtc(timeZone), paired, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
                     }
                     catch (Exception err)
                     {

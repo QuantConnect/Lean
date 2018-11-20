@@ -140,18 +140,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscription">The subscription to remove</param>
         public void RemoveSubscription(Subscription subscription)
         {
-            var security = subscription.Security;
+            var symbol = subscription.Configuration.Symbol;
 
             // remove the subscriptions
             if (subscription.Configuration.IsCustomData)
             {
-                _customExchange.RemoveEnumerator(security.Symbol);
-                _customExchange.RemoveDataHandler(security.Symbol);
+                _customExchange.RemoveEnumerator(symbol);
+                _customExchange.RemoveDataHandler(symbol);
             }
             else
             {
-                _dataQueueHandler.Unsubscribe(_job, new[] { security.Symbol });
-                _exchange.RemoveDataHandler(security.Symbol);
+                _dataQueueHandler.Unsubscribe(_job, new[] { symbol });
+                _exchange.RemoveDataHandler(symbol);
             }
         }
 
@@ -219,7 +219,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         enqueable.Enqueue(data);
-                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+
+                        UpdateSubscriptionRealTimePrice(
+                            subscription,
+                            timeZoneOffsetProvider,
+                            request.Security.Exchange.Hours,
+                            data);
                     });
                     enumerator = enqueable;
                 }
@@ -238,7 +243,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (tick.TickType == TickType.Quote)
                                 {
                                     quoteBarAggregator.ProcessData(tick);
-                                    if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+
+                                    UpdateSubscriptionRealTimePrice(
+                                        subscription,
+                                        timeZoneOffsetProvider,
+                                        request.Security.Exchange.Hours,
+                                        data);
                                 }
                             });
                             enumerator = quoteBarAggregator;
@@ -261,7 +271,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     if (tick.TickType == TickType.Trade)
                                     {
                                         tradeBarAggregator.ProcessData(tick);
-                                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+
+                                        UpdateSubscriptionRealTimePrice(
+                                            subscription,
+                                            timeZoneOffsetProvider,
+                                            request.Security.Exchange.Hours,
+                                            data);
                                     }
                                 }
                             });
@@ -294,10 +309,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         tickEnumerator.Enqueue(data);
 
-                        if (data.DataType != MarketDataType.Auxiliary &&
-                            SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider))
+                        if (data.DataType != MarketDataType.Auxiliary)
                         {
-                            subscription.RealtimePrice = data.Value;
+                            UpdateSubscriptionRealTimePrice(
+                                subscription,
+                                timeZoneOffsetProvider,
+                                request.Security.Exchange.Hours,
+                                data);
                         }
                     });
                     enumerator = tickEnumerator;
@@ -466,17 +484,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Checks if the subscription should update the RealTimePrice
+        /// Updates the subscription RealTimePrice if the exchange is open
         /// </summary>
         /// <param name="subscription">The <see cref="Subscription"/></param>
         /// <param name="timeZoneOffsetProvider">The <see cref="TimeZoneOffsetProvider"/> used to convert now into the timezone of the exchange</param>
-        /// <returns>True if the subscription is not null and the exchange is open</returns>
-        protected bool SubscriptionShouldUpdateRealTimePrice(Subscription subscription, TimeZoneOffsetProvider timeZoneOffsetProvider)
+        /// <param name="exchangeHours">The <see cref="SecurityExchangeHours"/> used to determine
+        /// if the exchange is open and we should update</param>
+        /// <param name="data">The <see cref="BaseData"/> used to update the real time price</param>
+        /// <returns>True if the real time price was updated</returns>
+        protected bool UpdateSubscriptionRealTimePrice(
+            Subscription subscription,
+            TimeZoneOffsetProvider timeZoneOffsetProvider,
+            SecurityExchangeHours exchangeHours,
+            BaseData data)
         {
-            return subscription != null &&
-                   subscription.Security.Exchange.Hours.IsOpen(
-                       timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
-                       subscription.Security.IsExtendedMarketHours);
+            if (subscription != null &&
+                exchangeHours.IsOpen(
+                    timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
+                    subscription.Configuration.ExtendedMarketHours))
+            {
+                subscription.RealtimePrice = data.Value;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

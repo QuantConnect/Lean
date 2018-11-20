@@ -17,9 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,10 +26,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class SubscriptionSynchronizer : ISubscriptionSynchronizer, ITimeProvider
     {
-        private ITimeProvider _timeProvider;
-        private readonly CashBook _cashBook;
-        private DateTimeZone _sliceTimeZone;
         private readonly UniverseSelection _universeSelection;
+        private TimeSliceFactory _timeSliceFactory;
+        private ITimeProvider _timeProvider;
         private ManualTimeProvider _frontierTimeProvider;
 
         /// <summary>
@@ -44,13 +41,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
-        /// <param name="cashBook">The cash book, used for creating the cash book updates</param>
         /// <returns>A time slice for the specified frontier time</returns>
-        public SubscriptionSynchronizer(UniverseSelection universeSelection,
-                                        CashBook cashBook)
+        public SubscriptionSynchronizer(UniverseSelection universeSelection)
         {
             _universeSelection = universeSelection;
-            _cashBook = cashBook;
         }
 
         /// <summary>
@@ -68,16 +62,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Sets the time zone of the created slice object. If already set will throw.
+        /// Sets the <see cref="TimeSliceFactory"/> instance to use
         /// </summary>
-        /// <param name="timeZone">The time zone of the created slice object</param>
-        public void SetSliceTimeZone(DateTimeZone timeZone)
+        /// <param name="timeSliceFactory">Used to create the new <see cref="TimeSlice"/></param>
+        public void SetTimeSliceFactory(TimeSliceFactory timeSliceFactory)
         {
-            if (_sliceTimeZone != null)
+            if (_timeSliceFactory != null)
             {
-                throw new Exception("SubscriptionSynchronizer.SetSliceTimeZone(): can only be called once");
+                throw new Exception("SubscriptionSynchronizer.SetTimeSliceFactory(): can only be called once");
             }
-            _sliceTimeZone = timeZone;
+            _timeSliceFactory = timeSliceFactory;
         }
 
         /// <summary>
@@ -197,7 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             while (newChanges != SecurityChanges.None);
 
-            var timeSlice = TimeSlice.Create(frontierUtc, _sliceTimeZone, _cashBook, data, changes, universeDataForTimeSliceCreate);
+            var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
 
             return timeSlice;
         }

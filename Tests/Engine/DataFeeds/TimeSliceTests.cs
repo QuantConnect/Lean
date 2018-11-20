@@ -28,7 +28,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
-using QuantConnect.Tests.Common.Securities;
 using QuandlFuture = QuantConnect.Algorithm.CSharp.QCUQuandlFutures.QuandlFuture;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -36,6 +35,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class TimeSliceTests
     {
+        private TimeSliceFactory _timeSliceFactory;
+        [SetUp]
+        public void SetUp()
+        {
+            _timeSliceFactory = new TimeSliceFactory(TimeZones.Utc);
+        }
+
         [Test]
         public void HandlesTicks_ExpectInOrderWithNoDuplicates()
         {
@@ -64,10 +70,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Select(i => new Tick(refTime.AddSeconds(i), Symbols.EURUSD, 1.3465m, 1.34652m))
                 .ToArray();
 
-            IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t => TimeSlice.Create(
+            IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t => _timeSliceFactory.Create(
                 t.Time,
-                TimeZones.Utc,
-                new CashBook(),
                 new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t }) },
                 new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>()));
@@ -116,7 +120,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ErrorCurrencyConverter.Instance
             );
 
-            var timeSlice = TimeSlice.Create(DateTime.UtcNow, TimeZones.Utc, new CashBook(),
+            var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
                 new List<DataFeedPacket>
                 {
                     new DataFeedPacket(security1, subscriptionDataConfig1, new List<BaseData> {new QuandlFuture { Symbol = symbol1, Time = DateTime.UtcNow.Date, Value = 15 } }),
@@ -156,7 +160,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var refTime = DateTime.UtcNow;
 
-            var timeSlice = TimeSlice.Create(refTime, TimeZones.Utc, new CashBook(),
+            var timeSlice = _timeSliceFactory.Create(refTime,
                 new List<DataFeedPacket>
                 {
                     new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
@@ -234,7 +238,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             );
 
             var refTime = DateTime.UtcNow;
-            var timeSlice = TimeSlice.Create(refTime, TimeZones.Utc, new CashBook(),
+            var timeSlice = _timeSliceFactory.Create(refTime,
                 new List<DataFeedPacket>
                 {
                     new DataFeedPacket(optionSecurity, subscriptionDataConfig, new List<BaseData>
@@ -271,7 +275,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {Underlying = underlyingSecurity};
 
             var refTime = DateTime.UtcNow;
-            var timeSlice = TimeSlice.Create(refTime, TimeZones.Utc, new CashBook(),
+            var timeSlice = _timeSliceFactory.Create(refTime,
                 new List<DataFeedPacket>
                 {
                     new DataFeedPacket(optionSecurity, subscriptionDataConfig, new List<BaseData>
@@ -305,10 +309,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var ask = new Bar(110, 110, 110, 110);
                     var volume = (i + 1) * initialVolume;
 
-                    return TimeSlice.Create(
+                    return _timeSliceFactory.Create(
                         time,
-                        TimeZones.Utc,
-                        new CashBook(),
                         new List<DataFeedPacket>
                         {
                             new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
