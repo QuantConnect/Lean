@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastFileWriteDate = DateTime.MinValue;
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
-            var timerInterval = TimeSpan.FromMilliseconds(100);
+            var timerInterval = TimeSpan.FromMilliseconds(10);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
@@ -140,14 +140,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
 
                 // 30 minutes is the check interval for daily remote files, so we choose a smaller one to advance time
-                timeProvider.Advance(TimeSpan.FromMinutes(15));
+                timeProvider.Advance(TimeSpan.FromMinutes(20));
 
                 //Log.Trace($"Time advanced to: {timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork)}");
 
                 // restart the timer
                 timer.Value.Change(timerInterval, timerInterval);
 
-            }, null, TimeSpan.FromSeconds(2), timerInterval);
+            }, null, TimeSpan.FromMilliseconds(50), timerInterval);
 
             try
             {
