@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
+        private readonly bool _liveMode;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -61,6 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
+            _liveMode = algorithm.LiveMode;
 
             var liveStart = DateTime.UtcNow;
             // wire ourselves up to receive notifications when universes are added/removed
@@ -163,7 +165,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Debug($"DataManager.AddSubscription(): Added {request.Configuration}." +
+            LiveDifferentiatedLog($"DataManager.AddSubscription(): Added {request.Configuration}." +
                 $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
             return DataFeedSubscriptions.TryAdd(subscription);
         }
@@ -204,7 +206,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _dataFeed.RemoveSubscription(subscription);
 
                     subscription.Dispose();
-                    Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
+
+                    RemoveSubscriptionDataConfig(configuration);
+
+                    LiveDifferentiatedLog($"DataManager.RemoveSubscription(): Removed {configuration}");
                     return true;
                 }
             }
@@ -241,10 +246,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                // count data subscriptions by symbol, ignoring multiple data types
+                // count data subscriptions by symbol, ignoring multiple data types.
+                // this limit was added due to the limits IB places on number of subscriptions
                 var uniqueCount = SubscriptionManagerSubscriptions
                     .Where(x => !x.Symbol.IsCanonical())
-                    // TODO should limit subscriptions or unique securities
                     .DistinctBy(x => x.Symbol.Value)
                     .Count();
 
@@ -263,6 +268,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return config;
+        }
+
+        /// <summary>
+        /// Will try to remove a <see cref="SubscriptionDataConfig"/> and update the corresponding
+        /// consumers accordingly
+        /// </summary>
+        /// <param name="config">The configuration to remove</param>
+        private void RemoveSubscriptionDataConfig(SubscriptionDataConfig config)
+        {
+            if (_subscriptionManagerSubscriptions.TryRemove(config, out config))
+            {
+                if (HasCustomData && config.IsCustomData)
+                {
+                    HasCustomData = _subscriptionManagerSubscriptions.Any(x => x.Key.IsCustomData);
+                }
+            }
         }
 
         /// <summary>
@@ -409,5 +430,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public UniverseSelection UniverseSelection { get; }
 
         #endregion
+
+        private void LiveDifferentiatedLog(string message)
+        {
+            if (_liveMode)
+            {
+                Log.Trace(message);
+            }
+            else
+            {
+                Log.Debug(message);
+            }
+        }
     }
 }
