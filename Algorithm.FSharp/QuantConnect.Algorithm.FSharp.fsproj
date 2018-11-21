@@ -10,7 +10,7 @@
     <RootNamespace>QuantConnect.Algorithm.FSharp</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.FSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
+    <!--<TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>-->
     <Name>QuantConnect.Algorithm.FSharp</Name>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -36,17 +36,16 @@
     <DocumentationFile>bin\Release\QuantConnect.Algorithm.FSharp.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
+    <Reference Include="mscorlib" />
     <Reference Include="NodaTime">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
     <Reference Include="Python.Runtime">
       <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.8\lib\Python.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="Python.Runtime" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
