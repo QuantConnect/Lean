@@ -25,7 +25,7 @@ using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
-    public class RetroCompatibilityFillModelsTests
+    public class BackwardsCompatibilityFillModelsTests
     {
         private SubscriptionDataConfig _config;
         private Security _security;
@@ -54,10 +54,28 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             _security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
         }
 
-        #region RetroCompatibilityOldFillInterfaceModelTests
+        #region BackwardsCompatibilityInheritImmediateFillModel
 
         [Test]
-        public void RetroCompatibilityOldInterfaceWorks_MarketFill()
+        public void InheritImmediateFillModel_MarketFill()
+        {
+            var model = new TestFillModelInheritImmediateFillModel();
+            // IFillModel will detect and call users old implementation
+            var result = model.Fill(
+                new FillModelContext(_security,
+                    new MarketOrder(_security.Symbol, 1, orderDateTime),
+                    new MockSubscriptionDataConfigProvider(_config)));
+
+            Assert.True(model.MarketFillWasCalled);
+            Assert.AreEqual(OrderStatus.Filled, result.Status);
+        }
+
+        #endregion
+
+        #region BackwardsCompatibilityOldFillInterfaceModelTests
+
+        [Test]
+        public void BackwardsCompatibilityOldInterfaceWorks_MarketFill()
         {
             var model = new TestFillModelInheritInterface();
             // IFillModel will detect and call users old implementation
@@ -71,7 +89,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldInterfaceWorks_StopMarketFill()
+        public void BackwardsCompatibilityOldInterfaceWorks_StopMarketFill()
         {
             var model = new TestFillModelInheritInterface();
             // IFillModel will detect and call users old implementation
@@ -85,7 +103,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldInterfaceWorks_StopLimitFill()
+        public void BackwardsCompatibilityOldInterfaceWorks_StopLimitFill()
         {
             var model = new TestFillModelInheritInterface();
             // IFillModel will detect and call users old implementation
@@ -99,7 +117,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldInterfaceWorks_LimitFill()
+        public void BackwardsCompatibilityOldInterfaceWorks_LimitFill()
         {
             var model = new TestFillModelInheritInterface();
             // IFillModel will detect and call users old implementation
@@ -113,7 +131,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldInterfaceWorks_MarketOnOpenFill()
+        public void BackwardsCompatibilityOldInterfaceWorks_MarketOnOpenFill()
         {
             var model = new TestFillModelInheritInterface();
             // IFillModel will detect and call users old implementation
@@ -127,7 +145,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldInterfaceWorks_MarketOnCloseFill()
+        public void BackwardsCompatibilityOldInterfaceWorks_MarketOnCloseFill()
         {
             var model = new TestFillModelInheritInterface();
             // IFillModel will detect and call users old implementation
@@ -142,10 +160,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         #endregion
 
-        #region RetroCompatibilityOldBaseFillModelTests
+        #region BackwardsCompatibilityOldBaseFillModelTests
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_DoesNotOverride_MarketFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_DoesNotOverride_MarketFill()
         {
             var model = new TestFillModelInheritBaseClassDoesNotOverride();
             // IFillModel will detect and call users old implementation
@@ -162,7 +180,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_MarketFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_MarketFill()
         {
             var model = new TestFillModelInheritBaseClass();
             // IFillModel will detect and call users old implementation
@@ -180,7 +198,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_StopMarketFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_StopMarketFill()
         {
             var model = new TestFillModelInheritBaseClass();
             // IFillModel will detect and call users old implementation
@@ -198,7 +216,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_StopLimitFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_StopLimitFill()
         {
             var model = new TestFillModelInheritBaseClass();
             // IFillModel will detect and call users old implementation
@@ -216,7 +234,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_LimitFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_LimitFill()
         {
             var model = new TestFillModelInheritBaseClass();
             // IFillModel will detect and call users old implementation
@@ -234,7 +252,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_MarketOnOpenFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_MarketOnOpenFill()
         {
             var model = new TestFillModelInheritBaseClass();
             _security.SetMarketPrice(new Tick(orderDateTime, _security.Symbol, 88, 88));
@@ -254,7 +272,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void RetroCompatibilityOldBaseFillModelWorks_MarketOnCloseFill()
+        public void BackwardsCompatibilityOldBaseFillModelWorks_MarketOnCloseFill()
         {
             var model = new TestFillModelInheritBaseClass();
             // IFillModel will detect and call users old implementation
@@ -398,6 +416,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 // call base.GetPrices() just to test it show its possible
                 base.GetPrices(asset, direction);
                 return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+            }
+        }
+
+        private class TestFillModelInheritImmediateFillModel : ImmediateFillModel
+        {
+            public bool MarketFillWasCalled;
+
+            public override OrderEvent MarketFill(Security asset, MarketOrder order)
+            {
+                MarketFillWasCalled = true;
+                return base.MarketFill(asset, order);
             }
         }
 

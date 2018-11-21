@@ -29,7 +29,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        [Obsolete("This was left for retro compatibility, see new MarketFill(FillModelContext context)")]
+        [Obsolete("This was left for backwards compatibility, see new MarketFill(FillModelContext context)")]
         public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             // The system will NOT call this method, but the user derivate might
@@ -45,7 +45,7 @@ namespace QuantConnect.Orders.Fills
                 );
             }
             throw new NotImplementedException("Unexpected usage of IFillModel method. " +
-                "This was left just for retro compatibility.");
+                "This was left just for backwards compatibility.");
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        [Obsolete("This was left for retro compatibility, see new StopMarketFill(FillModelContext context)")]
+        [Obsolete("This was left for backwards compatibility, see new StopMarketFill(FillModelContext context)")]
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             // The system will NOT call this method, but the user derivate might
@@ -70,7 +70,7 @@ namespace QuantConnect.Orders.Fills
                 );
             }
             throw new NotImplementedException("Unexpected usage of IFillModel method. " +
-                "This was left just for retro compatibility.");
+                "This was left just for backwards compatibility.");
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        [Obsolete("This was left for retro compatibility, see new StopLimitFill(FillModelContext context)")]
+        [Obsolete("This was left for backwards compatibility, see new StopLimitFill(FillModelContext context)")]
         public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
             // The system will NOT call this method, but the user derivate might
@@ -95,7 +95,7 @@ namespace QuantConnect.Orders.Fills
                 );
             }
             throw new NotImplementedException("Unexpected usage of IFillModel method. " +
-                "This was left just for retro compatibility.");
+                "This was left just for backwards compatibility.");
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        [Obsolete("This was left for retro compatibility, see new LimitFill(FillModelContext context)")]
+        [Obsolete("This was left for backwards compatibility, see new LimitFill(FillModelContext context)")]
         public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
         {
             // The system will NOT call this method, but the user derivate might
@@ -122,7 +122,7 @@ namespace QuantConnect.Orders.Fills
                 );
             }
             throw new NotImplementedException("Unexpected usage of IFillModel method. " +
-                "This was left just for retro compatibility.");
+                "This was left just for backwards compatibility.");
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        [Obsolete("This was left for retro compatibility, see new MarketOnOpenFill(FillModelContext context)")]
+        [Obsolete("This was left for backwards compatibility, see new MarketOnOpenFill(FillModelContext context)")]
         public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
             // The system will NOT call this method, but the user derivate might
@@ -147,7 +147,7 @@ namespace QuantConnect.Orders.Fills
                 );
             }
             throw new NotImplementedException("Unexpected usage of IFillModel method. " +
-                "This was left just for retro compatibility.");
+                "This was left just for backwards compatibility.");
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        [Obsolete("This was left for retro compatibility, see new MarketOnCloseFill(FillModelContext context)")]
+        [Obsolete("This was left for backwards compatibility, see new MarketOnCloseFill(FillModelContext context)")]
         public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
             // The system will NOT call this method, but the user derivate might
@@ -172,7 +172,7 @@ namespace QuantConnect.Orders.Fills
                 );
             }
             throw new NotImplementedException("Unexpected usage of IFillModel method. " +
-                "This was left just for retro compatibility.");
+                "This was left just for backwards compatibility.");
         }
     }
 }

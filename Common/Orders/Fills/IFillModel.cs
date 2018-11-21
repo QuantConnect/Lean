@@ -114,7 +114,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This method should only be called by <see cref="FillModel"/> and <see cref="IFillModel"/>.
-        /// This was created to maintain retro compatibility allowing old user code
+        /// This was created to maintain backwards compatibility allowing old user code
         /// to access base.xxxxFill(asset, order) implementation
         /// </summary>
         protected OrderEvent MarketFillImplementation(FillModelContext context)
@@ -178,7 +178,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This method should only be called by <see cref="FillModel"/> and <see cref="IFillModel"/>.
-        /// This was created to maintain retro compatibility allowing old user code
+        /// This was created to maintain backwards compatibility allowing old user code
         /// to access base.xxxxFill(asset, order) implementation
         /// </summary>
         protected OrderEvent StopMarketFillImplementation(FillModelContext context)
@@ -267,7 +267,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This method should only be called by <see cref="FillModel"/> and <see cref="IFillModel"/>.
-        /// This was created to maintain retro compatibility allowing old user code
+        /// This was created to maintain backwards compatibility allowing old user code
         /// to access base.xxxxFill(asset, order) implementation
         /// </summary>
         protected OrderEvent StopLimitFillImplementation(FillModelContext context)
@@ -365,7 +365,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This method should only be called by <see cref="FillModel"/> and <see cref="IFillModel"/>.
-        /// This was created to maintain retro compatibility allowing old user code
+        /// This was created to maintain backwards compatibility allowing old user code
         /// to access base.xxxxFill(asset, order) implementation
         /// </summary>
         protected OrderEvent LimitFillImplementation(FillModelContext context)
@@ -451,7 +451,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This method should only be called by <see cref="FillModel"/> and <see cref="IFillModel"/>.
-        /// This was created to maintain retro compatibility allowing old user code
+        /// This was created to maintain backwards compatibility allowing old user code
         /// to access base.xxxxFill(asset, order) implementation
         /// </summary>
         protected OrderEvent MarketOnOpenFillImplementation(FillModelContext context)
@@ -531,7 +531,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This method should only be called by <see cref="FillModel"/> and <see cref="IFillModel"/>.
-        /// This was created to maintain retro compatibility allowing old user code
+        /// This was created to maintain backwards compatibility allowing old user code
         /// to access base.xxxxFill(asset, order) implementation
         /// </summary>
         protected OrderEvent MarketOnCloseFillImplementation(FillModelContext context)
@@ -691,7 +691,7 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Helper method that will set the retro compatible fill functions
+        /// Helper method that will set the backwards compatible fill functions
         /// </summary>
         /// <param name="orderType">Used to determine the type of fill</param>
         private Func<Security, T, OrderEvent> GetFunctionCall<T>(OrderType orderType)
