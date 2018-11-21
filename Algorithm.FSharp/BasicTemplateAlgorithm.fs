@@ -11,12 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace System
-namespace System.Collections.Generic
-namespace QuantConnnect
-namespace QuantConnect.Orders
-namespace QuantConnect.Algorithm
-namespace QuantConnect.Securities
 namespace QuantConnect.Algorithm.FSharp
 
 open System
