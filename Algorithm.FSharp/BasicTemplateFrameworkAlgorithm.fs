@@ -23,7 +23,7 @@ open QuantConnect.Orders
 
 
 // Declare algorithm name
-type BasicTemplateAlgorithm() =
+type BasicTemplateFrameworkAlgorithm() =
 
     //Reuse all the base class of QCAlgorithm
     inherit QCAlgorithm()
