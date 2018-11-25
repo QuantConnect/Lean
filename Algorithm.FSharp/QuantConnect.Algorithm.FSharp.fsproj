@@ -59,6 +59,7 @@
     <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.fs" />
     <Compile Include="BasicTemplateOptionStrategyAlgorithm.fs" />
     <None Include="packages.config" />
+    <None Include="Notes.md" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
