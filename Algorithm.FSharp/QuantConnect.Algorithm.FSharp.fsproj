@@ -100,9 +100,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.8\build\QuantConnect.pythonnet.targets'))" />
-    <Error Condition="!Exists('..\packages\TensorFlowSharp.1.11.0\build\net45\TensorFlowSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\TensorFlowSharp.1.11.0\build\net45\TensorFlowSharp.targets'))" />
   </Target>
-  <Import Project="..\packages\TensorFlowSharp.1.11.0\build\net45\TensorFlowSharp.targets" Condition="Exists('..\packages\TensorFlowSharp.1.11.0\build\net45\TensorFlowSharp.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
