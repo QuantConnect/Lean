@@ -176,6 +176,7 @@ namespace QuantConnect.Lean.Engine
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
                             job,
+                            _systemHandlers.Api,
                             _algorithmHandlers.DataProvider,
                             historyDataCacheProvider,
                             _algorithmHandlers.MapFileProvider,

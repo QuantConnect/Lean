@@ -68,6 +68,7 @@ namespace QuantConnect.Tests.Common.Securities
             historyProvider.Initialize(
                 new HistoryProviderInitializeParameters(
                     null,
+                    null,
                     new DefaultDataProvider(),
                     new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                     new LocalDiskMapFileProvider(),
