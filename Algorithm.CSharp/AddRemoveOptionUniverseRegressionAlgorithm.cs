@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly HashSet<Symbol> _expectedSecurities = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedData = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedUniverses = new HashSet<Symbol>();
+        private bool _expectUniverseSubscription;
 
         // order of expected contract additions as price moves
         private int _expectedContractIndex;
@@ -61,6 +62,12 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice data)
         {
             // verify expectations
+            if (SubscriptionManager.Subscriptions.Count(x => x.Symbol == OptionChainSymbol)
+                != (_expectUniverseSubscription ? 1 : 0))
+            {
+                Log($"SubscriptionManager.Subscriptions:  {string.Join(" -- ", SubscriptionManager.Subscriptions)}");
+                throw new Exception($"Unexpected {OptionChainSymbol} subscription presence");
+            }
             if (!data.ContainsKey(Underlying))
             {
                 // TODO : In fact, we're unable to properly detect whether or not we auto-added or it was manually added
@@ -111,6 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 _expectedSecurities.Add(OptionChainSymbol);
                 _expectedUniverses.Add(OptionChainSymbol);
+                _expectUniverseSubscription = true;
             }
 
             // 11:30AM remove GOOG option chain
@@ -121,6 +129,8 @@ namespace QuantConnect.Algorithm.CSharp
                 _expectedData.RemoveWhere(s => _expectedContracts.Contains(s));
                 // remove option chain universe from expected universes
                 _expectedUniverses.Remove(OptionChainSymbol);
+                // OptionChainSymbol universe subscription should not be present
+                _expectUniverseSubscription = false;
             }
         }
 
@@ -203,7 +213,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.21%"},
-            {"Compounding Annual Return", "-96.657%"},
+            {"Compounding Annual Return", "-98.552%"},
             {"Drawdown", "0.600%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.626%"},
