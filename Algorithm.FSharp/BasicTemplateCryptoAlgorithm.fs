@@ -21,7 +21,7 @@ open QuantConnect
 open QuantConnect.Algorithm
 open QuantConnect.Orders
 open QuantConnect.Brokerages
-open Interop
+open QuantConnect.Algorithm.FSharp.Utils
 open QuantConnect.Interfaces
 
 // Declare algorithm name

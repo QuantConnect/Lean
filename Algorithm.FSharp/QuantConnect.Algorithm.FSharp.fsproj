@@ -53,15 +53,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interop.fs" />
-    <Compile Include="BasicTemplateFrameworkAlgorithm.fs" />
+    <Compile Include="BasicTemplateAlgorithm.fs" />
     <Compile Include="BasicTemplateCryptoAlgorithm.fs" />
     <Compile Include="BasicTemplateOptionsAlgorithm.fs" />
     <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.fs" />
     <Compile Include="BasicTemplateOptionStrategyAlgorithm.fs" />
     <None Include="packages.config" />
-    <None Include="Notes.md" />
+    <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm.FSharp.Utils\QuantConnect.Algorithm.FSharp.Utils.fsproj">
+      <Name>QuantConnect.Algorithm.FSharp.Utils</Name>
+      <Project>{47f5f093-dbc8-481a-97d3-c8458c561763}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
       <Name>QuantConnect.Algorithm</Name>
       <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>

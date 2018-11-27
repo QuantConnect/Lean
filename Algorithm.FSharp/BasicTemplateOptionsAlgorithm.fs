@@ -19,7 +19,7 @@ open System
 open QuantConnect
 open QuantConnect.Algorithm
 open QuantConnect.Interfaces
-open Interop
+open QuantConnect.Algorithm.FSharp.Utils
 
 // Declare algorithm name
 type BasicTemplateOptionsAlgorithm() =

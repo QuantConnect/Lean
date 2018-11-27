@@ -22,7 +22,7 @@ open QuantConnect.Algorithm
 open QuantConnect.Securities
 open QuantConnect.Securities.Option
 open QuantConnect.Interfaces
-open Interop
+open QuantConnect.Algorithm.FSharp.Utils
 
 // Declare algorithm name
 type BasicTemplateOptionStrategyAlgorithm() =
