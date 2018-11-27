@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null));
 
                 var now = DateTime.UtcNow;
 
@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
             var historyProvider = new BrokerageHistoryProvider();
             historyProvider.SetBrokerage(brokerage);
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null));
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null));
 
             var stopwatch = Stopwatch.StartNew();
 

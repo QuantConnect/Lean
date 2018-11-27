@@ -30,6 +30,11 @@ namespace QuantConnect.Data
         public AlgorithmNodePacket Job { get; }
 
         /// <summary>
+        /// The API instance
+        /// </summary>
+        public IApi Api { get; }
+
+        /// <summary>
         /// The provider used to get data when it is not present on disk
         /// </summary>
         public IDataProvider DataProvider { get; }
@@ -58,6 +63,7 @@ namespace QuantConnect.Data
         /// Initializes a new instance of the <see cref="HistoryProviderInitializeParameters"/> class from the specified parameters
         /// </summary>
         /// <param name="job">The job</param>
+        /// <param name="api">The API instance</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="dataCacheProvider">Provider used to cache history data files</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
@@ -65,6 +71,7 @@ namespace QuantConnect.Data
         /// <param name="statusUpdateAction">Function used to send status updates</param>
         public HistoryProviderInitializeParameters(
             AlgorithmNodePacket job,
+            IApi api,
             IDataProvider dataProvider,
             IDataCacheProvider dataCacheProvider,
             IMapFileProvider mapFileProvider,
@@ -72,6 +79,7 @@ namespace QuantConnect.Data
             Action<int> statusUpdateAction)
         {
             Job = job;
+            Api = api;
             DataProvider = dataProvider;
             DataCacheProvider = dataCacheProvider;
             MapFileProvider = mapFileProvider;

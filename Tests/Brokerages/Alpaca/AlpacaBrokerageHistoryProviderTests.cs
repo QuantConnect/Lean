@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             {
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null));
 
                 var now = DateTime.UtcNow;
 

@@ -83,6 +83,7 @@ namespace QuantConnect.Jupyter
                 HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
                         null,
+                        null,
                         algorithmHandlers.DataProvider,
                         _dataCacheProvider,
                         mapFileProvider,
