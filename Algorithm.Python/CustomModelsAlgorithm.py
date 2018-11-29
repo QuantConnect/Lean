@@ -19,8 +19,10 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Orders.Fills import ImmediateFillModel
+from QuantConnect.Orders import *
+from QuantConnect.Orders.Fees import *
+from QuantConnect.Securities import *
+from QuantConnect.Orders.Fills import *
 import numpy as np
 import decimal as d
 import random
@@ -89,15 +91,19 @@ class CustomFillModel(ImmediateFillModel):
         self.algorithm.Log("CustomFillModel: " + str(fill))
         return fill
 
-class CustomFeeModel:
+class CustomFeeModel(FeeModel):
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
-    def GetOrderFee(self, security, order):
+    def GetOrderFee(self, parameters):
         # custom fee math
-        fee = max(1, security.Price * order.AbsoluteQuantity * d.Decimal(0.00001))
+        fee = max(1, parameters.Security.Price
+                  * parameters.Order.AbsoluteQuantity
+                  * d.Decimal(0.00001))
         self.algorithm.Log("CustomFeeModel: " + str(fee))
-        return fee
+        return OrderFee(CashAmount(
+            fee,
+            parameters.Security.QuoteCurrency.AccountCurrency))
 
 class CustomSlippageModel:
     def __init__(self, algorithm):

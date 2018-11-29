@@ -642,7 +642,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
 
-            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.EURUSD, 100, DateTime.MinValue));
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new MarketOrder(Symbols.EURUSD, 100, DateTime.MinValue))).Value.Amount;
             var fill = new OrderEvent(1, Symbols.EURUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 1.1000m, 100, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(100, security.Holdings.Quantity);
@@ -677,7 +678,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(10000, portfolio.Cash);
 
-            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue));
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue))).Value.Amount;
             var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(2, security.Holdings.Quantity);
@@ -712,7 +714,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Buy on Monday
             var timeUtc = new DateTime(2015, 10, 26, 15, 30, 0);
-            var orderFee = security.FeeModel.GetOrderFee(security,new MarketOrder(Symbols.AAPL, 10, timeUtc));
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new MarketOrder(Symbols.AAPL, 10, timeUtc))).Value.Amount;
             var fill = new OrderEvent(1, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Buy, 100, 10, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(10, security.Holdings.Quantity);
@@ -721,7 +724,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Sell on Tuesday, cash unsettled
             timeUtc = timeUtc.AddDays(1);
-            orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.AAPL, 10, timeUtc));
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new MarketOrder(Symbols.AAPL, 10, timeUtc))).Value.Amount;
             fill = new OrderEvent(2, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(0, security.Holdings.Quantity);

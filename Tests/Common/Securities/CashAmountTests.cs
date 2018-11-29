@@ -25,35 +25,26 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void DoesNotInitializeWithInvalidArguments()
         {
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, null, new CashBook()));
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, "", new CashBook()));
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, "USD", null));
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, null, null));
+            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, null));
+            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, ""));
         }
 
         [Test]
         public void InitializesProperlyUsingAccountCurrency()
         {
-            var cashAmount = new CashAmount(1000m, CashBook.AccountCurrency, new CashBook());
+            var cashAmount = new CashAmount(1000m, CashBook.AccountCurrency);
 
             Assert.AreEqual(1000m, cashAmount.Amount);
             Assert.AreEqual(CashBook.AccountCurrency, cashAmount.Currency);
-
-            Assert.AreEqual(1000m, cashAmount.ValueInAccountCurrency.Amount);
-            Assert.AreEqual(CashBook.AccountCurrency, cashAmount.ValueInAccountCurrency.Currency);
         }
 
         [Test]
         public void InitializesProperlyUsingNonAccountCurrency()
         {
-            var cashBook = new CashBook { { "EUR", new Cash("EUR", 0, 1.17m) } };
-            var cashAmount = new CashAmount(1000m, "EUR", cashBook);
+            var cashAmount = new CashAmount(1000m, "EUR");
 
             Assert.AreEqual(1000m, cashAmount.Amount);
             Assert.AreEqual("EUR", cashAmount.Currency);
-
-            Assert.AreEqual(1170m, cashAmount.ValueInAccountCurrency.Amount);
-            Assert.AreEqual(CashBook.AccountCurrency, cashAmount.ValueInAccountCurrency.Currency);
         }
     }
 }

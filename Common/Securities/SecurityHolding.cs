@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities
 {
@@ -431,10 +432,12 @@ namespace QuantConnect.Securities
 
             // this is in the account currency
             var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
-            var orderFee = _security.FeeModel.GetOrderFee(_security, marketOrder);
+            var orderFee = _security.FeeModel.GetOrderFee(
+                new OrderFeeParameters(_security, marketOrder));
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
 
-            return (price - AveragePrice)*Quantity*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier - orderFee;
+            return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
+                * _security.SymbolProperties.ContractMultiplier - orderFee.Value.Amount;
         }
     }
 }

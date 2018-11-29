@@ -121,9 +121,12 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = GDAXTestsHelpers.GetSecurity();
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m });
-            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(security.Symbol, 1, DateTime.MinValue));
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security,
+                new MarketOrder(security.Symbol, 1, DateTime.MinValue)));
 
-            Assert.AreEqual(15m, orderFee);
+            Assert.AreEqual(15m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
         }
 
         [Test]
@@ -133,27 +136,33 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 5000m });
 
-            var orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 4999.99m, DateTime.MinValue)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 4999.99m, DateTime.MinValue)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(0, orderFee);
+            Assert.AreEqual(0, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, BidPrice = 5000m, AskPrice = 5000.01m, TickType = TickType.Quote });
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5000m, DateTime.MinValue)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 5000m, DateTime.MinValue)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(0, orderFee);
+            Assert.AreEqual(0, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, -1, 5000.01m, DateTime.MinValue)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, -1, 5000.01m, DateTime.MinValue)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(0, orderFee);
+            Assert.AreEqual(0, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
         }
 
         [Test]
@@ -162,30 +171,36 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = GDAXTestsHelpers.GetSecurity(resolution: Resolution.Tick);
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 5000m });
-            var orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
             // marketable buy limit fill at 5000
-            Assert.AreEqual(15m, orderFee);
+            Assert.AreEqual(15m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, BidPrice = 5000m, AskPrice = 5000.01m, TickType = TickType.Quote });
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
             // marketable buy limit fill at 5000.01
-            Assert.AreEqual(15.00003m, orderFee);
+            Assert.AreEqual(15.00003m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, -1, 5000m, DateTime.MinValue)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, -1, 5000m, DateTime.MinValue)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
             // marketable sell limit fill at 5000
-            Assert.AreEqual(15m, orderFee);
+            Assert.AreEqual(15m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
         }
 
         [Test]
@@ -197,19 +212,23 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m, EndTime = time.AddSeconds(75) });
 
-            var orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 4999.99m, time)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 4999.99m, time)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(0, orderFee);
+            Assert.AreEqual(0, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, -1, 5000.01m, time)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, -1, 5000.01m, time)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(0, orderFee);
+            Assert.AreEqual(0, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
         }
 
         [Test]
@@ -221,26 +240,32 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.FeeModel = new GDAXFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m, EndTime = time.AddMinutes(1) });
 
-            var orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5000m, time)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 5000m, time)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(15m, orderFee);
+            Assert.AreEqual(15m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, 1, 5050m, time)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, 1, 5050m, time)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(15m, orderFee);
+            Assert.AreEqual(15m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
 
-            orderFee = security.FeeModel.GetOrderFee(security, new LimitOrder(security.Symbol, -1, 4950m, time)
-            {
-                OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-            });
+            orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
+                security, new LimitOrder(security.Symbol, -1, 4950m, time)
+                {
+                    OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
+                }));
 
-            Assert.AreEqual(15m, orderFee);
+            Assert.AreEqual(15m, orderFee.Value.Amount);
+            Assert.AreEqual("USD", orderFee.Value.Currency);
         }
 
         [Test]

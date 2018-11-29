@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities
 {
@@ -138,12 +139,12 @@ namespace QuantConnect.Securities
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = parameters.Security.FeeModel.GetOrderFee(
-                parameters.Security,
-                parameters.Order);
+                new OrderFeeParameters(parameters.Security,
+                    parameters.Order));
 
             var orderValue = parameters.Order.GetValue(parameters.Security)
                 * GetInitialMarginRequirement(parameters.Security);
-            return orderValue + Math.Sign(orderValue) * orderFees;
+            return orderValue + Math.Sign(orderValue) * orderFees.Value.Amount;
         }
 
         /// <summary>
@@ -387,7 +388,8 @@ namespace QuantConnect.Securities
 
                 // generate the order
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, DateTime.UtcNow);
-                orderFees = parameters.Security.FeeModel.GetOrderFee(parameters.Security, order);
+                orderFees = parameters.Security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(parameters.Security, order)).Value.Amount;
 
                 // The TPV, take out the fees(unscaled) => yields available value for trading(less fees)
                 // then scale that by the target -- finally remove currentHoldingsValue to get targetOrderValue

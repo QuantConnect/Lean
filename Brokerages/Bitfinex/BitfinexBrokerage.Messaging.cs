@@ -19,6 +19,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using RestSharp;
@@ -569,7 +570,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (fillQuantity != 0)
                 {
                     var security = _securityProvider.GetSecurity(order.Symbol);
-                    orderFee = security.FeeModel.GetOrderFee(security, order);
+                    orderFee = security.FeeModel.GetOrderFee(
+                        new OrderFeeParameters(security, order)).Value.Amount;
                 }
 
                 OrderStatus status = fillQuantity == order.Quantity ? OrderStatus.Filled : OrderStatus.PartiallyFilled;

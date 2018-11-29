@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,36 +13,27 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides an order fee model that always returns the same order fee.
+    /// Base class for any order fee model
     /// </summary>
-    public class ConstantFeeModel : FeeModel
+    /// <remarks>Please use <see cref="FeeModel"/> as the base class for
+    /// any implementations of <see cref="IFeeModel"/></remarks>
+    public class FeeModel : IFeeModel
     {
-        private readonly decimal _fee;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantFeeModel"/> class with the specified <paramref name="fee"/>
-        /// </summary>
-        /// <param name="fee">The constant order fee used by the model</param>
-        public ConstantFeeModel(decimal fee)
-        {
-            _fee = Math.Abs(fee);
-        }
-
-        /// <summary>
-        /// Returns the constant fee for the model in units of the account currency
+        /// Gets the order fee associated with the specified order.
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
         /// containing the security and order</param>
-        /// <returns>The cost of the order in units of the account currency</returns>
-        public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+        /// <returns>The cost of the order in a <see cref="CashAmount"/> instance</returns>
+        public virtual OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return new OrderFee(new CashAmount(_fee,
+            return new OrderFee(new CashAmount(
+                0,
                 parameters.Security.QuoteCurrency.AccountCurrency));
         }
     }

@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities.Option
 {
@@ -74,12 +75,11 @@ namespace QuantConnect.Securities.Option
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = parameters.Security.FeeModel.GetOrderFee(
-                parameters.Security,
-                parameters.Order);
+                new OrderFeeParameters(parameters.Security, parameters.Order));
             var value = parameters.Order.GetValue(parameters.Security);
             var orderValue = value * GetInitialMarginRequirement(parameters.Security, value);
 
-            return orderValue + Math.Sign(orderValue) * orderFees;
+            return orderValue + Math.Sign(orderValue) * orderFees.Value.Amount;
         }
 
         /// <summary>

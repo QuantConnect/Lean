@@ -89,7 +89,13 @@ namespace QuantConnect.Securities
             {
                 var cash = kvp.Value;
 
-                var subscriptionDataConfig = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketMap, changes, securityService);
+                var subscriptionDataConfig = cash.EnsureCurrencyDataFeed(
+                    securities,
+                    subscriptions,
+                    marketMap,
+                    changes,
+                    securityService,
+                    AccountCurrency);
                 if (subscriptionDataConfig != null)
                 {
                     addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
@@ -338,7 +344,7 @@ namespace QuantConnect.Securities
             }
 
             var amount = Convert(cashAmount.Amount, cashAmount.Currency, AccountCurrency);
-            return new CashAmount(amount, AccountCurrency, this);
+            return new CashAmount(amount, AccountCurrency);
         }
 
         #endregion

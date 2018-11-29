@@ -12,30 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
-using System;
-using NUnit.Framework;
 using QuantConnect.Securities;
-
-namespace QuantConnect.Tests.Common.Securities
+namespace QuantConnect.Orders.Fees
 {
-    [TestFixture]
-    public class IdentityCurrencyConverterTests
+    /// <summary>
+    /// Defines the parameters for <see cref="IFeeModel.GetOrderFee"/>
+    /// </summary>
+    public class OrderFeeParameters
     {
-        [Test]
-        public void ThrowsArgumentExceptionOnCashAmountNotInAccountCurrency()
-        {
-            var converter = new IdentityCurrencyConverter("USD");
-            var cashAmount = new CashAmount(1m, "EUR");
-            Assert.Throws<ArgumentException>(() => converter.ConvertToAccountCurrency(cashAmount));
-        }
+        /// <summary>
+        /// Gets the security
+        /// </summary>
+        public Security Security { get; }
 
-        [Test]
-        public void ConvertsAccountCurrencyAsIdentity()
+        /// <summary>
+        /// Gets the order
+        /// </summary>
+        public Order Order { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OrderFeeParameters"/> class
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <param name="order">The order</param>
+        public OrderFeeParameters(Security security, Order order)
         {
-            var converter = new IdentityCurrencyConverter("ABC");
-            var cashAmount = new CashAmount(1m, "ABC");
-            Assert.AreEqual(cashAmount, converter.ConvertToAccountCurrency(cashAmount));
+            Security = security;
+            Order = order;
         }
     }
 }
