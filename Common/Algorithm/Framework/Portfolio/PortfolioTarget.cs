@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var adjustedPercent = percent * (1 - algorithm.Settings.FreePortfolioValuePercentage);
 
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
-                new GetMaximumOrderQuantityForTargetValueContext(algorithm.Portfolio, security, adjustedPercent)
+                new GetMaximumOrderQuantityForTargetValueParameters(algorithm.Portfolio, security, adjustedPercent)
             );
 
             if (result.IsError)

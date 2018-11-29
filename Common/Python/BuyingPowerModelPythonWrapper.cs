@@ -74,13 +74,13 @@ namespace QuantConnect.Python
         /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency
         /// </summary>
-        /// <param name="context">A context object containing the portfolio, the security and the target percentage holdings</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueContext context)
+        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.GetMaximumOrderQuantityForTargetValue(context);
+                return _model.GetMaximumOrderQuantityForTargetValue(parameters);
             }
         }
 
@@ -100,13 +100,13 @@ namespace QuantConnect.Python
         /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
-        /// <param name="context">A context object containing the portfolio, the security and the order</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>Returns buying power information for an order</returns>
-        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderContext context)
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.HasSufficientBuyingPowerForOrder(context);
+                return _model.HasSufficientBuyingPowerForOrder(parameters);
             }
         }
 

@@ -20,7 +20,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Defines the parameters for <see cref="IBuyingPowerModel.HasSufficientBuyingPowerForOrder"/>
     /// </summary>
-    public class HasSufficientBuyingPowerForOrderContext
+    public class HasSufficientBuyingPowerForOrderParameters
     {
         /// <summary>
         /// Gets the algorithm's portfolio
@@ -38,12 +38,12 @@ namespace QuantConnect.Securities
         public Order Order { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HasSufficientBuyingPowerForOrderContext"/> class
+        /// Initializes a new instance of the <see cref="HasSufficientBuyingPowerForOrderParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="order">The order</param>
-        public HasSufficientBuyingPowerForOrderContext(SecurityPortfolioManager portfolio, Security security, Order order)
+        public HasSufficientBuyingPowerForOrderParameters(SecurityPortfolioManager portfolio, Security security, Order order)
         {
             Portfolio = portfolio;
             Security = security;

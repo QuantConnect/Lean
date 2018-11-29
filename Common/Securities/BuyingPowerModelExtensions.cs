@@ -72,9 +72,9 @@ namespace QuantConnect.Securities
             Order order
             )
         {
-            var context = new HasSufficientBuyingPowerForOrderContext(portfolio, security, order);
+            var parameters = new HasSufficientBuyingPowerForOrderParameters(portfolio, security, order);
 
-            return model.HasSufficientBuyingPowerForOrder(context);
+            return model.HasSufficientBuyingPowerForOrder(parameters);
         }
 
         /// <summary>
@@ -92,9 +92,9 @@ namespace QuantConnect.Securities
             decimal target
             )
         {
-            var context = new GetMaximumOrderQuantityForTargetValueContext(portfolio, security, target);
+            var parameters = new GetMaximumOrderQuantityForTargetValueParameters(portfolio, security, target);
 
-            return model.GetMaximumOrderQuantityForTargetValue(context);
+            return model.GetMaximumOrderQuantityForTargetValue(parameters);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Defines the parameters for <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetValue"/>
     /// </summary>
-    public class GetMaximumOrderQuantityForTargetValueContext
+    public class GetMaximumOrderQuantityForTargetValueParameters
     {
         /// <summary>
         /// Gets the algorithm's portfolio
@@ -36,12 +36,12 @@ namespace QuantConnect.Securities
         public decimal Target { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueContext"/> class
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="target">The target percentage holdings</param>
-        public GetMaximumOrderQuantityForTargetValueContext(SecurityPortfolioManager portfolio, Security security, decimal target)
+        public GetMaximumOrderQuantityForTargetValueParameters(SecurityPortfolioManager portfolio, Security security, decimal target)
         {
             Portfolio = portfolio;
             Security = security;
