@@ -49,13 +49,13 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="context">A context object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        public BuyingPower GetBuyingPower(BuyingPowerContext context)
+        public BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.GetBuyingPower(context);
+                return _model.GetBuyingPower(parameters);
             }
         }
 
@@ -90,13 +90,13 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
         /// </summary>
-        /// <param name="context">A context object containing the security</param>
+        /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context)
+        public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.GetReservedBuyingPowerForPosition(context);
+                return _model.GetReservedBuyingPowerForPosition(parameters);
             }
         }
 

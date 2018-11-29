@@ -272,29 +272,29 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
         /// </summary>
-        /// <param name="context">A context object containing the security</param>
+        /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public override ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context)
+        public override ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
             // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
-            return context.ResultInAccountCurrency(0m);
+            return parameters.ResultInAccountCurrency(0m);
         }
 
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="context">A context object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        public override BuyingPower GetBuyingPower(BuyingPowerContext context)
+        public override BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {
-            var security = context.Security;
-            var portfolio = context.Portfolio;
-            var direction = context.Direction;
+            var security = parameters.Security;
+            var portfolio = parameters.Portfolio;
+            var direction = parameters.Direction;
 
             var baseCurrency = security as IBaseCurrencySymbol;
             if (baseCurrency == null)
             {
-                return context.ResultInAccountCurrency(0m);
+                return parameters.ResultInAccountCurrency(0m);
             }
 
             var baseCurrencyPosition = portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
@@ -304,7 +304,7 @@ namespace QuantConnect.Securities
             var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security) / security.QuoteCurrency.ConversionRate;
             if (unitPrice == 0)
             {
-                return context.ResultInAccountCurrency(0m);
+                return parameters.ResultInAccountCurrency(0m);
             }
 
             // NOTE: This is returning in units of the BASE currency
@@ -312,15 +312,15 @@ namespace QuantConnect.Securities
             {
                 // invert units for math, 6500USD per BTC, currency pairs aren't real fractions
                 // (USD)/(BTC/USD) => 10kUSD/ (6500 USD/BTC) => 10kUSD * (1BTC/6500USD) => ~ 1.5BTC
-                return context.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrencySymbol);
+                return parameters.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrencySymbol);
             }
 
             if (direction == OrderDirection.Sell)
             {
-                return context.Result(baseCurrencyPosition, baseCurrency.BaseCurrencySymbol);
+                return parameters.Result(baseCurrencyPosition, baseCurrency.BaseCurrencySymbol);
             }
 
-            return context.ResultInAccountCurrency(0m);
+            return parameters.ResultInAccountCurrency(0m);
         }
 
         private static decimal GetOrderPrice(Security security, Order order)

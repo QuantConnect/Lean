@@ -18,7 +18,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Defines the parameters for <see cref="IBuyingPowerModel.GetReservedBuyingPowerForPosition"/>
     /// </summary>
-    public class ReservedBuyingPowerForPositionContext
+    public class ReservedBuyingPowerForPositionParameters
     {
         /// <summary>
         /// Gets the security
@@ -26,10 +26,10 @@ namespace QuantConnect.Securities
         public Security Security { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReservedBuyingPowerForPositionContext"/> class
+        /// Initializes a new instance of the <see cref="ReservedBuyingPowerForPositionParameters"/> class
         /// </summary>
         /// <param name="security">The security</param>
-        public ReservedBuyingPowerForPositionContext(Security security)
+        public ReservedBuyingPowerForPositionParameters(Security security)
         {
             Security = security;
         }
