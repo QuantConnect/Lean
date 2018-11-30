@@ -189,7 +189,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
         public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual)
-            : base("Interactive Brokers Brokerage")
+            : base("Interactive Brokers Brokerage", algorithm)
         {
             _algorithm = algorithm;
             _orderProvider = orderProvider;
@@ -462,7 +462,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            var balances = _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            var balances = _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key), AccountCurrency)).ToList();
 
             if (balances.Count == 0)
             {

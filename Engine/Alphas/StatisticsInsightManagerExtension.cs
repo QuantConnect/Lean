@@ -45,12 +45,17 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Initializes a new instance of the <see cref="StatisticsInsightManagerExtension"/> class
         /// </summary>
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
         /// <param name="tradablePercentOfVolume">Percent of volume of first bar used to estimate the maximum number of tradable shares. Defaults to 1%</param>
         /// <param name="period">The period used for exponential smoothing of scores - this is a number of insights. Defaults to 100 insight predictions.</param>
         /// <param name="requireRollingAverageWarmup">Specify true to force the population average scoring to warmup before plotting.</param>
-        public StatisticsInsightManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100, bool requireRollingAverageWarmup = false)
+        public StatisticsInsightManagerExtension(
+            IAccountCurrencyProvider accountCurrencyProvider,
+            decimal tradablePercentOfVolume = 0.01m,
+            int period = 100,
+            bool requireRollingAverageWarmup = false)
         {
-            Statistics = new AlphaRuntimeStatistics();
+            Statistics = new AlphaRuntimeStatistics(accountCurrencyProvider);
             _tradablePercentOfVolume = tradablePercentOfVolume;
             _smoothingFactor = 2.0 / (period + 1.0);
 

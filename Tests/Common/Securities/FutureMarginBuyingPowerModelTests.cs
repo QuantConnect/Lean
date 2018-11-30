@@ -50,8 +50,8 @@ namespace QuantConnect.Tests.Common.Securities
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                new Cash("USD", 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
                 ErrorCurrencyConverter.Instance
             );
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
@@ -73,7 +73,11 @@ namespace QuantConnect.Tests.Common.Securities
             var ticker = "NOT-A-SYMBOL";
             var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
 
-            var futureSecurity = new Future(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)), ErrorCurrencyConverter.Instance);
+            var futureSecurity = new Future(SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash("USD", 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                ErrorCurrencyConverter.Instance);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
@@ -96,8 +100,8 @@ namespace QuantConnect.Tests.Common.Securities
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                new Cash("USD", 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
                 ErrorCurrencyConverter.Instance
             );
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });

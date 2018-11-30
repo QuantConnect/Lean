@@ -78,8 +78,14 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="accountKeyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode)
-            : base("Alpaca Brokerage")
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        public AlpacaBrokerage(IOrderProvider orderProvider,
+            ISecurityProvider securityProvider,
+            string accountKeyId,
+            string secretKey,
+            string tradingMode,
+            IAccountCurrencyProvider accountCurrencyProvider)
+            : base("Alpaca Brokerage", accountCurrencyProvider)
         {
             var baseUrl = "api.alpaca.markets";
             if (tradingMode.Equals("paper")) baseUrl = "paper-" + baseUrl;
@@ -242,7 +248,8 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 new Cash("USD",
                     balance.TradableCash,
-                    1m)
+                    1m,
+                    AccountCurrency)
             };
         }
 
@@ -329,7 +336,8 @@ namespace QuantConnect.Brokerages.Alpaca
                 return true;
             }
 
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = Orders.OrderStatus.Submitted });
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
+                { Status = Orders.OrderStatus.Submitted });
 
             return true;
         }

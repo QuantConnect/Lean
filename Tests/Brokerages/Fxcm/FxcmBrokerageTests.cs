@@ -21,6 +21,7 @@ using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
 {
@@ -39,7 +40,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var password = Config.Get("fxcm-password");
             var accountId = Config.Get("fxcm-account-id");
 
-            return new FxcmBrokerage(orderProvider, securityProvider, server, terminal, userName, password, accountId);
+            return new FxcmBrokerage(orderProvider, securityProvider, server, terminal, userName, password, accountId, new TestAccountCurrencyProvider());
         }
 
         /// <summary>

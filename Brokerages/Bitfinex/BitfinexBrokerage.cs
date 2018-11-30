@@ -21,7 +21,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -252,20 +251,20 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     if (string.Equals(item.Currency, "USD", StringComparison.OrdinalIgnoreCase))
                     {
-                        list.Add(new Cash(item.Currency, item.Amount, 1));
+                        list.Add(new Cash(item.Currency, item.Amount, 1, AccountCurrency));
                     }
                     else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
                     {
                         var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate, AccountCurrency));
                     }
                     else
                     {
                         var symbol = item.Currency + "USD";
                         var tick = GetTick(_symbolMapper.GetLeanSymbol(symbol));
 
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price, AccountCurrency));
                     }
                 }
             }

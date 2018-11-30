@@ -43,8 +43,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -67,8 +67,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -92,8 +92,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -127,8 +127,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -162,8 +162,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -208,8 +208,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -254,8 +254,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -292,8 +292,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -331,8 +331,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -377,8 +377,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -459,8 +459,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -494,8 +494,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -530,8 +530,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -583,8 +583,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -636,8 +636,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));

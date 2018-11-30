@@ -48,14 +48,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             var security = new Mock<Equity>(
                 Symbols.AAPL,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash(CashBook.AccountCurrency, 0, 1),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.Setup(m => m.Invested).Returns(invested);
 
             var holding = new Mock<EquityHolding>(security.Object,
-                new IdentityCurrencyConverter(CashBook.AccountCurrency));
+                new IdentityCurrencyConverter("USD"));
             holding.Setup(m => m.UnrealizedProfit).Returns(unrealizedProfit);
             holding.Setup(m => m.AbsoluteHoldingsCost).Returns(absoluteHoldingsCost);
 

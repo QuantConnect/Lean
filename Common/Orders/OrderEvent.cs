@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -170,16 +169,17 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             var message = FillQuantity == 0
-                ? string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3}", UtcTime, OrderId, Symbol.Value, Status)
-                : string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3} Quantity: {4} FillPrice: {5} {6}", UtcTime, OrderId, Symbol.Value, Status, FillQuantity, FillPrice.SmartRounding(), FillPriceCurrency);
+                ? $"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status}"
+                : $"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status} " +
+                $"Quantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}";
 
-            // attach the order fee so it ends up in logs properly
-            if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);
+            // attach the order fee so it ends up in logs properly. TODO: currency will be added in a following PR
+            if (OrderFee != 0m) message += $" OrderFee: {OrderFee}";
 
             // add message from brokerage
             if (!string.IsNullOrEmpty(Message))
             {
-                message += string.Format(" Message: {0}", Message);
+                message += $" Message: {Message}";
             }
 
             return message;

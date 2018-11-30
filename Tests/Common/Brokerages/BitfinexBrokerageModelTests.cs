@@ -18,7 +18,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -42,8 +41,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                         false,
                         false
                     ),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 );
             }

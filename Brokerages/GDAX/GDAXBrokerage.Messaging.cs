@@ -28,6 +28,7 @@ using RestSharp;
 using System.Text.RegularExpressions;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
@@ -84,9 +85,14 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="passPhrase">pass phrase</param>
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
+        public GDAXBrokerage(string wssUrl,
+            IWebSocket websocket,
+            IRestClient restClient,
+            string apiKey, string apiSecret,
+            string passPhrase,
+            IAlgorithm algorithm,
             IPriceProvider priceProvider)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX", algorithm)
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
@@ -414,7 +420,9 @@ namespace QuantConnect.Brokerages.GDAX
             var fillPrice = message.Price;
             var fillQuantity = direction == OrderDirection.Sell ? -message.Size : message.Size;
             var isMaker = order.BrokerId[0] == message.MakerOrderId;
-            var orderFee = GetFillFee(symbol, fillPrice, fillQuantity, isMaker);
+            var orderFee = new OrderFee(new CashAmount(
+                GetFillFee(symbol, fillPrice, fillQuantity, isMaker),
+                AccountCurrency)).Value.Amount;
 
             var orderEvent = new OrderEvent
             (

@@ -20,6 +20,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine.Alphas
 {
@@ -29,7 +30,7 @@ namespace QuantConnect.Tests.Engine.Alphas
         [Test]
         public void DefaultConstructorHasZeroWarmupPeriodForPopulationAverageScores()
         {
-            var stats = new StatisticsInsightManagerExtension();
+            var stats = new StatisticsInsightManagerExtension(new TestAccountCurrencyProvider());
             Assert.IsTrue(stats.RollingAverageIsReady);
         }
 
@@ -37,7 +38,7 @@ namespace QuantConnect.Tests.Engine.Alphas
         public void RecordsPopulationAverageScoresOnInsightAnalysisCompleted()
         {
             var time = new DateTime(2000, 01, 01);
-            var stats = new StatisticsInsightManagerExtension();
+            var stats = new StatisticsInsightManagerExtension(new TestAccountCurrencyProvider());
             var insight = Insight.Price(Symbols.SPY, Time.OneDay, InsightDirection.Up);
             var spySecurityValues = new SecurityValues(insight.Symbol, time, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), 100m, 1m, 125000, 1m);
             var context = new InsightAnalysisContext(insight, spySecurityValues, insight.Period);

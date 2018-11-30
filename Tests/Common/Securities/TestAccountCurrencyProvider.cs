@@ -13,29 +13,19 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Securities;
-namespace QuantConnect.Orders.Fees
-{
-    /// <summary>
-    /// Defines the result for <see cref="IFeeModel.GetOrderFee"/>
-    /// </summary>
-    public class OrderFee
-    {
-        /// <summary>
-        /// Gets the order fee
-        /// </summary>
-        public CashAmount Value { get; }
+using QuantConnect.Interfaces;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OrderFee"/> class
-        /// </summary>
-        /// <param name="orderFee">The order fee</param>
-        public OrderFee(CashAmount orderFee)
+namespace QuantConnect.Tests.Common.Securities
+{
+    internal class TestAccountCurrencyProvider : IAccountCurrencyProvider
+    {
+        public string AccountCurrency { get; }
+
+        public TestAccountCurrencyProvider() : this("USD") { }
+
+        public TestAccountCurrencyProvider(string accountCurrency)
         {
-            Value = new CashAmount(
-                orderFee.Amount.Normalize(),
-                orderFee.Currency);
+            AccountCurrency = accountCurrency;
         }
     }
 }

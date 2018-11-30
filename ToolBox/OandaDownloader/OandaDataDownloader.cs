@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Interfaces;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -38,7 +39,12 @@ namespace QuantConnect.ToolBox.OandaDownloader
         public OandaDataDownloader(string accessToken, string accountId)
         {
             // Set Oanda account credentials
-            _brokerage = new OandaBrokerage(null, null, Environment.Practice, accessToken, accountId);
+            _brokerage = new OandaBrokerage(null,
+                null,
+                Environment.Practice,
+                accessToken,
+                accountId,
+                new OandaDownloaderAccountCurrencyProvider());
         }
 
         /// <summary>
@@ -115,7 +121,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
                         barsToSave.Clear();
 
-                        // remove the completed date 
+                        // remove the completed date
                         groupedBars.Remove(currentDate);
                     }
 
@@ -216,6 +222,11 @@ namespace QuantConnect.ToolBox.OandaDownloader
             }
 
             return groupedBars;
+        }
+
+        internal class OandaDownloaderAccountCurrencyProvider : IAccountCurrencyProvider
+        {
+            public string AccountCurrency => "USD";
         }
     }
 }

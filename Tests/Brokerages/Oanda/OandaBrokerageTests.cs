@@ -25,6 +25,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
@@ -42,7 +43,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var accessToken = Config.Get("oanda-access-token");
             var accountId = Config.Get("oanda-account-id");
 
-            return new OandaBrokerage(orderProvider, securityProvider, environment, accessToken, accountId);
+            return new OandaBrokerage(orderProvider, securityProvider, environment, accessToken, accountId, new TestAccountCurrencyProvider());
         }
 
         /// <summary>

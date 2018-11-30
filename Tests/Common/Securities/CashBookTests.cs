@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Securities
             var book = new CashBook();
             Assert.AreEqual(1, book.Count);
             var cash = book.Single().Value;
-            Assert.AreEqual(CashBook.AccountCurrency, cash.Symbol);
+            Assert.AreEqual("USD", cash.Symbol);
             Assert.AreEqual(0, cash.Amount);
             Assert.AreEqual(1m, cash.ConversionRate);
         }
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Securities
             book.Add("EUR", 0, 1.20m);
 
             var expected = 1000m;
-            var actual = book.Convert(1200, CashBook.AccountCurrency, "EUR");
+            var actual = book.Convert(1200, "USD", "EUR");
             Assert.AreEqual(expected, actual);
         }
 
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Securities
             book.Add("JPY", 0, 1/100m);
 
             var expected = 100000m;
-            var actual = book.Convert(1000, CashBook.AccountCurrency, "JPY");
+            var actual = book.Convert(1000, "USD", "JPY");
             Assert.AreEqual(expected, actual);
         }
     }

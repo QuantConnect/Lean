@@ -129,7 +129,10 @@ namespace QuantConnect.Securities
             {
                 orderFee = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security, parameters.Order)).Value.Amount;
-                orderFee = parameters.Portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency, parameters.Security.QuoteCurrency.Symbol);
+                orderFee = parameters.Portfolio.CashBook.Convert(
+                        orderFee,
+                        parameters.Portfolio.CashBook.AccountCurrency,
+                        parameters.Security.QuoteCurrency.Symbol);
             }
 
             isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
@@ -189,16 +192,20 @@ namespace QuantConnect.Securities
             {
                 if (parameters.Security.QuoteCurrency.ConversionRate == 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The internal cash feed required for converting {parameters.Security.QuoteCurrency.Symbol} to {CashBook.AccountCurrency} does not have any data yet (or market may be closed).");
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, "The internal cash feed required for converting" +
+                        $" {parameters.Security.QuoteCurrency.Symbol} to {parameters.Portfolio.CashBook.AccountCurrency} does not" +
+                        " have any data yet (or market may be closed).");
                 }
 
                 if (parameters.Security.SymbolProperties.ContractMultiplier == 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The contract multiplier for the {parameters.Security.Symbol.Value} security is zero. The symbol properties database may be out of date.");
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The contract multiplier for the " +
+                        $"{parameters.Security.Symbol.Value} security is zero. The symbol properties database may be out of date.");
                 }
 
                 // security.Price == 0
-                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {parameters.Security.Symbol.Value} " +
+                    "security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
             }
 
             // calculate the total cash available

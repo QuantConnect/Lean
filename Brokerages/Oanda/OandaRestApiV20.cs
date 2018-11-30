@@ -24,10 +24,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using Oanda.RestV20.Api;
-using Oanda.RestV20.Client;
 using Oanda.RestV20.Model;
 using Oanda.RestV20.Session;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -63,8 +63,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent, IAccountCurrencyProvider accountCurrencyProvider)
+            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent, accountCurrencyProvider)
         {
             var basePathRest = environment == Environment.Trade ?
                 "https://api-fxtrade.oanda.com/v3" :
@@ -127,7 +128,8 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 new Cash(response.Account.Currency,
                     response.Account.Balance.ToDecimal(),
-                    GetUsdConversion(response.Account.Currency))
+                    GetUsdConversion(response.Account.Currency),
+                    AccountCurrency)
             };
         }
 

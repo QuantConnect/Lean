@@ -93,8 +93,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 SecurityExchangeHours,
                 subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetLeverage(10m);
@@ -278,8 +278,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     config,
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -392,8 +392,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     config1,
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -407,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities
                     SecurityExchangeHours,
                     usdCash,
                     config2,
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -456,8 +456,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -488,8 +488,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new SymbolProperties("", CashBook.AccountCurrency.ToUpper(), 50, 0.01m, 1),
+                    new Cash("USD", 0, 1m),
+                    new SymbolProperties("", "USD", 50, 0.01m, 1),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -520,8 +520,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new SymbolProperties("", CashBook.AccountCurrency.ToUpper(), 50, 0.01m, 1),
+                    new Cash("USD", 0, 1m),
+                    new SymbolProperties("", "USD", 50, 0.01m, 1),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -550,8 +550,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -576,8 +576,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -603,8 +603,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -633,7 +633,7 @@ namespace QuantConnect.Tests.Common.Securities
                     SecurityExchangeHours,
                     portfolio.CashBook["USD"],
                     CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -669,7 +669,7 @@ namespace QuantConnect.Tests.Common.Securities
                         SecurityType.Crypto,
                         Symbols.BTCUSD
                     ),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -678,8 +678,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(10000, portfolio.Cash);
 
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
-                security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue))).Value.Amount;
-            var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, orderFee);
+                security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue)));
+            var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, 0);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(2, security.Holdings.Quantity);
             Assert.AreEqual(10000, portfolio.Cash);
@@ -700,8 +700,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new QuantConnect.Securities.Equity.Equity(
                     securityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -764,8 +764,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     config,
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -777,7 +777,8 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            var fill = new OrderEvent(order, DateTime.UtcNow, 0)
+                { FillPrice = buyPrice, FillQuantity = quantity };
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -829,8 +830,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     config,
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -842,7 +843,8 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, sellPrice, sellPrice, sellPrice, sellPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, -quantity, time) { Price = sellPrice };
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = sellPrice, FillQuantity = -quantity };
+            var fill = new OrderEvent(order, DateTime.UtcNow, 0)
+                { FillPrice = sellPrice, FillQuantity = -quantity };
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -897,8 +899,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -907,7 +909,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -957,8 +959,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -967,7 +969,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1016,8 +1018,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1026,7 +1028,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1076,8 +1078,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1086,7 +1088,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1137,8 +1139,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1147,7 +1149,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1196,8 +1198,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1206,7 +1208,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1263,8 +1265,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1273,7 +1275,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1326,8 +1328,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1336,7 +1338,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1389,8 +1391,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1399,7 +1401,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1448,8 +1450,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1458,7 +1460,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1506,8 +1508,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1516,7 +1518,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1565,8 +1567,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1575,7 +1577,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1625,8 +1627,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1635,7 +1637,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1684,8 +1686,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1694,7 +1696,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1744,8 +1746,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1754,7 +1756,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1806,8 +1808,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1816,7 +1818,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1870,8 +1872,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1880,7 +1882,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -1934,8 +1936,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -1944,7 +1946,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash("USD", 0, 1m),
                     GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016),
                     ErrorCurrencyConverter.Instance
                 )
@@ -2049,7 +2051,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static OptionSymbolProperties GetOptionSymbolProperties(Symbol symbol)
         {
-            return new OptionSymbolProperties(SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, CashBook.AccountCurrency));
+            return new OptionSymbolProperties(SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD"));
         }
 
         private static TimeKeeper TimeKeeper

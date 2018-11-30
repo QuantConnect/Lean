@@ -30,6 +30,7 @@ using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications.Requests;
 using QuantConnect.Brokerages.Oanda.RestV1.Framework;
 using QuantConnect.Brokerages.Oanda.RestV1.Session;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -56,8 +57,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent, IAccountCurrencyProvider accountCurrencyProvider)
+            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent, accountCurrencyProvider)
         {
         }
 
@@ -101,7 +103,8 @@ namespace QuantConnect.Brokerages.Oanda
             return new List<Cash>
             {
                 new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(),
-                    GetUsdConversion(accountResponse.accountCurrency))
+                    GetUsdConversion(accountResponse.accountCurrency),
+                    AccountCurrency)
             };
         }
 

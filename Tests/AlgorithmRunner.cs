@@ -32,6 +32,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -45,7 +46,7 @@ namespace QuantConnect.Tests
         public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics, AlphaRuntimeStatistics expectedAlphaStatistics, Language language)
         {
             var statistics = new Dictionary<string, string>();
-            var alphaStatistics = new AlphaRuntimeStatistics();
+            var alphaStatistics = new AlphaRuntimeStatistics(new TestAccountCurrencyProvider());
             var algorithmManager = new AlgorithmManager(false);
 
             Composer.Instance.Reset();

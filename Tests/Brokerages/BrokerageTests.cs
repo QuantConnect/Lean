@@ -193,8 +193,8 @@ namespace QuantConnect.Tests.Brokerages
                     false,
                     false
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
         }
@@ -635,6 +635,11 @@ namespace QuantConnect.Tests.Brokerages
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 
             return order;
+        }
+
+        internal class AccountCurrencyProvider : IAccountCurrencyProvider
+        {
+            public string AccountCurrency => "USD";
         }
     }
 }

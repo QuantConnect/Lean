@@ -45,8 +45,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -79,8 +79,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -217,7 +217,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.BTCUSD,
@@ -228,7 +228,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
@@ -273,8 +273,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -324,7 +324,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -335,7 +335,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -384,7 +384,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.BTCUSD,
@@ -395,7 +395,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
@@ -454,8 +454,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -491,7 +491,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -502,7 +502,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -540,7 +540,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -551,7 +551,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
@@ -592,7 +592,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
 
             var security = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
+                new Cash("USD", 0, 1m),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.BTCUSD,
@@ -603,7 +603,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true,
                     true
                 ),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);

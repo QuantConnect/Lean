@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public abstract class Brokerage : IBrokerage
     {
+        private readonly IAccountCurrencyProvider _accountCurrencyProvider;
+
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
@@ -52,7 +54,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets the name of the brokerage
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
+
+        /// <summary>
+        /// The account currency
+        /// </summary>
+        public string AccountCurrency => _accountCurrencyProvider.AccountCurrency;
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -63,9 +70,11 @@ namespace QuantConnect.Brokerages
         /// Creates a new Brokerage instance with the specified name
         /// </summary>
         /// <param name="name">The name of the brokerage</param>
-        protected Brokerage(string name)
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        protected Brokerage(string name, IAccountCurrencyProvider accountCurrencyProvider)
         {
             Name = name;
+            _accountCurrencyProvider = accountCurrencyProvider;
         }
 
         /// <summary>
@@ -191,7 +200,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from IB</returns>

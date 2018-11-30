@@ -276,19 +276,19 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     if (item.Currency == "USD")
                     {
-                        list.Add(new Cash(item.Currency, item.Balance, 1));
+                        list.Add(new Cash(item.Currency, item.Balance, 1, AccountCurrency));
                     }
                     else if (new[] {"GBP", "EUR"}.Contains(item.Currency))
                     {
                         var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate, AccountCurrency));
                     }
                     else
                     {
                         var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
 
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price, AccountCurrency));
                     }
                 }
             }
@@ -311,14 +311,14 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (request.EndTimeUtc < request.StartTimeUtc)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange", 
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange",
                     "The history request start date must precede the end date, no history returned"));
                 yield break;
             }
 
             if (request.Resolution == Resolution.Tick || request.Resolution == Resolution.Second)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution", 
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution",
                     $"{request.Resolution} resolution not supported, no history returned"));
                 yield break;
             }
@@ -357,7 +357,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "HistoryError", 
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "HistoryError",
                         $"History request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}"));
                     yield break;
                 }

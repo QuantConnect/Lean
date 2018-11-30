@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
                                                                                     minimumPriceVariation, lotSize), ErrorCurrencyConverter.Instance);
             pair.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             pair.SetFeeModel(new ConstantFeeModel(decimal.Zero));
-            var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter(CashBook.AccountCurrency));
+            var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter("USD"));
             // Act
             forexHolding.SetHoldings(entryPrice, entryQuantity);
             var priceVariation = pips * 10 * minimumPriceVariation;

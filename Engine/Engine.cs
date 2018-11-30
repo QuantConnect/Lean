@@ -187,7 +187,8 @@ namespace QuantConnect.Lean.Engine
                                 if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                                 {
                                     _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
-                                        string.Format("Processing history {0}%...", progress));
+                                        $"Processing history {progress}%..."
+                                    );
                                 }
                             }
                         )

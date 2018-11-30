@@ -229,8 +229,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash("USD", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance
             );
             security.SetMarketPrice(new Tick { Value = 100 });
@@ -241,7 +241,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
             portfolio.SetCash("USD", 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100*1000m, portfolio.CashBook[CashBook.AccountCurrency].Amount);
+            Assert.AreEqual(100*1000m, portfolio.CashBook["USD"].Amount);
             return security;
         }
 

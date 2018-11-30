@@ -383,6 +383,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public DateTime UtcTime => _baseAlgorithm.UtcTime;
 
         /// <summary>
+        /// Gets the account currency
+        /// </summary>
+        public string AccountCurrency => _baseAlgorithm.AccountCurrency;
+
+        /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>

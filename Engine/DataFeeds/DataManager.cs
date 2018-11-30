@@ -86,8 +86,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 security = new Security(
                                     _marketHoursDatabase.GetExchangeHours(config),
                                     config,
-                                    algorithm.Portfolio.CashBook[CashBook.AccountCurrency],
-                                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                                    algorithm.Portfolio.CashBook[algorithm.AccountCurrency],
+                                    SymbolProperties.GetDefault(algorithm.AccountCurrency),
                                     algorithm.Portfolio.CashBook
                                  );
                             }

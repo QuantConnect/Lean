@@ -124,8 +124,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID)
-            : base("Tradier Brokerage")
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID, IAccountCurrencyProvider accountCurrencyProvider)
+            : base("Tradier Brokerage", accountCurrencyProvider)
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
@@ -803,7 +803,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             return new List<Cash>
             {
-                new Cash("USD", GetBalanceDetails(_accountID).TotalCash, 1.0m)
+                new Cash("USD", GetBalanceDetails(_accountID).TotalCash, 1.0m, AccountCurrency)
             };
         }
 
@@ -1128,7 +1128,8 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 // invalidate the order, bad request
                 const int orderFee = 0;
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee)
+                    { Status = OrderStatus.Invalid });
 
                 string message = _previousResponseRaw;
                 if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())

@@ -22,7 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
@@ -201,8 +200,8 @@ namespace QuantConnect.Tests.Common.Scheduling
                 new Security(
                     securityExchangeHours,
                     config,
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance
                 )
             );

@@ -189,6 +189,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the account currency
+        /// </summary>
+        public string AccountCurrency => Portfolio.CashBook.AccountCurrency;
+
+        /// <summary>
         /// Gets the time keeper instance
         /// </summary>
         public ITimeKeeper TimeKeeper => _timeKeeper;

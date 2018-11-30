@@ -13,29 +13,16 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Securities;
-namespace QuantConnect.Orders.Fees
+namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Defines the result for <see cref="IFeeModel.GetOrderFee"/>
+    /// A reduced interface for a account currency provider
     /// </summary>
-    public class OrderFee
+    public interface IAccountCurrencyProvider
     {
         /// <summary>
-        /// Gets the order fee
+        /// Gets the account currency
         /// </summary>
-        public CashAmount Value { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OrderFee"/> class
-        /// </summary>
-        /// <param name="orderFee">The order fee</param>
-        public OrderFee(CashAmount orderFee)
-        {
-            Value = new CashAmount(
-                orderFee.Amount.Normalize(),
-                orderFee.Currency);
-        }
+        string AccountCurrency { get; }
     }
 }

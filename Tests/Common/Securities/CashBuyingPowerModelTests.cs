@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities
             var tz = TimeZones.NewYork;
             _btcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                _portfolio.CashBook[CashBook.AccountCurrency],
+                _portfolio.CashBook["USD"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                _portfolio.CashBook[CashBook.AccountCurrency],
+                _portfolio.CashBook["USD"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHUSD, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
