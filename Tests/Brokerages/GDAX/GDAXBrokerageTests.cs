@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _unit.OrderStatusChanged += (s, e) =>
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
-                actualFee += e.OrderFee;
+                actualFee += e.OrderFee.Value.Amount;
                 actualQuantity += e.AbsoluteFillQuantity;
 
                 Assert.IsTrue(actualQuantity != orderQuantity);

@@ -35,6 +35,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -1287,7 +1288,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var order = _orderProvider.GetOrderByBrokerageId(requestId);
                 if (order != null)
                 {
-                    const int orderFee = 0;
+                    var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                     var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
                     {
                         Status = OrderStatus.Invalid,
@@ -1468,8 +1469,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
                     else
                     {
+                        var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                         // fire the event
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Order Event")
                         {
                             Status = status
                         });
@@ -1635,7 +1637,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
             var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
             var price = Convert.ToDecimal(execution.Price);
-            var orderFee = Convert.ToDecimal(commissionReport.Commission);
+            var orderFee = new OrderFee(new CashAmount(
+                Convert.ToDecimal(commissionReport.Commission),
+                commissionReport.Currency.ToUpper()));
 
             // set order status based on remaining quantity
             var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;

@@ -14,11 +14,9 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
@@ -145,14 +143,20 @@ namespace QuantConnect.Brokerages.Backtesting
                 // we take only deep ITM strikes
                 .Where(x => deepITM(x.Key))
                 // we estimate P/L
-                .Where(x => EstimateArbitragePnL((Option)x.Value, (OptionHolding)x.Value.Holdings, algorithm.Securities[x.Value.Symbol.Underlying]) > 0.0m)
+                .Where(x => EstimateArbitragePnL((Option)x.Value,
+                        (OptionHolding)x.Value.Holdings,
+                        algorithm.Securities[x.Value.Symbol.Underlying],
+                        algorithm.Portfolio.CashBook) > 0.0m)
                 .ToList()
                 // we exercise options with positive expected P/L (over basic sale of option)
                 .ForEach(x => backtestingBrokerage.ActivateOptionAssignment((Option)x.Value, (int)((OptionHolding)x.Value.Holdings).AbsoluteQuantity));
 
         }
 
-        private decimal EstimateArbitragePnL(Option option, OptionHolding holding, Security underlying)
+        private decimal EstimateArbitragePnL(Option option,
+            OptionHolding holding,
+            Security underlying,
+            ICurrencyConverter currencyConverter)
         {
             // no-arb argument:
             // if our long deep ITM position has a large B/A spread and almost no time value, it may be interesting for us
@@ -174,28 +178,28 @@ namespace QuantConnect.Brokerages.Backtesting
 
             // Scenario 1 (base): we just close option position
             var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
-            var orderFee1 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, marketOrder1));
+            var orderFee1 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
+                new OrderFeeParameters(option, marketOrder1)).Value);
 
             var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity
                 * option.QuoteCurrency.ConversionRate
                 * option.SymbolProperties.ContractMultiplier
-                - orderFee1.Value.Amount;
+                - orderFee1.Amount;
 
             // Scenario 2 (alternative): we exercise option and then close underlying position
             var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, (int)holding.AbsoluteQuantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
-            var optionOrderFee2 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, optionExerciseOrder2));
+            var optionOrderFee2 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
+                new OrderFeeParameters(option, optionExerciseOrder2)).Value);
 
             var undelyingMarketOrder2 = new MarketOrder(underlying.Symbol, -underlyingQuantity, underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone));
-            var undelyingOrderFee2 = underlying.FeeModel.GetOrderFee(
-                new OrderFeeParameters(underlying, undelyingMarketOrder2));
+            var undelyingOrderFee2 = currencyConverter.ConvertToAccountCurrency(underlying.FeeModel.GetOrderFee(
+                new OrderFeeParameters(underlying, undelyingMarketOrder2)).Value);
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
             var altPnL = (underlyingPrice - option.StrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
-                        - undelyingOrderFee2.Value.Amount
+                        - undelyingOrderFee2.Amount
                         - holding.AveragePrice * holding.AbsoluteQuantity * option.SymbolProperties.ContractMultiplier * option.QuoteCurrency.ConversionRate
-                        - optionOrderFee2.Value.Amount;
+                        - optionOrderFee2.Amount;
 
             return altPnL - basePnL;
         }

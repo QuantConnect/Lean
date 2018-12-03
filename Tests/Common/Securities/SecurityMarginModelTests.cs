@@ -370,6 +370,26 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
         }
 
+        [Test]
+        public void NonAccountCurrencyFees()
+        {
+            var algo = GetAlgorithm();
+            var security = InitAndGetSecurity(algo, 0);
+            algo.SetCash("EUR", 0, 100);
+            security.FeeModel = new NonAccountCurrencyCustomFeeModel();
+
+            // ((100000 - 100 * 100) * 2 * 0.9975 / (25)
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
+            Assert.AreEqual(7182m, actual);
+            // ((100000 - 100 * 100) * 2 / (25)
+            var quantity = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
+                algo.Portfolio, security, 2m).Quantity;
+            Assert.AreEqual(7200m, quantity);
+
+            // the maximum order quantity can be executed
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(quantity, security, algo)); ;
+        }
+
         private static QCAlgorithm GetAlgorithm()
         {
             SymbolCache.Clear();
@@ -431,6 +451,17 @@ namespace QuantConnect.Tests.Common.Securities
             var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
                 security, new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow));
             return hashSufficientBuyingPower.IsSufficient;
+        }
+
+        internal class NonAccountCurrencyCustomFeeModel : FeeModel
+        {
+            public string FeeCurrency = "EUR";
+            public decimal FeeAmount = 100m;
+
+            public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+            {
+                return new OrderFee(new CashAmount(FeeAmount, FeeCurrency));
+            }
         }
     }
 }

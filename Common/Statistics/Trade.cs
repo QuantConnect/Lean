@@ -58,22 +58,22 @@ namespace QuantConnect.Statistics
         public decimal ExitPrice { get; set; }
 
         /// <summary>
-        /// The gross profit/loss of the trade (as symbol currency)
+        /// The gross profit/loss of the trade (as account currency)
         /// </summary>
         public decimal ProfitLoss { get; set; }
 
         /// <summary>
-        /// The total fees associated with the trade (always positive value) (as symbol currency)
+        /// The total fees associated with the trade (always positive value) (as account currency)
         /// </summary>
         public decimal TotalFees { get; set; }
 
         /// <summary>
-        /// The Maximum Adverse Excursion (as symbol currency)
+        /// The Maximum Adverse Excursion (as account currency)
         /// </summary>
         public decimal MAE { get; set; }
 
         /// <summary>
-        /// The Maximum Favorable Excursion (as symbol currency)
+        /// The Maximum Favorable Excursion (as account currency)
         /// </summary>
         public decimal MFE { get; set; }
 

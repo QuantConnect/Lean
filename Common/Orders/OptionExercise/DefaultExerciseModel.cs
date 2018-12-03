@@ -15,6 +15,8 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Orders.OptionExercise
@@ -51,7 +53,7 @@ namespace QuantConnect.Orders.OptionExercise
                             exerciseDirection,
                             exercisePrice,
                             exerciseQuantity,
-                            0.0m,
+                            new OrderFee(new CashAmount(0, option.QuoteCurrency.AccountCurrency)),
                             "Option Exercise/Assignment");
 
             var optionRemoveEvent = new OrderEvent(order.Id,
@@ -61,7 +63,7 @@ namespace QuantConnect.Orders.OptionExercise
                             assignment ? OrderDirection.Buy : OrderDirection.Sell,
                             0.0m,
                             -optionQuantity,
-                            0.0m,
+                            new OrderFee(new CashAmount(0, option.QuoteCurrency.AccountCurrency)),
                             "Adjusting(or removing) the exercised/assigned option");
 
             if (optionRemoveEvent.FillQuantity > 0)

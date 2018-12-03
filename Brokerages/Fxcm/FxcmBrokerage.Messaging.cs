@@ -30,6 +30,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -406,7 +407,9 @@ namespace QuantConnect.Brokerages.Fxcm
                     {
                         order.PriceCurrency = message.getCurrency();
 
-                        var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)
+                        var orderEvent = new OrderEvent(order,
+                            DateTime.UtcNow,
+                            new OrderFee(new CashAmount(0, AccountCurrency)))
                         {
                             Status = ConvertOrderStatus(orderStatus),
                             FillPrice = Convert.ToDecimal(message.getPrice()),
@@ -418,7 +421,7 @@ namespace QuantConnect.Brokerages.Fxcm
                         {
                             var security = _securityProvider.GetSecurity(order.Symbol);
                             orderEvent.OrderFee = security.FeeModel.GetOrderFee(
-                                new OrderFeeParameters(security, order)).Value.Amount;
+                                new OrderFeeParameters(security, order));
                         }
 
                         _orderEventQueue.Enqueue(orderEvent);
@@ -431,7 +434,9 @@ namespace QuantConnect.Brokerages.Fxcm
                     order.PriceCurrency = message.getCurrency();
 
                     // new order
-                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)
+                    var orderEvent = new OrderEvent(order,
+                        DateTime.UtcNow,
+                        new OrderFee(new CashAmount(0, AccountCurrency)))
                     {
                         Status = ConvertOrderStatus(orderStatus)
                     };

@@ -24,6 +24,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -310,7 +311,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            const int orderFee = 0;
+            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
             order.PriceCurrency = "USD";
 
             try
@@ -326,7 +327,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 var errorMessage = $"Error placing order: {e.Message}";
 
                 OnOrderEvent(
-                    new OrderEvent(order, DateTime.UtcNow, 0, "Alpaca Order Event")
+                    new OrderEvent(order, DateTime.UtcNow, orderFee, "Alpaca Order Event")
                     {
                         Status = Orders.OrderStatus.Invalid,
                         Message = errorMessage

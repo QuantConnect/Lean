@@ -37,5 +37,17 @@ namespace QuantConnect.Orders.Fees
                 orderFee.Amount.Normalize(),
                 orderFee.Currency);
         }
+
+        public override string ToString()
+        {
+            return $"{Value.Amount} {Value.Currency}";
+        }
+        /// <summary>
+        /// This is for backward compatibility with old 'decimal' order fee
+        /// </summary>
+        public static implicit operator decimal(OrderFee m)
+        {
+            return m.Value.Amount;
+        }
     }
 }

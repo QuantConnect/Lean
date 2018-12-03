@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -99,7 +100,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             var cancellationSubmitted = false;
             if (response.StatusCode == HttpStatusCode.OK && !(response.Content?.IndexOf("None to cancel", StringComparison.OrdinalIgnoreCase) >= 0))
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
+                OnOrderEvent(new OrderEvent(order,
+                    DateTime.UtcNow,
+                    new OrderFee(new CashAmount(0, AccountCurrency)),
+                    "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
 
                 cancellationSubmitted = true;
             }

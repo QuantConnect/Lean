@@ -30,6 +30,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using DateTime = System.DateTime;
 using LimitOrder = QuantConnect.Orders.LimitOrder;
@@ -156,7 +157,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            const int orderFee = 0;
+            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
             var marketOrderFillQuantity = 0;
             var marketOrderFillPrice = 0m;
             var marketOrderRemainingQuantity = 0;
@@ -243,7 +244,7 @@ namespace QuantConnect.Brokerages.Oanda
             // check if the updated (marketable) order was filled
             if (response.Data.OrderFillTransaction != null)
             {
-                const int orderFee = 0;
+                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                 {
                     Status = OrderStatus.Filled,
@@ -273,7 +274,11 @@ namespace QuantConnect.Brokerages.Oanda
             foreach (var orderId in order.BrokerId)
             {
                 _apiRest.CancelOrder(Authorization, AccountId, orderId);
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
+                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
+                OnOrderEvent(new OrderEvent(order,
+                    DateTime.UtcNow,
+                    orderFee,
+                    "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 
             return true;
@@ -369,7 +374,7 @@ namespace QuantConnect.Brokerages.Oanda
                         {
                             order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                            const int orderFee = 0;
+                            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                             {
                                 Status = OrderStatus.Filled,

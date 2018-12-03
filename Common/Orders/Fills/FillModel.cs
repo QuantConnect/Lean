@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -108,7 +109,7 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order,
                 utcTime,
-                0);
+                new OrderFee(new CashAmount(0, asset.QuoteCurrency.AccountCurrency)));
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -152,7 +153,7 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order,
                 utcTime,
-                0);
+                new OrderFee(new CashAmount(0, asset.QuoteCurrency.AccountCurrency)));
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
@@ -221,7 +222,7 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order,
                 utcTime,
-                0);
+                new OrderFee(new CashAmount(0, asset.QuoteCurrency.AccountCurrency)));
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
@@ -300,7 +301,7 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order,
                 utcTime,
-                0);
+                new OrderFee(new CashAmount(0, asset.QuoteCurrency.AccountCurrency)));
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
@@ -364,7 +365,7 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order,
                 utcTime,
-                0);
+                new OrderFee(new CashAmount(0, asset.QuoteCurrency.AccountCurrency)));
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -422,7 +423,7 @@ namespace QuantConnect.Orders.Fills
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order,
                 utcTime,
-                0);
+                new OrderFee(new CashAmount(0, asset.QuoteCurrency.AccountCurrency)));
 
             if (order.Status == OrderStatus.Canceled) return fill;
 

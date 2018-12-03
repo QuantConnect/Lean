@@ -499,7 +499,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Order outOrder;
                 if (CachedOrderIDs.TryRemove(order.Id, out outOrder))
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order,
+                        DateTime.UtcNow,
+                        new OrderFee(new CashAmount(0, AccountCurrency)),
+                        "Bitfinex Order Event") { Status = OrderStatus.Canceled });
                 }
             }
             else
@@ -566,12 +569,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var fillQuantity = decimal.Parse(entries[5], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
                 var updTime = Time.UnixTimeStampToDateTime(double.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture));
-                var orderFee = 0m;
+                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                 if (fillQuantity != 0)
                 {
                     var security = _securityProvider.GetSecurity(order.Symbol);
                     orderFee = security.FeeModel.GetOrderFee(
-                        new OrderFeeParameters(security, order)).Value.Amount;
+                        new OrderFeeParameters(security, order));
                 }
 
                 OrderStatus status = fillQuantity == order.Quantity ? OrderStatus.Filled : OrderStatus.PartiallyFilled;

@@ -636,10 +636,5 @@ namespace QuantConnect.Tests.Brokerages
 
             return order;
         }
-
-        internal class AccountCurrencyProvider : IAccountCurrencyProvider
-        {
-            public string AccountCurrency => "USD";
-        }
     }
 }

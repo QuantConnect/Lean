@@ -422,7 +422,7 @@ namespace QuantConnect.Brokerages.GDAX
             var isMaker = order.BrokerId[0] == message.MakerOrderId;
             var orderFee = new OrderFee(new CashAmount(
                 GetFillFee(symbol, fillPrice, fillQuantity, isMaker),
-                AccountCurrency)).Value.Amount;
+                AccountCurrency));
 
             var orderEvent = new OrderEvent
             (

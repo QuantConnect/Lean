@@ -34,6 +34,7 @@ using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Tests.Common.Orders;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities
                                                : OrderDirection.Hold,
                 x.Get<decimal>("FillPrice"),
                 x.Get<int>("FillQuantity"),
-                0m)
+                OrderFeeTest.Zero())
                 ).ToList();
 
             var equity = XDocument.Load(equityFile).Descendants("decimal")
@@ -139,7 +140,7 @@ namespace QuantConnect.Tests.Common.Securities
                                                : OrderDirection.Hold,
                 x.Get<decimal>("FillPrice"),
                 x.Get<int>("FillQuantity"),
-                0)
+                OrderFeeTest.Zero())
                 ).ToList();
 
             var equity = XDocument.Load(equityFile).Descendants("decimal")
@@ -291,7 +292,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            var fill = new OrderEvent(order, DateTime.UtcNow, OrderFeeTest.Zero()) { FillPrice = buyPrice, FillQuantity = quantity };
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -357,7 +358,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, lowPrice, lowPrice, lowPrice, lowPrice, 1));
 
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
-            fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            fill = new OrderEvent(order, DateTime.UtcNow, OrderFeeTest.Zero()) { FillPrice = buyPrice, FillQuantity = quantity };
 
             portfolio.ProcessFill(fill);
 
@@ -462,13 +463,13 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
 
-            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, 0);
+            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fillBuy);
 
             Assert.AreEqual(0, portfolio.Cash);
             Assert.AreEqual(100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.Quantity);
 
-            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, 0);
+            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fillSell);
 
             Assert.AreEqual(0, portfolio.Cash);
@@ -494,13 +495,13 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
 
-            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, 0);
+            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fillBuy);
 
             Assert.AreEqual(0, portfolio.Cash);
             Assert.AreEqual(100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.Quantity);
 
-            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 99, -100, 0);
+            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 99, -100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fillSell);
 
             Assert.AreEqual(-100 * 50, portfolio.Cash);
@@ -526,12 +527,12 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
 
-            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, 0);
+            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fillBuy);
 
             Assert.AreEqual(100 * 100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.TotalSaleVolume);
 
-            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, 0);
+            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fillSell);
 
             Assert.AreEqual(2 * 100 * 100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.TotalSaleVolume);
@@ -556,7 +557,7 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
 
-            var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
+            var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fill);
 
             Assert.AreEqual(100 * 100, portfolio.Cash);
@@ -583,7 +584,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
 
-            var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
+            var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, OrderFeeTest.Zero());
             portfolio.ProcessFill(fill);
 
             Assert.AreEqual(100 * 100, portfolio.Cash);
@@ -610,7 +611,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
             securities[Symbols.AAPL].Holdings.SetHoldings(100, -100);
 
-            var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue,  OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
+            var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue,  OrderStatus.Filled, OrderDirection.Sell,  100, -100, OrderFeeTest.Zero());
             Assert.AreEqual(-100, securities[Symbols.AAPL].Holdings.Quantity);
             portfolio.ProcessFill(fill);
 
@@ -642,7 +643,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1000, portfolio.Cash);
 
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
-                security, new MarketOrder(Symbols.EURUSD, 100, DateTime.MinValue))).Value.Amount;
+                security, new MarketOrder(Symbols.EURUSD, 100, DateTime.MinValue)));
             var fill = new OrderEvent(1, Symbols.EURUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 1.1000m, 100, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(100, security.Holdings.Quantity);
@@ -679,7 +680,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
                 security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue)));
-            var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, 0);
+            var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, OrderFeeTest.Zero());
             portfolio.ProcessFill(fill);
             Assert.AreEqual(2, security.Holdings.Quantity);
             Assert.AreEqual(10000, portfolio.Cash);
@@ -714,7 +715,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Buy on Monday
             var timeUtc = new DateTime(2015, 10, 26, 15, 30, 0);
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
-                security, new MarketOrder(Symbols.AAPL, 10, timeUtc))).Value.Amount;
+                security, new MarketOrder(Symbols.AAPL, 10, timeUtc)));
             var fill = new OrderEvent(1, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Buy, 100, 10, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(10, security.Holdings.Quantity);
@@ -724,7 +725,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Sell on Tuesday, cash unsettled
             timeUtc = timeUtc.AddDays(1);
             orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
-                security, new MarketOrder(Symbols.AAPL, 10, timeUtc))).Value.Amount;
+                security, new MarketOrder(Symbols.AAPL, 10, timeUtc)));
             fill = new OrderEvent(2, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, orderFee);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(0, security.Holdings.Quantity);
@@ -777,7 +778,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0)
+            var fill = new OrderEvent(order, DateTime.UtcNow, OrderFeeTest.Zero())
                 { FillPrice = buyPrice, FillQuantity = quantity };
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
@@ -843,7 +844,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, sellPrice, sellPrice, sellPrice, sellPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, -quantity, time) { Price = sellPrice };
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0)
+            var fill = new OrderEvent(order, DateTime.UtcNow, OrderFeeTest.Zero())
                 { FillPrice = sellPrice, FillQuantity = -quantity };
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);

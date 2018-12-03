@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Algorithm
             decimal targetPercentage;
             OrderDirection orderDirection;
             MarketOrder order;
-            decimal orderFee;
+            OrderFee orderFee;
             OrderEvent fill;
             decimal orderQuantity;
             decimal freeMargin;
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
                 orderFee = security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(security, order)).Value.Amount;
+                    new OrderFeeParameters(security, order));
                 fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
                 algorithm.Portfolio.ProcessFill(fill);
 
@@ -226,7 +226,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
             orderFee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, order)).Value.Amount;
+                new OrderFeeParameters(security, order));
             fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
             algorithm.Portfolio.ProcessFill(fill);
 

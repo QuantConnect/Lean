@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -352,7 +353,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     order.Status = OrderStatus.CancelPending;
 
                     // notify the algorithm with an order event
-                    HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m));
+                    HandleOrderEvent(new OrderEvent(order,
+                        _algorithm.UtcTime,
+                        new OrderFee(new CashAmount(0, _algorithm.AccountCurrency))));
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
@@ -750,7 +753,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.Status = OrderStatus.Invalid;
                 var response = OrderResponse.ZeroQuantity(request);
                 _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Unable to add order for zero quantity"));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    "Unable to add order for zero quantity"));
                 return response;
             }
 
@@ -765,7 +771,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error(err);
                 _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Error executing margin models"));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    "Error executing margin models"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
             }
 
@@ -775,7 +784,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var errorMessage = $"Order Error: id: {order.Id}, Insufficient buying power to complete order (Value:{order.GetValue(security).SmartRounding()}), Reason: {hasSufficientBuyingPowerResult.Reason}";
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
                 _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, errorMessage));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    errorMessage));
                 return response;
             }
 
@@ -788,7 +800,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, "OrderID: " + order.Id + " " + message);
                 _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to submit order"));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    "BrokerageModel declared unable to submit order"));
                 return response;
             }
 
@@ -811,7 +826,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var errorMessage = "Brokerage failed to place order: " + order.Id;
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
                 _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to place order"));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    "Brokerage failed to place order"));
                 return response;
             }
 
@@ -847,7 +865,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidRequest", "BrokerageModel declared unable to update order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
                 _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to update order"));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    "BrokerageModel declared unable to update order"));
                 return response;
             }
 
@@ -875,7 +896,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // we failed to update the order for some reason
                 var errorMessage = "Brokerage failed to update order with id " + request.OrderId;
                 _algorithm.Error(errorMessage);
-                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to update order"));
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    "Brokerage failed to update order"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
             }
 
@@ -1019,14 +1043,24 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     //    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
                     //}
 
+                    var multiplier = security.SymbolProperties.ContractMultiplier;
+                    var securityConversionRate = security.QuoteCurrency.ConversionRate;
+                    var feeConversionRate = securityConversionRate;
+                    if (fill.OrderFee.Value.Currency != security.QuoteCurrency.Symbol)
+                    {
+                        feeConversionRate = _algorithm.Portfolio.CashBook
+                            [fill.OrderFee.Value.Currency].ConversionRate;
+                    }
+
                     try
                     {
                         _algorithm.Portfolio.ProcessFill(fill);
 
-                        var conversionRate = security.QuoteCurrency.ConversionRate;
-                        var multiplier = security.SymbolProperties.ContractMultiplier;
-
-                        _algorithm.TradeBuilder.ProcessFill(fill, conversionRate, multiplier);
+                        _algorithm.TradeBuilder.ProcessFill(
+                            fill,
+                            securityConversionRate,
+                            feeConversionRate,
+                            multiplier);
                     }
                     catch (Exception err)
                     {

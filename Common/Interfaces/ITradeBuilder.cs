@@ -53,8 +53,12 @@ namespace QuantConnect.Interfaces
         /// Processes a new fill, eventually creating new trades
         /// </summary>
         /// <param name="fill">The new fill order event</param>
-        /// <param name="conversionRate">The current market conversion rate into the account currency</param>
+        /// <param name="securityConversionRate">The current security market conversion rate into the account currency</param>
+        /// <param name="feeConversionRate">The current order fee market conversion rate into the account currency</param>
         /// <param name="multiplier">The contract multiplier</param>
-        void ProcessFill(OrderEvent fill, decimal conversionRate, decimal multiplier);
+        void ProcessFill(OrderEvent fill,
+            decimal securityConversionRate,
+            decimal feeConversionRate,
+            decimal multiplier = 1.0m);
     }
 }

@@ -38,7 +38,10 @@ namespace QuantConnect.Tests.Common.Securities.Forex
 
             var symbol = Symbol.Create(ticker, SecurityType.Forex, Market.FXCM);
             var pairQuoteCurrency = symbol.Value.Substring(startIndex: 3);
-            var cash = new Cash(pairQuoteCurrency, amount: 100000, conversionRate: conversionRate);
+            var cash = new Cash(pairQuoteCurrency,
+                amount: 100000,
+                conversionRate: conversionRate,
+                accountCurrency: "USD");
             var subscription = new SubscriptionDataConfig(typeof(QuoteBar), symbol, Resolution.Daily,
                                                           TimeZones.NewYork, TimeZones.NewYork, fillForward: true,
                                                           extendedHours: true, isInternalFeed: true);

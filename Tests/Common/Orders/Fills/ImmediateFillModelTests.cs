@@ -446,7 +446,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var expected = direction == OrderDirection.Buy ? askPrice : bidPrice;
             Assert.AreEqual(expected, fill.FillPrice);
-            Assert.AreEqual(0, fill.OrderFee);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
         [Test]
@@ -480,7 +480,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // The fill model should use the tick.Price
             Assert.AreEqual(fill.FillPrice, 100m);
-            Assert.AreEqual(0, fill.OrderFee);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
         [Test]
@@ -515,7 +515,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // The fill model should use the tick.Price
             Assert.AreEqual(fill.FillPrice, 1.0m);
-            Assert.AreEqual(0, fill.OrderFee);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
         [TestCase(100, 290.50)]
@@ -568,7 +568,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(orderQuantity, fill.FillQuantity);
             Assert.AreEqual(limitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(0, fill.OrderFee);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
         [TestCase(100, 291.50)]
@@ -621,7 +621,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(orderQuantity, fill.FillQuantity);
             Assert.AreEqual(stopPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(0, fill.OrderFee);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
         [TestCase(100, 291.50, 291.75)]
@@ -674,7 +674,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(orderQuantity, fill.FillQuantity);
             Assert.AreEqual(limitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(0, fill.OrderFee);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)

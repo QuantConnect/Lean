@@ -24,6 +24,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
@@ -40,7 +41,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode, new AccountCurrencyProvider());
+            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode, new TestAccountCurrencyProvider());
         }
 
         /// <summary>

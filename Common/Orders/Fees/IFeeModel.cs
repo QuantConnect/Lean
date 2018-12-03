@@ -35,7 +35,8 @@ namespace QuantConnect.Orders.Fees
     }
 
     /// <summary>
-    /// Provide extension method for <see cref="IFeeModel"/> to enable backwards compatibility of invocations
+    /// Provide extension method for <see cref="IFeeModel"/> to enable
+    /// backwards compatibility of invocations.
     /// </summary>
     public static class FeeModelExtensions
     {
