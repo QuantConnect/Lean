@@ -14,14 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -178,22 +177,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(true, result.IsCustomData);
             Assert.AreEqual(true, result.FillForwardResolution != null);
             Assert.AreEqual(true, result.IncludeExtendedMarketHours);
-        }
-
-        private class MockSubscriptionDataConfigProvider : ISubscriptionDataConfigProvider
-        {
-            public List<SubscriptionDataConfig> SubscriptionDataConfigs
-                = new List<SubscriptionDataConfig>();
-
-            public MockSubscriptionDataConfigProvider(SubscriptionDataConfig config)
-            {
-                SubscriptionDataConfigs.Add(config);
-            }
-
-            public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol)
-            {
-                return SubscriptionDataConfigs;
-            }
         }
     }
 }

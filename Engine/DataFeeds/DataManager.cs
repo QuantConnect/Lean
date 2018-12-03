@@ -207,7 +207,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     subscription.Dispose();
 
-                    RemoveSubscriptionDataConfig(configuration);
+                    RemoveSubscriptionDataConfig(subscription);
 
                     LiveDifferentiatedLog($"DataManager.RemoveSubscription(): Removed {configuration}");
                     return true;
@@ -274,10 +274,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Will try to remove a <see cref="SubscriptionDataConfig"/> and update the corresponding
         /// consumers accordingly
         /// </summary>
-        /// <param name="config">The configuration to remove</param>
-        private void RemoveSubscriptionDataConfig(SubscriptionDataConfig config)
+        /// <param name="subscription">The <see cref="Subscription"/> owning the configuration to remove</param>
+        private void RemoveSubscriptionDataConfig(Subscription subscription)
         {
-            if (_subscriptionManagerSubscriptions.TryRemove(config, out config))
+            SubscriptionDataConfig config;
+            if (subscription.RemovedFromUniverse.Value
+                && _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out config))
             {
                 if (HasCustomData && config.IsCustomData)
                 {

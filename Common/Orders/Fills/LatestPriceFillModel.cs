@@ -49,7 +49,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
+            var subscriptionTypes = Parameters.ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol)
+                .Select(x => x.Type).ToList();
 
             // Tick
             var tick = asset.Cache.GetData<Tick>();

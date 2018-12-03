@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,17 +16,22 @@
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Represents a model that simulates order fill events
+    /// Defines the result for <see cref="IFillModel.Fill"/>
     /// </summary>
-    /// <remarks>Please use<see cref="FillModel"/> as the base class for
-    /// any implementations of<see cref="IFillModel"/></remarks>
-    public interface IFillModel
+    public class Fill
     {
         /// <summary>
-        /// Return an order event with the fill details
+        /// The order event associated to this <see cref="Fill"/> instance
         /// </summary>
-        /// <param name="parameters">A <see cref="FillModelParameters"/> object containing the security and order</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        Fill Fill(FillModelParameters parameters);
+        public OrderEvent OrderEvent { get; }
+
+        /// <summary>
+        /// Creates a new <see cref="Fill"/> instance
+        /// </summary>
+        /// <param name="orderEvent"></param>
+        public Fill(OrderEvent orderEvent)
+        {
+            OrderEvent = orderEvent;
+        }
     }
 }
