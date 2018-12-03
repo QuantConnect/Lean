@@ -104,7 +104,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Remove:
                         foreach (var universe in args.OldItems.OfType<Universe>())
                         {
-                            RemoveSubscription(universe.Configuration, universe);
+                            // removing the subscription will be handled by the SubscriptionSynchronizer
+                            // in the next loop as well as executing a UniverseSelection one last time.
+                            if (!universe.DisposeRequested)
+                            {
+                                universe.Dispose();
+                            }
                         }
                         break;
 
@@ -184,16 +189,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (DataFeedSubscriptions.TryGetValue(configuration, out subscription))
             {
-                // don't remove universe subscriptions immediately, instead mark them as disposed
-                // so we can turn the crank one more time to ensure we emit security changes properly
-                if (subscription.IsUniverseSelectionSubscription
-                    && subscription.Universes.Single().DisposeRequested)
-                {
-                    // subscription syncer will dispose the universe AFTER we've run selection a final time
-                    // and then will invoke SubscriptionFinished which will remove the universe subscription
-                    return false;
-                }
-
                 // we remove the subscription when there are no other requests left
                 if (subscription.RemoveSubscriptionRequest(universe))
                 {
