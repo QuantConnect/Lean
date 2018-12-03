@@ -14,6 +14,8 @@
 */
 
 using System;
+using QuantConnect.Data;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -108,6 +110,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Message = message;
             StackTrace = stackTrace;
+        }
+    }
+
+    /// <summary>
+    /// Event arguments for the <see cref="SubscriptionDataReader.NewTradableDate"/> event
+    /// </summary>
+    public sealed class NewTradableDateEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The <see cref="Symbol"/> of the new tradable date
+        /// </summary>
+        public Symbol Symbol { get; }
+
+        /// <summary>
+        /// The new tradable date
+        /// </summary>
+        public DateTime Date { get; }
+
+        /// <summary>
+        /// The last <see cref="BaseData"/> of the <see cref="Security"/>
+        /// for which we are enumerating
+        /// </summary>
+        public BaseData LastBaseData { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NewTradableDateEventArgs"/> class
+        /// </summary>
+        /// <param name="date">The new tradable date</param>
+        /// <param name="lastBaseData">The last <see cref="BaseData"/> of the
+        /// <see cref="Security"/> for which we are enumerating</param>
+        /// <param name="symbol">The <see cref="Symbol"/> of the new tradable date</param>
+        public NewTradableDateEventArgs(DateTime date, BaseData lastBaseData, Symbol symbol)
+        {
+            Date = date;
+            LastBaseData = lastBaseData;
+            Symbol = symbol;
         }
     }
 }

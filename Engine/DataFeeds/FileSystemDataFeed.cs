@@ -75,7 +75,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
             _universeSelection = subscriptionManager.UniverseSelection;
             _cancellationTokenSource = new CancellationTokenSource();
-            _subscriptionFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
+            _subscriptionFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(
+                _resultHandler,
+                _mapFileProvider,
+                _factorFileProvider,
+                _dataProvider,
+                isLiveMode: false,
+                includeAuxiliaryData: true);
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
@@ -88,7 +94,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // ReSharper disable once PossibleMultipleEnumeration
             if (!request.TradableDays.Any())
             {
-                _algorithm.Error(string.Format("No data loaded for {0} because there were no tradeable dates for this security.", request.Security.Symbol));
+                _algorithm.Error(
+                    $"No data loaded for {request.Security.Symbol} because there were no tradeable dates for this security."
+                );
                 return null;
             }
 

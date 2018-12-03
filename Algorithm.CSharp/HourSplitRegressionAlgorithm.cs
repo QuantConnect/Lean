@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
@@ -27,6 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     public class HourSplitRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
+        private bool _receivedWarningEvent;
+        private bool _receivedOccurredEvent;
+        private int _dataCount;
 
         public override void Initialize()
         {
@@ -46,6 +52,44 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested && Time.Date == EndDate.Date)
             {
                 Buy(_symbol, 1);
+            }
+        }
+
+        public override void OnData(Slice slice)
+        {
+            _dataCount += slice.Bars.Count;
+            if (slice.Splits.Any())
+            {
+                if (slice.Splits.Single().Value.Type == SplitType.Warning)
+                {
+                    _receivedWarningEvent = true;
+                    Debug($"{slice.Splits.Single().Value}");
+                }
+                else if (slice.Splits.Single().Value.Type == SplitType.SplitOccurred)
+                {
+                    _receivedOccurredEvent = true;
+                    if (slice.Splits.Single().Value.Price != 88.9700m || slice.Splits.Single().Value.ReferencePrice != 88.9700m)
+                    {
+                        throw new Exception("Did not receive expected price values");
+                    }
+                    Debug($"{slice.Splits.Single().Value}");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_receivedOccurredEvent)
+            {
+                throw new Exception("Did not receive expected split event");
+            }
+            if (!_receivedWarningEvent)
+            {
+                throw new Exception("Did not receive expected split warning event");
+            }
+            if (_dataCount != 14)
+            {
+                throw new Exception($"Unexpected data count {_dataCount}. Expected 14");
             }
         }
 

@@ -21,6 +21,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -34,8 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly bool _includeAuxiliaryData;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
-        private readonly IDataProvider _dataProvider;
-        private ZipDataCacheProvider _zipDataCacheProvider;
+        private readonly ZipDataCacheProvider _zipDataCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
 
@@ -62,7 +62,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _dataProvider = dataProvider;
             _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider);
             _isLiveMode = isLiveMode;
             _includeAuxiliaryData = includeAuxiliaryData;
@@ -89,8 +88,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _factorFileProvider,
                 _tradableDaysProvider(request),
                 _isLiveMode,
-                 _zipDataCacheProvider,
-                _includeAuxiliaryData
+                 _zipDataCacheProvider
                 );
 
             dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
@@ -98,9 +96,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
             dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
 
+            var enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(
+                request.Configuration,
+                _factorFileProvider,
+                dataReader,
+                mapFileResolver,
+                _includeAuxiliaryData);
+
+            // has to be initialized after adding all the enumerators since it will execute a MoveNext
             dataReader.Initialize();
 
-            return dataReader;
+            return new SynchronizingEnumerator(dataReader, enumerator);
         }
 
         /// <summary>
@@ -109,8 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            if (_zipDataCacheProvider != null)
-                _zipDataCacheProvider.Dispose();
+            _zipDataCacheProvider?.DisposeSafely();
         }
     }
 }
