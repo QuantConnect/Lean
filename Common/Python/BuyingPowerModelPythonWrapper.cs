@@ -14,7 +14,6 @@
 */
 
 using Python.Runtime;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System;
 
@@ -75,15 +74,13 @@ namespace QuantConnect.Python
         /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="target">Target percentage holdings</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal target)
+        public GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.GetMaximumOrderQuantityForTargetValue(portfolio, security, target);
+                return _model.GetMaximumOrderQuantityForTargetValue(parameters);
             }
         }
 
@@ -103,15 +100,13 @@ namespace QuantConnect.Python
         /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="order">The order to be checked</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>Returns buying power information for an order</returns>
-        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order)
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.HasSufficientBuyingPowerForOrder(portfolio, security, order);
+                return _model.HasSufficientBuyingPowerForOrder(parameters);
             }
         }
 
