@@ -58,7 +58,7 @@ namespace QuantConnect.Securities.Equity
                 currencyConverter
                 )
         {
-            Holdings = new EquityHolding(this);
+            Holdings = new EquityHolding(this, currencyConverter);
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace QuantConnect.Securities.Equity
                 currencyConverter
                 )
         {
-            Holdings = new EquityHolding(this);
+            Holdings = new EquityHolding(this, currencyConverter);
         }
 
         /// <summary>

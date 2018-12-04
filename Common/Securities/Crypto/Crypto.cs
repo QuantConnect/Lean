@@ -55,7 +55,7 @@ namespace QuantConnect.Securities.Crypto
                 currencyConverter
                 )
         {
-            Holdings = new CryptoHolding(this);
+            Holdings = new CryptoHolding(this, currencyConverter);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
@@ -90,7 +90,7 @@ namespace QuantConnect.Securities.Crypto
                 currencyConverter
                 )
         {
-            Holdings = new CryptoHolding(this);
+            Holdings = new CryptoHolding(this, currencyConverter);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;

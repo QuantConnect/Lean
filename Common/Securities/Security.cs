@@ -351,7 +351,7 @@ namespace QuantConnect.Securities
             SlippageModel = slippageModel;
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
-            Holdings = new SecurityHolding(this);
+            Holdings = new SecurityHolding(this, currencyConverter);
 
             UpdateSubscriptionProperties();
         }

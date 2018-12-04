@@ -33,17 +33,20 @@ namespace QuantConnect.Securities
         private decimal _lastTradeProfit;
         private decimal _totalFees;
         private readonly Security _security;
+        private readonly ICurrencyConverter _currencyConverter;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
         /// <param name="security">The security being held</param>
-        public SecurityHolding(Security security)
+        /// <param name="currencyConverter">A currency converter instance</param>
+        public SecurityHolding(Security security, ICurrencyConverter currencyConverter)
         {
             _security = security;
             //Total Sales Volume for the day
             _totalSaleVolume = 0;
             _lastTradeProfit = 0;
+            _currencyConverter = currencyConverter;
         }
 
         /// <summary>
@@ -60,6 +63,7 @@ namespace QuantConnect.Securities
             _profit = holding._profit;
             _lastTradeProfit = holding._lastTradeProfit;
             _totalFees = holding._totalFees;
+            _currencyConverter = holding._currencyConverter;
         }
 
 

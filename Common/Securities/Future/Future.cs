@@ -68,7 +68,7 @@ namespace QuantConnect.Securities.Future
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
-            Holdings = new FutureHolding(this);
+            Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
             SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
         }
@@ -102,7 +102,7 @@ namespace QuantConnect.Securities.Future
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
-            Holdings = new FutureHolding(this);
+            Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
             SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
         }
