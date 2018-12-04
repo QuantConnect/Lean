@@ -30,7 +30,7 @@ namespace QuantConnect.Securities
         /// <returns>The reserved buying power in account currency</returns>
         public static decimal GetReservedBuyingPowerForPosition(this IBuyingPowerModel model, Security security)
         {
-            var context = new ReservedBuyingPowerForPositionContext(security);
+            var context = new ReservedBuyingPowerForPositionParameters(security);
             var reservedBuyingPower = model.GetReservedBuyingPowerForPosition(context);
             return reservedBuyingPower.Value;
         }
@@ -50,7 +50,7 @@ namespace QuantConnect.Securities
             OrderDirection direction
             )
         {
-            var context = new BuyingPowerContext(portfolio, security, direction);
+            var context = new BuyingPowerParameters(portfolio, security, direction);
             var buyingPower = model.GetBuyingPower(context);
 
             // existing implementations assume certain non-account currency units, so return raw value

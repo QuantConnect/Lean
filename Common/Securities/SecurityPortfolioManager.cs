@@ -429,7 +429,7 @@ namespace QuantConnect.Securities
                 foreach (var kvp in Securities)
                 {
                     var security = kvp.Value;
-                    var context = new ReservedBuyingPowerForPositionContext(security);
+                    var context = new ReservedBuyingPowerForPositionParameters(security);
                     var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
                     sum += reservedBuyingPower.Value;
                 }
@@ -511,7 +511,7 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
-            var context = new BuyingPowerContext(this, security, direction);
+            var context = new BuyingPowerParameters(this, security, direction);
             return security.BuyingPowerModel.GetBuyingPower(context).Value;
         }
 
@@ -723,11 +723,11 @@ namespace QuantConnect.Securities
                 var security = Securities[orderSubmitRequest.Symbol];
 
                 var marginUsed = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                    new ReservedBuyingPowerForPositionContext(security)
+                    new ReservedBuyingPowerForPositionParameters(security)
                 );
 
                 var marginRemaining = security.BuyingPowerModel.GetBuyingPower(
-                    new BuyingPowerContext(this, security, direction)
+                    new BuyingPowerParameters(this, security, direction)
                 );
 
                 Log.Trace("Order request margin information: " +

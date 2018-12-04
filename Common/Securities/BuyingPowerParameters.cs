@@ -20,7 +20,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Defines the parameters for <see cref="IBuyingPowerModel.GetBuyingPower"/>
     /// </summary>
-    public class BuyingPowerContext
+    public class BuyingPowerParameters
     {
         /// <summary>
         /// Gets the security
@@ -38,12 +38,12 @@ namespace QuantConnect.Securities
         public OrderDirection Direction { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BuyingPowerContext"/> class
+        /// Initializes a new instance of the <see cref="BuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="direction">The direction to compute buying power in</param>
-        public BuyingPowerContext(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        public BuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             Portfolio = portfolio;
             Security = security;

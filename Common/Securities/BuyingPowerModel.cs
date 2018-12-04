@@ -425,23 +425,23 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
         /// </summary>
-        /// <param name="context">A context object containing the security</param>
+        /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        public virtual ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionContext context)
+        public virtual ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
-            var maintenanceMargin = GetMaintenanceMargin(context.Security);
-            return context.ResultInAccountCurrency(maintenanceMargin);
+            var maintenanceMargin = GetMaintenanceMargin(parameters.Security);
+            return parameters.ResultInAccountCurrency(maintenanceMargin);
         }
 
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="context">A context object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        public virtual BuyingPower GetBuyingPower(BuyingPowerContext context)
+        public virtual BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {
-            var marginRemaining = GetMarginRemaining(context.Portfolio, context.Security, context.Direction);
-            return context.ResultInAccountCurrency(marginRemaining);
+            var marginRemaining = GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Direction);
+            return parameters.ResultInAccountCurrency(marginRemaining);
         }
     }
 }
