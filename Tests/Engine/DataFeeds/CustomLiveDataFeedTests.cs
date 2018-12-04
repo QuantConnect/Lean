@@ -76,13 +76,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastFileWriteDate = DateTime.MinValue;
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
-            var timerInterval = TimeSpan.FromMilliseconds(10);
+            var timerInterval = TimeSpan.FromMilliseconds(20);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
-                // stop the timer to prevent reentrancy
-                timer.Value.Change(Timeout.Infinite, Timeout.Infinite);
-
                 var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
 
                 if (currentTime.Date > endDate.Date)
@@ -145,9 +142,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 //Log.Trace($"Time advanced to: {timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork)}");
 
                 // restart the timer
-                timer.Value.Change(timerInterval, timerInterval);
+                timer.Value.Change(timerInterval.Milliseconds, Timeout.Infinite);
 
-            }, null, TimeSpan.FromMilliseconds(50), timerInterval);
+            }, null, timerInterval.Milliseconds, Timeout.Infinite);
 
             try
             {
