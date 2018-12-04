@@ -30,9 +30,10 @@ namespace QuantConnect.Tests.Common.Securities
         {
             public TestSecurityMarginModel(decimal leverage) : base(leverage) {}
 
-            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            public new decimal GetInitialMarginRequiredForOrder(
+                InitialMarginRequiredForOrderParameters parameters)
             {
-                return base.GetInitialMarginRequiredForOrder(security, order);
+                return base.GetInitialMarginRequiredForOrder(parameters);
             }
 
             public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
@@ -76,7 +77,8 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new TestSecurityMarginModel(2);
             security.BuyingPowerModel = buyingPowerModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
-            var actual = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
+            var actual = buyingPowerModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order));
 
             Assert.AreEqual(0, actual);
         }

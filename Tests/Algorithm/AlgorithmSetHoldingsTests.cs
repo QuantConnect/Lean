@@ -34,9 +34,10 @@ namespace QuantConnect.Tests.Algorithm
         {
             public TestSecurityMarginModel(decimal leverage) : base(leverage) { }
 
-            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            public new decimal GetInitialMarginRequiredForOrder(
+                InitialMarginRequiredForOrderParameters parameters)
             {
-                return base.GetInitialMarginRequiredForOrder(security, order);
+                return base.GetInitialMarginRequiredForOrder(parameters);
             }
 
             public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
@@ -166,7 +167,8 @@ namespace QuantConnect.Tests.Algorithm
                 orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
                 order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
                 freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
-                requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
+                requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
+                    new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order));
 
                 //Console.WriteLine("Current price: " + security.Price);
                 //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -209,7 +211,8 @@ namespace QuantConnect.Tests.Algorithm
             orderQuantity = algorithm.CalculateOrderQuantity(_symbol, targetPercentage);
             order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
             freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
-            requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(security, order);
+            requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order));
 
             //Console.WriteLine("Current price: " + security.Price);
             //Console.WriteLine("Target percentage: " + targetPercentage);
