@@ -27,8 +27,9 @@ namespace QuantConnect.Securities.Option
         /// Option Holding Class constructor
         /// </summary>
         /// <param name="security">The option security being held</param>
-        public OptionHolding(Option security)
-            : base(security)
+        /// <param name="currencyConverter">A currency converter instance</param>
+        public OptionHolding(Option security, ICurrencyConverter currencyConverter)
+            : base(security, currencyConverter)
         {
         }
     }

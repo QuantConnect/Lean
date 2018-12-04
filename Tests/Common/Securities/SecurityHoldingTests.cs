@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ComputesUnrealizedProfit()
         {
             var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily);
-            var holding = new SecurityHolding(security);
+            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(CashBook.AccountCurrency));
 
             var last = 100m;
             var bid = 99m;

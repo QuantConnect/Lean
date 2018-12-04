@@ -54,7 +54,7 @@ namespace QuantConnect.Securities.Forex
                 currencyConverter
                 )
         {
-            Holdings = new ForexHolding(this);
+            Holdings = new ForexHolding(this, currencyConverter);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
@@ -89,7 +89,7 @@ namespace QuantConnect.Securities.Forex
                 currencyConverter
                 )
         {
-            Holdings = new ForexHolding(this);
+            Holdings = new ForexHolding(this, currencyConverter);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
