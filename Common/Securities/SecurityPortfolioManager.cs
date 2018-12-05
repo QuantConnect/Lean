@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -546,7 +547,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="dividend">The dividend to be applied</param>
         /// <param name="liveMode">True if live mode, false for backtest</param>
-        public void ApplyDividend(Dividend dividend, bool liveMode)
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode mode)
         {
             // we currently don't properly model dividend payable dates, so in
             // live mode it's more accurate to rely on the brokerage cash sync
@@ -558,7 +560,6 @@ namespace QuantConnect.Securities
             var security = Securities[dividend.Symbol];
 
             // only apply dividends when we're in raw mode or split adjusted mode
-            var mode = security.DataNormalizationMode;
             if (mode == DataNormalizationMode.Raw || mode == DataNormalizationMode.SplitAdjusted)
             {
                 // longs get benefits, shorts get clubbed on dividends
@@ -574,7 +575,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="split">The split to be applied</param>
         /// <param name="liveMode">True if live mode, false for backtest</param>
-        public void ApplySplit(Split split, bool liveMode)
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode)
         {
             var security = Securities[split.Symbol];
 
@@ -585,7 +587,6 @@ namespace QuantConnect.Securities
             }
 
             // only apply splits in live or raw data mode
-            var mode = security.DataNormalizationMode;
             if (!liveMode && mode != DataNormalizationMode.Raw)
             {
                 return;

@@ -33,7 +33,6 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -1990,7 +1989,11 @@ namespace QuantConnect.Tests.Common.Securities
             spy.Holdings.SetHoldings(100m, 100);
 
             var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m, SplitType.SplitOccurred);
-            algorithm.Portfolio.ApplySplit(split, algorithm.LiveMode);
+            algorithm.Portfolio.ApplySplit(split,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
 
             // confirm the split was properly applied to our holdings, no left over cash from split
             Assert.AreEqual(50m, spy.Price);
@@ -2015,7 +2018,11 @@ namespace QuantConnect.Tests.Common.Securities
             spy.Holdings.SetHoldings(100m, 100);
 
             var dividend = new Dividend(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m);
-            algorithm.Portfolio.ApplyDividend(dividend, algorithm.LiveMode);
+            algorithm.Portfolio.ApplyDividend(dividend,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
 
             // confirm no changes were made
             Assert.AreEqual(100m, spy.Price);

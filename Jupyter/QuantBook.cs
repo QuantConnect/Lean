@@ -175,7 +175,10 @@ namespace QuantConnect.Jupyter
             }
 
             var option = Securities[symbol] as Option;
-            var underlying = AddEquity(symbol.Underlying.Value, option.Resolution);
+            var resolutionToUseForUnderlying = resolution ?? SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol)
+                .GetHighestResolution();
+            var underlying = AddEquity(symbol.Underlying.Value, resolutionToUseForUnderlying);
 
             var allSymbols = new List<Symbol>();
             for (var date = start; date < end; date = date.AddDays(1))

@@ -91,5 +91,19 @@ namespace QuantConnect.Data
                 .DefaultIfEmpty(QuantConnect.DataNormalizationMode.Adjusted)
                 .First();
         }
+
+        /// <summary>
+        /// Sets the data normalization mode to be used by
+        /// this set of <see cref="SubscriptionDataConfig"/>
+        /// </summary>
+        public static void SetDataNormalizationMode(
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs,
+            DataNormalizationMode mode)
+        {
+            foreach (var subscription in subscriptionDataConfigs)
+            {
+                subscription.DataNormalizationMode = mode;
+            }
+        }
     }
 }

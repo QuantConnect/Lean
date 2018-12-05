@@ -86,21 +86,25 @@ namespace QuantConnect.Securities
         /// Resolution of data requested for this security.
         /// </summary>
         /// <remarks>Tick, second or minute resolution for QuantConnect assets.</remarks>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public Resolution Resolution { get; private set; }
 
         /// <summary>
         /// Indicates the data will use previous bars when there was no trading in this time period. This was a configurable datastream setting set in initialization.
         /// </summary>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public bool IsFillDataForward { get; private set; }
 
         /// <summary>
         /// Indicates the security will continue feeding data after the primary market hours have closed. This was a configurable setting set in initialization.
         /// </summary>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public bool IsExtendedMarketHours { get; private set; }
 
         /// <summary>
         /// Gets the data normalization mode used for this security
         /// </summary>
+        [Obsolete("This property is obsolete. Use the 'SubscriptionDataConfig' exposed by 'SubscriptionManager'")]
         public DataNormalizationMode DataNormalizationMode { get; private set; }
 
         /// <summary>
@@ -571,6 +575,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns true if the security contains at least one subscription that represents custom data
         /// </summary>
+        [Obsolete("This method is obsolete. Use the 'SubscriptionDataConfig' exposed by" +
+            " 'SubscriptionManager' and the 'IsCustomData()' extension method")]
         public bool IsCustomData()
         {
             if (Subscriptions == null || !Subscriptions.Any())
@@ -597,6 +603,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Sets the data normalization mode to be used by this security
         /// </summary>
+        [Obsolete("This method is obsolete. Use the 'SubscriptionDataConfig' exposed by" +
+            " 'SubscriptionManager' and the 'SetDataNormalizationMode()' extension method")]
         public virtual void SetDataNormalizationMode(DataNormalizationMode mode)
         {
             foreach (var subscription in SubscriptionsBag)
@@ -604,6 +612,19 @@ namespace QuantConnect.Securities
                 subscription.DataNormalizationMode = mode;
             }
             UpdateSubscriptionProperties();
+        }
+
+        /// <summary>
+        /// This method will refresh the value of the <see cref="DataNormalizationMode"/> property.
+        /// This is required for backward-compatibility.
+        /// TODO: to be deleted with the DataNormalizationMode property
+        /// </summary>
+        public void RefreshDataNormalizationModeProperty()
+        {
+            DataNormalizationMode = SubscriptionsBag
+                .Select(x => x.DataNormalizationMode)
+                .DefaultIfEmpty(DataNormalizationMode.Adjusted)
+                .FirstOrDefault();
         }
 
         /// <summary>
@@ -758,7 +779,7 @@ namespace QuantConnect.Securities
             Resolution = SubscriptionsBag.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min();
             IsFillDataForward = SubscriptionsBag.Any(x => x.FillDataForward);
             IsExtendedMarketHours = SubscriptionsBag.Any(x => x.ExtendedMarketHours);
-            DataNormalizationMode = SubscriptionsBag.Select(x => x.DataNormalizationMode).DefaultIfEmpty(DataNormalizationMode.Adjusted).FirstOrDefault();
+            RefreshDataNormalizationModeProperty();
         }
     }
 }

@@ -78,16 +78,24 @@ namespace QuantConnect.Algorithm
                         ConfigureUnderlyingSecurity(security);
                     }
 
+                    var configs = SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(security.Symbol);
                     if (security.Symbol.HasUnderlying)
                     {
                         Security underlyingSecurity;
                         var underlyingSymbol = security.Symbol.Underlying;
+                        var resolution = configs.GetHighestResolution();
 
                         // create the underlying security object if it doesn't already exist
                         if (!Securities.TryGetValue(underlyingSymbol, out underlyingSecurity))
                         {
-                            underlyingSecurity = AddSecurity(underlyingSymbol.SecurityType, underlyingSymbol.Value, security.Resolution,
-                                underlyingSymbol.ID.Market, false, 0, security.IsExtendedMarketHours);
+                            underlyingSecurity = AddSecurity(underlyingSymbol.SecurityType,
+                                underlyingSymbol.Value,
+                                resolution,
+                                underlyingSymbol.ID.Market,
+                                false,
+                                0,
+                                configs.IsExtendedMarketHours());
                         }
 
                         // set data mode raw and default volatility model
@@ -100,14 +108,14 @@ namespace QuantConnect.Algorithm
                                 // lets request the higher resolution
                                 var currentResolutionRequest = requiredHistoryRequests[underlyingSecurity];
                                 if (currentResolutionRequest != Resolution.Minute  // Can not be less than Minute
-                                    && security.Resolution < currentResolutionRequest)
+                                    && resolution < currentResolutionRequest)
                                 {
-                                    requiredHistoryRequests[underlyingSecurity] = (Resolution)Math.Max((int)security.Resolution, (int)Resolution.Minute);
+                                    requiredHistoryRequests[underlyingSecurity] = (Resolution)Math.Max((int)resolution, (int)Resolution.Minute);
                                 }
                             }
                             else
                             {
-                                requiredHistoryRequests.Add(underlyingSecurity, (Resolution)Math.Max((int)security.Resolution, (int)Resolution.Minute));
+                                requiredHistoryRequests.Add(underlyingSecurity, (Resolution)Math.Max((int)resolution, (int)Resolution.Minute));
                             }
                         }
                         // set the underlying security on the derivative -- we do this in two places since it's possible
@@ -517,10 +525,14 @@ namespace QuantConnect.Algorithm
         private void ConfigureUnderlyingSecurity(Security security)
         {
             // force underlying securities to be raw data mode
-            if (security.DataNormalizationMode != DataNormalizationMode.Raw)
+            var configs = SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol);
+            if (configs.DataNormalizationMode() != DataNormalizationMode.Raw)
             {
                 Debug($"Warning: The {security.Symbol.Value} equity security was set the raw price normalization mode to work with options.");
-                security.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                configs.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                // For backward compatibility we need to refresh the security DataNormalizationMode Property
+                security.RefreshDataNormalizationModeProperty();
             }
 
             // ensure a volatility model has been set on the underlying
