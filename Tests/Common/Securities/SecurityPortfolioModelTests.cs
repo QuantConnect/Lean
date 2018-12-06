@@ -14,11 +14,13 @@
 */
 
 using System;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -187,6 +189,39 @@ namespace QuantConnect.Tests.Common.Securities
             // sold @50 and bought @100 = (50*100)+(-100*100 - 1) = -5001
             // current implementation doesn't back out fees.
             Assert.AreEqual(-5000m, security.Holdings.LastTradeProfit);
+        }
+
+        [Test]
+        public void NonAccountCurrencyFuture_LongToFlat()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var future = new Future(
+                Symbols.Fut_SPY_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            future.Holdings.SetHoldings(50m, 100);
+            portfolio.Securities.Add(future);
+
+            var fillPrice = 100m;
+            var fillQuantity = -future.Holdings.Quantity;
+            var orderFee = 1m;
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            // bought @50 and sold @100 = (-50*100)+(100*100) = 50000 * 10 (conversion rate to account currency)
+            Assert.AreEqual(50000m, future.Holdings.LastTradeProfit);
+            // bought @50 and sold @100 = (-50*100)+(100*100) = 5000
+            Assert.AreEqual(5000, portfolio.CashBook["EUR"].Amount);
         }
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
