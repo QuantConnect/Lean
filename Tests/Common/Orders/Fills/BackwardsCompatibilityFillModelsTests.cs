@@ -27,6 +27,7 @@ using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
+    [TestFixture]
     public class BackwardsCompatibilityFillModelsTests
     {
         private SubscriptionDataConfig _config;

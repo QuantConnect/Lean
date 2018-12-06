@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities
 {
@@ -126,7 +127,8 @@ namespace QuantConnect.Securities
             var orderFee = 0m;
             if (parameters.Order.Type == OrderType.Limit)
             {
-                orderFee = parameters.Security.FeeModel.GetOrderFee(parameters.Security, parameters.Order);
+                orderFee = parameters.Security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(parameters.Security, parameters.Order)).Value.Amount;
                 orderFee = parameters.Portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency, parameters.Security.QuoteCurrency.Symbol);
             }
 
@@ -257,7 +259,8 @@ namespace QuantConnect.Securities
                 // generate the order
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, DateTime.UtcNow);
                 var orderValue = orderQuantity * unitPrice;
-                orderFees = parameters.Security.FeeModel.GetOrderFee(parameters.Security, order);
+                orderFees = parameters.Security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(parameters.Security, order)).Value.Amount;
                 currentOrderValue = orderValue + orderFees;
             } while (currentOrderValue > targetOrderValue);
 

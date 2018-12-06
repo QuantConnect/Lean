@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,9 @@ using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IFeeModel"/> that models FXCM order fees
+    /// Provides an implementation of <see cref="FeeModel"/> that models FXCM order fees
     /// </summary>
-    public class FxcmFeeModel : IFeeModel
+    public class FxcmFeeModel : FeeModel
     {
         private readonly HashSet<Symbol> _groupCommissionSchedule1 = new HashSet<Symbol>
         {
@@ -36,12 +36,12 @@ namespace QuantConnect.Orders.Fees
         };
 
         /// <summary>
-        /// Get the fee for this order
+        /// Get the fee for this order in units of the account currency
         /// </summary>
-        /// <param name="security">The security matching the order</param>
-        /// <param name="order">The order to compute fees for</param>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
         /// <returns>The cost of the order in units of the account currency</returns>
-        public decimal GetOrderFee(Security security, Order order)
+        public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             // From http://www.fxcm.com/forex/forex-pricing/ (on Oct 6th, 2015)
             // Forex: $0.04 per side per 1k lot for EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, EURJPY, GBPJPY
@@ -50,12 +50,16 @@ namespace QuantConnect.Orders.Fees
             // From https://www.fxcm.com/uk/markets/cfds/frequently-asked-questions/
             // CFD: no commissions
 
-            if (security.Type != SecurityType.Forex)
-                return 0m;
+            decimal fee = 0;
+            if (parameters.Security.Type == SecurityType.Forex)
+            {
+                var commissionRate = _groupCommissionSchedule1.Contains(parameters.Security.Symbol)
+                    ? 0.04m : 0.06m;
 
-            var commissionRate = _groupCommissionSchedule1.Contains(security.Symbol) ? 0.04m : 0.06m;
-
-            return Math.Abs(commissionRate*order.AbsoluteQuantity/1000);
+                fee = Math.Abs(commissionRate * parameters.Order.AbsoluteQuantity / 1000);
+            }
+            return new OrderFee(new CashAmount(fee,
+                parameters.Security.QuoteCurrency.AccountCurrency));
         }
     }
 }

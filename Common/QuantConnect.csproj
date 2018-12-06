@@ -198,6 +198,9 @@
     <Compile Include="IsolatorLimitResult.cs" />
     <Compile Include="Orders\Fills\Fill.cs" />
     <Compile Include="Orders\Fills\FillModelParameters.cs" />
+    <Compile Include="Orders\Fees\FeeModel.cs" />
+    <Compile Include="Orders\Fees\OrderFee.cs" />
+    <Compile Include="Orders\Fees\OrderFeeParameters.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />

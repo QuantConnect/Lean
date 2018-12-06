@@ -13,12 +13,14 @@
  * limitations under the License.
 */
 
+using QuantConnect.Securities;
+
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IFeeModel"/> that models Bitfinex order fees
+    /// Provides an implementation of <see cref="FeeModel"/> that models Bitfinex order fees
     /// </summary>
-    public class BitfinexFeeModel : IFeeModel
+    public class BitfinexFeeModel : FeeModel
     {
         /// <summary>
         /// Tier 1 maker fees
@@ -37,16 +39,18 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Get the fee for this order in units of the account currency
         /// </summary>
-        /// <param name="security">The security matching the order</param>
-        /// <param name="order">The order to compute fees for</param>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
         /// <returns>The cost of the order in units of the account currency</returns>
-        public decimal GetOrderFee(Securities.Security security, Order order)
+        public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
+            var order = parameters.Order;
+            var security = parameters.Security;
             decimal fee = TakerFee;
             var props = order.Properties as BitfinexOrderProperties;
-            
+
             if (order.Type == OrderType.Limit &&
-                props?.Hidden != true && 
+                props?.Hidden != true &&
                 (props?.PostOnly == true || !order.IsMarketable))
             {
                 // limit order posted to the order book
@@ -64,7 +68,9 @@ namespace QuantConnect.Orders.Fees
             unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
 
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-            return unitPrice * order.AbsoluteQuantity * fee;
+            return new OrderFee(new CashAmount(
+                unitPrice * order.AbsoluteQuantity * fee,
+                security.QuoteCurrency.AccountCurrency));
         }
     }
 }

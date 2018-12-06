@@ -14,7 +14,6 @@
 */
 
 using Python.Runtime;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
@@ -23,9 +22,10 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an order fee model that wraps a <see cref="PyObject"/> object that represents a model that simulates order fees
     /// </summary>
-    public class FeeModelPythonWrapper : IFeeModel
+    public class FeeModelPythonWrapper : FeeModel
     {
         private readonly dynamic _model;
+        private bool _extendedVersion = true;
 
         /// <summary>
         /// Constructor for initialising the <see cref="FeeModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
@@ -37,17 +37,29 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Gets the order fee associated with the specified order. This returns the cost
-        /// of the transaction in the account currency
+        /// Get the fee for this order
         /// </summary>
-        /// <param name="security">The security matching the order</param>
-        /// <param name="order">The order to compute fees for</param>
+        /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+        /// containing the security and order</param>
         /// <returns>The cost of the order in units of the account currency</returns>
-        public decimal GetOrderFee(Security security, Order order)
+        public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             using (Py.GIL())
             {
-                return _model.GetOrderFee(security, order);
+                if (_extendedVersion)
+                {
+                    try
+                    {
+                        return _model.GetOrderFee(parameters);
+                    }
+                    catch (PythonException)
+                    {
+                        _extendedVersion = false;
+                    }
+                }
+                decimal fee = _model.GetOrderFee(parameters.Security, parameters.Order);
+                return new OrderFee(new CashAmount(fee,
+                    parameters.Security.QuoteCurrency.AccountCurrency));
             }
         }
     }
