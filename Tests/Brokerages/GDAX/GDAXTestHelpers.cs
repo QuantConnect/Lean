@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public static void AddOrder(GDAXBrokerage unit, int id, string brokerId, decimal quantity)
         {
             var order = new Orders.MarketOrder { BrokerId = new List<string> { brokerId }, Symbol = Btcusd, Quantity = quantity, Id = id };
+            order.PriceCurrency = "USD";
             unit.CachedOrderIDs.TryAdd(1, order);
             unit.FillSplit.TryAdd(id, new GDAXFill(order));
         }

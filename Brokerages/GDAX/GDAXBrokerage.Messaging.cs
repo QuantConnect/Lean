@@ -420,9 +420,14 @@ namespace QuantConnect.Brokerages.GDAX
             var fillPrice = message.Price;
             var fillQuantity = direction == OrderDirection.Sell ? -message.Size : message.Size;
             var isMaker = order.BrokerId[0] == message.MakerOrderId;
+
+            var currency = order.PriceCurrency == string.Empty
+                ? _algorithm.Securities[symbol].SymbolProperties.QuoteCurrency
+                : order.PriceCurrency;
+
             var orderFee = new OrderFee(new CashAmount(
                 GetFillFee(symbol, fillPrice, fillQuantity, isMaker),
-                AccountCurrency));
+                currency));
 
             var orderEvent = new OrderEvent
             (

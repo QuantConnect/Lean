@@ -21,6 +21,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -470,6 +471,79 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(100m, future.Holdings.AveragePrice);
             // had 1 EUR - 1 fee
             Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+        }
+
+        [Test]
+        public void NonAccountCurrencyCrypto_LongToFlat()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            portfolio.CashBook.Add("BTC", 0, 1000);
+            var crypto = new Crypto(
+                Symbols.BTCEUR,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            crypto.Holdings.SetHoldings(50m, 100);
+            portfolio.Securities.Add(crypto);
+
+            var fillPrice = 100m;
+            var fillQuantity = -crypto.Holdings.Quantity;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, crypto.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, crypto.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            // bought @50 and sold @100 = (-50*100)+(100*100) = 50000 * 10 (conversion rate to account currency)
+            Assert.AreEqual(50000m, crypto.Holdings.LastTradeProfit);
+            // sold @100 * 100 = 10000 - 1 fee
+            Assert.AreEqual(9999, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0m, crypto.Holdings.AveragePrice);
+            Assert.AreEqual(0m, crypto.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyCrypto_FlatToLong()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            portfolio.CashBook.Add("BTC", 0, 1000);
+            var crypto = new Crypto(
+                Symbols.BTCEUR,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            portfolio.Securities.Add(crypto);
+
+            var fillPrice = 100m;
+            var fillQuantity = 100;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, crypto.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, crypto.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(0m, crypto.Holdings.LastTradeProfit);
+            Assert.AreEqual(100m, crypto.Holdings.Quantity);
+            Assert.AreEqual(100m, crypto.Holdings.AveragePrice);
+            // had 0 EUR - 1 fee
+            Assert.AreEqual(-10001, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(100, portfolio.CashBook["BTC"].Amount);
         }
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)

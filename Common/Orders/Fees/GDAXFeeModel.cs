@@ -46,7 +46,7 @@ namespace QuantConnect.Orders.Fees
             {
                 // get order value in account currency, then apply taker fee factor
                 var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-                unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
+                unitPrice *= security.SymbolProperties.ContractMultiplier;
 
                 // currently we do not model 30-day volume, so we use the first tier
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Orders.Fees
             }
             return new OrderFee(new CashAmount(
                 fee,
-                security.QuoteCurrency.AccountCurrency));
+                security.QuoteCurrency.Symbol));
         }
     }
 }
