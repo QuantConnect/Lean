@@ -147,6 +147,9 @@ namespace QuantConnect.Packets
         AlphaNode,
 
         /// Packet containing list of algorithms to run as a regression test
-        RegressionAlgorithm
+        RegressionAlgorithm,
+
+        /// Packet containing a heartbeat
+        AlphaHeartbeat
     }
 }
