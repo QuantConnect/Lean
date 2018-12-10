@@ -638,20 +638,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.
         /// </summary>
-        /// <remarks>
-        /// Bit of a hack -- but using datetime as dictionary key is dangerous as you can process multiple orders within a second.
-        /// For the accounting / statistics generating purposes its not really critical to know the precise time, so just add a millisecond while there's an identical key.
-        /// </remarks>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
         public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
         {
-            var clone = time;
-            while (Transactions.TransactionRecord.ContainsKey(clone))
-            {
-                clone = clone.AddMilliseconds(1);
-            }
-            Transactions.TransactionRecord.Add(clone, transactionProfitLoss);
+            Transactions.AddTransactionRecord(time, transactionProfitLoss);
         }
 
         /// <summary>
