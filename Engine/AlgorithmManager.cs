@@ -794,6 +794,9 @@ namespace QuantConnect.Lean.Engine
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
 
+            // this is needed to have non-zero currency conversion rates during warmup
+            dataManager.UniverseSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
+
             // get the required history job from the algorithm
             DateTime? lastHistoryTimeUtc = null;
             var historyRequests = algorithm.GetWarmupHistoryRequests().ToList();
@@ -840,26 +843,6 @@ namespace QuantConnect.Lean.Engine
                 {
                     start = Math.Min(request.StartTimeUtc.Ticks, start);
                     Log.Trace(string.Format("AlgorithmManager.Stream(): WarmupHistoryRequest: {0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
-                }
-
-                // trigger universe selection in order to add all required internal feeds,
-                // this is needed to have non-zero currency conversion rates during warmup
-                foreach (var universe in algorithm.UniverseManager.Values)
-                {
-                    BaseDataCollection dataCollection;
-                    switch (universe.SecurityType)
-                    {
-                        case SecurityType.Option:
-                            dataCollection = new OptionChainUniverseDataCollection();
-                            break;
-                        case SecurityType.Future:
-                            dataCollection = new FuturesChainUniverseDataCollection();
-                            break;
-                        default:
-                            dataCollection = new BaseDataCollection();
-                            break;
-                    }
-                    dataManager.UniverseSelection.ApplyUniverseSelection(universe, new DateTime(start), dataCollection);
                 }
 
                 var timeSliceFactory = new TimeSliceFactory(timeZone);

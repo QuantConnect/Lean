@@ -16,27 +16,41 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm is a test case for validation of conversion rates during warm up.
+    /// This algorithm reproduces GH issue 2404, exception: `This is a forward only indicator`
     /// </summary>
-    public class WarmupConversionRatesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupIndicatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _spy;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2018, 4, 5);
-            SetEndDate(2018, 4, 5);
-            SetCash(10000);
+            SetStartDate(2013, 11, 1);
+            SetEndDate(2013, 12, 10);    //Set End Date
+            SetWarmup(TimeSpan.FromDays(30));
 
-            SetWarmUp(TimeSpan.FromDays(1));
-            AddCrypto("BTCEUR");
-            AddCrypto("LTCUSD");
+            _spy = AddEquity("SPY", Resolution.Daily).Symbol;
+            var renkoConsolidator = new RenkoConsolidator(2m);
+            renkoConsolidator.DataConsolidated += (sender, consolidated) =>
+            {
+                if (IsWarmingUp) return;
+                if (!Portfolio.Invested)
+                {
+                    SetHoldings(_spy, 1.0);
+                }
+                Log($"CLOSE - {consolidated.Time:o} - {consolidated.Open} {consolidated.Close}");
+            };
+            var sma = new SimpleMovingAverage("SMA", 3);
+            RegisterIndicator(_spy, sma, renkoConsolidator);
         }
 
         /// <summary>
@@ -45,25 +59,6 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (Portfolio.CashBook["EUR"].ConversionRate == 0
-                || Portfolio.CashBook["BTC"].ConversionRate == 0
-                || Portfolio.CashBook["LTC"].ConversionRate == 0)
-            {
-                Log($"BTCEUR current price: {Securities["BTCEUR"].Price}");
-                Log($"LTCUSD current price: {Securities["LTCUSD"].Price}");
-                Log($"EUR conversion rate: {Portfolio.CashBook["EUR"].ConversionRate}");
-                Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
-                Log($"LTC conversion rate: {Portfolio.CashBook["LTC"].ConversionRate}");
-
-                throw new Exception("Conversion rate is 0");
-            }
-
-            if (IsWarmingUp) return;
-            if (!Portfolio.Invested)
-            {
-                SetHoldings("LTCUSD", 1);
-                Debug("Purchased Stock");
-            }
         }
 
         /// <summary>
@@ -84,22 +79,22 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-36.860%"},
-            {"Drawdown", "4.400%"},
+            {"Compounding Annual Return", "21.454%"},
+            {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.126%"},
-            {"Sharpe Ratio", "-2.421"},
+            {"Net Profit", "2.155%"},
+            {"Sharpe Ratio", "3.253"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.888"},
-            {"Beta", "105.83"},
-            {"Annual Standard Deviation", "0.065"},
+            {"Alpha", "0.498"},
+            {"Beta", "-15.417"},
+            {"Annual Standard Deviation", "0.06"},
             {"Annual Variance", "0.004"},
-            {"Information Ratio", "-2.552"},
-            {"Tracking Error", "0.064"},
-            {"Treynor Ratio", "-0.001"},
-            {"Total Fees", "$0.00"}
+            {"Information Ratio", "2.914"},
+            {"Tracking Error", "0.06"},
+            {"Treynor Ratio", "-0.013"},
+            {"Total Fees", "$3.08"}
         };
     }
 }

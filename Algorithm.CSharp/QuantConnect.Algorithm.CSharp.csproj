@@ -213,6 +213,7 @@
     <Compile Include="UpdateOrderLiveTestAlgorithm.cs" />
     <Compile Include="UpdateOrderRegressionAlgorithm.cs" />
     <Compile Include="OrderTicketDemoAlgorithm.cs" />
+    <Compile Include="WarmupIndicatorRegressionAlgorithm.cs" />
     <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.cs" />
     <Compile Include="OptionChainProviderAlgorithm.cs" />
     <Compile Include="ConstituentsQC500GeneratorAlgorithm.cs" />
