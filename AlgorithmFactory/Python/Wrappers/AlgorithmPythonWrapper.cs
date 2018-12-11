@@ -876,5 +876,19 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="slice">The Slice object</param>
         public void SetCurrentSlice(Slice slice) => _baseAlgorithm.SetCurrentSlice(slice);
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        {
+            return _baseAlgorithm.History(symbols, periods, resolution);
+        }
     }
 }

@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -118,8 +119,15 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configuration transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
+        /// <param name="setupHelper"></param>
         /// <returns>Boolean true on successfully setting up the console.</returns>
-        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
+        public bool Setup(IAlgorithm algorithm,
+            IBrokerage brokerage,
+            AlgorithmNodePacket baseJob,
+            IResultHandler resultHandler,
+            ITransactionHandler transactionHandler,
+            IRealTimeHandler realTimeHandler,
+            SetupHandlerHelper setupHelper)
         {
             var initializeComplete = false;
 
@@ -166,6 +174,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
+
+                    setupHelper.InitializeCashConversionRates(algorithm);
                     StartingPortfolioValue = algorithm.Portfolio.Cash;
                 }
                 else

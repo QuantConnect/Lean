@@ -24,6 +24,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -135,8 +136,15 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
+        /// <param name="setupHelper"></param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
+        public bool Setup(IAlgorithm algorithm,
+            IBrokerage brokerage,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            ITransactionHandler transactionHandler,
+            IRealTimeHandler realTimeHandler,
+            SetupHandlerHelper setupHelper)
         {
             // verify we were given the correct job packet type
             var liveJob = job as LiveNodePacket;
@@ -348,6 +356,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Finalize Initialization
                 algorithm.PostInitialize();
 
+                setupHelper.InitializeCashConversionRates(algorithm);
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;

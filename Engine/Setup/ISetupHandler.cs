@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -98,7 +99,14 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
+        /// <param name="setupHelper"></param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler);
+        bool Setup(IAlgorithm algorithm,
+            IBrokerage brokerage,
+            AlgorithmNodePacket job,
+            IResultHandler resultHandler,
+            ITransactionHandler transactionHandler,
+            IRealTimeHandler realTimeHandler,
+            SetupHandlerHelper setupHelper);
     }
 }
