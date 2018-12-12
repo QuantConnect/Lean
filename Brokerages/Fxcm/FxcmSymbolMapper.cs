@@ -130,7 +130,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         private static readonly HashSet<string> KnownCurrencies = new HashSet<string>
         {
-            "AUD", "CAD", "CHF", "CNH", "EUR", "GBP", "HKD", "JPY", "MXN", "NOK", "NZD", "SEK", "TRY", "USD", "ZAR"
+            "AUD", "CAD", "CHF", "CNH", "EUR", "GBP", "HKD", "JPY", "MXN", "NOK", "NZD", "SEK", "TRY", Currencies.USD, "ZAR"
         };
 
         /// <summary>

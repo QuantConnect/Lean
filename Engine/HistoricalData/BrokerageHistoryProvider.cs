@@ -101,8 +101,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var security = new Security(
                 request.ExchangeHours,
                 config,
-                new Cash(CashBook.FakeCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.FakeCurrency),
+                new Cash(Currencies.NullCurrency, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.NullCurrency),
                 ErrorCurrencyConverter.Instance
             );
 

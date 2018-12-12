@@ -24,7 +24,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
 {

@@ -47,8 +47,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Equity(
                 Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                new Cash("USD", 0, 1),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
@@ -327,8 +327,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 security = new Equity(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash("USD", 0, 1),
-                    SymbolProperties.GetDefault("USD"),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance
                 );
             }
@@ -340,8 +340,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 security = new Option(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash("USD", 0, 1),
-                    new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                    new Cash(Currencies.USD, 0, 1),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance
                 );
             }
@@ -351,8 +351,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 security = new Future(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash("USD", 0, 1),
-                    SymbolProperties.GetDefault("USD"),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance
                 );
             }

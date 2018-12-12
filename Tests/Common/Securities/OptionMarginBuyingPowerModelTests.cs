@@ -53,8 +53,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             var buyingPowerModel = new OptionMarginModel();
@@ -75,8 +75,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -93,8 +93,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionPut.SetMarketPrice(new Tick { Value = price });
@@ -113,8 +113,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
@@ -138,8 +138,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -156,8 +156,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
@@ -181,8 +181,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -199,8 +199,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
@@ -224,8 +224,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -242,8 +242,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionPut.SetMarketPrice(new Tick { Value = price });
@@ -267,8 +267,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -285,8 +285,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
@@ -310,8 +310,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -320,8 +320,8 @@ namespace QuantConnect.Tests.Common.Securities
             var optionPut = new Option(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), optionPutSymbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionPut.SetMarketPrice(new Tick { Value = price });
@@ -347,8 +347,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = new QuantConnect.Securities.Equity.Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPriceStart });
@@ -357,8 +357,8 @@ namespace QuantConnect.Tests.Common.Securities
             var optionPut = new Option(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), optionPutSymbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties("", "USD", 100, 0.01m, 1),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance
             );
             optionPut.SetMarketPrice(new Tick { Value = optionPriceStart });

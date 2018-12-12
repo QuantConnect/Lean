@@ -761,7 +761,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var transactionHandler = new TestBrokerageTransactionHandler();
             var broker = new Mock<IBrokerage>();
 
-            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash("USD", 10, 10) });
+            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash(Currencies.USD, 10, 10) });
             transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
 
@@ -789,7 +789,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var transactionHandler = new TestBrokerageTransactionHandler();
             var broker = new Mock<IBrokerage>();
 
-            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash("USD", 10, 10) });
+            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash(Currencies.USD, 10, 10) });
             transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
 
@@ -821,7 +821,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var transactionHandler = new TestBrokerageTransactionHandler();
             var broker = new Mock<IBrokerage>();
 
-            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash("USD", 10, 10) });
+            broker.Setup(m => m.GetCashBalance()).Returns(new List<Cash> { new Cash(Currencies.USD, 10, 10) });
 
             // This is 2 am New York
             transactionHandler.TestCurrentTimeUtc = new DateTime(1, 1, 1, 7, 0, 0);

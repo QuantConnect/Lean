@@ -48,9 +48,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -65,9 +65,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -82,9 +82,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -100,9 +100,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -118,9 +118,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -139,9 +139,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(100, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -161,9 +161,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(ConstantFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -183,9 +183,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -206,9 +206,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(ConstantFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -229,9 +229,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(100, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -252,9 +252,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(100, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -275,9 +275,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(100, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -298,9 +298,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -321,9 +321,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(ConstantFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -344,9 +344,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -367,9 +367,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -391,9 +391,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -415,9 +415,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(2, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -438,9 +438,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -461,9 +461,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(ConstantFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         [Test]
@@ -484,9 +484,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(25, Math.Round(security.Leverage, RoundingPrecision));
             Assert.IsInstanceOf(typeof(FxcmFeeModel), security.FeeModel);
             var fee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, _order));
+                new OrderFeeParameters(security, _order, Currencies.USD));
             Assert.AreEqual(0.04, fee.Value.Amount);
-            Assert.AreEqual("USD", fee.Value.Currency);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
         private QCAlgorithm GetAlgorithm()

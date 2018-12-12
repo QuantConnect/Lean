@@ -162,9 +162,9 @@
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\Orders\Fees\BackwardsCompatibilityFeeModelTests.cs" />
+    <Compile Include="Common\Orders\Fees\BitfinexFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\GDAXFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fills\BackwardsCompatibilityFillModelsTests.cs" />
-    <Compile Include="Common\Orders\OrderFeeTest.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />

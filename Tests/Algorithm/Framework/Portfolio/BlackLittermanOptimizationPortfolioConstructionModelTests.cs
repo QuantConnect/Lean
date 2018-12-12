@@ -158,8 +158,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return new Security(
                 exchangeHours,
                 config,
-                new Cash("USD", 0, 1),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
         }

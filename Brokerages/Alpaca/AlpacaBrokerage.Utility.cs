@@ -22,7 +22,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
 using OrderStatus = QuantConnect.Orders.OrderStatus;
 
 namespace QuantConnect.Brokerages.Alpaca
@@ -132,7 +131,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
-                        new OrderFee(new CashAmount(0, AccountCurrency)),
+                        OrderFee.Zero,
                         "Alpaca Fill Event")
                     {
                         Status = status,
@@ -144,7 +143,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 {
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
-                        new OrderFee(new CashAmount(0, AccountCurrency)),
+                        OrderFee.Zero,
                         "Alpaca Cancel Order Event") { Status = OrderStatus.Canceled });
                 }
                 else if (trade.Event == TradeUpdateEvent.OrderCancelRejected)

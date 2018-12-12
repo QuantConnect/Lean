@@ -50,8 +50,8 @@ namespace QuantConnect.Tests.Common.Securities
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance
             );
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
@@ -75,8 +75,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var futureSecurity = new Future(SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
@@ -100,8 +100,8 @@ namespace QuantConnect.Tests.Common.Securities
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash("USD", 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance
             );
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });

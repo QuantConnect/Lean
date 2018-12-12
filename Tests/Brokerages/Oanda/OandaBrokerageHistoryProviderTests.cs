@@ -23,7 +23,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
@@ -69,7 +68,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 var accessToken = Config.Get("oanda-access-token");
                 var accountId = Config.Get("oanda-account-id");
 
-                var brokerage = new OandaBrokerage(null, null, environment, accessToken, accountId, new TestAccountCurrencyProvider());
+                var brokerage = new OandaBrokerage(null, null, environment, accessToken, accountId);
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);

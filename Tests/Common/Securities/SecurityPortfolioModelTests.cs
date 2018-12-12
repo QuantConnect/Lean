@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = 100;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -100;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = 100;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -security.Holdings.Quantity;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -2*security.Holdings.Quantity;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -140,7 +140,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -100;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -security.Holdings.Quantity;
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -2*security.Holdings.Quantity; // flip from -100 to +100
-            var orderFee = new OrderFee(new CashAmount(1m, security.QuoteCurrency.AccountCurrency));
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -551,8 +551,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             security.SetMarketPrice(new Tick { Value = 100 });
@@ -561,9 +561,9 @@ namespace QuantConnect.Tests.Common.Securities
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash("USD", 100 * 1000m, 1m);
+            portfolio.SetCash(Currencies.USD, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100*1000m, portfolio.CashBook["USD"].Amount);
+            Assert.AreEqual(100*1000m, portfolio.CashBook[Currencies.USD].Amount);
             return security;
         }
 

@@ -191,7 +191,7 @@ namespace QuantConnect.Brokerages
 
         private static readonly IReadOnlyDictionary<string, decimal> ForexCurrencyLimits = new Dictionary<string, decimal>()
         {
-            {"USD", 7000000m},
+            {Currencies.USD, 7000000m},
             {"AUD", 6000000m},
             {"CAD", 6000000m},
             {"CHF", 6000000m},

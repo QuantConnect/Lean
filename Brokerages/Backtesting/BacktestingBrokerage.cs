@@ -51,7 +51,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm)
-            : base("Backtesting Brokerage", algorithm)
+            : base("Backtesting Brokerage")
         {
             Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="name">The name of the brokerage</param>
         protected BacktestingBrokerage(IAlgorithm algorithm, string name)
-            : base(name, algorithm)
+            : base(name)
         {
             Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
@@ -75,7 +75,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="marketSimulation">The backtesting market simulation instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
-            : base("Backtesting Brokerage", algorithm)
+            : base("Backtesting Brokerage")
         {
             Algorithm = algorithm;
             MarketSimulation = marketSimulation;
@@ -146,7 +146,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 // fire off the event that says this order has been submitted
                 var submitted = new OrderEvent(order,
                         Algorithm.UtcTime,
-                        new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)))
+                        OrderFee.Zero)
                     { Status = OrderStatus.Submitted };
                 OnOrderEvent(submitted);
 
@@ -186,7 +186,7 @@ namespace QuantConnect.Brokerages.Backtesting
             // fire off the event that says this order has been updated
             var updated = new OrderEvent(order,
                     Algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)))
+                    OrderFee.Zero)
                 { Status = OrderStatus.Submitted };
             OnOrderEvent(updated);
 
@@ -221,7 +221,7 @@ namespace QuantConnect.Brokerages.Backtesting
             // fire off the event that says this order has been canceled
             var canceled = new OrderEvent(order,
                     Algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)))
+                    OrderFee.Zero)
                 { Status = OrderStatus.Canceled };
             OnOrderEvent(canceled);
 
@@ -275,7 +275,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                     var fills = new[] { new OrderEvent(order,
                         Algorithm.UtcTime,
-                        new OrderFee(new CashAmount(0, Algorithm.AccountCurrency))) };
+                        OrderFee.Zero) };
 
                     Security security;
                     if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
@@ -284,7 +284,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         // invalidate the order in the algorithm before removing
                         OnOrderEvent(new OrderEvent(order,
                                 Algorithm.UtcTime,
-                                new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)))
+                                OrderFee.Zero)
                         {Status = OrderStatus.Invalid});
                         _pending.TryRemove(order.Id, out order);
                         continue;
@@ -295,7 +295,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         OnOrderEvent(new OrderEvent(order,
                             Algorithm.UtcTime,
-                            new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)))
+                            OrderFee.Zero)
                         {
                             Status = OrderStatus.Canceled,
                             Message = "The order has expired."
@@ -321,7 +321,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         // if we threw an error just mark it as invalid and remove the order from our pending list
                         OnOrderEvent(new OrderEvent(order,
                                 Algorithm.UtcTime,
-                                new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)),
+                                OrderFee.Zero,
                                 err.Message)
                             { Status = OrderStatus.Invalid });
                         Order pending;
@@ -366,7 +366,9 @@ namespace QuantConnect.Brokerages.Backtesting
                                     if (fill.OrderFee.Value.Amount == 0m)
                                     {
                                         fill.OrderFee = security.FeeModel.GetOrderFee(
-                                            new OrderFeeParameters(security, order));
+                                            new OrderFeeParameters(security,
+                                                order,
+                                                Algorithm.Portfolio.CashBook.AccountCurrency));
                                     }
                                 }
                             }
@@ -383,7 +385,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         var message = $"Insufficient buying power to complete order (Value:{order.GetValue(security).SmartRounding()}), Reason: {hasSufficientBuyingPowerResult.Reason}.";
                         OnOrderEvent(new OrderEvent(order,
                                 Algorithm.UtcTime,
-                                new OrderFee(new CashAmount(0, Algorithm.AccountCurrency)),
+                                OrderFee.Zero,
                                 message)
                             { Status = OrderStatus.Invalid });
                         Order pending;

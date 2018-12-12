@@ -6389,7 +6389,7 @@ namespace QuantConnect.Algorithm.CSharp
             "USBI",
             "USCI",
             "USCR",
-            "USD",
+            Currencies.USD,
             "USEG",
             "USG",
             "USL",

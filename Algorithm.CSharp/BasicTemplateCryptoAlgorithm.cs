@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
             else if (Time.Hour == 2 && Time.Minute == 0)
             {
                 // Submit a buy limit order for BTC at 5% below the current price
-                var usdTotal = Portfolio.CashBook["USD"].Amount;
+                var usdTotal = Portfolio.CashBook[Currencies.USD].Amount;
                 var limitPrice = Math.Round(Securities["BTCUSD"].Price * 0.95m, 2);
                 // use only half of our total USD
                 var quantity = usdTotal * 0.5m / limitPrice;
@@ -104,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
             else if (Time.Hour == 2 && Time.Minute == 1)
             {
                 // Get current USD available, subtracting amount reserved for buy open orders
-                var usdTotal = Portfolio.CashBook["USD"].Amount;
+                var usdTotal = Portfolio.CashBook[Currencies.USD].Amount;
                 var usdReserved = Transactions.GetOpenOrders(x => x.Direction == OrderDirection.Buy && x.Type == OrderType.Limit)
                     .Where(x => x.Symbol == "BTCUSD" || x.Symbol == "ETHUSD")
                     .Sum(x => x.Quantity * ((LimitOrder) x).LimitPrice);

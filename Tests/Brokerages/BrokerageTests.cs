@@ -193,8 +193,8 @@ namespace QuantConnect.Tests.Brokerages
                     false,
                     false
                 ),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
         }
@@ -457,7 +457,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("GET CASH BALANCE");
             Log.Trace("");
             var balance = Brokerage.GetCashBalance();
-            Assert.AreEqual(1, balance.Count(x => x.Symbol == "USD"));
+            Assert.AreEqual(1, balance.Count(x => x.Symbol == Currencies.USD));
         }
 
         [Test]

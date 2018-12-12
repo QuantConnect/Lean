@@ -205,7 +205,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private class FakeSecurityHolding : SecurityHolding
         {
             public FakeSecurityHolding(Security security) :
-                base(security, new IdentityCurrencyConverter("USD"))
+                base(security, new IdentityCurrencyConverter(Currencies.USD))
             {
             }
             public void SetQuantity(int quantity)

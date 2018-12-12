@@ -25,7 +25,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX

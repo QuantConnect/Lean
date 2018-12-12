@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _equity = new Equity(
                 Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -51,8 +51,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _forex = new Forex(
                 Symbols.EURUSD,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 

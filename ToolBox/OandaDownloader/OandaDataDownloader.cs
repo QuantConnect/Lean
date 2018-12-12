@@ -20,7 +20,6 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages.Oanda;
-using QuantConnect.Interfaces;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -43,8 +42,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 null,
                 Environment.Practice,
                 accessToken,
-                accountId,
-                new OandaDownloaderAccountCurrencyProvider());
+                accountId);
         }
 
         /// <summary>
@@ -222,11 +220,6 @@ namespace QuantConnect.ToolBox.OandaDownloader
             }
 
             return groupedBars;
-        }
-
-        internal class OandaDownloaderAccountCurrencyProvider : IAccountCurrencyProvider
-        {
-            public string AccountCurrency => "USD";
         }
     }
 }

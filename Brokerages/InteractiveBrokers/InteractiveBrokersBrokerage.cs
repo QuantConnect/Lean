@@ -190,7 +190,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
         public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual)
-            : base("Interactive Brokers Brokerage", algorithm)
+            : base("Interactive Brokers Brokerage")
         {
             _algorithm = algorithm;
             _orderProvider = orderProvider;
@@ -434,7 +434,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 // if quote currency is in USD don't bother making the request
                 var currency = local.Symbol.Value.Substring(3);
-                if (currency == "USD")
+                if (currency == Currencies.USD)
                 {
                     local.ConversionRate = 1m;
                     return null;
@@ -463,7 +463,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            var balances = _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key), AccountCurrency)).ToList();
+            var balances = _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
 
             if (balances.Count == 0)
             {
@@ -1041,7 +1041,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <remarks>Synchronous, blocking</remarks>
         private decimal GetUsdConversion(string currency)
         {
-            if (currency == "USD")
+            if (currency == Currencies.USD)
             {
                 return 1m;
             }
@@ -1049,8 +1049,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Getting USD conversion for " + currency);
 
             // determine the correct symbol to choose
-            var invertedSymbol = "USD" + currency;
-            var normalSymbol = currency + "USD";
+            var invertedSymbol = Currencies.USD + currency;
+            var normalSymbol = currency + Currencies.USD;
             var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
@@ -1288,8 +1288,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var order = _orderProvider.GetOrderByBrokerageId(requestId);
                 if (order != null)
                 {
-                    var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
                     {
                         Status = OrderStatus.Invalid,
                         Message = message
@@ -1469,9 +1468,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
                     else
                     {
-                        var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                         // fire the event
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Order Event")
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Interactive Brokers Order Event")
                         {
                             Status = status
                         });
@@ -1876,7 +1874,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Symbol = ibSymbol,
                 Exchange = exchange ?? "Smart",
                 SecType = securityType,
-                Currency = "USD"
+                Currency = Currencies.USD
             };
             if (symbol.ID.SecurityType == SecurityType.Forex)
             {
@@ -2722,7 +2720,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contract = new Contract
             {
                 Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
-                Currency = securityCurrency ?? "USD",
+                Currency = securityCurrency ?? Currencies.USD,
                 Exchange = exchangeSpecifier,
                 SecType = ConvertSecurityType(securityType)
             };

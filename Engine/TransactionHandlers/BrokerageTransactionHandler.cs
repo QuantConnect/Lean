@@ -355,7 +355,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // notify the algorithm with an order event
                     HandleOrderEvent(new OrderEvent(order,
                         _algorithm.UtcTime,
-                        new OrderFee(new CashAmount(0, _algorithm.AccountCurrency))));
+                        OrderFee.Zero));
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
@@ -755,7 +755,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     "Unable to add order for zero quantity"));
                 return response;
             }
@@ -773,7 +773,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     "Error executing margin models"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
             }
@@ -786,7 +786,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     errorMessage));
                 return response;
             }
@@ -802,7 +802,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     "BrokerageModel declared unable to submit order"));
                 return response;
             }
@@ -828,7 +828,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     "Brokerage failed to place order"));
                 return response;
             }
@@ -867,7 +867,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     "BrokerageModel declared unable to update order"));
                 return response;
             }
@@ -898,7 +898,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.Error(errorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
-                    new OrderFee(new CashAmount(0, _algorithm.AccountCurrency)),
+                    OrderFee.Zero,
                     "Brokerage failed to update order"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
             }
@@ -1045,12 +1045,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     var multiplier = security.SymbolProperties.ContractMultiplier;
                     var securityConversionRate = security.QuoteCurrency.ConversionRate;
-                    var feeConversionRate = securityConversionRate;
-                    if (fill.OrderFee.Value.Currency != security.QuoteCurrency.Symbol)
-                    {
-                        feeConversionRate = _algorithm.Portfolio.CashBook
-                            [fill.OrderFee.Value.Currency].ConversionRate;
-                    }
+                    var feeInAccountCurrency = _algorithm.Portfolio.CashBook
+                        .ConvertToAccountCurrency(fill.OrderFee.Value).Amount;
 
                     try
                     {
@@ -1059,7 +1055,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         _algorithm.TradeBuilder.ProcessFill(
                             fill,
                             securityConversionRate,
-                            feeConversionRate,
+                            feeInAccountCurrency,
                             multiplier);
                     }
                     catch (Exception err)

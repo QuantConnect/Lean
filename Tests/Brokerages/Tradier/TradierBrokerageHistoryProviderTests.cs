@@ -14,7 +14,6 @@
 */
 
 using System;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Configuration;
@@ -22,7 +21,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
@@ -58,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             {
                 var accessToken = Config.Get("tradier-access-token");
 
-                var brokerage = new TradierBrokerage(null, null, "", new TestAccountCurrencyProvider());
+                var brokerage = new TradierBrokerage(null, null, "");
                 brokerage.SetTokens(0, accessToken, "", DateTime.Now, Time.OneDay);
 
                 var now = DateTime.UtcNow;

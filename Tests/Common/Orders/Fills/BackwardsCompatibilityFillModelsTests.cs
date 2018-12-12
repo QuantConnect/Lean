@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 OrderDirection.Buy,
                 1,
                 1,
-                new OrderFee(new CashAmount(1, "USD"))
+                new OrderFee(new CashAmount(1, Currencies.USD))
             );
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);

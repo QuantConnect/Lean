@@ -82,16 +82,16 @@ namespace QuantConnect.Tests.Common.Securities
             _tradeBarSecurity = new Security(
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 _tradeBarConfig,
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
             _quoteBarSecurity = new Security(
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 _quoteBarConfig,
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 

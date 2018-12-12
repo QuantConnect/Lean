@@ -18,8 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -121,19 +119,19 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="fill">The new fill order event</param>
         /// <param name="securityConversionRate">The current security market conversion rate into the account currency</param>
-        /// <param name="feeConversionRate">The current order fee market conversion rate into the account currency</param>
+        /// <param name="feeInAccountCurrency">The current order fee in the account currency</param>
         /// <param name="multiplier">The contract multiplier</param>
         public void ProcessFill(OrderEvent fill,
             decimal securityConversionRate,
-            decimal feeConversionRate,
+            decimal feeInAccountCurrency,
             decimal multiplier = 1.0m)
         {
             // If we have multiple fills per order, we assign the order fee only to its first fill
             // to avoid counting the same order fee multiple times.
-            var orderFee = new OrderFee(new CashAmount(0, fill.OrderFee.Value.Currency));
+            var orderFee = 0m;
             if (!_ordersWithFeesAssigned.Contains(fill.OrderId))
             {
-                orderFee = fill.OrderFee;
+                orderFee = feeInAccountCurrency;
                 _ordersWithFeesAssigned.Add(fill.OrderId);
             }
 
@@ -141,21 +139,21 @@ namespace QuantConnect.Statistics
             {
                 case FillGroupingMethod.FillToFill:
                     ProcessFillUsingFillToFill(fill.Clone(),
-                        orderFee.Value.Amount * feeConversionRate,
+                        orderFee,
                         securityConversionRate,
                         multiplier);
                     break;
 
                 case FillGroupingMethod.FlatToFlat:
                     ProcessFillUsingFlatToFlat(fill.Clone(),
-                        orderFee.Value.Amount * feeConversionRate,
+                        orderFee,
                         securityConversionRate,
                         multiplier);
                     break;
 
                 case FillGroupingMethod.FlatToReduced:
                     ProcessFillUsingFlatToReduced(fill.Clone(),
-                        orderFee.Value.Amount * feeConversionRate,
+                        orderFee,
                         securityConversionRate,
                         multiplier);
                     break;

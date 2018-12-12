@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             GetAuthenticationToken(req);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
-            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
+            var orderFee = OrderFee.Zero;
             if (response.StatusCode == HttpStatusCode.OK && response.Content != null)
             {
                 var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
@@ -161,7 +161,7 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
-                        new OrderFee(new CashAmount(0, AccountCurrency)),
+                        OrderFee.Zero,
                         "GDAX Order Event") { Status = OrderStatus.Canceled });
                 }
             }
@@ -278,21 +278,21 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 if (item.Balance > 0)
                 {
-                    if (item.Currency == "USD")
+                    if (item.Currency == Currencies.USD)
                     {
-                        list.Add(new Cash(item.Currency, item.Balance, 1, AccountCurrency));
+                        list.Add(new Cash(item.Currency, item.Balance, 1));
                     }
                     else if (new[] {"GBP", "EUR"}.Contains(item.Currency))
                     {
-                        var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
+                        var symbol = Symbol.Create(item.Currency + Currencies.USD, SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate, AccountCurrency));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
                     }
                     else
                     {
-                        var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
+                        var tick = GetTick(Symbol.Create(item.Currency + Currencies.USD, SecurityType.Crypto, Market.GDAX));
 
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price, AccountCurrency));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
                     }
                 }
             }

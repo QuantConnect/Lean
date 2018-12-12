@@ -24,6 +24,18 @@ namespace QuantConnect.Securities
     public class ErrorCurrencyConverter : ICurrencyConverter
     {
         /// <summary>
+        /// Gets account currency
+        /// </summary>
+        public string AccountCurrency
+        {
+            get
+            {
+                throw new InvalidOperationException(
+                    "Unexpected usage of ErrorCurrencyConverter.AccountCurrency");
+            }
+        }
+
+        /// <summary>
         /// Provides access to the single instance of <see cref="ErrorCurrencyConverter"/>.
         /// This is done this way to ensure usage is explicit.
         /// </summary>

@@ -44,8 +44,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
-                new Cash("USD", 0, 1),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             var request = new SubscriptionRequest(false, null, security, config, parameters.StartDate, parameters.EndDate);
@@ -104,8 +104,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
-                new Cash("USD", 0, 1),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);

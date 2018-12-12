@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ThrowsArgumentExceptionOnCashAmountNotInAccountCurrency()
         {
-            var converter = new IdentityCurrencyConverter("USD");
+            var converter = new IdentityCurrencyConverter(Currencies.USD);
             var cashAmount = new CashAmount(1m, "EUR");
             Assert.Throws<ArgumentException>(() => converter.ConvertToAccountCurrency(cashAmount));
         }

@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -48,17 +48,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", 1000);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
 
             Assert.AreEqual(2000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", -500);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, -500);
 
             Assert.AreEqual(1500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", 1000);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
 
             Assert.AreEqual(2500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);

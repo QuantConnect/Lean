@@ -878,7 +878,7 @@ namespace QuantConnect.Brokerages.Oanda
         private static readonly HashSet<string> KnownCurrencies = new HashSet<string>
         {
             "AUD", "CAD", "CHF", "CNH", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "INR", "JPY",
-            "MXN", "NOK", "NZD", "PLN", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", "USD", "ZAR"
+            "MXN", "NOK", "NZD", "PLN", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", Currencies.USD, "ZAR"
         };
 
         /// <summary>
@@ -972,7 +972,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if Oanda supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
         {
-            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value) || symbol.Value.Length <= 3) 
+            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value) || symbol.Value.Length <= 3)
                 return false;
 
             var oandaSymbol = ConvertLeanSymbolToOandaSymbol(symbol.Value);

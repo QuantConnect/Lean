@@ -89,16 +89,14 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="userName">The user name (login id)</param>
         /// <param name="password">The user password</param>
         /// <param name="accountId">The account id</param>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
         public FxcmBrokerage(IOrderProvider orderProvider,
             ISecurityProvider securityProvider,
             string server,
             string terminal,
             string userName,
             string password,
-            string accountId,
-            IAccountCurrencyProvider accountCurrencyProvider)
-            : base("FXCM Brokerage", accountCurrencyProvider)
+            string accountId)
+            : base("FXCM Brokerage")
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
@@ -416,8 +414,7 @@ namespace QuantConnect.Brokerages.Fxcm
             //Adds the account currency USD to the cashbook.
             cashBook.Add(new Cash(_fxcmAccountCurrency,
                         Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
-                        GetUsdConversion(_fxcmAccountCurrency),
-                        AccountCurrency));
+                        GetUsdConversion(_fxcmAccountCurrency)));
 
             foreach (var trade in _openPositions.Values)
             {
@@ -446,7 +443,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else
                 {
                     //add the base currency if not present
-                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency), AccountCurrency));
+                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
                 }
 
                 var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
@@ -458,7 +455,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else
                 {
                     //add the quote currency if not present
-                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency), AccountCurrency));
+                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
                 }
             }
             return cashBook;

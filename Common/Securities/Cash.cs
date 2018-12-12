@@ -54,11 +54,6 @@ namespace QuantConnect.Securities
         public string Symbol { get; }
 
         /// <summary>
-        /// The account currency
-        /// </summary>
-        public string AccountCurrency { get; internal set; }
-
-        /// <summary>
         /// Gets or sets the amount of cash held
         /// </summary>
         public decimal Amount { get; private set; }
@@ -84,9 +79,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">The symbol used to represent this cash</param>
         /// <param name="amount">The amount of this currency held</param>
         /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="AccountCurrency"/></param>
-        /// <param name="accountCurrency">The account currency to use.
-        /// NOTE: if not provided will use the 'symbol' parameter value instead.</param>
-        public Cash(string symbol, decimal amount, decimal conversionRate, string accountCurrency = "")
+        public Cash(string symbol, decimal amount, decimal conversionRate)
         {
             if (symbol == null || symbol.Length != 3)
             {
@@ -96,7 +89,6 @@ namespace QuantConnect.Securities
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
             CurrencySymbol = Currencies.GetCurrencySymbol(Symbol);
-            AccountCurrency = accountCurrency == "" ? symbol : accountCurrency;
         }
 
         /// <summary>
@@ -156,7 +148,8 @@ namespace QuantConnect.Securities
             SubscriptionManager subscriptions,
             IReadOnlyDictionary<SecurityType, string> marketMap,
             SecurityChanges changes,
-            ISecurityService securityService
+            ISecurityService securityService,
+            string accountCurrency
             )
         {
             // this gets called every time we add securities using universe selection,
@@ -166,7 +159,7 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            if (Symbol == AccountCurrency)
+            if (Symbol == accountCurrency)
             {
                 ConversionRateSecurity = null;
                 _isBaseCurrency = true;
@@ -175,8 +168,8 @@ namespace QuantConnect.Securities
             }
 
             // we require a security that converts this into the base currency
-            string normal = Symbol + AccountCurrency;
-            string invert = AccountCurrency + Symbol;
+            string normal = Symbol + accountCurrency;
+            string invert = accountCurrency + Symbol;
             var securitiesToSearch = securities.Select(kvp => kvp.Value)
                 .Concat(changes.AddedSecurities)
                 .Where(s => s.Type == SecurityType.Forex || s.Type == SecurityType.Cfd || s.Type == SecurityType.Crypto);
@@ -246,7 +239,7 @@ namespace QuantConnect.Securities
             }
 
             // if this still hasn't been set then it's an error condition
-            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, AccountCurrency));
+            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, accountCurrency));
         }
 
         /// <summary>

@@ -65,12 +65,12 @@ namespace QuantConnect.Orders.Fees
                 unitPrice = ((LimitOrder)order).LimitPrice;
             }
 
-            unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
+            unitPrice *= security.SymbolProperties.ContractMultiplier;
 
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier
             return new OrderFee(new CashAmount(
                 unitPrice * order.AbsoluteQuantity * fee,
-                security.QuoteCurrency.AccountCurrency));
+                security.QuoteCurrency.Symbol));
         }
     }
 }

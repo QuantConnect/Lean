@@ -40,8 +40,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             var pairQuoteCurrency = symbol.Value.Substring(startIndex: 3);
             var cash = new Cash(pairQuoteCurrency,
                 amount: 100000,
-                conversionRate: conversionRate,
-                accountCurrency: "USD");
+                conversionRate: conversionRate);
             var subscription = new SubscriptionDataConfig(typeof(QuoteBar), symbol, Resolution.Daily,
                                                           TimeZones.NewYork, TimeZones.NewYork, fillForward: true,
                                                           extendedHours: true, isInternalFeed: true);
@@ -52,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
                                                                                     minimumPriceVariation, lotSize), ErrorCurrencyConverter.Instance);
             pair.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             pair.SetFeeModel(new ConstantFeeModel(decimal.Zero));
-            var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter("USD"));
+            var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter(Currencies.USD));
             // Act
             forexHolding.SetHoldings(entryPrice, entryQuantity);
             var priceVariation = pips * 10 * minimumPriceVariation;

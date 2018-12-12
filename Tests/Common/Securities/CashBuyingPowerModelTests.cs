@@ -66,17 +66,17 @@ namespace QuantConnect.Tests.Common.Securities
             var tz = TimeZones.NewYork;
             _btcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                _portfolio.CashBook["USD"],
+                _portfolio.CashBook[Currencies.USD],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m),
+                new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
             );
 
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                _portfolio.CashBook["USD"],
+                _portfolio.CashBook[Currencies.USD],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m),
+                new SymbolProperties("ETHUSD", Currencies.USD, 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -393,7 +393,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // deposit another 50 USD
-            _portfolio.CashBook["USD"].AddAmount(50);
+            _portfolio.CashBook[Currencies.USD].AddAmount(50);
 
             // now the order is allowed
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);

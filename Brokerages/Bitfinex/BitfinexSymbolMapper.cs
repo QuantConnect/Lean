@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         private static readonly HashSet<string> KnownCurrencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "EUR", "GBP", "JPY", "USD"
+            "EUR", "GBP", "JPY", Currencies.USD
         };
 
         /// <summary>

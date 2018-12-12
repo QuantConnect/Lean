@@ -102,7 +102,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 OnOrderEvent(new OrderEvent(order,
                     DateTime.UtcNow,
-                    new OrderFee(new CashAmount(0, AccountCurrency)),
+                    OrderFee.Zero,
                     "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
 
                 cancellationSubmitted = true;
@@ -253,22 +253,22 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (item.Amount > 0)
                 {
-                    if (string.Equals(item.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(item.Currency, Currencies.USD, StringComparison.OrdinalIgnoreCase))
                     {
-                        list.Add(new Cash(item.Currency, item.Amount, 1, AccountCurrency));
+                        list.Add(new Cash(item.Currency, item.Amount, 1));
                     }
                     else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
                     {
-                        var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
+                        var symbol = Symbol.Create(item.Currency + Currencies.USD, SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate, AccountCurrency));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate));
                     }
                     else
                     {
-                        var symbol = item.Currency + "USD";
+                        var symbol = item.Currency + Currencies.USD;
                         var tick = GetTick(_symbolMapper.GetLeanSymbol(symbol));
 
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price, AccountCurrency));
+                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price));
                     }
                 }
             }

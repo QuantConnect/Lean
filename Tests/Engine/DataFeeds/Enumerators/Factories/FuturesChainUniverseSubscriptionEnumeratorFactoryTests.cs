@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             var canonicalSymbol = Symbol.Create("VX", SecurityType.Future, Market.USA, "/VX");
 
-            var quoteCurrency = new Cash("USD", 0, 1);
+            var quoteCurrency = new Cash(Currencies.USD, 0, 1);
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, canonicalSymbol, SecurityType.Future);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 canonicalSymbol,
                 exchangeHours,
                 quoteCurrency,
-                SymbolProperties.GetDefault("USD"),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 

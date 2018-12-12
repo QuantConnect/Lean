@@ -77,7 +77,8 @@ namespace QuantConnect.Securities.Option
 
             var fees = parameters.Security.FeeModel.GetOrderFee(
                 new OrderFeeParameters(parameters.Security,
-                    parameters.Order)).Value;
+                    parameters.Order,
+                    parameters.CurrencyConverter.AccountCurrency)).Value;
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 

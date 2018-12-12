@@ -25,7 +25,6 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -303,7 +302,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             SignRequest(request, payload.ToString());
 
             var response = ExecuteRestRequest(request);
-            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
+            var orderFee = OrderFee.Zero;
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);

@@ -133,9 +133,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
-        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent, IAccountCurrencyProvider accountCurrencyProvider)
-            : base("Oanda Brokerage", accountCurrencyProvider)
+        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+            : base("Oanda Brokerage")
         {
             SymbolMapper = symbolMapper;
             OrderProvider = orderProvider;
@@ -477,7 +476,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <remarks>Synchronous, blocking</remarks>
         protected decimal GetUsdConversion(string currency)
         {
-            if (currency == "USD")
+            if (currency == Currencies.USD)
                 return 1m;
 
             // determine the correct symbol to choose

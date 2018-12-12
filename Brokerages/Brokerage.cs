@@ -29,8 +29,6 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public abstract class Brokerage : IBrokerage
     {
-        private readonly IAccountCurrencyProvider _accountCurrencyProvider;
-
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
@@ -57,11 +55,6 @@ namespace QuantConnect.Brokerages
         public string Name { get; }
 
         /// <summary>
-        /// The account currency
-        /// </summary>
-        public string AccountCurrency => _accountCurrencyProvider.AccountCurrency;
-
-        /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
         public abstract bool IsConnected { get; }
@@ -70,11 +63,9 @@ namespace QuantConnect.Brokerages
         /// Creates a new Brokerage instance with the specified name
         /// </summary>
         /// <param name="name">The name of the brokerage</param>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
-        protected Brokerage(string name, IAccountCurrencyProvider accountCurrencyProvider)
+        protected Brokerage(string name)
         {
             Name = name;
-            _accountCurrencyProvider = accountCurrencyProvider;
         }
 
         /// <summary>

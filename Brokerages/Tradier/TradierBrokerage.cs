@@ -124,8 +124,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID, IAccountCurrencyProvider accountCurrencyProvider)
-            : base("Tradier Brokerage", accountCurrencyProvider)
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID)
+            : base("Tradier Brokerage")
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
@@ -803,7 +803,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             return new List<Cash>
             {
-                new Cash("USD", GetBalanceDetails(_accountID).TotalCash, 1.0m, AccountCurrency)
+                new Cash(Currencies.USD, GetBalanceDetails(_accountID).TotalCash, 1.0m)
             };
         }
 
@@ -968,9 +968,7 @@ namespace QuantConnect.Brokerages.Tradier
             }
 
             // success
-            OnOrderEvent(new OrderEvent(order,
-                DateTime.UtcNow,
-                new OrderFee(new CashAmount(0, AccountCurrency)))
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
                 { Status = OrderStatus.Submitted});
 
             // if we have contingents, update them as well
@@ -1025,8 +1023,8 @@ namespace QuantConnect.Brokerages.Tradier
                 {
                     TradierCachedOpenOrder tradierOrder;
                     _cachedOpenOrdersByTradierOrderID.TryRemove(id, out tradierOrder);
-                    var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Tradier Fill Event") { Status = OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Tradier Fill Event")
+                        { Status = OrderStatus.Canceled });
                 }
             }
 
@@ -1099,9 +1097,8 @@ namespace QuantConnect.Brokerages.Tradier
             if (response != null && response.Errors.Errors.IsNullOrEmpty())
             {
                 // send the submitted event
-                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-                order.QCOrder.PriceCurrency = "USD";
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+                order.QCOrder.PriceCurrency = Currencies.USD;
+                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates
                 UpdateCachedOpenOrder(response.Order.Id, new TradierOrderDetailed
@@ -1130,8 +1127,7 @@ namespace QuantConnect.Brokerages.Tradier
             else
             {
                 // invalidate the order, bad request
-                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee)
+                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero)
                     { Status = OrderStatus.Invalid });
 
                 string message = _previousResponseRaw;
@@ -1333,8 +1329,8 @@ namespace QuantConnect.Brokerages.Tradier
              || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Order.Status))
             {
                 var qcOrder = _orderProvider.GetOrderByBrokerageId(updatedOrder.Id);
-                qcOrder.PriceCurrency = "USD";
-                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
+                qcOrder.PriceCurrency = Currencies.USD;
+                var orderFee = OrderFee.Zero;
                 var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
                 {
                     Status = ConvertStatus(updatedOrder.Status),
@@ -1357,7 +1353,7 @@ namespace QuantConnect.Brokerages.Tradier
                     cachedOrder.EmittedOrderFee = true;
                     var security = _securityProvider.GetSecurity(qcOrder.Symbol);
                     fill.OrderFee = security.FeeModel.GetOrderFee(
-                        new OrderFeeParameters(security, qcOrder));
+                        new OrderFeeParameters(security, qcOrder, Currencies.USD));
                 }
 
                 // if we filled the order and have another contingent order waiting, submit it

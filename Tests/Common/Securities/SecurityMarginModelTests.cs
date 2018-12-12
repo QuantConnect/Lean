@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common.Securities
     public class SecurityMarginModelTests
     {
         private static Symbol _symbol;
-        private static readonly string _cashSymbol = "USD";
+        private static readonly string _cashSymbol = Currencies.USD;
         private static FakeOrderProcessor _fakeOrderProcessor;
 
         [Test]

@@ -31,14 +31,21 @@ namespace QuantConnect.Orders.Fees
         public Order Order { get; }
 
         /// <summary>
+        /// Gets account currency
+        /// </summary>
+        public string AccountCurrency { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OrderFeeParameters"/> class
         /// </summary>
         /// <param name="security">The security</param>
         /// <param name="order">The order</param>
-        public OrderFeeParameters(Security security, Order order)
+        /// <param name="accountCurrency">The account currency</param>
+        public OrderFeeParameters(Security security, Order order, string accountCurrency)
         {
             Security = security;
             Order = order;
+            AccountCurrency = accountCurrency;
         }
     }
 }

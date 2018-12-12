@@ -24,6 +24,16 @@ namespace QuantConnect
     public static class Currencies
     {
         /// <summary>
+        /// USD currency string
+        /// </summary>
+        public static string USD = "USD";
+
+        /// <summary>
+        /// Null currency used when a real one is not required
+        /// </summary>
+        public const string NullCurrency = "QCC";
+
+        /// <summary>
         /// Gets the listing of crypto pairs used for currency conversion rates
         /// </summary>
         /// <remarks>
@@ -261,7 +271,7 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
-            {"USD", "$"},
+            {USD, "$"},
             {"GBP", "₤"},
             {"JPY", "¥"},
             {"EUR", "€"},

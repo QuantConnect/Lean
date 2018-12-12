@@ -161,7 +161,7 @@ namespace QuantConnect.Brokerages.Tradier
             var issuedAt = Read<DateTime>(job.BrokerageData, "tradier-issued-at", errors);
             var lifeSpan = TimeSpan.FromSeconds(Read<double>(job.BrokerageData, "tradier-lifespan", errors));
 
-            var brokerage = new TradierBrokerage(algorithm.Transactions, algorithm.Portfolio, accountID, algorithm);
+            var brokerage = new TradierBrokerage(algorithm.Transactions, algorithm.Portfolio, accountID);
 
             // if we're running live locally we'll want to save any new tokens generated so that they can easily be retrieved
             if (Config.GetBool("tradier-save-tokens"))

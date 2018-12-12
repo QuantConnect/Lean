@@ -103,7 +103,7 @@ class CustomFeeModel(FeeModel):
         self.algorithm.Log("CustomFeeModel: " + str(fee))
         return OrderFee(CashAmount(
             fee,
-            parameters.Security.QuoteCurrency.AccountCurrency))
+            parameters.AccountCurrency))
 
 class CustomSlippageModel:
     def __init__(self, algorithm):

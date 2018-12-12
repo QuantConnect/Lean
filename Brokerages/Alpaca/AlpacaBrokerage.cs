@@ -79,14 +79,12 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="accountKeyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
         public AlpacaBrokerage(IOrderProvider orderProvider,
             ISecurityProvider securityProvider,
             string accountKeyId,
             string secretKey,
-            string tradingMode,
-            IAccountCurrencyProvider accountCurrencyProvider)
-            : base("Alpaca Brokerage", accountCurrencyProvider)
+            string tradingMode)
+            : base("Alpaca Brokerage")
         {
             var baseUrl = "api.alpaca.markets";
             if (tradingMode.Equals("paper")) baseUrl = "paper-" + baseUrl;
@@ -247,10 +245,9 @@ namespace QuantConnect.Brokerages.Alpaca
 
             return new List<Cash>
             {
-                new Cash("USD",
+                new Cash(Currencies.USD,
                     balance.TradableCash,
-                    1m,
-                    AccountCurrency)
+                    1m)
             };
         }
 
@@ -311,8 +308,8 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-            order.PriceCurrency = "USD";
+            var orderFee = OrderFee.Zero;
+            order.PriceCurrency = Currencies.USD;
 
             try
             {

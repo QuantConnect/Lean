@@ -60,7 +60,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex", algorithm)
+            : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _algorithm = algorithm;
             _securityProvider = algorithm?.Portfolio;
@@ -501,7 +501,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
-                        new OrderFee(new CashAmount(0, AccountCurrency)),
+                        OrderFee.Zero,
                         "Bitfinex Order Event") { Status = OrderStatus.Canceled });
                 }
             }
@@ -569,12 +569,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var fillQuantity = decimal.Parse(entries[5], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
                 var updTime = Time.UnixTimeStampToDateTime(double.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture));
-                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
+                var orderFee = OrderFee.Zero;
                 if (fillQuantity != 0)
                 {
                     var security = _securityProvider.GetSecurity(order.Symbol);
                     orderFee = security.FeeModel.GetOrderFee(
-                        new OrderFeeParameters(security, order));
+                        new OrderFeeParameters(security, order, _algorithm.Portfolio.CashBook.AccountCurrency));
                 }
 
                 OrderStatus status = fillQuantity == order.Quantity ? OrderStatus.Filled : OrderStatus.PartiallyFilled;

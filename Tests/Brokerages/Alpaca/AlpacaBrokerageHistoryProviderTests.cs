@@ -23,7 +23,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
@@ -64,7 +63,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            using (var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode, new TestAccountCurrencyProvider()))
+            using (var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode))
             {
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);

@@ -95,10 +95,10 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Unexpected ETH cash amount: " +
                     $"{Portfolio.CashBook["ETH"].Amount}");
             }
-            if (Portfolio.CashBook["USD"].Amount != 0)
+            if (Portfolio.CashBook[Currencies.USD].Amount != 0)
             {
                 throw new Exception("Unexpected USD cash amount: " +
-                    $"{Portfolio.CashBook["USD"].Amount}");
+                    $"{Portfolio.CashBook[Currencies.USD].Amount}");
             }
             if (Portfolio.CashBook["BTC"].Amount != 0)
             {

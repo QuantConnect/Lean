@@ -16,13 +16,11 @@
 using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Brokerages
 {
@@ -89,16 +87,14 @@ namespace QuantConnect.Brokerages
         /// <param name="apiSecret">Brokerage api auth secret</param>
         /// <param name="market">Name of market</param>
         /// <param name="name">Name of brokerage</param>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
         public BaseWebsocketsBrokerage(string wssUrl,
             IWebSocket websocket,
             IRestClient restClient,
             string apiKey,
             string apiSecret,
             string market,
-            string name,
-            IAccountCurrencyProvider accountCurrencyProvider)
-            : base(name, accountCurrencyProvider)
+            string name)
+            : base(name)
         {
             WebSocket = websocket;
 

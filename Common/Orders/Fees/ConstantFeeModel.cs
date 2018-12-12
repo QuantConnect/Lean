@@ -43,7 +43,7 @@ namespace QuantConnect.Orders.Fees
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             return new OrderFee(new CashAmount(_fee,
-                parameters.Security.QuoteCurrency.AccountCurrency));
+                parameters.AccountCurrency));
         }
     }
 }

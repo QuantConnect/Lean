@@ -92,7 +92,7 @@ namespace QuantConnect.Brokerages.GDAX
             string passPhrase,
             IAlgorithm algorithm,
             IPriceProvider priceProvider)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX", algorithm)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;

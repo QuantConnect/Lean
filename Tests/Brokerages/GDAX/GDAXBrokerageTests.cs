@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             });
 
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
-            _algo.Setup(a => a.AccountCurrency).Returns("USD");
+            _algo.Setup(a => a.AccountCurrency).Returns(Currencies.USD);
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
                 actualFee += e.OrderFee.Value.Amount;
-                Assert.AreEqual("USD", e.OrderFee.Value.Currency);
+                Assert.AreEqual(Currencies.USD, e.OrderFee.Value.Currency);
                 actualQuantity += e.AbsoluteFillQuantity;
 
                 Assert.IsTrue(actualQuantity != orderQuantity);
@@ -265,7 +265,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             Assert.AreEqual(2, actual.Count());
 
-            var usd = actual.Single(a => a.Symbol == "USD");
+            var usd = actual.Single(a => a.Symbol == Currencies.USD);
             var btc = actual.Single(a => a.Symbol == "BTC");
 
             Assert.AreEqual(80.2301373066930000m, usd.Amount);

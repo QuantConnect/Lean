@@ -24,7 +24,6 @@ using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
@@ -38,7 +37,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderProvider, securityProvider, accountID, new TestAccountCurrencyProvider());
+            var tradier = new TradierBrokerage(orderProvider, securityProvider, accountID);
 
             var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
             var tokens = TradierBrokerageFactory.GetTokens();

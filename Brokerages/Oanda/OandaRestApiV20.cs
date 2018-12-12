@@ -27,7 +27,6 @@ using Oanda.RestV20.Api;
 using Oanda.RestV20.Model;
 using Oanda.RestV20.Session;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -64,9 +63,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
-        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent, IAccountCurrencyProvider accountCurrencyProvider)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent, accountCurrencyProvider)
+        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
         {
             var basePathRest = environment == Environment.Trade ?
                 "https://api-fxtrade.oanda.com/v3" :
@@ -129,8 +127,7 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 new Cash(response.Account.Currency,
                     response.Account.Balance.ToDecimal(),
-                    GetUsdConversion(response.Account.Currency),
-                    AccountCurrency)
+                    GetUsdConversion(response.Account.Currency))
             };
         }
 
@@ -157,7 +154,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
+            var orderFee = OrderFee.Zero;
             var marketOrderFillQuantity = 0;
             var marketOrderFillPrice = 0m;
             var marketOrderRemainingQuantity = 0;
@@ -244,8 +241,7 @@ namespace QuantConnect.Brokerages.Oanda
             // check if the updated (marketable) order was filled
             if (response.Data.OrderFillTransaction != null)
             {
-                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Oanda Fill Event")
                 {
                     Status = OrderStatus.Filled,
                     FillPrice = response.Data.OrderFillTransaction.Price.ToDecimal(),
@@ -274,10 +270,9 @@ namespace QuantConnect.Brokerages.Oanda
             foreach (var orderId in order.BrokerId)
             {
                 _apiRest.CancelOrder(Authorization, AccountId, orderId);
-                var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
                 OnOrderEvent(new OrderEvent(order,
                     DateTime.UtcNow,
-                    orderFee,
+                    OrderFee.Zero,
                     "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 
@@ -374,8 +369,7 @@ namespace QuantConnect.Brokerages.Oanda
                         {
                             order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                            var orderFee = new OrderFee(new CashAmount(0, AccountCurrency));
-                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Oanda Fill Event")
                             {
                                 Status = OrderStatus.Filled,
                                 FillPrice = transaction.Price.ToDecimal(),

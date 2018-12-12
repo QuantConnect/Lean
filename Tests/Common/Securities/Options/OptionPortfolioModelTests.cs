@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             // 808 - 1000 (price) - 1 fee
             Assert.AreEqual(-193, portfolio.CashBook["EUR"].Amount);
             // 100000 initial amount, no fee deducted
-            Assert.AreEqual(100000, portfolio.CashBook["USD"].Amount);
+            Assert.AreEqual(100000, portfolio.CashBook[Currencies.USD].Amount);
         }
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
@@ -73,8 +73,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(),
-                new Cash("USD", 0, 1m),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             security.SetMarketPrice(new Tick { Value = 100 });
@@ -83,9 +83,9 @@ namespace QuantConnect.Tests.Common.Securities.Options
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash("USD", 100 * 1000m, 1m);
+            portfolio.SetCash(Currencies.USD, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100 * 1000m, portfolio.CashBook["USD"].Amount);
+            Assert.AreEqual(100 * 1000m, portfolio.CashBook[Currencies.USD].Amount);
             return security;
         }
 

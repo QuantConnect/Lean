@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.Algorithm
                 order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
                 freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
                 requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                    new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order));
+                    new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order));
 
                 //Console.WriteLine("Current price: " + security.Price);
                 //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
                 orderFee = security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(security, order));
+                    new OrderFeeParameters(security, order, Currencies.USD));
                 fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
                 algorithm.Portfolio.ProcessFill(fill);
 
@@ -213,7 +213,7 @@ namespace QuantConnect.Tests.Algorithm
             order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
             freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
             requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order));
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order));
 
             //Console.WriteLine("Current price: " + security.Price);
             //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -226,7 +226,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
             orderFee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, order));
+                new OrderFeeParameters(security, order, Currencies.USD));
             fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
             algorithm.Portfolio.ProcessFill(fill);
 

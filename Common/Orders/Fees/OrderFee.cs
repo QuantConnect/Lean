@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fees
 {
@@ -42,6 +41,7 @@ namespace QuantConnect.Orders.Fees
         {
             return $"{Value.Amount} {Value.Currency}";
         }
+
         /// <summary>
         /// This is for backward compatibility with old 'decimal' order fee
         /// </summary>
@@ -49,5 +49,11 @@ namespace QuantConnect.Orders.Fees
         {
             return m.Value.Amount;
         }
+
+        /// <summary>
+        /// Gets an instance of <see cref="OrderFee"/> that represents zero.
+        /// </summary>
+        public static readonly OrderFee Zero =
+            new OrderFee(new CashAmount(0, Currencies.NullCurrency));
     }
 }

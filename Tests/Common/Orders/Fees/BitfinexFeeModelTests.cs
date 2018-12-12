@@ -25,11 +25,11 @@ using QuantConnect.Securities.Crypto;
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
-    class GDAXFeeModelTests
+    class BitfinexFeeModelTests
     {
         private Crypto _btcusd;
         private Crypto _btceur;
-        private readonly IFeeModel _feeModel = new GDAXFeeModel();
+        private readonly IFeeModel _feeModel = new BitfinexFeeModel();
 
         [SetUp]
         public void Initialize()
@@ -66,8 +66,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            // 100 (price) * 0.003 (taker fee)
-            Assert.AreEqual(0.3m, fee.Value.Amount);
+            // 100 (price) * 0.002 (taker fee)
+            Assert.AreEqual(0.2m, fee.Value.Amount);
         }
 
         [Test]
@@ -82,8 +82,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
 
             Assert.AreEqual("EUR", fee.Value.Currency);
-            // 100 (price) * 0.003 (taker fee)
-            Assert.AreEqual(0.3m, fee.Value.Amount);
+            // 100 (price) * 0.002 (taker fee)
+            Assert.AreEqual(0.2m, fee.Value.Amount);
         }
     }
 }
