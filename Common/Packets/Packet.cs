@@ -28,13 +28,13 @@ namespace QuantConnect.Packets
         /// Packet type defined by a string enum
         /// </summary>
         [JsonProperty(PropertyName = "eType")]
-        public PacketType Type = PacketType.None;
+        public PacketType Type { get; set; } = PacketType.None;
 
         /// <summary>
         /// User unique specific channel endpoint to send the packets
         /// </summary>
         [JsonProperty(PropertyName = "sChannel")]
-        public string Channel = "";
+        public virtual string Channel { get; set; } = "";
 
         /// <summary>
         /// Initialize the base class and setup the packet type.
@@ -147,6 +147,9 @@ namespace QuantConnect.Packets
         AlphaNode,
 
         /// Packet containing list of algorithms to run as a regression test
-        RegressionAlgorithm
+        RegressionAlgorithm,
+
+        /// Packet containing a heartbeat
+        AlphaHeartbeat
     }
 }
