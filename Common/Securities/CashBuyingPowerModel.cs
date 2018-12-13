@@ -201,13 +201,11 @@ namespace QuantConnect.Securities
 
                 if (parameters.Security.SymbolProperties.ContractMultiplier == 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The contract multiplier for the " +
-                        $"{parameters.Security.Symbol.Value} security is zero. The symbol properties database may be out of date.");
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The contract multiplier for the {parameters.Security.Symbol.Value} security is zero. The symbol properties database may be out of date.");
                 }
 
                 // security.Price == 0
-                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {parameters.Security.Symbol.Value} " +
-                    "security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
+                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
             }
 
             // calculate the total cash available

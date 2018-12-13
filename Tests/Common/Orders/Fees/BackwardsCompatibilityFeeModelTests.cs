@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     "       self.CalledGetOrderFee = False\n" +
                     "   def GetOrderFee(self, parameters):\n" +
                     "       self.CalledGetOrderFee = True\n" +
-                    "       return OrderFee(CashAmount(15, \"USD\"))");
+                    "       return OrderFee(CashAmount(15, parameters.AccountCurrency))");
 
                 var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
                 var wrapper = new FeeModelPythonWrapper(customFeeModel);

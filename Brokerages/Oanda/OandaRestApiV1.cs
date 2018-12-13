@@ -30,7 +30,6 @@ using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications.Requests;
 using QuantConnect.Brokerages.Oanda.RestV1.Framework;
 using QuantConnect.Brokerages.Oanda.RestV1.Session;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;

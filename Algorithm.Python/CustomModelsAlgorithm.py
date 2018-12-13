@@ -101,9 +101,7 @@ class CustomFeeModel(FeeModel):
                   * parameters.Order.AbsoluteQuantity
                   * d.Decimal(0.00001))
         self.algorithm.Log("CustomFeeModel: " + str(fee))
-        return OrderFee(CashAmount(
-            fee,
-            parameters.AccountCurrency))
+        return OrderFee(CashAmount(fee, "USD"))
 
 class CustomSlippageModel:
     def __init__(self, algorithm):

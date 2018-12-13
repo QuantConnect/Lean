@@ -16,7 +16,7 @@
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// A reduced interface for a account currency provider
+    /// A reduced interface for an account currency provider
     /// </summary>
     public interface IAccountCurrencyProvider
     {

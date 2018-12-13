@@ -79,11 +79,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="accountKeyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        public AlpacaBrokerage(IOrderProvider orderProvider,
-            ISecurityProvider securityProvider,
-            string accountKeyId,
-            string secretKey,
-            string tradingMode)
+        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode)
             : base("Alpaca Brokerage")
         {
             var baseUrl = "api.alpaca.markets";

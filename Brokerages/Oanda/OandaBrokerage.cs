@@ -52,12 +52,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaBrokerage(IOrderProvider orderProvider,
-            ISecurityProvider securityProvider,
-            Environment environment,
-            string accessToken,
-            string accountId,
-            string agent = OandaRestApiBase.OandaAgentDefaultValue)
+        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
             if (environment != Environment.Trade && environment != Environment.Practice)

@@ -37,11 +37,11 @@ namespace QuantConnect.Orders.Fees
         public const decimal TakerFee = 0.002m;
 
         /// <summary>
-        /// Get the fee for this order in units of the account currency
+        /// Get the fee for this order in quote currency
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
         /// containing the security and order</param>
-        /// <returns>The cost of the order in units of the account currency</returns>
+        /// <returns>The cost of the order in quote currency</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
@@ -57,7 +57,7 @@ namespace QuantConnect.Orders.Fees
                 fee = MakerFee;
             }
 
-            // get order value in account currency
+            // get order value in quote currency
             var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             if (order.Type == OrderType.Limit)
             {

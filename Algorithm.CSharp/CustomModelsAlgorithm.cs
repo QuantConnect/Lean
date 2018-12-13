@@ -132,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
                     parameters.Security.Price*parameters.Order.AbsoluteQuantity*0.00001m);
 
                 _algorithm.Log("CustomFeeModel: " + fee);
-                return new OrderFee(new CashAmount(fee, Currencies.USD));
+                return new OrderFee(new CashAmount(fee, "USD"));
             }
         }
 

@@ -47,7 +47,7 @@ namespace QuantConnect.Orders
         public OrderStatus Status { get; set; }
 
         /// <summary>
-        /// The fee associated with the order (always positive value).
+        /// The fee associated with the order
         /// </summary>
         public OrderFee OrderFee { get; set; }
 

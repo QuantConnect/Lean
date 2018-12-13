@@ -89,13 +89,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="userName">The user name (login id)</param>
         /// <param name="password">The user password</param>
         /// <param name="accountId">The account id</param>
-        public FxcmBrokerage(IOrderProvider orderProvider,
-            ISecurityProvider securityProvider,
-            string server,
-            string terminal,
-            string userName,
-            string password,
-            string accountId)
+        public FxcmBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string server, string terminal, string userName, string password, string accountId)
             : base("FXCM Brokerage")
         {
             _orderProvider = orderProvider;

@@ -16,50 +16,32 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Brokerages;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test algorithm where custom a <see cref="FeeModel"/> does not use Account the Currency
+    /// Regression test algorithm where custom a <see cref="FeeModel"/> returns <see cref="OrderFee.Zero"/>
     /// </summary>
-    public class FeeModelNotUsingAccountCurrency : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ZeroFeeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Security _security;
         // Adding this so we only trade once, so math is easier and clear
         private bool _alreadyTraded;
-        private int _initialEurCash = 10000;
-        private decimal _orderFeesInAccountCurrency;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2018, 4, 4); // Set Start Date
-            SetEndDate(2018, 4, 4); // Set End Date
-            // Set Strategy Cash (USD) to 0. This is required for
-            // SetHoldings(_security.Symbol, 1) not to fail
-            SetCash(0);
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
 
-            // EUR/USD conversion rate will be updated dynamically
-            // Note: the conversion rates are required in backtesting (for now) because of this issue:
-            // https://github.com/QuantConnect/Lean/issues/1859
-            SetCash("EUR", _initialEurCash, 1.23m);
-
-            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
-
-            _security = AddCrypto("BTCEUR");
-
-            // This is required because in our custom model, NonAccountCurrencyCustomFeeModel,
-            // fees will be charged in ETH (not Base, nor Quote, not account currency).
-            // Setting the cash allows the system to add a data subscription to fetch required conversion rates.
-            SetCash("ETH", 0, 0m);
-            _security.FeeModel = new NonAccountCurrencyCustomFeeModel();
+            _security = AddEquity("SPY", Resolution.Minute);
+            _security.FeeModel = new ZeroFeeModel();
         }
 
         /// <summary>
@@ -80,33 +62,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            Debug(Time + " " + orderEvent);
-            _orderFeesInAccountCurrency +=
-                Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
-        }
-
         public override void OnEndOfAlgorithm()
         {
             Log($"TotalPortfolioValue: {Portfolio.TotalPortfolioValue}");
             Log($"CashBook: {Portfolio.CashBook}");
             Log($"Holdings.TotalCloseProfit: {_security.Holdings.TotalCloseProfit()}");
-            // Fees will be applied to the corresponding Cash currency. 1 ETH * 2 trades
-            if (Portfolio.CashBook["ETH"].Amount != -2)
-            {
-                throw new Exception("Unexpected ETH cash amount: " +
-                    $"{Portfolio.CashBook["ETH"].Amount}");
-            }
-            if (Portfolio.CashBook["USD"].Amount != 0)
+
+            if (Portfolio.CashBook["USD"].Amount - _security.Holdings.LastTradeProfit != 100000)
             {
                 throw new Exception("Unexpected USD cash amount: " +
                     $"{Portfolio.CashBook["USD"].Amount}");
-            }
-            if (Portfolio.CashBook["BTC"].Amount != 0)
-            {
-                throw new Exception("Unexpected BTC cash amount: " +
-                    $"{Portfolio.CashBook["BTC"].Amount}");
             }
             if (Portfolio.CashBook.ContainsKey(Currencies.NullCurrency))
             {
@@ -114,28 +79,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var closedTrade = TradeBuilder.ClosedTrades[0];
-            var profitInQuoteCurrency = (closedTrade.ExitPrice - closedTrade.EntryPrice)
-                * closedTrade.Quantity;
-            if (Portfolio.CashBook["EUR"].Amount != _initialEurCash + profitInQuoteCurrency)
-            {
-                throw new Exception("Unexpected EUR cash amount: " +
-                    $"{Portfolio.CashBook["EUR"].Amount}");
-            }
-            if (closedTrade.TotalFees != _orderFeesInAccountCurrency)
+            if (closedTrade.TotalFees != 0)
             {
                 throw new Exception($"Unexpected closed trades total fees {closedTrade.TotalFees}");
             }
-            if (_security.Holdings.TotalFees != _orderFeesInAccountCurrency)
+            if (_security.Holdings.TotalFees != 0)
             {
                 throw new Exception($"Unexpected closed trades total fees {closedTrade.TotalFees}");
             }
         }
 
-        internal class NonAccountCurrencyCustomFeeModel : FeeModel
+        internal class ZeroFeeModel : FeeModel
         {
             public override OrderFee GetOrderFee(OrderFeeParameters parameters)
             {
-                return new OrderFee(new CashAmount(1m, "ETH"));
+                return OrderFee.Zero;
             }
         }
 
@@ -156,23 +114,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-6.62%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "3.500%"},
+            {"Average Loss", "-0.04%"},
+            {"Compounding Annual Return", "-2.754%"},
+            {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-6.383%"},
-            {"Sharpe Ratio", "-11.232"},
+            {"Net Profit", "-0.036%"},
+            {"Sharpe Ratio", "-7.099"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-16.081"},
-            {"Beta", "1165.034"},
-            {"Annual Standard Deviation", "0.716"},
-            {"Annual Variance", "0.513"},
-            {"Information Ratio", "-11.252"},
-            {"Tracking Error", "0.715"},
-            {"Treynor Ratio", "-0.007"},
-            {"Total Fees", "$804.33"}
+            {"Alpha", "-0.09"},
+            {"Beta", "6.519"},
+            {"Annual Standard Deviation", "0.003"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-13.531"},
+            {"Tracking Error", "0.002"},
+            {"Treynor Ratio", "-0.003"},
+            {"Total Fees", "$0.00"}
         };
     }
 }

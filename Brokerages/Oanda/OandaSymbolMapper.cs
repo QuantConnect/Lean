@@ -878,7 +878,7 @@ namespace QuantConnect.Brokerages.Oanda
         private static readonly HashSet<string> KnownCurrencies = new HashSet<string>
         {
             "AUD", "CAD", "CHF", "CNH", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "INR", "JPY",
-            "MXN", "NOK", "NZD", "PLN", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", Currencies.USD, "ZAR"
+            "MXN", "NOK", "NZD", "PLN", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", "USD", "ZAR"
         };
 
         /// <summary>

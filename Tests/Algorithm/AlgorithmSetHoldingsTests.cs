@@ -168,7 +168,8 @@ namespace QuantConnect.Tests.Algorithm
                 order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
                 freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
                 requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                    new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order));
+                    new InitialMarginRequiredForOrderParameters(
+                        new IdentityCurrencyConverter(algorithm.Portfolio.CashBook.AccountCurrency), security, order));
 
                 //Console.WriteLine("Current price: " + security.Price);
                 //Console.WriteLine("Target percentage: " + targetPercentage);
@@ -213,7 +214,8 @@ namespace QuantConnect.Tests.Algorithm
             order = new MarketOrder(_symbol, orderQuantity, DateTime.UtcNow);
             freeMargin = buyingPowerModel.GetMarginRemaining(algorithm.Portfolio, security, orderDirection);
             requiredMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order));
+                new InitialMarginRequiredForOrderParameters(
+                    new IdentityCurrencyConverter(algorithm.Portfolio.CashBook.AccountCurrency), security, order));
 
             //Console.WriteLine("Current price: " + security.Price);
             //Console.WriteLine("Target percentage: " + targetPercentage);

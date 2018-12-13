@@ -271,7 +271,7 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
-            {USD, "$"},
+            {"USD", "$"},
             {"GBP", "₤"},
             {"JPY", "¥"},
             {"EUR", "€"},

@@ -420,14 +420,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket((BacktestNodePacket) job,
-                    new BacktestResult(Algorithm.IsFrameworkAlgorithm,
-                        charts,
-                        orders,
-                        profitLoss,
-                        statisticsResults.Summary,
-                        banner,
-                        statisticsResults.RollingPerformances,
-                        statisticsResults.TotalPerformance))
+                    new BacktestResult(Algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance))
                 {
                     ProcessingTime = (DateTime.UtcNow - _startTime).TotalSeconds,
                     DateFinished = DateTime.Now,

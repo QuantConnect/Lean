@@ -136,7 +136,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// </summary>
         private static readonly HashSet<string> KnownCurrencies = new HashSet<string>
         {
-            "AUD", "BRL", "CAD", "CHF", "CNH", "DKK", "EUR", "GBP", "HKD", "HUF", "JPY", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", Currencies.USD, "ZAR"
+            "AUD", "BRL", "CAD", "CHF", "CNH", "DKK", "EUR", "GBP", "HKD", "HUF", "JPY", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "USD", "ZAR"
         };
 
         /// <summary>

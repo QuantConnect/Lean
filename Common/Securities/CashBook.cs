@@ -302,10 +302,10 @@ namespace QuantConnect.Securities
         {
             get
             {
-                // if requesting for NullCurrency will return AccountCurrency
                 if (symbol == Currencies.NullCurrency)
                 {
-                    return _currencies[AccountCurrency];
+                    throw new InvalidOperationException(
+                        "Unexpected request for NullCurrency Cash instance");
                 }
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))

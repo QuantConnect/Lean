@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities
 {
@@ -63,10 +64,14 @@ namespace QuantConnect.Securities
                 }
 
                 // subtract transaction fees from the portfolio
-                var feeThisOrder = fill.OrderFee.Value;
-                var feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
-                security.Holdings.AddNewFee(feeInAccountCurrency);
-                portfolio.CashBook[feeThisOrder.Currency].AddAmount(-feeThisOrder.Amount);
+                var feeInAccountCurrency = 0m;
+                if (fill.OrderFee != OrderFee.Zero)
+                {
+                    var feeThisOrder = fill.OrderFee.Value;
+                    feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
+                    security.Holdings.AddNewFee(feeInAccountCurrency);
+                    portfolio.CashBook[feeThisOrder.Currency].AddAmount(-feeThisOrder.Amount);
+                }
 
                 // apply the funds using the current settlement model
                 // we dont adjust funds for futures: it is zero upfront payment derivative (margin applies though)

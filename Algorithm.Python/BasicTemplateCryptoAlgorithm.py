@@ -93,7 +93,7 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
 
         elif self.Time.hour == 2 and self.Time.minute == 0:
             # Submit a buy limit order for BTC at 5% below the current price
-            usdTotal = self.Portfolio.CashBook[Currencies.USD].Amount
+            usdTotal = self.Portfolio.CashBook["USD"].Amount
             limitPrice = round(self.Securities["BTCUSD"].Price * d.Decimal(0.95), 2)
             # use only half of our total USD
             quantity = usdTotal * d.Decimal(0.5) / limitPrice
@@ -101,7 +101,7 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
 
         elif self.Time.hour == 2 and self.Time.minute == 1:
             # Get current USD available, subtracting amount reserved for buy open orders
-            usdTotal = self.Portfolio.CashBook[Currencies.USD].Amount
+            usdTotal = self.Portfolio.CashBook["USD"].Amount
             usdReserved = sum(x.Quantity * x.LimitPrice for x
                 in [x for x in self.Transactions.GetOpenOrders()
                     if x.Direction == OrderDirection.Buy

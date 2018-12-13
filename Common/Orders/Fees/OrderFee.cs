@@ -37,6 +37,9 @@ namespace QuantConnect.Orders.Fees
                 orderFee.Currency);
         }
 
+        /// <summary>
+        /// This is for backward compatibility with old 'decimal' order fee
+        /// </summary>
         public override string ToString()
         {
             return $"{Value.Amount} {Value.Currency}";
