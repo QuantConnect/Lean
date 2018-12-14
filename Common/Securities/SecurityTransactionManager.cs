@@ -28,6 +28,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionManager : IOrderProvider
     {
+        private readonly Dictionary<DateTime, decimal> _transactionRecord;
         private readonly IAlgorithm _algorithm;
         private int _orderId;
         private readonly SecurityManager _securities;
@@ -36,7 +37,6 @@ namespace QuantConnect.Securities
         private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
         private IOrderProcessor _orderProcessor;
-        private Dictionary<DateTime, decimal> _transactionRecord;
 
         /// <summary>
         /// Gets the time the security information was last updated
@@ -63,15 +63,16 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Trade record of profits and losses for each trade statistics calculations
         /// </summary>
+        /// <remarks>Will return a shallow copy, modifying the returned container
+        /// will have no effect <see cref="AddTransactionRecord"/></remarks>
         public Dictionary<DateTime, decimal> TransactionRecord
         {
             get
             {
-                return _transactionRecord;
-            }
-            set
-            {
-                _transactionRecord = value;
+                lock (_transactionRecord)
+                {
+                    return new Dictionary<DateTime, decimal>(_transactionRecord);
+                }
             }
         }
 
@@ -340,6 +341,29 @@ namespace QuantConnect.Securities
         public void SetOrderProcessor(IOrderProcessor orderProvider)
         {
             _orderProcessor = orderProvider;
+        }
+
+
+        /// <summary>
+        /// Record the transaction value and time in a list to later be processed for statistics creation.
+        /// </summary>
+        /// <remarks>
+        /// Bit of a hack -- but using datetime as dictionary key is dangerous as you can process multiple orders within a second.
+        /// For the accounting / statistics generating purposes its not really critical to know the precise time, so just add a millisecond while there's an identical key.
+        /// </remarks>
+        /// <param name="time">Time of order processed </param>
+        /// <param name="transactionProfitLoss">Profit Loss.</param>
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        {
+            lock (_transactionRecord)
+            {
+                var clone = time;
+                while (_transactionRecord.ContainsKey(clone))
+                {
+                    clone = clone.AddMilliseconds(1);
+                }
+                _transactionRecord.Add(clone, transactionProfitLoss);
+            }
         }
 
         /// <summary>
