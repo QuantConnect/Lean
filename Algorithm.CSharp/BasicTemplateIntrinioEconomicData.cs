@@ -18,9 +18,6 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Indicators;
-using QuantConnect.Parameters;
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,16 +25,15 @@ namespace QuantConnect.Algorithm.CSharp
     ///     Basic template algorithm simply initializes the date range and cash. This is a skeleton
     ///     framework you can use for designing an algorithm.
     /// </summary>
+    /// <remarks>This regression test requires a valid Intrinio account</remarks>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateIntrinioEconomicData : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateIntrinioEconomicData : QCAlgorithm
     {
-        // Get the intrinio credentials from the parameters.
-        [Parameter("intrinio-username")]
-        public string _user;
-        [Parameter("intrinio-password")]
-        public string _password;
+        // Set your Intrinino user and password.
+        public string _user = "";
+        public string _password = "";
 
         private Symbol _uso; // United States Oil Fund LP
         private Symbol _bno; // United States Brent Oil Fund LP
@@ -114,16 +110,6 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings(_uso, -0.25 * Math.Sign(_spread));
             }
         }
-
-        /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
