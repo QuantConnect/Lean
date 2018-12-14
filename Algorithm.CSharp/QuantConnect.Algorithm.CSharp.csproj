@@ -90,6 +90,7 @@
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="Alphas\ForexCalendarAlpha.cs" />
     <Compile Include="Alphas\RebalancingLeveragedETFAlpha.cs" />
+    <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
     <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.cs" />
     <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.cs" />
     <Compile Include="TrailingStopRiskFrameworkAlgorithm.cs" />
@@ -220,6 +221,7 @@
     <Compile Include="Benchmarks\HistoryRequestBenchmark.cs" />
     <Compile Include="Benchmarks\CoarseFineUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\IndicatorRibbonBenchmark.cs" />
+    <Compile Include="ZeroFeeRegressionAlgorithm.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">

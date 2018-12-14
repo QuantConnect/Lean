@@ -58,8 +58,7 @@ namespace QuantConnect.Python
                     }
                 }
                 decimal fee = _model.GetOrderFee(parameters.Security, parameters.Order);
-                return new OrderFee(new CashAmount(fee,
-                    parameters.Security.QuoteCurrency.AccountCurrency));
+                return new OrderFee(new CashAmount(fee, parameters.AccountCurrency));
             }
         }
     }

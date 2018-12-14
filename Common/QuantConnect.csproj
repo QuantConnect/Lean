@@ -186,6 +186,7 @@
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="HistoryProviderEvents.cs" />
+    <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IOptionPrice.cs" />

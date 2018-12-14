@@ -24,7 +24,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
@@ -40,8 +39,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 

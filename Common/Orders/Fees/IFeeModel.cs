@@ -35,7 +35,8 @@ namespace QuantConnect.Orders.Fees
     }
 
     /// <summary>
-    /// Provide extension method for <see cref="IFeeModel"/> to enable backwards compatibility of invocations
+    /// Provide extension method for <see cref="IFeeModel"/> to enable
+    /// backwards compatibility of invocations.
     /// </summary>
     public static class FeeModelExtensions
     {
@@ -49,14 +50,9 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public static decimal GetOrderFee(this IFeeModel model, Security security, Order order)
         {
-            var parameters = new OrderFeeParameters(security, order);
+            var parameters = new OrderFeeParameters(security, order, security.QuoteCurrency.Symbol);
             var fee = model.GetOrderFee(parameters);
 
-            if (fee.Value.Currency != security.QuoteCurrency.AccountCurrency)
-            {
-                throw new InvalidOperationException("The GetOrderFee extension method is only valid" +
-                    " for fee models returning fees in the account currency");
-            }
             return fee.Value.Amount;
         }
     }

@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -106,7 +107,7 @@ namespace QuantConnect.Orders.Fills
         {
             //Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -148,7 +149,7 @@ namespace QuantConnect.Orders.Fills
         {
             //Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
@@ -215,7 +216,7 @@ namespace QuantConnect.Orders.Fills
         {
             //Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
@@ -292,7 +293,7 @@ namespace QuantConnect.Orders.Fills
         {
             //Initialise;
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
@@ -354,7 +355,7 @@ namespace QuantConnect.Orders.Fills
         public virtual OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -410,7 +411,7 @@ namespace QuantConnect.Orders.Fills
         public virtual OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 

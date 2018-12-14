@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
             security = CreateSecurity(NoonHoliday);
@@ -151,7 +151,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
             security = CreateSecurity(NoonWeekend);
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
             security = CreateSecurity(NoonHoliday);
@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
             security = CreateSecurity(NoonWeekend);
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order)), 1e-3);
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -292,8 +292,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 CreateUsEquitySecurityExchangeHours(),
                 CreateTradeBarConfig(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             TimeKeeper.SetUtcDateTime(newLocalTime.ConvertToUtc(security.Exchange.TimeZone));

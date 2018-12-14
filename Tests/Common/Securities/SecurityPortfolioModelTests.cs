@@ -19,7 +19,9 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -36,7 +38,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = 100;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -54,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -100;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -74,7 +76,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = 100;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -94,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -security.Holdings.Quantity;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -115,7 +117,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -2*security.Holdings.Quantity;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -138,7 +140,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -100;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -157,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -security.Holdings.Quantity;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -179,7 +181,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -2*security.Holdings.Quantity; // flip from -100 to +100
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
@@ -189,6 +191,146 @@ namespace QuantConnect.Tests.Common.Securities
             // sold @50 and bought @100 = (50*100)+(-100*100 - 1) = -5001
             // current implementation doesn't back out fees.
             Assert.AreEqual(-5000m, security.Holdings.LastTradeProfit);
+        }
+
+        [Test]
+        public void NonAccountCurrencyEquity_LongToFlat()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var equity = new Security(
+                Symbols.AAPL,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            equity.Holdings.SetHoldings(50m, 100);
+            portfolio.Securities.Add(equity);
+
+            var fillPrice = 100m;
+            var fillQuantity = -equity.Holdings.Quantity;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            // bought @50 and sold @100 = (-50*100)+(100*100) = 50000 * 10 (conversion rate to account currency)
+            Assert.AreEqual(50000m, equity.Holdings.LastTradeProfit);
+            // sold @100 = (100*100) = 10000 - 1 fee
+            Assert.AreEqual(9999, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0m, equity.Holdings.AveragePrice);
+            Assert.AreEqual(0m, equity.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyEquity_ShortToFlat()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var equity = new Security(
+                Symbols.AAPL,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            equity.Holdings.SetHoldings(50m, -100);
+            portfolio.Securities.Add(equity);
+
+            var fillPrice = 100m;
+            var fillQuantity = -equity.Holdings.Quantity;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            // sold @50 and bought @100 = (-50*100)+(100*100) = -50000 * 10 (conversion rate to account currency)
+            Assert.AreEqual(-50000m, equity.Holdings.LastTradeProfit);
+            // bought @100 = (-100*100) = -10000 - 1 fee
+            Assert.AreEqual(-10001, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0m, equity.Holdings.AveragePrice);
+            Assert.AreEqual(0m, equity.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyEquity_FlatToShort()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var equity = new Security(
+                Symbols.AAPL,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            portfolio.Securities.Add(equity);
+
+            var fillPrice = 100m;
+            var fillQuantity = -100;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(0m, equity.Holdings.LastTradeProfit);
+            // sold @100 = (100*100) = 10000 - 1 fee
+            Assert.AreEqual(9999, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(100m, equity.Holdings.AveragePrice);
+            Assert.AreEqual(100m, equity.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyEquity_FlatToLong()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var equity = new Security(
+                Symbols.AAPL,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            portfolio.Securities.Add(equity);
+
+            var fillPrice = 100m;
+            var fillQuantity = 100;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, equity.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(0m, equity.Holdings.LastTradeProfit);
+            // bought @100 = -(100*100) = -10000 - 1 fee
+            Assert.AreEqual(-10001, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(100m, equity.Holdings.AveragePrice);
+            Assert.AreEqual(100m, equity.Holdings.AbsoluteQuantity);
         }
 
         [Test]
@@ -212,16 +354,196 @@ namespace QuantConnect.Tests.Common.Securities
 
             var fillPrice = 100m;
             var fillQuantity = -future.Holdings.Quantity;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
             var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
 
             // current implementation doesn't back out fees.
+            Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
             // bought @50 and sold @100 = (-50*100)+(100*100) = 50000 * 10 (conversion rate to account currency)
             Assert.AreEqual(50000m, future.Holdings.LastTradeProfit);
-            // bought @50 and sold @100 = (-50*100)+(100*100) = 5000
-            Assert.AreEqual(5000, portfolio.CashBook["EUR"].Amount);
+            // bought @50 and sold @100 = (-50*100)+(100*100) = 5000 - 1 fee
+            Assert.AreEqual(4999, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0m, future.Holdings.AveragePrice);
+            Assert.AreEqual(0m, future.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyFuture_ShortToFlat()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var future = new Future(
+                Symbols.Fut_SPY_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            future.Holdings.SetHoldings(50m, -100);
+            portfolio.Securities.Add(future);
+
+            var fillPrice = 100m;
+            var fillQuantity = -future.Holdings.Quantity;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            // sold @50 and bought @100 = (50*100)+(-100*100) = -50000 * 10 (conversion rate to account currency)
+            Assert.AreEqual(-50000m, future.Holdings.LastTradeProfit);
+            // sold @50 and bought @100  = (50*100)+(-100*100) = -5000 - 1 fee
+            Assert.AreEqual(-5001, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0m, future.Holdings.AveragePrice);
+            Assert.AreEqual(0m, future.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyFuture_FlatToLong()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 1, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var future = new Future(
+                Symbols.Fut_SPY_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            portfolio.Securities.Add(future);
+
+            var fillPrice = 100m;
+            var fillQuantity = 100;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(0m, future.Holdings.LastTradeProfit);
+            Assert.AreEqual(100m, future.Holdings.Quantity);
+            Assert.AreEqual(100m, future.Holdings.AveragePrice);
+            // had 1 EUR - 1 fee
+            Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+        }
+
+        [Test]
+        public void NonAccountCurrencyFuture_FlatToShort()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 1, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            var future = new Future(
+                Symbols.Fut_SPY_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            portfolio.Securities.Add(future);
+
+            var fillPrice = 100m;
+            var fillQuantity = -100;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, future.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(0m, future.Holdings.LastTradeProfit);
+            Assert.AreEqual(-100m, future.Holdings.Quantity);
+            Assert.AreEqual(100m, future.Holdings.AveragePrice);
+            // had 1 EUR - 1 fee
+            Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+        }
+
+        [Test]
+        public void NonAccountCurrencyCrypto_LongToFlat()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            portfolio.CashBook.Add("BTC", 0, 1000);
+            var crypto = new Crypto(
+                Symbols.BTCEUR,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            crypto.Holdings.SetHoldings(50m, 100);
+            portfolio.Securities.Add(crypto);
+
+            var fillPrice = 100m;
+            var fillQuantity = -crypto.Holdings.Quantity;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, crypto.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, crypto.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            // bought @50 and sold @100 = (-50*100)+(100*100) = 50000 * 10 (conversion rate to account currency)
+            Assert.AreEqual(50000m, crypto.Holdings.LastTradeProfit);
+            // sold @100 * 100 = 10000 - 1 fee
+            Assert.AreEqual(9999, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0m, crypto.Holdings.AveragePrice);
+            Assert.AreEqual(0m, crypto.Holdings.AbsoluteQuantity);
+        }
+
+        [Test]
+        public void NonAccountCurrencyCrypto_FlatToLong()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            SecurityPortfolioManager portfolio;
+            InitializeTest(reference, out portfolio);
+
+            var cash = new Cash("EUR", 0, 10);
+            portfolio.CashBook.Add("EUR", cash);
+            portfolio.CashBook.Add("BTC", 0, 1000);
+            var crypto = new Crypto(
+                Symbols.BTCEUR,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                cash,
+                SymbolProperties.GetDefault("EUR"),
+                portfolio.CashBook
+            );
+            portfolio.Securities.Add(crypto);
+
+            var fillPrice = 100m;
+            var fillQuantity = 100;
+            var orderFee = new OrderFee(new CashAmount(1m, "EUR"));
+            var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+            var fill = new OrderEvent(1, crypto.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
+            portfolio.ProcessFill(fill);
+
+            // current implementation doesn't back out fees.
+            Assert.AreEqual(10, crypto.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(0m, crypto.Holdings.LastTradeProfit);
+            Assert.AreEqual(100m, crypto.Holdings.Quantity);
+            Assert.AreEqual(100m, crypto.Holdings.AveragePrice);
+            // had 0 EUR - 1 fee
+            Assert.AreEqual(-10001, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(100, portfolio.CashBook["BTC"].Amount);
         }
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
@@ -229,8 +551,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             security.SetMarketPrice(new Tick { Value = 100 });
@@ -239,9 +561,9 @@ namespace QuantConnect.Tests.Common.Securities
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash("USD", 100 * 1000m, 1m);
+            portfolio.SetCash(Currencies.USD, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100*1000m, portfolio.CashBook[CashBook.AccountCurrency].Amount);
+            Assert.AreEqual(100*1000m, portfolio.CashBook[Currencies.USD].Amount);
             return security;
         }
 

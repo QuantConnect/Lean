@@ -67,6 +67,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 var history = _brokerage.GetHistory(request);
                 var subscription = CreateSubscription(request, history);
+
                 subscription.MoveNext(); // prime pump
                 subscriptions.Add(subscription);
             }
@@ -100,8 +101,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var security = new Security(
                 request.ExchangeHours,
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.NullCurrency, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.NullCurrency),
                 ErrorCurrencyConverter.Instance
             );
 

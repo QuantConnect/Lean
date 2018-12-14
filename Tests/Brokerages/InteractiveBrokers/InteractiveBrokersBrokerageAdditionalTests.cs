@@ -28,7 +28,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -79,7 +78,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     Symbol = "EUR",
                     Exchange = "IDEALPRO",
                     SecType = "CASH",
-                    Currency = "USD"
+                    Currency = Currencies.USD
                 };
                 var parameters = new object[] { contract };
 
@@ -161,8 +160,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     false,
                     false
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 

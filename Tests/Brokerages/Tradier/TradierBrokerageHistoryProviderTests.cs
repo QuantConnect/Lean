@@ -14,7 +14,6 @@
 */
 
 using System;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Configuration;

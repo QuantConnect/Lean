@@ -474,7 +474,9 @@ namespace QuantConnect.Lean.Engine
                     Security security = null;
                     if (_liveMode && algorithm.Securities.TryGetValue(dividend.Symbol, out security))
                     {
-                        Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: {algorithm.Portfolio.CashBook[CashBook.AccountCurrency].Amount}");
+                        Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. " +
+                            $"Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
+                            $"{algorithm.Portfolio.CashBook[algorithm.AccountCurrency].Amount}");
                     }
 
                     var mode = algorithm.SubscriptionManager.SubscriptionDataConfigService
@@ -486,7 +488,9 @@ namespace QuantConnect.Lean.Engine
 
                     if (_liveMode && security != null)
                     {
-                        Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Post-Dividend: {dividend}. Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: {algorithm.Portfolio.CashBook[CashBook.AccountCurrency].Amount}");
+                        Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Post-Dividend: {dividend}. Security " +
+                            $"Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
+                            $"{algorithm.Portfolio.CashBook[algorithm.AccountCurrency].Amount}");
                     }
                 }
 

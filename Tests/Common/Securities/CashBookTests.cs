@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities;
@@ -28,7 +29,7 @@ namespace QuantConnect.Tests.Common.Securities
             var book = new CashBook();
             Assert.AreEqual(1, book.Count);
             var cash = book.Single().Value;
-            Assert.AreEqual(CashBook.AccountCurrency, cash.Symbol);
+            Assert.AreEqual(Currencies.USD, cash.Symbol);
             Assert.AreEqual(0, cash.Amount);
             Assert.AreEqual(1m, cash.ConversionRate);
         }
@@ -37,11 +38,11 @@ namespace QuantConnect.Tests.Common.Securities
         public void ComputesValueInAccountCurrency()
         {
             var book = new CashBook();
-            book["USD"].SetAmount(1000);
+            book[Currencies.USD].SetAmount(1000);
             book.Add("JPY", 1000, 1/100m);
             book.Add("GBP", 1000, 2m);
 
-            decimal expected = book["USD"].ValueInAccountCurrency + book["JPY"].ValueInAccountCurrency + book["GBP"].ValueInAccountCurrency;
+            decimal expected = book[Currencies.USD].ValueInAccountCurrency + book["JPY"].ValueInAccountCurrency + book["GBP"].ValueInAccountCurrency;
             Assert.AreEqual(expected, book.TotalValueInAccountCurrency);
         }
 
@@ -75,7 +76,7 @@ namespace QuantConnect.Tests.Common.Securities
             book.Add("EUR", 0, 1.20m);
 
             var expected = 1000m;
-            var actual = book.Convert(1200, CashBook.AccountCurrency, "EUR");
+            var actual = book.Convert(1200, book.AccountCurrency, "EUR");
             Assert.AreEqual(expected, actual);
         }
 
@@ -86,8 +87,43 @@ namespace QuantConnect.Tests.Common.Securities
             book.Add("JPY", 0, 1/100m);
 
             var expected = 100000m;
-            var actual = book.Convert(1000, CashBook.AccountCurrency, "JPY");
+            var actual = book.Convert(1000, book.AccountCurrency, "JPY");
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void WontAddNullCurrencyCash()
+        {
+            var book = new CashBook {{Currencies.NullCurrency, 1, 1}};
+            Assert.AreEqual(1, book.Count);
+            var cash = book.Single().Value;
+            Assert.AreEqual(Currencies.USD, cash.Symbol);
+
+            book.Add(Currencies.NullCurrency, 1, 1);
+            Assert.AreEqual(1, book.Count);
+            cash = book.Single().Value;
+            Assert.AreEqual(Currencies.USD, cash.Symbol);
+
+            book.Add(Currencies.NullCurrency,
+                new Cash(Currencies.NullCurrency, 1, 1));
+            Assert.AreEqual(1, book.Count);
+            cash = book.Single().Value;
+            Assert.AreEqual(Currencies.USD, cash.Symbol);
+
+            book[Currencies.NullCurrency] =
+                new Cash(Currencies.NullCurrency, 1, 1);
+            Assert.AreEqual(1, book.Count);
+            cash = book.Single().Value;
+            Assert.AreEqual(Currencies.USD, cash.Symbol);
+        }
+
+        [Test]
+        public void WillThrowIfGetNullCurrency()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var symbol = new CashBook()[Currencies.NullCurrency].Symbol;
+            });
         }
     }
 }

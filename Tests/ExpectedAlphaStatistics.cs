@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests
 {
@@ -23,6 +24,11 @@ namespace QuantConnect.Tests
     /// </summary>
     public class ExpectedAlphaStatistics : AlphaRuntimeStatistics
     {
+        public ExpectedAlphaStatistics(IAccountCurrencyProvider accountCurrencyProvider)
+            : base(accountCurrencyProvider)
+        {
+        }
+
         public double MeanPopuationDirection
         {
             set { MeanPopulationScore.SetScore(InsightScoreType.Direction, value, new DateTime()); }

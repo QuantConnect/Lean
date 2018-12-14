@@ -66,6 +66,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             foreach (var request in requests)
             {
                 var subscription = CreateSubscription(request, request.StartTimeUtc, request.EndTimeUtc);
+
                 subscription.MoveNext(); // prime pump
                 subscriptions.Add(subscription);
             }
@@ -99,8 +100,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var security = new Security(
                 request.ExchangeHours,
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.NullCurrency, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.NullCurrency),
                 ErrorCurrencyConverter.Instance
             );
             var mapFileResolver = config.SecurityType == SecurityType.Equity

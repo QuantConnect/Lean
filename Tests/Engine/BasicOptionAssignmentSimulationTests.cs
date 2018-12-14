@@ -17,17 +17,14 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities.Option;
 using Moq;
 using QuantConnect.Securities;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Data.Market;
 using QuantConnect.Data;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -54,8 +51,8 @@ namespace QuantConnect.Tests.Engine
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -67,8 +64,8 @@ namespace QuantConnect.Tests.Engine
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, option1),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -79,8 +76,8 @@ namespace QuantConnect.Tests.Engine
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, option2),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -91,8 +88,8 @@ namespace QuantConnect.Tests.Engine
                 new Option(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, option3),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance
                 )
             );
@@ -161,8 +158,8 @@ namespace QuantConnect.Tests.Engine
                     var option = new Option(
                         SecurityExchangeHours,
                         CreateTradeBarDataConfig(SecurityType.Option, symbol),
-                        new Cash(CashBook.AccountCurrency, 0, 1m),
-                        new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                        new Cash(Currencies.USD, 0, 1m),
+                        new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                         ErrorCurrencyConverter.Instance
                     );
                     securities.Add(symbol, option);
@@ -178,8 +175,8 @@ namespace QuantConnect.Tests.Engine
                 new Security(
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance
                 )
             );

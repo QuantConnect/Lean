@@ -16,7 +16,7 @@
 using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Securities.Forex;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities
 {
@@ -63,10 +63,15 @@ namespace QuantConnect.Securities
                     security.Holdings.AddNewSale(saleValue);
                 }
 
-                // subtract transaction fees from the portfolio (assumes in account currency)
-                var feeThisOrder = Math.Abs(fill.OrderFee);
-                security.Holdings.AddNewFee(feeThisOrder);
-                portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
+                // subtract transaction fees from the portfolio
+                var feeInAccountCurrency = 0m;
+                if (fill.OrderFee != OrderFee.Zero)
+                {
+                    var feeThisOrder = fill.OrderFee.Value;
+                    feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
+                    security.Holdings.AddNewFee(feeInAccountCurrency);
+                    portfolio.CashBook[feeThisOrder.Currency].AddAmount(-feeThisOrder.Amount);
+                }
 
                 // apply the funds using the current settlement model
                 // we dont adjust funds for futures: it is zero upfront payment derivative (margin applies though)
@@ -109,7 +114,7 @@ namespace QuantConnect.Securities
                     security.Holdings.SetLastTradeProfit(lastTradeProfitInAccountCurrency);
                     portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(
                         security.Exchange.TimeZone),
-                        lastTradeProfitInAccountCurrency - 2*feeThisOrder);
+                        lastTradeProfitInAccountCurrency - 2 * feeInAccountCurrency);
                 }
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:

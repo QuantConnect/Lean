@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             SPY.Holdings.SetHoldings(100m, 1000);
 
             // resolve expected outcome
-            var USD = algorithm.Portfolio.CashBook["USD"];
+            var USD = algorithm.Portfolio.CashBook[Currencies.USD];
             var preDistributionCash = USD.Amount;
             var distributionPerShare = 10m;
             var expectedTotalDistribution = distributionPerShare * SPY.Holdings.Quantity;
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(100m, 1);
             algorithm.PostInitialize();
 
-            var initializedCash = algorithm.Portfolio.CashBook["USD"].Amount;
+            var initializedCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
             // init algorithm manager
             var manager = new AlgorithmManager(true);
@@ -133,7 +133,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
                 new CancellationToken()
             );
 
-            var postDividendCash = algorithm.Portfolio.CashBook["USD"].Amount;
+            var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
             Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
         }

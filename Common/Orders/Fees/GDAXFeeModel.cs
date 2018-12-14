@@ -29,11 +29,11 @@ namespace QuantConnect.Orders.Fees
         public const decimal TakerFee = 0.003m;
 
         /// <summary>
-        /// Get the fee for this order in units of the account currency
+        /// Get the fee for this order in quote currency
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
         /// containing the security and order</param>
-        /// <returns>The cost of the order in units of the account currency</returns>
+        /// <returns>The cost of the order in quote currency</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
@@ -44,9 +44,9 @@ namespace QuantConnect.Orders.Fees
             // check limit order posted to the order book, 0% maker fee
             if (!(order.Type == OrderType.Limit && !order.IsMarketable))
             {
-                // get order value in account currency, then apply taker fee factor
+                // get order value in quote currency, then apply taker fee factor
                 var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-                unitPrice *= security.QuoteCurrency.ConversionRate * security.SymbolProperties.ContractMultiplier;
+                unitPrice *= security.SymbolProperties.ContractMultiplier;
 
                 // currently we do not model 30-day volume, so we use the first tier
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Orders.Fees
             }
             return new OrderFee(new CashAmount(
                 fee,
-                security.QuoteCurrency.AccountCurrency));
+                security.QuoteCurrency.Symbol));
         }
     }
 }

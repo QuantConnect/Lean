@@ -35,7 +35,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the base currency used
         /// </summary>
-        public const string AccountCurrency = "USD";
+        public string AccountCurrency { get; }
 
         private readonly ConcurrentDictionary<string, Cash> _currencies;
 
@@ -52,6 +52,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public CashBook()
         {
+            AccountCurrency = Currencies.USD;
             _currencies = new ConcurrentDictionary<string, Cash>();
             _currencies.AddOrUpdate(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
         }
@@ -66,7 +67,7 @@ namespace QuantConnect.Securities
         public void Add(string symbol, decimal quantity, decimal conversionRate)
         {
             var cash = new Cash(symbol, quantity, conversionRate);
-            _currencies.AddOrUpdate(symbol, cash);
+            Add(symbol, cash);
         }
 
         /// <summary>
@@ -113,6 +114,11 @@ namespace QuantConnect.Securities
         /// <returns>The converted value</returns>
         public decimal Convert(decimal sourceQuantity, string sourceCurrency, string destinationCurrency)
         {
+            if (sourceQuantity == 0)
+            {
+                return 0;
+            }
+
             var source = this[sourceCurrency];
             var destination = this[destinationCurrency];
 
@@ -138,6 +144,10 @@ namespace QuantConnect.Securities
         /// <returns>The converted value</returns>
         public decimal ConvertToAccountCurrency(decimal sourceQuantity, string sourceCurrency)
         {
+            if (sourceCurrency == AccountCurrency)
+            {
+                return sourceQuantity;
+            }
             return Convert(sourceQuantity, sourceCurrency, AccountCurrency);
         }
 
@@ -188,7 +198,7 @@ namespace QuantConnect.Securities
         /// <param name="item">KeyValuePair of symbol -> Cash item</param>
         public void Add(KeyValuePair<string, Cash> item)
         {
-            _currencies.AddOrUpdate(item.Key, item.Value);
+            Add(item.Key, item.Value);
         }
 
         /// <summary>
@@ -198,6 +208,10 @@ namespace QuantConnect.Securities
         /// <param name="value">Value.</param>
         public void Add(string symbol, Cash value)
         {
+            if (symbol == Currencies.NullCurrency)
+            {
+                return;
+            }
             _currencies.AddOrUpdate(symbol, value);
         }
 
@@ -288,6 +302,11 @@ namespace QuantConnect.Securities
         {
             get
             {
+                if (symbol == Currencies.NullCurrency)
+                {
+                    throw new InvalidOperationException(
+                        "Unexpected request for NullCurrency Cash instance");
+                }
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))
                 {
@@ -297,7 +316,11 @@ namespace QuantConnect.Securities
             }
             set
             {
-                _currencies[symbol] = value;
+                // wont add NullCurrency
+                if (symbol != Currencies.NullCurrency)
+                {
+                    _currencies[symbol] = value;
+                }
             }
         }
 

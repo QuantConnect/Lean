@@ -66,17 +66,17 @@ namespace QuantConnect.Tests.Common.Securities
             var tz = TimeZones.NewYork;
             _btcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                _portfolio.CashBook[CashBook.AccountCurrency],
+                _portfolio.CashBook[Currencies.USD],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCUSD", "USD", 1, 0.01m, 0.00000001m),
+                new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
             );
 
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                _portfolio.CashBook[CashBook.AccountCurrency],
+                _portfolio.CashBook[Currencies.USD],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHUSD, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("ETHUSD", "USD", 1, 0.01m, 0.00000001m),
+                new SymbolProperties("ETHUSD", Currencies.USD, 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -393,7 +393,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // deposit another 50 USD
-            _portfolio.CashBook["USD"].AddAmount(50);
+            _portfolio.CashBook[Currencies.USD].AddAmount(50);
 
             // now the order is allowed
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
@@ -613,6 +613,26 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(false, result.IsError);
         }
 
+        [Test]
+        public void NonAccountCurrencyFees()
+        {
+            _portfolio.SetCash(10000);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+            _btcusd.FeeModel = new NonAccountCurrencyCustomFeeModel();
+            Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
+
+            // 0.24875621 * 100050 (ask price) + 0.5 (fee) * 15000 (conversion rate, because its BTC) = 9999.9999105
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 1m).Quantity;
+            Assert.AreEqual(0.24875621m, quantity);
+
+            // the maximum order quantity can be executed
+            var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
+        }
+
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)
         {
             using (var resetEvent = new ManualResetEvent(false))
@@ -642,6 +662,17 @@ namespace QuantConnect.Tests.Common.Securities
                 resetEvent.WaitOne();
 
                 _brokerage.OrderStatusChanged -= handler;
+            }
+        }
+
+        internal class NonAccountCurrencyCustomFeeModel : FeeModel
+        {
+            public string FeeCurrency = "BTC";
+            public decimal FeeAmount = 0.5m;
+
+            public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+            {
+                return new OrderFee(new CashAmount(FeeAmount, FeeCurrency));
             }
         }
     }

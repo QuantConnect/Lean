@@ -125,8 +125,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                     true,
                     false
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
         }

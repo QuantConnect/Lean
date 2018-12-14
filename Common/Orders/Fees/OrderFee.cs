@@ -32,7 +32,31 @@ namespace QuantConnect.Orders.Fees
         /// <param name="orderFee">The order fee</param>
         public OrderFee(CashAmount orderFee)
         {
-            Value = orderFee;
+            Value = new CashAmount(
+                orderFee.Amount.Normalize(),
+                orderFee.Currency);
         }
+
+        /// <summary>
+        /// This is for backward compatibility with old 'decimal' order fee
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Value.Amount} {Value.Currency}";
+        }
+
+        /// <summary>
+        /// This is for backward compatibility with old 'decimal' order fee
+        /// </summary>
+        public static implicit operator decimal(OrderFee m)
+        {
+            return m.Value.Amount;
+        }
+
+        /// <summary>
+        /// Gets an instance of <see cref="OrderFee"/> that represents zero.
+        /// </summary>
+        public static readonly OrderFee Zero =
+            new OrderFee(new CashAmount(0, Currencies.NullCurrency));
     }
 }

@@ -23,7 +23,10 @@ namespace QuantConnect.Securities
     /// </summary>
     public class IdentityCurrencyConverter : ICurrencyConverter
     {
-        private readonly string _accountCurrency;
+        /// <summary>
+        /// Gets account currency
+        /// </summary>
+        public string AccountCurrency { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ICurrencyConverter"/> class
@@ -31,7 +34,7 @@ namespace QuantConnect.Securities
         /// <param name="accountCurrency">The algorithm's account currency</param>
         public IdentityCurrencyConverter(string accountCurrency)
         {
-            this._accountCurrency = accountCurrency;
+            AccountCurrency = accountCurrency;
         }
 
         /// <summary>
@@ -42,7 +45,7 @@ namespace QuantConnect.Securities
         /// <returns>A new <see cref="CashAmount"/> instance denominated in the account currency</returns>
         public CashAmount ConvertToAccountCurrency(CashAmount cashAmount)
         {
-            if (!string.Equals(cashAmount.Currency, _accountCurrency, StringComparison.InvariantCultureIgnoreCase))
+            if (!string.Equals(cashAmount.Currency, AccountCurrency, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new ArgumentException($"The {nameof(IdentityCurrencyConverter)} can only handle CashAmounts in units of the account currency");
             }

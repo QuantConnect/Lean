@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(
                 exchangeHours,
                 config,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -170,8 +170,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -193,8 +193,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -221,8 +221,8 @@ namespace QuantConnect.Tests.Common.Securities
                     false,
                     false
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -260,8 +260,8 @@ namespace QuantConnect.Tests.Common.Securities
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
         }

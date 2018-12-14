@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // send scored insights to messaging handler
             InsightManager.AddExtension(CreateAlphaResultPacketSender());
 
-            var statistics = new StatisticsInsightManagerExtension();
+            var statistics = new StatisticsInsightManagerExtension(algorithm);
             RuntimeStatistics = statistics.Statistics;
             InsightManager.AddExtension(statistics);
             _charting = new ChartingInsightManagerExtension(algorithm, statistics);

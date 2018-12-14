@@ -28,6 +28,7 @@ using RestSharp;
 using System.Text.RegularExpressions;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
@@ -414,7 +415,14 @@ namespace QuantConnect.Brokerages.GDAX
             var fillPrice = message.Price;
             var fillQuantity = direction == OrderDirection.Sell ? -message.Size : message.Size;
             var isMaker = order.BrokerId[0] == message.MakerOrderId;
-            var orderFee = GetFillFee(symbol, fillPrice, fillQuantity, isMaker);
+
+            var currency = order.PriceCurrency == string.Empty
+                ? _algorithm.Securities[symbol].SymbolProperties.QuoteCurrency
+                : order.PriceCurrency;
+
+            var orderFee = new OrderFee(new CashAmount(
+                GetFillFee(symbol, fillPrice, fillQuantity, isMaker),
+                currency));
 
             var orderEvent = new OrderEvent
             (

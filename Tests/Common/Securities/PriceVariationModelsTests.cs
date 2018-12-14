@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         private Security GetSecurity(Symbol symbol, DataNormalizationMode mode)
         {
             var symbolProperties = SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, CashBook.AccountCurrency);
+                .GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, Currencies.USD);
 
             Security security;
             if (symbol.ID.SecurityType == SecurityType.Equity)
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
                         true,
                         false
                     ),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash(Currencies.USD, 0, 1m),
                     symbolProperties,
                     ErrorCurrencyConverter.Instance
                 );
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             {
                 security = new QuantConnect.Securities.Forex.Forex(
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                    new Cash(Currencies.USD, 0, 1m),
                     new SubscriptionDataConfig(
                         typeof(TradeBar),
                         symbol,

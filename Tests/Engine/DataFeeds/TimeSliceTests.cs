@@ -58,8 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -107,16 +107,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security1 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig1,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
             var security2 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig1,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -153,8 +153,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -222,8 +222,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var underlyingSecurity = new Equity(
                 optionSymbol.Underlying,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                new Cash("USD", 0, 1),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             var subscriptionDataConfig = new SubscriptionDataConfig(
@@ -232,8 +232,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var optionSecurity = new Option(
                 optionSymbol,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance
             );
 
@@ -258,8 +258,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var underlyingSecurity = new Equity(
                 optionSymbol.Underlying,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                new Cash("USD", 0, 1),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             var subscriptionDataConfig = new SubscriptionDataConfig(
@@ -268,8 +268,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var optionSecurity = new Option(
                     optionSymbol,
                     SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                    new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance
                 )
                 {Underlying = underlyingSecurity};
@@ -294,8 +294,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             var refTime = DateTime.UtcNow;

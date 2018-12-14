@@ -22,6 +22,7 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {

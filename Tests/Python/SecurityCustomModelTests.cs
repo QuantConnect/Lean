@@ -141,8 +141,8 @@ class CustomBuyingPowerModel(SecurityMarginModel):
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
         }

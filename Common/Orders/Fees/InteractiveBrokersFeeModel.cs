@@ -64,7 +64,7 @@ namespace QuantConnect.Orders.Fees
                 {
                     return new OrderFee(new CashAmount(
                         0,
-                        security.QuoteCurrency.AccountCurrency));
+                        parameters.AccountCurrency));
                 }
             }
 
@@ -111,7 +111,7 @@ namespace QuantConnect.Orders.Fees
             // all other types default to zero fees
             return new OrderFee(new CashAmount(
                 feeResult,
-                security.QuoteCurrency.AccountCurrency));
+                parameters.AccountCurrency));
         }
 
         /// <summary>

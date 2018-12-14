@@ -35,6 +35,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -433,7 +434,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 // if quote currency is in USD don't bother making the request
                 var currency = local.Symbol.Value.Substring(3);
-                if (currency == "USD")
+                if (currency == Currencies.USD)
                 {
                     local.ConversionRate = 1m;
                     return null;
@@ -1040,7 +1041,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <remarks>Synchronous, blocking</remarks>
         private decimal GetUsdConversion(string currency)
         {
-            if (currency == "USD")
+            if (currency == Currencies.USD)
             {
                 return 1m;
             }
@@ -1048,8 +1049,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Getting USD conversion for " + currency);
 
             // determine the correct symbol to choose
-            var invertedSymbol = "USD" + currency;
-            var normalSymbol = currency + "USD";
+            var invertedSymbol = Currencies.USD + currency;
+            var normalSymbol = currency + Currencies.USD;
             var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
@@ -1287,8 +1288,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var order = _orderProvider.GetOrderByBrokerageId(requestId);
                 if (order != null)
                 {
-                    const int orderFee = 0;
-                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
                     {
                         Status = OrderStatus.Invalid,
                         Message = message
@@ -1469,7 +1469,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     else
                     {
                         // fire the event
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Interactive Brokers Order Event")
                         {
                             Status = status
                         });
@@ -1635,7 +1635,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
             var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
             var price = Convert.ToDecimal(execution.Price);
-            var orderFee = Convert.ToDecimal(commissionReport.Commission);
+            var orderFee = new OrderFee(new CashAmount(
+                Convert.ToDecimal(commissionReport.Commission),
+                commissionReport.Currency.ToUpper()));
 
             // set order status based on remaining quantity
             var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
@@ -1872,7 +1874,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Symbol = ibSymbol,
                 Exchange = exchange ?? "Smart",
                 SecType = securityType,
-                Currency = "USD"
+                Currency = Currencies.USD
             };
             if (symbol.ID.SecurityType == SecurityType.Forex)
             {
@@ -2718,7 +2720,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contract = new Contract
             {
                 Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
-                Currency = securityCurrency ?? "USD",
+                Currency = securityCurrency ?? Currencies.USD,
                 Exchange = exchangeSpecifier,
                 SecType = ConvertSecurityType(securityType)
             };

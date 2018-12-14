@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -78,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.BuyingPowerModel = buyingPowerModel;
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
             var actual = buyingPowerModel.GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter("USD"), security, order));
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order));
 
             Assert.AreEqual(0, actual);
         }
@@ -147,7 +148,8 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, buyPrice, buyPrice));
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            var fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
+                { FillPrice = buyPrice, FillQuantity = quantity };
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -210,7 +212,8 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
 
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
-            fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
+                { FillPrice = buyPrice, FillQuantity = quantity };
             portfolio.ProcessFill(fill);
 
             Assert.AreEqual(0, portfolio.TotalPortfolioValue);
@@ -246,8 +249,8 @@ namespace QuantConnect.Tests.Common.Securities
                     true,
                     true
                 ),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
         }

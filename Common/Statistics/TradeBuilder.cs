@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Helper class to manage pending trades and market price updates for a symbol
         /// </summary>
-        private class Position 
+        private class Position
         {
             internal List<Trade> PendingTrades { get; set; }
             internal List<OrderEvent> PendingFills { get; set; }
@@ -118,16 +118,20 @@ namespace QuantConnect.Statistics
         /// Processes a new fill, eventually creating new trades
         /// </summary>
         /// <param name="fill">The new fill order event</param>
-        /// <param name="conversionRate">The current market conversion rate into the account currency</param>
+        /// <param name="conversionRate">The current security market conversion rate into the account currency</param>
+        /// <param name="feeInAccountCurrency">The current order fee in the account currency</param>
         /// <param name="multiplier">The contract multiplier</param>
-        public void ProcessFill(OrderEvent fill, decimal conversionRate, decimal multiplier = 1.0m)
+        public void ProcessFill(OrderEvent fill,
+            decimal conversionRate,
+            decimal feeInAccountCurrency,
+            decimal multiplier = 1.0m)
         {
             // If we have multiple fills per order, we assign the order fee only to its first fill
             // to avoid counting the same order fee multiple times.
             var orderFee = 0m;
             if (!_ordersWithFeesAssigned.Contains(fill.OrderId))
             {
-                orderFee = fill.OrderFee;
+                orderFee = feeInAccountCurrency;
                 _ordersWithFeesAssigned.Add(fill.OrderId);
             }
 
@@ -213,7 +217,7 @@ namespace QuantConnect.Statistics
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
                         trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
-                        
+
                         AddNewTrade(trade);
                     }
                     else
@@ -470,7 +474,7 @@ namespace QuantConnect.Statistics
             _closedTrades.Add(trade);
 
             // Due to memory constraints in live mode, we cap the number of trades
-            if (!_liveMode) 
+            if (!_liveMode)
                 return;
 
             // maximum number of trades

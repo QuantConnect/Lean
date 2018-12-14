@@ -21,12 +21,12 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -100,7 +100,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             var cancellationSubmitted = false;
             if (response.StatusCode == HttpStatusCode.OK && !(response.Content?.IndexOf("None to cancel", StringComparison.OrdinalIgnoreCase) >= 0))
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
+                OnOrderEvent(new OrderEvent(order,
+                    DateTime.UtcNow,
+                    OrderFee.Zero,
+                    "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
 
                 cancellationSubmitted = true;
             }
@@ -250,19 +253,19 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (item.Amount > 0)
                 {
-                    if (string.Equals(item.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(item.Currency, Currencies.USD, StringComparison.OrdinalIgnoreCase))
                     {
                         list.Add(new Cash(item.Currency, item.Amount, 1));
                     }
                     else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
                     {
-                        var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
+                        var symbol = Symbol.Create(item.Currency + Currencies.USD, SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
                         list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate));
                     }
                     else
                     {
-                        var symbol = item.Currency + "USD";
+                        var symbol = item.Currency + Currencies.USD;
                         var tick = GetTick(_symbolMapper.GetLeanSymbol(symbol));
 
                         list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price));

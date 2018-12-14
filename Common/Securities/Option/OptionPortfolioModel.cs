@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 

@@ -43,7 +43,7 @@ namespace QuantConnect.Interfaces
     /// Interface for QuantConnect algorithm implementations. All algorithms must implement these
     /// basic members to allow interaction with the Lean Backtesting Engine.
     /// </summary>
-    public interface IAlgorithm : ISecurityInitializerProvider
+    public interface IAlgorithm : ISecurityInitializerProvider, IAccountCurrencyProvider
     {
         /// <summary>
         /// Event fired when an algorithm generates a insight

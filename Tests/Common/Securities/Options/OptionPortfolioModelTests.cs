@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -52,7 +53,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var fillPrice = 1000m;
             var fillQuantity = 1;
             option.ExerciseSettlement = SettlementType.Cash;
-            var orderFee = 1m;
+            var orderFee = new OrderFee(new CashAmount(1, "EUR"));
             var order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, fillQuantity, DateTime.UtcNow);
             fakeOrderProcessor.AddOrder(order);
             var orderDirection = fillQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
@@ -60,10 +61,11 @@ namespace QuantConnect.Tests.Common.Securities.Options
             portfolio.ProcessFill(fill);
 
             // (1000 (price) - 192 (call strike)) * 1 quantity => 808 EUR
-            // 808 - 1000 (price)
-            Assert.AreEqual(-192, portfolio.CashBook["EUR"].Amount);
-            // 100000- 1 fee
-            Assert.AreEqual(99999, portfolio.CashBook["USD"].Amount);
+            Assert.AreEqual(10, option.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            // 808 - 1000 (price) - 1 fee
+            Assert.AreEqual(-193, portfolio.CashBook["EUR"].Amount);
+            // 100000 initial amount, no fee deducted
+            Assert.AreEqual(100000, portfolio.CashBook[Currencies.USD].Amount);
         }
 
         private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
@@ -71,8 +73,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(),
-                new Cash(CashBook.AccountCurrency, 0, 1m),
-                SymbolProperties.GetDefault(CashBook.AccountCurrency),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance
             );
             security.SetMarketPrice(new Tick { Value = 100 });
@@ -81,9 +83,9 @@ namespace QuantConnect.Tests.Common.Securities.Options
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash("USD", 100 * 1000m, 1m);
+            portfolio.SetCash(Currencies.USD, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100 * 1000m, portfolio.CashBook[CashBook.AccountCurrency].Amount);
+            Assert.AreEqual(100 * 1000m, portfolio.CashBook[Currencies.USD].Amount);
             return security;
         }
 

@@ -19,6 +19,7 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Python;
 using QuantConnect.Securities;
@@ -49,7 +50,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 OrderDirection.Buy,
                 1,
                 1,
-                1
+                new OrderFee(new CashAmount(1, Currencies.USD))
             );
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);

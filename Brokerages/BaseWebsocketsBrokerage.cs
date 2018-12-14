@@ -16,7 +16,6 @@
 using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;

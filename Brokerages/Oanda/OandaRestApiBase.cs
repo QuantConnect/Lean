@@ -476,7 +476,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <remarks>Synchronous, blocking</remarks>
         protected decimal GetUsdConversion(string currency)
         {
-            if (currency == "USD")
+            if (currency == Currencies.USD)
                 return 1m;
 
             // determine the correct symbol to choose

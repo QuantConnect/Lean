@@ -127,9 +127,14 @@ namespace QuantConnect.Securities
             var orderFee = 0m;
             if (parameters.Order.Type == OrderType.Limit)
             {
-                orderFee = parameters.Security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(parameters.Security, parameters.Order)).Value.Amount;
-                orderFee = parameters.Portfolio.CashBook.Convert(orderFee, CashBook.AccountCurrency, parameters.Security.QuoteCurrency.Symbol);
+                var fee = parameters.Security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(parameters.Security,
+                        parameters.Order,
+                        parameters.Portfolio.CashBook.AccountCurrency)).Value;
+                orderFee = parameters.Portfolio.CashBook.Convert(
+                        fee.Amount,
+                        fee.Currency,
+                        parameters.Security.QuoteCurrency.Symbol);
             }
 
             isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
@@ -189,7 +194,9 @@ namespace QuantConnect.Securities
             {
                 if (parameters.Security.QuoteCurrency.ConversionRate == 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The internal cash feed required for converting {parameters.Security.QuoteCurrency.Symbol} to {CashBook.AccountCurrency} does not have any data yet (or market may be closed).");
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, "The internal cash feed required for converting" +
+                        $" {parameters.Security.QuoteCurrency.Symbol} to {parameters.Portfolio.CashBook.AccountCurrency} does not" +
+                        " have any data yet (or market may be closed).");
                 }
 
                 if (parameters.Security.SymbolProperties.ContractMultiplier == 0)
@@ -259,8 +266,13 @@ namespace QuantConnect.Securities
                 // generate the order
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, DateTime.UtcNow);
                 var orderValue = orderQuantity * unitPrice;
-                orderFees = parameters.Security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(parameters.Security, order)).Value.Amount;
+
+                var fees = parameters.Security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(parameters.Security,
+                        order,
+                        parameters.Portfolio.CashBook.AccountCurrency)).Value;
+                orderFees = parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
+
                 currentOrderValue = orderValue + orderFees;
             } while (currentOrderValue > targetOrderValue);
 

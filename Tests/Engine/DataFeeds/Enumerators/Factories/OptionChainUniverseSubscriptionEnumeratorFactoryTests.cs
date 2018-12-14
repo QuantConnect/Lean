@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             var canonicalSymbol = Symbol.Create("SPY", SecurityType.Option, Market.USA, "?SPY");
 
-            var quoteCurrency = new Cash(CashBook.AccountCurrency, 0, 1);
+            var quoteCurrency = new Cash(Currencies.USD, 0, 1);
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, canonicalSymbol, SecurityType.Option);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 canonicalSymbol,
                 exchangeHours,
                 quoteCurrency,
-                new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance
             );
 

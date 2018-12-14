@@ -26,6 +26,7 @@ using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -76,7 +77,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             GetAuthenticationToken(req);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
-
+            var orderFee = OrderFee.Zero;
             if (response.StatusCode == HttpStatusCode.OK && response.Content != null)
             {
                 var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
@@ -84,7 +85,7 @@ namespace QuantConnect.Brokerages.GDAX
                 if (raw?.Id == null)
                 {
                     var errorMessage = $"Error parsing response from place order: {response.Content}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
                     UnlockStream();
@@ -94,7 +95,7 @@ namespace QuantConnect.Brokerages.GDAX
                 if (raw.Status == "rejected")
                 {
                     var errorMessage = "Reject reason: " + raw.RejectReason;
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
                     UnlockStream();
@@ -116,7 +117,7 @@ namespace QuantConnect.Brokerages.GDAX
                 FillSplit.TryAdd(order.Id, new GDAXFill(order));
 
                 // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                 UnlockStream();
@@ -124,7 +125,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
@@ -158,7 +159,10 @@ namespace QuantConnect.Brokerages.GDAX
                 success.Add(response.StatusCode == HttpStatusCode.OK);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order,
+                        DateTime.UtcNow,
+                        OrderFee.Zero,
+                        "GDAX Order Event") { Status = OrderStatus.Canceled });
                 }
             }
 
@@ -274,19 +278,19 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 if (item.Balance > 0)
                 {
-                    if (item.Currency == "USD")
+                    if (item.Currency == Currencies.USD)
                     {
                         list.Add(new Cash(item.Currency, item.Balance, 1));
                     }
                     else if (new[] {"GBP", "EUR"}.Contains(item.Currency))
                     {
-                        var symbol = Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.FXCM);
+                        var symbol = Symbol.Create(item.Currency + Currencies.USD, SecurityType.Forex, Market.FXCM);
                         var rate = GetConversionRate(symbol);
                         list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
                     }
                     else
                     {
-                        var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
+                        var tick = GetTick(Symbol.Create(item.Currency + Currencies.USD, SecurityType.Crypto, Market.GDAX));
 
                         list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
                     }
@@ -311,14 +315,14 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (request.EndTimeUtc < request.StartTimeUtc)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange", 
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange",
                     "The history request start date must precede the end date, no history returned"));
                 yield break;
             }
 
             if (request.Resolution == Resolution.Tick || request.Resolution == Resolution.Second)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution", 
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution",
                     $"{request.Resolution} resolution not supported, no history returned"));
                 yield break;
             }
@@ -357,7 +361,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "HistoryError", 
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "HistoryError",
                         $"History request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}"));
                     yield break;
                 }

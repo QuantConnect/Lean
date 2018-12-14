@@ -138,13 +138,17 @@ namespace QuantConnect.Securities
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-            var orderFees = parameters.Security.FeeModel.GetOrderFee(
+
+            var fees = parameters.Security.FeeModel.GetOrderFee(
                 new OrderFeeParameters(parameters.Security,
-                    parameters.Order));
+                    parameters.Order,
+                    parameters.CurrencyConverter.AccountCurrency)).Value;
+            var feesInAccountCurrency = parameters.CurrencyConverter.
+                ConvertToAccountCurrency(fees).Amount;
 
             var orderValue = parameters.Order.GetValue(parameters.Security)
                 * GetInitialMarginRequirement(parameters.Security);
-            return orderValue + Math.Sign(orderValue) * orderFees.Value.Amount;
+            return orderValue + Math.Sign(orderValue) * feesInAccountCurrency;
         }
 
         /// <summary>
@@ -388,8 +392,12 @@ namespace QuantConnect.Securities
 
                 // generate the order
                 var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, DateTime.UtcNow);
-                orderFees = parameters.Security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(parameters.Security, order)).Value.Amount;
+
+                var fees = parameters.Security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(parameters.Security,
+                        order,
+                        parameters.Portfolio.CashBook.AccountCurrency)).Value;
+                orderFees = parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
 
                 // The TPV, take out the fees(unscaled) => yields available value for trading(less fees)
                 // then scale that by the target -- finally remove currentHoldingsValue to get targetOrderValue

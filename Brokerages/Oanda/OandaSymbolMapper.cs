@@ -972,7 +972,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if Oanda supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
         {
-            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value) || symbol.Value.Length <= 3) 
+            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value) || symbol.Value.Length <= 3)
                 return false;
 
             var oandaSymbol = ConvertLeanSymbolToOandaSymbol(symbol.Value);

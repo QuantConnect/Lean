@@ -59,7 +59,7 @@ namespace QuantConnect.Orders.Fees
                 fee = Math.Abs(commissionRate * parameters.Order.AbsoluteQuantity / 1000);
             }
             return new OrderFee(new CashAmount(fee,
-                parameters.Security.QuoteCurrency.AccountCurrency));
+                parameters.AccountCurrency));
         }
     }
 }

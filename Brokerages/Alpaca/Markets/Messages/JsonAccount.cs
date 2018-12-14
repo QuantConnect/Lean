@@ -50,7 +50,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             if (String.IsNullOrEmpty(Currency))
             {
-                Currency = "USD";
+                Currency = Currencies.USD;
             }
         }
     }

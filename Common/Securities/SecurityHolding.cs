@@ -432,12 +432,16 @@ namespace QuantConnect.Securities
 
             // this is in the account currency
             var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+
             var orderFee = _security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(_security, marketOrder));
+                new OrderFeeParameters(_security, marketOrder, _currencyConverter.AccountCurrency)).Value;
+            var feesInAccountCurrency = _currencyConverter.
+                ConvertToAccountCurrency(orderFee).Amount;
+
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
 
             return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
-                * _security.SymbolProperties.ContractMultiplier - orderFee.Value.Amount;
+                * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;
         }
     }
 }
