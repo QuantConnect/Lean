@@ -40,6 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly ISecurityService _securityService;
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
+        private readonly HashSet<SubscriptionDataConfig> _addedCurrencySubscriptionDataConfigs;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -53,6 +54,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _algorithm = algorithm;
             _securityService = securityService;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
+            _addedCurrencySubscriptionDataConfigs = new HashSet<SubscriptionDataConfig>();
         }
 
         /// <summary>
@@ -294,18 +296,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Add currency data feeds that weren't explicitly added in Initialize
             if (additions.Count > 0)
             {
-                var addedSubscriptionDataConfigs = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(
-                    _algorithm.Securities,
-                    _algorithm.SubscriptionManager,
-                    _algorithm.BrokerageModel.DefaultMarkets,
-                    securityChanges,
-                    _securityService);
+                EnsureCurrencyDataFeeds(securityChanges);
 
-                foreach (var subscriptionDataConfig in addedSubscriptionDataConfigs)
+                foreach (var subscriptionDataConfig in _addedCurrencySubscriptionDataConfigs)
                 {
                     var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
                     _dataManager.AddSubscription(new SubscriptionRequest(false, universe, security, subscriptionDataConfig, dateTimeUtc, algorithmEndDateUtc));
                 }
+                _addedCurrencySubscriptionDataConfigs.Clear();
             }
 
             if (securityChanges != SecurityChanges.None)
@@ -314,6 +312,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return securityChanges;
+        }
+
+        /// <summary>
+        /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
+        /// </summary>
+        public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
+        {
+            var newConfigs = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(
+                _algorithm.Securities,
+                _algorithm.SubscriptionManager,
+                _algorithm.BrokerageModel.DefaultMarkets,
+                securityChanges,
+                _securityService);
+            foreach (var config in newConfigs)
+            {
+                _addedCurrencySubscriptionDataConfigs.Add(config);
+            }
         }
 
         private void RemoveSecurityFromUniverse(

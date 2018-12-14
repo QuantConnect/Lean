@@ -85,6 +85,18 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (Portfolio.CashBook["EUR"].ConversionRate == 0
+                || Portfolio.CashBook["BTC"].ConversionRate == 0
+                || Portfolio.CashBook["ETH"].ConversionRate == 0
+                || Portfolio.CashBook["LTC"].ConversionRate == 0)
+            {
+                Log($"EUR conversion rate: {Portfolio.CashBook["EUR"].ConversionRate}");
+                Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
+                Log($"LTC conversion rate: {Portfolio.CashBook["LTC"].ConversionRate}");
+                Log($"ETH conversion rate: {Portfolio.CashBook["ETH"].ConversionRate}");
+
+                throw new Exception("Conversion rate is 0");
+            }
             if (Time.Hour == 1 && Time.Minute == 0)
             {
                 // Sell all ETH holdings with a limit order at 1% above the current price
