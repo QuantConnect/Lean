@@ -37,7 +37,7 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
 
         # Set your Intrinino user and password.
-        IntrinioConfig.SetUserAndPassword(self.GetParameter("intrinio-username"), self.GetParameter("intrinio-password"))
+        IntrinioConfig.SetUserAndPassword("intrinio-username", "intrinio-password")
         # The Intrinio user and password can be also defined in the config.json file for local backtest.
 
         # Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.

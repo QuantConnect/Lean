@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
-using Newtonsoft.Json;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -42,19 +41,6 @@ namespace QuantConnect.Tests
                 Config.Set("symbol-minute-limit", "100");
                 Config.Set("symbol-second-limit", "100");
                 Config.Set("symbol-tick-limit", "100");
-            }
-
-            if (parameters.Algorithm == "BasicTemplateIntrinioEconomicData")
-            {
-                var parametersConfigString = Config.Get("parameters");
-                var algorithmParameters = parametersConfigString != string.Empty
-                    ? JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString)
-                    : new Dictionary<string, string>();
-
-                algorithmParameters["intrinio-username"] = "121078c02c20a09aa5d9c541087e7fa4";
-                algorithmParameters["intrinio-password"] = "65be35238b14de4cd0afc0edf364efc3";
-
-                Config.Set("parameters", JsonConvert.SerializeObject(algorithmParameters));
             }
 
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
