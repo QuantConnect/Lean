@@ -35,6 +35,11 @@ namespace QuantConnect.Brokerages
     public class DefaultBrokerageModel : IBrokerageModel
     {
         /// <summary>
+        /// Gets the brokerage model parameters <see cref="BrokerageModelParameters"/>
+        /// </summary>
+        protected BrokerageModelParameters BrokerageModelParameters { get; }
+
+        /// <summary>
         /// The default markets for the backtesting brokerage
         /// </summary>
         public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
@@ -74,11 +79,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="QuantConnect.AccountType.Margin"/></param>
-        public DefaultBrokerageModel(AccountType accountType = AccountType.Margin)
+        /// <param name="brokerageModelParameters">The brokerage model parameters</param>
+        public DefaultBrokerageModel(BrokerageModelParameters brokerageModelParameters )
         {
-            AccountType = accountType;
+            AccountType = brokerageModelParameters.AccountType;
+            BrokerageModelParameters = brokerageModelParameters;
         }
 
         /// <summary>
@@ -203,16 +208,21 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
-                    return new ConstantFeeModel(0m);
+                    return new ConstantFeeModel(0m,
+                        new FeeModelParameters(
+                            BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
 
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
-                    return new InteractiveBrokersFeeModel();
+                    return new InteractiveBrokersFeeModel(
+                        new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
 
                 case SecurityType.Commodity:
                 default:
-                    return new ConstantFeeModel(0m);
+                    return new ConstantFeeModel(0m,
+                        new FeeModelParameters(
+                            BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
             }
         }
 

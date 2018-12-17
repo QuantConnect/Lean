@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Orders;
 using Moq;
 using QuantConnect.Brokerages;
+using QuantConnect.Tests.Common.Securities;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
@@ -70,7 +71,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var webSocketClient = new WebSocketWrapper();
 
             var algorithm = new Mock<IAlgorithm>();
-            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));
+            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(
+                new BrokerageModelParameters(new TestAccountCurrencyProvider(), AccountType.Cash)));
 
             var priceProvider = new ApiPriceProvider(Config.GetInt("job-user-id"), Config.Get("api-access-token"));
 

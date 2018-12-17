@@ -49,10 +49,10 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="AccountType.Margin"/></param>
-        public FxcmBrokerageModel(AccountType accountType = AccountType.Margin)
-            : base(accountType)
+        /// <param name="brokerageModelParameters">The brokerage model parameters
+        /// <see cref="BrokerageModelParameters"/></param>
+        public FxcmBrokerageModel(BrokerageModelParameters brokerageModelParameters)
+            : base(brokerageModelParameters)
         {
         }
 
@@ -177,7 +177,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new FxcmFeeModel();
+            return new FxcmFeeModel(
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
         }
 
         /// <summary>

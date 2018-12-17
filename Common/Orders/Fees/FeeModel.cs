@@ -25,6 +25,20 @@ namespace QuantConnect.Orders.Fees
     public class FeeModel : IFeeModel
     {
         /// <summary>
+        /// Gets the <see cref="FeeModelParameters"/> to use
+        /// </summary>
+        public FeeModelParameters FeeModelParameters { get; }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="feeModelParameters"> The fee model parameters object to use</param>
+        public FeeModel(FeeModelParameters feeModelParameters)
+        {
+            FeeModelParameters = feeModelParameters;
+        }
+
+        /// <summary>
         /// Gets the order fee associated with the specified order.
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
@@ -34,7 +48,7 @@ namespace QuantConnect.Orders.Fees
         {
             return new OrderFee(new CashAmount(
                 0,
-                parameters.AccountCurrency));
+                FeeModelParameters.AccountCurrency));
         }
     }
 }

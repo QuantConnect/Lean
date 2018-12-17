@@ -66,9 +66,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Gets a new instance of the <see cref="OandaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
         {
-            get { return new OandaBrokerageModel(); }
+            return new OandaBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider));
         }
 
         /// <summary>

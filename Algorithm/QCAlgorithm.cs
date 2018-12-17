@@ -125,7 +125,8 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
-            BrokerageModel = new DefaultBrokerageModel();
+            var brokerageModelParameters = new BrokerageModelParameters(this, AccountType.Margin);
+            BrokerageModel = new DefaultBrokerageModel(brokerageModelParameters);
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:
@@ -148,7 +149,7 @@ namespace QuantConnect.Algorithm
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
-            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin), SecuritySeeder.Null);
+            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(brokerageModelParameters), SecuritySeeder.Null);
 
             CandlestickPatterns = new CandlestickPatterns(this);
 
@@ -981,7 +982,8 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage,
+                new BrokerageModelParameters(this, accountType)));
         }
 
         /// <summary>

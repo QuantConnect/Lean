@@ -19,8 +19,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Util;
-using QuantConnect.Logging;
-using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -61,9 +59,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
         {
-            get { return new InteractiveBrokersBrokerageModel(); }
+            return new InteractiveBrokersBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider));
         }
 
         /// <summary>

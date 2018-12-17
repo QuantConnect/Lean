@@ -429,7 +429,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var timeKeeper = new TimeKeeper(referenceUtc);
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            var brokerageModel = new FxcmBrokerageModel();
+            var brokerageModel = new FxcmBrokerageModel(
+                new BrokerageModelParameters(new TestAccountCurrencyProvider()));
             var fillModel = brokerageModel.GetFillModel(security);
 
             const decimal bidPrice = 1.13739m;

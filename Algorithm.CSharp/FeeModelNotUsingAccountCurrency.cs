@@ -59,7 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
             // fees will be charged in ETH (not Base, nor Quote, not account currency).
             // Setting the cash allows the system to add a data subscription to fetch required conversion rates.
             SetCash("ETH", 0, 0m);
-            _security.FeeModel = new NonAccountCurrencyCustomFeeModel();
+            _security.FeeModel = new NonAccountCurrencyCustomFeeModel(
+                new FeeModelParameters(AccountCurrency));
         }
 
         /// <summary>
@@ -136,6 +137,11 @@ namespace QuantConnect.Algorithm.CSharp
             public override OrderFee GetOrderFee(OrderFeeParameters parameters)
             {
                 return new OrderFee(new CashAmount(1m, "ETH"));
+            }
+
+            public NonAccountCurrencyCustomFeeModel(FeeModelParameters feeModelParameters)
+                : base(feeModelParameters)
+            {
             }
         }
 

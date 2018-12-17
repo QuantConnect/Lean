@@ -60,8 +60,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _btcusd,
-                    new MarketOrder(_btcusd.Symbol, 1, DateTime.UtcNow),
-                    Currencies.USD
+                    new MarketOrder(_btcusd.Symbol, 1, DateTime.UtcNow)
                 )
             );
 
@@ -76,8 +75,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _btceur,
-                    new MarketOrder(_btceur.Symbol, 1, DateTime.UtcNow),
-                    Currencies.USD
+                    new MarketOrder(_btceur.Symbol, 1, DateTime.UtcNow)
                 )
             );
 

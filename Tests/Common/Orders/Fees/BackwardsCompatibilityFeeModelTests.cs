@@ -63,8 +63,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
                 var result = wrapper.GetOrderFee(new OrderFeeParameters(
                     _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    Currencies.USD
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)
                 ));
 
                 bool called;
@@ -86,20 +85,20 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     "AddReference(\"QuantConnect.Common\")\n" +
                     "from QuantConnect.Orders.Fees import *\n" +
                     "from QuantConnect.Securities import *\n" +
-                    "class CustomFeeModel(FeeModel):\n" +
+                    "class CustomFeeModel():\n" +
                     "   def __init__(self):\n" +
+                    "       self.__base = FeeModel(FeeModelParameters(\"EUR\"))\n" +
                     "       self.CalledGetOrderFee = False\n" +
                     "   def GetOrderFee(self, parameters):\n" +
                     "       self.CalledGetOrderFee = True\n" +
-                    "       return OrderFee(CashAmount(15, parameters.AccountCurrency))");
+                    "       return OrderFee(CashAmount(15, self.__base.FeeModelParameters.AccountCurrency))");
 
                 var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
                 var wrapper = new FeeModelPythonWrapper(customFeeModel);
 
                 var result = wrapper.GetOrderFee(new OrderFeeParameters(
                     _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    Currencies.USD
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)
                 ));
 
                 bool called;
@@ -107,7 +106,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 Assert.True(called);
                 Assert.IsNotNull(result);
                 Assert.AreEqual(15, result.Value.Amount);
-                Assert.AreEqual(Currencies.USD, result.Value.Currency);
+                Assert.AreEqual("EUR", result.Value.Currency);
             }
         }
         #endregion

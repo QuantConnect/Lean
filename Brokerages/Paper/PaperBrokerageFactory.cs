@@ -34,9 +34,16 @@ namespace QuantConnect.Brokerages.Paper
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>();
 
         /// <summary>
-        /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
+        /// Gets a new instance of the <see cref="DefaultBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new DefaultBrokerageModel();
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
+        {
+            return new DefaultBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider));
+        }
 
         /// <summary>
         /// Creates a new IBrokerage instance

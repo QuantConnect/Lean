@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -53,9 +52,16 @@ namespace QuantConnect.Brokerages.Bitfinex
         };
 
         /// <summary>
-        /// The brokerage model
+        /// Gets a new instance of the <see cref="BitfinexBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new BitfinexBrokerageModel();
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
+        {
+            return new BitfinexBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider));
+        }
 
         /// <summary>
         /// Create the Brokerage instance

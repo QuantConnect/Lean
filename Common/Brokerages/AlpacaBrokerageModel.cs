@@ -46,12 +46,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="AccountType.Cash"/></param>
-        public AlpacaBrokerageModel(AccountType accountType = AccountType.Cash)
-            : base(accountType)
+        /// <param name="brokerageModelParameters">The brokerage model parameters
+        /// <see cref="BrokerageModelParameters"/></param>
+        public AlpacaBrokerageModel(BrokerageModelParameters brokerageModelParameters)
+            : base(brokerageModelParameters)
         {
-            if (accountType == AccountType.Margin)
+            if (brokerageModelParameters.AccountType == AccountType.Margin)
             {
                 throw new Exception("The Alpaca brokerage does not currently support Margin trading.");
             }
@@ -122,7 +122,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new ConstantFeeModel(0m);
+            return new ConstantFeeModel(0m,
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
         }
 
         /// <summary>

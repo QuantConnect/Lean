@@ -376,7 +376,8 @@ namespace QuantConnect.Tests.Common.Securities
             var algo = GetAlgorithm();
             var security = InitAndGetSecurity(algo, 0);
             algo.SetCash("EUR", 0, 100);
-            security.FeeModel = new NonAccountCurrencyCustomFeeModel();
+            security.FeeModel = new NonAccountCurrencyCustomFeeModel(
+                new FeeModelParameters(algo.AccountCurrency));
 
             // ((100000 - 100 * 100) * 2 * 0.9975 / (25)
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
@@ -461,6 +462,11 @@ namespace QuantConnect.Tests.Common.Securities
             public override OrderFee GetOrderFee(OrderFeeParameters parameters)
             {
                 return new OrderFee(new CashAmount(FeeAmount, FeeCurrency));
+            }
+
+            public NonAccountCurrencyCustomFeeModel(FeeModelParameters feeModelParameters)
+                : base(feeModelParameters)
+            {
             }
         }
     }

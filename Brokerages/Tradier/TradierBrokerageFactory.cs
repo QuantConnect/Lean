@@ -141,9 +141,13 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Gets a new instance of the <see cref="TradierBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
         {
-            get { return new TradierBrokerageModel(); }
+            return new TradierBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider));
         }
 
         /// <summary>

@@ -32,6 +32,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="model">Represents a model that simulates order fees</param>
         public FeeModelPythonWrapper(PyObject model)
+            : base(new FeeModelParameters(Currencies.USD))
         {
             _model = model;
         }
@@ -58,7 +59,7 @@ namespace QuantConnect.Python
                     }
                 }
                 decimal fee = _model.GetOrderFee(parameters.Security, parameters.Order);
-                return new OrderFee(new CashAmount(fee, parameters.AccountCurrency));
+                return new OrderFee(new CashAmount(fee, FeeModelParameters.AccountCurrency));
             }
         }
     }

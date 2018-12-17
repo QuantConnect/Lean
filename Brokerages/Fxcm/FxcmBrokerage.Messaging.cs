@@ -421,7 +421,7 @@ namespace QuantConnect.Brokerages.Fxcm
                         {
                             var security = _securityProvider.GetSecurity(order.Symbol);
                             orderEvent.OrderFee = security.FeeModel.GetOrderFee(
-                                new OrderFeeParameters(security, order, _fxcmAccountCurrency));
+                                new OrderFeeParameters(security, order));
                         }
 
                         _orderEventQueue.Enqueue(orderEvent);

@@ -95,8 +95,9 @@ namespace QuantConnect.Tests.Common.Securities
                 ErrorCurrencyConverter.Instance
             );
 
-            _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
-                                                                          new FuncSecuritySeeder(_algo.GetLastKnownPrice));
+            _brokerageInitializer = new BrokerageModelSecurityInitializer(
+                new DefaultBrokerageModel(new BrokerageModelParameters(new TestAccountCurrencyProvider())),
+                new FuncSecuritySeeder(_algo.GetLastKnownPrice));
         }
 
         [Test]
@@ -154,7 +155,8 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void BrokerageModelSecurityInitializer_SetLeverageForBuyingPowerModel_Successfully()
         {
-            var brokerageModel = new DefaultBrokerageModel(AccountType.Cash);
+            var brokerageModel = new DefaultBrokerageModel(
+                new BrokerageModelParameters(_algo, AccountType.Cash));
             var localBrokerageInitializer = new BrokerageModelSecurityInitializer(brokerageModel,
                 new FuncSecuritySeeder(_algo.GetLastKnownPrice));
             Assert.AreEqual(1.0, _tradeBarSecurity.Leverage);

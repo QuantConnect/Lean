@@ -621,7 +621,8 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd = _algorithm.AddCrypto("BTCUSD");
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
-            _btcusd.FeeModel = new NonAccountCurrencyCustomFeeModel();
+            _btcusd.FeeModel = new NonAccountCurrencyCustomFeeModel(
+                new FeeModelParameters(_algorithm.AccountCurrency));
             Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
 
             // 0.24875621 * 100050 (ask price) + 0.5 (fee) * 15000 (conversion rate, because its BTC) = 9999.9999105
@@ -673,6 +674,11 @@ namespace QuantConnect.Tests.Common.Securities
             public override OrderFee GetOrderFee(OrderFeeParameters parameters)
             {
                 return new OrderFee(new CashAmount(FeeAmount, FeeCurrency));
+            }
+
+            public NonAccountCurrencyCustomFeeModel(FeeModelParameters feeModelParameters)
+                : base(feeModelParameters)
+            {
             }
         }
     }

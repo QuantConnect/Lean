@@ -53,9 +53,17 @@ namespace QuantConnect.Brokerages.GDAX
         };
 
         /// <summary>
-        /// The brokerage model
+        /// Gets a new instance of the <see cref="GDAXBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new GDAXBrokerageModel();
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
+        {
+            return new GDAXBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider,
+                    AccountType.Cash));
+        }
 
         /// <summary>
         /// Create the Brokerage instance

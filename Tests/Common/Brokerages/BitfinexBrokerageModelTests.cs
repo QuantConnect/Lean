@@ -18,6 +18,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -51,7 +52,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetCashBuyingPowerModelTest()
         {
-            BitfinexBrokerageModel model = new BitfinexBrokerageModel(AccountType.Cash);
+            BitfinexBrokerageModel model = new BitfinexBrokerageModel(
+                new BrokerageModelParameters(new TestAccountCurrencyProvider(), AccountType.Cash));
             Assert.IsInstanceOf<CashBuyingPowerModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(1, model.GetLeverage(Security));
         }
@@ -59,7 +61,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetSecurityMarginModelTest()
         {
-            BitfinexBrokerageModel model = new BitfinexBrokerageModel(AccountType.Margin);
+            BitfinexBrokerageModel model = new BitfinexBrokerageModel(
+                new BrokerageModelParameters(new TestAccountCurrencyProvider()));
             Assert.IsInstanceOf<SecurityMarginModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(3.3M, model.GetLeverage(Security));
         }

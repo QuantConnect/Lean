@@ -121,7 +121,7 @@ namespace QuantConnect.Orders
             else
             {
                 //no data, use default
-                new DefaultBrokerageModel().DefaultMarkets.TryGetValue(securityType, out market);
+                DefaultBrokerageModel.DefaultMarketMap.TryGetValue(securityType, out market);
             }
 
             if (jObject.SelectTokens("Symbol.ID").Any())

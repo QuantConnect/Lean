@@ -330,7 +330,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
             transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
-            _algorithm.SetBrokerageModel(new TestBrokerageModel());
+            _algorithm.SetBrokerageModel(new TestBrokerageModel(
+                new BrokerageModelParameters(_algorithm)));
             // Creates a limit order
             var security = _algorithm.Securities[Ticker];
             var price = 1.12m;
@@ -904,6 +905,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 message = new BrokerageMessageEvent(0, 0, "");
                 return false;
+            }
+
+            public TestBrokerageModel(BrokerageModelParameters brokerageModelParameters)
+                : base(brokerageModelParameters)
+            {
             }
         }
 

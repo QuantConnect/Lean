@@ -29,6 +29,23 @@ namespace QuantConnect.Orders.Fees
         public const decimal TakerFee = 0.003m;
 
         /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public GDAXFeeModel()
+            : this(new FeeModelParameters(Currencies.USD))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="feeModelParameters">The fee model parameters object to use</param>
+        public GDAXFeeModel(FeeModelParameters feeModelParameters)
+            : base(feeModelParameters)
+        {
+        }
+
+        /// <summary>
         /// Get the fee for this order in quote currency
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object

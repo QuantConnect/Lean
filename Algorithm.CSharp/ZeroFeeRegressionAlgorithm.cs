@@ -95,6 +95,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return OrderFee.Zero;
             }
+
+            public ZeroFeeModel() : base(new FeeModelParameters(Currencies.NullCurrency))
+            {
+            }
         }
 
         /// <summary>

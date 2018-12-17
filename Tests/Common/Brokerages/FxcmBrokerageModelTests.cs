@@ -44,7 +44,8 @@ namespace QuantConnect.Tests.Common.Brokerages
             var request = new SubmitOrderRequest(orderType, symbol.SecurityType, symbol, quantity, stopPrice, limitPrice, DateTime.UtcNow, "");
             var order = Order.CreateOrder(request);
 
-            var model = new FxcmBrokerageModel();
+            var model = new FxcmBrokerageModel(
+                    new BrokerageModelParameters(new TestAccountCurrencyProvider()));
 
             BrokerageMessageEvent messageEvent;
             Assert.AreEqual(isValid, model.CanSubmitOrder(security, order, out messageEvent));

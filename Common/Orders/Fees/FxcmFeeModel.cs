@@ -36,6 +36,23 @@ namespace QuantConnect.Orders.Fees
         };
 
         /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public FxcmFeeModel()
+            : this(new FeeModelParameters(Currencies.USD))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="feeModelParameters">The fee model parameters object to use</param>
+        public FxcmFeeModel(FeeModelParameters feeModelParameters)
+            : base(feeModelParameters)
+        {
+        }
+
+        /// <summary>
         /// Get the fee for this order in units of the account currency
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
@@ -59,7 +76,7 @@ namespace QuantConnect.Orders.Fees
                 fee = Math.Abs(commissionRate * parameters.Order.AbsoluteQuantity / 1000);
             }
             return new OrderFee(new CashAmount(fee,
-                parameters.AccountCurrency));
+                FeeModelParameters.AccountCurrency));
         }
     }
 }

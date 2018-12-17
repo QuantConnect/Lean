@@ -164,35 +164,36 @@ namespace QuantConnect.Brokerages
         /// Creates a new <see cref="IBrokerageModel"/> for the specified <see cref="BrokerageName"/>
         /// </summary>
         /// <param name="brokerage">The name of the brokerage</param>
-        /// <param name="accountType">The account type</param>
+        /// <param name="brokerageModelParameters">The brokerage model parameters</param>
         /// <returns>The model for the specified brokerage</returns>
-        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType)
+        public static IBrokerageModel Create(BrokerageName brokerage,
+            BrokerageModelParameters brokerageModelParameters)
         {
             switch (brokerage)
             {
                 case BrokerageName.Default:
-                    return new DefaultBrokerageModel(accountType);
+                    return new DefaultBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.InteractiveBrokersBrokerage:
-                    return new InteractiveBrokersBrokerageModel(accountType);
+                    return new InteractiveBrokersBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.TradierBrokerage:
-                    return new TradierBrokerageModel(accountType);
+                    return new TradierBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.OandaBrokerage:
-                    return new OandaBrokerageModel(accountType);
+                    return new OandaBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.FxcmBrokerage:
-                    return new FxcmBrokerageModel(accountType);
+                    return new FxcmBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.Bitfinex:
-                    return new BitfinexBrokerageModel(accountType);
+                    return new BitfinexBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.GDAX:
-                    return new GDAXBrokerageModel(accountType);
+                    return new GDAXBrokerageModel(brokerageModelParameters);
 
                 case BrokerageName.Alpaca:
-                    return new AlpacaBrokerageModel(accountType);
+                    return new AlpacaBrokerageModel(brokerageModelParameters);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);

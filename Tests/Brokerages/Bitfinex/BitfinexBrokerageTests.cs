@@ -43,7 +43,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.Transactions).Returns(transactions);
-            algorithm.Setup(a => a.BrokerageModel).Returns(new BitfinexBrokerageModel(AccountType.Margin));
+            algorithm.Setup(a => a.BrokerageModel).Returns(new BitfinexBrokerageModel(
+                new BrokerageModelParameters(new TestAccountCurrencyProvider(), AccountType.Margin)));
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
             var priceProvider = new Mock<IPriceProvider>();

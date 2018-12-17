@@ -63,9 +63,13 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <summary>
         /// Gets a new instance of the <see cref="FxcmBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
         {
-            get { return new FxcmBrokerageModel(); }
+            return new FxcmBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider));
         }
 
         /// <summary>

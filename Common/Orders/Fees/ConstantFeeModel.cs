@@ -29,9 +29,20 @@ namespace QuantConnect.Orders.Fees
         /// Initializes a new instance of the <see cref="ConstantFeeModel"/> class with the specified <paramref name="fee"/>
         /// </summary>
         /// <param name="fee">The constant order fee used by the model</param>
-        public ConstantFeeModel(decimal fee)
+        /// <param name="feeModelParameters">The fee model parameters object to use</param>
+        public ConstantFeeModel(decimal fee, FeeModelParameters feeModelParameters)
+            : base(feeModelParameters)
         {
             _fee = Math.Abs(fee);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConstantFeeModel"/> class with the specified <paramref name="fee"/>
+        /// </summary>
+        /// <param name="fee">The constant order fee used by the model</param>
+        public ConstantFeeModel(decimal fee)
+            : this(fee, new FeeModelParameters(Currencies.USD))
+        {
         }
 
         /// <summary>
@@ -43,7 +54,7 @@ namespace QuantConnect.Orders.Fees
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             return new OrderFee(new CashAmount(_fee,
-                parameters.AccountCurrency));
+                FeeModelParameters.AccountCurrency));
         }
     }
 }

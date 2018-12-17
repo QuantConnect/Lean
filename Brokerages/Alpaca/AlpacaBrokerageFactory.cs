@@ -59,7 +59,15 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Gets a new instance of the <see cref="AlpacaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new AlpacaBrokerageModel();
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
+        /// <returns>The new brokerage model</returns>
+        public override IBrokerageModel GetBrokerageModel(
+            IAccountCurrencyProvider accountCurrencyProvider)
+        {
+            return new AlpacaBrokerageModel(
+                new BrokerageModelParameters(accountCurrencyProvider,
+                    AccountType.Cash));
+        }
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance

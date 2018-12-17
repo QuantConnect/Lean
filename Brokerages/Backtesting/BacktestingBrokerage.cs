@@ -367,8 +367,7 @@ namespace QuantConnect.Brokerages.Backtesting
                                     {
                                         fill.OrderFee = security.FeeModel.GetOrderFee(
                                             new OrderFeeParameters(security,
-                                                order,
-                                                Algorithm.Portfolio.CashBook.AccountCurrency));
+                                                order));
                                     }
                                 }
                             }

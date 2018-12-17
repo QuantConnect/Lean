@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
                 orderFee = security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(security, order, Currencies.USD));
+                    new OrderFeeParameters(security, order));
                 fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
                 algorithm.Portfolio.ProcessFill(fill);
 
@@ -228,7 +228,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
             orderFee = security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(security, order, Currencies.USD));
+                new OrderFeeParameters(security, order));
             fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
             algorithm.Portfolio.ProcessFill(fill);
 

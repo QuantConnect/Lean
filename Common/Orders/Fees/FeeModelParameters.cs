@@ -12,33 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using QuantConnect.Securities;
+
+
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Defines the parameters for <see cref="IFeeModel.GetOrderFee"/>
+    /// Parameters class used to construct a new <see cref="FeeModel"/>
+    /// and its derivatives.
     /// </summary>
-    public class OrderFeeParameters
+    public class FeeModelParameters
     {
         /// <summary>
-        /// Gets the security
+        /// Gets the account currency
         /// </summary>
-        public Security Security { get; }
+        public string AccountCurrency { get; }
 
         /// <summary>
-        /// Gets the order
+        /// Creates a new instance
         /// </summary>
-        public Order Order { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OrderFeeParameters"/> class
-        /// </summary>
-        /// <param name="security">The security</param>
-        /// <param name="order">The order</param>
-        public OrderFeeParameters(Security security, Order order)
+        /// <param name="accountCurrency">The current account currency</param>
+        public FeeModelParameters(string accountCurrency)
         {
-            Security = security;
-            Order = order;
+            AccountCurrency = accountCurrency;
         }
     }
 }

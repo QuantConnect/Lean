@@ -32,11 +32,27 @@ namespace QuantConnect.Orders.Fees
         private readonly Func<decimal, decimal, decimal>  _optionsCommissionFunc;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
+        /// Initializes a new instance of the <see cref="InteractiveBrokersFeeModel"/>
         /// </summary>
         /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
         /// <param name="monthlyOptionsTradeAmountInContracts">Monthly options contracts traded</param>
         public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0, decimal monthlyOptionsTradeAmountInContracts = 0)
+            : this(new FeeModelParameters(Currencies.USD),
+                monthlyForexTradeAmountInUSDollars,
+                monthlyOptionsTradeAmountInContracts)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InteractiveBrokersFeeModel"/>
+        /// </summary>
+        /// <param name="feeModelParameters">The fee model parameters object to use</param>
+        /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
+        /// <param name="monthlyOptionsTradeAmountInContracts">Monthly options contracts traded</param>
+        public InteractiveBrokersFeeModel(FeeModelParameters feeModelParameters,
+            decimal monthlyForexTradeAmountInUSDollars = 0,
+            decimal monthlyOptionsTradeAmountInContracts = 0)
+            : base(feeModelParameters)
         {
             ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
             ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out _optionsCommissionFunc);
@@ -64,7 +80,7 @@ namespace QuantConnect.Orders.Fees
                 {
                     return new OrderFee(new CashAmount(
                         0,
-                        parameters.AccountCurrency));
+                        FeeModelParameters.AccountCurrency));
                 }
             }
 
@@ -111,7 +127,7 @@ namespace QuantConnect.Orders.Fees
             // all other types default to zero fees
             return new OrderFee(new CashAmount(
                 feeResult,
-                parameters.AccountCurrency));
+                FeeModelParameters.AccountCurrency));
         }
 
         /// <summary>

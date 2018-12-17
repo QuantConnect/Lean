@@ -55,12 +55,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
-        /// <see cref="AccountType.Cash"/></param>
-        public GDAXBrokerageModel(AccountType accountType = AccountType.Cash)
-            : base(accountType)
+        /// <param name="brokerageModelParameters">The brokerage model parameters
+        /// <see cref="BrokerageModelParameters"/></param>
+        public GDAXBrokerageModel(BrokerageModelParameters brokerageModelParameters)
+            : base(brokerageModelParameters)
         {
-            if (accountType == AccountType.Margin)
+            if (brokerageModelParameters.AccountType == AccountType.Margin)
             {
                 throw new Exception("The GDAX brokerage does not currently support Margin trading.");
             }
@@ -84,7 +84,8 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new GDAXFeeModel();
+            return new GDAXFeeModel(
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
         }
 
         /// <summary>

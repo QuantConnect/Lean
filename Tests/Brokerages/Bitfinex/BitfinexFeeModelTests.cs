@@ -21,6 +21,7 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -81,7 +82,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         [Test]
         public void GetFeeModelTest()
         {
-            BitfinexBrokerageModel model = new BitfinexBrokerageModel();
+            BitfinexBrokerageModel model = new BitfinexBrokerageModel(
+                new BrokerageModelParameters(new TestAccountCurrencyProvider()));
             Assert.IsInstanceOf<BitfinexFeeModel>(model.GetFeeModel(Security));
         }
 
@@ -93,7 +95,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             Order order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
-            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order, Currencies.USD));
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
                 BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
@@ -109,7 +111,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Order order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(Security, order, Currencies.USD));
+                feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
                 BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
@@ -125,7 +127,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Order order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(Security, order, Currencies.USD));
+                feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
                 BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
@@ -141,7 +143,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Order order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee =
-                feeModel.GetOrderFee(new OrderFeeParameters(Security, order, Currencies.USD));
+                feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
                 BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), fee.Value.Amount);

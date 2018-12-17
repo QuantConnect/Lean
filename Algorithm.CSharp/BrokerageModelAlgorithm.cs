@@ -87,6 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
             private readonly decimal _minimumAccountBalance;
 
             public MinimumAccountBalanceBrokerageModel(QCAlgorithm algorithm, decimal minimumAccountBalance)
+                : base(new BrokerageModelParameters(algorithm))
             {
                 _algorithm = algorithm;
                 _minimumAccountBalance = minimumAccountBalance;
