@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
 
             _security = AddEquity("SPY", Resolution.Minute);
-            _security.FeeModel = new ZeroFeeModel();
+            _security.FeeModel = new ZeroFeeModel(this);
         }
 
         /// <summary>
@@ -96,7 +96,8 @@ namespace QuantConnect.Algorithm.CSharp
                 return OrderFee.Zero;
             }
 
-            public ZeroFeeModel() : base(new FeeModelParameters(Currencies.NullCurrency))
+            public ZeroFeeModel(IAccountCurrencyProvider accountCurrencyProvider)
+                : base(new FeeModelParameters(accountCurrencyProvider))
             {
             }
         }

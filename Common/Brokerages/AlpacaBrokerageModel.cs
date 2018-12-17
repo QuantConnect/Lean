@@ -123,7 +123,7 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new ConstantFeeModel(0m,
-                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider));
         }
 
         /// <summary>

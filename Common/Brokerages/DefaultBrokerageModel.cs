@@ -210,19 +210,19 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Crypto:
                     return new ConstantFeeModel(0m,
                         new FeeModelParameters(
-                            BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                            BrokerageModelParameters.AccountCurrencyProvider));
 
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
                     return new InteractiveBrokersFeeModel(
-                        new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                        new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider));
 
                 case SecurityType.Commodity:
                 default:
                     return new ConstantFeeModel(0m,
                         new FeeModelParameters(
-                            BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                            BrokerageModelParameters.AccountCurrencyProvider));
             }
         }
 

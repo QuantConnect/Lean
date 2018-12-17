@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             private readonly QCAlgorithm _algorithm;
 
             public CustomFeeModel(QCAlgorithm algorithm)
-                : base(new FeeModelParameters(algorithm.AccountCurrency))
+                : base(new FeeModelParameters(algorithm))
             {
                 _algorithm = algorithm;
             }

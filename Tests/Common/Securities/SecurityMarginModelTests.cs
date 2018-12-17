@@ -376,8 +376,7 @@ namespace QuantConnect.Tests.Common.Securities
             var algo = GetAlgorithm();
             var security = InitAndGetSecurity(algo, 0);
             algo.SetCash("EUR", 0, 100);
-            security.FeeModel = new NonAccountCurrencyCustomFeeModel(
-                new FeeModelParameters(algo.AccountCurrency));
+            security.FeeModel = new NonAccountCurrencyCustomFeeModel(new FeeModelParameters(algo));
 
             // ((100000 - 100 * 100) * 2 * 0.9975 / (25)
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));

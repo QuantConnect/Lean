@@ -41,6 +41,37 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             _security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
         }
 
+        #region C#
+
+        [Test]
+        public void OldFeeModelModel_ConstructorNoParameters_Csharp()
+        {
+            var model = new OldCustomFeeModel();
+            var fee = model.GetOrderFee(
+                new OrderFeeParameters(
+                    _security,
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)));
+
+            Assert.AreEqual(13, fee.Value.Amount);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+        }
+
+        [Test]
+        public void NewFeeModelModel_GetOrderFee_Csharp()
+        {
+            var model = new CustomFeeModel(new FeeModelParameters(
+                new TestAccountCurrencyProvider("BTC")));
+            var fee = model.GetOrderFee(
+                new OrderFeeParameters(
+                    _security,
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)));
+
+            Assert.AreEqual(0, fee.Value.Amount);
+            Assert.AreEqual("BTC", fee.Value.Currency);
+        }
+
+        #endregion
+
         #region Python
 
         [Test]
@@ -76,6 +107,40 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
+        public void OldFeeModelModel_ConstructorNoParameters_Py()
+        {
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from clr import AddReference\n" +
+                    "AddReference(\"QuantConnect.Common\")\n" +
+                    "from QuantConnect.Orders.Fees import *\n" +
+                    "from QuantConnect.Securities import *\n" +
+                    "class CustomFeeModel(FeeModel):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.CalledGetOrderFee = False\n" +
+                    "   def GetOrderFee(self, parameters):\n" +
+                    "       self.CalledGetOrderFee = True\n" +
+                    "       return OrderFee(CashAmount(15, \"USD\"))");
+
+                var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
+                var wrapper = new FeeModelPythonWrapper(customFeeModel);
+
+                var result = wrapper.GetOrderFee(new OrderFeeParameters(
+                    _security,
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)
+                ));
+
+                bool called;
+                customFeeModel.GetAttr("CalledGetOrderFee").TryConvert(out called);
+                Assert.True(called);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(15, result.Value.Amount);
+                Assert.AreEqual(Currencies.USD, result.Value.Currency);
+            }
+        }
+
+        [Test]
         public void NewFeeModelModel_GetOrderFee_Py()
         {
             using (Py.GIL())
@@ -85,15 +150,16 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     "AddReference(\"QuantConnect.Common\")\n" +
                     "from QuantConnect.Orders.Fees import *\n" +
                     "from QuantConnect.Securities import *\n" +
-                    "class CustomFeeModel():\n" +
-                    "   def __init__(self):\n" +
-                    "       self.__base = FeeModel(FeeModelParameters(\"EUR\"))\n" +
+                    "class CustomFeeModel(FeeModel):\n" +
+                    "   def __init__(self, feeModelParameters):\n" +
+                    "       super().__init__(feeModelParameters)\n" +
                     "       self.CalledGetOrderFee = False\n" +
                     "   def GetOrderFee(self, parameters):\n" +
                     "       self.CalledGetOrderFee = True\n" +
-                    "       return OrderFee(CashAmount(15, self.__base.FeeModelParameters.AccountCurrency))");
+                    "       return OrderFee(CashAmount(15, self.FeeModelParameters.AccountCurrency))");
 
-                var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
+                var customFeeModel = module.GetAttr("CustomFeeModel").Invoke(
+                    PyObject.FromManagedObject(new FeeModelParameters(new TestAccountCurrencyProvider("EUR"))));
                 var wrapper = new FeeModelPythonWrapper(customFeeModel);
 
                 var result = wrapper.GetOrderFee(new OrderFeeParameters(
@@ -110,5 +176,26 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             }
         }
         #endregion
+
+        private class OldCustomFeeModel : FeeModel
+        {
+            public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+            {
+                return new OrderFee(new CashAmount(13, "USD"));
+            }
+        }
+
+        private class CustomFeeModel : FeeModel
+        {
+            public CustomFeeModel(FeeModelParameters feeModelParameters)
+                : base(feeModelParameters)
+            {
+            }
+
+            public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+            {
+                return base.GetOrderFee(parameters);
+            }
+        }
     }
 }

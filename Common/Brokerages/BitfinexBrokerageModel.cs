@@ -15,11 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
-using System.Linq;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
@@ -90,7 +87,7 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new BitfinexFeeModel(
-                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider));
         }
 
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()

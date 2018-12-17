@@ -40,7 +40,7 @@ namespace QuantConnect.Orders.Fees
         /// Creates a new instance
         /// </summary>
         public BitfinexFeeModel()
-            : this(new FeeModelParameters(Currencies.USD))
+            : this(new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance))
         {
         }
 

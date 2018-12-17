@@ -39,7 +39,7 @@ namespace QuantConnect.Orders.Fees
         /// Creates a new instance
         /// </summary>
         public FxcmFeeModel()
-            : this(new FeeModelParameters(Currencies.USD))
+            : this(new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance))
         {
         }
 

@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 
 
@@ -37,7 +36,7 @@ namespace QuantConnect.Orders.Fees
         /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
         /// <param name="monthlyOptionsTradeAmountInContracts">Monthly options contracts traded</param>
         public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0, decimal monthlyOptionsTradeAmountInContracts = 0)
-            : this(new FeeModelParameters(Currencies.USD),
+            : this(new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance),
                 monthlyForexTradeAmountInUSDollars,
                 monthlyOptionsTradeAmountInContracts)
         {

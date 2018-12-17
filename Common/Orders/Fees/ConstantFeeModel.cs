@@ -41,7 +41,7 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         /// <param name="fee">The constant order fee used by the model</param>
         public ConstantFeeModel(decimal fee)
-            : this(fee, new FeeModelParameters(Currencies.USD))
+            : this(fee, new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance))
         {
         }
 

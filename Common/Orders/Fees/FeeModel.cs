@@ -27,7 +27,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Gets the <see cref="FeeModelParameters"/> to use
         /// </summary>
-        public FeeModelParameters FeeModelParameters { get; }
+        protected FeeModelParameters FeeModelParameters { get; }
 
         /// <summary>
         /// Creates a new instance
@@ -36,6 +36,14 @@ namespace QuantConnect.Orders.Fees
         public FeeModel(FeeModelParameters feeModelParameters)
         {
             FeeModelParameters = feeModelParameters;
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public FeeModel()
+            : this(new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance))
+        {
         }
 
         /// <summary>

@@ -209,6 +209,7 @@
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Python\PythonWrapper.cs" />
+    <Compile Include="Securities\BackwardsCompatibleAccountCurrencyProvider.cs" />
     <Compile Include="Securities\BuyingPower.cs" />
     <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />

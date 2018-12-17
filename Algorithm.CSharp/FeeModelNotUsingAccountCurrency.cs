@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Setting the cash allows the system to add a data subscription to fetch required conversion rates.
             SetCash("ETH", 0, 0m);
             _security.FeeModel = new NonAccountCurrencyCustomFeeModel(
-                new FeeModelParameters(AccountCurrency));
+                new FeeModelParameters(this));
         }
 
         /// <summary>

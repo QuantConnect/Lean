@@ -177,7 +177,7 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new ConstantFeeModel(1m,
-                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider));
         }
 
         /// <summary>

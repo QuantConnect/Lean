@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new GDAXFeeModel(
-                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider.AccountCurrency));
+                new FeeModelParameters(BrokerageModelParameters.AccountCurrencyProvider));
         }
 
         /// <summary>

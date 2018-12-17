@@ -32,7 +32,7 @@ namespace QuantConnect.Orders.Fees
         /// Creates a new instance
         /// </summary>
         public GDAXFeeModel()
-            : this(new FeeModelParameters(Currencies.USD))
+            : this(new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance))
         {
         }
 

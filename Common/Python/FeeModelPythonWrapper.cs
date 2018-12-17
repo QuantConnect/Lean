@@ -32,7 +32,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="model">Represents a model that simulates order fees</param>
         public FeeModelPythonWrapper(PyObject model)
-            : base(new FeeModelParameters(Currencies.USD))
+            : base(new FeeModelParameters(BackwardsCompatibleAccountCurrencyProvider.Instance))
         {
             _model = model;
         }

@@ -13,31 +13,30 @@
  * limitations under the License.
 */
 
-
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Orders.Fees
+namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Parameters class used to construct a new <see cref="FeeModel"/>
-    /// and its derivatives.
+    /// This class is a <see cref="IAccountCurrencyProvider"/> used
+    /// to maintain backwards compatibility.
+    /// It will always return <see cref="Currencies.USD"/>
     /// </summary>
-    public class FeeModelParameters
+    public class BackwardsCompatibleAccountCurrencyProvider : IAccountCurrencyProvider
     {
-        private readonly IAccountCurrencyProvider _accountCurrencyProvider;
-
         /// <summary>
-        /// Gets the account currency provider
+        /// Gets the account currency
         /// </summary>
-        public string AccountCurrency => _accountCurrencyProvider.AccountCurrency;
+        public string AccountCurrency => Currencies.USD;
 
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        /// <param name="accountCurrencyProvider">The account currency provider</param>
-        public FeeModelParameters(IAccountCurrencyProvider accountCurrencyProvider)
+        private BackwardsCompatibleAccountCurrencyProvider()
         {
-            _accountCurrencyProvider = accountCurrencyProvider;
         }
+
+        /// <summary>
+        /// Gets the static instance
+        /// </summary>
+        public static readonly BackwardsCompatibleAccountCurrencyProvider Instance
+            = new BackwardsCompatibleAccountCurrencyProvider();
     }
 }
