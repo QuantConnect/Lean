@@ -14,6 +14,7 @@
  *
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -47,8 +48,41 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Where(x => x.ConversionRateSecurity != null && x.ConversionRate == 0)
                 .ToList();
 
-            var slices = algorithm.History(
-                cashToUpdate.Select(x => x.ConversionRateSecurity.Symbol), 1);
+            var historyRequestFactory = new HistoryRequestFactory(algorithm);
+            var historyRequests = new List<HistoryRequest>();
+            foreach (var cash in cashToUpdate)
+            {
+                // if we already added a history request for this security, skip
+                if (historyRequests.Any(x => x.Symbol == cash.ConversionRateSecurity.Symbol))
+                {
+                    continue;
+                }
+
+                var configs = algorithm
+                    .SubscriptionManager
+                    .SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol);
+
+                var resolution = configs.GetHighestResolution();
+                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
+                    cash.ConversionRateSecurity.Symbol,
+                    1,
+                    resolution,
+                    cash.ConversionRateSecurity.Exchange.Hours);
+                var endTime = algorithm.Time.RoundDown(resolution.ToTimeSpan());
+
+                foreach (var subscriptionDataConfig in configs)
+                {
+                    historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
+                        subscriptionDataConfig,
+                        startTime,
+                        endTime,
+                        cash.ConversionRateSecurity.Exchange.Hours,
+                        resolution));
+                }
+            }
+
+            var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
             slices.PushThrough(data =>
             {
                 foreach (var cash in cashToUpdate
