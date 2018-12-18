@@ -156,6 +156,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Time.Hour > 13)
             {
+                if (Transactions.GetOpenOrders("LTCUSD").Count > 0) return;
+
                 // To include any initial holdings, we read the LTC amount from the cashbook
                 // instead of using Portfolio["LTCUSD"].Quantity
 
@@ -212,19 +214,19 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "-99.992%"},
             {"Drawdown", "3.800%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-2.545%"},
-            {"Sharpe Ratio", "-16.028"},
+            {"Net Profit", "-2.546%"},
+            {"Sharpe Ratio", "-16.255"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-5.47"},
-            {"Beta", "326.536"},
-            {"Annual Standard Deviation", "0.201"},
-            {"Annual Variance", "0.04"},
-            {"Information Ratio", "-16.112"},
-            {"Tracking Error", "0.2"},
+            {"Alpha", "-5.442"},
+            {"Beta", "322.169"},
+            {"Annual Standard Deviation", "0.198"},
+            {"Annual Variance", "0.039"},
+            {"Information Ratio", "-16.34"},
+            {"Tracking Error", "0.197"},
             {"Treynor Ratio", "-0.01"},
-            {"Total Fees", "$85.27"}
+            {"Total Fees", "$85.26"}
         };
     }
 }

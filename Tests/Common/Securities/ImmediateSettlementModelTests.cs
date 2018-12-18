@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void FundsAreSettledImmediately()
         {
             var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
+            var transactions = new SecurityTransactionManager(new QCAlgorithm(), securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             var model = new ImmediateSettlementModel();
             var config = CreateTradeBarConfig();

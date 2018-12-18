@@ -453,7 +453,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void ImmediateFillModelUsesPriceForTicksWhenBidAskSpreadsAreNotAvailable()
         {
             var noon = new DateTime(2014, 6, 24, 12, 0, 0);
-            var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var noonUtc = noon.ConvertToUtc(TimeZones.NewYork);
+
+            var timeKeeper = new TimeKeeper(noonUtc, new[] { TimeZones.NewYork });
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var config = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
             var security = new Security(
@@ -468,11 +470,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // Add both a tradebar and a tick to the security cache
             // This is the case when a tick is seeded with minute data in an algorithm
-            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
-            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+            security.Cache.AddData(new TradeBar(noon, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
+            security.Cache.AddData(new Tick(config, "57600000,1000000,100,A,@,0", noon));
 
             var fillModel = new ImmediateFillModel();
-            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var order = new MarketOrder(symbol, 1000, noonUtc);
             var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
@@ -487,7 +489,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void ImmediateFillModelDoesNotUseTicksWhenThereIsNoTickSubscription()
         {
             var noon = new DateTime(2014, 6, 24, 12, 0, 0);
-            var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var noonUtc = noon.ConvertToUtc(TimeZones.NewYork);
+
+            var timeKeeper = new TimeKeeper(noonUtc, new[] { TimeZones.NewYork });
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             // Minute subscription
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
@@ -501,13 +505,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
-
             // This is the case when a tick is seeded with minute data in an algorithm
-            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
-            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+            security.Cache.AddData(new TradeBar(noon, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
+            security.Cache.AddData(new Tick(config, "57600000,1000000,100,A,@,0", noon));
 
             var fillModel = new ImmediateFillModel();
-            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var order = new MarketOrder(symbol, 1000, noonUtc);
             var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,

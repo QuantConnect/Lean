@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -278,7 +279,7 @@ namespace QuantConnect.Tests.Common.Securities
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
-            var transactions = new SecurityTransactionManager(null, securities);
+            var transactions = new SecurityTransactionManager(new QCAlgorithm(), securities);
             transactions.SetOrderProcessor(orderProcessor);
 
             var portfolio = new SecurityPortfolioManager(securities, transactions);

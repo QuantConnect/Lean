@@ -68,6 +68,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            if (Transactions.GetOpenOrders().Count > 0) return;
+
             if (!Portfolio.Invested)
             {
                 foreach(var chain in slice.FutureChains)
@@ -117,25 +119,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8220"},
+            {"Total Trades", "7964"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
             {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "13.500%"},
-            {"Expectancy", "-0.818"},
-            {"Net Profit", "-13.517%"},
-            {"Sharpe Ratio", "-29.354"},
+            {"Drawdown", "13.000%"},
+            {"Expectancy", "-0.807"},
+            {"Net Profit", "-12.980%"},
+            {"Sharpe Ratio", "-30.984"},
             {"Loss Rate", "89%"},
             {"Win Rate", "11%"},
-            {"Profit-Loss Ratio", "0.69"},
-            {"Alpha", "-7.746"},
-            {"Beta", "-0.859"},
-            {"Annual Standard Deviation", "0.305"},
-            {"Annual Variance", "0.093"},
-            {"Information Ratio", "-24.985"},
-            {"Tracking Error", "0.414"},
-            {"Treynor Ratio", "10.413"},
-            {"Total Fees", "$15207.00"}
+            {"Profit-Loss Ratio", "0.74"},
+            {"Alpha", "-7.572"},
+            {"Beta", "-0.719"},
+            {"Annual Standard Deviation", "0.277"},
+            {"Annual Variance", "0.077"},
+            {"Information Ratio", "-26.012"},
+            {"Tracking Error", "0.384"},
+            {"Treynor Ratio", "11.933"},
+            {"Total Fees", "$14733.40"}
         };
     }
 }

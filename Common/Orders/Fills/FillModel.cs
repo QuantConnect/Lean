@@ -114,8 +114,15 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Current;
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime < order.Time) return fill;
+
+            //Order [fill]price for a market order model is the current security price or the open price of the next bar
+            fill.FillPrice = pricesEndTime > order.Time ? prices.Open : prices.Current;
+
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c

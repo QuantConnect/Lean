@@ -59,6 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
                     continue;
                 }
 
+                if (Transactions.GetOpenOrders(symbol).Count > 0) return;
+
                 var holdings = Portfolio[symbol];
                 if (!holdings.Invested)
                 {
@@ -86,25 +88,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5433"},
+            {"Total Trades", "161"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-3.894%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.993"},
-            {"Net Profit", "-0.054%"},
-            {"Sharpe Ratio", "-30.322"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "2.23"},
-            {"Alpha", "-0.019"},
-            {"Beta", "-0.344"},
-            {"Annual Standard Deviation", "0.001"},
+            {"Compounding Annual Return", "-0.117%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "-0.832"},
+            {"Net Profit", "-0.002%"},
+            {"Sharpe Ratio", "-17.638"},
+            {"Loss Rate", "94%"},
+            {"Win Rate", "6%"},
+            {"Profit-Loss Ratio", "1.69"},
+            {"Alpha", "-0.001"},
+            {"Beta", "0.059"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-38.881"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "0.066"},
-            {"Total Fees", "$5433.00"}
+            {"Information Ratio", "-36.312"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "-0.011"},
+            {"Total Fees", "$161.00"}
         };
     }
 }

@@ -49,6 +49,9 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
 
 
     def OnData(self,slice):
+        if len(self.Transactions.GetOpenOrders()) > 0:
+            return
+
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:
                  # Get contracts expiring no earlier than in 90 days

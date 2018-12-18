@@ -52,6 +52,9 @@ class BasicTemplateOptionStrategyAlgorithm(QCAlgorithm):
         self.SetBenchmark("GOOG")
 
     def OnData(self,slice):
+        if len(self.Transactions.GetOpenOrders()) > 0:
+            return
+
         if not self.Portfolio.Invested:
             for kvp in slice.OptionChains:
                 chain = kvp.Value

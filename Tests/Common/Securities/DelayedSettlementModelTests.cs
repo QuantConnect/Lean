@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SellOnMondaySettleOnThursday()
         {
             var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
+            var transactions = new SecurityTransactionManager(new QCAlgorithm(), securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
@@ -84,7 +85,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void SellOnThursdaySettleOnTuesday()
         {
             var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
+            var transactions = new SecurityTransactionManager(new QCAlgorithm(), securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));

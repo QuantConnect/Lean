@@ -58,6 +58,8 @@ namespace QuantConnect.Securities
 
             //Internal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
+
+            _marketOrderFillTimeout = TimeSpan.FromSeconds(algorithm != null && algorithm.LiveMode ? 5 : 0.5);
         }
 
         /// <summary>
@@ -257,7 +259,7 @@ namespace QuantConnect.Securities
 
             if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
-                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within {0} seconds.", _marketOrderFillTimeout.TotalSeconds);
+                Log.Error($"SecurityTransactionManager.WaitForOrder(): Order {orderId} did not fill within {_marketOrderFillTimeout.TotalSeconds} seconds.");
                 return false;
             }
 

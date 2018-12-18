@@ -58,6 +58,10 @@ class RegressionAlgorithm(QCAlgorithm):
                 pass
 
             symbol = kvp.Key
+
+            if len(self.Transactions.GetOpenOrders(symbol)) > 0:
+                return
+
             holdings = self.Portfolio[symbol]
 
             if not holdings.Invested:

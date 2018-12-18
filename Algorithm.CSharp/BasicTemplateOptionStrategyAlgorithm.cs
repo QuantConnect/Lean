@@ -59,6 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
+            if (Transactions.GetOpenOrders().Count > 0) return;
+
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
@@ -111,13 +113,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "778"},
+            {"Total Trades", "404"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-100%"},
-            {"Drawdown", "6.800%"},
+            {"Compounding Annual Return", "-100.000%"},
+            {"Drawdown", "4.400%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-6.821%"},
+            {"Net Profit", "-4.388%"},
             {"Sharpe Ratio", "0"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
@@ -129,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$389.00"}
+            {"Total Fees", "$202.00"}
         };
     }
 }

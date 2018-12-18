@@ -41,7 +41,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             _config = SecurityTests.CreateTradeBarConfig();
             _security = SecurityTests.GetSecurity();
-            orderDateTime = new DateTime(2017, 2, 2, 13, 0, 0);
+
+            var reference = new DateTime(2017, 2, 2, 13, 0, 0);
+            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(referenceUtc);
+            _security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            _security.SetMarketPrice(new TradeBar { Time = reference, Close = 0.5m });
+
+            orderDateTime = referenceUtc;
             orderEvent = new OrderEvent(
                 99,
                 _security.Symbol,
@@ -52,10 +59,6 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 1,
                 new OrderFee(new CashAmount(1, Currencies.USD))
             );
-            var reference = DateTime.Now;
-            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
-            var timeKeeper = new TimeKeeper(referenceUtc);
-            _security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
         }
 
         #region InheritImmediateFillModel
@@ -237,11 +240,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_MarketOnOpenFill()
         {
             var model = new TestFillModelInheritBaseClass();
-            _security.SetMarketPrice(new Tick(orderDateTime, _security.Symbol, 88, 88));
+            _security.SetMarketPrice(new Tick(orderDateTime.ConvertFromUtc(TimeZones.NewYork), _security.Symbol, 88, 88));
 
             var result = model.Fill(
                 new FillModelParameters(_security,
-                    new MarketOnOpenOrder(_security.Symbol, 1, orderDateTime),
+                    new MarketOnOpenOrder(_security.Symbol, 1, orderDateTime.AddDays(-1)),
                     new MockSubscriptionDataConfigProvider(_config)));
 
             Assert.True(model.MarketOnOpenFillWasCalled);
@@ -256,7 +259,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var model = new TestFillModelInheritBaseClass();
             var result = model.Fill(
                 new FillModelParameters(_security,
-                    new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime),
+                    new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime.AddDays(-1)),
                     new MockSubscriptionDataConfigProvider(_config)));
 
             Assert.True(model.MarketOnCloseFillWasCalled);
@@ -615,7 +618,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             protected override Prices GetPrices(Security asset, OrderDirection direction)
             {
                 GetPricesWasCalled = true;
-                return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+                return new Prices(orderDateTime.AddMinutes(1).ConvertFromUtc(TimeZones.NewYork), 12345, 12345, 12345, 12345, 12345);
             }
         }
 
@@ -628,7 +631,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 GetPricesWasCalled = true;
                 // call base.GetPrices() just to test it show its possible
                 base.GetPrices(asset, direction);
-                return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+                return new Prices(orderDateTime.AddMinutes(1).ConvertFromUtc(TimeZones.NewYork), 12345, 12345, 12345, 12345, 12345);
             }
         }
 

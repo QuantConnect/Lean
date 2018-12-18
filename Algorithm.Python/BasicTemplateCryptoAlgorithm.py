@@ -141,6 +141,9 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
             self.Transactions.CancelOpenOrders("BTCEUR")
 
         elif self.Time.hour > 13:
+            if len(self.Transactions.GetOpenOrders("LTCUSD")) > 0:
+                return
+
             # To include any initial holdings, we read the LTC amount from the cashbook
             # instead of using Portfolio["LTCUSD"].Quantity
 
