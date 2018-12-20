@@ -96,19 +96,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 wallet.Type.Equals("trading") && accountType == AccountType.Margin;
         }
 
-        private decimal GetConversionRate(Symbol symbol)
-        {
-            try
-            {
-                return _priceProvider.GetLastPrice(symbol);
-            }
-            catch (Exception e)
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 0, $"GetConversionRate: {e.Message}"));
-                return 0;
-            }
-        }
-
         /// <summary>
         /// Provides the current best bid and ask
         /// </summary>
@@ -220,7 +207,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 AveragePrice = position.AveragePrice,
                 Quantity = position.Amount,
                 UnrealizedPnL = position.PL,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Type = SecurityType.Crypto
             };

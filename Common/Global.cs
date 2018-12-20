@@ -71,9 +71,6 @@ namespace QuantConnect
         /// Current Market Price of the Asset in the currency the symbol is traded in
         public decimal MarketPrice;
 
-        /// Current market conversion rate into the account currency
-        public decimal ConversionRate;
-
         /// Current market value of the holding
         public decimal MarketValue;
 
@@ -84,7 +81,6 @@ namespace QuantConnect
         public Holding()
         {
             CurrencySymbol = "$";
-            ConversionRate = 1m;
         }
 
         /// <summary>
@@ -101,7 +97,6 @@ namespace QuantConnect
             Quantity = holding.Quantity;
             MarketValue = holding.HoldingsValue;
             CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
-            ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;
             if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd)
@@ -135,7 +130,6 @@ namespace QuantConnect
                 MarketPrice = MarketPrice,
                 MarketValue = MarketValue,
                 UnrealizedPnL = UnrealizedPnL,
-                ConversionRate  = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
         }
@@ -146,11 +140,6 @@ namespace QuantConnect
         public override string ToString()
         {
             var value = string.Format("{0}: {1} @ {2}{3} - Market: {2}{4}", Symbol.Value, Quantity, CurrencySymbol, AveragePrice, MarketPrice);
-
-            if (ConversionRate != 1m)
-            {
-                value += string.Format(" - Conversion: {0}", ConversionRate);
-            }
 
             return value;
         }

@@ -207,7 +207,7 @@ namespace QuantConnect.Brokerages
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public abstract List<Cash> GetCashBalance();
+        public abstract List<CashAmount> GetCashBalance();
 
         /// <summary>
         /// Specifies whether the brokerage will instantly update account balances

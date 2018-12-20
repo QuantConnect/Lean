@@ -47,5 +47,26 @@ namespace QuantConnect.Securities
             Amount = amount;
             Currency = currency;
         }
+
+        public static bool operator ==(CashAmount lhs, CashAmount rhs)
+        {
+            return Equals(lhs, rhs);
+        }
+
+        public static bool operator !=(CashAmount lhs, CashAmount rhs)
+        {
+            return !Equals(lhs, rhs);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is CashAmount)
+            {
+                var cashAmountObj = (CashAmount) obj;
+                return Amount == cashAmountObj.Amount
+                    && Currency == cashAmountObj.Currency;
+            }
+            return false;
+        }
     }
 }

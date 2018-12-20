@@ -172,29 +172,6 @@ namespace QuantConnect.Brokerages.Fxcm
             return _rates.Where(x => fxcmSymbols.Contains(x.Key)).Select(x => x.Value).ToList();
         }
 
-        /// <summary>
-        /// Gets the current conversion rate into USD
-        /// </summary>
-        /// <remarks>Synchronous, blocking</remarks>
-        private decimal GetUsdConversion(string currency)
-        {
-            if (currency == Currencies.USD)
-                return 1m;
-
-            // determine the correct symbol to choose
-            var normalSymbol = currency + "/USD";
-            var invertedSymbol = "USD/" + currency;
-            var isInverted = _fxcmInstruments.ContainsKey(invertedSymbol);
-            var fxcmSymbol = isInverted ? invertedSymbol : normalSymbol;
-
-            // get current quotes for the instrument
-            var quotes = GetQuotes(new List<string> { fxcmSymbol });
-
-            var rate = (decimal)(quotes[0].getBidClose() + quotes[0].getAskClose()) / 2;
-
-            return isInverted ? 1 / rate : rate;
-        }
-
         #region IGenericMessageListener implementation
 
         /// <summary>

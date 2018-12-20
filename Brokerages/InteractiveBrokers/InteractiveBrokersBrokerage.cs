@@ -422,30 +422,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
-            // fire up tasks to resolve the conversion rates so we can do them in parallel
-            var tasks = holdings.Select(local =>
-            {
-                // we need to resolve the conversion rate for non-USD currencies
-                if (local.Type != SecurityType.Forex)
-                {
-                    // this assumes all non-forex are us denominated, we should add the currency to 'holding'
-                    local.ConversionRate = 1m;
-                    return null;
-                }
-                // if quote currency is in USD don't bother making the request
-                var currency = local.Symbol.Value.Substring(3);
-                if (currency == Currencies.USD)
-                {
-                    local.ConversionRate = 1m;
-                    return null;
-                }
-
-                // this will allow us to do this in parallel
-                return Task.Factory.StartNew(() => local.ConversionRate = GetUsdConversion(currency));
-            }).Where(x => x != null).ToArray();
-
-            Task.WaitAll(tasks, 5000);
-
             return holdings;
         }
 
@@ -453,7 +429,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             CheckIbGateway();
 
@@ -463,7 +439,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            var balances = _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            var balances = _accountData.CashBalances.Select(x => new CashAmount(x.Value, x.Key)).ToList();
 
             if (balances.Count == 0)
             {
@@ -1033,179 +1009,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ContractDetails -= clientOnContractDetails;
 
             return contractDetails;
-        }
-
-        /// <summary>
-        /// Gets the current conversion rate into USD
-        /// </summary>
-        /// <remarks>Synchronous, blocking</remarks>
-        private decimal GetUsdConversion(string currency)
-        {
-            if (currency == Currencies.USD)
-            {
-                return 1m;
-            }
-
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Getting USD conversion for " + currency);
-
-            // determine the correct symbol to choose
-            var invertedSymbol = Currencies.USD + currency;
-            var normalSymbol = currency + Currencies.USD;
-            var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
-            if (currencyPair == null)
-            {
-                throw new Exception("Unable to resolve currency conversion pair for currency: " + currency);
-            }
-
-            // is it XXXUSD or USDXXX
-            bool inverted = invertedSymbol == currencyPair;
-            var symbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.FXCM);
-            var contract = CreateContract(symbol);
-
-            ContractDetails details;
-            if (!_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
-            {
-                details = GetContractDetails(contract);
-            }
-
-            if (details == null)
-            {
-                throw new Exception("Unable to resolve conversion for currency: " + currency);
-            }
-
-            // if this stays zero then we haven't received the conversion rate
-            var rate = 0m;
-            var manualResetEvent = new ManualResetEvent(false);
-
-            // we're going to request ticks first and if not present,
-            // we'll make a history request and use the latest value returned.
-
-            const int requestTimeout = 60;
-
-            // define and add our tick handler for the ticks
-            var marketDataTicker = GetNextTickerId();
-
-            _requestInformation[marketDataTicker] = "GetUsdConversion.MarketData: " + contract;
-
-            EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
-            {
-                if (args.TickerId == marketDataTicker &&
-                    (args.Field == IBApi.TickType.ASK || args.Field == IBApi.TickType.DELAYED_ASK))
-                {
-                    rate = Convert.ToDecimal(args.Price);
-                    Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Market price rate is " + args.Price + " for currency " + currency);
-                    manualResetEvent.Set();
-                }
-            };
-
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting market data for " + currencyPair);
-            _client.TickPrice += clientOnTickPrice;
-
-            CheckRateLimiting();
-
-            _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
-
-            if (!manualResetEvent.WaitOne(requestTimeout * 1000))
-            {
-                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
-            }
-
-            _client.TickPrice -= clientOnTickPrice;
-
-            // check to see if ticks returned something
-            // we also need to check for negative values, IB returns -1 on Saturday
-            if (rate <= 0)
-            {
-                string errorMessage;
-                bool pacingViolation;
-                const int pacingDelaySeconds = 60;
-
-                do
-                {
-                    errorMessage = string.Empty;
-                    pacingViolation = false;
-                    manualResetEvent.Reset();
-
-                    var data = new List<IB.HistoricalDataEventArgs>();
-                    var historicalTicker = GetNextTickerId();
-
-                    _requestInformation[historicalTicker] = "GetUsdConversion.Historical: " + contract;
-
-                    EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
-                    {
-                        if (args.RequestId == historicalTicker)
-                        {
-                            data.Add(args);
-                        }
-                    };
-
-                    EventHandler<IB.HistoricalDataEndEventArgs> clientOnHistoricalDataEnd = (sender, args) =>
-                    {
-                        if (args.RequestId == historicalTicker)
-                        {
-                            manualResetEvent.Set();
-                        }
-                    };
-
-                    EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
-                    {
-                        if (args.Code == 162 && args.Message.Contains("pacing violation"))
-                        {
-                            // pacing violation happened
-                            pacingViolation = true;
-                        }
-                        else
-                        {
-                            errorMessage = $"Code: {args.Code} - ErrorMessage: {args.Message}";
-                        }
-                    };
-
-                    Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting historical data for " + currencyPair);
-                    _client.HistoricalData += clientOnHistoricalData;
-                    _client.HistoricalDataEnd += clientOnHistoricalDataEnd;
-                    _client.Error += clientOnError;
-
-                    CheckRateLimiting();
-
-                    // request some historical data, IB's api takes into account weekends/market opening hours
-                    const string requestSpan = "100 S";
-                    _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"),
-                        requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, false, new List<TagValue>());
-
-                    if (!manualResetEvent.WaitOne(requestTimeout * 1000))
-                    {
-                        Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
-                    }
-
-                    if (pacingViolation)
-                    {
-                        // we received 'pacing violation' error from IB, so we have to wait
-                        Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion() Pacing violation, pausing for {0} secs.", pacingDelaySeconds);
-                        Thread.Sleep(pacingDelaySeconds * 1000);
-                    }
-                    else
-                    {
-                        // check for history
-                        var ordered = data.OrderByDescending(x => x.Bar.Time);
-                        var mostRecentQuote = ordered.FirstOrDefault();
-                        if (mostRecentQuote == null)
-                        {
-                            throw new Exception("Unable to get recent quote for " + currencyPair + " - " + errorMessage);
-                        }
-
-                        rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
-                        Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Last historical price rate is " + rate + " for currency " + currency);
-                    }
-
-                    // be sure to unwire our history handler as well
-                    _client.HistoricalData -= clientOnHistoricalData;
-                    _client.HistoricalDataEnd -= clientOnHistoricalDataEnd;
-                    _client.Error -= clientOnError;
-
-                } while (pacingViolation);
-            }
-
-            return inverted ? 1 / rate : rate;
         }
 
         /// <summary>
@@ -2248,7 +2051,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Quantity = e.Position,
                 AveragePrice = Convert.ToDecimal(e.AverageCost) / multiplier,
                 MarketPrice = Convert.ToDecimal(e.MarketPrice),
-                ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
                 CurrencySymbol = currencySymbol
             };
         }

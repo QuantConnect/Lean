@@ -232,18 +232,17 @@ namespace QuantConnect.Brokerages.Alpaca
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             CheckRateLimiting();
 
             var task = _restClient.GetAccountAsync();
             var balance = task.SynchronouslyAwaitTaskResult();
 
-            return new List<Cash>
+            return new List<CashAmount>
             {
-                new Cash(Currencies.USD,
-                    balance.TradableCash,
-                    1m)
+                new CashAmount(balance.TradableCash,
+                    Currencies.USD)
             };
         }
 

@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -92,6 +93,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     cash.Update(data);
                 }
             });
+
+            Log.Trace("BaseSetupHandler.SetupCurrencyConversions(): " +
+                $"{string.Join(" | ", algorithm.Portfolio.CashBook.Values.Select(x => x.ToString()))}");
         }
     }
 }

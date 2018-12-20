@@ -799,11 +799,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
-            return new List<Cash>
+            return new List<CashAmount>
             {
-                new Cash(Currencies.USD, GetBalanceDetails(_accountID).TotalCash, 1.0m)
+                new CashAmount(GetBalanceDetails(_accountID).TotalCash, Currencies.USD)
             };
         }
 
@@ -1674,7 +1674,6 @@ namespace QuantConnect.Brokerages.Tradier
                 Symbol = Symbol.Create(position.Symbol, SecurityType.Equity, Market.USA),
                 Type = SecurityType.Equity,
                 AveragePrice = position.CostBasis/position.Quantity,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 MarketPrice = 0m, //--> GetAccountHoldings does a call to GetQuotes to fill this data in
                 Quantity = position.Quantity

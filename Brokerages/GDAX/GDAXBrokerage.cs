@@ -261,9 +261,9 @@ namespace QuantConnect.Brokerages.GDAX
         /// Gets the total account cash balance
         /// </summary>
         /// <returns></returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
-            var list = new List<Cash>();
+            var list = new List<CashAmount>();
 
             var request = new RestRequest("/accounts", Method.GET);
             GetAuthenticationToken(request);
@@ -278,22 +278,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 if (item.Balance > 0)
                 {
-                    if (item.Currency == Currencies.USD)
-                    {
-                        list.Add(new Cash(item.Currency, item.Balance, 1));
-                    }
-                    else if (new[] {"GBP", "EUR"}.Contains(item.Currency))
-                    {
-                        var symbol = Symbol.Create(item.Currency + Currencies.USD, SecurityType.Forex, Market.FXCM);
-                        var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, rate));
-                    }
-                    else
-                    {
-                        var tick = GetTick(Symbol.Create(item.Currency + Currencies.USD, SecurityType.Crypto, Market.GDAX));
-
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
-                    }
+                    list.Add(new CashAmount(item.Balance, item.Currency.ToUpper()));
                 }
             }
 

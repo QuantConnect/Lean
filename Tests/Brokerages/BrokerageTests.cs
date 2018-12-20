@@ -457,7 +457,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("GET CASH BALANCE");
             Log.Trace("");
             var balance = Brokerage.GetCashBalance();
-            Assert.AreEqual(1, balance.Count(x => x.Symbol == Currencies.USD));
+            Assert.AreEqual(1, balance.Count(x => x.Currency == Currencies.USD));
         }
 
         [Test]

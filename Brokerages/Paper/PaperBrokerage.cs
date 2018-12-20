@@ -47,18 +47,18 @@ namespace QuantConnect.Brokerages.Paper
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             string value;
             if (_job.BrokerageData.TryGetValue("project-paper-equity", out value))
             {
                 // remove the key, we really only want to return the cached value on the first request
                 _job.BrokerageData.Remove("project-paper-equity");
-                return new List<Cash>{new Cash(Currencies.USD, decimal.Parse(value), 1)};
+                return new List<CashAmount> {new CashAmount(decimal.Parse(value), Algorithm.AccountCurrency)};
             }
 
             // if we've already begun running, just return the current state
-            return Algorithm.Portfolio.CashBook.Select(x => x.Value).ToList();
+            return Algorithm.Portfolio.CashBook.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList();
         }
 
         /// <summary>
