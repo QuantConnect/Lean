@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect
 {
@@ -144,10 +144,7 @@ namespace QuantConnect
             var month = expiration.Month;
 
             // These futures expire in the month before the contract month
-            if (underlying == Futures.Energies.CrudeOilWTI ||
-                underlying == Futures.Energies.Gasoline ||
-                underlying == Futures.Energies.HeatingOil ||
-                underlying == Futures.Energies.NaturalGas)
+            if (FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(underlying))
             {
                 if (month < 12)
                 {
