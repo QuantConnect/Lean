@@ -396,29 +396,19 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Plot(string,decimal)"/>
         public void Plot(string series, PyObject pyObject)
         {
-            IIndicator<IndicatorDataPoint> indicator;
-
             using (Py.GIL())
             {
-                var pythonType = pyObject.GetPythonType();
-
                 try
                 {
-                    var type = pythonType.As<Type>();
-                    indicator = pyObject.AsManagedObject(type) as IIndicator<IndicatorDataPoint>;
-
-                    if (indicator == null)
-                    {
-                        throw new ArgumentException();
-                    }
+                    decimal value = ((dynamic)pyObject).Current.Value;
+                    Plot(series, value);
                 }
                 catch
                 {
-                    throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType.Repr()} was provided.");
+                    var pythonType = pyObject.GetPythonType().Repr();
+                    throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided.");
                 }
             }
-
-            Plot(series, indicator.Current.Value);
         }
 
         /// <summary>
