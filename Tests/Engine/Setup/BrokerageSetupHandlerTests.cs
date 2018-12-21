@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Engine.Setup
         private ITransactionHandler _transactionHandler;
         private NonDequeingTestResultsHandler _resultHandler;
         private IBrokerage _brokerage;
+        private DataManager _dataManager;
 
         private TestableBrokerageSetupHandler _brokerageSetupHandler;
 
@@ -51,7 +52,8 @@ namespace QuantConnect.Tests.Engine.Setup
         public void Setup()
         {
             _algorithm = new QCAlgorithm();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _dataManager = new DataManagerStub(_algorithm);
+            _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _transactionHandler = new BrokerageTransactionHandler();
             _resultHandler = new NonDequeingTestResultsHandler();
             _brokerage = new TestBrokerage();
@@ -126,7 +128,8 @@ namespace QuantConnect.Tests.Engine.Setup
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
-            var result = setupHandler.Setup(algorithm, brokerage.Object, job, resultHandler.Object, transactionHandler.Object, realTimeHandler.Object);
+            var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object));
 
             Assert.AreEqual(expected, result);
 
@@ -180,7 +183,8 @@ namespace QuantConnect.Tests.Engine.Setup
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
-            Assert.IsTrue(setupHandler.Setup(algorithm, brokerage.Object, job, resultHandler.Object, transactionHandler.Object, realTimeHandler.Object));
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));

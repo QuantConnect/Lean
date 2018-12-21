@@ -45,16 +45,13 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
 
         # Set Strategy Cash (EUR)
         # EUR/USD conversion rate will be updated dynamically
-        self.SetCash("EUR", 10000, 1.23)
+        self.SetCash("EUR", 10000)
 
         # Add some coins as initial holdings
         # When connected to a real brokerage, the amount specified in SetCash
         # will be replaced with the amount in your actual account.
-        self.SetCash("BTC", 1, 7300)
-        self.SetCash("ETH", 5, 400)
-
-        # Note: the conversion rates above are required in backtesting (for now) because of this issue:
-        # https://github.com/QuantConnect/Lean/issues/1859
+        self.SetCash("BTC", 1)
+        self.SetCash("ETH", 5)
 
         self.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash)
 

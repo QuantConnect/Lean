@@ -123,7 +123,6 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // run algorithm manager
             manager.Run(job,
                 algorithm,
-                dataManager,
                 synchronizer,
                 transactions,
                 results,

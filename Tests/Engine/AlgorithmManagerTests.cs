@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Engine
 
             Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");
             var sw = Stopwatch.StartNew();
-            algorithmManager.Run(job, algorithm, dataManager, nullSynchronizer, transactions, results, realtime, leanManager, alphas, token);
+            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, alphas, token);
             sw.Stop();
 
             var thousands = nullSynchronizer.Count / 1000d;
