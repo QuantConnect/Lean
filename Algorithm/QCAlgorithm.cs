@@ -89,6 +89,8 @@ namespace QuantConnect.Algorithm
         private Resolution? _warmupResolution;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
+        private HistoryRequestFactory _historyRequestFactory;
+
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -155,6 +157,7 @@ namespace QuantConnect.Algorithm
 
             OptionChainProvider = new EmptyOptionChainProvider();
             FutureChainProvider = new EmptyFutureChainProvider();
+            _historyRequestFactory = new HistoryRequestFactory(this);
         }
 
         /// <summary>
