@@ -32,6 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly HashSet<SubscriptionDataConfig> _toBeAddedCurrencySubscriptionDataConfigs;
         private readonly HashSet<SubscriptionDataConfig> _addedCurrencySubscriptionDataConfigs;
         private bool _ensureCurrencyDataFeeds;
+        private bool _pendingSubscriptionDataConfigs;
         private readonly CashBook _cashBook;
         private readonly SecurityManager _securityManager;
         private readonly SubscriptionManager _subscriptionManager;
@@ -54,6 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             cashBook.CashAdded += (sender, cash) => _ensureCurrencyDataFeeds = true;
 
+            _pendingSubscriptionDataConfigs = false;
             _securityManager = securityManager;
             _subscriptionManager = subscriptionManager;
             _securityService = securityService;
@@ -86,18 +88,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Will return any pending internal currency subscriptions and remove them as pending.
+        /// Will update pending currency <see cref="SubscriptionDataConfig"/>
         /// </summary>
-        /// <returns>Will return the <see cref="SubscriptionDataConfig"/> to be added</returns>
-        public IEnumerable<SubscriptionDataConfig> GetPendingCurrencyDataFeeds()
+        /// <returns>True when there are pending currency subscriptions <see cref="GetPendingSubscriptionDataConfigs"/></returns>
+        public bool UpdatePendingSubscriptionDataConfigs()
         {
-            var result = new List<SubscriptionDataConfig>();
             if (_ensureCurrencyDataFeeds)
             {
                 // this allows us to handle the case where SetCash is called when no security has been really added
-                EnsureCurrencyDataFeeds(SecurityChanges.None);
+                EnsureCurrencySubscriptionDataConfigs(SecurityChanges.None);
             }
-            if (_toBeAddedCurrencySubscriptionDataConfigs.Any())
+            return _pendingSubscriptionDataConfigs;
+        }
+
+        /// <summary>
+        /// Will return any pending internal currency <see cref="SubscriptionDataConfig"/> and remove them as pending.
+        /// </summary>
+        /// <returns>Will return the <see cref="SubscriptionDataConfig"/> to be added</returns>
+        public IEnumerable<SubscriptionDataConfig> GetPendingSubscriptionDataConfigs()
+        {
+            var result = new List<SubscriptionDataConfig>();
+            if (_pendingSubscriptionDataConfigs)
             {
                 foreach (var subscriptionDataConfig in _toBeAddedCurrencySubscriptionDataConfigs)
                 {
@@ -105,14 +116,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     result.Add(subscriptionDataConfig);
                 }
                 _toBeAddedCurrencySubscriptionDataConfigs.Clear();
+                _pendingSubscriptionDataConfigs = false;
             }
             return result;
         }
 
         /// <summary>
-        /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
+        /// Checks the current <see cref="SubscriptionDataConfig"/> and adds new necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
+        public void EnsureCurrencySubscriptionDataConfigs(SecurityChanges securityChanges)
         {
             _ensureCurrencyDataFeeds = false;
             // remove any 'to be added' if the security has already been added
@@ -129,6 +141,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _toBeAddedCurrencySubscriptionDataConfigs.Add(config);
             }
+            _pendingSubscriptionDataConfigs = _toBeAddedCurrencySubscriptionDataConfigs.Any();
         }
     }
 }

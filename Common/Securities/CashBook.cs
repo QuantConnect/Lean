@@ -217,8 +217,13 @@ namespace QuantConnect.Securities
             {
                 return;
             }
+
+            var alreadyExisted = _currencies.ContainsKey(symbol);
             _currencies.AddOrUpdate(symbol, value);
-            OnCashAdded(value);
+            if (!alreadyExisted)
+            {
+                OnCashAdded(value);
+            }
         }
 
         /// <summary>

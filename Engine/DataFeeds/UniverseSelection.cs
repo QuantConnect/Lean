@@ -328,16 +328,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool AddPendingCurrencyDataFeeds(DateTime utcStart)
         {
             var added = false;
-            foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager.GetPendingCurrencyDataFeeds())
+            if (_currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs())
             {
-                var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
-                added |= _dataManager.AddSubscription(new SubscriptionRequest(
-                    false,
-                    null,
-                    security,
-                    subscriptionDataConfig,
-                    utcStart,
-                    _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+                foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager
+                    .GetPendingSubscriptionDataConfigs())
+                {
+                    var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
+                    added |= _dataManager.AddSubscription(new SubscriptionRequest(
+                        false,
+                        null,
+                        security,
+                        subscriptionDataConfig,
+                        utcStart,
+                        _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+                }
             }
             return added;
         }
@@ -347,7 +351,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
         {
-            _currencySubscriptionDataConfigManager.EnsureCurrencyDataFeeds(securityChanges);
+            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges);
         }
 
         private void RemoveSecurityFromUniverse(
