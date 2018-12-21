@@ -40,7 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly ISecurityService _securityService;
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
-        private readonly HashSet<SubscriptionDataConfig> _addedCurrencySubscriptionDataConfigs;
+        private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -52,9 +52,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ISecurityService securityService)
         {
             _algorithm = algorithm;
+
             _securityService = securityService;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
-            _addedCurrencySubscriptionDataConfigs = new HashSet<SubscriptionDataConfig>();
+            _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
+                algorithm.Securities,
+                algorithm.SubscriptionManager,
+                _securityService,
+                algorithm.BrokerageModel);
         }
 
         /// <summary>
@@ -268,6 +273,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // For now this is required for retro compatibility with usages of security.Subscriptions
                         security.AddData(request.Configuration);
                     }
+
+                    var toRemove = _currencySubscriptionDataConfigManager.GetSubscriptionDataConfigToRemove(request.Configuration.Symbol);
+                    if (toRemove != null)
+                    {
+                        Log.Trace($"UniverseSelection.ApplyUniverseSelection(): Removing internal currency data feed {toRemove}");
+                        _dataManager.RemoveSubscription(toRemove);
+                    }
+
                     _dataManager.AddSubscription(request);
 
                     // only update our security changes if we actually added data
@@ -297,13 +310,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (additions.Count > 0)
             {
                 EnsureCurrencyDataFeeds(securityChanges);
-
-                foreach (var subscriptionDataConfig in _addedCurrencySubscriptionDataConfigs)
-                {
-                    var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
-                    _dataManager.AddSubscription(new SubscriptionRequest(false, universe, security, subscriptionDataConfig, dateTimeUtc, algorithmEndDateUtc));
-                }
-                _addedCurrencySubscriptionDataConfigs.Clear();
             }
 
             if (securityChanges != SecurityChanges.None)
@@ -315,20 +321,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Will add any pending internal currency subscriptions
+        /// </summary>
+        /// <param name="utcStart">The current date time in utc</param>
+        /// <returns>Will return true if any subscription was added</returns>
+        public bool AddPendingCurrencyDataFeeds(DateTime utcStart)
+        {
+            var added = false;
+            foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager.GetPendingCurrencyDataFeeds())
+            {
+                var security = _algorithm.Securities[subscriptionDataConfig.Symbol];
+                added |= _dataManager.AddSubscription(new SubscriptionRequest(
+                    false,
+                    null,
+                    security,
+                    subscriptionDataConfig,
+                    utcStart,
+                    _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+            }
+            return added;
+        }
+
+        /// <summary>
         /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
         /// </summary>
         public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
         {
-            var newConfigs = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(
-                _algorithm.Securities,
-                _algorithm.SubscriptionManager,
-                _algorithm.BrokerageModel.DefaultMarkets,
-                securityChanges,
-                _securityService);
-            foreach (var config in newConfigs)
-            {
-                _addedCurrencySubscriptionDataConfigs.Add(config);
-            }
+            _currencySubscriptionDataConfigManager.EnsureCurrencyDataFeeds(securityChanges);
         }
 
         private void RemoveSecurityFromUniverse(

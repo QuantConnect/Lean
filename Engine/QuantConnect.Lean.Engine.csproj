@@ -149,6 +149,7 @@
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
     <Compile Include="DataFeeds\DataManager.cs" />
     <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\DividendEventProvider.cs" />

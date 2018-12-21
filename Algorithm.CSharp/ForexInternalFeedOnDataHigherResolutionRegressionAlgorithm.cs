@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -48,8 +49,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (_added)
+            {
+                var eurUsdSubscription = SubscriptionManager.Subscriptions.Single(x => x.Symbol.Value == "EURUSD");
+                if (eurUsdSubscription.IsInternalFeed)
+                {
+                    throw new Exception("Unexpected internal 'EURUSD' Subscription");
+                }
+            }
             if (!_added)
             {
+                var eurUsdSubscription = SubscriptionManager.Subscriptions.Single(x => x.Symbol.Value == "EURUSD");
+                if (!eurUsdSubscription.IsInternalFeed)
+                {
+                    throw new Exception("Unexpected not internal 'EURUSD' Subscription");
+                }
                 var eurusd = AddForex("EURUSD", Resolution.Hour);
                 _dataPointsPerSymbol.Add(eurusd.Symbol, 0);
 

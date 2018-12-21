@@ -48,13 +48,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Event fired when a <see cref="Cash"/> is added
+        /// </summary>
+        public event EventHandler<Cash> CashAdded;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CashBook"/> class.
         /// </summary>
         public CashBook()
         {
             AccountCurrency = Currencies.USD;
             _currencies = new ConcurrentDictionary<string, Cash>();
-            _currencies.AddOrUpdate(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
+            Add(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
         }
 
         /// <summary>
@@ -213,6 +218,7 @@ namespace QuantConnect.Securities
                 return;
             }
             _currencies.AddOrUpdate(symbol, value);
+            OnCashAdded(value);
         }
 
         /// <summary>
@@ -316,11 +322,7 @@ namespace QuantConnect.Securities
             }
             set
             {
-                // wont add NullCurrency
-                if (symbol != Currencies.NullCurrency)
-                {
-                    _currencies[symbol] = value;
-                }
+                Add(symbol, value);
             }
         }
 
@@ -371,5 +373,14 @@ namespace QuantConnect.Securities
         }
 
         #endregion
+
+        /// <summary>
+        /// Event invocator for the <see cref="CashAdded"/> event
+        /// </summary>
+        protected virtual void OnCashAdded(Cash cash)
+        {
+            var handler = CashAdded;
+            handler?.Invoke(this, cash);
+        }
     }
 }
