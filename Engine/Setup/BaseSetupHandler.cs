@@ -71,15 +71,16 @@ namespace QuantConnect.Lean.Engine.Setup
                     cash.ConversionRateSecurity.Exchange.Hours);
                 var endTime = algorithm.Time.RoundDown(resolution.ToTimeSpan());
 
-                foreach (var subscriptionDataConfig in configs)
-                {
-                    historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
-                        subscriptionDataConfig,
-                        startTime,
-                        endTime,
-                        cash.ConversionRateSecurity.Exchange.Hours,
-                        resolution));
-                }
+                // we need to order and select a specific configuration type
+                // so the conversion rate is deterministic
+                var configToUse = configs.OrderBy(x => x.TickType).First();
+
+                historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
+                    configToUse,
+                    startTime,
+                    endTime,
+                    cash.ConversionRateSecurity.Exchange.Hours,
+                    resolution));
             }
 
             var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
