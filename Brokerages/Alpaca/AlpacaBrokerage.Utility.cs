@@ -417,7 +417,6 @@ namespace QuantConnect.Brokerages.Alpaca
                 Symbol = symbol,
                 Type = securityType,
                 AveragePrice = position.AverageEntryPrice,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = position.Side == PositionSide.Long ? position.Quantity : -position.Quantity
             };

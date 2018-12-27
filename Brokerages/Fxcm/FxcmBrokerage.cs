@@ -369,7 +369,6 @@ namespace QuantConnect.Brokerages.Fxcm
                     Symbol = group.Key,
                     Type = group.First().Type,
                     AveragePrice = group.Sum(x => x.AveragePrice * x.Quantity) / group.Sum(x => x.Quantity),
-                    ConversionRate = group.First().ConversionRate,
                     CurrencySymbol = group.First().CurrencySymbol,
                     Quantity = group.Sum(x => x.Quantity)
                 })
@@ -400,15 +399,14 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             Log.Trace("FxcmBrokerage.GetCashBalance()");
-            var cashBook = new List<Cash>();
+            var cashBook = new List<CashAmount>();
 
-            //Adds the account currency USD to the cashbook.
-            cashBook.Add(new Cash(_fxcmAccountCurrency,
-                        Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
-                        GetUsdConversion(_fxcmAccountCurrency)));
+            //Adds the account currency to the cashbook.
+            cashBook.Add(new CashAmount(Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
+                _fxcmAccountCurrency));
 
             foreach (var trade in _openPositions.Values)
             {
@@ -428,28 +426,30 @@ namespace QuantConnect.Brokerages.Fxcm
                 var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
                 quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
 
-                var baseCurrencyObject = (from cash in cashBook where cash.Symbol == baseCurrency select cash).FirstOrDefault();
+                var baseCurrencyAmount = cashBook.FirstOrDefault(x => x.Currency == baseCurrency);
                 //update the value of the base currency
-                if (baseCurrencyObject != null)
+                if (baseCurrencyAmount != default(CashAmount))
                 {
-                    baseCurrencyObject.AddAmount(baseQuantity);
+                    cashBook.Remove(baseCurrencyAmount);
+                    cashBook.Add(new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency));
                 }
                 else
                 {
                     //add the base currency if not present
-                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
+                    cashBook.Add(new CashAmount(baseQuantity, baseCurrency));
                 }
 
-                var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
+                var quoteCurrencyAmount = cashBook.Find(x => x.Currency == quoteCurrency);
                 //update the value of the quote currency
-                if (quoteCurrencyObject != null)
+                if (quoteCurrencyAmount != default(CashAmount))
                 {
-                    quoteCurrencyObject.AddAmount(quoteQuantity);
+                    cashBook.Remove(quoteCurrencyAmount);
+                    cashBook.Add(new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency));
                 }
                 else
                 {
                     //add the quote currency if not present
-                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
+                    cashBook.Add(new CashAmount(quoteQuantity, quoteCurrency));
                 }
             }
             return cashBook;

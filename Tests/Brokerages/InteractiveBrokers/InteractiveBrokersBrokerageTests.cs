@@ -523,13 +523,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
             var cashBalance = ib.GetCashBalance();
-            Assert.IsTrue(cashBalance.Any(x => x.Symbol == Currencies.USD));
+            Assert.IsTrue(cashBalance.Any(x => x.Currency == Currencies.USD));
             foreach (var cash in cashBalance)
             {
                 Console.WriteLine(cash);
-                if (cash.Symbol == Currencies.USD)
+                if (cash.Currency == Currencies.USD)
                 {
-                    Assert.AreNotEqual(0m, cashBalance.Single(x => x.Symbol == Currencies.USD));
+                    Assert.AreNotEqual(0m, cashBalance.Single(x => x.Currency == Currencies.USD));
                 }
             }
         }
@@ -578,7 +578,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            decimal balance = ib.GetCashBalance().Single(x => x.Symbol == Currencies.USD).Amount;
+            decimal balance = ib.GetCashBalance().Single(x => x.Currency == Currencies.USD).Amount;
 
             // wait for our order to fill
             var manualResetEvent = new ManualResetEvent(false);
@@ -590,7 +590,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             manualResetEvent.WaitOneAssertFail(3000, "Didn't receive account changed event");
 
-            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == Currencies.USD).Amount;
+            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Currency == Currencies.USD).Amount;
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
         }

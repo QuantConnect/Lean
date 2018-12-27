@@ -469,27 +469,5 @@ namespace QuantConnect.Brokerages.Oanda
                 StartPricingStream(instruments);
             }
         }
-
-        /// <summary>
-        /// Gets the current conversion rate into USD
-        /// </summary>
-        /// <remarks>Synchronous, blocking</remarks>
-        protected decimal GetUsdConversion(string currency)
-        {
-            if (currency == Currencies.USD)
-                return 1m;
-
-            // determine the correct symbol to choose
-            var normalSymbol = currency + "_USD";
-            var invertedSymbol = "USD_" + currency;
-            var isInverted = SymbolMapper.IsKnownBrokerageSymbol(invertedSymbol);
-            var oandaSymbol = isInverted ? invertedSymbol : normalSymbol;
-
-            var quote = GetRates(new List<string> { oandaSymbol }).Values.First();
-            var rate = (quote.BidPrice + quote.AskPrice) / 2;
-
-            return isInverted ? 1 / rate : rate;
-        }
-
     }
 }

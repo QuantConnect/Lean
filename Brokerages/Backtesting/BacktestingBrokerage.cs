@@ -115,9 +115,9 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
-            return Algorithm.Portfolio.CashBook.Select(x => x.Value).ToList();
+            return Algorithm.Portfolio.CashBook.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList();
         }
 
         /// <summary>

@@ -72,7 +72,7 @@ namespace QuantConnect
         public decimal MarketPrice;
 
         /// Current market conversion rate into the account currency
-        public decimal ConversionRate;
+        public decimal? ConversionRate;
 
         /// Current market value of the holding
         public decimal MarketValue;
@@ -84,7 +84,6 @@ namespace QuantConnect
         public Holding()
         {
             CurrencySymbol = "$";
-            ConversionRate = 1m;
         }
 
         /// <summary>

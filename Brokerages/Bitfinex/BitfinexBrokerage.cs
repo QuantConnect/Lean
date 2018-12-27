@@ -227,9 +227,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Gets the total account cash balance for specified account type
         /// </summary>
         /// <returns></returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
-            var list = new List<Cash>();
+            var list = new List<CashAmount>();
             var endpoint = GetEndpoint("balances"); ;
             var request = new RestRequest(endpoint, Method.POST);
 
@@ -253,23 +253,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (item.Amount > 0)
                 {
-                    if (string.Equals(item.Currency, Currencies.USD, StringComparison.OrdinalIgnoreCase))
-                    {
-                        list.Add(new Cash(item.Currency, item.Amount, 1));
-                    }
-                    else if (_symbolMapper.IsKnownFiatCurrency(item.Currency))
-                    {
-                        var symbol = Symbol.Create(item.Currency + Currencies.USD, SecurityType.Forex, Market.FXCM);
-                        var rate = GetConversionRate(symbol);
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, rate));
-                    }
-                    else
-                    {
-                        var symbol = item.Currency + Currencies.USD;
-                        var tick = GetTick(_symbolMapper.GetLeanSymbol(symbol));
-
-                        list.Add(new Cash(item.Currency.ToUpper(), item.Amount, tick.Price));
-                    }
+                    list.Add(new CashAmount(item.Amount, item.Currency.ToUpper()));
                 }
             }
 

@@ -119,15 +119,14 @@ namespace QuantConnect.Brokerages.Oanda
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             var response = _apiRest.GetAccountSummary(Authorization, AccountId);
 
-            return new List<Cash>
+            return new List<CashAmount>
             {
-                new Cash(response.Account.Currency,
-                    response.Account.Balance.ToDecimal(),
-                    GetUsdConversion(response.Account.Currency))
+                new CashAmount(response.Account.Balance.ToDecimal(),
+                    response.Account.Currency)
             };
         }
 
@@ -698,7 +697,6 @@ namespace QuantConnect.Brokerages.Oanda
                 Symbol = symbol,
                 Type = securityType,
                 AveragePrice = averagePrice,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = quantity
             };

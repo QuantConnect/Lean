@@ -589,7 +589,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
 
-                var balances = new List<Cash>();
+                var balances = new List<CashAmount>();
                 try
                 {
                     balances = _brokerage.GetCashBalance();
@@ -609,10 +609,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 foreach (var balance in balances)
                 {
                     Cash cash;
-                    if (!_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                    if (!_algorithm.Portfolio.CashBook.TryGetValue(balance.Currency, out cash))
                     {
-                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): Unexpected cash found {0} {1}", balance.Amount, balance.Symbol);
-                        _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
+                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): Unexpected cash found {0} {1}", balance.Currency, balance.Amount);
+                        _algorithm.Portfolio.SetCash(balance.Currency, balance.Amount, 0);
                     }
                 }
 
@@ -621,24 +621,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     var cash = kvp.Value;
 
-                    var balanceCash = balances.FirstOrDefault(balance => balance.Symbol == cash.Symbol);
                     //update the cash if the entry if found in the balances
-                    if (balanceCash != null)
+                    var balanceCash = balances.Find(balance => balance.Currency == cash.Symbol);
+                    if (balanceCash != default(CashAmount))
                     {
-                        // compare in dollars
+                        // compare in account currency
                         var delta = cash.Amount - balanceCash.Amount;
                         if (Math.Abs(_algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > 5)
                         {
                             // log the delta between
-                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Symbol,
+                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Currency,
                                 delta.ToString("0.00"));
                         }
-                        _algorithm.Portfolio.SetCash(balanceCash.Symbol, balanceCash.Amount, balanceCash.ConversionRate);
+                        _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(balanceCash.Amount);
                     }
                     else
                     {
                         //Set the cash amount to zero if cash entry not found in the balances
-                        _algorithm.Portfolio.SetCash(cash.Symbol, 0, cash.ConversionRate);
+                        Log.LogHandler.Trace($"BrokerageTransactionHandler.PerformCashSync(): {cash.Symbol} was not found" +
+                            "in brokerage cash balance, setting the amount to 0");
+                        _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }
                 }
                 _syncedLiveBrokerageCashToday = true;

@@ -265,13 +265,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             Assert.AreEqual(2, actual.Count());
 
-            var usd = actual.Single(a => a.Symbol == Currencies.USD);
-            var btc = actual.Single(a => a.Symbol == "BTC");
+            var usd = actual.Single(a => a.Currency == Currencies.USD);
+            var btc = actual.Single(a => a.Currency == "BTC");
 
             Assert.AreEqual(80.2301373066930000m, usd.Amount);
-            Assert.AreEqual(1, usd.ConversionRate);
             Assert.AreEqual(1.1, btc.Amount);
-            Assert.AreEqual(333.985m, btc.ConversionRate);
         }
 
         [Test, Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
