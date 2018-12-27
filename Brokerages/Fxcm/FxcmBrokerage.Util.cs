@@ -102,7 +102,6 @@ namespace QuantConnect.Brokerages.Fxcm
                 Symbol = _symbolMapper.GetLeanSymbol(fxcmPosition.getInstrument().getSymbol(), securityType, Market.FXCM),
                 Type = securityType,
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = Convert.ToDecimal(fxcmPosition.getPositionQty().getLongQty() > 0
                     ? fxcmPosition.getPositionQty().getLongQty()

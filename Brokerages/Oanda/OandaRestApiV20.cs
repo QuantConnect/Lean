@@ -697,7 +697,6 @@ namespace QuantConnect.Brokerages.Oanda
                 Symbol = symbol,
                 Type = securityType,
                 AveragePrice = averagePrice,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = quantity
             };

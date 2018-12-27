@@ -840,7 +840,6 @@ namespace QuantConnect.Brokerages.Oanda
                 Symbol = SymbolMapper.GetLeanSymbol(position.instrument, securityType, Market.Oanda),
                 Type = securityType,
                 AveragePrice = (decimal)position.avgPrice,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = position.side == "sell" ? -position.units : position.units
             };

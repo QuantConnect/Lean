@@ -207,7 +207,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 AveragePrice = position.AveragePrice,
                 Quantity = position.Amount,
                 UnrealizedPnL = position.PL,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Type = SecurityType.Crypto
             };

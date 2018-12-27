@@ -48,16 +48,32 @@ namespace QuantConnect.Securities
             Currency = currency;
         }
 
+        /// <summary>
+        /// Will determine if two <see cref="CashAmount"/> instances are equal
+        /// Useful to compare against the default instance
+        /// </summary>
+        /// <returns>True if <see cref="Currency"/> and <see cref="Amount"/> are equal</returns>
         public static bool operator ==(CashAmount lhs, CashAmount rhs)
         {
             return Equals(lhs, rhs);
         }
 
+        /// <summary>
+        /// Will determine if two <see cref="CashAmount"/> instances are different
+        /// Useful to compare against the default instance
+        /// </summary>
+        /// <returns>True if <see cref="Currency"/> or <see cref="Amount"/> are different</returns>
         public static bool operator !=(CashAmount lhs, CashAmount rhs)
         {
             return !Equals(lhs, rhs);
         }
 
+        /// <summary>
+        /// Used to compare two <see cref="CashAmount"/> instances.
+        /// Useful to compare against the default instance
+        /// </summary>
+        /// <param name="obj">The other object to compare with</param>
+        /// <returns>True if <see cref="Currency"/> and <see cref="Amount"/> are equal</returns>
         public override bool Equals(object obj)
         {
             if (obj is CashAmount)
