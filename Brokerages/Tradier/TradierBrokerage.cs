@@ -1674,6 +1674,7 @@ namespace QuantConnect.Brokerages.Tradier
                 Symbol = Symbol.Create(position.Symbol, SecurityType.Equity, Market.USA),
                 Type = SecurityType.Equity,
                 AveragePrice = position.CostBasis/position.Quantity,
+                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 MarketPrice = 0m, //--> GetAccountHoldings does a call to GetQuotes to fill this data in
                 Quantity = position.Quantity

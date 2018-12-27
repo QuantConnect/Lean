@@ -2051,6 +2051,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Quantity = e.Position,
                 AveragePrice = Convert.ToDecimal(e.AverageCost) / multiplier,
                 MarketPrice = Convert.ToDecimal(e.MarketPrice),
+                ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
                 CurrencySymbol = currencySymbol
             };
         }
