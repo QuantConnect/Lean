@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // send last empty packet list before terminating,
                 // so the algorithm manager has a chance to detect the runtime error
                 // and exit showing the correct error instead of a timeout
-                nextEmit = previousEmitTime.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                nextEmit = FrontierTimeProvider.GetUtcNow().RoundDown(Time.OneSecond);
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     var timeSlice = _timeSliceFactory.Create(
