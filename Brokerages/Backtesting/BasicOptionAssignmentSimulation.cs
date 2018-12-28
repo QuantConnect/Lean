@@ -179,7 +179,7 @@ namespace QuantConnect.Brokerages.Backtesting
             // Scenario 1 (base): we just close option position
             var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var orderFee1 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, marketOrder1, currencyConverter.AccountCurrency)).Value);
+                new OrderFeeParameters(option, marketOrder1)).Value);
 
             var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity
                 * option.QuoteCurrency.ConversionRate
@@ -189,11 +189,11 @@ namespace QuantConnect.Brokerages.Backtesting
             // Scenario 2 (alternative): we exercise option and then close underlying position
             var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, (int)holding.AbsoluteQuantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var optionOrderFee2 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, optionExerciseOrder2, currencyConverter.AccountCurrency)).Value);
+                new OrderFeeParameters(option, optionExerciseOrder2)).Value);
 
             var undelyingMarketOrder2 = new MarketOrder(underlying.Symbol, -underlyingQuantity, underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone));
             var undelyingOrderFee2 = currencyConverter.ConvertToAccountCurrency(underlying.FeeModel.GetOrderFee(
-                new OrderFeeParameters(underlying, undelyingMarketOrder2, currencyConverter.AccountCurrency)).Value);
+                new OrderFeeParameters(underlying, undelyingMarketOrder2)).Value);
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
             var altPnL = (underlyingPrice - option.StrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade

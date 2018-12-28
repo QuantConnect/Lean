@@ -34,7 +34,7 @@ namespace QuantConnect.Orders.Fees
         {
             return new OrderFee(new CashAmount(
                 0,
-                parameters.AccountCurrency));
+                "USD"));
         }
     }
 }

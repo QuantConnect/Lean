@@ -62,13 +62,12 @@ namespace QuantConnect.Orders.Fees
                 if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option &&
                     optionOrder.Symbol.ID.Underlying.SecurityType == SecurityType.Equity)
                 {
-                    return new OrderFee(new CashAmount(
-                        0,
-                        parameters.AccountCurrency));
+                    return OrderFee.Zero;
                 }
             }
 
             decimal feeResult = 0;
+            string feeCurrency = security.QuoteCurrency.Symbol;
             switch (security.Type)
             {
                 case SecurityType.Forex:
@@ -76,6 +75,8 @@ namespace QuantConnect.Orders.Fees
                     var totalOrderValue = order.GetValue(security);
                     var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
                     feeResult = Math.Max(_forexMinimumOrderFee, fee);
+                    // IB Forex fees are all in USD
+                    feeCurrency = "USD";
                     break;
                 case SecurityType.Option:
                     // applying commission function to the order
@@ -111,7 +112,7 @@ namespace QuantConnect.Orders.Fees
             // all other types default to zero fees
             return new OrderFee(new CashAmount(
                 feeResult,
-                parameters.AccountCurrency));
+                feeCurrency));
         }
 
         /// <summary>

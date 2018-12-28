@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -50,7 +49,7 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public static decimal GetOrderFee(this IFeeModel model, Security security, Order order)
         {
-            var parameters = new OrderFeeParameters(security, order, security.QuoteCurrency.Symbol);
+            var parameters = new OrderFeeParameters(security, order);
             var fee = model.GetOrderFee(parameters);
 
             return fee.Value.Amount;

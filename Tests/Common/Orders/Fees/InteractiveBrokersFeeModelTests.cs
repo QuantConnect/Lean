@@ -1,0 +1,91 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Tests.Common.Securities;
+
+namespace QuantConnect.Tests.Common.Orders.Fees
+{
+    [TestFixture]
+    class InteractiveBrokersFeeModelTests
+    {
+        private readonly IFeeModel _feeModel = new InteractiveBrokersFeeModel();
+
+        [Test]
+        public void ReturnsMinimumFeeInQuoteCurrency_USD()
+        {
+            var security = SecurityTests.GetSecurity();
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void ReturnsFeeInQuoteCurrency_USD()
+        {
+            var security = SecurityTests.GetSecurity();
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(5m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void  ForexFee_NonUSD()
+        {
+            var tz = TimeZones.NewYork;
+            var security = new Forex(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("GBP", 0, 0),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m),
+                ErrorCurrencyConverter.Instance
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(2m, fee.Value.Amount);
+        }
+    }
+}

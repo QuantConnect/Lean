@@ -24,6 +24,8 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class FxcmFeeModel : FeeModel
     {
+        private readonly string _currency;
+
         private readonly HashSet<Symbol> _groupCommissionSchedule1 = new HashSet<Symbol>
         {
             Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM),
@@ -34,6 +36,15 @@ namespace QuantConnect.Orders.Fees
             Symbol.Create("EURJPY", SecurityType.Forex, Market.FXCM),
             Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM),
         };
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="currency">The currency of the order fee, for FXCM this is the account currency</param>
+        public FxcmFeeModel(string currency = "USD")
+        {
+            _currency = currency;
+        }
 
         /// <summary>
         /// Get the fee for this order in units of the account currency
@@ -59,7 +70,7 @@ namespace QuantConnect.Orders.Fees
                 fee = Math.Abs(commissionRate * parameters.Order.AbsoluteQuantity / 1000);
             }
             return new OrderFee(new CashAmount(fee,
-                parameters.AccountCurrency));
+                _currency));
         }
     }
 }

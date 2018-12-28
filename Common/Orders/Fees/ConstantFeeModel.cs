@@ -24,14 +24,17 @@ namespace QuantConnect.Orders.Fees
     public class ConstantFeeModel : FeeModel
     {
         private readonly decimal _fee;
+        private readonly string _currency;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantFeeModel"/> class with the specified <paramref name="fee"/>
         /// </summary>
         /// <param name="fee">The constant order fee used by the model</param>
-        public ConstantFeeModel(decimal fee)
+        /// <param name="currency">The currency of the order fee</param>
+        public ConstantFeeModel(decimal fee, string currency = "USD")
         {
             _fee = Math.Abs(fee);
+            _currency = currency;
         }
 
         /// <summary>
@@ -42,8 +45,7 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return new OrderFee(new CashAmount(_fee,
-                parameters.AccountCurrency));
+            return new OrderFee(new CashAmount(_fee, _currency));
         }
     }
 }
