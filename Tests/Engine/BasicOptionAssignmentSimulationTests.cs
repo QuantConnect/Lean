@@ -139,15 +139,15 @@ namespace QuantConnect.Tests.Engine
 
             // we define option chain with expected results for each contract (if it is optimal to exercise it or not)
             var optionChain = new[] { new { Right = OptionRight.Call, StrikePrice = 190.0m, BidPrice = 27.81m, AskPrice = 28.01m, Exercise = true },
-                                    new { Right = OptionRight.Call, StrikePrice = 193.0m, BidPrice = 24.87m, AskPrice = 24.99m, Exercise = false },
+                                    new { Right = OptionRight.Call, StrikePrice = 193.0m, BidPrice = 24.87m, AskPrice = 24.99m, Exercise = true },
                                     new { Right = OptionRight.Call, StrikePrice = 196.0m, BidPrice = 21.50m, AskPrice = 21.63m, Exercise = true },
                                     new { Right = OptionRight.Call, StrikePrice = 198.0m, BidPrice = 18.79m, AskPrice = 18.96m, Exercise = true },
                                     new { Right = OptionRight.Call, StrikePrice = 200.0m, BidPrice = 17.77m, AskPrice = 17.96m, Exercise = true },
                                     new { Right = OptionRight.Call, StrikePrice = 202.0m, BidPrice = 15.31m, AskPrice = 15.47m, Exercise = true },
 
-                                    new { Right = OptionRight.Put, StrikePrice = 225.0m, BidPrice = 7.071m, AskPrice = 7.26m, Exercise = false },
-                                    new { Right = OptionRight.Put, StrikePrice = 226.0m, BidPrice = 8.07m, AskPrice = 8.24m, Exercise = false },
-                                    new { Right = OptionRight.Put, StrikePrice = 227.0m, BidPrice = 9.59m, AskPrice = 9.77m, Exercise = false },
+                                    new { Right = OptionRight.Put, StrikePrice = 225.0m, BidPrice = 7.071m, AskPrice = 7.26m, Exercise = true },
+                                    new { Right = OptionRight.Put, StrikePrice = 226.0m, BidPrice = 8.07m, AskPrice = 8.24m, Exercise = true },
+                                    new { Right = OptionRight.Put, StrikePrice = 227.0m, BidPrice = 9.59m, AskPrice = 9.77m, Exercise = true },
                                     new { Right = OptionRight.Put, StrikePrice = 230.0m, BidPrice = 12.01m, AskPrice = 12.34m, Exercise = true },
                                     new { Right = OptionRight.Put, StrikePrice = 240.0m, BidPrice = 22.01m, AskPrice = 22.32m, Exercise = true } };
 

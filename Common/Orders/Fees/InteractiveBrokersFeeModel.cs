@@ -30,16 +30,17 @@ namespace QuantConnect.Orders.Fees
         private readonly decimal _forexMinimumOrderFee;
 
         // option commission function takes number of contracts and the size of the option premium and returns total commission
-        private readonly Func<decimal, decimal, decimal>  _optionsCommissionFunc;
+        private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
+            new Dictionary<string, Func<decimal, decimal, CashAmount>>();
 
-        private readonly Dictionary<string, InteractiveBrokersEquityFee> _equityFee =
-            new Dictionary<string, InteractiveBrokersEquityFee> {
-                { Market.USA, new InteractiveBrokersEquityFee("USD", feeRate: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m) }
+        private readonly Dictionary<string, EquityFee> _equityFee =
+            new Dictionary<string, EquityFee> {
+                { Market.USA, new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m) }
             };
 
-        private readonly Dictionary<string, CashAmount> _futureFee = new Dictionary<string, CashAmount>
-            //                          IB fee + exchange fee
-            { { Market.USA, new CashAmount(0.85m + 1, "USD") } };
+        private readonly Dictionary<string, CashAmount> _futureFee =
+            //                                                               IB fee + exchange fee
+            new Dictionary<string, CashAmount> { { Market.USA, new CashAmount(0.85m + 1, "USD") } };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
@@ -49,7 +50,10 @@ namespace QuantConnect.Orders.Fees
         public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0, decimal monthlyOptionsTradeAmountInContracts = 0)
         {
             ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
-            ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out _optionsCommissionFunc);
+            Func<decimal, decimal, CashAmount> optionsCommissionFunc;
+            ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
+            // only USA for now
+            _optionFee.Add(Market.USA, optionsCommissionFunc);
         }
 
         /// <summary>
@@ -90,14 +94,15 @@ namespace QuantConnect.Orders.Fees
                     feeCurrency = Currencies.USD;
                     break;
                 case SecurityType.Option:
-                    // only USA supported for now
-                    if (market != Market.USA)
+                    Func<decimal, decimal, CashAmount> optionsCommissionFunc;
+                    if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {
                         throw new Exception($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
                     }
                     // applying commission function to the order
-                    feeResult = _optionsCommissionFunc(order.AbsoluteQuantity, order.Price);
-                    feeCurrency = Currencies.USD;
+                    var optionFee = optionsCommissionFunc(order.AbsoluteQuantity, order.Price);
+                    feeResult = optionFee.Amount;
+                    feeCurrency = optionFee.Currency;
                     break;
                 case SecurityType.Future:
                     if (market == Market.Globex || market == Market.NYMEX
@@ -117,7 +122,7 @@ namespace QuantConnect.Orders.Fees
                     feeCurrency = feeRatePerContract.Currency;
                     break;
                 case SecurityType.Equity:
-                    InteractiveBrokersEquityFee equityFee;
+                    EquityFee equityFee;
                     if (!_equityFee.TryGetValue(market, out equityFee))
                     {
                         throw new Exception($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
@@ -125,7 +130,7 @@ namespace QuantConnect.Orders.Fees
                     var tradeValue = Math.Abs(order.GetValue(security));
 
                     //Per share fees
-                    var tradeFee = equityFee.FeeRate * order.AbsoluteQuantity;
+                    var tradeFee = equityFee.FeePerShare * order.AbsoluteQuantity;
 
                     //Maximum Per Order: equityFee.MaximumFeeRate
                     //Minimum per order. $equityFee.MinimumFee
@@ -181,7 +186,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Determines which tier an account falls into based on the monthly trading volume
         /// </summary>
-        private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, decimal> optionsCommissionFunc)
+        private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, CashAmount> optionsCommissionFunc)
         {
             const decimal bp = 0.0001m;
             if (monthlyOptionsTradeAmountInContracts <= 10000)
@@ -191,7 +196,7 @@ namespace QuantConnect.Orders.Fees
                     var commissionRate = premium >= 0.1m ?
                                             0.7m :
                                             (0.05m <= premium && premium < 0.1m ? 0.5m : 0.25m);
-                    return Math.Min(orderSize * commissionRate, 1.0m);
+                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
                 };
             }
             else if (monthlyOptionsTradeAmountInContracts <= 50000)
@@ -199,7 +204,7 @@ namespace QuantConnect.Orders.Fees
                 optionsCommissionFunc = (orderSize, premium) =>
                 {
                     var commissionRate = premium >= 0.05m ? 0.5m : 0.25m;
-                    return Math.Min(orderSize * commissionRate, 1.0m);
+                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
                 };
             }
             else if (monthlyOptionsTradeAmountInContracts <= 100000)
@@ -207,7 +212,7 @@ namespace QuantConnect.Orders.Fees
                 optionsCommissionFunc = (orderSize, premium) =>
                 {
                     var commissionRate = 0.25m;
-                    return Math.Min(orderSize * commissionRate, 1.0m);
+                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
                 };
             }
             else
@@ -215,7 +220,7 @@ namespace QuantConnect.Orders.Fees
                 optionsCommissionFunc = (orderSize, premium) =>
                 {
                     var commissionRate = 0.15m;
-                    return Math.Min(orderSize * commissionRate, 1.0m);
+                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
                 };
             }
         }
@@ -223,20 +228,20 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Helper class to handle IB Equity fees
         /// </summary>
-        private class InteractiveBrokersEquityFee
+        private class EquityFee
         {
             public string Currency { get; }
-            public decimal FeeRate { get; }
+            public decimal FeePerShare { get; }
             public decimal MinimumFee { get; }
             public decimal MaximumFeeRate { get; }
 
-            public InteractiveBrokersEquityFee(string currency,
-                decimal feeRate,
+            public EquityFee(string currency,
+                decimal feePerShare,
                 decimal minimumFee,
                 decimal maximumFeeRate)
             {
                 Currency = currency;
-                FeeRate = feeRate;
+                FeePerShare = feePerShare;
                 MinimumFee = minimumFee;
                 MaximumFeeRate = maximumFeeRate;
             }
