@@ -141,8 +141,7 @@ namespace QuantConnect.Securities
 
             var fees = parameters.Security.FeeModel.GetOrderFee(
                 new OrderFeeParameters(parameters.Security,
-                    parameters.Order,
-                    parameters.CurrencyConverter.AccountCurrency)).Value;
+                    parameters.Order)).Value;
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 
@@ -395,8 +394,7 @@ namespace QuantConnect.Securities
 
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security,
-                        order,
-                        parameters.Portfolio.CashBook.AccountCurrency)).Value;
+                        order)).Value;
                 orderFees = parameters.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
 
                 // The TPV, take out the fees(unscaled) => yields available value for trading(less fees)

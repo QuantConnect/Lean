@@ -164,6 +164,7 @@
     <Compile Include="Common\Orders\Fees\BackwardsCompatibilityFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\BitfinexFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\GDAXFeeModelTests.cs" />
+    <Compile Include="Common\Orders\Fees\InteractiveBrokersFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\OrderFeesTests.cs" />
     <Compile Include="Common\Orders\Fills\BackwardsCompatibilityFillModelsTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />

@@ -123,8 +123,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m });
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
                 security,
-                new MarketOrder(security.Symbol, 1, DateTime.MinValue),
-                Currencies.USD));
+                new MarketOrder(security.Symbol, 1, DateTime.MinValue)));
 
             Assert.AreEqual(15m, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -141,7 +140,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 4999.99m, DateTime.MinValue)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(0, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -151,7 +150,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 5000m, DateTime.MinValue)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(0, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -160,7 +159,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, -1, 5000.01m, DateTime.MinValue)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(0, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -176,7 +175,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             // marketable buy limit fill at 5000
             Assert.AreEqual(15m, orderFee.Value.Amount);
@@ -187,7 +186,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             // marketable buy limit fill at 5000.01
             Assert.AreEqual(15.00003m, orderFee.Value.Amount);
@@ -197,7 +196,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, -1, 5000m, DateTime.MinValue)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             // marketable sell limit fill at 5000
             Assert.AreEqual(15m, orderFee.Value.Amount);
@@ -217,7 +216,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 4999.99m, time)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(0, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -226,7 +225,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, -1, 5000.01m, time)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(0, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -245,7 +244,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 5000m, time)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(15m, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -254,7 +253,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, 1, 5050m, time)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(15m, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);
@@ -263,7 +262,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 security, new LimitOrder(security.Symbol, -1, 4950m, time)
                 {
                     OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Price)
-                }, Currencies.USD));
+                }));
 
             Assert.AreEqual(15m, orderFee.Value.Amount);
             Assert.AreEqual(Currencies.USD, orderFee.Value.Currency);

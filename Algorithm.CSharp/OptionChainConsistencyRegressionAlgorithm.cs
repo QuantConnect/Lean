@@ -121,11 +121,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-3.86%"},
+            {"Average Loss", "-3.87%"},
             {"Compounding Annual Return", "-100.000%"},
             {"Drawdown", "3.900%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-3.855%"},
+            {"Net Profit", "-3.870%"},
             {"Sharpe Ratio", "0"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.50"}
+            {"Total Fees", "$2.00"}
         };
     }
 }

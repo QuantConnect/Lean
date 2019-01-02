@@ -63,8 +63,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
                 var result = wrapper.GetOrderFee(new OrderFeeParameters(
                     _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    Currencies.USD
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)
                 ));
 
                 bool called;
@@ -91,15 +90,14 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     "       self.CalledGetOrderFee = False\n" +
                     "   def GetOrderFee(self, parameters):\n" +
                     "       self.CalledGetOrderFee = True\n" +
-                    "       return OrderFee(CashAmount(15, parameters.AccountCurrency))");
+                    "       return OrderFee(CashAmount(15, \"USD\"))");
 
                 var customFeeModel = module.GetAttr("CustomFeeModel").Invoke();
                 var wrapper = new FeeModelPythonWrapper(customFeeModel);
 
                 var result = wrapper.GetOrderFee(new OrderFeeParameters(
                     _security,
-                    new MarketOrder(_security.Symbol, 1, orderDateTime),
-                    Currencies.USD
+                    new MarketOrder(_security.Symbol, 1, orderDateTime)
                 ));
 
                 bool called;
