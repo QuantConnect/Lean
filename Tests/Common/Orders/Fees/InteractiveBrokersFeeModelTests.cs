@@ -21,6 +21,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Future;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         private readonly IFeeModel _feeModel = new InteractiveBrokersFeeModel();
 
         [Test]
-        public void ReturnsMinimumFeeInQuoteCurrency_USD()
+        public void USAEquityMinimumFeeInUSD()
         {
             var security = SecurityTests.GetSecurity();
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
@@ -48,7 +49,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
-        public void ReturnsFeeInQuoteCurrency_USD()
+        public void USAEquityFeeInUSD()
         {
             var security = SecurityTests.GetSecurity();
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
@@ -62,6 +63,29 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(5m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void USAFutureFee()
+        {
+            var tz = TimeZones.NewYork;
+            var security = new Future(Symbols.Fut_SPY_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("USD", 0, 0),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance
+                );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1000 * 1.85m, fee.Value.Amount);
         }
 
         [Test]

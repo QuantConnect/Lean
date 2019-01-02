@@ -94,8 +94,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
             });
 
-            Log.Trace("BaseSetupHandler.SetupCurrencyConversions(): " +
-                $"{string.Join(" | ", algorithm.Portfolio.CashBook.Values.Select(x => x.ToString()))}");
+            Log.Trace($"BaseSetupHandler.SetupCurrencyConversions(): {algorithm.Portfolio.CashBook}");
         }
     }
 }
