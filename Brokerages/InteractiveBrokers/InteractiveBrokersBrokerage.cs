@@ -546,7 +546,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     _messageProcessingThread = new Thread(() =>
                     {
-                        Log.Trace("IB message processing thread started: #" + Thread.CurrentThread.ManagedThreadId);
+                        Log.Trace("InteractiveBrokersBrokerage.Connect(): IB message processing thread started: #" + Thread.CurrentThread.ManagedThreadId);
 
                         while (_client.ClientSocket.IsConnected())
                         {
@@ -558,11 +558,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             catch (Exception error)
                             {
                                 // error in message processing thread, log error and disconnect
-                                Log.Error("Error in message processing thread #" + Thread.CurrentThread.ManagedThreadId + ": " + error);
+                                Log.Error("InteractiveBrokersBrokerage.Connect(): Error in message processing thread #" + Thread.CurrentThread.ManagedThreadId + ": " + error);
                             }
                         }
 
-                        Log.Trace("IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
+                        Log.Trace("InteractiveBrokersBrokerage.Connect(): IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
                     }) { IsBackground = true };
 
                     _messageProcessingThread.Start();
@@ -601,7 +601,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
                     }
 
-                    Log.Trace("IB next valid id received.");
+                    Log.Trace("InteractiveBrokersBrokerage.Connect(): IB next valid id received.");
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
 
@@ -719,7 +719,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private bool DownloadAccount(string account)
         {
+            Log.Trace($"InteractiveBrokersBrokerage.DownloadAccount(): Downloading account data for {account}");
+
             _accountHoldingsLastException = null;
+            _accountHoldingsResetEvent.Reset();
 
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
             EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
