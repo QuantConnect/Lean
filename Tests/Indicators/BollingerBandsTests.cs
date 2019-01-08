@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,14 +27,14 @@ namespace QuantConnect.Tests.Indicators
         {
             var bb = new BollingerBands(20, 2.0m, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Moving Average 20", (BollingerBands ind) => (double)ind.MiddleBand.Current.Value);
-        }   
+        }
 
         [Test]
         public void ComparesWithExternalDataUpperBand()
         {
             var bb = new BollingerBands(20, 2.0m, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Top", (BollingerBands ind) => (double)ind.UpperBand.Current.Value);
-        }           
+        }
 
         [Test]
         public void ComparesWithExternalDataLowerBand()
@@ -63,6 +63,29 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(bb.LowerBand);
             TestHelper.AssertIndicatorIsInDefaultState(bb.MiddleBand);
             TestHelper.AssertIndicatorIsInDefaultState(bb.UpperBand);
+        }
+
+        [Test]
+        public void LowerUpperBandUpdateOnce()
+        {
+            var bb = new BollingerBands(2, 2m);
+            var lowerBandUpdateCount = 0;
+            var upperBandUpdateCount = 0;
+            bb.LowerBand.Updated += (sender, updated) =>
+            {
+                lowerBandUpdateCount++;
+            };
+            bb.UpperBand.Updated += (sender, updated) =>
+            {
+                upperBandUpdateCount++;
+            };
+
+            Assert.AreEqual(0, lowerBandUpdateCount);
+            Assert.AreEqual(0, upperBandUpdateCount);
+            bb.Update(DateTime.Today, 1m);
+
+            Assert.AreEqual(1, lowerBandUpdateCount);
+            Assert.AreEqual(1, upperBandUpdateCount);
         }
     }
 }
