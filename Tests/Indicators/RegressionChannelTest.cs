@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,6 +69,29 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(indicator.IsReady, "Regression Channel ready");
             indicator.Reset();
             TestHelper.AssertIndicatorIsInDefaultState(indicator);
+        }
+
+        [Test]
+        public void LowerUpperChannelUpdateOnce()
+        {
+            var bb = new RegressionChannel(2, 2m);
+            var lowerChannelUpdateCount = 0;
+            var upperChannelUpdateCount = 0;
+            bb.LowerChannel.Updated += (sender, updated) =>
+            {
+                lowerChannelUpdateCount++;
+            };
+            bb.UpperChannel.Updated += (sender, updated) =>
+            {
+                upperChannelUpdateCount++;
+            };
+
+            Assert.AreEqual(0, lowerChannelUpdateCount);
+            Assert.AreEqual(0, upperChannelUpdateCount);
+            bb.Update(DateTime.Today, 1m);
+
+            Assert.AreEqual(1, lowerChannelUpdateCount);
+            Assert.AreEqual(1, upperChannelUpdateCount);
         }
     }
 }
