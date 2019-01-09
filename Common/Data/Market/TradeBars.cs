@@ -37,5 +37,14 @@ namespace QuantConnect.Data.Market
             : base(frontier)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the TradeBar with the specified ticker/Symbol.
+        /// </summary>
+        /// <returns>
+        /// The TradeBar with the specified ticker.
+        /// </returns>
+        /// <param name="ticker">The ticker/Symbol of the element to get or set.</param>
+        public new TradeBar this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
     }
 }

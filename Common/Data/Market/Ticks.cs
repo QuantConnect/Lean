@@ -39,5 +39,14 @@ namespace QuantConnect.Data.Market
             : base(frontier)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the list of Tick with the specified ticker/Symbol.
+        /// </summary>
+        /// <returns>
+        /// The list of Tick with the specified ticker.
+        /// </returns>
+        /// <param name="ticker">The ticker/Symbol of the element to get or set.</param>
+        public new List<Tick> this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
     }
 }

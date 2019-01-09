@@ -38,5 +38,14 @@ namespace QuantConnect.Data.Market
             : base(frontier)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the Delisting with the specified ticker/Symbol.
+        /// </summary>
+        /// <returns>
+        /// The Delisting with the specified ticker.
+        /// </returns>
+        /// <param name="ticker">The ticker/Symbol of the element to get or set.</param>
+        public new Delisting this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
     }
 }
