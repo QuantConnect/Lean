@@ -24,19 +24,29 @@ namespace QuantConnect.Data.Market
     public class SymbolChangedEvents : DataDictionary<SymbolChangedEvent>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Delistings"/> dictionary
+        /// Initializes a new instance of the <see cref="SymbolChangedEvent"/> dictionary
         /// </summary>
         public SymbolChangedEvents()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Delistings"/> dictionary
+        /// Initializes a new instance of the <see cref="SymbolChangedEvent"/> dictionary
         /// </summary>
         /// <param name="frontier">The time associated with the data in this dictionary</param>
         public SymbolChangedEvents(DateTime frontier)
             : base(frontier)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the SymbolChangedEvent with the specified ticker/Symbol.
+        /// </summary>
+        /// <returns>
+        /// The SymbolChangedEvent with the specified ticker.
+        /// </returns>
+        /// <param name="ticker">The ticker/Symbol of the element to get or set.</param>
+        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
+        public new SymbolChangedEvent this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
     }
 }

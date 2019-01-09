@@ -38,5 +38,15 @@ namespace QuantConnect.Data.Market
             : base(frontier)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the Split with the specified ticker/Symbol.
+        /// </summary>
+        /// <returns>
+        /// The Split with the specified ticker.
+        /// </returns>
+        /// <param name="ticker">The ticker/Symbol of the element to get or set.</param>
+        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
+        public new Split this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
     }
 }
