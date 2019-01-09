@@ -142,9 +142,8 @@ namespace QuantConnect.ToolBox
                         break;
                     case "kdc":
                     case "kaikodataconverter":
-                        KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "market"),
-                                                                     GetParameterOrExit(optionsObject, "tick-type"),
-                                                                     GetParameterOrExit(optionsObject, "source-dir"));
+                        KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
+                                                                     GetParameterOrExit(optionsObject, "date"));
                         break;
                     case "nmdc":
                     case "nsemarketdataconverter":
