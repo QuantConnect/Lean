@@ -81,11 +81,11 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                             Log.Trace($"KaikoDataConverter(): Starting consolidation for {symbol.Value} {tickType}");
                             var consolidators = GetHighResolutionDataAggregatorsForTickType(tickType);
 
-                            foreach (var tickBar in ticks)
+                            foreach (var tick in ticks)
                             {
                                 foreach (var consolidator in consolidators)
                                 {
-                                    consolidator.Consolidator.Update(tickBar);
+                                    consolidator.Consolidator.Update(tick);
                                 }
                             }
 
@@ -114,94 +114,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
             Log.Trace($"KaikoDataConverter(): Finished in {timer.Elapsed}");
         }
 
-        /// <summary>
-        /// Create ticks from Raw Kaiko data
-        /// </summary>
-        /// <param name="fileLocation">Path to the raw Kaiko data</param>
-        /// <param name="market">The exchange the data represents</param>
-        /// <param name="tickType">The tick type being processed</param>
-        /// <param name="aggregateFunction">Function that parses the Kaiko data file and returns the enumerable of ticks</param>
-        public static void CreateCryptoTicks(string fileLocation, string market, TickType tickType, Func<Symbol, string, IEnumerable<Tick>> aggregateFunction)
-        {
-            foreach (var symbolFolder in Directory.EnumerateDirectories(fileLocation))
-            {
-                var symbolDirectoryInfo = new DirectoryInfo(symbolFolder);
-
-                // Create symbol from folder name
-                var symbol = Symbol.Create(symbolDirectoryInfo.Name, SecurityType.Crypto, market);
-
-                foreach (var symbolMonthDirectory in Directory.EnumerateDirectories(symbolDirectoryInfo.FullName))
-                {
-                    foreach (var tradeFile in Directory.EnumerateFiles(symbolMonthDirectory, "*.gz"))
-                    {
-                        string unzippedFile;
-                        // Unzip file
-                        try
-                        {
-                            unzippedFile = Compression.UnGZip(tradeFile, symbolMonthDirectory);
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error($"KaikoDataConverter.CreateCryptoTicks(): File {tradeFile} cannot be unzipped. Exception {e}");
-                            continue;
-                        }
-
-                        // Write the ticks
-                        var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
-                        writer.Write(aggregateFunction(symbol, unzippedFile));
-
-                        // Clean up unzipped file
-                        File.Delete(unzippedFile);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Aggregate the ticks into all second, minute, hour and daily resolution
-        /// </summary>
-        /// <param name="market">The market the ticks represent</param>
-        /// <param name="tickType">The TickType being processed</param>
-        public static void AggregateTicksInAllResolutions(string market, TickType tickType)
-        {
-            var tickBasePath = Path.Combine(Globals.DataFolder, "crypto", market, "tick");
-
-            foreach (var tickDirectory in Directory.EnumerateDirectories(tickBasePath))
-            {
-                var symbolDirectoryInfo = new DirectoryInfo(tickDirectory);
-                var symbol = Symbol.Create(symbolDirectoryInfo.Name, SecurityType.Crypto, market);
-
-                foreach (var tickDateFile in Directory.EnumerateFiles(symbolDirectoryInfo.FullName, "*.zip"))
-                {
-                    try
-                    {
-                        // There are both trade and quote files in directory - we only want one type
-                        if (!tickDateFile.Contains(tickType.ToLower())) continue;
-
-                        var consolidators = GetDataAggregatorsForTickType(tickType);
-                        var reader = GetLeanDataTickReader(symbol, tickType, tickDateFile);
-
-                        foreach (var tickBar in reader.Parse().Select(x => x as Tick))
-                        {
-                            foreach (var consolidator in consolidators)
-                            {
-                                consolidator.Consolidator.Update(tickBar);
-                            }
-                        }
-
-                        foreach (var consolidator in consolidators)
-                        {
-                            WriteTicksForResolution(symbol, consolidator.Resolution, tickType, consolidator.Flush());
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error($"KaikoDataConverter.AggregateTicksInAllResolutions(): Error processing file {tickDateFile}. Exception {e}");
-                    }
-                }
-            }
-        }
-
         public static List<TickAggregator> GetHighResolutionDataAggregatorsForTickType(TickType tickType)
         {
             if (tickType == TickType.Quote)
@@ -221,33 +133,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         }
 
         /// <summary>
-        /// Get data aggregators for specified tick type at every resolution
-        /// </summary>
-        /// <param name="tickType">The tick type being processed</param>
-        /// <returns>A collection of <see cref="KaikoDataAggregator"/></returns>
-        public static List<TickAggregator> GetDataAggregatorsForTickType(TickType tickType)
-        {
-            if (tickType == TickType.Quote)
-            {
-                return new List<TickAggregator>
-                {
-                    new QuoteTickAggregator(Resolution.Second),
-                    new QuoteTickAggregator(Resolution.Minute),
-                    new QuoteTickAggregator(Resolution.Hour),
-                    new QuoteTickAggregator(Resolution.Daily),
-                };
-            }
-
-            return new List<TickAggregator>
-            {
-                new TradeTickAggregator(Resolution.Second),
-                new TradeTickAggregator(Resolution.Minute),
-                new TradeTickAggregator(Resolution.Hour),
-                new TradeTickAggregator(Resolution.Daily),
-            };
-        }
-
-        /// <summary>
         /// Use the lean data writer to write the ticks for a specific resolution
         /// </summary>
         /// <param name="symbol">The symbol these ticks represent</param>
@@ -258,23 +143,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         {
             var writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
             writer.Write(bars);
-        }
-
-        /// <summary>
-        /// Get a lean data reader for a specific symbol to read the ticks
-        /// </summary>
-        /// <param name="symbol">The symbol being read</param>
-        /// <param name="tickDateFile">The path to the tick file</param>
-        /// <returns>A <see cref="LeanDataReader"/></returns>
-        public static LeanDataReader GetLeanDataTickReader(Symbol symbol, TickType type, string tickDateFile)
-        {
-            Symbol sym;
-            DateTime date;
-            Resolution res;
-            var subscription = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick,
-                DateTimeZone.Utc, DateTimeZone.Utc, false, false, false, false, type);
-            LeanData.TryParsePath(tickDateFile, out sym, out date, out res);
-            return new LeanDataReader(subscription, symbol, Resolution.Tick, date, Globals.DataFolder);
         }
 
         /// <summary>
