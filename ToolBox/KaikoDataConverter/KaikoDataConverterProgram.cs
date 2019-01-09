@@ -72,7 +72,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                         var tickType = nameParts[2] == "trades" ? TickType.Trade : TickType.Quote;
                         var symbol = Symbol.Create(ticker, SecurityType.Crypto, exchange);
 
-                        var rawData = KaikoCryptoReader.GetRawDataFromEntry(zipEntry);
+                        var rawData = EnumerableCompressedGz.GetRawDataFromEntry(zipEntry);
                         var ticks = tickType == TickType.Trade ? ParseKaikoTradeFile(rawData, symbol) : ParseKaikoQuoteFile(rawData, symbol);
                         Log.Trace($"KaikoDataConverter(): Processing {symbol.Value} {tickType}");
 
@@ -114,7 +114,12 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
             Log.Trace($"KaikoDataConverter(): Finished in {timer.Elapsed}");
         }
 
-        public static List<TickAggregator> GetHighResolutionDataAggregatorsForTickType(TickType tickType)
+        /// <summary>
+        /// Gets the aggregators for minute and second resolutions.
+        /// </summary>
+        /// <param name="tickType">The tick type (Trades/Quotes)</param>
+        /// <returns></returns>
+        private static List<TickAggregator> GetHighResolutionDataAggregatorsForTickType(TickType tickType)
         {
             if (tickType == TickType.Quote)
             {
@@ -137,9 +142,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// </summary>
         /// <param name="symbol">The symbol these ticks represent</param>
         /// <param name="resolution">The resolution that should be written</param>
-        /// <param name="tickType">The tpye (Trades/Quotes) </param>
+        /// <param name="tickType">The tick type (Trades/Quotes) </param>
         /// <param name="bars">The aggregated bars being written to disk</param>
-        public static void WriteTicksForResolution(Symbol symbol, Resolution resolution, TickType tickType, List<BaseData> bars)
+        private static void WriteTicksForResolution(Symbol symbol, Resolution resolution, TickType tickType, List<BaseData> bars)
         {
             var writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
             writer.Write(bars);
@@ -151,7 +156,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <param name="symbol">The symbol being converted</param>
         /// <param name="unzippedFile">The path to the unzipped file</param>
         /// <returns>Lean quote ticks representing the Kaiko data</returns>
-        public static IEnumerable<Tick> ParseKaikoQuoteFile(IEnumerable<string> rawDataLines, Symbol symbol)
+        private static IEnumerable<Tick> ParseKaikoQuoteFile(IEnumerable<string> rawDataLines, Symbol symbol)
         {
             var headerLine = rawDataLines.First();
             var headerCsv = headerLine.ToCsv();
@@ -215,7 +220,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <param name="date">The data being processed</param>
         /// <param name="currentEpcohTicks">The snapshot of bid/ask Kaiko data</param>
         /// <returns>A single Lean quote tick</returns>
-        public static Tick CreateQuoteTick(Symbol symbol, DateTime date, List<KaikoTick> currentEpcohTicks)
+        private static Tick CreateQuoteTick(Symbol symbol, DateTime date, List<KaikoTick> currentEpcohTicks)
         {
             // lowest ask
             var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
@@ -261,7 +266,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <param name="symbol">The symbol being processed</param>
         /// <param name="unzippedFile">The path to the unzipped file</param>
         /// <returns>Lean Ticks in the Kaiko file</returns>
-        public static IEnumerable<Tick> ParseKaikoTradeFile(IEnumerable<string> rawDataLines, Symbol symbol)
+        private static IEnumerable<Tick> ParseKaikoTradeFile(IEnumerable<string> rawDataLines, Symbol symbol)
         {
             var headerLine = rawDataLines.First();
             var headerCsv = headerLine.ToCsv();
@@ -306,7 +311,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <param name="lineParts">The line from the Kaiko file</param>
         /// <param name="column">The index of the quantity column </param>
         /// <returns>The quantity as a decimal</returns>
-        public static decimal ParseScientificNotationToDecimal(string[] lineParts, int column)
+        private static decimal ParseScientificNotationToDecimal(string[] lineParts, int column)
         {
             var value = lineParts[column];
             if (value.Contains("e"))
@@ -321,7 +326,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// Simple class to add order direction to Tick
         /// used for aggregating Kaiko order book snapshots
         /// </summary>
-        public class KaikoTick : Tick
+        private class KaikoTick : Tick
         {
             public string OrderDirection { get; set; }
         }

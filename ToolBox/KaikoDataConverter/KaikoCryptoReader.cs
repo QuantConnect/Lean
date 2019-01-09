@@ -25,7 +25,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
     /// <summary>
     /// Decompress single entry from Kaiko crypto raw data.
     /// </summary>
-    public class KaikoCryptoReader
+    public class EnumerableCompressedGz
     {
         /// <summary>
         /// Gets the raw data from entry.
