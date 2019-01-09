@@ -42,6 +42,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     public class AlgorithmPythonWrapper : IAlgorithm
     {
         private readonly dynamic _algorithm = null;
+        private readonly dynamic _onData;
+        private readonly dynamic _onOrderEvent;
         private readonly IAlgorithm _baseAlgorithm;
         private readonly bool _isOnDataDefined = false;
 
@@ -82,8 +84,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             // determines whether OnData method was defined or inherits from QCAlgorithm
                             // If it is not, OnData from the base class will not be called
-                            var pythonType = (_algorithm as PyObject).GetAttr("OnData").GetPythonType();
+                            _onData = (_algorithm as PyObject).GetAttr("OnData");
+                            var pythonType = _onData.GetPythonType();
                             _isOnDataDefined = pythonType.Repr().Equals("<class \'method\'>");
+
+                            _onOrderEvent = (_algorithm as PyObject).GetAttr("OnOrderEvent");
                         }
                     }
 
@@ -543,7 +548,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    _algorithm.OnData(SubscriptionManager.HasCustomData ? new PythonSlice(slice) : slice);
+                    _onData(SubscriptionManager.HasCustomData ? new PythonSlice(slice) : slice);
                 }
             }
         }
@@ -688,7 +693,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             using (Py.GIL())
             {
-                _algorithm.OnOrderEvent(newEvent);
+                _onOrderEvent(newEvent);
             }
         }
 
