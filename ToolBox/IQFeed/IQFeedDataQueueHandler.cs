@@ -377,7 +377,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         Log.Trace(string.Format("IQFeed.OnSecond(): Ticks/sec: {0} Engine.Ticks.Count: {1} CPU%: {2}",
                             ticksPerSecond.ToString("0000.00"),
                             _dataQueue.Count,
-                            OS.CpuUsage.NextValue().ToString("0.0") + "%"
+                            OS.CpuUsage.ToString("0.0") + "%"
                             ));
                     }
 

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect
 {
@@ -28,7 +29,6 @@ namespace QuantConnect
     public static class OS
     {
         private static PerformanceCounter _ramTotalCounter;
-        private static PerformanceCounter _ramAvailableBytes;
         private static PerformanceCounter _cpuUsageCounter;
 
         /// <summary>
@@ -38,51 +38,44 @@ namespace QuantConnect
         {
             get
             {
-                if (_ramTotalCounter == null)
+                if (_ramTotalCounter == null && IsLinux)
                 {
-                    if (IsLinux)
+                    try
                     {
-                        _ramTotalCounter = new PerformanceCounter ("Mono Memory", "Total Physical Memory");
+                        _ramTotalCounter = new PerformanceCounter("Mono Memory", "Total Physical Memory");
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
                     }
                 }
-                return _ramTotalCounter;
-            }
-        }
 
-        /// <summary>
-        /// Memory free on the machine available for use:
-        /// </summary>
-        public static PerformanceCounter RamAvailableBytes
-        {
-            get
-            {
-                if (_ramAvailableBytes == null)
-                {
-                    if (IsLinux)
-                    {
-                        _ramAvailableBytes = new PerformanceCounter("Mono Memory", "Allocated Objects");
-                    }
-                    else
-                    {
-                        _ramAvailableBytes = new PerformanceCounter("Memory", "Available Bytes");
-                    }
-                }
-                return _ramAvailableBytes;
+                return _ramTotalCounter;
             }
         }
 
         /// <summary>
         /// Total CPU usage as a percentage
         /// </summary>
-        public static PerformanceCounter CpuUsage
+        private static PerformanceCounter CpuUsageCounter
         {
             get
             {
                 if (_cpuUsageCounter == null)
                 {
-                    _cpuUsageCounter = new PerformanceCounter("Process", "% Processor Time",
-                        IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
+                    try
+                    {
+                        _cpuUsageCounter = new PerformanceCounter(
+                            "Process",
+                            "% Processor Time",
+                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                    }
                 }
+
                 return _cpuUsageCounter;
             }
         }
@@ -102,25 +95,12 @@ namespace QuantConnect
         /// <summary>
         /// Global Flag :: Operating System
         /// </summary>
-        public static bool IsWindows
-        {
-            get
-            {
-                return !IsLinux;
-            }
-        }
-
+        public static bool IsWindows => !IsLinux;
 
         /// <summary>
         /// Character Separating directories in this OS:
         /// </summary>
-        public static string PathSeparation
-        {
-            get
-            {
-                return Path.DirectorySeparatorChar.ToString();
-            }
-        }
+        public static string PathSeparation => Path.DirectorySeparatorChar.ToString();
 
         /// <summary>
         /// Get the drive space remaining on windows and linux in MB
@@ -145,7 +125,6 @@ namespace QuantConnect
                 return (d.TotalSize - d.AvailableFreeSpace) / (1024 * 1024);
             }
         }
-
 
         /// <summary>
         /// Total space on the drive
@@ -178,7 +157,7 @@ namespace QuantConnect
             get
             {
                 var proc = Process.GetCurrentProcess();
-                return (proc.PrivateMemorySize64 / (1024*1024));
+                return proc.PrivateMemorySize64 / (1024 * 1024);
             }
         }
 
@@ -186,27 +165,30 @@ namespace QuantConnect
         /// Get total RAM installed on the machine:
         /// </summary>
         public static long TotalPhysicalMemory => IsLinux
-            ? (long) (RamTotalCounter.NextValue() / (1024 * 1024))
+            ? (RamTotalCounter == null ? 0 : (long) (RamTotalCounter.NextValue() / (1024 * 1024)))
             : (long) new Microsoft.VisualBasic.Devices.ComputerInfo().TotalPhysicalMemory / (1024 * 1024);
 
         /// <summary>
         /// Get the RAM used on the machine:
         /// </summary>
-        public static long TotalPhysicalMemoryUsed
-        {
-            get
-            {
-                return GC.GetTotalMemory(false) / (1024*1024);
-            }
-        }
+        public static long TotalPhysicalMemoryUsed => GC.GetTotalMemory(false) / (1024 * 1024);
 
         /// <summary>
         /// Gets the RAM remaining on the machine
         /// </summary>
-        private static long FreePhysicalMemory
+        public static long FreePhysicalMemory
         {
-            get { return TotalPhysicalMemory - TotalPhysicalMemoryUsed; }
+            get
+            {
+                var totalPhysicalMemory = TotalPhysicalMemory;
+                return totalPhysicalMemory == 0 ? 0 : totalPhysicalMemory - TotalPhysicalMemoryUsed;
+            }
         }
+
+        /// <summary>
+        /// Total CPU usage as a percentage
+        /// </summary>
+        public static decimal CpuUsage => CpuUsageCounter == null ? 0 : (decimal) CpuUsageCounter.NextValue();
 
         /// <summary>
         /// Gets the statistics of the machine, including CPU% and RAM
@@ -215,14 +197,14 @@ namespace QuantConnect
         {
             return new Dictionary<string, string>
             {
-                {"CPU Usage",            CpuUsage.NextValue().ToString("0.0") + "%"},
-                {"Used RAM (MB)",        TotalPhysicalMemoryUsed.ToString()},
-                {"Total RAM (MB)",        TotalPhysicalMemory.ToString()},
-                {"Used Disk Space (MB)", DriveSpaceUsed.ToString() },
-                {"Total Disk Space (MB)", DriveTotalSpace.ToString() },
+                { "CPU Usage", CpuUsage.ToString("0.0") + "%"},
+                { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToString()},
+                { "Total RAM (MB)", TotalPhysicalMemory.ToString()},
+                { "Used Disk Space (MB)", DriveSpaceUsed.ToString() },
+                { "Total Disk Space (MB)", DriveTotalSpace.ToString() },
                 { "Hostname", Environment.MachineName },
-                {"LEAN Version", "v" + Globals.Version}
+                { "LEAN Version", "v" + Globals.Version}
             };
         }
-    } // End OS Class
-} // End QC Namespace
+    }
+}
