@@ -72,9 +72,12 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                         var tickType = nameParts[2] == "trades" ? TickType.Trade : TickType.Quote;
                         var symbol = Symbol.Create(ticker, SecurityType.Crypto, exchange);
 
-                        var rawData = EnumerableCompressedGz.GetRawDataFromEntry(zipEntry);
-                        var ticks = tickType == TickType.Trade ? ParseKaikoTradeFile(rawData, symbol) : ParseKaikoQuoteFile(rawData, symbol);
                         Log.Trace($"KaikoDataConverter(): Processing {symbol.Value} {tickType}");
+
+                        // Generate ticks from raw data and write them to disk
+                        var ticks = KaikoDataReader.GetTicksFromZipEntry(zipEntry, symbol, tickType);
+                        var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
+                        writer.Write(ticks);
 
                         try
                         {
@@ -89,20 +92,10 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                                 }
                             }
 
-                            Log.Trace($"KaikoDataConverter(): Consolidation finished for {symbol.Value} {tickType}");
-                            Log.Trace($"KaikoDataConverter(): Save minute and second files for {symbol.Value} {tickType}");
-
                             foreach (var consolidator in consolidators)
                             {
                                 WriteTicksForResolution(symbol, consolidator.Resolution, tickType, consolidator.Flush());
                             }
-
-                            Log.Trace($"KaikoDataConverter(): Save tick files for {symbol.Value} {tickType}");
-
-                            var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
-                            writer.Write(ticks);
-
-                            Log.Trace($"KaikoDataConverter(): Tick files saved for {symbol.Value} {tickType}");
                         }
                         catch (Exception e)
                         {
@@ -148,187 +141,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         {
             var writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
             writer.Write(bars);
-        }
-
-        /// <summary>
-        /// Parse order book information for Kaiko data files
-        /// </summary>
-        /// <param name="symbol">The symbol being converted</param>
-        /// <param name="unzippedFile">The path to the unzipped file</param>
-        /// <returns>Lean quote ticks representing the Kaiko data</returns>
-        private static IEnumerable<Tick> ParseKaikoQuoteFile(IEnumerable<string> rawDataLines, Symbol symbol)
-        {
-            var headerLine = rawDataLines.First();
-            var headerCsv = headerLine.ToCsv();
-            var typeColumn = headerCsv.FindIndex(x => x == "type");
-            var dateColumn = headerCsv.FindIndex(x => x == "date");
-            var priceColumn = headerCsv.FindIndex(x => x == "price");
-            var quantityColumn = headerCsv.FindIndex(x => x == "amount");
-
-            long currentEpoch = 0;
-            var currentEpochTicks = new List<KaikoTick>();
-
-            foreach (var line in rawDataLines.Skip(1))
-            {
-                if (line == null || line == string.Empty) continue;
-
-                var lineParts = line.Split(',');
-
-                var tickEpoch = Convert.ToInt64(lineParts[dateColumn]);
-
-                decimal quantity;
-                decimal price;
-
-                try
-                {
-                    quantity = ParseScientificNotationToDecimal(lineParts, quantityColumn);
-                    price = ParseScientificNotationToDecimal(lineParts, priceColumn);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"KaikoDataConverter.ParseKaikoQuoteFile(): Raw data corrupted. Line {string.Join(" ", lineParts)}, Exception {ex}");
-                    continue;
-                }
-
-                var currentTick = new KaikoTick
-                {
-                    TickType = TickType.Quote,
-                    Time = Time.UnixMillisecondTimeStampToDateTime(tickEpoch),
-                    Quantity = quantity,
-                    Value = price,
-                    OrderDirection = lineParts[typeColumn]
-                };
-
-                if (currentEpoch != tickEpoch)
-                {
-                    var quoteTick = CreateQuoteTick(symbol, Time.UnixMillisecondTimeStampToDateTime(currentEpoch), currentEpochTicks);
-
-                    if (quoteTick != null) yield return quoteTick;
-
-                    currentEpochTicks.Clear();
-                    currentEpoch = tickEpoch;
-                }
-
-                currentEpochTicks.Add(currentTick);
-            }
-        }
-
-        /// <summary>
-        /// Take a minute snapshot of order book information and make a single Lean quote tick
-        /// </summary>
-        /// <param name="symbol">The symbol being processed</param>
-        /// <param name="date">The data being processed</param>
-        /// <param name="currentEpcohTicks">The snapshot of bid/ask Kaiko data</param>
-        /// <returns>A single Lean quote tick</returns>
-        private static Tick CreateQuoteTick(Symbol symbol, DateTime date, List<KaikoTick> currentEpcohTicks)
-        {
-            // lowest ask
-            var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
-                                        .OrderBy(x => x.Value)
-                                        .FirstOrDefault();
-
-            // highest bid
-            var bestBid = currentEpcohTicks.Where(x => x.OrderDirection == "b")
-                                        .OrderByDescending(x => x.Value)
-                                        .FirstOrDefault();
-
-            if (bestAsk == null && bestBid == null)
-            {
-                // Did not have enough data to create a tick
-                return null;
-            }
-
-            var tick = new Tick()
-            {
-                Symbol = symbol,
-                Time = date,
-                TickType = TickType.Quote
-            };
-
-            if (bestBid != null)
-            {
-                tick.BidPrice = bestBid.Price;
-                tick.BidSize = bestBid.Quantity;
-            }
-
-            if (bestAsk != null)
-            {
-                tick.AskPrice = bestAsk.Price;
-                tick.AskSize = bestAsk.Quantity;
-            }
-
-            return tick;
-        }
-
-        /// <summary>
-        /// Parse a kaiko trade file
-        /// </summary>
-        /// <param name="symbol">The symbol being processed</param>
-        /// <param name="unzippedFile">The path to the unzipped file</param>
-        /// <returns>Lean Ticks in the Kaiko file</returns>
-        private static IEnumerable<Tick> ParseKaikoTradeFile(IEnumerable<string> rawDataLines, Symbol symbol)
-        {
-            var headerLine = rawDataLines.First();
-            var headerCsv = headerLine.ToCsv();
-            var dateColumn = headerCsv.FindIndex(x => x == "date");
-            var priceColumn = headerCsv.FindIndex(x => x == "price");
-            var quantityColumn = headerCsv.FindIndex(x => x == "amount");
-
-            foreach (var line in rawDataLines.Skip(1))
-            {
-                if (line == null || line == string.Empty) continue;
-
-                var lineParts = line.Split(',');
-
-                decimal quantity;
-                decimal price;
-
-                try
-                {
-                    quantity = ParseScientificNotationToDecimal(lineParts, quantityColumn);
-                    price = ParseScientificNotationToDecimal(lineParts, priceColumn);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"KaikoDataConverter.ParseKaikoTradeFile(): Raw data corrupted. Line {string.Join(" ", lineParts)}, Exception {ex}");
-                    continue;
-                }
-
-                yield return new Tick
-                {
-                    Symbol = symbol,
-                    TickType = TickType.Trade,
-                    Time = Time.UnixMillisecondTimeStampToDateTime(Convert.ToInt64(lineParts[dateColumn])),
-                    Quantity = quantity,
-                    Value = price
-                };
-            }
-        }
-
-        /// <summary>
-        /// Parse the quantity field of the kaiko ticks - can sometimes be expressed in scientific notation
-        /// </summary>
-        /// <param name="lineParts">The line from the Kaiko file</param>
-        /// <param name="column">The index of the quantity column </param>
-        /// <returns>The quantity as a decimal</returns>
-        private static decimal ParseScientificNotationToDecimal(string[] lineParts, int column)
-        {
-            var value = lineParts[column];
-            if (value.Contains("e"))
-            {
-                return Decimal.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
-            }
-
-            return Convert.ToDecimal(lineParts[column], CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Simple class to add order direction to Tick
-        /// used for aggregating Kaiko order book snapshots
-        /// </summary>
-        private class KaikoTick : Tick
-        {
-            public string OrderDirection { get; set; }
         }
     }
 }
