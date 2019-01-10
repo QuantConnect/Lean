@@ -26,7 +26,7 @@ using System.Reflection;
 namespace QuantConnect.Python
 {
     /// <summary>
-    /// Organizes a list of data to create pandas.DataFrames 
+    /// Organizes a list of data to create pandas.DataFrames
     /// </summary>
     public class PandasData
     {
@@ -36,7 +36,7 @@ namespace QuantConnect.Python
         private readonly int _levels;
         private readonly bool _isCustomData;
         private readonly Symbol _symbol;
-        private readonly Dictionary<string, Tuple<List<DateTime>, List<object>>> _series;
+        private readonly Dictionary<string, Tuple<List<PyObject>, List<object>>> _series;
 
         private readonly IEnumerable<MemberInfo> _members;
 
@@ -111,7 +111,7 @@ namespace QuantConnect.Python
                 columns.AddRange(keys);
             }
 
-            _series = columns.Distinct().ToDictionary(k => k, v => Tuple.Create(new List<DateTime>(), new List<object>()));
+            _series = columns.Distinct().ToDictionary(k => k, v => Tuple.Create(new List<PyObject>(), new List<object>()));
         }
 
         /// <summary>
@@ -123,7 +123,11 @@ namespace QuantConnect.Python
             foreach (var member in _members)
             {
                 var key = member.Name.ToLower();
-                var endTime = (baseData as IBaseData).EndTime;
+                PyObject endTime;
+                using (Py.GIL())
+                {
+                    endTime = (baseData as IBaseData).EndTime.ToPython();
+                }
                 AddToSeries(key, endTime, (member as FieldInfo)?.GetValue(baseData));
                 AddToSeries(key, endTime, (member as PropertyInfo)?.GetValue(baseData));
             }
@@ -131,7 +135,11 @@ namespace QuantConnect.Python
             var storage = (baseData as DynamicData)?.GetStorageDictionary();
             if (storage != null)
             {
-                var endTime = (baseData as IBaseData).EndTime;
+                PyObject endTime;
+                using (Py.GIL())
+                {
+                    endTime = (baseData as IBaseData).EndTime.ToPython();
+                }
                 var value = (baseData as IBaseData).Value;
                 AddToSeries("value", endTime, value);
 
@@ -159,7 +167,11 @@ namespace QuantConnect.Python
         {
             if (tradeBar != null)
             {
-                var time = tradeBar.EndTime;
+                PyObject time;
+                using (Py.GIL())
+                {
+                    time = tradeBar.EndTime.ToPython();
+                }
                 AddToSeries("open", time, tradeBar.Open);
                 AddToSeries("high", time, tradeBar.High);
                 AddToSeries("low", time, tradeBar.Low);
@@ -168,7 +180,11 @@ namespace QuantConnect.Python
             }
             if (quoteBar != null)
             {
-                var time = quoteBar.EndTime;
+                PyObject time;
+                using (Py.GIL())
+                {
+                    time = quoteBar.EndTime.ToPython();
+                }
                 if (tradeBar == null)
                 {
                     AddToSeries("open", time, quoteBar.Open);
@@ -199,7 +215,11 @@ namespace QuantConnect.Python
                 {
                     if (tick == null) continue;
 
-                    var time = tick.EndTime;
+                    PyObject time;
+                    using (Py.GIL())
+                    {
+                        time = tick.EndTime.ToPython();
+                    }
                     var column = tick.TickType == TickType.OpenInterest
                         ? "openinterest"
                         : "lastprice";
@@ -220,7 +240,7 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Get the pandas.DataFrame of the current <see cref="PandasData"/> state 
+        /// Get the pandas.DataFrame of the current <see cref="PandasData"/> state
         /// </summary>
         /// <param name="levels">Number of levels of the multi index</param>
         /// <returns>pandas.DataFrame object</returns>
@@ -263,9 +283,9 @@ namespace QuantConnect.Python
                 var isFalse = x is bool && !(bool)x;
                 return x == null || isNaNOrZero || isNullOrWhiteSpace || isFalse;
             };
-            Func<DateTime, PyTuple> selector = x => 
+            Func<PyObject, PyTuple> selector = x =>
             {
-                list[list.Count - 1] = x.ToPython();
+                list[list.Count - 1] = x;
                 return new PyTuple(list.ToArray());
             };
 
@@ -273,14 +293,14 @@ namespace QuantConnect.Python
             {
                 // Returns a dictionary keyed by column name where values are pandas.Series objects
                 var pyDict = new PyDict();
-
+                var splitNames = names.Split(',');
                 foreach (var kvp in _series)
                 {
                     var values = kvp.Value.Item2;
                     if (values.All(filter)) continue;
 
                     var tuples = kvp.Value.Item1.Select(selector).ToArray();
-                    var index = _pandas.MultiIndex.from_tuples(tuples, names: names.Split(','));
+                    var index = _pandas.MultiIndex.from_tuples(tuples, names: splitNames);
 
                     pyDict.SetItem(kvp.Key, _pandas.Series(values, index));
                 }
@@ -295,11 +315,11 @@ namespace QuantConnect.Python
         /// <param name="key">The key of the value to get</param>
         /// <param name="time"><see cref="DateTime"/> object to add to the value associated with the specific key</param>
         /// <param name="input"><see cref="Object"/> to add to the value associated with the specific key</param>
-        private void AddToSeries(string key, DateTime time, object input)
+        private void AddToSeries(string key, PyObject time, object input)
         {
             if (input == null) return;
 
-            Tuple<List<DateTime>, List<object>> value;
+            Tuple<List<PyObject>, List<object>> value;
             if (_series.TryGetValue(key, out value))
             {
                 value.Item1.Add(time);
