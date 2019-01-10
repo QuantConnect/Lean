@@ -350,18 +350,15 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                //1. Make sure this is the right type of packet:
+                // Make sure this is the right type of packet:
                 if (packet.Type != PacketType.BacktestResult) return;
 
-                //2. Port to packet format:
+                // Port to packet format:
                 var result = packet as BacktestResultPacket;
 
                 if (result != null)
                 {
-                    //3. Set Alpha Runtime Statistics
-                    result.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
-
-                    //4. Get Storage Location:
+                    // Get Storage Location:
                     var key = _job.BacktestId + ".json";
 
                     BacktestResult results;
@@ -375,10 +372,12 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.Statistics,
                             result.Results.RuntimeStatistics,
                             result.Results.RollingWindow,
-                            result.Results.TotalPerformance);
+                            result.Results.TotalPerformance
+                        )
+                        // Set Alpha Runtime Statistics
+                        { AlphaRuntimeStatistics = result.Results.AlphaRuntimeStatistics };
                     }
-
-                    //5. Save results
+                    // Save results
                     SaveResults(key, results);
                 }
                 else
@@ -420,7 +419,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket((BacktestNodePacket) job,
-                    new BacktestResult(Algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance))
+                    new BacktestResult(Algorithm.IsFrameworkAlgorithm, charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
+                        { AlphaRuntimeStatistics = AlphaRuntimeStatistics })
                 {
                     ProcessingTime = (DateTime.UtcNow - _startTime).TotalSeconds,
                     DateFinished = DateTime.Now,
