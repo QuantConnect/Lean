@@ -72,7 +72,10 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                         Log.Trace($"KaikoDataConverter(): Processing {symbol.Value} {tickType}");
 
                         // Generate ticks from raw data and write them to disk
-                        var ticks = KaikoDataReader.GetTicksFromZipEntry(zipEntry, symbol, tickType);
+
+                        var reader = new KaikoDataReader(symbol, tickType);
+                        var ticks = reader.GetTicksFromZipEntry(zipEntry);
+
                         var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
                         writer.Write(ticks);
 

@@ -32,17 +32,29 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
     /// </summary>
     public class KaikoDataReader
     {
+        private Symbol _symbol;
+        private TickType _tickType;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KaikoDataReader"/> class.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="tickType">Type of the tick.</param>
+        public KaikoDataReader(Symbol symbol, TickType tickType)
+        {
+            _symbol = symbol;
+            _tickType = tickType;
+        }
+
         /// <summary>
         /// Gets the ticks from Kaiko file zip entry.
         /// </summary>
         /// <param name="zipEntry">The zip entry.</param>
-        /// <param name="symbol">The symbol.</param>
-        /// <param name="tickType">Type of the tick.</param>
         /// <returns></returns>
-        public static IEnumerable<BaseData> GetTicksFromZipEntry(ZipEntry zipEntry, Symbol symbol, TickType tickType)
+        public IEnumerable<BaseData> GetTicksFromZipEntry(ZipEntry zipEntry)
         {
             var rawData = GetRawDataStreamFromEntry(zipEntry);
-            return tickType == TickType.Trade ? ParseKaikoTradeFile(rawData, symbol) : ParseKaikoQuoteFile(rawData, symbol);
+            return _tickType == TickType.Trade ? ParseKaikoTradeFile(rawData) : ParseKaikoQuoteFile(rawData);
         }
 
         /// <summary>
@@ -50,7 +62,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// </summary>
         /// <param name="zipEntry">The zip entry.</param>
         /// <returns>IEnumerable with the zip entry content.</returns>
-        private static IEnumerable<string> GetRawDataStreamFromEntry(ZipEntry zipEntry)
+        private IEnumerable<string> GetRawDataStreamFromEntry(ZipEntry zipEntry)
         {
             using (var outerStream = new StreamReader(zipEntry.OpenReader()))
             using (var innerStream = new GZipStream(outerStream.BaseStream, CompressionMode.Decompress))
@@ -67,10 +79,11 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <summary>
         /// Parse order book information for Kaiko data files
         /// </summary>
-        /// <param name="symbol">The symbol being converted</param>
-        /// <param name="unzippedFile">The path to the unzipped file</param>
-        /// <returns>Lean quote ticks representing the Kaiko data</returns>
-        private static IEnumerable<Tick> ParseKaikoQuoteFile(IEnumerable<string> rawDataLines, Symbol symbol)
+        /// <param name="rawDataLines">The raw data lines.</param>
+        /// <returns>
+        /// IEnumerable of ticks representing the Kaiko data
+        /// </returns>
+        private IEnumerable<Tick> ParseKaikoQuoteFile(IEnumerable<string> rawDataLines)
         {
             var headerLine = rawDataLines.First();
             var headerCsv = headerLine.ToCsv();
@@ -115,7 +128,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 if (currentEpoch != tickEpoch)
                 {
-                    var quoteTick = CreateQuoteTick(symbol, Time.UnixMillisecondTimeStampToDateTime(currentEpoch), currentEpochTicks);
+                    var quoteTick = CreateQuoteTick(Time.UnixMillisecondTimeStampToDateTime(currentEpoch), currentEpochTicks);
 
                     if (quoteTick != null) yield return quoteTick;
 
@@ -130,11 +143,10 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <summary>
         /// Take a minute snapshot of order book information and make a single Lean quote tick
         /// </summary>
-        /// <param name="symbol">The symbol being processed</param>
         /// <param name="date">The data being processed</param>
         /// <param name="currentEpcohTicks">The snapshot of bid/ask Kaiko data</param>
         /// <returns>A single Lean quote tick</returns>
-        private static Tick CreateQuoteTick(Symbol symbol, DateTime date, List<KaikoTick> currentEpcohTicks)
+        private Tick CreateQuoteTick(DateTime date, List<KaikoTick> currentEpcohTicks)
         {
             // lowest ask
             var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
@@ -154,7 +166,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
             var tick = new Tick()
             {
-                Symbol = symbol,
+                Symbol = _symbol,
                 Time = date,
                 TickType = TickType.Quote
             };
@@ -177,10 +189,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <summary>
         /// Parse a kaiko trade file
         /// </summary>
-        /// <param name="symbol">The symbol being processed</param>
         /// <param name="unzippedFile">The path to the unzipped file</param>
         /// <returns>Lean Ticks in the Kaiko file</returns>
-        private static IEnumerable<Tick> ParseKaikoTradeFile(IEnumerable<string> rawDataLines, Symbol symbol)
+        private IEnumerable<Tick> ParseKaikoTradeFile(IEnumerable<string> rawDataLines)
         {
             var headerLine = rawDataLines.First();
             var headerCsv = headerLine.ToCsv();
@@ -210,7 +221,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 yield return new Tick
                 {
-                    Symbol = symbol,
+                    Symbol = _symbol,
                     TickType = TickType.Trade,
                     Time = Time.UnixMillisecondTimeStampToDateTime(Convert.ToInt64(lineParts[dateColumn])),
                     Quantity = quantity,
