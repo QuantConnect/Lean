@@ -263,6 +263,7 @@
     <None Include="IQFeed\IQFeed-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="KaikoDataConverter\KaikoCryptoReader.cs" />
     <None Include="packages.config" />
     <Content Include="Visualizer\QuantConnect.Visualizer.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
