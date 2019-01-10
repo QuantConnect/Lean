@@ -14,9 +14,6 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
@@ -58,7 +55,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 using (var zip = new ZipFile(filePath.FullName))
                 {
                     var targetDayEntries = zip.Entries.Where(e => e.FileName.Contains($"{processingDate:yyyy_MM_dd}"));
-                        
+
                     if (targetDayEntries.Count() == 0)
                     {
                         Log.Error($"KaikoDataConverter(): Date {processingDate:yyyy_MM_dd} not found in source file {filePath.FullName}.");
@@ -82,7 +79,24 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                         try
                         {
                             Log.Trace($"KaikoDataConverter(): Starting consolidation for {symbol.Value} {tickType}");
-                            var consolidators = GetHighResolutionDataAggregatorsForTickType(tickType);
+                            List<TickAggregator> consolidators = new List<TickAggregator>();
+
+                            if (tickType == TickType.Trade)
+                            {
+                                consolidators.AddRange(new[]
+                                {
+                                    new TradeTickAggregator(Resolution.Second),
+                                    new TradeTickAggregator(Resolution.Minute),
+                                });
+                            }
+                            else
+                            {
+                                consolidators.AddRange(new[]
+                                {
+                                    new QuoteTickAggregator(Resolution.Second),
+                                    new QuoteTickAggregator(Resolution.Minute),
+                                });
+                            }
 
                             foreach (var tick in ticks)
                             {
@@ -94,7 +108,8 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                             foreach (var consolidator in consolidators)
                             {
-                                WriteTicksForResolution(symbol, consolidator.Resolution, tickType, consolidator.Flush());
+                                writer = new LeanDataWriter(consolidator.Resolution, symbol, Globals.DataFolder, tickType);
+                                writer.Write(consolidator.Flush());
                             }
                         }
                         catch (Exception e)
@@ -105,42 +120,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 }
             }
             Log.Trace($"KaikoDataConverter(): Finished in {timer.Elapsed}");
-        }
-
-        /// <summary>
-        /// Gets the aggregators for minute and second resolutions.
-        /// </summary>
-        /// <param name="tickType">The tick type (Trades/Quotes)</param>
-        /// <returns></returns>
-        private static List<TickAggregator> GetHighResolutionDataAggregatorsForTickType(TickType tickType)
-        {
-            if (tickType == TickType.Quote)
-            {
-                return new List<TickAggregator>
-                {
-                    new QuoteTickAggregator(Resolution.Second),
-                    new QuoteTickAggregator(Resolution.Minute),
-                };
-            }
-
-            return new List<TickAggregator>
-            {
-                new TradeTickAggregator(Resolution.Second),
-                new TradeTickAggregator(Resolution.Minute),
-            };
-        }
-
-        /// <summary>
-        /// Use the lean data writer to write the ticks for a specific resolution
-        /// </summary>
-        /// <param name="symbol">The symbol these ticks represent</param>
-        /// <param name="resolution">The resolution that should be written</param>
-        /// <param name="tickType">The tick type (Trades/Quotes) </param>
-        /// <param name="bars">The aggregated bars being written to disk</param>
-        private static void WriteTicksForResolution(Symbol symbol, Resolution resolution, TickType tickType, List<BaseData> bars)
-        {
-            var writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
-            writer.Write(bars);
         }
     }
 }

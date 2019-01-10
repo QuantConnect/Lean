@@ -14,8 +14,6 @@
  * limitations under the License.
 */
 
-using Ionic.Zip;
-using Ionic.Zlib;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -23,8 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using ZipEntry = Ionic.Zip.ZipEntry;
 
 namespace QuantConnect.ToolBox.KaikoDataConverter
@@ -43,7 +41,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <returns></returns>
         public static IEnumerable<BaseData> GetTicksFromZipEntry(ZipEntry zipEntry, Symbol symbol, TickType tickType)
         {
-            var rawData = GetRawDataFromEntry(zipEntry);
+            var rawData = GetRawDataStreamFromEntry(zipEntry);
             return tickType == TickType.Trade ? ParseKaikoTradeFile(rawData, symbol) : ParseKaikoQuoteFile(rawData, symbol);
         }
 
@@ -128,8 +126,6 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 currentEpochTicks.Add(currentTick);
             }
         }
-
-        
 
         /// <summary>
         /// Take a minute snapshot of order book information and make a single Lean quote tick
@@ -248,51 +244,5 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         {
             public string OrderDirection { get; set; }
         }
-
-        #region Vestigial Code (or better to say lazy developer implementation)
-
-        /// <summary>
-        /// Gets the raw data from entry.
-        /// </summary>
-        /// <param name="zipEntry">The zip entry.</param>
-        /// <returns>IEnumerable with the zip entry content.</returns>
-        public static IEnumerable<string> GetRawDataFromEntry(ZipEntry zipEntry)
-        {
-            using (var outerStream = new StreamReader(zipEntry.OpenReader()))
-            using (var innerStream = new GZipStream(outerStream.BaseStream, CompressionMode.Decompress))
-            {
-                var decompressed = Decompress(innerStream);
-                return Encoding.ASCII.GetString(decompressed).Split(new char[] { '\n' });
-            }
-        }
-
-        /// <summary>
-        /// Decompress the specified GZip stream.
-        /// </summary>
-        /// <param name="innerStream">The inner stream.</param>
-        /// <returns>Array of bytes with the decompressed data.</returns>
-        private static byte[] Decompress(GZipStream innerStream)
-        {
-            const int size = 4096;
-            byte[] buffer = new byte[size];
-            using (MemoryStream memory = new MemoryStream())
-            {
-                int count = 0;
-                do
-                {
-                    count = innerStream.Read(buffer, 0, size);
-                    if (count > 0)
-                    {
-                        memory.Write(buffer, 0, count);
-                    }
-                }
-                while (count > 0);
-                return memory.ToArray();
-            }
-        }
-
-        
-
-        #endregion Vestigial Code (or better to say lazy developer implementation)
     }
 }
