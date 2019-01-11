@@ -32,55 +32,6 @@ namespace QuantConnect
         private static PerformanceCounter _cpuUsageCounter;
 
         /// <summary>
-        /// Total Physical Ram on the Machine:
-        /// </summary>
-        private static PerformanceCounter RamTotalCounter
-        {
-            get
-            {
-                if (_ramTotalCounter == null && IsLinux)
-                {
-                    try
-                    {
-                        _ramTotalCounter = new PerformanceCounter("Mono Memory", "Total Physical Memory");
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                    }
-                }
-
-                return _ramTotalCounter;
-            }
-        }
-
-        /// <summary>
-        /// Total CPU usage as a percentage
-        /// </summary>
-        private static PerformanceCounter CpuUsageCounter
-        {
-            get
-            {
-                if (_cpuUsageCounter == null)
-                {
-                    try
-                    {
-                        _cpuUsageCounter = new PerformanceCounter(
-                            "Process",
-                            "% Processor Time",
-                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                    }
-                }
-
-                return _cpuUsageCounter;
-            }
-        }
-
-        /// <summary>
         /// Global Flag :: Operating System
         /// </summary>
         public static bool IsLinux
@@ -164,9 +115,31 @@ namespace QuantConnect
         /// <summary>
         /// Get total RAM installed on the machine:
         /// </summary>
-        public static long TotalPhysicalMemory => IsLinux
-            ? (RamTotalCounter == null ? 0 : (long) (RamTotalCounter.NextValue() / (1024 * 1024)))
-            : (long) new Microsoft.VisualBasic.Devices.ComputerInfo().TotalPhysicalMemory / (1024 * 1024);
+        public static long TotalPhysicalMemory
+        {
+            get
+            {
+                if (IsWindows)
+                {
+                    return (long) new Microsoft.VisualBasic.Devices.ComputerInfo().TotalPhysicalMemory / (1024 * 1024);
+                }
+
+                if (_ramTotalCounter == null)
+                {
+                    try
+                    {
+                        _ramTotalCounter = new PerformanceCounter("Mono Memory", "Total Physical Memory");
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                        return 0;
+                    }
+                }
+
+                return (long) (_ramTotalCounter.NextValue() / (1024 * 1024));
+            }
+        }
 
         /// <summary>
         /// Get the RAM used on the machine:
@@ -188,7 +161,29 @@ namespace QuantConnect
         /// <summary>
         /// Total CPU usage as a percentage
         /// </summary>
-        public static decimal CpuUsage => CpuUsageCounter == null ? 0 : (decimal) CpuUsageCounter.NextValue();
+        public static decimal CpuUsage
+        {
+            get
+            {
+                if (_cpuUsageCounter == null)
+                {
+                    try
+                    {
+                        _cpuUsageCounter = new PerformanceCounter(
+                            "Process",
+                            "% Processor Time",
+                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                        return 0;
+                    }
+                }
+
+                return (decimal) _cpuUsageCounter.NextValue();
+            }
+        }
 
         /// <summary>
         /// Gets the statistics of the machine, including CPU% and RAM
