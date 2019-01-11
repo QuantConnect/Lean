@@ -28,7 +28,6 @@ namespace QuantConnect
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS
     {
-        private static PerformanceCounter _ramTotalCounter;
         private static PerformanceCounter _cpuUsageCounter;
 
         /// <summary>
@@ -113,50 +112,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Get total RAM installed on the machine:
-        /// </summary>
-        public static long TotalPhysicalMemory
-        {
-            get
-            {
-                if (IsWindows)
-                {
-                    return (long) new Microsoft.VisualBasic.Devices.ComputerInfo().TotalPhysicalMemory / (1024 * 1024);
-                }
-
-                if (_ramTotalCounter == null)
-                {
-                    try
-                    {
-                        _ramTotalCounter = new PerformanceCounter("Mono Memory", "Total Physical Memory");
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                        return 0;
-                    }
-                }
-
-                return (long) (_ramTotalCounter.NextValue() / (1024 * 1024));
-            }
-        }
-
-        /// <summary>
         /// Get the RAM used on the machine:
         /// </summary>
         public static long TotalPhysicalMemoryUsed => GC.GetTotalMemory(false) / (1024 * 1024);
-
-        /// <summary>
-        /// Gets the RAM remaining on the machine
-        /// </summary>
-        public static long FreePhysicalMemory
-        {
-            get
-            {
-                var totalPhysicalMemory = TotalPhysicalMemory;
-                return totalPhysicalMemory == 0 ? 0 : totalPhysicalMemory - TotalPhysicalMemoryUsed;
-            }
-        }
 
         /// <summary>
         /// Total CPU usage as a percentage
@@ -192,13 +150,13 @@ namespace QuantConnect
         {
             return new Dictionary<string, string>
             {
-                { "CPU Usage", CpuUsage.ToString("0.0") + "%"},
-                { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToString()},
-                { "Total RAM (MB)", TotalPhysicalMemory.ToString()},
+                { "CPU Usage", CpuUsage.ToString("0.0") + "%" },
+                { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToString() },
+                { "Total RAM (MB)", "" },
                 { "Used Disk Space (MB)", DriveSpaceUsed.ToString() },
                 { "Total Disk Space (MB)", DriveTotalSpace.ToString() },
                 { "Hostname", Environment.MachineName },
-                { "LEAN Version", "v" + Globals.Version}
+                { "LEAN Version", "v" + Globals.Version }
             };
         }
     }
