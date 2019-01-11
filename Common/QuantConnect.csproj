@@ -637,6 +637,7 @@
     <Compile Include="Util\IParallelRunnerWorkItem.cs" />
     <Compile Include="Util\LeanData.cs" />
     <Compile Include="Util\LeanDataPathComponents.cs" />
+    <Compile Include="Util\ListComparer.cs" />
     <Compile Include="Util\MarketHoursDatabaseJsonConverter.cs" />
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
