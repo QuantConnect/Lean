@@ -13,25 +13,29 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
     public class HistoryRequestBenchmark : QCAlgorithm
     {
-        private Symbol symbol;
+        private Symbol _symbol;
         public override void Initialize()
         {
-            SetStartDate(2015, 01, 01);
+            SetStartDate(2010, 01, 01);
             SetEndDate(2018, 01, 01);
             SetCash(10000);
-            symbol = AddEquity("SPY", Resolution.Hour).Symbol;
+            _symbol = AddEquity("SPY").Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnEndOfDay()
         {
-            History(symbol, 2, Resolution.Daily);
-            History(symbol, 4, Resolution.Minute);
+            var minuteHistory = History(_symbol, 60, Resolution.Minute);
+            var lastHourHigh = minuteHistory.Select(minuteBar => minuteBar.High).DefaultIfEmpty(0).Max();
+            var dailyHistory = History(_symbol, 1, Resolution.Daily).First();
+            var dailyHigh = dailyHistory.High;
+            var dailyLow = dailyHistory.Low;
+            var dailyOpen = dailyHistory.Open;
         }
     }
 }

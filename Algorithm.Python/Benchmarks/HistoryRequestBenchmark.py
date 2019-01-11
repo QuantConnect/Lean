@@ -26,12 +26,19 @@ from QuantConnect.Indicators import *
 class HistoryRequestBenchmark(QCAlgorithm):
 
     def Initialize(self):
+        self.SetStartDate(2010, 1, 1)
+        self.SetEndDate(2018, 1, 1)
+        self.SetCash(10000)
+        self.symbol = self.AddEquity("SPY").Symbol
 
-        self.SetStartDate(2015, 1, 1)   
-        self.SetEndDate(2018, 1, 1)     
-        self.SetCash(10000)             
-        self.symbol = self.AddEquity("SPY", Resolution.Hour).Symbol
- 
-    def OnData(self, data):
-        self.History([self.symbol], 2, Resolution.Daily)
-        self.History([self.symbol], 4, Resolution.Minute)
+    def OnEndOfDay(self):
+        minuteHistory = self.History([self.symbol], 60, Resolution.Minute)
+        lastHourHigh = 0
+        for index, row in minuteHistory.loc["SPY"].iterrows():
+            if lastHourHigh < row["high"]:
+                lastHourHigh = row["high"]
+
+        dailyHistory = self.History([self.symbol], 1, Resolution.Daily).loc["SPY"].head()
+        dailyHistoryHigh = dailyHistory["high"]
+        dailyHistoryLow = dailyHistory["low"]
+        dailyHistoryOpen = dailyHistory["open"]
