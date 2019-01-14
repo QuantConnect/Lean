@@ -64,7 +64,7 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         /// Date/time of the event
         /// </summary>
-        public DateTimeOffset EventDateTime
+        public DateTime EventDateTime
         {
             get { return DisplayDate.Date.Add(DisplayTime.TimeOfDay); }
         }
