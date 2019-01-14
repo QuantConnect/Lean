@@ -47,7 +47,7 @@ class BasePairsTradingAlphaModel(AlphaModel):
         self.Securities = list()
 
         resolutionString = Extensions.GetEnumString(resolution, Resolution)
-        self.Name = f'{self.__class__.__name__}({self.lookback},{resolutionString},{Extensions.Normalize(threshold)})'
+        self.Name = f'{self.__class__.__name__}({self.lookback},{resolutionString},{Extensions.NormalizeToStr(threshold)})'
 
 
     def Update(self, algorithm, data):

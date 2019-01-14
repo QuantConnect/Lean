@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Exceptions
 
                 try
                 {
-                    // x = decimal.Decimal(1) * 1.1
+                    // x = None + "Pepe Grillo"
                     algorithm.unsupported_operand();
                 }
                 catch (PythonException pythonException)
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var assembly = typeof(PythonExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
-            Assert.True(exception.Message.Contains("x = decimal.Decimal(1) * 1.1"));
+            Assert.True(exception.Message.Contains("x = None + \"Pepe Grillo\""));
         }
 
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
