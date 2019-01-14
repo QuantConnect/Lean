@@ -60,8 +60,7 @@ namespace QuantConnect.ToolBox
                 _dataType = TickType.Quote;
             }
 
-            // Can only process Fx and equity for now
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto && _securityType != SecurityType.Future && _securityType != SecurityType.Option)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
@@ -224,7 +223,7 @@ namespace QuantConnect.ToolBox
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             // Write out this data string to a zip file
-            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol.Value, _securityType, date, _resolution, _dataType));
+            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _dataType));
 
             // Move temp file to the final destination with the appropriate name
             File.Move(tempFilePath, filePath);
