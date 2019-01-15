@@ -181,10 +181,15 @@
     <Compile Include="IEX\IEXDownloaderProgram.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />
     <Compile Include="RandomDataGenerator\DataDensity.cs" />
+    <Compile Include="RandomDataGenerator\RandomDataGeneratorSettings.cs" />
     <Compile Include="RandomDataGenerator\IRandomValueGenerator.cs" />
+    <Compile Include="RandomDataGenerator\RandomDataGeneratorProgram.cs" />
     <Compile Include="RandomDataGenerator\RandomValueGenerator.cs" />
     <Compile Include="RandomDataGenerator\RandomValueGeneratorException.cs" />
+    <Compile Include="RandomDataGenerator\SymbolGenerator.cs" />
+    <Compile Include="RandomDataGenerator\TickGenerator.cs" />
     <Compile Include="RandomDataGenerator\TooManyFailedAttemptsException.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
