@@ -186,41 +186,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             };
         }
 
-        public IEnumerable<ConsolidatorTickTypeData> CreateConsolidators()
+        public IEnumerable<TickAggregator> CreateAggregators()
         {
-            if (Resolution == Resolution.Tick)
+            // create default aggregators for tick type/resolution
+            foreach (var tickAggregator in TickAggregator.ForTickTypes(Resolution, TickTypes))
             {
-                // to maintain 'likeness' w/ non-tick resolutions, we'll use identity here
-                foreach (var tickType in TickTypes)
-                {
-                    if (tickType == TickType.OpenInterest)
-                    {
-                        yield return new ConsolidatorTickTypeData(Resolution.Daily, TickType.OpenInterest, new OpenInterestConsolidator(Time.OneDay));
-                    }
-                    else
-                    {
-                        yield return new ConsolidatorTickTypeData(Resolution, tickType, new IdentityDataConsolidator<Tick>());
-                    }
-                }
-
-                yield break;
+                yield return tickAggregator;
             }
 
-            var increment = Resolution.ToTimeSpan();
-            if (TickTypes.Contains(TickType.Trade))
-            {
-                yield return new ConsolidatorTickTypeData(Resolution, TickType.Trade, new TickConsolidator(increment));
-            }
-
-            if (TickTypes.Contains(TickType.Quote))
-            {
-                yield return new ConsolidatorTickTypeData(Resolution, TickType.Quote, new TickQuoteBarConsolidator(increment));
-            }
-
-            if (TickTypes.Contains(TickType.OpenInterest))
-            {
-                yield return new ConsolidatorTickTypeData(Resolution.Daily, TickType.OpenInterest, new OpenInterestConsolidator(Time.OneDay));
-            }
 
             // ensure we have a daily consolidator when coarse is enabled
             if (IncludeCoarse && Resolution != Resolution.Daily)
@@ -228,35 +201,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // prefer trades for coarse - in practice equity only does trades, but leaving this as configurable
                 if (TickTypes.Contains(TickType.Trade))
                 {
-                    yield return new ConsolidatorTickTypeData(Resolution.Daily, TickType.Trade, new TickConsolidator(Time.OneDay));
+                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Trade).Single();
                 }
                 else
                 {
-                    yield return new ConsolidatorTickTypeData(Resolution.Daily, TickType.Quote, new TickQuoteBarConsolidator(Time.OneDay));
+                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Quote).Single();
                 }
-            }
-        }
-
-        /// <summary>
-        /// Provides a small layer to maintain a cache of consolidated data
-        /// </summary>
-        public class ConsolidatorTickTypeData
-        {
-            private List<IBaseData> _data;
-            public Resolution Resolution { get; }
-            public IReadOnlyList<IBaseData> Data { get { return _data; } }
-            public TickType TickType { get; }
-            public IDataConsolidator Consolidator { get; }
-
-            public ConsolidatorTickTypeData(Resolution resolution, TickType tickType, IDataConsolidator consolidator)
-            {
-                Resolution = resolution;
-                TickType = tickType;
-                Consolidator = consolidator;
-                _data = new List<IBaseData>();
-
-                // cache consolidated data, we'll write to disk after data is generated per symbol
-                Consolidator.DataConsolidated += (sender, args) => _data.Add(args);
             }
         }
     }

@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
-using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
+    /// <summary>
+    /// Generates random data according to the specified parameters
+    /// </summary>
     public class RandomDataGeneratorProgram
     {
         public static void RandomDataGenerator(
@@ -75,8 +72,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 output.Warn.WriteLine($"\tSymbol[{++count}]: {symbol} Progress: {progress:0.0}% - Generating data...");
 
-                // define consolidators via settings
-                var consolidators = settings.CreateConsolidators().ToList();
+                // define aggregators via settings
+                var aggregators = settings.CreateAggregators().ToList();
 
                 // generate and consolidate data
                 foreach (var tick in tickGenerator.GenerateTicks(symbol))
@@ -87,14 +84,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         previousMonth = tick.Time.Month;
                     }
 
-                    foreach (var item in consolidators)
+                    foreach (var item in aggregators)
                     {
                         item.Consolidator.Update(tick);
                     }
                 }
-
-                var min = consolidators[0].Data[0];
-                var max = consolidators[0].Data.Last();
 
                 // count each stage as a point, so total points is 2*symbol-count
                 // and the current progress is twice the current, but less one because we haven't finished writing data yet
@@ -102,13 +96,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Progress: {progress:0.0}% - Saving data in LEAN format");
 
                 // persist consolidated data to disk
-                foreach (var item in consolidators)
+                foreach (var item in aggregators)
                 {
                     var writer = new LeanDataWriter(item.Resolution, symbol, Globals.DataFolder, item.TickType);
 
-                    // IDataConsolidator defines its output as IBaseData, but they're all derived from BaseData,
-                    // so this OfType<BaseData> is safe and will not filter any items out of the result set
-                    writer.Write(item.Data.OfType<BaseData>());
+                    // send the flushed data into the writer. pulling the flushed list is very important,
+                    // lest we likely wouldn't get the last piece of data stuck in the consolidator
+                    writer.Write(item.Flush());
                 }
 
                 // update progress

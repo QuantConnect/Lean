@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -10,10 +11,16 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public abstract class TickAggregator
     {
-        protected TickAggregator(Resolution resolution)
+        protected TickAggregator(Resolution resolution, TickType tickType)
         {
+            TickType = tickType;
             Resolution = resolution;
         }
+
+        /// <summary>
+        /// Gets the tick type of the consolidator
+        /// </summary>
+        public TickType TickType { get; protected set; }
 
         /// <summary>
         /// The consolidator used to aggregate data from
@@ -39,6 +46,51 @@ namespace QuantConnect.ToolBox
         {
             return new List<BaseData>(Consolidated) { Consolidator.WorkingData as BaseData };
         }
+
+        /// <summary>
+        /// Creates the correct <see cref="TickAggregator"/> instances for the specified tick types and resolution.
+        /// <see cref="QuantConnect.TickType.OpenInterest"/> will ignore <paramref name="resolution"/> and use <see cref="QuantConnect.Resolution.Daily"/>
+        /// </summary>
+        public static IEnumerable<TickAggregator> ForTickTypes(Resolution resolution, params TickType[] tickTypes)
+        {
+            if (resolution == Resolution.Tick)
+            {
+                foreach (var tickType in tickTypes)
+                {
+                    // OI is special
+                    if (tickType == TickType.OpenInterest)
+                    {
+                        yield return new OpenInterestTickAggregator();
+                        continue;
+                    }
+
+                    yield return new IdentityTickAggregator(tickType);
+                }
+
+                yield break;
+            }
+
+            foreach (var tickType in tickTypes)
+            {
+                switch (tickType)
+                {
+                    case TickType.Trade:
+                        yield return new TradeTickAggregator(resolution);
+                        break;
+
+                    case TickType.Quote:
+                        yield return new QuoteTickAggregator(resolution);
+                        break;
+
+                    case TickType.OpenInterest:
+                        yield return new OpenInterestTickAggregator();
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(tickType), tickType, null);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -47,7 +99,7 @@ namespace QuantConnect.ToolBox
     public class QuoteTickAggregator : TickAggregator
     {
         public QuoteTickAggregator(Resolution resolution)
-            : base(resolution)
+            : base(resolution, TickType.Quote)
         {
             Consolidated = new List<BaseData>();
             Consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
@@ -64,13 +116,47 @@ namespace QuantConnect.ToolBox
     public class TradeTickAggregator : TickAggregator
     {
         public TradeTickAggregator(Resolution resolution)
-            : base(resolution)
+            : base(resolution, TickType.Trade)
         {
             Consolidated = new List<BaseData>();
             Consolidator = new TickConsolidator(resolution.ToTimeSpan());
             Consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 Consolidated.Add(consolidated as TradeBar);
+            };
+        }
+    }
+
+    /// <summary>
+    /// Use <see cref="OpenInterestConsolidator"/> to consolidate open interest ticks daily.
+    /// </summary>
+    public class OpenInterestTickAggregator : TickAggregator
+    {
+        public OpenInterestTickAggregator()
+            : base(Resolution.Daily, TickType.OpenInterest)
+        {
+            Consolidated = new List<BaseData>();
+            Consolidator = new OpenInterestConsolidator(Time.OneDay);
+            Consolidator.DataConsolidated += (sender, consolidated) =>
+            {
+                Consolidated.Add(consolidated as OpenInterest);
+            };
+        }
+    }
+
+    /// <summary>
+    /// Use <see cref="IdentityDataConsolidator{T}"/> to yield ticks unmodified into the consolidated data collection
+    /// </summary>
+    public class IdentityTickAggregator : TickAggregator
+    {
+        public IdentityTickAggregator(TickType tickType)
+            : base(Resolution.Tick, tickType)
+        {
+            Consolidated = new List<BaseData>();
+            Consolidator = FilteredIdentityDataConsolidator.ForTickType(tickType);
+            Consolidator.DataConsolidated += (sender, consolidated) =>
+            {
+                Consolidated.Add(consolidated as Tick);
             };
         }
     }
