@@ -509,32 +509,6 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates the entry name for a QC zip data file
-        /// </summary>
-        public static string GenerateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
-        {
-            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex && securityType != SecurityType.Cfd && securityType != SecurityType.Crypto)
-            {
-                throw new NotImplementedException("This method only implements base, equity, forex, crypto and cfd security type.");
-            }
-
-            symbol = symbol.ToLower();
-
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol + ".csv";
-            }
-
-            //All fx is quote data.
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
-            {
-                dataType = TickType.Quote;
-            }
-
-            return string.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToLower(), dataType.ToLower());
-        }
-
-        /// <summary>
         /// Generates the zip file name for the specified date of data.
         /// </summary>
         public static string GenerateZipFileName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
