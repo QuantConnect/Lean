@@ -441,7 +441,7 @@ namespace QuantConnect.Util
                         return string.Format("{0}_{1}_{2}_{3}.csv",
                             formattedDate,
                             symbol.Value.ToLower(),
-                            tickType,
+                            tickType.ToLower(),
                             resolution
                         );
                     }
