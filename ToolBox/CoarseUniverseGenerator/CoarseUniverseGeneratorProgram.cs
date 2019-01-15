@@ -107,7 +107,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// </summary>
         /// <param name="dataDirectory">The Lean /Data directory</param>
         /// <param name="ignoreMaplessSymbols">Ignore symbols without a QuantQuote map file.</param>
-        public static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols, DateTime? startDate)
+        public static IEnumerable<string> ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols, DateTime? startDate)
         {
             var exclusions = ReadExclusionsFile(ExclusionsFile);
 
@@ -123,7 +123,11 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 }
 
                 var lastProcessedDate = startDate ?? GetLastProcessedDate(coarseFolder);
-                ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols, lastProcessedDate);
+                var files = ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols, lastProcessedDate);
+                foreach (var file in files)
+                {
+                    yield return file;
+                }
             }
         }
 

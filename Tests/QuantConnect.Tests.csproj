@@ -437,6 +437,7 @@
     <Compile Include="ToolBox\ForexVolume\FxcmVolumeDownloaderTest.cs" />
     <Compile Include="ToolBox\LeanDataReaderTests.cs" />
     <Compile Include="ToolBox\LeanDataWriterTests.cs" />
+    <Compile Include="ToolBox\RandomDataGenerator\RandomValueGeneratorTests.cs" />
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
