@@ -71,15 +71,19 @@ class CustomFillModel(ImmediateFillModel):
     def __init__(self, algorithm):
         self.algorithm = algorithm
         self.absoluteRemainingByOrderId = {}
-        random.seed(100)
+        self.random = Random(387510346)
 
     def MarketFill(self, asset, order):
-        #if not _absoluteRemainingByOrderId.TryGetValue(order.Id, absoluteRemaining):
         absoluteRemaining = order.AbsoluteQuantity
-        self.absoluteRemainingByOrderId[order.Id] = order.AbsoluteQuantity
+
+        if order.Id in self.absoluteRemainingByOrderId.keys():
+            absoluteRemaining = self.absoluteRemainingByOrderId[order.Id]
+            self.absoluteRemainingByOrderId[order.Id] = order.AbsoluteQuantity
+
         fill = super().MarketFill(asset, order)
-        absoluteFillQuantity = int(min(absoluteRemaining, random.randint(0, 2*int(order.AbsoluteQuantity))))
+        absoluteFillQuantity = int(min(absoluteRemaining, self.random.Next(0, 2*int(order.AbsoluteQuantity))))
         fill.FillQuantity = np.sign(order.Quantity) * absoluteFillQuantity
+        
         if absoluteRemaining == absoluteFillQuantity:
             fill.Status = OrderStatus.Filled
             if self.absoluteRemainingByOrderId.get(order.Id):
