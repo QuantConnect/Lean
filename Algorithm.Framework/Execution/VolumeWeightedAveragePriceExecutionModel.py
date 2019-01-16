@@ -72,8 +72,16 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
                 maxOrderSize = OrderSizing.PercentVolume(data.Security, self.MaximumOrderQuantityPercentVolume)
                 orderSize = np.min([maxOrderSize, np.abs(unorderedQuantity)])
 
+                remainder = orderSize % data.Security.SymbolProperties.LotSize
+                missingForLotSize = data.Security.SymbolProperties.LotSize - remainder
+                # if the amount we are missing for +1 lot size is 1M part of a lot size
+                # we suppose its due to floating point error and round up
+                # Note: this is required to avoid a diff with C# equivalent
+                if missingForLotSize < (data.Security.SymbolProperties.LotSize / 1000000):
+                    remainder -= data.Security.SymbolProperties.LotSize
+
                 # round down to even lot size
-                orderSize -= orderSize % data.Security.SymbolProperties.LotSize
+                orderSize -= remainder
                 if orderSize != 0:
                     algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
 

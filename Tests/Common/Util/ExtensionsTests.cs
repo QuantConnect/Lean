@@ -700,7 +700,7 @@ namespace QuantConnect.Tests.Common.Util
             }
             catch (PythonException e)
             {
-                Assert.AreEqual($"ValueError : {6}", e.Message);
+                Assert.AreEqual("ValueError : 6.0", e.Message);
             }
         }
 

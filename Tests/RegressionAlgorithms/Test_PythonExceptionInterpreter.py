@@ -38,7 +38,7 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
         self.SetCash('SPY')
 
     def unsupported_operand(self):
-        x = decimal.Decimal(1) * 1.1
+        x = None + "Pepe Grillo"
 
     def zero_division_error(self):
         x = 1 / 0

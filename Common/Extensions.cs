@@ -235,10 +235,29 @@ namespace QuantConnect
             return (decimal) input;
         }
 
+        /// <summary>
+        /// Will remove any trailing zeros for the provided decimal input
+        /// </summary>
+        /// <param name="input">The <see cref="decimal"/> to remove trailing zeros from</param>
+        /// <returns>Provided input with no trailing zeros</returns>
+        /// <remarks>Will not have the expected behavior when called from Python,
+        /// since the returned <see cref="decimal"/> will be converted to python float,
+        /// <see cref="NormalizeToStr"/></remarks>
         public static decimal Normalize(this decimal input)
         {
             // http://stackoverflow.com/a/7983330/1582922
             return input / 1.000000000000000000000000000000000m;
+        }
+
+        /// <summary>
+        /// Will remove any trailing zeros for the provided decimal and convert to string.
+        /// Uses <see cref="Normalize"/>.
+        /// </summary>
+        /// <param name="input">The <see cref="decimal"/> to convert to <see cref="string"/></param>
+        /// <returns>Input converted to <see cref="string"/> with no trailing zeros</returns>
+        public static string NormalizeToStr(this decimal input)
+        {
+            return Normalize(input).ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
