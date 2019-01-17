@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                true);
+                false);
             IEnumerator<BaseData> reader = new SynchronizingEnumerator(dataReader, enumerator);
 
             // has to be initialized after adding all the enumerators since it will execute a MoveNext

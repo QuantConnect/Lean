@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -26,14 +25,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class HistoryWithSymbolChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly List<SymbolChangedEvent> _expectedSymbolChangedEvents = new List<SymbolChangedEvent>
-        {
-            new SymbolChangedEvent(null, new DateTime(1998, 7, 17), "UW", "WMI"),
-            new SymbolChangedEvent(null, new DateTime(2009, 8, 5), "WMI", "WM"),
-        };
-
-        private readonly List<SymbolChangedEvent> _actualSymbolChangedEvents = new List<SymbolChangedEvent>();
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -48,37 +39,23 @@ namespace QuantConnect.Algorithm.CSharp
             var history = History(new [] {symbol}, TimeSpan.FromDays(5700), Resolution.Daily).ToList();
             Debug($"{Time} - history.Count: {history.Count}");
 
-            foreach (var slice in history)
-            {
-                if (slice.SymbolChangedEvents.Count > 0)
-                {
-                    _actualSymbolChangedEvents.Add(slice.SymbolChangedEvents.First().Value);
-                }
-            }
-
-            if (_actualSymbolChangedEvents.Count != _expectedSymbolChangedEvents.Count)
-            {
-                throw new Exception("History symbol change events - " +
-                                    $"expected: {_expectedSymbolChangedEvents.Count}, " +
-                                    $"actual: {_actualSymbolChangedEvents.Count}");
-            }
-            for (var i = 0; i < _actualSymbolChangedEvents.Count; i++)
-            {
-                var actual = _actualSymbolChangedEvents[i];
-                var expected = _expectedSymbolChangedEvents[i];
-
-                if (actual.OldSymbol != expected.OldSymbol ||
-                    actual.NewSymbol != expected.NewSymbol ||
-                    actual.Time != expected.Time)
-                {
-                    throw new Exception($"Symbol change data mismatch");
-                }
-            }
-
-            var expectedSliceCount = 3935;
+            const int expectedSliceCount = 3926;
             if (history.Count != expectedSliceCount)
             {
                 throw new Exception($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+            }
+
+            var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
+
+            if (totalBars != expectedSliceCount)
+            {
+                throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
+            }
+
+            var firstBar = history.First().Bars.GetValue(symbol);
+            if (firstBar.EndTime != new DateTime(1998, 3, 3) || firstBar.Close != 26.3607004m)
+            {
+                throw new Exception("First History bar - unexpected data received");
             }
         }
 

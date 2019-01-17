@@ -64,7 +64,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 foreach (var tradableDateEventProvider in tradableDateEventProviders)
                 {
                     // Call implementation
-                    var newEvents = tradableDateEventProvider.GetEvents(eventArgs);
+                    // and materialize list since we need symbol changes applied to the config
+                    // regardless of the includeAuxiliaryData argument
+                    var newEvents = tradableDateEventProvider.GetEvents(eventArgs).ToList();
                     if (includeAuxiliaryData)
                     {
                         foreach (var newEvent in newEvents)
