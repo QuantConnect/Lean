@@ -78,7 +78,6 @@ class CustomFillModel(ImmediateFillModel):
 
         if order.Id in self.absoluteRemainingByOrderId.keys():
             absoluteRemaining = self.absoluteRemainingByOrderId[order.Id]
-            self.absoluteRemainingByOrderId[order.Id] = order.AbsoluteQuantity
 
         fill = super().MarketFill(asset, order)
         absoluteFillQuantity = int(min(absoluteRemaining, self.random.Next(0, 2*int(order.AbsoluteQuantity))))
