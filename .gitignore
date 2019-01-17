@@ -259,3 +259,8 @@ QuantConnectProjects.xml
 Launcher/Plugins/*
 /ApiPython/dist
 /ApiPython/quantconnect.egg-info
+
+# Vagrant support
+.vagrant
+!vagrant-provision.sh
+
