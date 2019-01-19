@@ -48,13 +48,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // --start
             if (!DateTime.TryParseExact(startDateString, DateFormats, null, DateTimeStyles.None, out startDate))
             {
-                output.Error.WriteLine($"Required parameter --start was incorrectly formatted. Please specify in yyyyMMdd format. Value provided: '{startDateString}'");
+                output.Error.WriteLine($"Required parameter --from-date was incorrectly formatted. Please specify in yyyyMMdd format. Value provided: '{startDateString}'");
             }
 
             // --end
             if (!DateTime.TryParseExact(endDateString, DateFormats, null, DateTimeStyles.None, out endDate))
             {
-                output.Error.WriteLine($"Required parameter --end was incorrectly formatted. Please specify in yyyyMMdd format. Value provided: '{endDateString}'");
+                output.Error.WriteLine($"Required parameter --to-date was incorrectly formatted. Please specify in yyyyMMdd format. Value provided: '{endDateString}'");
             }
 
             // --symbol-count
