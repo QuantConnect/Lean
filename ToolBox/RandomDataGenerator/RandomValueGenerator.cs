@@ -65,7 +65,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 throw new ArgumentException("The provided reference price must be a positive number.");
             }
 
-            if (maximumPercentDeviation <= 0)
+            if (maximumPercentDeviation < 0)
             {
                 throw new ArgumentException("The provided maximum percent deviation must be a postive number");
             }
