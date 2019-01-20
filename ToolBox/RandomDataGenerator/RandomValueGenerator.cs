@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -42,6 +43,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _marketHoursDatabase = marketHoursDatabase;
             _symbols = new FixedSizeHashQueue<Symbol>(1000);
             _symbolPropertiesDatabase = symbolPropertiesDatabase;
+        }
+
+        public bool NextBool(double percentOddsForTrue)
+        {
+            return _random.NextDouble() <= percentOddsForTrue/100;
         }
 
         public virtual string NextUpperCaseString(int minLength, int maxLength)
@@ -221,13 +227,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     return tick;
 
                 case TickType.Quote:
-                    var quoteDeviation = Math.Max(0.1m, maximumPercentDeviation / 10m);
-                    var bid = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, quoteDeviation);
+                    var bid = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, maximumPercentDeviation);
                     if (bid > tick.Value)
                     {
                         bid = tick.Value - (bid - tick.Value);
                     }
-                    var ask = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, quoteDeviation);
+                    var ask = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, maximumPercentDeviation);
                     if (ask < tick.Value)
                     {
                         ask = tick.Value + (tick.Value - ask);

@@ -4,9 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
-using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -23,6 +20,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public string Market { get; set; }
         public bool IncludeCoarse { get; set; } = true;
         public int SymbolCount { get; set; }
+        public double QuoteTradeRatio { get; set; } = 1;
         public TickType[] TickTypes { get; set; }
 
         public static RandomDataGeneratorSettings FromCommandLineArguments(
@@ -34,6 +32,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string resolutionString,
             string dataDensityString,
             string includeCoarseString,
+            string quoteTradeRatioString,
             ConsoleLeveledOutput output
             )
         {
@@ -41,6 +40,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             bool includeCoarse;
             TickType[] tickTypes;
             Resolution resolution;
+            double quoteTradeRatio;
             DataDensity dataDensity;
             SecurityType securityType;
             DateTime startDate, endDate;
@@ -135,6 +135,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output.Error.WriteLine($"Optional parameter --data-density was incorrectly formated. Please specify a valid DataDensity. Value provided: '{dataDensityString}'. Valid values: {validValues}");
             }
 
+            // --quote-trade-ratio
+            if (string.IsNullOrEmpty(quoteTradeRatioString))
+            {
+                quoteTradeRatio = 1;
+            }
+            else if (!double.TryParse(quoteTradeRatioString, out quoteTradeRatio))
+            {
+                output.Error.WriteLine($"Optional parameter --quote-trade-ratio was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{quoteTradeRatioString}'");
+            }
+
             if (output.ErrorMessageWritten)
             {
                 output.Error.WriteLine("Please address the errors and run the application again.");
@@ -177,6 +187,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Market = market,
                 SymbolCount = symbolCount,
                 SecurityType = securityType,
+                QuoteTradeRatio = quoteTradeRatio,
 
                 TickTypes = tickTypes,
                 Resolution = resolution,
