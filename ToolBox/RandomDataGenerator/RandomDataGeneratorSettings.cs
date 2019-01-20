@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
 
             // --symbol-count
-            if (!int.TryParse(symbolCountString, out symbolCount))
+            if (!int.TryParse(symbolCountString, out symbolCount) || symbolCount <= 0)
             {
                 output.Error.WriteLine($"Required parameter --symbol-count was incorrectly formatted. Please specify a valid integer greater than zero. Value provided: '{symbolCountString}'");
             }
