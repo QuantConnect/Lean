@@ -196,7 +196,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     resolution = Resolution.Second;
                 }
 
-                // emit a new tick somewhere in the next trading day at a step lower resolution to guarantee a hit
+                // emit a new tick somewhere in the next trading day at a step higher resolution to guarantee a hit
                 return NextTickTime(symbol, nextMarketOpen, resolution - 1, density);
             }
 
