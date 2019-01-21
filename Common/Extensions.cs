@@ -322,6 +322,9 @@ namespace QuantConnect
             int value = 0;
             for (var i = 0; i < str.Length; i++)
             {
+                if (str[i] == '.')
+                    break;
+
                 value = value * 10 + (str[i] - '0');
             }
             return value;
@@ -338,6 +341,9 @@ namespace QuantConnect
             long value = 0;
             for (var i = 0; i < str.Length; i++)
             {
+                if (str[i] == '.')
+                    break;
+
                 value = value * 10 + (str[i] - '0');
             }
             return value;
