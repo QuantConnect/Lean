@@ -83,9 +83,7 @@
     <None Include="CustomDataBitcoinAlgorithm.py" />
     <None Include="CustomDataIndicatorExtensionsAlgorithm.py" />
     <None Include="CustomDataNIFTYAlgorithm.py" />
-    <None Include="CustomDataRegressionAlgorithm.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="CustomDataRegressionAlgorithm.py" />
     <None Include="CustomDataUniverseAlgorithm.py" />
     <None Include="CustomIndicatorAlgorithm.py" />
     <None Include="CustomModelsAlgorithm.py" />
@@ -181,7 +179,7 @@
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Python.Runtime, Version=1.0.5.12, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Python.Runtime, Version=1.0.5.14, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.14\lib\Python.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
