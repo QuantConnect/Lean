@@ -44,7 +44,13 @@ namespace QuantConnect.ToolBox
         /// </summary>
         public List<BaseData> Flush()
         {
-            return new List<BaseData>(Consolidated) { Consolidator.WorkingData as BaseData };
+            var data = new List<BaseData>(Consolidated);
+            if (Consolidator.WorkingData != null)
+            {
+                data.Add(Consolidator.WorkingData as BaseData);
+            }
+
+            return data;
         }
 
         /// <summary>
