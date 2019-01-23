@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -94,7 +95,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
             });
 
-            Log.Trace($"BaseSetupHandler.SetupCurrencyConversions(): {algorithm.Portfolio.CashBook}");
+            Log.Trace("BaseSetupHandler.SetupCurrencyConversions():" +
+                $"{Environment.NewLine}{algorithm.Portfolio.CashBook}");
         }
     }
 }

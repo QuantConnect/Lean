@@ -82,6 +82,8 @@ oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
 
 usa,[*],option,,USD,100,0.01,1
 
+usa,[*],equity,,USD,1,0.01,1
+
 usa,ZC,future,,USD,50,0.25,1
 usa,ZW,future,,USD,50,0.25,1
 usa,ZS,future,,USD,50,0.25,1

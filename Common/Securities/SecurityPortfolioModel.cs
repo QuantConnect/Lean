@@ -65,7 +65,10 @@ namespace QuantConnect.Securities
 
                 // subtract transaction fees from the portfolio
                 var feeInAccountCurrency = 0m;
-                if (fill.OrderFee != OrderFee.Zero)
+                if (fill.OrderFee != OrderFee.Zero
+                    // this is for user friendliness because some
+                    // Security types default to use 0 USD ConstantFeeModel
+                    && fill.OrderFee.Value.Amount != 0)
                 {
                     var feeThisOrder = fill.OrderFee.Value;
                     feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;

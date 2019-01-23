@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm
         private Resolution? _warmupResolution;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
-        private HistoryRequestFactory _historyRequestFactory;
+        private readonly HistoryRequestFactory _historyRequestFactory;
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -1103,6 +1103,23 @@ namespace QuantConnect.Algorithm
         {
             get;
             private set;
+        }
+
+        /// <summary>
+        /// Sets the account currency cash symbol this algorithm is to manage.
+        /// </summary>
+        /// <remarks>Has to be called during <see cref="Initialize"/> before
+        /// calling <see cref="SetCash(decimal)"/> or adding any <see cref="Security"/></remarks>
+        /// <param name="accountCurrency">The account currency cash symbol to set</param>
+        public void SetAccountCurrency(string accountCurrency)
+        {
+            if (_locked)
+            {
+                throw new InvalidOperationException("Algorithm.SetAccountCurrency(): " +
+                    "Cannot change AccountCurrency after algorithm initialized.");
+            }
+
+            Portfolio.SetAccountCurrency(accountCurrency);
         }
 
         /// <summary>
