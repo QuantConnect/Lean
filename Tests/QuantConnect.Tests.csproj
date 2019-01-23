@@ -170,6 +170,7 @@
     <Compile Include="Algorithm\Framework\Alphas\MacdAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\BasePairsTradingAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\RsiAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Serialization\AlphaRuntimeStatisticsTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />
     <Compile Include="Algorithm\Framework\Execution\VolumeWeightedAveragePriceExecutionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Execution\ImmediateExecutionModelTests.cs" />
