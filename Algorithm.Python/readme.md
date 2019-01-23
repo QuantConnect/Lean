@@ -14,16 +14,10 @@ Before we enable python support, follow the [installation instructions](https://
         - Name of the variable: `PYTHONHOME`. 
         - Value of the variable: python installation path.
 4. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-5. Install [**Visual C++ for Python 2.7**](https://www.microsoft.com/en-us/download/details.aspx?id=44266)
-6. Install .NET Framework 3.5:
-   1. Open the Control Panel
-   2. Click on Programs and Features, then Turn Windows Features On or Off
-   3. Mark ".NET Framework 3.5 (includes .NET 2.0 and 3.0)"
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
 2. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-3. Install [**pkg-config**](http://macappstore.org/pkg-config/)
 
 #### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
 By default, **miniconda** is installed in the users home directory (`$HOME`):
@@ -37,32 +31,20 @@ conda update -y python conda pip
 conda install -y cython pandas
 ```
 
-Install clang and glib 2.0:
-```
-sudo apt-get -y install clang libglib2.0-dev
-```
-
 *Note:* There is a [known issue](https://github.com/pythonnet/pythonnet/issues/609) with python 3.6.5 that prevents pythonnet installation, please upgrade python to version 3.6.6:
 ```
 conda install -y python=3.6.6
 ```
 
-
 ### Run python algorithm
-1. At Lean root directory, run the setup script:
-```
-python setup.py
-```
-It will install QuantConnect's version of [pythonnet](https://github.com/QuantConnect/pythonnet/) in your system.
-
-2. Update the [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json) to run the python algorithm:
+1. Update the [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json) to run the python algorithm:
 ```json
 "algorithm-type-name": "BasicTemplateAlgorithm",
 "algorithm-language": "Python",
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
- 3. Rebuild LEAN.
- 4. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
+ 2. Rebuild LEAN.
+ 3. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
 ___
 #### Python.Runtime.dll compilation
