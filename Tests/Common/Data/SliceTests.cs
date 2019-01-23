@@ -164,17 +164,23 @@ namespace QuantConnect.Tests.Common.Data
 
             var tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);
+            Assert.AreEqual(3000, tradeBarData[Symbols.BTCUSD].Close);
 
             var quoteBarData = slice.Get<QuoteBar>();
             Assert.AreEqual(1, quoteBarData.Count);
+            Assert.AreEqual(3100, quoteBarData[Symbols.BTCUSD].Bid.Close);
+            Assert.AreEqual(3101, quoteBarData[Symbols.BTCUSD].Ask.Close);
 
             slice = new Slice(DateTime.Now, new BaseData[] { tradeBar, quoteBar });
 
             tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);
+            Assert.AreEqual(3000, tradeBarData[Symbols.BTCUSD].Close);
 
             quoteBarData = slice.Get<QuoteBar>();
             Assert.AreEqual(1, quoteBarData.Count);
+            Assert.AreEqual(3100, quoteBarData[Symbols.BTCUSD].Bid.Close);
+            Assert.AreEqual(3101, quoteBarData[Symbols.BTCUSD].Ask.Close);
         }
     }
 }
