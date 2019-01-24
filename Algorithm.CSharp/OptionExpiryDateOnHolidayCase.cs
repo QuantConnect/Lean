@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            Delisting delisting; 
+            Delisting delisting;
             if (slice.Delistings.TryGetValue(_optionContract.Symbol, out delisting))
             {
                 Log(delisting.ToString());
@@ -64,8 +64,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (!(_delistings.Count == 2 && 
-                  _delistings.Any(d => d.Type == DelistingType.Warning) && 
+            if (!(_delistings.Count == 2 &&
+                  _delistings.Any(d => d.Type == DelistingType.Warning) &&
                   _delistings.Any(d => d.Type == DelistingType.Delisted)))
             {
                 throw new Exception($"Option contract {_optionContract.Symbol} was not correctly delisted.");
@@ -107,22 +107,22 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.54%"},
-            {"Compounding Annual Return", "23.199%"},
+            {"Compounding Annual Return", "23.156%"},
             {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "0.449%"},
-            {"Sharpe Ratio", "15.604"},
+            {"Net Profit", "0.448%"},
+            {"Sharpe Ratio", "15.59"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.172"},
-            {"Beta", "-0.683"},
+            {"Alpha", "0.171"},
+            {"Beta", "-0.65"},
             {"Annual Standard Deviation", "0.01"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "13.984"},
+            {"Information Ratio", "13.971"},
             {"Tracking Error", "0.01"},
-            {"Treynor Ratio", "-0.236"},
-            {"Total Fees", "$0.25"}
+            {"Treynor Ratio", "-0.248"},
+            {"Total Fees", "$1.00"}
         };
     }
 }
