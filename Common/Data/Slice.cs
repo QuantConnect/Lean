@@ -252,6 +252,18 @@ namespace QuantConnect.Data
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).OfType<T>(), x => x.Symbol));
                 }
+                else if (typeof(T) == typeof(TradeBar))
+                {
+                    dictionary = new Lazy<object>(() => new DataDictionary<TradeBar>(
+                        _data.Value.Values.Where(x => x.TradeBar != null).Select(x => x.TradeBar),
+                        x => x.Symbol));
+                }
+                else if (typeof(T) == typeof(QuoteBar))
+                {
+                    dictionary = new Lazy<object>(() => new DataDictionary<QuoteBar>(
+                        _data.Value.Values.Where(x => x.QuoteBar != null).Select(x => x.QuoteBar),
+                        x => x.Symbol));
+                }
                 else
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.Select(x => x.GetData()).OfType<T>(), x => x.Symbol));
