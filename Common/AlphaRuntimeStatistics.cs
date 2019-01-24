@@ -42,6 +42,14 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <remarks>Required for proper deserialization</remarks>
+        public AlphaRuntimeStatistics()
+        {
+        }
+
+        /// <summary>
         /// Gets the mean scores for the entire population of insights
         /// </summary>
         public InsightScore MeanPopulationScore { get; } = new InsightScore();
@@ -113,7 +121,8 @@ namespace QuantConnect
         /// </summary>
         public Dictionary<string, string> ToDictionary()
         {
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(_accountCurrencyProvider.AccountCurrency);
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(_accountCurrencyProvider?.AccountCurrency ?? Currencies.USD);
+
             return new Dictionary<string, string>
             {
                 {"Total Insights Generated", $"{TotalInsightsGenerated}"},
