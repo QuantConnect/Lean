@@ -1172,6 +1172,8 @@ namespace QuantConnect.Lean.Engine
                 if (!security.IsTradable
                     && !algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol))
                 {
+                    // remove the warning from out list
+                    splitWarnings.RemoveAt(i);
                     // Since we are storing the split warnings for a loop
                     // we need to check if the security was removed.
                     // When removed, it will be marked as non tradable but just in case
