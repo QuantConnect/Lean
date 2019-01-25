@@ -173,7 +173,8 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "resolution", "Minute"),
                             GetParameterOrDefault(optionsObject, "data-density", "Dense"),
                             GetParameterOrDefault(optionsObject, "include-coarse", "true"),
-                            GetParameterOrDefault(optionsObject, "quote-trade-ratio", "1")
+                            GetParameterOrDefault(optionsObject, "quote-trade-ratio", "1"),
+                            GetParameterOrDefault(optionsObject, "random-seed", null)
                         );
                         break;
                     default:

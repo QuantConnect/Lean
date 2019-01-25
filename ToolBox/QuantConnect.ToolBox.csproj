@@ -215,8 +215,10 @@
     <Compile Include="IEX\IEXDownloaderProgram.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
     <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />
     <Compile Include="RandomDataGenerator\DataDensity.cs" />
+    <Compile Include="RandomDataGenerator\FinancialCalendar.cs" />
     <Compile Include="RandomDataGenerator\RandomDataGeneratorSettings.cs" />
     <Compile Include="RandomDataGenerator\IRandomValueGenerator.cs" />
     <Compile Include="RandomDataGenerator\RandomDataGeneratorProgram.cs" />

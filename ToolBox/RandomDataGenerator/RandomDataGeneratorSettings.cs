@@ -21,6 +21,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public bool IncludeCoarse { get; set; } = true;
         public int SymbolCount { get; set; }
         public double QuoteTradeRatio { get; set; } = 1;
+        public int RandomSeed { get; set; }
+        public bool RandomSeedSet { get; set; }
         public TickType[] TickTypes { get; set; }
 
         public static RandomDataGeneratorSettings FromCommandLineArguments(
@@ -33,9 +35,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string dataDensityString,
             string includeCoarseString,
             string quoteTradeRatioString,
+            string randomSeedString,
             ConsoleLeveledOutput output
             )
         {
+            bool randomSeedSet = true;
+
+            int randomSeed;
             int symbolCount;
             bool includeCoarse;
             TickType[] tickTypes;
@@ -145,6 +151,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output.Error.WriteLine($"Optional parameter --quote-trade-ratio was incorrectly formatted. Please specify a valid double greater than or equal to zero. Value provided: '{quoteTradeRatioString}'");
             }
 
+            // --random-seed
+            if (string.IsNullOrEmpty(randomSeedString))
+            {
+                randomSeed = 0;
+                randomSeedSet = false;
+            }
+            else if (!int.TryParse(randomSeedString, out randomSeed))
+            {
+                output.Error.WriteLine($"Optional parameter --random-seed was incorrectly formatted. Please specify a valid integer");
+            }
+
             if (output.ErrorMessageWritten)
             {
                 output.Error.WriteLine("Please address the errors and run the application again.");
@@ -194,6 +211,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 DataDensity = dataDensity,
                 IncludeCoarse = includeCoarse,
+                RandomSeed = randomSeed,
+                RandomSeedSet = randomSeedSet
             };
         }
 

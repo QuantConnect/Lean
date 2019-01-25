@@ -25,7 +25,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
-    /// Defines a single row in a factor_factor file. This is a csv file ordered as {date, price factor, split factor}
+    /// Defines a single row in a factor_factor file. This is a csv file ordered as {date, price factor, split factor, reference price}
     /// </summary>
     public class FactorFileRow
     {
