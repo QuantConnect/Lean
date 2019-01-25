@@ -1169,6 +1169,16 @@ namespace QuantConnect.Lean.Engine
                 var split = splitWarnings[i];
                 var security = algorithm.Securities[split.Symbol];
 
+                if (!security.IsTradable
+                    && !algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol))
+                {
+                    // Since we are storing the split warnings for a loop
+                    // we need to check if the security was removed.
+                    // When removed, it will be marked as non tradable but just in case
+                    // we expect it not to be an active security either
+                    continue;
+                }
+
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // determine the latest possible time we can submit a MOC order
