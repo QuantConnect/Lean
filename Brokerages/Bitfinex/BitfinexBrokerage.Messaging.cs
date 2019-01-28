@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -224,7 +224,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                                 OnOrderClose(token[2].ToObject<string[]>());
                                 return;
                             case "tu":
-                                EmitFillOrder(token[2].ToObject<string[]>());
+                                EmitFillOrder(token[2].ToObject<string[]>(), false);
                                 return;
                             default:
                                 return;
@@ -502,8 +502,13 @@ namespace QuantConnect.Brokerages.Bitfinex
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
                         OrderFee.Zero,
-                        "Bitfinex Order Event") { Status = OrderStatus.Canceled });
+                        "Bitfinex Order Event")
+                    { Status = OrderStatus.Canceled });
                 }
+            }
+            else if (entries[5].IndexOf("executed", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                EmitFillOrder(entries, true);
             }
             else
             {
@@ -546,7 +551,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void EmitFillOrder(string[] entries)
+        private void EmitFillOrder(string[] entries, bool isFinalFill)
         {
             try
             {
@@ -577,7 +582,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         new OrderFeeParameters(security, order));
                 }
 
-                OrderStatus status = fillQuantity == order.Quantity ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+                OrderStatus status = isFinalFill ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
                 var orderEvent = new OrderEvent
                 (
