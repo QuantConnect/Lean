@@ -74,7 +74,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var dividendEveryQuarter = _randomValueGenerator.NextBool(30.0);
 
             var previousSplitFactor = (decimal)_random.NextDouble();
-            var previousPriceFactor = _randomValueGenerator.NextBool(50.0) ? (decimal)_random.NextDouble() : _random.Next(1, 5);
+            var previousPriceFactor = (decimal)_random.NextDouble();
+            var previousX = _random.NextDouble();
 
             var splitDates = new List<DateTime>();
             var dividendDates = new List<DateTime>();
@@ -90,10 +91,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (firstTick)
                     {
                         DividendsSplits.Add(new FactorFileRow(tick.Time,
-                            1,
-                            (decimal)(_randomValueGenerator.NextBool(50.0)
-                                ? _random.Next(1, 500)
-                                : _random.NextDouble()),
+                            previousPriceFactor,
+                            previousSplitFactor,
                             tick.Value));
 
                         MapRows.Add(new MapFileRow(tick.Time, CurrentSymbol.Value));
@@ -155,8 +154,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                             {
                                 do
                                 {
-                                    previousPriceFactor = _randomValueGenerator.NextPrice(SecurityType.Equity, "usa", previousPriceFactor, 5.0m);
-                                } while (previousPriceFactor > 1.0m || previousPriceFactor <= 0m);
+                                    previousPriceFactor = (decimal)Math.Tanh(previousX);
+                                    previousX += _random.NextDouble() / 10;
+                                } while (previousPriceFactor >= 1.0m || previousPriceFactor <= 0m);
 
                                 dividendDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
                             }
@@ -167,15 +167,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                                 {
                                     if (previousSplitFactor < 1)
                                     {
-                                        previousSplitFactor = (decimal)(_random.NextDouble() - _random.NextDouble());
+                                        previousSplitFactor += (decimal)(_random.NextDouble() - _random.NextDouble());
                                     }
                                     else
                                     {
-                                        // Covers a no split event, reverse, and normal split
-                                        // We set an arbitrary upper bound of x5 for the increase/decrease
-                                        // of the split factor in order to contain a possible explosion of the value
-                                        previousSplitFactor += _random.Next(-1, 1) * _random.Next(1, 5);
-                                        previousSplitFactor = Math.Round(previousSplitFactor, 0);
+                                        previousSplitFactor *= (decimal)_random.NextDouble() * _random.Next(1, 5);
                                     }
                                 } while (previousSplitFactor < 0);
 
