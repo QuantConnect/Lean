@@ -2035,6 +2035,66 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(initialCash, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
         }
 
+        [Test]
+        public void SetAccountCurrency()
+        {
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            algorithm.Portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            Assert.AreEqual(Currencies.USD, algorithm.AccountCurrency);
+            Assert.AreEqual(Currencies.USD, algorithm.Portfolio.CashBook.AccountCurrency);
+            var amount = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
+
+            algorithm.SetAccountCurrency("btc");
+            Assert.AreEqual("BTC", algorithm.AccountCurrency);
+            Assert.AreEqual("BTC", algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(amount, algorithm.Portfolio.CashBook["BTC"].Amount);
+        }
+
+        [Test]
+        public void CanNotChangeAccountCurrencyAfterAddingASecurity()
+        {
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            algorithm.Securities = securities;
+
+            securities.Add(
+                Symbols.SPY,
+                new Security(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
+            Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
+        }
+
+        [TestCase("SetCash(decimal cash)")]
+        [TestCase("SetCash(string symbol, ...)")]
+        public void CanNotChangeAccountCurrencyAfterSettingCash(string overload)
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            if (overload == "SetCash(decimal cash)")
+            {
+                portfolio.SetCash(10);
+            }
+            else
+            {
+                portfolio.SetCash(Currencies.USD, 1, 1);
+            }
+            Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
