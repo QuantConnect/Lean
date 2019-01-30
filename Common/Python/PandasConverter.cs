@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using QuantConnect.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace QuantConnect.Python
     public class PandasConverter
     {
         private static dynamic _pandas;
+        private readonly string _repr = "pandas module was not imported.";
 
         /// <summary>
         /// Creates an instance of <see cref="PandasConverter"/>.
@@ -38,7 +40,10 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
+                    dynamic numpy = Py.Import("numpy");
                     _pandas = Py.Import("pandas");
+                    _repr = $"PandasConverter(): Pandas v{_pandas.__version__} Numpy v{numpy.__version__}";
+                    Log.Trace(_repr);
                 }
             }
         }
@@ -154,11 +159,6 @@ namespace QuantConnect.Python
         /// Returns a string that represent the current object
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
-        {
-            return _pandas == null
-                ? "pandas module was not imported."
-                : _pandas.Repr();
-        }
+        public override string ToString() => _repr;
     }
 }
