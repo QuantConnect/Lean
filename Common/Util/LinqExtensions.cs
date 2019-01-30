@@ -64,17 +64,6 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
         /// </summary>
-        /// <typeparam name="T">The item type in the hash set</typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
-        /// <returns>A new <see cref="HashSet{T}"/> containing the items in the enumerable</returns>
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable)
-        {
-            return new HashSet<T>(enumerable);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="HashSet{T}"/> from the elements in the specified enumerable
-        /// </summary>
         /// <typeparam name="T">The item type of the source enumerable</typeparam>
         /// <typeparam name="TResult">The type of the items in the output <see cref="HashSet{T}"/></typeparam>
         /// <param name="enumerable">The items to be placed into the enumerable</param>
