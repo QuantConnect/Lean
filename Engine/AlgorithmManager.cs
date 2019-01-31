@@ -1172,7 +1172,7 @@ namespace QuantConnect.Lean.Engine
                 if (!security.IsTradable
                     && !algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol))
                 {
-                    Log.Trace($"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - Removing split warning for {security.Symbol}");
+                    Log.Debug($"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - Removing split warning for {security.Symbol}");
 
                     // remove the warning from out list
                     splitWarnings.RemoveAt(i);
@@ -1191,9 +1191,11 @@ namespace QuantConnect.Lean.Engine
 
                 if (configs.Count == 0)
                 {
-                    Log.Trace($"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - No subscriptions found for {security.Symbol}" +
-                              $", IsTradable: {security.IsTradable}" +
-                              $", Active: {algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol)}");
+                    // should never happen at this point, if it does let's give some extra info
+                    throw new Exception(
+                        $"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - No subscriptions found for {security.Symbol}" +
+                        $", IsTradable: {security.IsTradable}" +
+                        $", Active: {algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol)}");
                 }
 
                 var latestMarketOnCloseTimeRoundedDownByResolution = nextMarketClose.Subtract(MarketOnCloseOrder.DefaultSubmissionTimeBuffer)
