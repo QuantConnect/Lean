@@ -381,7 +381,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     else
                     {
-                        _dataManager.RemoveSubscription(subscription.Configuration, universe);
+                        if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
+                        {
+                            member.IsTradable = false;
+                        }
                     }
                 }
 
