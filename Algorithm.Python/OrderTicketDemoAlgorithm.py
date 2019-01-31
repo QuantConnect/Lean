@@ -221,10 +221,10 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # value so we'll set a long stop .25% above the current bar's
             # close now we'll also be setting a limit, this means we are
             # gauranteed to get at least the limit price for our fills,
-            # so make the limit price a little softer than the stop price
+            # so make the limit price a little higher than the stop price
 
             close = self.Securities[self.spy.Value].Close
-            newTicket = self.StopLimitOrder(self.spy, 10, close * d.Decimal(1.001), close - d.Decimal(0.03))
+            newTicket = self.StopLimitOrder(self.spy, 10, close * d.Decimal(1.001), close * d.Decimal(1.0025))
             self.__openStopLimitOrders.append(newTicket)
 
             # a short stop is triggered when the price falls below the
@@ -233,7 +233,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # gauranteed to get at least the limit price for our fills,
             # so make the limit price a little softer than the stop price
 
-            newTicket = self.StopLimitOrder(self.spy, -10, close * d.Decimal(.999), close + d.Decimal(0.03))
+            newTicket = self.StopLimitOrder(self.spy, -10, close * d.Decimal(.999), close * d.Decimal(0.9975))
             self.__openStopLimitOrders.append(newTicket)
 
         # when we submitted new stop limit orders we placed them into this list,
