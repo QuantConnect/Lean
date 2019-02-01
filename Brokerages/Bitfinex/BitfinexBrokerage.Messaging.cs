@@ -633,7 +633,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public void LockStream()
         {
-            Log.Trace("BItfinexBrokerage.Messaging.LockStream(): Locking Stream");
+            Log.Trace("BitfinexBrokerage.Messaging.LockStream(): Locking Stream");
             _streamLocked = true;
         }
 
@@ -642,14 +642,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public void UnlockStream()
         {
-            Log.Trace("BItfinexBrokerage.Messaging.UnlockStream(): Processing Backlog...");
+            Log.Trace("BitfinexBrokerage.Messaging.UnlockStream(): Processing Backlog...");
             while (_messageBuffer.Any())
             {
                 WebSocketMessage e;
                 _messageBuffer.TryDequeue(out e);
                 OnMessageImpl(this, e);
             }
-            Log.Trace("BItfinexBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
+            Log.Trace("BitfinexBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
             // Once dequeued in order; unlock stream.
             _streamLocked = false;
         }
