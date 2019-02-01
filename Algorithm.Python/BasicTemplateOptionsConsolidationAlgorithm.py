@@ -63,3 +63,4 @@ class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
         for security in changes.RemovedSecurities:
             consolidator = self.consolidators.pop(security.Symbol)
             self.SubscriptionManager.RemoveConsolidator(security.Symbol, consolidator)
+            consolidator.DataConsolidated -= self.OnDataConsolidated
