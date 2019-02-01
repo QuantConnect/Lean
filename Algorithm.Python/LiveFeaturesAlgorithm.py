@@ -25,6 +25,8 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
+from QuantConnect.Algorithm import QCAlgorithm
+from QuantConnect.Python import PythonData
 import numpy as np
 import json
 
