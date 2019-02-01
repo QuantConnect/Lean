@@ -12,12 +12,10 @@
 # limitations under the License.
 
 from clr import AddReference
-AddReference("System")
-AddReference("System.Globalization")
+AddReference("System.Core")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Common")
-AddReference("Quantconnect.Data")
-AddReference("Quantconnect.Data.Market")
+
 
 from System import *
 from System.Globalization import *
@@ -25,9 +23,11 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
-from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Python import PythonData
+
 import numpy as np
+from datetime import datetime
+import decimal
 import json
 
 
@@ -70,8 +70,8 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
 
             ##Send a notification email/SMS/web request on events:
             self.Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment")
-            self.Notify.Sms("+11233456789", str(self.Time.date) + ">> Test message from live BTC server.")
-            self.Notify.Web("http://api.quantconnect.com", str(self.Time.date) + ">> Test data packet posted from live BTC server.")
+            self.Notify.Sms("+11233456789", str(self.Time) + ">> Test message from live BTC server.")
+            self.Notify.Web("http://api.quantconnect.com", str(self.Time) + ">> Test data packet posted from live BTC server.")
 
 
     ### Raises the data event
@@ -79,7 +79,7 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
         if (not self.Portfolio['IBM'].HoldStock) and data.ContainsKey('IBM'):
             quantity = int(np.floor(self.Portfolio.MarginRemaining / data['IBM'].Close))
             self.MarketOrder('IBM',quantity)
-            self.Debug('Purchased IBM on ' + str(self.Time.date))
+            self.Debug('Purchased IBM on ' + str(self.Time))
             self.Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment")
 
 ###Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data
