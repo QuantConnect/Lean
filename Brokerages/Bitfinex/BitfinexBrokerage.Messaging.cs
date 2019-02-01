@@ -41,9 +41,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         private volatile bool _streamLocked;
         private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<Symbol, OrderBook> _orderBooks = new ConcurrentDictionary<Symbol, OrderBook>();
-        private readonly object closeLocker = new object();
-        private readonly List<string> _pendingClose = new List<string>();
         private readonly IPriceProvider _priceProvider;
+        private readonly ConcurrentDictionary<int, decimal> filling = new ConcurrentDictionary<int, decimal>();
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -505,13 +504,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                         "Bitfinex Order Event") { Status = OrderStatus.Canceled });
                 }
             }
-            else
-            {
-                lock (closeLocker)
-                {
-                    _pendingClose.Add(brokerId);
-                }
-            }
         }
 
         /// <summary>
@@ -577,7 +569,18 @@ namespace QuantConnect.Brokerages.Bitfinex
                         new OrderFeeParameters(security, order));
                 }
 
-                OrderStatus status = fillQuantity == order.Quantity ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+                OrderStatus status = OrderStatus.Filled;
+                if (fillQuantity != order.Quantity)
+                {
+                    decimal totalFillQuantity = 0;
+                    filling.TryGetValue(order.Id, out totalFillQuantity);
+                    totalFillQuantity += fillQuantity;
+                    filling[order.Id] = totalFillQuantity;
+
+                    status = totalFillQuantity == order.Quantity
+                        ? OrderStatus.Filled
+                        : OrderStatus.PartiallyFilled;
+                }
 
                 var orderEvent = new OrderEvent
                 (
@@ -587,15 +590,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                 );
 
                 // if the order is closed, we no longer need it in the active order list
-                lock (closeLocker)
+                if (status == OrderStatus.Filled)
                 {
-                    if (_pendingClose.Contains(brokerId))
-                    {
-                        _pendingClose.Remove(brokerId);
-                        Order outOrder;
-                        CachedOrderIDs.TryRemove(order.Id, out outOrder);
-                    }
+                    Order outOrder;
+                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
+                    decimal ignored;
+                    filling.TryRemove(order.Id, out ignored);
                 }
+
                 OnOrderEvent(orderEvent);
             }
             catch (Exception e)
