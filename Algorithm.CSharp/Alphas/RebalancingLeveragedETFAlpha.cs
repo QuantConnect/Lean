@@ -65,6 +65,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 			SetExecution(new ImmediateExecutionModel());
 			SetRiskManagement(new NullRiskManagementModel());
 		}
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -83,28 +84,28 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {"Total Trades", "2465"},
             {"Average Win", "0.26%"},
             {"Average Loss", "-0.24%"},
-            {"Compounding Annual Return", "8.143%"},
-            {"Drawdown", "17.600%"},
-            {"Expectancy", "0.036"},
-            {"Net Profit", "9.582%"},
-            {"Sharpe Ratio", "0.505"},
+            {"Compounding Annual Return", "7.848%"},
+            {"Drawdown", "17.500%"},
+            {"Expectancy", "0.035"},
+            {"Net Profit", "9.233%"},
+            {"Sharpe Ratio", "0.492"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.07"},
-            {"Alpha", "0.58"},
-            {"Beta", "-24.276"},
-            {"Annual Standard Deviation", "0.191"},
+            {"Profit-Loss Ratio", "1.06"},
+            {"Alpha", "0.585"},
+            {"Beta", "-24.639"},
+            {"Annual Standard Deviation", "0.19"},
             {"Annual Variance", "0.036"},
-            {"Information Ratio", "0.401"},
-            {"Tracking Error", "0.191"},
+            {"Information Ratio", "0.387"},
+            {"Tracking Error", "0.19"},
             {"Treynor Ratio", "-0.004"},
-            {"Total Fees", "$9056.88"}
+            {"Total Fees", "$9029.33"}
         };
     }
 
 	/// <summary>
 	/// If the underlying ETF has experienced a return >= 1% since the previous day's close up to the current time at 14:15,
-	/// then buy it's ultra ETF right away, and exit at the close. If the return is <= -1%, sell it's ultra-short ETF.
+	/// then buy it's ultra ETF right away, and exit at the close. If the return is &lt;= -1%, sell it's ultra-short ETF.
 	/// </summary>
 	class RebalancingLeveragedETFAlphaModel : AlphaModel
 	{
@@ -154,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 					if (group.YesterdayClose == 0) continue;
 					var returns = (algorithm.Portfolio[group.Underlying].Price - group.YesterdayClose) / group.YesterdayClose;
 
-					if(returns > 0.01m)
+					if (returns > 0.01m)
 					{
 						insights.Add(Insight.Price(group.UltraLong, period, InsightDirection.Up, magnitude));
 					}
