@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="systemHandlers">The system handlers for controlling acquisition of jobs, messaging, and api calls</param>
         /// <param name="algorithmHandlers">The algorithm handlers for managing algorithm initialization, data, results, transaction, and real time events</param>
-        /// <param name="liveMode">True when running in live mode, false otherwises</param>
+        /// <param name="liveMode">True when running in live mode, false otherwise</param>
         public Engine(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, bool liveMode)
         {
             _liveMode = liveMode;
@@ -173,7 +173,9 @@ namespace QuantConnect.Lean.Engine
                         (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
                     }
 
-                    var historyDataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
+                    IDataCacheProvider historyDataCacheProvider = (IDataCacheProvider)Activator.CreateInstance(
+                        Type.GetType(Config.Get("data-cache-provider", "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider")),
+                        _algorithmHandlers.DataProvider);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
                             job,

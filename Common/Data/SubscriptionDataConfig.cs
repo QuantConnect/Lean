@@ -129,7 +129,17 @@ namespace QuantConnect.Data
         public readonly DateTimeZone ExchangeTimeZone;
 
         /// <summary>
-        /// Consolidators that are registred with this subscription
+        /// The start of history data range in exchange timezone
+        /// </summary>
+        public readonly DateTime? DataStartTime;
+
+        /// <summary>
+        /// The end of history data range in exchange timezone
+        /// </summary>
+        public readonly DateTime? DataEndTime;
+
+        /// <summary>
+        /// Consolidators that are registered with this subscription
         /// </summary>
         public readonly HashSet<IDataConsolidator> Consolidators;
 
@@ -155,6 +165,8 @@ namespace QuantConnect.Data
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
+        /// <param name="subscriptionDataStartDate">The start of subscribed data range</param>
+        /// <param name="subscriptionDataEndDate">The end of subscribed data range</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -166,7 +178,9 @@ namespace QuantConnect.Data
             bool isCustom = false,
             TickType? tickType = null,
             bool isFilteredSubscription = true,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DateTime? subscriptionDataStartDate = null,
+            DateTime? subscriptionDataEndDate = null)
         {
             if (objectType == null) throw new ArgumentNullException("objectType");
             if (symbol == null) throw new ArgumentNullException("symbol");
@@ -189,13 +203,14 @@ namespace QuantConnect.Data
             IsFilteredSubscription = isFilteredSubscription;
             Consolidators = new HashSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
-
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
+            DataStartTime = subscriptionDataStartDate;
+            DataEndTime = subscriptionDataEndDate;
 
             switch (resolution)
             {
                 case Resolution.Tick:
-                    //Ticks are individual sales and fillforward doesn't apply.
+                    //Ticks are individual sales and fill-forward doesn't apply.
                     Increment = TimeSpan.FromSeconds(0);
                     FillDataForward = false;
                     break;

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Data;
 
@@ -26,11 +27,25 @@ namespace QuantConnect.Interfaces
     public interface IDataCacheProvider : IDisposable
     {
         /// <summary>
-        /// Fetch data from the cache
+        /// Fetch data from the cache as stream
         /// </summary>
         /// <param name="key">A string representing the key of the cached data</param>
         /// <returns>An <see cref="Stream"/> of the cached data</returns>
-        Stream Fetch(string key);
+        Stream FetchStream(string key);
+
+        /// <summary>
+        /// Fetch data from the cache as enumerator
+        /// </summary>
+        /// <param name="key">A string representing the key of the cached data</param>
+        /// <param name="config">The subscription config</param>
+        /// <param name="startDate">Provide the start date of data to be fetched. Inclusive.</param>
+        /// <param name="endDate">Provide the end date of data to be fetched. Inclusive.</param>
+        /// <returns>An enumerator of the cached data</returns>
+        IEnumerator<string> FetchEnumerator(
+            string key,
+            SubscriptionDataConfig config,
+            DateTime? startDate = null,
+            DateTime? endDate = null);
 
         /// <summary>
         /// Store the data in the cache

@@ -64,11 +64,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
         public TextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataCacheProvider = dataCacheProvider;
-            _date = date;
-            _config = config;
-            _isLiveMode = isLiveMode;
-            _factory = (BaseData) ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
+            this._dataCacheProvider = dataCacheProvider;
+            this._date = date;
+            this._config = config;
+            this._isLiveMode = isLiveMode;
+            this._factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
         }
 
         /// <summary>
@@ -78,12 +78,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            using (var reader = CreateStreamReader(source))
+            string content = string.Empty;
+            using (var reader = this.CreateStreamReader(source))
             {
                 // if the reader doesn't have data then we're done with this subscription
                 if (reader == null || reader.EndOfStream)
                 {
-                    OnCreateStreamReaderError(_date, source);
+                    this.OnCreateStreamReaderError(this._date, source);
                     yield break;
                 }
 
@@ -95,11 +96,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BaseData instance = null;
                     try
                     {
-                        instance = _factory.Reader(_config, line, _date, _isLiveMode);
+                        instance = this._factory.Reader(this._config, line, this._date, this._isLiveMode);
                     }
                     catch (Exception err)
                     {
-                        OnReaderError(line, err);
+                        this.OnReaderError(line, err);
                     }
 
                     if (instance != null && instance.EndTime != default(DateTime))
@@ -121,15 +122,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             switch (subscriptionDataSource.TransportMedium)
             {
                 case SubscriptionTransportMedium.LocalFile:
-                    reader = HandleLocalFileSource(subscriptionDataSource);
+                    reader = this.HandleLocalFileSource(subscriptionDataSource);
                     break;
 
                 case SubscriptionTransportMedium.RemoteFile:
-                    reader = HandleRemoteSourceFile(subscriptionDataSource);
+                    reader = this.HandleRemoteSourceFile(subscriptionDataSource);
                     break;
 
                 case SubscriptionTransportMedium.Rest:
-                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, _isLiveMode);
+                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, this._isLiveMode);
                     break;
 
                 default:
@@ -146,7 +147,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
         {
             var handler = InvalidSource;
-            if (handler != null) handler(this, new InvalidSourceEventArgs(source, exception));
+            if (handler != null)
+            {
+                handler(this, new InvalidSourceEventArgs(source, exception));
+            }
         }
 
         /// <summary>
@@ -157,7 +161,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void OnReaderError(string line, Exception exception)
         {
             var handler = ReaderError;
-            if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
+            if (handler != null)
+            {
+                handler(this, new ReaderErrorEventArgs(line, exception));
+            }
         }
 
         /// <summary>
@@ -168,7 +175,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void OnCreateStreamReaderError(DateTime date, SubscriptionDataSource source)
         {
             var handler = CreateStreamReaderError;
-            if (handler != null) handler(this, new CreateStreamReaderErrorEventArgs(date, source));
+            if (handler != null)
+            {
+                handler(this, new CreateStreamReaderErrorEventArgs(date, source));
+            }
         }
 
         /// <summary>
@@ -177,7 +187,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
         {
             // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
+            if (this._dataCacheProvider is DataPointCacheProvider)
+            {
+                return new LocalFileSubscriptionEnumeratorReader(
+                    this._dataCacheProvider,
+                    this._config,
+                    source.Source,
+                    null,
+                    this._config.DataStartTime,
+                    this._config.DataEndTime);
+            }
+
+            return new LocalFileSubscriptionStreamReader(
+                this._dataCacheProvider,
+                source.Source,
+                null);
         }
 
         /// <summary>
@@ -190,11 +214,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
+                return new RemoteFileSubscriptionStreamReader(this._dataCacheProvider, source.Source, Globals.Cache, source.Headers);
             }
             catch (Exception err)
             {
-                OnInvalidSource(source, err);
+                this.OnInvalidSource(source, err);
                 return null;
             }
         }

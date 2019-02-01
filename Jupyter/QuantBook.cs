@@ -66,8 +66,11 @@ namespace QuantConnect.Jupyter
                 // Initialize History Provider
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
-                _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
+                // Select data reader
+                _dataCacheProvider = (IDataCacheProvider)Activator.CreateInstance(
+                    Type.GetType(Config.Get("data-cache-provider", "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider")),
+                    algorithmHandlers.DataProvider);
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this);
                 Securities.SetSecurityService(securityService);
@@ -405,7 +408,7 @@ namespace QuantConnect.Jupyter
                 var listBenchmark = CalculateDailyRateOfChange(dictBenchmark);
                 var listPerformance = CalculateDailyRateOfChange(dictEquity);
 
-                // Gets the startting capital
+                // Gets the starting capital
                 var startingCapital = Convert.ToDecimal(dictEquity.FirstOrDefault().Value);
 
                 // Compute portfolio statistics

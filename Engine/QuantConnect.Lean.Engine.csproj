@@ -135,6 +135,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +152,8 @@
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
     <Compile Include="DataFeeds\DataManager.cs" />
+    <Compile Include="DataFeeds\DataPointDictionary.cs" />
+    <Compile Include="DataFeeds\Enumerators\DataPointEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\DividendEventProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\CorporateEventEnumeratorFactory.cs" />
@@ -162,6 +165,7 @@
     <Compile Include="DataFeeds\Enumerators\LiveBaseDataSynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\AuxiliaryDataEnumerator.cs" />
+    <Compile Include="DataFeeds\DataPointCacheProvider.cs" />
     <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
     <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
     <Compile Include="DataFeeds\IDataManager.cs" />
@@ -223,6 +227,7 @@
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
     <Compile Include="DataFeeds\TimeSliceFactory.cs" />
+    <Compile Include="DataFeeds\Transport\LocalFileSubscriptionEnumeratorReader.cs" />
     <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />

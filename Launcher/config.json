@@ -26,6 +26,7 @@
 
   // engine
   "data-folder": "../../../Data/",
+  //"data-folder": "..\\..\\..\\Data\\",
 
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",
@@ -35,6 +36,7 @@
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
   "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+  "data-cache-provider": "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider",
   "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
 
   // limits on number of symbols to allow

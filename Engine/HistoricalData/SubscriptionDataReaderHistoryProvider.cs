@@ -83,19 +83,21 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
             end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
-            var config = new SubscriptionDataConfig(request.DataType,
-                request.Symbol,
-                request.Resolution,
-                request.DataTimeZone,
-                request.ExchangeHours.TimeZone,
-                request.FillForwardResolution.HasValue,
-                request.IncludeExtendedMarketHours,
-                false,
-                request.IsCustomData,
-                request.TickType,
-                true,
-                request.DataNormalizationMode
-                );
+            var config = new SubscriptionDataConfig(
+                objectType: request.DataType,
+                symbol: request.Symbol,
+                resolution: request.Resolution,
+                dataTimeZone: request.DataTimeZone,
+                exchangeTimeZone: request.ExchangeHours.TimeZone,
+                fillForward: request.FillForwardResolution.HasValue,
+                extendedHours: request.IncludeExtendedMarketHours,
+                isInternalFeed: false,
+                isCustom: request.IsCustomData,
+                tickType: request.TickType,
+                isFilteredSubscription: true,
+                dataNormalizationMode: request.DataNormalizationMode,
+                subscriptionDataStartDate: request.StartTimeUtc,
+                subscriptionDataEndDate: request.EndTimeUtc);
 
             var security = new Security(
                 request.ExchangeHours,

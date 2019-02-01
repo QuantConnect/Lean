@@ -14,8 +14,11 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 using Ionic.Zip;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -37,7 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public SingleEntryDataCacheProvider(IDataProvider dataProvider)
         {
-            _dataProvider = dataProvider;
+            this._dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -45,19 +48,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="key">A string representing the key of the cached data</param>
         /// <returns>An <see cref="Stream"/> of the cached data</returns>
-        public Stream Fetch(string key)
+        public Stream FetchStream(string key)
         {
-            var stream = _dataProvider.Fetch(key);
+            var stream = this._dataProvider.Fetch(key);
 
             if (key.EndsWith(".zip") && stream != null)
             {
                 // get the first entry from the zip file
                 try
                 {
-                    var entryStream = Compression.UnzipStream(stream, out _zipFile);
+                    var entryStream = Compression.UnzipStream(stream, out this._zipFile);
 
                     // save the file stream so it can be disposed later
-                    _zipFileStream = stream;
+                    this._zipFileStream = stream;
 
                     return entryStream;
                 }
@@ -87,8 +90,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            _zipFile?.DisposeSafely();
-            _zipFileStream?.DisposeSafely();
+            this._zipFile?.DisposeSafely();
+            this._zipFileStream?.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Fetch data from the cache as enumerator
+        /// </summary>
+        /// <param name="key">A string representing the key of the cached data</param>
+        /// <param name="config">The subscription config</param>
+        /// <param name="startDate">Provide the start date of data to be fetched. Inclusive.</param>
+        /// <param name="endDate">Provide the end date of data to be fetched. Inclusive.</param>
+        /// <returns>An enumerator of the cached data</returns>
+        public IEnumerator<string> FetchEnumerator(string key, SubscriptionDataConfig config, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

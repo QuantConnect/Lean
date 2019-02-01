@@ -41,10 +41,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// or to open the first zip entry found regardless of name</param>
         public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string entryName = null)
         {
-            var stream = dataCacheProvider.Fetch(source);
-
-            if (stream != null)
+            var zipfileStream = dataCacheProvider.FetchStream(source);
+            if (zipfileStream != null)
             {
+                MemoryStream stream = new MemoryStream();
+                zipfileStream.CopyTo(stream);
+                stream.Position = 0;
                 _streamReader = new StreamReader(stream);
             }
         }
@@ -57,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="startingPosition">The position in the stream from which to start reading</param>
         public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, long startingPosition)
         {
-            var stream = dataCacheProvider.Fetch(source);
+            var stream = dataCacheProvider.FetchStream(source);
 
             if (stream != null)
             {

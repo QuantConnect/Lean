@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
@@ -35,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly bool _includeAuxiliaryData;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
-        private readonly ZipDataCacheProvider _zipDataCacheProvider;
+        private readonly IDataCacheProvider _dataCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
 
@@ -46,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="isLiveMode">True if runnig live algorithm, false otherwise</param>
+        /// <param name="isLiveMode">True if running live algorithm, false otherwise</param>
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
@@ -59,13 +60,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
             )
         {
-            _resultHandler = resultHandler;
-            _mapFileProvider = mapFileProvider;
-            _factorFileProvider = factorFileProvider;
-            _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider);
-            _isLiveMode = isLiveMode;
-            _includeAuxiliaryData = includeAuxiliaryData;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            this._resultHandler = resultHandler;
+            this._mapFileProvider = mapFileProvider;
+            this._factorFileProvider = factorFileProvider;
+            this._dataCacheProvider = (IDataCacheProvider)Activator.CreateInstance(
+                Type.GetType(Config.Get("data-cache-provider", "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider")),
+                dataProvider);
+            this._isLiveMode = isLiveMode;
+            this._includeAuxiliaryData = includeAuxiliaryData;
+            this._tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }
 
         /// <summary>
@@ -78,30 +81,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity ||
                                   request.Configuration.SecurityType == SecurityType.Option
-                                    ? _mapFileProvider.Get(request.Security.Symbol.ID.Market)
+                                    ? this._mapFileProvider.Get(request.Security.Symbol.ID.Market)
                                     : MapFileResolver.Empty;
 
             var dataReader = new SubscriptionDataReader(request.Configuration,
                 request.StartTimeLocal,
                 request.EndTimeLocal,
                 mapFileResolver,
-                _factorFileProvider,
-                _tradableDaysProvider(request),
-                _isLiveMode,
-                 _zipDataCacheProvider
+                this._factorFileProvider,
+                this._tradableDaysProvider(request),
+                this._isLiveMode,
+                 this._dataCacheProvider
                 );
 
-            dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
-            dataReader.NumericalPrecisionLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
-            dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
-            dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
+            dataReader.InvalidConfigurationDetected += (sender, args) => { this._resultHandler.ErrorMessage(args.Message); };
+            dataReader.NumericalPrecisionLimited += (sender, args) => { this._resultHandler.DebugMessage(args.Message); };
+            dataReader.DownloadFailed += (sender, args) => { this._resultHandler.ErrorMessage(args.Message, args.StackTrace); };
+            dataReader.ReaderErrorDetected += (sender, args) => { this._resultHandler.RuntimeError(args.Message, args.StackTrace); };
 
             var enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(
                 request.Configuration,
-                _factorFileProvider,
+                this._factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                _includeAuxiliaryData);
+                this._includeAuxiliaryData);
 
             // has to be initialized after adding all the enumerators since it will execute a MoveNext
             dataReader.Initialize();
@@ -115,7 +118,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            _zipDataCacheProvider?.DisposeSafely();
+            this._dataCacheProvider?.DisposeSafely();
         }
     }
 }
