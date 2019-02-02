@@ -561,17 +561,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var fillQuantity = decimal.Parse(entries[5], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
                 var updTime = Time.UnixTimeStampToDateTime(double.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture));
-                var orderFee = OrderFee.Zero;
-                if (fillQuantity != 0)
-                {
-                    var security = _securityProvider.GetSecurity(order.Symbol);
-                    var feeSize = security.FeeModel.GetOrderFee(
-                        new OrderFeeParameters(security, order));
-                    orderFee = new OrderFee(new CashAmount(
-                            feeSize.Value.Amount * (Math.Abs(fillQuantity) / order.AbsoluteQuantity).Normalize(),
-                            feeSize.Value.Currency
-                        ));
-                }
+                var orderFee = new OrderFee(new CashAmount(
+                        Math.Abs(decimal.Parse(entries[9], NumberStyles.Float, CultureInfo.InvariantCulture)),
+                        entries[10]
+                    ));
 
                 OrderStatus status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
