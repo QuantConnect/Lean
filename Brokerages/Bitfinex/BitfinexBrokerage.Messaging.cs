@@ -565,8 +565,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (fillQuantity != 0)
                 {
                     var security = _securityProvider.GetSecurity(order.Symbol);
-                    orderFee = security.FeeModel.GetOrderFee(
+                    var feeSize = security.FeeModel.GetOrderFee(
                         new OrderFeeParameters(security, order));
+                    orderFee = new OrderFee(new CashAmount(
+                            feeSize.Value.Amount * (Math.Abs(fillQuantity) / order.AbsoluteQuantity).Normalize(),
+                            feeSize.Value.Currency
+                        ));
                 }
 
                 OrderStatus status = OrderStatus.Filled;
