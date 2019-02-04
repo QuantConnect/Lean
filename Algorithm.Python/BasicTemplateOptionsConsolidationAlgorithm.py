@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,25 +26,23 @@ from QuantConnect.Data.Consolidators import *
 from datetime import timedelta
 
 ### <summary>
-### A demonstration of consolidating futures data into larger bars for your algorithm.
+### A demonstration of consolidating options data into larger bars for your algorithm.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="benchmarks" />
 ### <meta name="tag" content="consolidating data" />
-### <meta name="tag" content="futures" />
-class BasicTemplateFuturesConsolidationAlgorithm(QCAlgorithm):
-
+### <meta name="tag" content="options" />
+class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 11)
         self.SetCash(1000000)
 
-        # Subscribe and set our expiry filter for the futures chain
-        future = self.AddFuture(Futures.Indices.SP500EMini)
-        future.SetFilter(timedelta(0), timedelta(182))
-
+        # Subscribe and set our filter for the options chain
+        option = self.AddOption('SPY')
+        option.SetFilter(-2, 2, timedelta(0), timedelta(180))
         self.consolidators = dict()
-
+    
     def OnData(self,slice):
         pass
 
@@ -54,7 +52,10 @@ class BasicTemplateFuturesConsolidationAlgorithm(QCAlgorithm):
         
     def OnSecuritiesChanged(self, changes):
         for security in changes.AddedSecurities:
-            consolidator = QuoteBarConsolidator(timedelta(minutes=5))
+            if security.Type == SecurityType.Equity:
+                consolidator = TradeBarConsolidator(timedelta(minutes=5))
+            else:
+                consolidator = QuoteBarConsolidator(timedelta(minutes=5))
             consolidator.DataConsolidated += self.OnDataConsolidated
             self.SubscriptionManager.AddConsolidator(security.Symbol, consolidator)
             self.consolidators[security.Symbol] = consolidator
